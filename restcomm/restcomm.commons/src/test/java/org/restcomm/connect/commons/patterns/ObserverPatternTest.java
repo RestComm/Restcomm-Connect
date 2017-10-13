@@ -22,20 +22,17 @@ package org.restcomm.connect.commons.patterns;
 import akka.actor.ActorRef;
 import akka.actor.ActorSystem;
 import akka.actor.Props;
-import akka.actor.UntypedActor;
 import akka.testkit.JavaTestKit;
+import org.junit.AfterClass;
+import org.junit.BeforeClass;
+import org.junit.Test;
+import org.restcomm.connect.commons.faulttolerance.RestcommUntypedActor;
 
 import java.util.ArrayList;
 import java.util.List;
 
-import static org.junit.Assert.*;
-import org.junit.AfterClass;
-import org.junit.BeforeClass;
-import org.junit.Test;
-import org.restcomm.connect.commons.patterns.Observe;
-import org.restcomm.connect.commons.patterns.Observing;
-import org.restcomm.connect.commons.patterns.StopObserving;
-import org.restcomm.connect.commons.patterns.TooManyObserversException;
+import static org.junit.Assert.assertFalse;
+import static org.junit.Assert.assertTrue;
 
 /**
  * @author thomas.quintana@telestax.com (Thomas Quintana)
@@ -108,7 +105,7 @@ public class ObserverPatternTest {
     private static final class BroadcastHelloWorld {
     }
 
-    private static final class ObservableActor extends UntypedActor {
+    private static final class ObservableActor extends RestcommUntypedActor {
         private final List<ActorRef> listeners;
 
         @SuppressWarnings("unused")

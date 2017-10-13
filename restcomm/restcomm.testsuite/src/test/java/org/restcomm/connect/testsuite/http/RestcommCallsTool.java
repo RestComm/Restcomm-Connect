@@ -290,7 +290,7 @@ public class RestcommCallsTool {
      */
     public JsonObject modifyCall(String deploymentUrl, String username, String authToken, String callSid, String status,
                                  String rcmlUrl) throws Exception {
-        return modifyCall(deploymentUrl, username, authToken, callSid, status, rcmlUrl, false, null);
+        return modifyCall(deploymentUrl, username, authToken, callSid.trim(), status, rcmlUrl, false, null);
     }
 
     public JsonObject modifyCall(String deploymentUrl, String username, String authToken, String callSid, String status,
@@ -345,7 +345,7 @@ public class RestcommCallsTool {
             JsonParser parser = new JsonParser();
             jsonObject = parser.parse(response).getAsJsonObject();
         } catch (Exception e) {
-            logger.info("Exception e: "+e);
+            logger.error("Exception : ", e);
             UniformInterfaceException exception = (UniformInterfaceException)e;
             jsonObject = new JsonObject();
             jsonObject.addProperty("Exception",exception.getResponse().getStatus());

@@ -62,17 +62,22 @@ import static com.github.tomakehurst.wiremock.client.WireMock.getRequestedFor;
 import static com.github.tomakehurst.wiremock.client.WireMock.stubFor;
 import static com.github.tomakehurst.wiremock.client.WireMock.urlPathEqualTo;
 import static com.github.tomakehurst.wiremock.client.WireMock.urlPathMatching;
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.Map;
 import static org.cafesip.sipunit.SipAssert.assertLastOperationSuccess;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertTrue;
+import org.restcomm.connect.testsuite.NetworkPortAssigner;
+import org.restcomm.connect.testsuite.WebArchiveUtil;
 
 /**
  * Test for Dial Action attribute. Reference: https://www.twilio.com/docs/api/twiml/dial#attributes-action The 'action'
  * attribute takes a URL as an argument. When the dialed call ends, Restcomm will make a GET or POST request to this URL
- * 
+ *
  * @author <a href="mailto:gvagenas@gmail.com">gvagenas</a>
- * 
+ *
  */
 @RunWith(Arquillian.class)
 public class CallLifecycleAnswerDelayTest {
@@ -92,10 +97,12 @@ public class CallLifecycleAnswerDelayTest {
     @ArquillianResource
     URL deploymentUrl;
 
-    //Dial Action URL: http://ACae6e420f425248d6a26948c17a9e2acf:77f8c12cc7b8f8423e5c38b035249166@127.0.0.1:8080/restcomm/2012-04-24/DialAction Method: POST
+    private static int mediaPort = NetworkPortAssigner.retrieveNextPortByFile();
+    
+    private static int mockPort = NetworkPortAssigner.retrieveNextPortByFile();
     @Rule
-    public WireMockRule wireMockRule = new WireMockRule(8090); // No-args constructor defaults to port 8080
-
+    public WireMockRule wireMockRule = new WireMockRule(mockPort);
+    
     private static SipStackTool tool1;
     private static SipStackTool tool2;
     private static SipStackTool tool3;
@@ -104,23 +111,31 @@ public class CallLifecycleAnswerDelayTest {
     // Bob is a simple SIP Client. Will not register with Restcomm
     private SipStack bobSipStack;
     private SipPhone bobPhone;
-    private String bobContact = "sip:bob@127.0.0.1:5090";
+    private static String bobPort = String.valueOf(NetworkPortAssigner.retrieveNextPortByFile()); 
+    private String bobContact = "sip:bob@127.0.0.1:" + bobPort;
 
     // Alice is a Restcomm Client with VoiceURL. This Restcomm Client can register with Restcomm and whatever will dial the RCML
     // of the VoiceURL will be executed.
     private SipStack aliceSipStack;
     private SipPhone alicePhone;
-    private String aliceContact = "sip:alice@127.0.0.1:5091";
+    private static String alicePort = String.valueOf(NetworkPortAssigner.retrieveNextPortByFile());    
+    private String aliceContact = "sip:alice@127.0.0.1:" + alicePort;
 
     // Henrique is a simple SIP Client. Will not register with Restcomm
     private SipStack henriqueSipStack;
     private SipPhone henriquePhone;
-    private String henriqueContact = "sip:henrique@127.0.0.1:5092";
+    private static String henriquePort = String.valueOf(NetworkPortAssigner.retrieveNextPortByFile());     
+    private String henriqueContact = "sip:henrique@127.0.0.1:" + henriquePort;
 
     // George is a simple SIP Client. Will not register with Restcomm
     private SipStack georgeSipStack;
     private SipPhone georgePhone;
-    private String georgeContact = "sip:+131313@127.0.0.1:5070";
+    private static String georgePort = String.valueOf(NetworkPortAssigner.retrieveNextPortByFile());     
+    private String georgeContact = "sip:+131313@127.0.0.1:" + georgePort;
+    
+    private static int restcommPort = 5080;
+    private static int restcommHTTPPort = 8080;        
+    private static String restcommContact = "127.0.0.1:" + restcommPort;      
 
     private String adminAccountSid = "ACae6e420f425248d6a26948c17a9e2acf";
     private String adminAuthToken = "77f8c12cc7b8f8423e5c38b035249166";
@@ -132,21 +147,32 @@ public class CallLifecycleAnswerDelayTest {
         tool3 = new SipStackTool("CallLifecycleDelayAnswerTest3");
         tool4 = new SipStackTool("CallLifecycleDelayAnswerTest");
     }
+    
+    public static void reconfigurePorts() { 
+        if (System.getProperty("arquillian_sip_port") != null) {
+            restcommPort = Integer.valueOf(System.getProperty("arquillian_sip_port"));
+            restcommContact = "127.0.0.1:" + restcommPort; 
+        } 
+        if (System.getProperty("arquillian_http_port") != null) {
+            restcommHTTPPort = Integer.valueOf(System.getProperty("arquillian_http_port"));
+        }          
+    }
 
 
     @Before
     public void before() throws Exception {
-        bobSipStack = tool1.initializeSipStack(SipStack.PROTOCOL_UDP, "127.0.0.1", "5090", "127.0.0.1:5080");
-        bobPhone = bobSipStack.createSipPhone("127.0.0.1", SipStack.PROTOCOL_UDP, 5080, bobContact);
+        bobSipStack = tool1.initializeSipStack(SipStack.PROTOCOL_UDP, "127.0.0.1", bobPort, restcommContact);
+        bobPhone = bobSipStack.createSipPhone("127.0.0.1", SipStack.PROTOCOL_UDP, restcommPort, bobContact);
 
-        aliceSipStack = tool2.initializeSipStack(SipStack.PROTOCOL_UDP, "127.0.0.1", "5091", "127.0.0.1:5080");
-        alicePhone = aliceSipStack.createSipPhone("127.0.0.1", SipStack.PROTOCOL_UDP, 5080, aliceContact);
+        aliceSipStack = tool2.initializeSipStack(SipStack.PROTOCOL_UDP, "127.0.0.1", alicePort, restcommContact);
+        alicePhone = aliceSipStack.createSipPhone("127.0.0.1", SipStack.PROTOCOL_UDP, restcommPort, aliceContact);
 
-        henriqueSipStack = tool3.initializeSipStack(SipStack.PROTOCOL_UDP, "127.0.0.1", "5092", "127.0.0.1:5080");
-        henriquePhone = henriqueSipStack.createSipPhone("127.0.0.1", SipStack.PROTOCOL_UDP, 5080, henriqueContact);
+        henriqueSipStack = tool3.initializeSipStack(SipStack.PROTOCOL_UDP, "127.0.0.1", henriquePort, restcommContact);
+        henriquePhone = henriqueSipStack.createSipPhone("127.0.0.1", SipStack.PROTOCOL_UDP, restcommPort, henriqueContact);
 
-        georgeSipStack = tool4.initializeSipStack(SipStack.PROTOCOL_UDP, "127.0.0.1", "5070", "127.0.0.1:5080");
-        georgePhone = georgeSipStack.createSipPhone("127.0.0.1", SipStack.PROTOCOL_UDP, 5080, georgeContact);
+        georgeSipStack = tool4.initializeSipStack(SipStack.PROTOCOL_UDP, "127.0.0.1", georgePort, restcommContact);
+        georgePhone = georgeSipStack.createSipPhone("127.0.0.1", SipStack.PROTOCOL_UDP, restcommPort, georgeContact);
+
     }
 
     @After
@@ -192,10 +218,10 @@ public class CallLifecycleAnswerDelayTest {
                         .withHeader("Content-Type", "text/xml")
                         .withBody(dialAliceRcml)));
 
-        assertTrue(MonitoringServiceTool.getInstance().getLiveCalls(deploymentUrl.toString(),adminAccountSid, adminAuthToken)==0);
+        assertTrue(MonitoringServiceTool.getInstance().getStatistics(deploymentUrl.toString(),adminAccountSid, adminAuthToken)==0);
         assertTrue(MonitoringServiceTool.getInstance().getLiveCallsArraySize(deploymentUrl.toString(),adminAccountSid, adminAuthToken)==0);
 
-        SipURI uri = aliceSipStack.getAddressFactory().createSipURI(null, "127.0.0.1:5080");
+        SipURI uri = aliceSipStack.getAddressFactory().createSipURI(null, restcommContact);
         assertTrue(alicePhone.register(uri, "alice", "1234", aliceContact, 3600, 3600));
 
         // Prepare second phone to receive call
@@ -204,7 +230,7 @@ public class CallLifecycleAnswerDelayTest {
 
         // Create outgoing call with first phone
         final SipCall bobCall = bobPhone.createSipCall();
-        bobCall.initiateOutgoingCall(bobContact, "sip:1111@127.0.0.1:5080", null, body, "application", "sdp", null, null);
+        bobCall.initiateOutgoingCall(bobContact, "sip:1111@" + restcommContact, null, body, "application", "sdp", null, null);
         assertLastOperationSuccess(bobCall);
         assertTrue(bobCall.waitOutgoingCallResponse(5 * 1000));
         final int response = bobCall.getLastReceivedResponse().getStatusCode();
@@ -222,7 +248,7 @@ public class CallLifecycleAnswerDelayTest {
 
 //        Thread.sleep(15000);
 //
-//        int liveCalls = MonitoringServiceTool.getInstance().getLiveCalls(deploymentUrl.toString(),adminAccountSid, adminAuthToken);
+//        int liveCalls = MonitoringServiceTool.getInstance().getStatistics(deploymentUrl.toString(),adminAccountSid, adminAuthToken);
 //        logger.info("LiveCalls: "+liveCalls);
 //        int liveCallsArraySize = MonitoringServiceTool.getInstance().getLiveCallsArraySize(deploymentUrl.toString(),adminAccountSid, adminAuthToken);
 //        logger.info("LiveCallsArraySize: "+liveCallsArraySize);
@@ -248,7 +274,7 @@ public class CallLifecycleAnswerDelayTest {
         String status = jsonObj.get("status").getAsString();
         logger.info("Status: "+status);
         assertTrue(status.equalsIgnoreCase("canceled"));
-        assertTrue(MonitoringServiceTool.getInstance().getLiveCalls(deploymentUrl.toString(),adminAccountSid, adminAuthToken)==0);
+        assertTrue(MonitoringServiceTool.getInstance().getStatistics(deploymentUrl.toString(),adminAccountSid, adminAuthToken)==0);
         assertTrue(MonitoringServiceTool.getInstance().getLiveCallsArraySize(deploymentUrl.toString(),adminAccountSid, adminAuthToken)==0);
     }
 
@@ -262,7 +288,7 @@ public class CallLifecycleAnswerDelayTest {
                         .withHeader("Content-Type", "text/xml")
                         .withBody(dialAliceRcml)));
 
-        SipURI uri = aliceSipStack.getAddressFactory().createSipURI(null, "127.0.0.1:5080");
+        SipURI uri = aliceSipStack.getAddressFactory().createSipURI(null, restcommContact);
         assertTrue(alicePhone.register(uri, "alice", "1234", aliceContact, 3600, 3600));
 
         // Prepare second phone to receive call
@@ -271,7 +297,7 @@ public class CallLifecycleAnswerDelayTest {
 
         // Create outgoing call with first phone
         final SipCall bobCall = bobPhone.createSipCall();
-        bobCall.initiateOutgoingCall(bobContact, "sip:1111@127.0.0.1:5080", null, body, "application", "sdp", null, null);
+        bobCall.initiateOutgoingCall(bobContact, "sip:1111@" + restcommContact, null, body, "application", "sdp", null, null);
         assertLastOperationSuccess(bobCall);
         assertTrue(bobCall.waitOutgoingCallResponse(5 * 1000));
         final int response = bobCall.getLastReceivedResponse().getStatusCode();
@@ -297,9 +323,9 @@ public class CallLifecycleAnswerDelayTest {
         assertTrue(aliceCall.waitForAck(5000));
 
         Thread.sleep(1000);
-        int liveCalls = MonitoringServiceTool.getInstance().getLiveCalls(deploymentUrl.toString(),adminAccountSid, adminAuthToken);
-        int liveIncomingCalls = MonitoringServiceTool.getInstance().getLiveIncomingCalls(deploymentUrl.toString(),adminAccountSid, adminAuthToken);
-        int liveOutgoingCalls = MonitoringServiceTool.getInstance().getLiveOutgoingCalls(deploymentUrl.toString(),adminAccountSid, adminAuthToken);
+        int liveCalls = MonitoringServiceTool.getInstance().getStatistics(deploymentUrl.toString(),adminAccountSid, adminAuthToken);
+        int liveIncomingCalls = MonitoringServiceTool.getInstance().getLiveIncomingCallStatistics(deploymentUrl.toString(),adminAccountSid, adminAuthToken);
+        int liveOutgoingCalls = MonitoringServiceTool.getInstance().getLiveOutgoingCallStatistics(deploymentUrl.toString(),adminAccountSid, adminAuthToken);
         int liveCallsArraySize = MonitoringServiceTool.getInstance().getLiveCallsArraySize(deploymentUrl.toString(),adminAccountSid, adminAuthToken);
         assertTrue(liveCalls==2);
         assertTrue(liveIncomingCalls==1);
@@ -348,7 +374,7 @@ public class CallLifecycleAnswerDelayTest {
         assertTrue(maxConcurrentIncomingCalls==1);
         assertTrue(maxConcurrentOutgoingCalls==1);
     }
-    
+
     private String dialNumberRcml = "<Response><Dial><Number>+131313</Number></Dial></Response>";
 
     @Test
@@ -365,7 +391,7 @@ public class CallLifecycleAnswerDelayTest {
 
         // Create outgoing call with first phone
         final SipCall bobCall = bobPhone.createSipCall();
-        bobCall.initiateOutgoingCall(bobContact, "sip:1111@127.0.0.1:5080", null, body, "application", "sdp", null, null);
+        bobCall.initiateOutgoingCall(bobContact, "sip:1111@" + restcommContact, null, body, "application", "sdp", null, null);
         assertLastOperationSuccess(bobCall);
         assertTrue(bobCall.waitOutgoingCallResponse(5 * 1000));
         final int response = bobCall.getLastReceivedResponse().getStatusCode();
@@ -388,9 +414,9 @@ public class CallLifecycleAnswerDelayTest {
         assertTrue(bobCall.sendInviteOkAck());
         assertTrue(georgeCall.waitForAck(5000));
 
-        assertTrue(MonitoringServiceTool.getInstance().getLiveCalls(deploymentUrl.toString(),adminAccountSid, adminAuthToken)==2);
-        assertTrue(MonitoringServiceTool.getInstance().getLiveIncomingCalls(deploymentUrl.toString(),adminAccountSid, adminAuthToken)==1);
-        assertTrue(MonitoringServiceTool.getInstance().getLiveOutgoingCalls(deploymentUrl.toString(),adminAccountSid, adminAuthToken)==1);
+        assertTrue(MonitoringServiceTool.getInstance().getStatistics(deploymentUrl.toString(),adminAccountSid, adminAuthToken)==2);
+        assertTrue(MonitoringServiceTool.getInstance().getLiveIncomingCallStatistics(deploymentUrl.toString(),adminAccountSid, adminAuthToken)==1);
+        assertTrue(MonitoringServiceTool.getInstance().getLiveOutgoingCallStatistics(deploymentUrl.toString(),adminAccountSid, adminAuthToken)==1);
         assertTrue(MonitoringServiceTool.getInstance().getLiveCallsArraySize(deploymentUrl.toString(),adminAccountSid, adminAuthToken)==2);
 
         Thread.sleep(3000);
@@ -418,7 +444,7 @@ public class CallLifecycleAnswerDelayTest {
         JsonObject cdr = RestcommCallsTool.getInstance().getCall(deploymentUrl.toString(), adminAccountSid, adminAuthToken, callSid);
         JsonObject jsonObj = cdr.getAsJsonObject();
         assertTrue(jsonObj.get("status").getAsString().equalsIgnoreCase("completed"));
-        assertTrue(MonitoringServiceTool.getInstance().getLiveCalls(deploymentUrl.toString(),adminAccountSid, adminAuthToken)==0);
+        assertTrue(MonitoringServiceTool.getInstance().getStatistics(deploymentUrl.toString(),adminAccountSid, adminAuthToken)==0);
         assertTrue(MonitoringServiceTool.getInstance().getLiveCallsArraySize(deploymentUrl.toString(),adminAccountSid, adminAuthToken)==0);
     }
 
@@ -434,7 +460,7 @@ public class CallLifecycleAnswerDelayTest {
         SipCall georgeCall = georgePhone.createSipCall();
         georgeCall.listenForIncomingCall();
 
-        SipURI uri = aliceSipStack.getAddressFactory().createSipURI(null, "127.0.0.1:5080");
+        SipURI uri = aliceSipStack.getAddressFactory().createSipURI(null, restcommContact);
         assertTrue(alicePhone.register(uri, "alice", "1234", aliceContact, 3600, 3600));
 
         Credential c = new Credential("127.0.0.1", "alice", "1234");
@@ -442,7 +468,7 @@ public class CallLifecycleAnswerDelayTest {
 
         // Create outgoing call with first phone
         final SipCall aliceCall = alicePhone.createSipCall();
-        aliceCall.initiateOutgoingCall(bobContact, "sip:1111@127.0.0.1:5080", null, body, "application", "sdp", null, null);
+        aliceCall.initiateOutgoingCall(bobContact, "sip:1111@" + restcommContact, null, body, "application", "sdp", null, null);
         assertLastOperationSuccess(aliceCall);
         assertTrue(aliceCall.waitForAuthorisation(5000));
         assertTrue(aliceCall.waitOutgoingCallResponse(5 * 1000));
@@ -466,9 +492,9 @@ public class CallLifecycleAnswerDelayTest {
         assertTrue(aliceCall.sendInviteOkAck());
         assertTrue(georgeCall.waitForAck(5000));
 
-        assertTrue(MonitoringServiceTool.getInstance().getLiveCalls(deploymentUrl.toString(),adminAccountSid, adminAuthToken)==2);
-        assertTrue(MonitoringServiceTool.getInstance().getLiveIncomingCalls(deploymentUrl.toString(),adminAccountSid, adminAuthToken)==1);
-        assertTrue(MonitoringServiceTool.getInstance().getLiveOutgoingCalls(deploymentUrl.toString(),adminAccountSid, adminAuthToken)==1);
+        assertTrue(MonitoringServiceTool.getInstance().getStatistics(deploymentUrl.toString(),adminAccountSid, adminAuthToken)==2);
+        assertTrue(MonitoringServiceTool.getInstance().getLiveIncomingCallStatistics(deploymentUrl.toString(),adminAccountSid, adminAuthToken)==1);
+        assertTrue(MonitoringServiceTool.getInstance().getLiveOutgoingCallStatistics(deploymentUrl.toString(),adminAccountSid, adminAuthToken)==1);
         assertTrue(MonitoringServiceTool.getInstance().getLiveCallsArraySize(deploymentUrl.toString(),adminAccountSid, adminAuthToken)==2);
 
         aliceCall.disposeNoBye();
@@ -494,7 +520,7 @@ public class CallLifecycleAnswerDelayTest {
         JsonObject cdr = RestcommCallsTool.getInstance().getCall(deploymentUrl.toString(), adminAccountSid, adminAuthToken, callSid);
         JsonObject jsonObj = cdr.getAsJsonObject();
         assertTrue(jsonObj.get("status").getAsString().equalsIgnoreCase("completed"));
-        assertTrue(MonitoringServiceTool.getInstance().getLiveCalls(deploymentUrl.toString(),adminAccountSid, adminAuthToken)==0);
+        assertTrue(MonitoringServiceTool.getInstance().getStatistics(deploymentUrl.toString(),adminAccountSid, adminAuthToken)==0);
         assertTrue(MonitoringServiceTool.getInstance().getLiveCallsArraySize(deploymentUrl.toString(),adminAccountSid, adminAuthToken)==0);
     }
 
@@ -512,7 +538,7 @@ public class CallLifecycleAnswerDelayTest {
 
         // Create outgoing call with first phone
         final SipCall bobCall = bobPhone.createSipCall();
-        bobCall.initiateOutgoingCall(bobContact, "sip:1111@127.0.0.1:5080", null, body, "application", "sdp", null, null);
+        bobCall.initiateOutgoingCall(bobContact, "sip:1111@" + restcommContact, null, body, "application", "sdp", null, null);
         assertLastOperationSuccess(bobCall);
         assertTrue(bobCall.waitOutgoingCallResponse(5 * 1000));
         final int response = bobCall.getLastReceivedResponse().getStatusCode();
@@ -526,9 +552,9 @@ public class CallLifecycleAnswerDelayTest {
         assertTrue(georgeCall.waitForIncomingCall(5000));
         assertTrue(georgeCall.sendIncomingCallResponse(Response.TRYING, "George-Trying", 3600));
 
-        assertTrue(MonitoringServiceTool.getInstance().getLiveCalls(deploymentUrl.toString(),adminAccountSid, adminAuthToken)==2);
-        assertTrue(MonitoringServiceTool.getInstance().getLiveIncomingCalls(deploymentUrl.toString(),adminAccountSid, adminAuthToken)==1);
-        assertTrue(MonitoringServiceTool.getInstance().getLiveOutgoingCalls(deploymentUrl.toString(),adminAccountSid, adminAuthToken)==1);
+        assertTrue(MonitoringServiceTool.getInstance().getStatistics(deploymentUrl.toString(),adminAccountSid, adminAuthToken)==2);
+        assertTrue(MonitoringServiceTool.getInstance().getLiveIncomingCallStatistics(deploymentUrl.toString(),adminAccountSid, adminAuthToken)==1);
+        assertTrue(MonitoringServiceTool.getInstance().getLiveOutgoingCallStatistics(deploymentUrl.toString(),adminAccountSid, adminAuthToken)==1);
         assertTrue(MonitoringServiceTool.getInstance().getLiveCallsArraySize(deploymentUrl.toString(),adminAccountSid, adminAuthToken)==2);
 
         assertTrue(georgeCall.sendIncomingCallResponse(Response.FORBIDDEN, "George-Forbidden", 3600));
@@ -591,7 +617,7 @@ public class CallLifecycleAnswerDelayTest {
 
         // Create outgoing call with first phone
         final SipCall bobCall = bobPhone.createSipCall();
-        bobCall.initiateOutgoingCall(bobContact, "sip:1111@127.0.0.1:5080", null, body, "application", "sdp", null, null);
+        bobCall.initiateOutgoingCall(bobContact, "sip:1111@" + restcommContact, null, body, "application", "sdp", null, null);
         assertLastOperationSuccess(bobCall);
         assertTrue(bobCall.waitOutgoingCallResponse(5 * 1000));
         final int response = bobCall.getLastReceivedResponse().getStatusCode();
@@ -614,9 +640,9 @@ public class CallLifecycleAnswerDelayTest {
         assertTrue(bobCall.sendInviteOkAck());
         assertTrue(georgeCall.waitForAck(5000));
 
-        assertTrue(MonitoringServiceTool.getInstance().getLiveCalls(deploymentUrl.toString(),adminAccountSid, adminAuthToken)==2);
-        assertTrue(MonitoringServiceTool.getInstance().getLiveIncomingCalls(deploymentUrl.toString(),adminAccountSid, adminAuthToken)==1);
-        assertTrue(MonitoringServiceTool.getInstance().getLiveOutgoingCalls(deploymentUrl.toString(),adminAccountSid, adminAuthToken)==1);
+        assertTrue(MonitoringServiceTool.getInstance().getStatistics(deploymentUrl.toString(),adminAccountSid, adminAuthToken)==2);
+        assertTrue(MonitoringServiceTool.getInstance().getLiveIncomingCallStatistics(deploymentUrl.toString(),adminAccountSid, adminAuthToken)==1);
+        assertTrue(MonitoringServiceTool.getInstance().getLiveOutgoingCallStatistics(deploymentUrl.toString(),adminAccountSid, adminAuthToken)==1);
         assertTrue(MonitoringServiceTool.getInstance().getLiveCallsArraySize(deploymentUrl.toString(),adminAccountSid, adminAuthToken)==2);
 
         Thread.sleep(3000);
@@ -655,11 +681,11 @@ public class CallLifecycleAnswerDelayTest {
         JsonObject cdr = RestcommCallsTool.getInstance().getCall(deploymentUrl.toString(), adminAccountSid, adminAuthToken, callSid);
         JsonObject jsonObj = cdr.getAsJsonObject();
         assertTrue(jsonObj.get("status").getAsString().equalsIgnoreCase("completed"));
-        assertTrue(MonitoringServiceTool.getInstance().getLiveCalls(deploymentUrl.toString(),adminAccountSid, adminAuthToken)==0);
+        assertTrue(MonitoringServiceTool.getInstance().getStatistics(deploymentUrl.toString(),adminAccountSid, adminAuthToken)==0);
         assertTrue(MonitoringServiceTool.getInstance().getLiveCallsArraySize(deploymentUrl.toString(),adminAccountSid, adminAuthToken)==0);
     }
-    
-    
+
+
     @Test
     public void testDialNumberPstn_404NotHere() throws ParseException, InterruptedException, MalformedURLException {
 
@@ -674,7 +700,7 @@ public class CallLifecycleAnswerDelayTest {
 
         // Create outgoing call with first phone
         final SipCall bobCall = bobPhone.createSipCall();
-        bobCall.initiateOutgoingCall(bobContact, "sip:1111@127.0.0.1:5080", null, body, "application", "sdp", null, null);
+        bobCall.initiateOutgoingCall(bobContact, "sip:1111@" + restcommContact, null, body, "application", "sdp", null, null);
         assertLastOperationSuccess(bobCall);
         assertTrue(bobCall.waitOutgoingCallResponse(5 * 1000));
         final int response = bobCall.getLastReceivedResponse().getStatusCode();
@@ -685,9 +711,9 @@ public class CallLifecycleAnswerDelayTest {
             assertEquals(Response.RINGING, bobCall.getLastReceivedResponse().getStatusCode());
         }
 
-        assertTrue(MonitoringServiceTool.getInstance().getLiveCalls(deploymentUrl.toString(),adminAccountSid, adminAuthToken)==2);
-        assertTrue(MonitoringServiceTool.getInstance().getLiveIncomingCalls(deploymentUrl.toString(),adminAccountSid, adminAuthToken)==1);
-        assertTrue(MonitoringServiceTool.getInstance().getLiveOutgoingCalls(deploymentUrl.toString(),adminAccountSid, adminAuthToken)==1);
+        assertTrue(MonitoringServiceTool.getInstance().getStatistics(deploymentUrl.toString(),adminAccountSid, adminAuthToken)==2);
+        assertTrue(MonitoringServiceTool.getInstance().getLiveIncomingCallStatistics(deploymentUrl.toString(),adminAccountSid, adminAuthToken)==1);
+        assertTrue(MonitoringServiceTool.getInstance().getLiveOutgoingCallStatistics(deploymentUrl.toString(),adminAccountSid, adminAuthToken)==1);
         assertTrue(MonitoringServiceTool.getInstance().getLiveCallsArraySize(deploymentUrl.toString(),adminAccountSid, adminAuthToken)==2);
 
         assertTrue(georgeCall.waitForIncomingCall(5000));
@@ -702,9 +728,9 @@ public class CallLifecycleAnswerDelayTest {
         assertTrue(bobCall.sendInviteOkAck());
         assertTrue(georgeCall.waitForAck(5000));
 
-        assertTrue(MonitoringServiceTool.getInstance().getLiveCalls(deploymentUrl.toString(),adminAccountSid, adminAuthToken)==2);
-        assertTrue(MonitoringServiceTool.getInstance().getLiveIncomingCalls(deploymentUrl.toString(),adminAccountSid, adminAuthToken)==1);
-        assertTrue(MonitoringServiceTool.getInstance().getLiveOutgoingCalls(deploymentUrl.toString(),adminAccountSid, adminAuthToken)==1);
+        assertTrue(MonitoringServiceTool.getInstance().getStatistics(deploymentUrl.toString(),adminAccountSid, adminAuthToken)==2);
+        assertTrue(MonitoringServiceTool.getInstance().getLiveIncomingCallStatistics(deploymentUrl.toString(),adminAccountSid, adminAuthToken)==1);
+        assertTrue(MonitoringServiceTool.getInstance().getLiveOutgoingCallStatistics(deploymentUrl.toString(),adminAccountSid, adminAuthToken)==1);
         assertTrue(MonitoringServiceTool.getInstance().getLiveCallsArraySize(deploymentUrl.toString(),adminAccountSid, adminAuthToken)==2);
 
         Thread.sleep(3000);
@@ -737,12 +763,12 @@ public class CallLifecycleAnswerDelayTest {
         bobPhone = null;
         georgePhone.dispose();
         georgePhone = null;
-        assertTrue(MonitoringServiceTool.getInstance().getLiveCalls(deploymentUrl.toString(),adminAccountSid, adminAuthToken)==0);
+        assertTrue(MonitoringServiceTool.getInstance().getStatistics(deploymentUrl.toString(),adminAccountSid, adminAuthToken)==0);
         assertTrue(MonitoringServiceTool.getInstance().getLiveCallsArraySize(deploymentUrl.toString(),adminAccountSid, adminAuthToken)==0);
     }
 
     private String dialNumberRcmlWithTimeout = "<Response><Dial timeout=\"10\"><Number>+131313</Number></Dial></Response>";
-    
+
     @Test
     public void testDialNumberPstnNoAnswer() throws ParseException, InterruptedException, MalformedURLException {
 
@@ -757,7 +783,7 @@ public class CallLifecycleAnswerDelayTest {
 
         // Create outgoing call with first phone
         final SipCall bobCall = bobPhone.createSipCall();
-        bobCall.initiateOutgoingCall(bobContact, "sip:1111@127.0.0.1:5080", null, body, "application", "sdp", null, null);
+        bobCall.initiateOutgoingCall(bobContact, "sip:1111@" + restcommContact, null, body, "application", "sdp", null, null);
         assertLastOperationSuccess(bobCall);
         assertTrue(bobCall.waitOutgoingCallResponse(5 * 1000));
         final int response = bobCall.getLastReceivedResponse().getStatusCode();
@@ -771,9 +797,9 @@ public class CallLifecycleAnswerDelayTest {
         assertTrue(georgeCall.waitForIncomingCall(5000));
         assertTrue(georgeCall.sendIncomingCallResponse(Response.TRYING, "George-Trying", 3600));
 
-        assertTrue(MonitoringServiceTool.getInstance().getLiveCalls(deploymentUrl.toString(),adminAccountSid, adminAuthToken)==2);
-        assertTrue(MonitoringServiceTool.getInstance().getLiveIncomingCalls(deploymentUrl.toString(),adminAccountSid, adminAuthToken)==1);
-        assertTrue(MonitoringServiceTool.getInstance().getLiveOutgoingCalls(deploymentUrl.toString(),adminAccountSid, adminAuthToken)==1);
+        assertTrue(MonitoringServiceTool.getInstance().getStatistics(deploymentUrl.toString(),adminAccountSid, adminAuthToken)==2);
+        assertTrue(MonitoringServiceTool.getInstance().getLiveIncomingCallStatistics(deploymentUrl.toString(),adminAccountSid, adminAuthToken)==1);
+        assertTrue(MonitoringServiceTool.getInstance().getLiveOutgoingCallStatistics(deploymentUrl.toString(),adminAccountSid, adminAuthToken)==1);
         assertTrue(MonitoringServiceTool.getInstance().getLiveCallsArraySize(deploymentUrl.toString(),adminAccountSid, adminAuthToken)==2);
 
         assertTrue(georgeCall.sendIncomingCallResponse(Response.RINGING, "George-Ringing", 3600));
@@ -781,12 +807,12 @@ public class CallLifecycleAnswerDelayTest {
         SipTransaction cancelTransaction = georgeCall.waitForCancel(100 * 1000);
         assertNotNull(cancelTransaction);
         assertTrue(georgeCall.respondToCancel(cancelTransaction, Response.OK, "George-OK-2-Cancel", 3600));
-        
+
         assertTrue(bobCall.waitOutgoingCallResponse(5 * 1000));
         assertEquals(Response.REQUEST_TIMEOUT, bobCall.getLastReceivedResponse().getStatusCode());
 
         Thread.sleep(1000);
-        
+
         assertTrue(bobCall.disconnect());
 
         Thread.sleep(10000);
@@ -808,10 +834,10 @@ public class CallLifecycleAnswerDelayTest {
         String status = jsonObj.get("status").getAsString();
         logger.info("Status: "+status);
         assertTrue(status.equalsIgnoreCase("completed"));
-        assertTrue(MonitoringServiceTool.getInstance().getLiveCalls(deploymentUrl.toString(),adminAccountSid, adminAuthToken)==0);
+        assertTrue(MonitoringServiceTool.getInstance().getStatistics(deploymentUrl.toString(),adminAccountSid, adminAuthToken)==0);
         assertTrue(MonitoringServiceTool.getInstance().getLiveCallsArraySize(deploymentUrl.toString(),adminAccountSid, adminAuthToken)==0);
     }
-    
+
     @Test
     public void testDialNumberPstn_500ServerInternalError() throws ParseException, InterruptedException, MalformedURLException {
 
@@ -826,7 +852,7 @@ public class CallLifecycleAnswerDelayTest {
 
         // Create outgoing call with first phone
         final SipCall bobCall = bobPhone.createSipCall();
-        bobCall.initiateOutgoingCall(bobContact, "sip:1111@127.0.0.1:5080", null, body, "application", "sdp", null, null);
+        bobCall.initiateOutgoingCall(bobContact, "sip:1111@" + restcommContact, null, body, "application", "sdp", null, null);
         assertLastOperationSuccess(bobCall);
         assertTrue(bobCall.waitOutgoingCallResponse(5 * 1000));
         final int response = bobCall.getLastReceivedResponse().getStatusCode();
@@ -836,12 +862,12 @@ public class CallLifecycleAnswerDelayTest {
             assertTrue(bobCall.waitOutgoingCallResponse(5 * 1000));
             assertEquals(Response.RINGING, bobCall.getLastReceivedResponse().getStatusCode());
         }
-        
+
         Thread.sleep(200);
 
-        assertTrue(MonitoringServiceTool.getInstance().getLiveCalls(deploymentUrl.toString(),adminAccountSid, adminAuthToken)==2);
-        assertTrue(MonitoringServiceTool.getInstance().getLiveIncomingCalls(deploymentUrl.toString(),adminAccountSid, adminAuthToken)==1);
-        assertTrue(MonitoringServiceTool.getInstance().getLiveOutgoingCalls(deploymentUrl.toString(),adminAccountSid, adminAuthToken)==1);
+        assertTrue(MonitoringServiceTool.getInstance().getStatistics(deploymentUrl.toString(),adminAccountSid, adminAuthToken)==2);
+        assertTrue(MonitoringServiceTool.getInstance().getLiveIncomingCallStatistics(deploymentUrl.toString(),adminAccountSid, adminAuthToken)==1);
+        assertTrue(MonitoringServiceTool.getInstance().getLiveOutgoingCallStatistics(deploymentUrl.toString(),adminAccountSid, adminAuthToken)==1);
         assertTrue(MonitoringServiceTool.getInstance().getLiveCallsArraySize(deploymentUrl.toString(),adminAccountSid, adminAuthToken)==2);
 
         assertTrue(georgeCall.waitForIncomingCall(5000));
@@ -869,10 +895,10 @@ public class CallLifecycleAnswerDelayTest {
         JsonObject cdr = RestcommCallsTool.getInstance().getCall(deploymentUrl.toString(), adminAccountSid, adminAuthToken, callSid);
         JsonObject jsonObj = cdr.getAsJsonObject();
         assertTrue(jsonObj.get("status").getAsString().equalsIgnoreCase("completed"));
-        assertTrue(MonitoringServiceTool.getInstance().getLiveCalls(deploymentUrl.toString(),adminAccountSid, adminAuthToken)==0);
+        assertTrue(MonitoringServiceTool.getInstance().getStatistics(deploymentUrl.toString(),adminAccountSid, adminAuthToken)==0);
         assertTrue(MonitoringServiceTool.getInstance().getLiveCallsArraySize(deploymentUrl.toString(),adminAccountSid, adminAuthToken)==0);
     }
-    
+
     @Test
     public void testDialNumberPstn_BusyHere() throws ParseException, InterruptedException, MalformedURLException {
 
@@ -887,7 +913,7 @@ public class CallLifecycleAnswerDelayTest {
 
         // Create outgoing call with first phone
         final SipCall bobCall = bobPhone.createSipCall();
-        bobCall.initiateOutgoingCall(bobContact, "sip:1111@127.0.0.1:5080", null, body, "application", "sdp", null, null);
+        bobCall.initiateOutgoingCall(bobContact, "sip:1111@" + restcommContact, null, body, "application", "sdp", null, null);
         assertLastOperationSuccess(bobCall);
         assertTrue(bobCall.waitOutgoingCallResponse(5 * 1000));
         final int response = bobCall.getLastReceivedResponse().getStatusCode();
@@ -897,12 +923,12 @@ public class CallLifecycleAnswerDelayTest {
             assertTrue(bobCall.waitOutgoingCallResponse(5 * 1000));
             assertEquals(Response.RINGING, bobCall.getLastReceivedResponse().getStatusCode());
         }
-        
+
         Thread.sleep(200);
 
-        assertTrue(MonitoringServiceTool.getInstance().getLiveCalls(deploymentUrl.toString(),adminAccountSid, adminAuthToken)==2);
-        assertTrue(MonitoringServiceTool.getInstance().getLiveIncomingCalls(deploymentUrl.toString(),adminAccountSid, adminAuthToken)==1);
-        assertTrue(MonitoringServiceTool.getInstance().getLiveOutgoingCalls(deploymentUrl.toString(),adminAccountSid, adminAuthToken)==1);
+        assertTrue(MonitoringServiceTool.getInstance().getStatistics(deploymentUrl.toString(),adminAccountSid, adminAuthToken)==2);
+        assertTrue(MonitoringServiceTool.getInstance().getLiveIncomingCallStatistics(deploymentUrl.toString(),adminAccountSid, adminAuthToken)==1);
+        assertTrue(MonitoringServiceTool.getInstance().getLiveOutgoingCallStatistics(deploymentUrl.toString(),adminAccountSid, adminAuthToken)==1);
         assertTrue(MonitoringServiceTool.getInstance().getLiveCallsArraySize(deploymentUrl.toString(),adminAccountSid, adminAuthToken)==2);
 
         assertTrue(georgeCall.waitForIncomingCall(5000));
@@ -930,7 +956,7 @@ public class CallLifecycleAnswerDelayTest {
         JsonObject cdr = RestcommCallsTool.getInstance().getCall(deploymentUrl.toString(), adminAccountSid, adminAuthToken, callSid);
         JsonObject jsonObj = cdr.getAsJsonObject();
         assertTrue(jsonObj.get("status").getAsString().equalsIgnoreCase("completed"));
-        assertTrue(MonitoringServiceTool.getInstance().getLiveCalls(deploymentUrl.toString(),adminAccountSid, adminAuthToken)==0);
+        assertTrue(MonitoringServiceTool.getInstance().getStatistics(deploymentUrl.toString(),adminAccountSid, adminAuthToken)==0);
         assertTrue(MonitoringServiceTool.getInstance().getLiveCallsArraySize(deploymentUrl.toString(),adminAccountSid, adminAuthToken)==0);
     }
 
@@ -945,7 +971,7 @@ public class CallLifecycleAnswerDelayTest {
                         .withHeader("Content-Type", "text/xml")
                         .withBody(dialAliceRcmlInvalidRCML)));
 
-        SipURI uri = aliceSipStack.getAddressFactory().createSipURI(null, "127.0.0.1:5080");
+        SipURI uri = aliceSipStack.getAddressFactory().createSipURI(null, restcommContact);
         assertTrue(alicePhone.register(uri, "alice", "1234", aliceContact, 3600, 3600));
 
         // Prepare second phone to receive call
@@ -954,7 +980,7 @@ public class CallLifecycleAnswerDelayTest {
 
         // Create outgoing call with first phone
         final SipCall bobCall = bobPhone.createSipCall();
-        bobCall.initiateOutgoingCall(bobContact, "sip:1111@127.0.0.1:5080", null, body, "application", "sdp", null, null);
+        bobCall.initiateOutgoingCall(bobContact, "sip:1111@" + restcommContact, null, body, "application", "sdp", null, null);
         assertLastOperationSuccess(bobCall);
         assertTrue(bobCall.waitOutgoingCallResponse(5 * 1000));
         final int response = bobCall.getLastReceivedResponse().getStatusCode();
@@ -973,7 +999,7 @@ public class CallLifecycleAnswerDelayTest {
 
         Thread.sleep(5000);
 
-        assertTrue(MonitoringServiceTool.getInstance().getLiveCalls(deploymentUrl.toString(),adminAccountSid, adminAuthToken)==0);
+        assertTrue(MonitoringServiceTool.getInstance().getStatistics(deploymentUrl.toString(),adminAccountSid, adminAuthToken)==0);
         assertTrue(MonitoringServiceTool.getInstance().getLiveCallsArraySize(deploymentUrl.toString(),adminAccountSid, adminAuthToken)==0);
 
         Thread.sleep(5000);
@@ -993,29 +1019,29 @@ public class CallLifecycleAnswerDelayTest {
         JsonObject cdr = RestcommCallsTool.getInstance().getCall(deploymentUrl.toString(), adminAccountSid, adminAuthToken, callSid);
         JsonObject jsonObj = cdr.getAsJsonObject();
         assertTrue(jsonObj.get("status").getAsString().equalsIgnoreCase("completed"));
-        assertTrue(MonitoringServiceTool.getInstance().getLiveCalls(deploymentUrl.toString(),adminAccountSid, adminAuthToken)==0);
+        assertTrue(MonitoringServiceTool.getInstance().getStatistics(deploymentUrl.toString(),adminAccountSid, adminAuthToken)==0);
         assertTrue(MonitoringServiceTool.getInstance().getLiveCallsArraySize(deploymentUrl.toString(),adminAccountSid, adminAuthToken)==0);
     }
 
     @Deployment(name = "CallLifecycleDelayAnswerTest", managed = true, testable = false)
     public static WebArchive createWebArchiveNoGw() {
         logger.info("Packaging Test App");
-        WebArchive archive = ShrinkWrap.create(WebArchive.class, "restcomm.war");
-        final WebArchive restcommArchive = ShrinkWrapMaven.resolver()
-                .resolve("org.restcomm:restcomm-connect.application:war:" + version).withoutTransitivity()
-                .asSingle(WebArchive.class);
-        archive = archive.merge(restcommArchive);
-        archive.delete("/WEB-INF/sip.xml");
-        archive.delete("/WEB-INF/conf/restcomm.xml");
-        archive.delete("/WEB-INF/data/hsql/restcomm.script");
-        archive.delete("/WEB-INF/classes/application.conf");
-        archive.addAsWebInfResource("sip.xml");
-        archive.addAsWebInfResource("restcomm_calllifecycle-delay.xml", "conf/restcomm.xml");
-        archive.addAsWebInfResource("restcomm.script_callLifecycleTest", "data/hsql/restcomm.script");
-        archive.addAsWebInfResource("akka_application.conf", "classes/application.conf");
-        archive.addAsWebResource("dial-client-entry_wActionUrl.xml");
-        logger.info("Packaged Test App");
-        return archive;
-    }
+        reconfigurePorts();
+        
+        Map<String,String> replacements = new HashMap();
+        //replace mediaport 2727 
+        replacements.put("2727", String.valueOf(mediaPort));        
+        replacements.put("8080", String.valueOf(restcommHTTPPort));
+        replacements.put("8090", String.valueOf(mockPort));
+        replacements.put("5080", String.valueOf(restcommPort));
+        replacements.put("5070", String.valueOf(georgePort));        
+        replacements.put("5090", String.valueOf(bobPort));
+        replacements.put("5091", String.valueOf(alicePort));
+        replacements.put("5092", String.valueOf(henriquePort));
+        
+        List<String> resources = new ArrayList(Arrays.asList("dial-client-entry_wActionUrl.xml"));
+        return WebArchiveUtil.createWebArchiveNoGw("restcomm_calllifecycle-delay.xml", 
+                "restcomm.script_callLifecycleTest",resources, replacements);
+    }    
 
 }

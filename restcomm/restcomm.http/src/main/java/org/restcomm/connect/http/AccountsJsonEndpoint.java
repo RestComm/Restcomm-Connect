@@ -19,19 +19,22 @@
  */
 package org.restcomm.connect.http;
 
-import org.restcomm.connect.commons.annotations.concurrency.ThreadSafe;
+import static javax.ws.rs.core.MediaType.APPLICATION_FORM_URLENCODED;
+import static javax.ws.rs.core.MediaType.APPLICATION_JSON_TYPE;
 
 import javax.ws.rs.Consumes;
 import javax.ws.rs.GET;
+import javax.ws.rs.OPTIONS;
 import javax.ws.rs.POST;
 import javax.ws.rs.PUT;
 import javax.ws.rs.Path;
 import javax.ws.rs.PathParam;
+import javax.ws.rs.core.Context;
 import javax.ws.rs.core.MultivaluedMap;
 import javax.ws.rs.core.Response;
+import javax.ws.rs.core.UriInfo;
 
-import static javax.ws.rs.core.MediaType.APPLICATION_FORM_URLENCODED;
-import static javax.ws.rs.core.MediaType.APPLICATION_JSON_TYPE;
+import org.restcomm.connect.commons.annotations.concurrency.ThreadSafe;
 
 /**
  * @author quintana.thomas@gmail.com (Thomas Quintana)
@@ -49,9 +52,16 @@ public final class AccountsJsonEndpoint extends AccountsEndpoint {
         return getAccount(accountSid, APPLICATION_JSON_TYPE);
     }
 
+    @Path("/{accountSid}")
+    @OPTIONS
+    public Response optionsAccount(@PathParam("accountSid") final String accountSid) {
+        // no authentication here since this is a pre-flight request
+        return Response.ok().build();
+    }
+
     @GET
-    public Response getAccounts() {
-        return getAccounts(APPLICATION_JSON_TYPE);
+    public Response getAccounts(@Context UriInfo info) {
+        return getAccounts(info, APPLICATION_JSON_TYPE);
     }
 
     /* disabled as #1270

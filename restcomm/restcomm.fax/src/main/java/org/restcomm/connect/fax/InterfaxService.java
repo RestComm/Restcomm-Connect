@@ -20,14 +20,6 @@
 package org.restcomm.connect.fax;
 
 import akka.actor.ActorRef;
-import akka.actor.UntypedActor;
-
-import java.io.File;
-import java.net.URI;
-import java.net.URLConnection;
-import java.security.cert.CertificateException;
-import java.security.cert.X509Certificate;
-
 import org.apache.commons.configuration.Configuration;
 import org.apache.http.Header;
 import org.apache.http.HttpHeaders;
@@ -45,11 +37,18 @@ import org.apache.http.impl.client.DefaultHttpClient;
 import org.apache.http.protocol.BasicHttpContext;
 import org.apache.http.protocol.HttpContext;
 import org.apache.http.util.EntityUtils;
+import org.restcomm.connect.commons.faulttolerance.RestcommUntypedActor;
+
+import java.io.File;
+import java.net.URI;
+import java.net.URLConnection;
+import java.security.cert.CertificateException;
+import java.security.cert.X509Certificate;
 
 /**
  * @author quintana.thomas@gmail.com (Thomas Quintana)
  */
-public final class InterfaxService extends UntypedActor {
+public final class InterfaxService extends RestcommUntypedActor {
     private static final String url = "https://rest.interfax.net/outbound/faxes?faxNumber=";
 
     private final TrustStrategy strategy;

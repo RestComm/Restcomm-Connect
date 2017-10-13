@@ -20,6 +20,8 @@
 
 package org.restcomm.connect.commons.configuration.sets;
 
+import java.net.InetSocketAddress;
+import java.util.Map;
 import org.restcomm.connect.commons.common.http.SslMode;
 
 /**
@@ -30,6 +32,16 @@ public interface MainConfigurationSet {
 
     int getResponseTimeout();
 
+    Integer getDefaultHttpConnectionRequestTimeout();
+
+    Integer getDefaultHttpMaxConns();
+
+    Integer getDefaultHttpMaxConnsPerRoute();
+
+    Integer getDefaultHttpTTL();
+
+    Map<InetSocketAddress,Integer> getDefaultHttpRoutes();
+
     boolean isUseHostnameToResolveRelativeUrls();
 
     String getHostname();
@@ -39,4 +51,8 @@ public interface MainConfigurationSet {
     void setInstanceId(String instanceId);
 
     String getInstanceId();
+
+    String getApiVersion();
+
+    int getRecordingMaxDelay ();
 }

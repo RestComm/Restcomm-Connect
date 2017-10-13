@@ -86,7 +86,7 @@ public final class SmsServiceProxy extends SipServlet implements SipServletListe
             private static final long serialVersionUID = 1L;
             @Override
             public UntypedActor create() throws Exception {
-                return new SmppService(system, configuration, factory, storage, context, smppMessageHandler);
+                return new SmppService(configuration, factory, storage, context, smppMessageHandler);
             }
         });
         return system.actorOf(props);

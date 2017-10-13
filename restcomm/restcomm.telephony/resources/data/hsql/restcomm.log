@@ -1,0 +1,21 @@
+/*C6*/SET SCHEMA PUBLIC
+DELETE FROM "restcomm_media_servers" WHERE "ms_id"=2 AND "local_ip"='127.0.0.1' AND "local_port"=2727 AND "remote_ip"='127.0.0.1' AND "remote_port"=2427 AND "compatibility" IS NULL AND "response_timeout"='1500' AND "external_address" IS NULL
+INSERT INTO "restcomm_media_servers" VALUES(2,'127.0.0.1',2727,'127.0.0.1',2427,NULL,'1500',NULL)
+COMMIT
+INSERT INTO "restcomm_conference_detail_records" VALUES('CF81f7e156651244d8ae7728011841caf9','2017-04-04 12:28:07.312000','2017-04-04 12:28:07.313000','ACae6e420f425248d6a26948c17a9e2acf','RUNNING_INITIALIZING','69b86c28553d4341a5e9ff35ad1dde68','2012-04-24','/2012-04-24/Accounts/ACae6e420f425248d6a26948c17a9e2acf/Conferences/CF81f7e156651244d8ae7728011841caf9','2',NULL,TRUE,NULL,NULL,NULL,NULL,NULL,NULL)
+COMMIT
+DELETE FROM "restcomm_conference_detail_records" WHERE "sid"='CF81f7e156651244d8ae7728011841caf9'
+INSERT INTO "restcomm_conference_detail_records" VALUES('CF81f7e156651244d8ae7728011841caf9','2017-04-04 12:28:07.312000','2017-04-04 12:28:07.404000','ACae6e420f425248d6a26948c17a9e2acf','RUNNING_INITIALIZING','69b86c28553d4341a5e9ff35ad1dde68','2012-04-24','/2012-04-24/Accounts/ACae6e420f425248d6a26948c17a9e2acf/Conferences/CF81f7e156651244d8ae7728011841caf9','2','mobicents/cnf/1',TRUE,'mobicents/ivr/2','2',NULL,NULL,NULL,'2')
+COMMIT
+DELETE FROM "restcomm_conference_detail_records" WHERE "sid"='CF81f7e156651244d8ae7728011841caf9'
+INSERT INTO "restcomm_conference_detail_records" VALUES('CF81f7e156651244d8ae7728011841caf9','2017-04-04 12:28:07.312000','2017-04-04 12:28:07.410000','ACae6e420f425248d6a26948c17a9e2acf','RUNNING_MODERATOR_ABSENT','69b86c28553d4341a5e9ff35ad1dde68','2012-04-24','/2012-04-24/Accounts/ACae6e420f425248d6a26948c17a9e2acf/Conferences/CF81f7e156651244d8ae7728011841caf9','2','mobicents/cnf/1',TRUE,'mobicents/ivr/2','2',NULL,NULL,NULL,'2')
+COMMIT
+DELETE FROM "restcomm_conference_detail_records" WHERE "sid"='CF81f7e156651244d8ae7728011841caf9'
+INSERT INTO "restcomm_conference_detail_records" VALUES('CF81f7e156651244d8ae7728011841caf9','2017-04-04 12:28:07.312000','2017-04-04 12:28:10.442000','ACae6e420f425248d6a26948c17a9e2acf','RUNNING_MODERATOR_ABSENT','69b86c28553d4341a5e9ff35ad1dde68','2012-04-24','/2012-04-24/Accounts/ACae6e420f425248d6a26948c17a9e2acf/Conferences/CF81f7e156651244d8ae7728011841caf9','2','mobicents/cnf/1',TRUE,'mobicents/ivr/2','2','mobicents/bridge/$','1','1d','2')
+COMMIT
+DELETE FROM "restcomm_conference_detail_records" WHERE "sid"='CF81f7e156651244d8ae7728011841caf9'
+INSERT INTO "restcomm_conference_detail_records" VALUES('CF81f7e156651244d8ae7728011841caf9','2017-04-04 12:28:07.312000','2017-04-04 12:28:13.472000','ACae6e420f425248d6a26948c17a9e2acf','RUNNING_MODERATOR_ABSENT','69b86c28553d4341a5e9ff35ad1dde68','2012-04-24','/2012-04-24/Accounts/ACae6e420f425248d6a26948c17a9e2acf/Conferences/CF81f7e156651244d8ae7728011841caf9','2','mobicents/cnf/1',FALSE,'mobicents/ivr/2','2','mobicents/bridge/$','1','1d','2')
+COMMIT
+DELETE FROM "restcomm_conference_detail_records" WHERE "sid"='CF81f7e156651244d8ae7728011841caf9'
+INSERT INTO "restcomm_conference_detail_records" VALUES('CF81f7e156651244d8ae7728011841caf9','2017-04-04 12:28:07.312000','2017-04-04 12:28:13.477000','ACae6e420f425248d6a26948c17a9e2acf','COMPLETED','69b86c28553d4341a5e9ff35ad1dde68','2012-04-24','/2012-04-24/Accounts/ACae6e420f425248d6a26948c17a9e2acf/Conferences/CF81f7e156651244d8ae7728011841caf9','2','mobicents/cnf/1',FALSE,'mobicents/ivr/2','2','mobicents/bridge/$','1','1d','2')
+COMMIT

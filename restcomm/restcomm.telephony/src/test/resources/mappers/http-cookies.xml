@@ -1,0 +1,36 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<!--
+  @author thomas.quintana@telestax.com (Thomas Quintana)
+-->
+<mapper namespace="org.mobicents.servlet.sip.restcomm.dao.HttpCookiesDao">
+  <insert id="addCookie" parameterType="map">
+    INSERT INTO "restcomm_http_cookies" ("sid", "comment", "domain", "expiration_date", "name", "path", "value", "version")
+    VALUES (#{sid}, #{comment}, #{domain}, #{expiration_date}, #{name}, #{path}, #{value}, #{version});
+  </insert>
+  
+  <select id="getCookies" resultType="hashmap">
+    SELECT * FROM "restcomm_http_cookies";
+  </select>
+  
+  <select id="hasCookie" parameterType="map" resultType="int">
+    SELECT COUNT(*) FROM "restcomm_http_cookies" WHERE "sid"=#{sid} AND "name"=#{name};
+  </select>
+  
+  <select id="hasExpiredCookies" parameterType="string" resultType="int">
+    SELECT COUNT(*) FROM "restcomm_http_cookies" WHERE "sid"=#{sid} AND "expiration_date" &lt;= NOW();
+  </select>
+  
+  <delete id="removeCookies" parameterType="string">
+    DELETE FROM "restcomm_http_cookies" WHERE "sid"=#{sid};
+  </delete>
+  
+  <delete id="removeExpiredCookies" parameterType="string">
+    DELETE FROM "restcomm_http_cookies" WHERE "sid"=#{sid} AND "expiration_date" &lt;= NOW();
+  </delete>
+  
+  <update id="updateCookie" parameterType="map">
+    UPDATE "restcomm_http_cookies" SET "comment"=#{comment}, "expiration_date"=#{expiration_date},
+    "value"=#{value} WHERE "sid"=#{sid} AND "name"=#{name};
+  </update>
+</mapper>

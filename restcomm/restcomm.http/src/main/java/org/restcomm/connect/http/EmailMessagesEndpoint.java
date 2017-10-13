@@ -13,6 +13,7 @@ import com.thoughtworks.xstream.XStream;
 import org.apache.commons.configuration.Configuration;
 import org.apache.log4j.Logger;
 import org.joda.time.DateTime;
+import org.restcomm.connect.commons.faulttolerance.RestcommUntypedActor;
 import org.restcomm.connect.commons.patterns.Observe;
 import org.restcomm.connect.commons.patterns.Observing;
 import org.restcomm.connect.commons.patterns.StopObserving;
@@ -33,10 +34,7 @@ import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.MultivaluedMap;
 import javax.ws.rs.core.Response;
 
-import static javax.ws.rs.core.MediaType.APPLICATION_JSON;
-import static javax.ws.rs.core.MediaType.APPLICATION_JSON_TYPE;
-import static javax.ws.rs.core.MediaType.APPLICATION_XML;
-import static javax.ws.rs.core.MediaType.APPLICATION_XML_TYPE;
+import static javax.ws.rs.core.MediaType.*;
 import static javax.ws.rs.core.Response.Status.BAD_REQUEST;
 import static javax.ws.rs.core.Response.Status.INTERNAL_SERVER_ERROR;
 import static javax.ws.rs.core.Response.ok;
@@ -241,7 +239,7 @@ public class EmailMessagesEndpoint extends SecuredEndpoint {
         return system.actorOf(props);
     }
 
-    private final class EmailSessionObserver extends UntypedActor {
+    private final class EmailSessionObserver extends RestcommUntypedActor {
         public EmailSessionObserver() {
             super();
         }

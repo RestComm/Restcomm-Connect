@@ -27,7 +27,7 @@ import java.util.Map;
 
 /*
  * Mockup configuration source. Fill it up in your tests with values that simulate the actual source
- * 
+ *
  * @author orestis.tsakiridis@telestax.com (Orestis Tsakiridis)
  */
 public class EditableConfigurationSource implements ConfigurationSource {
@@ -45,6 +45,14 @@ public class EditableConfigurationSource implements ConfigurationSource {
     @Override
     public String getProperty(String key) {
         return properties.get(key);
+    }
+
+    @Override
+    public String getProperty (String key, String defValue) {
+        String result = properties.get(key);
+        if (key == null || key.isEmpty())
+            result = defValue;
+        return result;
     }
 
     public void setProperty(String key, String value) {

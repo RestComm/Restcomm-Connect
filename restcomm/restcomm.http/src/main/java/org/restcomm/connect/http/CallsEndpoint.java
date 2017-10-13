@@ -20,18 +20,22 @@
 package org.restcomm.connect.http;
 
 import akka.actor.ActorRef;
+import akka.pattern.AskTimeoutException;
 import akka.util.Timeout;
+
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
 import com.google.i18n.phonenumbers.NumberParseException;
 import com.google.i18n.phonenumbers.PhoneNumberUtil;
 import com.google.i18n.phonenumbers.PhoneNumberUtil.PhoneNumberFormat;
 import com.thoughtworks.xstream.XStream;
+
 import org.apache.commons.configuration.Configuration;
 import org.restcomm.connect.commons.amazonS3.RecordingSecurityLevel;
 import org.restcomm.connect.commons.annotations.concurrency.NotThreadSafe;
 import org.restcomm.connect.commons.configuration.RestcommConfiguration;
 import org.restcomm.connect.commons.dao.Sid;
+import org.restcomm.connect.commons.telephony.CreateCallType;
 import org.restcomm.connect.dao.AccountsDao;
 import org.restcomm.connect.dao.CallDetailRecordsDao;
 import org.restcomm.connect.dao.DaoManager;
@@ -59,6 +63,7 @@ import org.restcomm.connect.telephony.api.GetCall;
 import org.restcomm.connect.telephony.api.GetCallInfo;
 import org.restcomm.connect.telephony.api.Hangup;
 import org.restcomm.connect.telephony.api.UpdateCallScript;
+
 import scala.concurrent.Await;
 import scala.concurrent.Future;
 import scala.concurrent.duration.Duration;
@@ -71,11 +76,13 @@ import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.MultivaluedMap;
 import javax.ws.rs.core.Response;
 import javax.ws.rs.core.UriInfo;
+
 import java.net.URI;
 import java.net.URL;
 import java.text.ParseException;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.LinkedList;
 import java.util.List;
 import java.util.concurrent.CopyOnWriteArrayList;
 import java.util.concurrent.TimeUnit;
@@ -89,6 +96,7 @@ import static javax.ws.rs.core.Response.Status.BAD_REQUEST;
 import static javax.ws.rs.core.Response.Status.INTERNAL_SERVER_ERROR;
 import static javax.ws.rs.core.Response.Status.NOT_ACCEPTABLE;
 import static javax.ws.rs.core.Response.Status.NOT_FOUND;
+import static javax.ws.rs.core.Response.Status.GONE;
 import static javax.ws.rs.core.Response.ok;
 import static javax.ws.rs.core.Response.status;
 
@@ -345,7 +353,7 @@ public abstract class CallsEndpoint extends SecuredEndpoint {
 
         URI statusCallback = null;
         String statusCallbackMethod = "POST";
-        List<String> statusCallbackEvent = new ArrayList<String>();
+        List<String> statusCallbackEvent = new LinkedList<String>();
         statusCallbackEvent.add("initiated");
         statusCallbackEvent.add("ringing");
         statusCallbackEvent.add("answered");
@@ -372,20 +380,20 @@ public abstract class CallsEndpoint extends SecuredEndpoint {
                 statusCallbackMethod = data.getFirst("StatusCallbackMethod").trim();
             }
             if (data.containsKey("StatusCallbackEvent")) {
-                statusCallbackEvent = Arrays.asList(data.getFirst("StatusCallbackEvent").trim().split(","));
+                statusCallbackEvent.addAll(Arrays.asList(data.getFirst("StatusCallbackEvent").trim().split(",")));
             }
         }
 
         CreateCall create = null;
         try {
             if (to.contains("@")) {
-                create = new CreateCall(from, to, username, password, true, timeout != null ? timeout : 30, CreateCall.Type.SIP,
+                create = new CreateCall(from, to, username, password, true, timeout != null ? timeout : 30, CreateCallType.SIP,
                         accountId, null, statusCallback, statusCallbackMethod, statusCallbackEvent);
             } else if (to.startsWith("client")) {
-                create = new CreateCall(from, to, username, password, true, timeout != null ? timeout : 30, CreateCall.Type.CLIENT,
+                create = new CreateCall(from, to, username, password, true, timeout != null ? timeout : 30, CreateCallType.CLIENT,
                         accountId, null, statusCallback, statusCallbackMethod, statusCallbackEvent);
             } else {
-                create = new CreateCall(from, to, username, password, true, timeout != null ? timeout : 30, CreateCall.Type.PSTN,
+                create = new CreateCall(from, to, username, password, true, timeout != null ? timeout : 30, CreateCallType.PSTN,
                         accountId, null, statusCallback, statusCallbackMethod, statusCallbackEvent);
             }
             create.setCreateCDR(false);
@@ -506,7 +514,13 @@ public abstract class CallsEndpoint extends SecuredEndpoint {
             CallResponse<CallInfo> response = (CallResponse<CallInfo>) Await.result(future,
                     Duration.create(10, TimeUnit.SECONDS));
             callInfo = response.get();
+        } catch (AskTimeoutException ate) {
+            final String msg ="Call is already completed.";
+            if(logger.isDebugEnabled())
+                logger.debug("Modify Call LCM for call sid:"+callSid+ " AskTimeout while getting call: "+ callPath +" restcomm will send "+GONE +" with msg: "+msg);
+            return status(GONE).entity(msg).build();
         } catch (Exception exception) {
+            logger.error("Exception while trying to update call callPath: "+callPath+" callSid: "+callSid, exception);
             return status(INTERNAL_SERVER_ERROR).entity(exception.getMessage()).build();
         }
 

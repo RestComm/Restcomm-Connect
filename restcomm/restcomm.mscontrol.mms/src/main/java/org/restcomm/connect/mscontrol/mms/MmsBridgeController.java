@@ -22,7 +22,6 @@
 package org.restcomm.connect.mscontrol.mms;
 
 import akka.actor.ActorRef;
-import akka.actor.ActorSystem;
 import akka.actor.Props;
 import akka.actor.UntypedActor;
 import akka.actor.UntypedActorFactory;
@@ -41,6 +40,7 @@ import org.restcomm.connect.commons.patterns.StopObserving;
 import org.restcomm.connect.commons.util.WavUtils;
 import org.restcomm.connect.dao.DaoManager;
 import org.restcomm.connect.dao.RecordingsDao;
+import org.restcomm.connect.dao.entities.MediaAttributes;
 import org.restcomm.connect.dao.entities.Recording;
 import org.restcomm.connect.mgcp.CreateConferenceEndpoint;
 import org.restcomm.connect.mgcp.DestroyEndpoint;
@@ -64,7 +64,6 @@ import org.restcomm.connect.mscontrol.api.messages.Stop;
 import org.restcomm.connect.mscontrol.api.messages.StopMediaGroup;
 
 import javax.sound.sampled.UnsupportedAudioFileException;
-import java.io.File;
 import java.io.IOException;
 import java.net.URI;
 import java.util.ArrayList;
@@ -74,6 +73,7 @@ import java.util.Set;
 
 /**
  * @author Henrique Rosa (henrique.rosa@telestax.com)
+ * @author maria.farooq@telestax.com (Maria Farooq)
  *
  */
 public class MmsBridgeController extends MediaServerController {
@@ -81,7 +81,6 @@ public class MmsBridgeController extends MediaServerController {
     // Logging
     private final LoggingAdapter logger = Logging.getLogger(getContext().system(), this);
 
-    private final ActorSystem system;
     // Finite State Machine
     private final FiniteStateMachine fsm;
     private final State uninitialized;
@@ -115,9 +114,8 @@ public class MmsBridgeController extends MediaServerController {
 
     private Sid callSid;
 
-    public MmsBridgeController(final ActorRef mrb, final ActorSystem system) {
+    public MmsBridgeController(final ActorRef mrb) {
         final ActorRef self = self();
-        this.system = system;
 
         // Finite states
         this.uninitialized = new State("uninitialized", null, null);
@@ -188,29 +186,29 @@ public class MmsBridgeController extends MediaServerController {
             duration = 0.0;
         }
 
-        if (duration.equals(0.0)) {
+        if (!duration.equals(0.0)) {
+            if(logger.isInfoEnabled()) {
+            logger.info("Call wraping up recording. File already exists, duration: " + duration);
+            }
+
+            final Recording.Builder builder = Recording.builder();
+            builder.setSid(recordingSid);
+            builder.setAccountSid(accountId);
+            builder.setCallSid(callId);
+            builder.setDuration(duration);
+            builder.setApiVersion(runtimeSettings.getString("api-version"));
+            StringBuilder buffer = new StringBuilder();
+            buffer.append("/").append(runtimeSettings.getString("api-version")).append("/Accounts/").append(accountId.toString());
+            buffer.append("/Recordings/").append(recordingSid.toString());
+            builder.setUri(URI.create(buffer.toString()));
+            final Recording recording = builder.build();
+            RecordingsDao recordsDao = daoManager.getRecordingsDao();
+            recordsDao.addRecording(recording, MediaAttributes.MediaType.AUDIO_ONLY);
+        } else {
             if(logger.isInfoEnabled()) {
                 logger.info("Call wraping up recording. File doesn't exist since duration is 0");
             }
-            final DateTime end = DateTime.now();
-            duration = new Double((end.getMillis() - recordStarted.getMillis()) / 1000);
-        } else  if(logger.isInfoEnabled()) {
-            logger.info("Call wraping up recording. File already exists, length: " + (new File(recordingUri).length()));
         }
-
-        final Recording.Builder builder = Recording.builder();
-        builder.setSid(recordingSid);
-        builder.setAccountSid(accountId);
-        builder.setCallSid(callId);
-        builder.setDuration(duration);
-        builder.setApiVersion(runtimeSettings.getString("api-version"));
-        StringBuilder buffer = new StringBuilder();
-        buffer.append("/").append(runtimeSettings.getString("api-version")).append("/Accounts/").append(accountId.toString());
-        buffer.append("/Recordings/").append(recordingSid.toString());
-        builder.setUri(URI.create(buffer.toString()));
-        final Recording recording = builder.build();
-        RecordingsDao recordsDao = daoManager.getRecordingsDao();
-        recordsDao.addRecording(recording);
     }
 
     /*
@@ -347,7 +345,9 @@ public class MmsBridgeController extends MediaServerController {
 
     private void onEndpointStateChanged(EndpointStateChanged message, ActorRef self, ActorRef sender) throws Exception {
         if (is(stopping)) {
-            if (sender.equals(this.endpoint) && EndpointState.DESTROYED.equals(message.getState())) {
+            if (sender.equals(this.endpoint) && (EndpointState.DESTROYED.equals(message.getState()) || EndpointState.FAILED.equals(message.getState()))) {
+                if(EndpointState.FAILED.equals(message.getState()))
+                    logger.error("Could not destroy endpoint on media server. corresponding actor path is: " + this.endpoint.path());
                 this.endpoint.tell(new StopObserving(self), self);
                 context().stop(endpoint);
                 endpoint = null;
@@ -373,7 +373,7 @@ public class MmsBridgeController extends MediaServerController {
             this.recordingRequest = message;
 
             // Tell media group to start recording
-            Record record = new Record(message.getRecordingUri(), timeout, maxLength, finishOnKey);
+            Record record = new Record(message.getRecordingUri(), timeout, maxLength, finishOnKey, MediaAttributes.MediaType.AUDIO_ONLY);
             this.mediaGroup.tell(record, self);
         }
     }
@@ -442,7 +442,7 @@ public class MmsBridgeController extends MediaServerController {
                     return new MgcpMediaGroup(mediaGateway, mediaSession, endpoint);
                 }
             });
-            return system.actorOf(props);
+            return getContext().actorOf(props);
         }
 
         @Override

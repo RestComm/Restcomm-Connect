@@ -3,6 +3,7 @@
 ## Description: Configures RestComm
 ## Author: Henrique Rosa (henrique.rosa@telestax.com)
 ## Author: Pavel Slegr (pavel.slegr@telestax.com)
+## Author: Maria Farooq (maria.farooq@telestax.com)
 ##
 
 # VARIABLES
@@ -10,7 +11,7 @@ RESTCOMM_BIN=$RESTCOMM_HOME/bin
 RESTCOMM_DARS=$RESTCOMM_HOME/standalone/configuration/dars
 RESTCOMM_CONF=$RESTCOMM_HOME/standalone/configuration
 RESTCOMM_DEPLOY=$RESTCOMM_HOME/standalone/deployments/restcomm.war
-RVD_DEPLOY=$RESTCOMM_HOME/standalone/deployments/restcomm-rvd.war
+RVD_DEPLOY_PATH=$RESTCOMM_HOME/standalone/deployments/restcomm-rvd.war
 
 ## FUNCTIONS
 
@@ -76,7 +77,15 @@ configOutboundProxy(){
 	-e "s|<outbound-proxy-password>.*<\/outbound-proxy-password>|<outbound-proxy-password>$OUTBOUND_PROXY_PASSWORD<\/outbound-proxy-password>|" $FILE > $FILE.bak;
 	mv $FILE.bak $FILE
 }
-
+## Description: Push notification server configuration.
+configPushNotificationServer() {
+    echo "Configure push-notification-server"
+    FILE=$RESTCOMM_DEPLOY/WEB-INF/conf/restcomm.xml
+    sed -e "s|<push-notification-server-enabled>.*<\/push-notification-server-enabled>|<push-notification-server-enabled>$PUSH_NOTIFICATION_SERVER_ENABLED<\/push-notification-server-enabled>|" \
+	-e "s|<push-notification-server-url>.*<\/push-notification-server-url>|<push-notification-server-url>$PUSH_NOTIFICATION_SERVER_URL<\/push-notification-server-url>|"  \
+	-e "s|<push-notification-server-delay>.*<\/push-notification-server-delay>|<push-notification-server-delay>$PUSH_NOTIFICATION_SERVER_DELAY<\/push-notification-server-delay>|" $FILE > $FILE.bak;
+	mv $FILE.bak $FILE
+}
 ## Description: Configures Voip Innovations Credentials
 ## Parameters : 1.Login
 ## 				2.Password
@@ -540,25 +549,79 @@ otherRestCommConf(){
     echo "End Rest RestComm configuration"
 }
 
-confRVD(){
-    echo "Configure RVD"
-	if [ -n "$RVD_LOCATION" ]; then
-  		echo "RVD_LOCATION $RVD_LOCATION"
-  		mkdir -p `echo $RVD_LOCATION`
-  		sed -i "s|<workspaceLocation>.*</workspaceLocation>|<workspaceLocation>${RVD_LOCATION}</workspaceLocation>|" $RVD_DEPLOY/WEB-INF/rvd.xml
-
-  		COPYFLAG=$RVD_LOCATION/.demos_initialized
-  		if [ -f "$COPYFLAG" ]; then
-   			#Do nothing, we already copied the demo file to the new workspace
-    		echo "RVD demo application are already copied"
-  		else
-    		echo "Will copy RVD demo applications to the new workspace $RVD_LOCATION"
-    		cp -ar $RVD_DEPLOY/workspace/* $RVD_LOCATION
-    		touch $COPYFLAG
-  		fi
-
+disableRVD() {
+    if [[ -f "$RVD_DEPLOY_PATH.deployed" || -f "$RVD_DEPLOY_PATH.dodeploy" ]]; then
+		rm -f "$RVD_DEPLOY_PATH.deployed"
+		rm -f "$RVD_DEPLOY_PATH.dodeploy"
+    	echo "RVD undeployed (or not deployed at all)"
+	else
+		echo "RVD not deployed"
 	fi
 }
+
+enableRVD() {
+	if [ -f "$RVD_DEPLOY_PATH.deployed" ]; then
+		echo "RVD already deployed"
+	else
+		touch "$RVD_DEPLOY_PATH".dodeploy
+		echo "RVD deployed"
+	fi
+}
+
+confRVD(){
+    if [[ "$RVD_UNDEPLOY" = true || "$RVD_UNDEPLOY" = True || "$RVD_UNDEPLOY" = TRUE ]]; then
+        disableRVD
+    else
+        enableRVD
+        echo "Configuring bundled RVD"
+        if [ -n "$RVD_LOCATION" ]; then
+            echo "RVD_LOCATION $RVD_LOCATION"
+            mkdir -p `echo $RVD_LOCATION`
+            sed -i "s|<workspaceLocation>.*</workspaceLocation>|<workspaceLocation>${RVD_LOCATION}</workspaceLocation>|" $RVD_DEPLOY_PATH/WEB-INF/rvd.xml
+
+            COPYFLAG=$RVD_LOCATION/.demos_initialized
+            if [ -f "$COPYFLAG" ]; then
+                #Do nothing, we already copied the demo file to the new workspace
+                echo "RVD demo application are already copied"
+            else
+                echo "Will copy RVD demo applications to the new workspace $RVD_LOCATION"
+                cp -ar $RVD_DEPLOY_PATH/workspace/* $RVD_LOCATION
+                touch $COPYFLAG
+            fi
+
+        fi
+    fi
+}
+
+## Adds/removes <rcmlserver>/<base-url> element based on $RVD_URL
+## This version of confRcmlserver() will used xmlstarlet and will probably sed commands that rely on empty elements like <x></x> instead of <x/>
+#confRcmlserver(){
+#    echo "Configuring <rcmlserver/>..."
+#    local RESTCOMM_XML=$RESTCOMM_DEPLOY/WEB-INF/conf/restcomm.xml
+#    if [ -z "$RVD_URL" ]; then
+#        # remove <rcmlserver>/<base-url> element altogether
+#        xmlstarlet ed -P -d "/restcomm/rcmlserver/base-url" "$RESTCOMM_XML" > "${RESTCOMM_XML}.bak"
+#        mv ${RESTCOMM_XML}.bak "$RESTCOMM_XML"
+#    else
+#        # remove existing <base-url/> element
+#        xmlstarlet ed -P -d /restcomm/rcmlserver/base-url "$RESTCOMM_XML" > "${RESTCOMM_XML}.bak"
+#        mv ${RESTCOMM_XML}.bak "$RESTCOMM_XML"
+#        # add it anew
+#        xmlstarlet ed -P -s /restcomm/rcmlserver -t elem -n base-url -v "$RVD_URL" "${RESTCOMM_XML}" > "${RESTCOMM_XML}.bak"
+#        mv "${RESTCOMM_XML}.bak" "$RESTCOMM_XML"
+#    fi
+#    echo "<rcmlserver/> configured"
+#}
+
+# Updates <rcmlserver>/<base-url> according to $RVD_URL
+# This version of confRcmlserver() used sed for backwards compatibility with existing sed commands in this
+confRcmlserver() {
+    local RESTCOMM_XML=$RESTCOMM_DEPLOY/WEB-INF/conf/restcomm.xml
+    sed  "/<rcmlserver>/,/<\/rcmlserver>/ s|<base-url>.*</base-url>|<base-url>${RVD_URL}</base-url>|" "$RESTCOMM_XML" > "${RESTCOMM_XML}.bak"
+    mv ${RESTCOMM_XML}.bak "$RESTCOMM_XML"
+    echo "Configured <rcmlserver/>. base-url set to '$RVD_URL'"
+}
+
 
 #Auto Configure RMS Networking, if  MANUAL_SETUP=false.
 configRMSNetworking() {
@@ -568,6 +631,60 @@ configRMSNetworking() {
         sed -i "s|NETWORK=.*|NETWORK=${BIND_NETWORK}|" $RESTCOMM_BIN/restcomm/mediaserver.conf
         sed -i "s|SUBNET=.*|SUBNET=${BIND_SUBNET_MASK}|" $RESTCOMM_BIN/restcomm/mediaserver.conf
     fi
+}
+
+configAsrDriver() {
+    if [ ! -z "$MG_ASR_DRIVERS" ] && [ ! -z "$MG_ASR_DRIVER_DEFAULT" ]; then
+        FILE=$RESTCOMM_DEPLOY/WEB-INF/conf/restcomm.xml
+        xmlstarlet ed --inplace -d "/restcomm/runtime-settings/mg-asr-drivers" \
+            -s "/restcomm/runtime-settings" -t elem  -n mg-asr-drivers \
+            -i "/restcomm/runtime-settings/mg-asr-drivers" -t attr -n default -v "$MG_ASR_DRIVER_DEFAULT" \
+            $FILE
+        for driverName in ${MG_ASR_DRIVERS//,/ }; do
+            xmlstarlet ed --inplace -s "/restcomm/runtime-settings/mg-asr-drivers" -t elem -n "driver" -v "$driverName" \
+                $FILE
+        done
+    fi
+}
+
+## Description: DNS Provisioning Manager Configuration.
+configDnsProvisioningManager() {
+    echo "Configure DnsProvisioningManager"
+    FILE=$RESTCOMM_DEPLOY/WEB-INF/conf/restcomm.xml
+
+	xmlstarlet ed --inplace -d "/restcomm/runtime-settings/dns-provisioning" \
+            -s "/restcomm/runtime-settings" -t elem  -n dns-provisioning \
+            -i "/restcomm/runtime-settings/dns-provisioning" -t attr -n class -v "$DNS_PROVISIONING_CLASS" \
+            $FILE
+            
+	xmlstarlet ed --inplace -d "/restcomm/runtime-settings/dns-provisioning" \
+            -s "/restcomm/runtime-settings" -t elem  -n dns-provisioning \
+            -i "/restcomm/runtime-settings/dns-provisioning" -t attr -n enabled -v "$DNS_PROVISIONING_ENABLED" \
+            $FILE
+
+	xmlstarlet ed --inplace -d "/restcomm/runtime-settings/dns-provisioning" \
+            -s "/restcomm/runtime-settings" -t elem  -n dns-provisioning \
+            -i "/restcomm/runtime-settings/dns-provisioning" -t attr -n class -v "$DNS_PROVISIONING_CLASS" \
+            $FILE
+	xmlstarlet ed --inplace -s "/restcomm/runtime-settings/dns-provisioning" -t attr -n "enabled" -v "$DNS_PROVISIONING_ENABLED" $FILE
+    xmlstarlet ed --inplace -s "/restcomm/runtime-settings/dns-provisioning" -t elem -n "restcomm-address" -v "$DNS_PROVISIONING_RESTCOMM_ADDRESS" $FILE
+    xmlstarlet ed --inplace -s "/restcomm/runtime-settings/dns-provisioning" -t elem -n "rr-type" -v "$DNS_PROVISIONING_RR_TYPE" $FILE
+
+	xmlstarlet ed --inplace -d "/restcomm/runtime-settings/dns-provisioning/aws-route53" \
+            -s "/restcomm/runtime-settings/dns-provisioning" -t elem  -n aws-route53 $FILE
+    xmlstarlet ed --inplace -s "/restcomm/runtime-settings/dns-provisioning/aws-route53" -t elem -n "access-key" -v "$DNS_PROVISIONING_AWS_ROUTE53_ACCESS_KEY" $FILE
+    xmlstarlet ed --inplace -s "/restcomm/runtime-settings/dns-provisioning/aws-route53" -t elem -n "secret-key" -v "$DNS_PROVISIONING_AWS_ROUTE53_SECRET_KEY" $FILE
+    xmlstarlet ed --inplace -s "/restcomm/runtime-settings/dns-provisioning/aws-route53" -t elem -n "region" -v "$DNS_PROVISIONING_AWS_ROUTE53_REGION" $FILE
+    xmlstarlet ed --inplace -s "/restcomm/runtime-settings/dns-provisioning/aws-route53" -t elem -n "ttl" -v "$DNS_PROVISIONING_AWS_ROUTE53_TTL" $FILE
+    xmlstarlet ed --inplace -s "/restcomm/runtime-settings/dns-provisioning/aws-route53" -t elem -n "hosted-zone-id" -v "$DNS_PROVISIONING_AWS_ROUTE53_HOSTED_ZONE_ID" $FILE
+    xmlstarlet ed --inplace -s "/restcomm/runtime-settings/dns-provisioning/aws-route53" -t elem -n "is-alias" -v "$DNS_PROVISIONING_AWS_ROUTE53_IS_ALIAS" $FILE
+
+
+	xmlstarlet ed --inplace -d "/restcomm/runtime-settings/dns-provisioning/aws-route53/alias-target" \
+            -s "/restcomm/runtime-settings/dns-provisioning/aws-route53" -t elem  -n alias-target $FILE
+	xmlstarlet ed --inplace -s "/restcomm/runtime-settings/dns-provisioning/aws-route53/alias-target" -t elem -n "evaluate-target-health" -v "$DNS_PROVISIONING_AWS_ROUTE53_ALIAS_EVALUATE_TARGET_HEALTH" $FILE
+	xmlstarlet ed --inplace -s "/restcomm/runtime-settings/dns-provisioning/aws-route53/alias-target" -t elem -n "hosted-zone-id" -v "$DNS_PROVISIONING_AWS_ROUTE53_ALIAS_HOSTED_ZONE_ID" $FILE
+
 }
 
 # MAIN
@@ -605,7 +722,11 @@ configRestCommURIs
 updateRecordingsPath
 configHypertextPort
 configOutboundProxy
+configPushNotificationServer
 otherRestCommConf
+confRcmlserver
 confRVD
 configRMSNetworking
+configAsrDriver
+configDnsProvisioningManager
 echo 'Configured RestComm!'

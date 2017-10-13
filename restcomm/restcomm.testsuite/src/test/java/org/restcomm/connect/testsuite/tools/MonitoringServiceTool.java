@@ -10,6 +10,8 @@ import com.sun.jersey.api.client.filter.HTTPBasicAuthFilter;
 import org.apache.log4j.Logger;
 
 import javax.ws.rs.core.MediaType;
+import java.util.Map;
+import java.util.concurrent.ConcurrentHashMap;
 
 /**
  * Created by gvagenas on 11/25/15.
@@ -39,13 +41,50 @@ public class MonitoringServiceTool {
         return accountsUrl;
     }
 
-    public JsonObject getMetrics(String deploymentUrl, String username, String authToken) {
+    public JsonObject getLiveCalls(String deploymentUrl, String username, String authToken) {
         Client jerseyClient = Client.create();
         jerseyClient.addFilter(new HTTPBasicAuthFilter(username, authToken));
         String url = getAccountsUrl(deploymentUrl, username);
-        WebResource webResource = jerseyClient.resource(url);
+        WebResource webResource = jerseyClient.resource(url).path("/livecalls");
+
         String response = null;
-        response = webResource.path("/metrics").accept(MediaType.APPLICATION_JSON, MediaType.APPLICATION_XML).get(String.class);
+        response = webResource.accept(MediaType.APPLICATION_JSON, MediaType.APPLICATION_XML).get(String.class);
+        JsonParser parser = new JsonParser();
+        return parser.parse(response).getAsJsonObject();
+    }
+
+    public Map<String, Integer> getMgcpResources(JsonObject metrics) {
+        Integer mgcpEndpoints = metrics.getAsJsonObject("Metrics").get("MgcpEndpoints").getAsInt();
+        Integer mgcpConnections = metrics.getAsJsonObject("Metrics").get("MgcpConnections").getAsInt();
+
+        Map<String, Integer> mgcpResources = new ConcurrentHashMap<String, Integer>();
+
+        mgcpResources.put("MgcpEndpoints", mgcpEndpoints);
+        mgcpResources.put("MgcpConnections", mgcpConnections);
+
+
+        return mgcpResources;
+    }
+
+    public JsonObject getMetrics(String deploymentUrl, String username, String authToken) {
+        return getMetrics(deploymentUrl, username, authToken, true, true);
+    }
+
+    public JsonObject getMetrics(String deploymentUrl, String username, String authToken, boolean callDetails, boolean mgcpStats) {
+        Client jerseyClient = Client.create();
+        jerseyClient.addFilter(new HTTPBasicAuthFilter(username, authToken));
+        String url = getAccountsUrl(deploymentUrl, username);
+        WebResource webResource = jerseyClient.resource(url).path("/metrics");
+
+        if (callDetails) {
+            webResource = webResource.queryParam("LiveCallDetails","true");
+        }
+        if (mgcpStats) {
+            webResource = webResource.queryParam("MgcpStats", "true");
+        }
+
+        String response = null;
+        response = webResource.accept(MediaType.APPLICATION_JSON, MediaType.APPLICATION_XML).get(String.class);
         JsonParser parser = new JsonParser();
         return parser.parse(response).getAsJsonObject();
     }
@@ -66,7 +105,7 @@ public class MonitoringServiceTool {
 
     }
 
-    public int getLiveCalls(String deploymentUrl, String username, String authToken) {
+    public int getStatistics (String deploymentUrl, String username, String authToken) {
         int liveCalls = 0;
         JsonObject jsonObject = getMetrics(deploymentUrl, username, authToken);
 
@@ -81,7 +120,7 @@ public class MonitoringServiceTool {
         return liveCalls;
     }
 
-    public int getLiveIncomingCalls(String deploymentUrl, String username, String authToken) {
+    public int getLiveIncomingCallStatistics (String deploymentUrl, String username, String authToken) {
         int liveIncomingCalls = 0;
         JsonObject jsonObject = getMetrics(deploymentUrl, username, authToken);
 
@@ -96,7 +135,7 @@ public class MonitoringServiceTool {
         return liveIncomingCalls;
     }
 
-    public int getLiveOutgoingCalls(String deploymentUrl, String username, String authToken) {
+    public int getLiveOutgoingCallStatistics (String deploymentUrl, String username, String authToken) {
         int liveOutgoingCalls = 0;
         JsonObject jsonObject = getMetrics(deploymentUrl, username, authToken);
 
@@ -113,7 +152,7 @@ public class MonitoringServiceTool {
 
     public int getLiveCallsArraySize(String deploymentUrl, String username, String authToken) {
         int liveCallsArraySize = 0;
-        JsonObject jsonObject = getMetrics(deploymentUrl, username, authToken);
+        JsonObject jsonObject = getLiveCalls(deploymentUrl, username, authToken);
 
 //        {"InstanceId":"IDbe78ada9dc864b558774ce4432cac866","Version":"7.5.0-SNAPSHOT","Revision":"r35cf44c0589a0aeabd6ae8d1bfab0a9edcd24c1a","Metrics":{"TotalCallsSinceUptime":0,"NoAnswerCalls":0,"LiveOutgoingCalls":0,"OutgoingCallsSinceUptime":0,"IncomingCallsSinceUptime":0,"RegisteredUsers":1,"CompletedCalls":0,"TextMessageOutbound":0,"NotFoundCalls":0,"CanceledCalls":0,"FailedCalls":0,"TextMessageNotFound":0,"TextMessageInboundToApp":0,"LiveCalls":0,"BusyCalls":0,"LiveIncomingCalls":0,"TextMessageInboundToProxyOut":0,"TextMessageInboundToClient":0},"LiveCallDetails":[]}
 

@@ -22,6 +22,7 @@ package org.restcomm.connect.telephony.api;
 import akka.actor.ActorRef;
 
 import org.restcomm.connect.commons.annotations.concurrency.Immutable;
+import org.restcomm.connect.dao.entities.MediaAttributes;
 
 /**
  * @author quintana.thomas@gmail.com (Thomas Quintana)
@@ -29,13 +30,23 @@ import org.restcomm.connect.commons.annotations.concurrency.Immutable;
 @Immutable
 public final class AddParticipant {
     private final ActorRef call;
+    private final MediaAttributes mediaAttributes;
 
     public AddParticipant(final ActorRef call) {
+        this(call, new MediaAttributes());
+    }
+
+    public AddParticipant(final ActorRef call, final MediaAttributes mediaAttributes){
         super();
         this.call = call;
+        this.mediaAttributes = mediaAttributes;
     }
 
     public ActorRef call() {
         return call;
+    }
+
+    public MediaAttributes mediaAttributes(){
+        return mediaAttributes;
     }
 }

@@ -21,6 +21,7 @@ package org.restcomm.connect.telephony.api;
 
 import org.restcomm.connect.commons.annotations.concurrency.Immutable;
 import org.restcomm.connect.commons.dao.Sid;
+import org.restcomm.connect.dao.entities.MediaAttributes;
 
 /**
  * @author quintana.thomas@gmail.com (Thomas Quintana)
@@ -29,13 +30,25 @@ import org.restcomm.connect.commons.dao.Sid;
 public final class StartConference {
 
     private final Sid callSid;
+    private final MediaAttributes mediaAttributes;
 
     public StartConference(final Sid callSid) {
         super();
         this.callSid = callSid;
+        this.mediaAttributes = new MediaAttributes();
+    }
+
+    public StartConference(final Sid callSid, final MediaAttributes mediaAttributes) {
+        super();
+        this.callSid = callSid;
+        this.mediaAttributes = mediaAttributes;
     }
 
     public Sid callSid(){
         return callSid;
+    }
+
+    public MediaAttributes mediaAttributes() {
+        return mediaAttributes;
     }
 }
