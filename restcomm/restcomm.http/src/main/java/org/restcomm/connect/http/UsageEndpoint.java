@@ -95,8 +95,7 @@ public abstract class UsageEndpoint extends SecuredEndpoint {
   protected Response getUsage(final String accountSid, final String subresource, UriInfo info, final MediaType responseType) {
     secure(accountsDao.getAccount(accountSid), "RestComm:Read:Usage");
 
-    String categoryStr = info.getQueryParameters().getFirst("Category");
-    categoryStr = categoryStr.toUpperCase();
+    String categoryStr = info.getQueryParameters().getFirst("Category").toUpperCase();
     String startDateStr = info.getQueryParameters().getFirst("StartDate");
     String endDateStr = info.getQueryParameters().getFirst("EndDate");
     //pass in reqUri without query params
