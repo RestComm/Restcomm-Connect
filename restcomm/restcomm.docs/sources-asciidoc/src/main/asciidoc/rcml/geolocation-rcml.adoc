@@ -25,7 +25,7 @@ The **<Geolocation>** verb supports the following attributes:
 
 
 ●      **deviceIdentifier**. The _‘deviceIdentifier’_ attribute takes a
-valid E.164 phone number, an IP or MAC address as a value. RestComm will
+valid E.164 (MSISDN) or E.212 (IMSI) phone number, an IP or MAC address as a value. RestComm will
 send a location request to this target.
 
 ●      **action**. The _‘action’_ attribute takes a URL as an argument.
