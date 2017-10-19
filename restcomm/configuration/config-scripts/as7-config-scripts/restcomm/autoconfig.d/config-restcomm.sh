@@ -539,6 +539,9 @@ otherRestCommConf(){
 	echo "HTTP_RESPONSE_TIMEOUT $HTTP_RESPONSE_TIMEOUT"
 	sed -e "/<http-client>/ {
 			N
+			N;
+			N;
+			N;
 			N; s|<response-timeout>.*</response-timeout>|<response-timeout>$HTTP_RESPONSE_TIMEOUT</response-timeout>|
 		}" $FILE > $FILE.bak
     mv $FILE.bak $FILE
