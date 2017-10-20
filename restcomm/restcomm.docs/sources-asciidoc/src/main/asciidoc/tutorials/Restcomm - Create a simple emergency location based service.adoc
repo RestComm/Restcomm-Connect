@@ -116,7 +116,7 @@ and *main_simulator2.xml* (only *m3ua* element shown next):
 * On the GUI press the following buttons in this sequence: *Start*, then *Run test* and *Start*.
 * After about 20 seconds you should see that SCTP association is *connected* and M3UA is *active*, like in the following image:
 
-image:./images/911-jSS7-sim-ATI-Server_connected-active.png[911-jSS7-sim-ATI-Server_connected-active,width=680,height=729]
+image:./images/911-jSS7-sim-ATI-Server_connected-active.png[911-jSS7-sim-ATI-Server_connected-active,align=center,width=680,height=729]
 
 
 [[step-3-start-RestcommONE-USSDGateway]]
@@ -127,13 +127,13 @@ Step 3 - Start RestcommONE USSD Gateway in simulator mode
 *sudo ./run.sh -c simulator -Djboss.service.binding.set=ports-02*
 * Go to the USSD phone simulator path (wherever you downloaded it) and start it. The following image should pop up:
 
-image:./images/911_USSD_Phone_Sim_conf.png[USSD_Phone_Sim_conf,align=center,width=380,height=429].
+image:./images/911_USSD_Phone_Sim_conf.png[USSD_Phone_Sim_conf,align=center,width=450,height=380].
 
 
 * Except for the "Phone" parameter (you can set any number there), leave the other parameters like in the above image. Notice that the IP Channel type is set to *SCTP* (again, you need SCTP installed in your OS Linux distribution -Ubuntu, Debian, Red Hat Enterprise Linux, CentOS, Fedora, Mint, etc.-). Also, host and peer ports are left default (we only changed those for GMLC and its jSS7 simulator -would we use SMSC in simulator mode, we should change them too for making three simulators work together in the same machine-).
 * Press *Start* button. After a few seconds the following image should pop up with the cursor blinking:
 
-image:./images/911_call_phone-sim_start.png[USSD_Phone_Sim_started,align=center,width=280,height=329]
+image:./images/911_call_phone-sim_start.png[USSD_Phone_Sim_started,align=center,width=280,height=380]
 
 
 If you wish to use jSS7 simulator instead of the USSD Phone Simulator, proceed as follows:
@@ -365,11 +365,11 @@ Step 5 - Login to Restcomm and build the USSD RVD project
 * Start a USSD project (in this tutorial we will call it "USSD_Emergency_Geolocation").
 * Rename the Welcome module to *Retrieve_CGI* and remove its default content. Drag and drop the "External Service" verb and set the Service Url http://127.0.0.1/Geolocation/geolocation.php. Click on "add service parameter" and set "Name" to "target" and "Value" to "$core_From". Click on "Add assignment" as many times needed so you have the following parameters of scope "application": *cid*, *lac*, *mcc*, *mnc*, *mscvlrOrSgsnOrMme* and *loc_age_mins* whose values come from *cell_id*, *location_area_code*, *mobile_country_code*, *mobile_network_code*, *network_entity_address* and *location_age* respectively. On making a route decision, mark it as *fixed* to Continue to the *Get_GCI_Coordinates* module. Optionally, on "Remote error" set *Loc_Error* module and on "On timeout" set *Loc_Timeout* modules (recommended). At the end, the module should look like the following image:
 
-image:./images/911_RVD_Retrieve_CGI_module.png[USSD_RVD_Retrieve_GCI,width=680,height=729]
+image:./images/911_RVD_Retrieve_CGI_module.png[USSD_RVD_Retrieve_GCI,align=center,width=680,height=729]
 
 * Add a new module named *Get_CGI_Coordinates*. Drag and drop the "External Service" verb and set the Service Url http://127.0.0.1/Geolocation/convertCGItoCoordinates.php. Click four times on "add service parameter" and set "Name" to "cid", "lac", "mcc" and "mnc", while "Value" respectively to "$cid", "$lac", "$mcc" and "$mnc". Click on "Add assignment" two times needed so you have the following parameters of scope "application": *cell_lat*, *cell_long* whose values come from *cell_latitude* and *cell_longitude* respectively. On making a route decision, mark it as *fixed* to Continue to the *Menu* module. Optionally, on "Remote error" set *Loc_Error* module and on "On timeout" set *Loc_Timeout* modules (recommended). At the end, the module should look like the following image:
 
-image:./images/911_RVD_Get_CGI_Coordinates_module.png[USSD_RVD_Get_Cordinates,width=680,height=729]
+image:./images/911_RVD_Get_CGI_Coordinates_module.png[USSD_RVD_Get_Cordinates,align=center,width=680,height=800]
 
 * Add a new module named *Menu*. Drag and drop a "USSD Collect" verb. Place the following USSD messages in three different lines (so it appears like that in the user's handset): "Welcome to Restcomm. We have detected your location.", "Are you in an emergency situation?" and "Press 1 for NO, press 2 for YES". Set Menu option "1" to Continue to *Out* module, while option "2" to Continue to *Send_SMS* module.
 
@@ -377,7 +377,7 @@ image:./images/911_RVD_Get_CGI_Coordinates_module.png[USSD_RVD_Get_Cordinates,wi
 
 * Add a new module named *Send_SMS*. Drag and drop the "External Service" verb and set the Service Url http://127.0.0.1/Geolocation/send_sms_thru_api.php. Click seven times on "add service parameter" and set "Name" to "sms_destination", "sms_origin", "originator", "cid", "lac", "c_lat" and "c_long" while "Value" respectively to "5555" (the PSAP number), "911", "$core_From" "$cid", "$lac", "$cell_lat" and "$cell_long". No "Add assignment" will be done, as the external service isn't meant to return any value back to the application but send an SMS through the SMS API. On making a route decision, mark it as *fixed* to Continue to the *USSD_End* module. Optionally, on "Remote error" set *SMS_Error* module and on "On timeout" set *SMS_Timeout* modules (recommended). At the end, the module should look like the following image:
 
-image:./images/911_RVD_Send_SMS_module.png[USSD_RVD_Send_SMS,width=680,height=729]
+image:./images/911_RVD_Send_SMS_module.png[USSD_RVD_Send_SMS,align=center,width=680,height=729]
 
 * Add four modules named *Loc_Error*, *Loc_Timeout*, *SMS_Error* and *SMS_Timeout*. You are free to choose either to send an ending message by drag and drop a "USSD Message" verb or let the user try again by drag and drop a "USSD Collect" verb giving the user the ability to start all over and attempt another location service, therefore you should Continue to the welcome module *Retrieve_CGI*. For example, if you chose the latter option, *Loc_Error* could look like the following image:
 
@@ -385,7 +385,7 @@ image:./images/911_RVD_Loc_Error_module.png[USSD_RVD_Loc_Error,width=680,height=
 
 The RVD project is then built. A nice way to check how it's setup is graphically by clicking on diagram. You should then see something similar to the following image:
 
-image:./images/911_RVD_USSD_SOS_Geolocation_diagram.png[USSD_RVD_SOS_Geolocation_diagrama,width=680,height=729]
+image:./images/911_RVD_USSD_SOS_Geolocation_diagram.png[USSD_RVD_SOS_Geolocation_diagram,align=center,width=680,height=729]
 
 
 [[step-6-RegisterNumber]]
@@ -394,7 +394,7 @@ Step 6 - Register a SIP Number and assign it to the USSD RVD project
 
 * Go to http://127.0.0.1:8080/#/numbers/incoming by clicking on *Numbers* on RestcommONE-Connect console or dashboard and click on *+Register number*. Set *Number* to +++*911#+++ and *Friendly Name* to "USSD SOS Location" (or whatever you like as friendly name). Then assign *USSD_Emergency_Geolocation* as *RVD Application* in *USSD Request* section under *USSD*. In the end it should look like next:
 
-image:./images/911_USSD_SIP_number.png[USSD_SIP_Num_App,width=680,height=729]
+image:./images/911_USSD_SIP_number.png[USSD_SIP_Num_App,align=center,width=680,height=500]
 
 Click on *Save Changes* and verify the new +++*911#+++ is correctly added and set to the desired *USSD_Emergency_Geolocation* application (*Features* column) at http://127.0.0.1:8080/#/numbers/incoming. 
 
@@ -405,7 +405,7 @@ Step 7 - Create the corresponding routing rule in RestcommONE USSD Gateway
 
 * Go to http://127.0.0.1:8280/ussd-management/# (admin/admin) and in *Routing Rule* click on *+Create rule* and "Short Code" to +++*911#+++, "Type" to *SIP*, "URL or SIP Proxy" to *127.0.0.1:5060* and click on "Create" (leaving on default values both "Network Id" and "Exact match"). At the end you should see the *Routing Rule" created like in the image below:
 
-image:./images/911_USSDgw_Routing_Rule.png[USSD_Routing_Rule,width=680,height=729]
+image:./images/911_USSDgw_Routing_Rule.png[USSD_Routing_Rule,align=center,width=730,height=550]
 
 [[step-8-SetJitsi]]
 Step 8 - Start and configure SIP Phone
@@ -421,11 +421,11 @@ Step 9 - Test the emergency location based service triggered by USSD
 
 * Go to the USSD Phone simulator, dial +++*911#+++ and click call like in the image below:
 
-image:./images/911_call_phone-sim.png[USSD_Phone_Sim_dial,align=center,width=280,height=329]
+image:./images/911_call_phone-sim.png[USSD_Phone_Sim_dial,align=center,width=280,height=360]
 
 After receiving the USSD request and started the correspondent RVD project logic, RestcommONE-Connect sent the MAP ATI request to the GMLC via the Restcomm Geolocation API, which reached the jSS7 simulator. The latter, responds with a GCI value, which in JSON is formatted to the following by the script *geolocation.php*: {"cell_id":"221","location_area_code":"32000","mobile_country_code":250,"mobile_network_code":"1","network_entity_address":5555555666,"location_age":5} and stored in the correspondent RVD application variables after the first external service execution. MAP ATI can be seen received and answered back in the jSS7 simulator like in the image snapshot:
 
-image:./images/911_jSS7-sim-ATI-Server_ATI_resp.png[jSS7-sim_MAP-ATI,width=680,height=729]
+image:./images/911_jSS7-sim-ATI-Server_ATI_resp.png[jSS7-sim_MAP-ATI,align=center,width=680,height=729]
 
 * GCI information is converted to geographic coordinates after the MySQL query performed by *convertCGItoCoordinates.php* as per the RVD project logic.
 
@@ -437,7 +437,7 @@ image:./images/911_menu_phone-sim_menu.png[USSD_Phone_Sim_Menu,align=center,widt
 
 * At this point, the RVD project logic follows by sending an SMS to the PSAP via the SMS API (through the external service call to *send_sms_thru_api.php* in the *Send_SMS" RVD module), which results to be the registrarless SIP account 5555 residing in Jitsi. Then you will see the message arriving to Jitsi acting as PSAP, like in the image below:
 
-image:./images/911_jitsi_sms.png[Jitsi_SMS,align=center,width=280,height=329]
+image:./images/911_jitsi_sms.png[Jitsi_SMS,align=center,width=300,height=450]
 
 As you can see, the SMS received at Jitsi's account 5555 from 911 corresponds to the service logic, informing that the initiator number (in this case, identified by the number "86399413") is requesting help and is located in the geographic coordinates of the correspondent CGI (as stored in the database).
 
