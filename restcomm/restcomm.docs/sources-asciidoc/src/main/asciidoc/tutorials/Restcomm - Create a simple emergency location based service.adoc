@@ -127,7 +127,7 @@ Step 3 - Start RestcommONE USSD Gateway in simulator mode
 *sudo ./run.sh -c simulator -Djboss.service.binding.set=ports-02*
 * Go to the USSD phone simulator path (wherever you downloaded it) and start it. The following image should pop up:
 
-image:./images/911_USSD_Phone_Sim_conf.png[USSD_Phone_Sim_conf,align=center,width=450,height=380].
+image:./images/911_USSD_Phone_Sim_conf.png[USSD_Phone_Sim_conf,align=center,width=450,height=350].
 
 
 * Except for the "Phone" parameter (you can set any number there), leave the other parameters like in the above image. Notice that the IP Channel type is set to *SCTP* (again, you need SCTP installed in your OS Linux distribution -Ubuntu, Debian, Red Hat Enterprise Linux, CentOS, Fedora, Mint, etc.-). Also, host and peer ports are left default (we only changed those for GMLC and its jSS7 simulator -would we use SMSC in simulator mode, we should change them too for making three simulators work together in the same machine-).
@@ -369,7 +369,7 @@ image:./images/911_RVD_Retrieve_CGI_module.png[USSD_RVD_Retrieve_GCI,align=cente
 
 * Add a new module named *Get_CGI_Coordinates*. Drag and drop the "External Service" verb and set the Service Url http://127.0.0.1/Geolocation/convertCGItoCoordinates.php. Click four times on "add service parameter" and set "Name" to "cid", "lac", "mcc" and "mnc", while "Value" respectively to "$cid", "$lac", "$mcc" and "$mnc". Click on "Add assignment" two times needed so you have the following parameters of scope "application": *cell_lat*, *cell_long* whose values come from *cell_latitude* and *cell_longitude* respectively. On making a route decision, mark it as *fixed* to Continue to the *Menu* module. Optionally, on "Remote error" set *Loc_Error* module and on "On timeout" set *Loc_Timeout* modules (recommended). At the end, the module should look like the following image:
 
-image:./images/911_RVD_Get_CGI_Coordinates_module.png[USSD_RVD_Get_Cordinates,align=center,width=680,height=800]
+image:./images/911_RVD_Get_CGI_Coordinates_module.png[USSD_RVD_Get_Cordinates,align=center,width=680,height=630]
 
 * Add a new module named *Menu*. Drag and drop a "USSD Collect" verb. Place the following USSD messages in three different lines (so it appears like that in the user's handset): "Welcome to Restcomm. We have detected your location.", "Are you in an emergency situation?" and "Press 1 for NO, press 2 for YES". Set Menu option "1" to Continue to *Out* module, while option "2" to Continue to *Send_SMS* module.
 
@@ -381,11 +381,11 @@ image:./images/911_RVD_Send_SMS_module.png[USSD_RVD_Send_SMS,align=center,width=
 
 * Add four modules named *Loc_Error*, *Loc_Timeout*, *SMS_Error* and *SMS_Timeout*. You are free to choose either to send an ending message by drag and drop a "USSD Message" verb or let the user try again by drag and drop a "USSD Collect" verb giving the user the ability to start all over and attempt another location service, therefore you should Continue to the welcome module *Retrieve_CGI*. For example, if you chose the latter option, *Loc_Error* could look like the following image:
 
-image:./images/911_RVD_Loc_Error_module.png[USSD_RVD_Loc_Error,width=680,height=729]
+image:./images/911_RVD_Loc_Error_module.png[USSD_RVD_Loc_Error,width=680,height=550]
 
 The RVD project is then built. A nice way to check how it's setup is graphically by clicking on diagram. You should then see something similar to the following image:
 
-image:./images/911_RVD_USSD_SOS_Geolocation_diagram.png[USSD_RVD_SOS_Geolocation_diagram,align=center,width=680,height=729]
+image:./images/911_RVD_USSD_SOS_Geolocation_diagram.png[USSD_RVD_SOS_Geolocation_diagram,align=center,width=750,height=600]
 
 
 [[step-6-RegisterNumber]]
@@ -405,7 +405,7 @@ Step 7 - Create the corresponding routing rule in RestcommONE USSD Gateway
 
 * Go to http://127.0.0.1:8280/ussd-management/# (admin/admin) and in *Routing Rule* click on *+Create rule* and "Short Code" to +++*911#+++, "Type" to *SIP*, "URL or SIP Proxy" to *127.0.0.1:5060* and click on "Create" (leaving on default values both "Network Id" and "Exact match"). At the end you should see the *Routing Rule" created like in the image below:
 
-image:./images/911_USSDgw_Routing_Rule.png[USSD_Routing_Rule,align=center,width=730,height=550]
+image:./images/911_USSDgw_Routing_Rule.png[USSD_Routing_Rule,align=center,width=850,height=550]
 
 [[step-8-SetJitsi]]
 Step 8 - Start and configure SIP Phone
