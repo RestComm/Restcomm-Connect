@@ -96,6 +96,9 @@ public abstract class UsageEndpoint extends SecuredEndpoint {
     secure(accountsDao.getAccount(accountSid), "RestComm:Read:Usage");
 
     String categoryStr = info.getQueryParameters().getFirst("Category");
+    if (categoryStr != null) {
+      categoryStr = categoryStr.toUpperCase();
+    }
     String startDateStr = info.getQueryParameters().getFirst("StartDate");
     String endDateStr = info.getQueryParameters().getFirst("EndDate");
     //pass in reqUri without query params
