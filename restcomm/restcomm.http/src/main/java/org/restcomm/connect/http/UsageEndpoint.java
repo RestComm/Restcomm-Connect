@@ -97,14 +97,14 @@ public abstract class UsageEndpoint extends SecuredEndpoint {
 
     String categoryStr = info.getQueryParameters().getFirst("Category");
     if (categoryStr != null) {
-      categoryStr = categoryStr.toUpperCase();
+      categoryStr = categoryStr.toLowerCase();
     }
     String startDateStr = info.getQueryParameters().getFirst("StartDate");
     String endDateStr = info.getQueryParameters().getFirst("EndDate");
     //pass in reqUri without query params
     String reqUri = request.getServletPath() + "/" + info.getPath(false);
 
-    Usage.Category category = categoryStr != null ? Usage.Category.valueOf(categoryStr) : null;
+    Usage.Category category = categoryStr != null ? Usage.Category.getCategoryValue(categoryStr) : null;
     DateTime startDate = new DateTime(0).withTimeAtStartOfDay();
     if (startDateStr != null) {
       try {
