@@ -582,7 +582,8 @@
 		<use-hostname-to-resolve-relative-url>true</use-hostname-to-resolve-relative-url>
 		<!-- Optionally provide the hostname to be used, otherwise Java will try to get the hostname of the machine JVM is running -->
 		<hostname></hostname>
-		<!-- HTTP Connection Pooling configuration -set to default/example values for now, commented-
+		<!-- HTTP Connection Pooling configuration -set to default/example values for now, commented- -->
+		<!--
 		<connection-request-timeout>2000</connection-request-timeout>
 		<max-conn-total>200</max-conn-total>
 		<max-conn-per-route>2</max-conn-per-route>
