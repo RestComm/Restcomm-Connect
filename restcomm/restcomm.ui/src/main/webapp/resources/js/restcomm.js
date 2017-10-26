@@ -13,7 +13,8 @@ var rcMod = angular.module('rcApp', [
   'ngPasswordStrength',
   'nvd3',
   'ngSanitize',
-  'ui.router'
+  'ui.router',
+  'ui.carousel'
 ]);
 
 // For all states that that have resolve sections that rely on a determined authorization status (AuthService.checkAccess()) and are children of 'restcomm' state, the 'authorize' value should be injected in the dependent 'resolve' values. See state 'restcomm.incoming-phone / localApps'.
@@ -94,6 +95,11 @@ rcMod.config(['$stateProvider','$urlRouterProvider', function($stateProvider, $u
             return IdentityConfig.getIdentity();
         }
     }
+  });
+  $stateProvider.state('restcomm.home',{
+    url:'/home',
+    templateUrl:'modules/home.html',
+    controller: 'DashboardCtrl'
   });
   $stateProvider.state('restcomm.dashboard',{
     url:'/dashboard',
