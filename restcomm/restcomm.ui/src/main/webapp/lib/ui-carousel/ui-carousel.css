@@ -1,0 +1,132 @@
+.v-middle, .ui-carousel .carousel-btn {
+  display: block;
+  position: absolute;
+  top: 50%;
+  -webkit-transform: translate(0, -50%);
+  -ms-transform: translate(0, -50%);
+  -o-transform: translate(0, -50%);
+  transform: translate(0, -50%); }
+
+@font-face {
+  font-family: "ui-carousel";
+  src: url("fonts/ui-carousel.eot");
+  src: url("fonts/ui-carousel.eot?#iefix") format("embedded-opentype"), url("fonts/ui-carousel.woff") format("woff"), url("fonts/ui-carousel.ttf") format("truetype"), url("fonts/ui-carousel.svg#ui-carousel") format("svg");
+  font-weight: normal;
+  font-style: normal; }
+
+[data-icon]:before {
+  font-family: "ui-carousel" !important;
+  content: attr(data-icon);
+  font-style: normal !important;
+  font-weight: normal !important;
+  font-variant: normal !important;
+  text-transform: none !important;
+  speak: none;
+  line-height: 1;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale; }
+
+[class^="ui-icon-"]:before,
+[class*=" ui-icon-"]:before {
+  font-family: "ui-carousel" !important;
+  font-style: normal !important;
+  font-weight: normal !important;
+  font-variant: normal !important;
+  text-transform: none !important;
+  speak: none;
+  line-height: 1;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale; }
+
+.ui-icon-prev:before {
+  content: "\61"; }
+
+.ui-icon-next:before {
+  content: "\62"; }
+
+.ui-icon-dot:before {
+  content: "\63"; }
+
+.ui-carousel {
+  display: block;
+  margin-bottom: 30px; }
+  .ui-carousel .carousel-wrapper {
+    position: relative; }
+  .ui-carousel .track-wrapper {
+    position: relative;
+    display: block;
+    overflow: hidden;
+    margin: 0;
+    padding: 0; }
+  .ui-carousel .track {
+    position: relative;
+    display: block;
+    float: left; }
+  .ui-carousel .slide {
+    float: left;
+    height: 100%;
+    min-height: 1px; }
+  .ui-carousel .carousel-btn {
+    position: absolute;
+    z-index: 10;
+    background-color: transparent;
+    outline: none;
+    border: none;
+    font-size: 20px;
+    opacity: .75; }
+    .ui-carousel .carousel-btn:hover {
+      opacity: 1; }
+  .ui-carousel .carousel-prev .carousel-btn {
+    left: -25px; }
+  .ui-carousel .carousel-next .carousel-btn {
+    right: -25px; }
+  .ui-carousel .carousel-disable {
+    opacity: 0.5; }
+    .ui-carousel .carousel-disable .carousel-btn:hover {
+      opacity: .75; }
+
+.carousel-dots {
+  position: absolute;
+  bottom: -30px;
+  display: block;
+  width: 100%;
+  padding: 0;
+  margin: 0;
+  list-style: none;
+  text-align: center; }
+  .carousel-dots li {
+    position: relative;
+    display: inline-block;
+    width: 15px;
+    height: 15px;
+    margin: 0 5px;
+    padding: 0;
+    cursor: pointer; }
+    .carousel-dots li button {
+      font-size: 0;
+      line-height: 0;
+      display: block;
+      width: 15px;
+      height: 15px;
+      padding: 5px;
+      cursor: pointer;
+      color: transparent;
+      border: 0;
+      outline: none;
+      background: transparent; }
+      .carousel-dots li button:before {
+        font-family: ui-carousel;
+        font-size: 9px;
+        line-height: 15px;
+        position: absolute;
+        top: 0px;
+        left: 0px;
+        width: 15px;
+        height: 15px;
+        content: "\63";
+        text-align: center;
+        opacity: 0.25;
+        color: black;
+        -webkit-font-smoothing: antialiased; }
+    .carousel-dots li.carousel-active button:before {
+      opacity: .75; }

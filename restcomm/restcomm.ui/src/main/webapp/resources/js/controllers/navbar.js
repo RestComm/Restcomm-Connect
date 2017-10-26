@@ -9,6 +9,10 @@ rcMod.controller('UserMenuCtrl', function($scope, $http, $resource, $rootScope, 
     $rootScope.location = $location.path();
   });
 
+  $rootScope.goTo = function (path) {
+    $location.path(path);
+  };
+
   //$scope.auth = AuthService;
   //$scope.sid = SessionService.get('sid');
   $scope.friendlyName = AuthService.getFrientlyName();
@@ -77,18 +81,18 @@ rcMod.controller('UserMenuCtrl', function($scope, $http, $resource, $rootScope, 
 });
 
 rcMod.controller('SubAccountsCtrl', function($scope, $resource, $stateParams, RCommAccounts,Notifications) {
-	$scope.predicate = 'name';  
+	$scope.predicate = 'name';
     $scope.reverse = false;
     $scope.search = {};
-    $scope.currentPage = 1;  
+    $scope.currentPage = 1;
      $scope.maxSize = 5; //pagination max size
     $scope.entryLimit = 10; //max rows for data table
-     $scope.order = function (predicate) {  
-    $scope.reverse = ($scope.predicate === predicate) ? !$scope.reverse : false;  
-     $scope.predicate = predicate; 
+     $scope.order = function (predicate) {
+    $scope.reverse = ($scope.predicate === predicate) ? !$scope.reverse : false;
+     $scope.predicate = predicate;
     };
     $scope.statusFilter = 'Any';
-  
+
     var subAccountsList = RCommAccounts.query(function(list) {
 		// remove logged (parent) account from the list
 		var i = 0;
@@ -101,18 +105,18 @@ rcMod.controller('SubAccountsCtrl', function($scope, $resource, $stateParams, RC
       $scope.subAccountsList = list;
       $scope.totalItems = list.length;
     });;
-    
+
     $scope.setEntryLimit = function(limit) {
         $scope.entryLimit = limit;
         $scope.numPerPage = Math.ceil($scope.subAccountsList.length / $scope.entryLimit);
-      }; 
-  
-    $scope.paginate = function (value) {  
-      var begin, end, index;  
-      begin = ($scope.currentPage - 1) * $scope.entryLimit;  
-      end = begin + $scope.entryLimit;  
-      index = $scope.subAccountsList.indexOf(value);  
-      return (begin <= index && index < end);  
+      };
+
+    $scope.paginate = function (value) {
+      var begin, end, index;
+      begin = ($scope.currentPage - 1) * $scope.entryLimit;
+      end = begin + $scope.entryLimit;
+      index = $scope.subAccountsList.indexOf(value);
+      return (begin <= index && index < end);
     };
 
     $scope.$watch('statusFilter', function (value) {
@@ -121,7 +125,7 @@ rcMod.controller('SubAccountsCtrl', function($scope, $resource, $stateParams, RC
         else
             $scope.search.status = value.toLowerCase();
     });
-  }); 
+  });
 
 
 
@@ -236,7 +240,7 @@ var RegisterAccountModalCtrl = function ($scope, $uibModalInstance, RCommAccount
       Notifications.error('Required fields are missing.');
     }
   };
-  
+
   $scope.cancel = function () {
     $uibModalInstance.dismiss('cancel');
   };

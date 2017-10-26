@@ -58,8 +58,9 @@ rcMod.controller('ClientsCtrl', function($scope, $resource, $uibModal, $dialog, 
 
 rcMod.controller('ClientDetailsCtrl', function ($scope, $stateParams, $location, $dialog, $uibModalInstance, SessionService, RCommClients, RCommApps, Notifications, localApps, Applications) {
 
-	$scope.localApps = Applications.filterByKind(localApps,'voice');
-  // are we editing details...
+  $scope.localApps = Applications.filterByKind(localApps,'voice');
+
+    // are we editing details...
   if($scope.clientSid = $stateParams.clientSid) {
     $scope.sid = SessionService.get("sid");
 
@@ -95,6 +96,9 @@ rcMod.controller('ClientDetailsCtrl', function ($scope, $stateParams, $location,
     if (client.friendly_name) {
       params["FriendlyName"] = client.friendly_name;
     }
+
+    params["Status"] = client.status;
+
     // Always send, value consistency controlled by actions performed by user
     params["VoiceApplicationSid"] = client.voice_application_sid;
     params["VoiceUrl"] = client.voice_url;
