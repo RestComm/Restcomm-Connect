@@ -112,23 +112,23 @@ configDidProvisionManager() {
         sed -e "s|phone-number-provisioning class=\".*\"|phone-number-provisioning class=\"org.restcomm.connect.provisioning.number.vi.VoIPInnovationsNumberProvisioningManager\"|" $FILE > $FILE.bak
 
         sed -e "/<voip-innovations>/ {
-            N; s|<login>.*</login>|<login>$1</login>|
-            N; s|<password>.*</password>|<password>$2</password>|
-            N; s|<endpoint>.*</endpoint>|<endpoint>$3</endpoint>|
+            N; s/<login>.*<\/login>/<login>$1<\/login>/g;s/<login\/>/<login>$1<\/login>/g
+            N; s/<password>.*<\/password>/<password>$2<\/password>/g;s/<password\/>/<password>$2<\/password>/g
+            N; s/<endpoint>.*<\/endpoint>/<endpoint>$3<\/endpoint>/g;s/<endpoint\/>/<endpoint>$3<\/endpoint>/g
         }" $FILE.bak > $FILE
-        sed -i "s|<outboudproxy-user-at-from-header>.*<\/outboudproxy-user-at-from-header>|<outboudproxy-user-at-from-header>"false"<\/outboudproxy-user-at-from-header>|" $FILE
+        sed -i "s/<outboudproxy-user-at-from-header>.*<\/outboudproxy-user-at-from-header>/<outboudproxy-user-at-from-header>"false"<\/outboudproxy-user-at-from-header>/g;s/<outboudproxy-user-at-from-header\/>/<outboudproxy-user-at-from-header>"false"<\/outboudproxy-user-at-from-header>/g" $FILE
         echo 'Configured Voip Innovation credentials'
     else
         if [[ "$PROVISION_PROVIDER" == "BW" || "$PROVISION_PROVIDER" == "bw" ]]; then
         sed -e "s|phone-number-provisioning class=\".*\"|phone-number-provisioning class=\"org.restcomm.connect.provisioning.number.bandwidth.BandwidthNumberProvisioningManager\"|" $FILE > $FILE.bak
 
         sed -e "/<bandwidth>/ {
-            N; s|<username>.*</username>|<username>$1</username>|
-            N; s|<password>.*</password>|<password>$2</password>|
-            N; s|<accountId>.*</accountId>|<accountId>$6</accountId>|
-            N; s|<siteId>.*</siteId>|<siteId>$4</siteId>|
+        	N; s/<username>.*<\/username>/<username>$1<\/username>/g;s/<username\/>/<username>$1<\/username>/g
+            N; s/<password>.*<\/password>/<password>$2<\/password>/g;s/<password\/>/<password>$2<\/password>/g
+            N; s/<accountId>.*<\/accountId>/<accountId>$6<\/accountId>/g;s/<accountId\/>/<accountId>$6<\/accountId>/g
+            N; s/<siteId>.*<\/siteId>/<siteId>$4<\/siteId>/g;s/<siteId\/>/<siteId>$4<\/siteId>/g
         }" $FILE.bak > $FILE
-        sed -i "s|<outboudproxy-user-at-from-header>.*<\/outboudproxy-user-at-from-header>|<outboudproxy-user-at-from-header>"false"<\/outboudproxy-user-at-from-header>|" $FILE
+        sed -i "s/<outboudproxy-user-at-from-header>.*<\/outboudproxy-user-at-from-header>/<outboudproxy-user-at-from-header>"false"<\/outboudproxy-user-at-from-header>/g;s/<outboudproxy-user-at-from-header\/>/<outboudproxy-user-at-from-header>"false"<\/outboudproxy-user-at-from-header>/g" $FILE
         echo 'Configured Bandwidth credentials'
         else
             if [[ "$PROVISION_PROVIDER" == "NX" || "$PROVISION_PROVIDER" == "nx" ]]; then
@@ -143,13 +143,13 @@ configDidProvisionManager() {
                 }" $FILE
 
                 sed -i "/<nexmo>/ {
-                    N; s|<api-key>.*</api-key>|<api-key>$1</api-key>|
-                    N; s|<api-secret>.*</api-secret>|<api-secret>$2</api-secret>|
+                    N; s/<api-key>.*<\/api-key>/<api-key>$1<\/api-key>/g;s/<api-key\/>/<api-key>$1<\/api-key>/g
+                    N; s/<api-secret>.*<\/api-secret>/<api-secret>$2<\/api-secret>/g;s/<api-secret\/>/<api-secret>$2<\/api-secret>/g
                     N
-                    N; s|<smpp-system-type>.*</smpp-system-type>|<smpp-system-type>$7</smpp-system-type>|
+                    N; s/<smpp-system-type>.*<\/smpp-system-type>/<smpp-system-type>$7<\/smpp-system-type>/g;s/<smpp-system-type\/>/<smpp-system-type>$7<\/smpp-system-type>/g;
                 }" $FILE
 
-                sed -i "s|<outboudproxy-user-at-from-header>.*<\/outboudproxy-user-at-from-header>|<outboudproxy-user-at-from-header>"true"<\/outboudproxy-user-at-from-header>|" $FILE
+                sed -i"." "s/<outboudproxy-user-at-from-header>.*<\/outboudproxy-user-at-from-header>/<outboudproxy-user-at-from-header>"true"<\/outboudproxy-user-at-from-header>/g;s/<outboudproxy-user-at-from-header\/>/<outboudproxy-user-at-from-header>"true"<\/outboudproxy-user-at-from-header>/g" $FILE
 
             else
                 if [[ "$PROVISION_PROVIDER" == "VB" || "$PROVISION_PROVIDER" == "vb" ]]; then
@@ -163,11 +163,11 @@ configDidProvisionManager() {
                     N; s|<ussd url=\".*\" method=\".*\" />|<ussd url=\"\+\{E164\}\@$5:$8\" method=\"SIP\" />|
                 }" $FILE
 
-                sed -i "/<voxbone>/ {
-                    N; s|<username>.*</username>|<username>$1</username>|
-                    N; s|<password>.*</password>|<password>$2</password>|
+                sed -i"." "/<voxbone>/ {
+                    N; s/<username>.*<\/username>/<username>$1<\/username>/g;s/<username\/>/<username>$1<\/username>/g
+                    N; s/<password>.*<\/password>/<password>$2<\/password>/g;s/<password\/>/<password>$2<\/password>/g
                 }" $FILE
-                sed -i "s|<outboudproxy-user-at-from-header>.*<\/outboudproxy-user-at-from-header>|<outboudproxy-user-at-from-header>"false"<\/outboudproxy-user-at-from-header>|" $FILE
+                sed -i"." "s/<outboudproxy-user-at-from-header>.*<\/outboudproxy-user-at-from-header>/<outboudproxy-user-at-from-header>"false"<\/outboudproxy-user-at-from-header>/g;s/<outboudproxy-user-at-from-header\/>/<outboudproxy-user-at-from-header>"false"<\/outboudproxy-user-at-from-header>/g" $FILE
 
                 fi
             fi
