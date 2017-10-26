@@ -33,7 +33,7 @@ configRestcomm() {
 	static_address="$1"
 
 	sed -e  "s|<\!--.*<external-ip>.*<\/external-ip>.*-->|<external-ip>$static_address<\/external-ip>|" \
-		-e "s|<external-ip>.*<\/external-ip>|<external-ip>$static_address<\/external-ip>|" \
+		-e "s/<external-ip>.*<\/external-ip>/<external-ip>$static_address<\/external-ip>/g;s/<external-ip\/>/<external-ip>$static_address<\/external-ip>/g" \
 		 $FILE > $FILE.bak;
 
 	mv $FILE.bak $FILE
@@ -41,17 +41,17 @@ configRestcomm() {
 
     #If "STRICT" no self-signed certificate is permitted.
 	if [ "$SSL_MODE" == "strict" ] || [ "$SSL_MODE" == "STRICT" ]; then
-		sed -e "s/<ssl-mode>.*<\/ssl-mode>/<ssl-mode>strict<\/ssl-mode>/" $FILE > $FILE.bak
+		sed -e "s/<ssl-mode>.*<\/ssl-mode>/<ssl-mode>strict<\/ssl-mode>/g;s/<ssl-mode\/>/<ssl-mode>strict<\/ssl-mode>/g" $FILE > $FILE.bak
 		mv $FILE.bak $FILE
 	else
-		sed -e "s/<ssl-mode>.*<\/ssl-mode>/<ssl-mode>allowall<\/ssl-mode>/" $FILE > $FILE.bak
+		sed -e "s/<ssl-mode>.*<\/ssl-mode>/<ssl-mode>allowall<\/ssl-mode>/g;s/<ssl-mode\/>/<ssl-mode>allowall<\/ssl-mode>/g" $FILE > $FILE.bak
 		mv $FILE.bak $FILE
 	fi
 
 	#Configure RESTCOMM_HOSTNAME at restcomm.xml. If not set "STATIC_ADDRESS" will be used.
 	if [ -n "$RESTCOMM_HOSTNAME" ]; then
   		echo "HOSTNAME $RESTCOMM_HOSTNAME"
-  		sed -i "s|<hostname>.*<\/hostname>|<hostname>${RESTCOMM_HOSTNAME}<\/hostname>|" $RESTCOMM_DEPLOY/WEB-INF/conf/restcomm.xml
+  		sed -i "s/<hostname>.*<\/hostname>/<hostname>${RESTCOMM_HOSTNAME}<\/hostname>/g;s/<hostname\/>/<hostname>${RESTCOMM_HOSTNAME}<\/hostname>/g" $FILE
 
 	if ! grep "${BIND_ADDRESS}.*${RESTCOMM_HOSTNAME}" /etc/hosts ; then
         if hash host 2>/dev/null; then
@@ -65,16 +65,16 @@ configRestcomm() {
          fi
 fi
 	else
-  		sed -i "s|<hostname>.*<\/hostname>|<hostname>${PUBLIC_IP}<\/hostname>|" $RESTCOMM_DEPLOY/WEB-INF/conf/restcomm.xml
+  		sed -i "s/<hostname>.*<\/hostname>/<hostname>${PUBLIC_IP}<\/hostname>/g;s/<hostname\/>/<hostname>${PUBLIC_IP}<\/hostname>/g" $FILE
  	fi
 }
 ## Description: OutBoundProxy configuration.
 configOutboundProxy(){
     echo "Configure outbound-proxy"
     FILE=$RESTCOMM_DEPLOY/WEB-INF/conf/restcomm.xml
-    sed -e "s|<outbound-proxy-uri>.*<\/outbound-proxy-uri>|<outbound-proxy-uri>$OUTBOUND_PROXY<\/outbound-proxy-uri>|" \
-	-e "s|<outbound-proxy-user>.*<\/outbound-proxy-user>|<outbound-proxy-user>$OUTBOUND_PROXY_USERNAME<\/outbound-proxy-user>|"  \
-	-e "s|<outbound-proxy-password>.*<\/outbound-proxy-password>|<outbound-proxy-password>$OUTBOUND_PROXY_PASSWORD<\/outbound-proxy-password>|" $FILE > $FILE.bak;
+    sed -e "s/<outbound-proxy-uri>.*<\/outbound-proxy-uri>/<outbound-proxy-uri>$OUTBOUND_PROXY<\/outbound-proxy-uri>/g;s/<outbound-proxy-uri\/>/<outbound-proxy-uri>$OUTBOUND_PROXY<\/outbound-proxy-uri>/g" \
+	-e "s/<outbound-proxy-user>.*<\/outbound-proxy-user>/<outbound-proxy-user>$OUTBOUND_PROXY_USERNAME<\/outbound-proxy-user>/g;s/<outbound-proxy-user\/>/<outbound-proxy-user>$OUTBOUND_PROXY_USERNAME<\/outbound-proxy-user>/g;"  \
+	-e "s/<outbound-proxy-password>.*<\/outbound-proxy-password>/<outbound-proxy-password>$OUTBOUND_PROXY_PASSWORD<\/outbound-proxy-password>/g;s/<outbound-proxy-password\/>/<outbound-proxy-password>$OUTBOUND_PROXY_PASSWORD<\/outbound-proxy-password>/g" $FILE > $FILE.bak;
 	mv $FILE.bak $FILE
 }
 ## Description: Push notification server configuration.
