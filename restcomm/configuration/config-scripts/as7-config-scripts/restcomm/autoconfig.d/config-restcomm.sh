@@ -94,9 +94,9 @@ configVoipInnovations() {
 	FILE=$RESTCOMM_DEPLOY/WEB-INF/conf/restcomm.xml
 
 	sed -e "/<voip-innovations>/ {
-		N; s|<login>.*</login>|<login>$1</login>|
-        N; s|<password>.*</password>|<password>$2</password>|
-        N; s|<endpoint>.*</endpoint>|<endpoint>$3</endpoint>|
+		N; s/<login>.*<\/login>/<login>$1<\/login>/g;s/<login\/>/<login>$1<\/login>/g
+        N; s/<password>.*<\/password>/<password>$2<\/password>/g;s/<password\/>/<password>$2<\/password>/g
+        N; s/<endpoint>.*<\/endpoint>/<endpoint>$3<\/endpoint>/g;s/<endpoint\/>/<endpoint>$3<\/endpoint>/g
 	}" $FILE > $FILE.bak
 
 	mv $FILE.bak $FILE
