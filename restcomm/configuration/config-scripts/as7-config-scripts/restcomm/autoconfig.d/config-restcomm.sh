@@ -81,9 +81,9 @@ configOutboundProxy(){
 configPushNotificationServer() {
     echo "Configure push-notification-server"
     FILE=$RESTCOMM_DEPLOY/WEB-INF/conf/restcomm.xml
-    sed -e "s|<push-notification-server-enabled>.*<\/push-notification-server-enabled>|<push-notification-server-enabled>$PUSH_NOTIFICATION_SERVER_ENABLED<\/push-notification-server-enabled>|" \
-	-e "s|<push-notification-server-url>.*<\/push-notification-server-url>|<push-notification-server-url>$PUSH_NOTIFICATION_SERVER_URL<\/push-notification-server-url>|"  \
-	-e "s|<push-notification-server-delay>.*<\/push-notification-server-delay>|<push-notification-server-delay>$PUSH_NOTIFICATION_SERVER_DELAY<\/push-notification-server-delay>|" $FILE > $FILE.bak;
+    sed -e "s/<push-notification-server-enabled>.*<\/push-notification-server-enabled>/<push-notification-server-enabled>$PUSH_NOTIFICATION_SERVER_ENABLED<\/push-notification-server-enabled>/g;s/<push-notification-server-enabled\/>/<push-notification-server-enabled>$PUSH_NOTIFICATION_SERVER_ENABLED<\/push-notification-server-enabled>/g" \
+	-e "s/<push-notification-server-url>.*<\/push-notification-server-url>/<push-notification-server-url>$PUSH_NOTIFICATION_SERVER_URL<\/push-notification-server-url>/g;s/<push-notification-server-url\/>/<push-notification-server-url>$PUSH_NOTIFICATION_SERVER_URL<\/push-notification-server-url>/g"  \
+	-e "s/<push-notification-server-delay>.*<\/push-notification-server-delay>/<push-notification-server-delay>$PUSH_NOTIFICATION_SERVER_DELAY<\/push-notification-server-delay>/g;s/<push-notification-server-delay\/>/<push-notification-server-delay>$PUSH_NOTIFICATION_SERVER_DELAY<\/push-notification-server-delay>/g" $FILE > $FILE.bak;
 	mv $FILE.bak $FILE
 }
 ## Description: Configures Voip Innovations Credentials
@@ -266,7 +266,7 @@ configVoiceRSS() {
          sed -i 's|<speech-synthesizer active=".*"/>|<speech-synthesizer active="voicerss"/>|' $FILE
 
          sed -e "/<service-root>http:\/\/api.voicerss.org<\/service-root>/ {
-         N; s|<apikey>.*</apikey>|<apikey>$1</apikey>|
+         N; s/<apikey>.*<\/apikey>/<apikey>$1<\/apikey>/g;s/<apikey\/>/<apikey>$1<\/apikey>/g
          }" $FILE > $FILE.bak
 
          mv $FILE.bak $FILE
