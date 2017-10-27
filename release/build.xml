@@ -31,7 +31,7 @@
   <!--property name="mobicents-media.download.url" value="https://mobicents.ci.cloudbees.com/view/MediaServer/job/Mobicents-MediaServer-2.x/lastSuccessfulBuild/artifact/bootstrap/target/mms-server.zip" /-->
   <!--property name="mobicents-media.download.url" value="https://mobicents.ci.cloudbees.com/view/MediaServer/job/Mobicents-MediaServer-4.x/lastSuccessfulBuild/artifact/bootstrap/target/mms-server.zip"/-->
   <!--property name="restcomm-media.download.url" value="https://mobicents.ci.cloudbees.com/view/MediaServer/job/Restcomm-MediaServer-6.x/${restcomm-media.build}/artifact/bootstrap/target/restcomm-media-server.zip"/ -->
-  <property name="restcomm-media.download.url" value="https://cxs.restcomm.com/view/Upstream/job/UPS_RestComm-MediaServer-6.x/${restcomm-media.build}/artifact/bootstrap/target/restcomm-media-server-${restcomm-media.version}-${restcomm-media.build}.zip"/>
+  <property name="telscale-media.download.url" value="https://github.com/RestComm/mediaserver/releases/download/untagged-cff25bf5755a5e9a8e4a/restcomm-media-server-${telscale-media.version}.${telscale-media.build}.zip" />
   <property name="restcomm-media.distro.zip.path" value="${checkout.dir}/${restcomm-media.download.distro.file}"/>
 
   <!-- <property name="restcomm-olympus.download.url" value="https://mobicents.ci.cloudbees.com/job/Olympus/${olympus.build}/artifact/target/olympus.war"/> -->
