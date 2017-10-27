@@ -361,13 +361,13 @@ configMediaServerManager() {
     local LOCALMGCP=$((LOCALMGCP + PORT_OFFSET))
     local REMOTEMGCP=$((REMOTEMGCP + PORT_OFFSET))
 
-    sed -e "s|<local-address>.*</local-address>|<local-address>$bind_address</local-address>|" \
-        -e "s|<local-port>.*</local-port>|<local-port>$LOCALMGCP</local-port>|" \
-        -e "s|<remote-address>.*</remote-address>|<remote-address>$ms_address</remote-address>|" \
-        -e "s|<remote-port>.*</remote-port>|<remote-port>$REMOTEMGCP</remote-port>|" \
-        -e "s|<response-timeout>.*</response-timeout>|<response-timeout>$MGCP_RESPONSE_TIMEOUT</response-timeout>|" \
-        -e "s|<\!--.*<external-address>.*</external-address>.*-->|<external-address>$ms_external_address</external-address>|" \
-        -e "s|<external-address>.*</external-address>|<external-address>$ms_external_address</external-address>|" $FILE > $FILE.bak
+    sed -e "s/<local-address>.*<\/local-address>/<local-address>$bind_address<\/local-address>/g;s/<local-address\/>/<local-address>$bind_address<\/local-address>/g" \
+        -e "s/<local-port>.*<\/local-port>/<local-port>$LOCALMGCP<\/local-port>/g;s/<local-port\/>/<local-port>$LOCALMGCP<\/local-port>/g" \
+        -e "s/<remote-address>.*<\/remote-address>/<remote-address>$ms_address<\/remote-address>/g;s/<remote-address\/>/<remote-address>$ms_address<\/remote-address>/g" \
+        -e "s/<remote-port>.*<\/remote-port>/<remote-port>$REMOTEMGCP<\/remote-port>/g;s/<remote-port\/>/<remote-port>$REMOTEMGCP<\/remote-port>/g" \
+        -e "s/<response-timeout>.*<\/response-timeout>/<response-timeout>$MGCP_RESPONSE_TIMEOUT<\/response-timeout>/g;s/<response-timeout\/>/<response-timeout>$MGCP_RESPONSE_TIMEOUT<\/response-timeout>/g" \
+        -e "s/<\!--.*<external-address>.*<\/external-address>.*-->/<external-address>$ms_external_address<\/external-address>/g;" \
+        -e "s/<external-address>.*<\/external-address>/<external-address>$ms_external_address<\/external-address>/g;s/<external-address\/>/<external-address>$ms_external_address<\/external-address>/g" $FILE > $FILE.bak
 
     mv $FILE.bak $FILE
     echo 'Configured Media Server Manager'
@@ -405,13 +405,13 @@ configSMPPAccount() {
 			N
 			N
 			N
-			N; s|<systemid>.*</systemid>|<systemid>$systemID</systemid>|
-			N; s|<peerip>.*</peerip>|<peerip>$peerIP</peerip>|
-			N; s|<peerport>.*</peerport>|<peerport>$peerPort</peerport>|
+			N; s/<systemid>.*<\/systemid>/<systemid>$systemID<\/systemid>/g;s/<systemid\/>/<systemid>$systemID<\/systemid>/g
+			N; s/<peerip>.*<\/peerip>/<peerip>$peerIP<\/peerip>/g;s/<peerip\/>/<peerip>$peerIP<\/peerip>/g
+			N; s/<peerport>.*<\/peerport>/<peerport>$peerPort<\/peerport>/g;s/<peerport\/>/<peerport>$peerPort<\/peerport>/g
 			N
 			N
-			N; s|<password>.*</password>|<password>$password</password>|
-			N; s|<systemtype>.*</systemtype>|<systemtype>$systemType</systemtype>|
+			N; s/<password>.*<\/password>/<password>$password<\/password>/g;s/<password\/>/<password>$password<\/password>/g
+			N; s/<systemtype>.*<\/systemtype>/<systemtype>$systemType<\/systemtype>/g;s/<systemtype\/>/<systemtype>$systemType<\/systemtype>/g
 		}" $FILE > $FILE.bak
 
 		mv $FILE.bak $FILE
@@ -425,13 +425,13 @@ configSMPPAccount() {
 			N
 			N
 			N
-			N; s|<systemid>.*</systemid>|<systemid></systemid>|
-			N; s|<peerip>.*</peerip>|<peerip></peerip>|
-			N; s|<peerport>.*</peerport>|<peerport></peerport>|
+			N; s/<systemid>.*<\/systemid>/<systemid><\/systemid>/g;s/<systemid\/>/<systemid><\/systemid>/g
+			N; s/<peerip>.*<\/peerip>/<peerip><\/peerip>/g;s/<peerip\/>/<peerip><\/peerip>/g
+			N; s/<peerport>.*<\/peerport>/<peerport><\/peerport>/g;s/<peerport\/>/<peerport><\/peerport>/g
 			N
 			N
-			N; s|<password>.*</password>|<password></password>|
-			N; s|<systemtype>.*</systemtype>|<systemtype></systemtype>|
+			N; s/<password>.*<\/password>/<password><\/password>/g;s/<password\/>/<password><\/password>/g
+			N; s/<systemtype>.*<\/systemtype>/<systemtype><\/systemtype>/g;s/<systemtype\/>/<systemtype><\/systemtype>/g
 		}" $FILE > $FILE.bak
 
 		mv $FILE.bak $FILE
