@@ -182,8 +182,8 @@ configFaxService() {
 	FILE=$RESTCOMM_DEPLOY/WEB-INF/conf/restcomm.xml
 
 	sed -e "/<fax-service.*>/ {
-		N; s|<user>.*</user>|<user>$1</user>|
-		N; s|<password>.*</password>|<password>$2</password>|
+		N; s/<user>.*<\/user>/<user>$1<\/user>/g;s/<user\/>/<user>$1<\/user>/g
+		N; s/<password>.*<\/password>/<password>$2<\/password>/g;s/<password\/>/<password>$2<\/password>/g
 	}" $FILE > $FILE.bak
 
 	mv $FILE.bak $FILE
@@ -197,8 +197,8 @@ configSmsAggregator() {
 	FILE=$RESTCOMM_DEPLOY/WEB-INF/conf/restcomm.xml
 
 	sed -e "/<sms-aggregator.*>/ {
-		N; s|<outbound-prefix>.*</outbound-prefix>|<outbound-prefix>$2</outbound-prefix>|
-		N; s|<outbound-endpoint>.*</outbound-endpoint>|<outbound-endpoint>$1</outbound-endpoint>|
+		N; s/<outbound-prefix>.*<\/outbound-prefix>/<outbound-prefix>$2<\/outbound-prefix>/g;s/<outbound-prefix\/>/<outbound-prefix>$2<\/outbound-prefix>/g
+		N; s/<outbound-endpoint>.*<\/outbound-endpoint>/<outbound-endpoint>$1<\/outbound-endpoint>/g;s/<outbound-endpoint\/>/<outbound-endpoint>$1<\/outbound-endpoint>/g
 	}" $FILE > $FILE.bak
 
 	mv $FILE.bak $FILE
