@@ -247,9 +247,9 @@ configAcapela() {
 
 	        sed -e "/<acapela class=\"org.restcomm.connect.tts.acapela.AcapelaSpeechSynthesizer\">/ {
 		        N
-		        N; s|<application>.*</application>|<application>$1</application>|
-		        N; s|<login>.*</login>|<login>$2</login>|
-		        N; s|<password>.*</password>|<password>$3</password>|
+		        N; s/<application>.*<\/application>/<application>$1<\/application>/g;s/<application\/>/<application>$1<\/application>/g
+		        N; s/<login>.*<\/login>/<login>$2<\/login>/g;s/<login\/>/<login>$2<\/login>/g
+		        N; s/<password>.*<\/password>/<password>$3<\/password>/g;s/<password\/>/<password>$3<\/password>/g
 	        }" $FILE > $FILE.bak
 
         mv $FILE.bak $FILE
@@ -290,9 +290,9 @@ configAWSPolly() {
 
 	        sed -e "/<awspolly class=\"org.restcomm.connect.tts.awspolly.AWSPollySpeechSyntetizer\">/ {
 		        N
-		        N; s|<aws-access-key>.*</aws-access-key>|<aws-access-key>$1</aws-access-key>|
-		        N; s|<aws-secret-key>.*</aws-secret-key>|<aws-secret-key>$2</aws-secret-key>|
-		        N; s|<aws-region>.*</aws-region>|<aws-region>$3</aws-region>|
+		        N; s/<aws-access-key>.*<\/aws-access-key>/<aws-access-key>$1<\/aws-access-key>/g;s/<aws-access-key\/>/<aws-access-key>$1<\/aws-access-key>/g
+		        N; s/<aws-secret-key>.*<\/aws-secret-key>/<aws-secret-key>$2<\/aws-secret-key>/g;s/<aws-secret-key\/>/<aws-secret-key>$2<\/aws-secret-key>/g
+		        N; s/<aws-region>.*<\/aws-region>/<aws-region>$3<\/aws-region>/g;s/<aws-region\/>/<aws-region>$3<\/aws-region>/g
 	        }" $FILE > $FILE.bak
 
         mv $FILE.bak $FILE
@@ -320,24 +320,24 @@ configTelestaxProxy() {
 	enabled="$1"
 	if [ "$enabled" == "true" ] || [ "$enabled" == "TRUE" ]; then
 		sed -e "/<telestax-proxy>/ {
-			N; s|<enabled>.*</enabled>|<enabled>$1</enabled>|
-		N; s|<login>.*</login>|<login>$2</login>|
-		N; s|<password>.*</password>|<password>$3</password>|
-		N; s|<endpoint>.*</endpoint>|<endpoint>$4</endpoint>|
-		N; s|<siteId>.*</siteId>|<siteId>$6</siteId>|
-		N; s|<uri>.*</uri>|<uri>http:\/\/$5:2080</uri>|
+		N; s/<enabled>.*<\/enabled>/<enabled>$1<\/enabled>/g;s/<enabled\/>/<enabled>$1<\/enabled>/g
+		N; s/<login>.*<\/login>/<login>$2<\/login>/g;s/<login\/>/<login>$2<\/login>/g
+		N; s/<password>.*<\/password>/<password>$3<\/password>/g;s/<password\/>/<password>$3<\/password>/g
+		N; s/<endpoint>.*<\/endpoint>/<endpoint>$4<\/endpoint>/g;s/<endpoint\/>/<endpoint>$4<\/endpoint>/g
+		N; s/<siteId>.*<\/siteId>/<siteId>$6<\/siteId>/g;s/<siteId\/>/<siteId>$6<\/siteId>/g
+		N; s/<uri>.*<\/uri>/<uri>http:\/\/$5:2080<\/uri>/g;s/<uri\/>/<uri>http:\/\/$5:2080<\/uri>/g
 		}" $FILE > $FILE.bak
 
 		mv $FILE.bak $FILE
 		echo 'Enabled TeleStax Proxy'
 	else
 		sed -e "/<telestax-proxy>/ {
-			N; s|<enabled>.*</enabled>|<enabled>false</enabled>|
-			N; s|<login>.*</login>|<login></login>|
-			N; s|<password>.*</password>|<password></password>|
-			N; s|<endpoint>.*</endpoint>|<endpoint></endpoint>|
-			N; s|<siteid>.*</siteid>|<siteid></siteid>|
-			N; s|<uri>.*</uri>|<uri>http:\/\/127.0.0.1:2080</uri>|
+			N; s/<enabled>.*<\/enabled>/<enabled>false<\/enabled>/g;s/<enabled\/>/<enabled>false<\/enabled>/g
+			N; s/<login>.*<\/login>/<login><\/login>/g;s/<login\/>/<login><\/login>/g
+			N; s/<password>.*<\/password>/<password><\/password>/g;s/<password\/>/<password><\/password>/g
+			N; s/<endpoint>.*<\/endpoint>/<endpoint><\/endpoint>/g;s/<endpoint\/>/<endpoint><\/endpoint>/g
+			N; s/<siteId>.*<\/siteId>/<siteId><\/siteId>/g;s/<siteId\/>/<siteId><\/siteId>/g
+			N; s/<uri>.*<\/uri>/<uri>http:\/\/127.0.0.1:2080<\/uri>/g;s/<uri\/>/<uri>http:\/\/127.0.0.1:2080<\/uri>/g
 		}" $FILE > $FILE.bak
 
 		mv $FILE.bak $FILE
