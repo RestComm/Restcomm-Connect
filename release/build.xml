@@ -26,7 +26,7 @@
   <property name="restcomm-sipservlets.as7.download.url" value="https://mobicents.ci.cloudbees.com/job/RestcommSipServlets-Release/${sipservlets-build}/artifact/${restcomm-sipservlets.as7.download.distro.file}"/>
   <property name="restcomm-sipservlets.as7.distro.zip.path" value="${checkout.dir}/${restcomm-sipservlets.as7.download.distro.file}"/>
 
-  <property name="restcomm-media.download.distro.file" value="restcomm-media-server.zip"/>
+  <property name="restcomm-media.download.distro.file" value="restcomm-media-server-${restcomm-media.version}-${restcomm-media.build}.zip"/>
   <!--<property name="mobicents-media.download.url" value="https://github.com/Mobicents/mediaserver/releases/download/3.0.2.FINAL/mms-server-3.0.2.Final.zip" />-->
   <!--property name="mobicents-media.download.url" value="https://mobicents.ci.cloudbees.com/view/MediaServer/job/Mobicents-MediaServer-2.x/lastSuccessfulBuild/artifact/bootstrap/target/mms-server.zip" /-->
   <!--property name="mobicents-media.download.url" value="https://mobicents.ci.cloudbees.com/view/MediaServer/job/Mobicents-MediaServer-4.x/lastSuccessfulBuild/artifact/bootstrap/target/mms-server.zip"/-->
@@ -128,10 +128,8 @@
     <echo>Downloading Restcomm Media version: ${restcomm-media.version}.${restcomm-media.build}</echo>
     <exec executable="wget" failonerror="true">
       <arg value="${restcomm-media.download.url}"/>
-      <arg value="-O restcomm-media-server.zip"/>
     </exec>
-    <move file="${base.dir}/restcomm-media-server.zip" todir="${checkout.dir}"/>
-    <move file="${checkout.dir}/restcomm-media-server.zip" tofile="${checkout.dir}/${restcomm-media.download.distro.file}"/>
+    <move file="${base.dir}/${restcomm-media.download.distro.file}" todir="${checkout.dir}"/>
   </target>
 
   <!--Olympus-->
