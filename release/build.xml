@@ -128,6 +128,7 @@
     <echo>Downloading Restcomm Media version: ${restcomm-media.version}.${restcomm-media.build}</echo>
     <exec executable="wget" failonerror="true">
       <arg value="${restcomm-media.download.url}"/>
+      <arg value="-O restcomm-media-server.zip"/>
     </exec>
     <move file="${base.dir}/restcomm-media-server.zip" todir="${checkout.dir}"/>
     <move file="${checkout.dir}/restcomm-media-server.zip" tofile="${checkout.dir}/${restcomm-media.download.distro.file}"/>
