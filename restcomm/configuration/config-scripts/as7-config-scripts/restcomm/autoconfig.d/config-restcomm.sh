@@ -72,9 +72,13 @@ fi
 configOutboundProxy(){
     echo "Configure outbound-proxy"
     FILE=$RESTCOMM_DEPLOY/WEB-INF/conf/restcomm.xml
-    sed -e "s/<outbound-proxy-uri>.*<\/outbound-proxy-uri>/<outbound-proxy-uri>$OUTBOUND_PROXY<\/outbound-proxy-uri>/g;s/<outbound-proxy-uri\/>/<outbound-proxy-uri>$OUTBOUND_PROXY<\/outbound-proxy-uri>/g" \
-	-e "s/<outbound-proxy-user>.*<\/outbound-proxy-user>/<outbound-proxy-user>$OUTBOUND_PROXY_USERNAME<\/outbound-proxy-user>/g;s/<outbound-proxy-user\/>/<outbound-proxy-user>$OUTBOUND_PROXY_USERNAME<\/outbound-proxy-user>/g;"  \
-	-e "s/<outbound-proxy-password>.*<\/outbound-proxy-password>/<outbound-proxy-password>$OUTBOUND_PROXY_PASSWORD<\/outbound-proxy-password>/g;s/<outbound-proxy-password\/>/<outbound-proxy-password>$OUTBOUND_PROXY_PASSWORD<\/outbound-proxy-password>/g" $FILE > $FILE.bak;
+    sed -e "s|<outbound-proxy-uri>.*<\/outbound-proxy-uri>|<outbound-proxy-uri>$OUTBOUND_PROXY<\/outbound-proxy-uri>|" \
+		-e "s|<outbound-proxy-user>.*<\/outbound-proxy-user>|<outbound-proxy-user>$OUTBOUND_PROXY_USERNAME<\/outbound-proxy-user>|"  \
+		-e "s|<outbound-proxy-password>.*<\/outbound-proxy-password>|<outbound-proxy-password>$OUTBOUND_PROXY_PASSWORD<\/outbound-proxy-password>|" $FILE > $FILE.bak;
+	mv $FILE.bak $FILE
+	sed -e "s|<outbound-proxy-uri/>|<outbound-proxy-uri>$OUTBOUND_PROXY<\/outbound-proxy-uri>|" \
+		-e "s|<outbound-proxy-user/>|<outbound-proxy-user>$OUTBOUND_PROXY_USERNAME<\/outbound-proxy-user>|"  \
+		-e "s|<outbound-proxy-password/>|<outbound-proxy-password>$OUTBOUND_PROXY_PASSWORD<\/outbound-proxy-password>|" $FILE > $FILE.bak;
 	mv $FILE.bak $FILE
 }
 ## Description: Push notification server configuration.
@@ -83,13 +87,13 @@ configPushNotificationServer() {
     FILE=$RESTCOMM_DEPLOY/WEB-INF/conf/restcomm.xml
     
 	sed -e "s|<push-notification-server-enabled>.*<\/push-notification-server-enabled>|<push-notification-server-enabled>$PUSH_NOTIFICATION_SERVER_ENABLED<\/push-notification-server-enabled>|" \
-		-e "s|<push-notification-server-url>.*<\/push-notification-server-url>|<push-notification-server-url>$PUSH_NOTIFICATION_SERVER_URL<\/push-notification-server-url>|;"  \
-		-e "s|<push-notification-server-delay>.*<\/push-notification-server-delay>|<push-notification-server-delay>$PUSH_NOTIFICATION_SERVER_DELAY<\/push-notification-server-delay>|" $FILE > $FILE.bak;
+	-e "s|<push-notification-server-url>.*<\/push-notification-server-url>|<push-notification-server-url>$PUSH_NOTIFICATION_SERVER_URL<\/push-notification-server-url>|;"  \
+	-e "s|<push-notification-server-delay>.*<\/push-notification-server-delay>|<push-notification-server-delay>$PUSH_NOTIFICATION_SERVER_DELAY<\/push-notification-server-delay>|" $FILE > $FILE.bak;
 	mv $FILE.bak $FILE
 
 	sed -e "s|<push-notification-server-enabled\/>|<push-notification-server-enabled>$PUSH_NOTIFICATION_SERVER_ENABLED<\/push-notification-server-enabled>|" \
-		-e "s|<push-notification-server-url\/>|<push-notification-server-url>$PUSH_NOTIFICATION_SERVER_URL<\/push-notification-server-url>|"  \
-		-e "s|<push-notification-server-delay\/>|<push-notification-server-delay>$PUSH_NOTIFICATION_SERVER_DELAY<\/push-notification-server-delay>|" $FILE > $FILE.bak;
+	-e "s|<push-notification-server-url\/>|<push-notification-server-url>$PUSH_NOTIFICATION_SERVER_URL<\/push-notification-server-url>|"  \
+	-e "s|<push-notification-server-delay\/>|<push-notification-server-delay>$PUSH_NOTIFICATION_SERVER_DELAY<\/push-notification-server-delay>|" $FILE > $FILE.bak;
 	mv $FILE.bak $FILE	
 }
 ## Description: Configures Voip Innovations Credentials
