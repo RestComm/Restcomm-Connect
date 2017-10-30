@@ -81,10 +81,16 @@ configOutboundProxy(){
 configPushNotificationServer() {
     echo "Configure push-notification-server"
     FILE=$RESTCOMM_DEPLOY/WEB-INF/conf/restcomm.xml
-    sed -e "s/<push-notification-server-enabled>.*<\/push-notification-server-enabled>/<push-notification-server-enabled>$PUSH_NOTIFICATION_SERVER_ENABLED<\/push-notification-server-enabled>/g;s/<push-notification-server-enabled\/>/<push-notification-server-enabled>$PUSH_NOTIFICATION_SERVER_ENABLED<\/push-notification-server-enabled>/g" \
-	-e "s/<push-notification-server-url>.*<\/push-notification-server-url>/<push-notification-server-url>$PUSH_NOTIFICATION_SERVER_URL<\/push-notification-server-url>/g;s/<push-notification-server-url\/>/<push-notification-server-url>$PUSH_NOTIFICATION_SERVER_URL<\/push-notification-server-url>/g"  \
-	-e "s/<push-notification-server-delay>.*<\/push-notification-server-delay>/<push-notification-server-delay>$PUSH_NOTIFICATION_SERVER_DELAY<\/push-notification-server-delay>/g;s/<push-notification-server-delay\/>/<push-notification-server-delay>$PUSH_NOTIFICATION_SERVER_DELAY<\/push-notification-server-delay>/g" $FILE > $FILE.bak;
+    
+	sed -e "s|<push-notification-server-enabled>.*<\/push-notification-server-enabled>|<push-notification-server-enabled>$PUSH_NOTIFICATION_SERVER_ENABLED<\/push-notification-server-enabled>|" \
+		-e "s|<push-notification-server-url>.*<\/push-notification-server-url>|<push-notification-server-url>$PUSH_NOTIFICATION_SERVER_URL<\/push-notification-server-url>|;"  \
+		-e "s|<push-notification-server-delay>.*<\/push-notification-server-delay>|<push-notification-server-delay>$PUSH_NOTIFICATION_SERVER_DELAY<\/push-notification-server-delay>|" $FILE > $FILE.bak;
 	mv $FILE.bak $FILE
+
+	sed -e "s|<push-notification-server-enabled\/>|<push-notification-server-enabled>$PUSH_NOTIFICATION_SERVER_ENABLED<\/push-notification-server-enabled>|" \
+		-e "s|<push-notification-server-url\/>|<push-notification-server-url>$PUSH_NOTIFICATION_SERVER_URL<\/push-notification-server-url>|"  \
+		-e "s|<push-notification-server-delay\/>|<push-notification-server-delay>$PUSH_NOTIFICATION_SERVER_DELAY<\/push-notification-server-delay>|" $FILE > $FILE.bak;
+	mv $FILE.bak $FILE	
 }
 ## Description: Configures Voip Innovations Credentials
 ## Parameters : 1.Login
@@ -167,7 +173,7 @@ configDidProvisionManager() {
                     N; s/<username>.*<\/username>/<username>$1<\/username>/g;s/<username\/>/<username>$1<\/username>/g
                     N; s/<password>.*<\/password>/<password>$2<\/password>/g;s/<password\/>/<password>$2<\/password>/g
                 }" $FILE
-                sed -i"." "s/<outboudproxy-user-at-from-header>.*<\/outboudproxy-user-at-from-header>/<outboudproxy-user-at-from-header>"false"<\/outboudproxy-user-at-from-header>/g;s/<outboudproxy-user-at-from-header\/>/<outboudproxy-user-at-from-header>"false"<\/outboudproxy-user-at-from-header>/g" $FILE
+                sed -i "s/<outboudproxy-user-at-from-header>.*<\/outboudproxy-user-at-from-header>/<outboudproxy-user-at-from-header>"false"<\/outboudproxy-user-at-from-header>/g;s/<outboudproxy-user-at-from-header\/>/<outboudproxy-user-at-from-header>"false"<\/outboudproxy-user-at-from-header>/g" $FILE
 
                 fi
             fi
@@ -464,8 +470,13 @@ configRestCommURIs() {
 		sed -e "s|<prompts-uri>.*</prompts-uri>|<prompts-uri>$REMOTE_ADDRESS/restcomm/audio<\/prompts-uri>|" \
 		-e "s|<cache-uri>.*/cache-uri>|<cache-uri>$REMOTE_ADDRESS/restcomm/cache</cache-uri>|" \
 		-e "s|<error-dictionary-uri>.*</error-dictionary-uri>|<error-dictionary-uri>$REMOTE_ADDRESS/restcomm/errors</error-dictionary-uri>|" $FILE > $FILE.bak
-
 		mv $FILE.bak $FILE
+
+		sed -e "s|<prompts-uri/>|<prompts-uri>$REMOTE_ADDRESS/restcomm/audio<\/prompts-uri>|" \
+		-e "s|<cache-uri/>|<cache-uri>$REMOTE_ADDRESS/restcomm/cache</cache-uri>|" \
+		-e "s|<error-dictionary-uri/>|<error-dictionary-uri>$REMOTE_ADDRESS/restcomm/errors</error-dictionary-uri>|" $FILE > $FILE.bak
+		mv $FILE.bak $FILE
+
 		echo "Updated prompts-uri cache-uri error-dictionary-uri External MSaddress for "
 	fi
 	echo 'Configured RestCommURIs'
@@ -505,7 +516,7 @@ configHypertextPort(){
 #enable/disable SSLSNI (default:false)
 otherRestCommConf(){
     FILE=$RESTCOMM_DEPLOY/WEB-INF/conf/restcomm.xml
-    sed -e "s|<play-music-for-conference>.*</play-music-for-conference>|<play-music-for-conference>${PLAY_WAIT_MUSIC}<\/play-music-for-conference>|" $FILE > $FILE.bak
+    sed -e "s/<play-music-for-conference>.*<\/play-music-for-conference>/<play-music-for-conference>${PLAY_WAIT_MUSIC}<\/play-music-for-conference>/g;s/<play-music-for-conference\/>/<play-music-for-conference>${PLAY_WAIT_MUSIC}<\/play-music-for-conference>/g" $FILE > $FILE.bak
 	mv $FILE.bak $FILE
 
     #Remove if is set in earlier run.
@@ -530,9 +541,13 @@ otherRestCommConf(){
 	if [ -n "$USSDGATEWAYURI" ]; then
   		echo "USSD GATEWAY configuration"
   		FILE=$RESTCOMM_DEPLOY/WEB-INF/conf/restcomm.xml
-         sed -e "s|<ussd-gateway-uri>.*</ussd-gateway-uri>|<ussd-gateway-uri>$USSDGATEWAYURI</ussd-gateway-uri>|" \
-             -e "s|<ussd-gateway-user>.*</ussd-gateway-user>|<ussd-gateway-user>$USSDGATEWAYUSER</ussd-gateway-user>|" \
-             -e "s|<ussd-gateway-password>.*</ussd-gateway-password>|<ussd-gateway-password>$USSDGATEWAYPASSWORD</ussd-gateway-password>|" $FILE > $FILE.bak
+        sed -e "s|<ussd-gateway-uri>.*</ussd-gateway-uri>|<ussd-gateway-uri>$USSDGATEWAYURI</ussd-gateway-uri>|" \
+        	-e "s|<ussd-gateway-user>.*</ussd-gateway-user>|<ussd-gateway-user>$USSDGATEWAYUSER</ussd-gateway-user>|" \
+        	-e "s|<ussd-gateway-password>.*</ussd-gateway-password>|<ussd-gateway-password>$USSDGATEWAYPASSWORD</ussd-gateway-password>|" $FILE > $FILE.bak
+          mv $FILE.bak $FILE
+		sed -e "s|<ussd-gateway-uri/>|<ussd-gateway-uri>$USSDGATEWAYURI</ussd-gateway-uri>|" \
+             -e "s|<ussd-gateway-user/>|<ussd-gateway-user>$USSDGATEWAYUSER</ussd-gateway-user>|" \
+             -e "s|<ussd-gateway-password/>|<ussd-gateway-password>$USSDGATEWAYPASSWORD</ussd-gateway-password>|" $FILE > $FILE.bak
           mv $FILE.bak $FILE
 	fi
 
@@ -542,7 +557,7 @@ otherRestCommConf(){
 			N;
 			N;
 			N;
-			N; s|<response-timeout>.*</response-timeout>|<response-timeout>$HTTP_RESPONSE_TIMEOUT</response-timeout>|
+			N; s/<response-timeout>.*<\/response-timeout>/<response-timeout>$HTTP_RESPONSE_TIMEOUT<\/response-timeout>/g;s/<response-timeout\/>/<response-timeout>$HTTP_RESPONSE_TIMEOUT<\/response-timeout>/g
 		}" $FILE > $FILE.bak
     mv $FILE.bak $FILE
 
