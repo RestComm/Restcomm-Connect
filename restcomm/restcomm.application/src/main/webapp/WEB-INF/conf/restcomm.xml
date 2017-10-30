@@ -559,7 +559,7 @@
             <remote-address>127.0.0.1</remote-address>
             <remote-port>2427</remote-port>
             <response-timeout>500</response-timeout>
-            <external-address><null/></external-address>
+            <external-address></external-address>
             <rtp-timeout>60</rtp-timeout>
             <rtp-timeout-timer-start-time>im</rtp-timeout-timer-start-time>
         </mgcp-server>
