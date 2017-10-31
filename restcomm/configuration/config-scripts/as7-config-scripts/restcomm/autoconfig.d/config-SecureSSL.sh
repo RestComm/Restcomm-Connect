@@ -156,13 +156,14 @@ MssStackConf(){
 	local HTTPS_PORT=$((HTTPS_PORT + PORT_OFFSET))
 
 
-    sed -i '/org.mobicents.ha.javax.sip.LOCAL_SSL_PORT='"$HTTPS_PORT"'/ a \
+    sed -i '/org.mobicents.ha.javax.sip.LOCAL_SSL_PORT=.*/ a \
     \gov.nist.javax.sip.TLS_CLIENT_AUTH_TYPE='"$TLS_CLIENT_AUTH_TYPE"'\
     \javax.net.ssl.keyStore='"$TRUSTSTORE_LOCATION"'\
     \javax.net.ssl.keyStorePassword='" $TRUSTSTORE_PASSWORD"'\
     \javax.net.ssl.trustStorePassword='"$TRUSTSTORE_PASSWORD"'\
     \javax.net.ssl.trustStore='"$TRUSTSTORE_LOCATION"'\
-    \javax.net.ssl.keyStoreType=JKS' $RESTCOMM_CONF/mss-sip-stack.properties
+    \javax.net.ssl.keyStoreType=JKS\
+    ' $RESTCOMM_CONF/mss-sip-stack.properties
 }
 
 
