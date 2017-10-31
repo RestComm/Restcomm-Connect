@@ -135,8 +135,7 @@ configDidProvisionManager() {
                 echo "Nexmo PROVISION_PROVIDER"
                 sed -i "s|phone-number-provisioning class=\".*\"|phone-number-provisioning class=\"org.restcomm.connect.provisioning.number.nexmo.NexmoPhoneNumberProvisioningManager\"|" $FILE
 
-
-               if [[ -z $8 ]]; then
+               if [[ -z "$8" ]]; then
                   sed -i "/<callback-urls>/ {
                     N; s|<voice url=\".*\" method=\".*\" />|<voice url=\"$5\" method=\"SIP\" />|
                     N; s|<sms url=\".*\" method=\".*\" />|<sms url=\"\" method=\"\" />|
