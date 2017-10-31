@@ -709,7 +709,6 @@ configRestcomm "$PUBLIC_IP"
 if [ "$ACTIVATE_LB" == "true" ] || [ "$ACTIVATE_LB" == "TRUE" ]; then
     HOSTFORDID=$LBHOST
 else
-    DID_URIPORT=$SIP_PORT_UDP
     HOSTFORDID=$PUBLIC_IP
 
     #Check for port offset.
