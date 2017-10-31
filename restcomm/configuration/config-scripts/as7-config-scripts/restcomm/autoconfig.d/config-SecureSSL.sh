@@ -155,7 +155,7 @@ MssStackConf(){
     #check for port offset
 	local HTTPS_PORT=$((HTTPS_PORT + PORT_OFFSET))
 
-
+	#https://github.com/RestComm/Restcomm-Connect/issues/2606
     sed -i '/org.mobicents.ha.javax.sip.LOCAL_SSL_PORT=.*/ a \
     \gov.nist.javax.sip.TLS_CLIENT_AUTH_TYPE='"$TLS_CLIENT_AUTH_TYPE"'\
     \javax.net.ssl.keyStore='"$TRUSTSTORE_LOCATION"'\
