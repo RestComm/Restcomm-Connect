@@ -10,12 +10,14 @@ import org.apache.log4j.Logger;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
+import org.restcomm.connect.commons.configuration.RestcommConfiguration;
 import org.restcomm.connect.commons.dao.Sid;
 import org.restcomm.connect.commons.patterns.Observe;
 import org.restcomm.connect.commons.patterns.Observing;
 import org.restcomm.connect.dao.DaoManager;
 import org.restcomm.connect.mscontrol.api.MediaServerControllerFactory;
 import org.restcomm.connect.mscontrol.api.messages.JoinComplete;
+import org.restcomm.connect.mscontrol.api.messages.Leave;
 import org.restcomm.connect.mscontrol.api.messages.Left;
 import org.restcomm.connect.mscontrol.mms.MockFailingMmsControllerFactory;
 import org.restcomm.connect.mscontrol.mms.MockMmsControllerFactory;
@@ -175,6 +177,44 @@ public class ConferenceTest extends ConferenceTestUtil{
                 expectMsgClass(ConferenceResponse.class);
                 expectMsgClass(ConferenceResponse.class);
                 expectMsgClass(JoinComplete.class);
+            	
+            }};
+	}
+	
+    @Test
+	public void testConferenceTimeout() throws InterruptedException {
+        new JavaTestKit(system) {
+            {
+            	// set conference timeout to 5 seconds
+            	RestcommConfiguration.getInstance().getMain().setConferenceTimeout(3);
+                final ActorRef tester = getRef();
+                // Create MockFailingMmsControllerFactory
+                MediaServerControllerFactory factory = new MockMmsControllerFactory(system, null);
+                // Create ConferenceCenter
+                final ActorRef conferenceCenter = conferenceCenter(factory, daoManager);
+
+                // get a fresh conference from conferenecneter
+                final CreateConference create = new CreateConference(CONFERENCE_FRIENDLY_NAME_1, new Sid(CALL_SID));
+                conferenceCenter.tell(create, tester);
+                ConferenceCenterResponse conferenceCenterResponse = expectMsgClass(ConferenceCenterResponse.class);
+                ActorRef conferene = conferenceCenterResponse.get();
+                
+                // start observing conference
+                conferene.tell(new Observe(tester), tester);
+                Observing observingResponse = expectMsgClass(Observing.class);
+                assertTrue(observingResponse.succeeded());
+
+                // addparticipant in conference
+                conferene.tell(new AddParticipant(tester), tester);
+                //receieve sent to observers
+                expectMsgClass(ConferenceResponse.class);
+                //receieve sent to call (since we are pretending to call&VoiceInterpreter)
+                expectMsgClass(ConferenceResponse.class);
+                expectMsgClass(JoinComplete.class);
+
+                Thread.sleep(10000);
+                
+                expectMsgClass(Leave.class);
             	
             }};
 	}

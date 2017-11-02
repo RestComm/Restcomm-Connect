@@ -22,11 +22,12 @@ package org.restcomm.connect.commons.configuration.sets.impl;
 import java.net.InetSocketAddress;
 import java.util.HashMap;
 import java.util.Map;
+
+import org.apache.commons.lang.StringUtils;
 import org.restcomm.connect.commons.annotations.concurrency.Immutable;
+import org.restcomm.connect.commons.common.http.SslMode;
 import org.restcomm.connect.commons.configuration.sets.MainConfigurationSet;
 import org.restcomm.connect.commons.configuration.sources.ConfigurationSource;
-import org.restcomm.connect.commons.common.http.SslMode;
-import org.apache.commons.lang.StringUtils;
 
 /**
  * Provides a typed interface to a set of configuration options retrieved from a
@@ -50,6 +51,8 @@ public class MainConfigurationSetImpl extends ConfigurationSet implements MainCo
     private static final String HTTP_ROUTES_HOST = "http-client.routes-host";
     private static final String HTTP_ROUTES_PORT = "http-client.routes-port";
     private static final String HTTP_ROUTES_CONN = "http-client.routes-conn";
+    private static final String CONFERENCE_TIMEOUT_KEY = "runtime-setting.conference-timeout";
+    private static final long CONFERENCE_TIMEOUT_DEFAULT = 14400; //4 hours in seconds
     private static final SslMode SSL_MODE_DEFAULT = SslMode.strict;
     private SslMode sslMode;
     private int responseTimeout;
@@ -66,6 +69,7 @@ public class MainConfigurationSetImpl extends ConfigurationSet implements MainCo
     private String instanceId;
     private String apiVersion;
     private int recordingMaxDelay;
+    private long conferenceTimeout;
 
     public static final String BYPASS_LB_FOR_CLIENTS = "bypass-lb-for-clients";
     private boolean bypassLbForClients = false;
@@ -152,6 +156,11 @@ public class MainConfigurationSetImpl extends ConfigurationSet implements MainCo
         apiVersion = source.getProperty("runtime-settings.api-version");
 
         this.recordingMaxDelay = Integer.parseInt(source.getProperty("runtime-setting.recording-max-delay", "2000"));
+        try{
+            this.conferenceTimeout = Long.parseLong(source.getProperty(CONFERENCE_TIMEOUT_KEY, ""+CONFERENCE_TIMEOUT_DEFAULT));
+        }catch(NumberFormatException nfe){
+            this.conferenceTimeout = CONFERENCE_TIMEOUT_DEFAULT;
+        }
     }
 
     public MainConfigurationSetImpl(SslMode sslMode, int responseTimeout, boolean useHostnameToResolveRelativeUrls, String hostname, String instanceId, boolean bypassLbForClients) {
@@ -251,5 +260,15 @@ public class MainConfigurationSetImpl extends ConfigurationSet implements MainCo
     @Override
     public Integer getDefaultHttpConnectionRequestTimeout() {
         return connectionRequestTimeout;
+    }
+
+    @Override
+    public long getConferenceTimeout() {
+        return conferenceTimeout;
+    }
+
+    @Override
+    public void setConferenceTimeout(long conferenceTimeout) {
+        this.conferenceTimeout = conferenceTimeout;
     }
 }

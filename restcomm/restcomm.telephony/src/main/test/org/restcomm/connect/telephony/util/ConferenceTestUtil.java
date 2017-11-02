@@ -10,6 +10,7 @@ import org.apache.commons.configuration.XMLConfiguration;
 import org.apache.log4j.Logger;
 import org.junit.AfterClass;
 import org.junit.BeforeClass;
+import org.restcomm.connect.commons.configuration.RestcommConfiguration;
 import org.restcomm.connect.commons.dao.Sid;
 import org.restcomm.connect.dao.ConferenceDetailRecordsDao;
 import org.restcomm.connect.dao.entities.ConferenceDetailRecord;
@@ -44,6 +45,7 @@ public class ConferenceTestUtil {
 
     @BeforeClass
     public static void beforeClass() throws Exception {
+    	RestcommConfiguration.createOnce(new XMLConfiguration());
         system = ActorSystem.create();
     }
 
