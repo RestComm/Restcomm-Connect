@@ -253,8 +253,9 @@ public class MgcpMediaGroup extends MediaGroup {
         } else {
             event = new MediaGroupResponse<>(response.cause(), response.error());
         }
-        if (originator != null)
+        if (originator != null) {
             this.originator.tell(event, self);
+        }
         if (ivrResponse == null || (mgcpCollectedResult != null && !(mgcpCollectedResult.isPartial()))) {
             ivrInUse = false;
         }
@@ -410,7 +411,7 @@ public class MgcpMediaGroup extends MediaGroup {
     }
 
     protected void stop(MgcpEvent signal) {
-        if (ivrInUse) {
+        if (ivrInUse || (lastEvent != null && lastEvent.equals(AUMgcpEvent.PLAY_RECORD))) {
             final ActorRef self = self();
             ivr.tell(new StopEndpoint(signal), self);
             ivrInUse = false;

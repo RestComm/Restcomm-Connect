@@ -578,10 +578,13 @@ public class MockMediaGateway extends RestcommUntypedActor {
                         logger.info(msg);
                         URI waveFileUri = ClassLoader.getSystemResource("FiveMinutes.wav").toURI();
                         File waveFile = new File(waveFileUri);
-                        delayRespone = 3000;
-                        try {
-                            Thread.sleep(delayRespone);
-                        } catch (InterruptedException e) {}
+                        delayRespone = 0;
+                        if (delayRespone > 0) {
+                            try {
+                                Thread.sleep(delayRespone);
+                            } catch (InterruptedException e) {
+                            }
+                        }
                         writeRecording(waveFile, recordingFile, 3);
                     } catch (Exception e) {
                         String msg = String.format("Exception while trying to create Recording file %s, exception %s", filename, e);
