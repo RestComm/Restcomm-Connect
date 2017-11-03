@@ -279,7 +279,7 @@ public abstract class ConferencesEndpoint extends SecuredEndpoint {
                     HttpPost request = new HttpPost(uri);
                     request.setHeader(HttpHeaders.AUTHORIZATION, authHeader);
                     request.setHeader("Accept", "application/json");
-                    
+
                     ArrayList<NameValuePair> postParameters = new ArrayList<NameValuePair>();
                     postParameters.add(new BasicNameValuePair("Status", "Completed"));
                     request.setEntity(new UrlEncodedFormEntity(postParameters, "UTF-8"));
@@ -290,7 +290,6 @@ public abstract class ConferencesEndpoint extends SecuredEndpoint {
                         logger.info("Call Termination Response: " + response.getStatusLine());
                     }
                 }
-            
             } catch (InterruptedException | ExecutionException | URISyntaxException | UnsupportedEncodingException e) {
                 logger.error("Exception while trying to terminate conference via api: ", e);
             } finally {
