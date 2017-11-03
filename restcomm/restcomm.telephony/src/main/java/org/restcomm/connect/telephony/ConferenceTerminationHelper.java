@@ -20,10 +20,12 @@
 package org.restcomm.connect.telephony;
 
 import java.io.IOException;
+import java.io.UnsupportedEncodingException;
 import java.net.URI;
 import java.net.URISyntaxException;
 import java.nio.charset.Charset;
 import java.text.ParseException;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.Future;
@@ -31,9 +33,12 @@ import java.util.concurrent.Future;
 import org.apache.commons.codec.binary.Base64;
 import org.apache.http.HttpHeaders;
 import org.apache.http.HttpResponse;
+import org.apache.http.NameValuePair;
+import org.apache.http.client.entity.UrlEncodedFormEntity;
 import org.apache.http.client.methods.HttpPost;
 import org.apache.http.impl.nio.client.CloseableHttpAsyncClient;
 import org.apache.http.impl.nio.client.HttpAsyncClients;
+import org.apache.http.message.BasicNameValuePair;
 import org.restcomm.connect.commons.dao.Sid;
 import org.restcomm.connect.commons.faulttolerance.RestcommUntypedActor;
 import org.restcomm.connect.commons.util.UriUtils;
@@ -41,14 +46,10 @@ import org.restcomm.connect.dao.DaoManager;
 import org.restcomm.connect.dao.entities.Account;
 import org.restcomm.connect.dao.entities.ConferenceDetailRecord;
 import org.restcomm.connect.dao.entities.ConferenceDetailRecordFilter;
-import org.restcomm.connect.http.client.Downloader;
 import org.restcomm.connect.http.client.DownloaderResponse;
 import org.restcomm.connect.telephony.api.StopConference;
 
 import akka.actor.ActorRef;
-import akka.actor.Props;
-import akka.actor.UntypedActor;
-import akka.actor.UntypedActorFactory;
 import akka.event.Logging;
 import akka.event.LoggingAdapter;
 
@@ -61,7 +62,6 @@ public class ConferenceTerminationHelper extends RestcommUntypedActor {
     private final String name;
     private final Sid conferenceSid;
     private ConferenceDetailRecord conferenceDetailRecord;
-    private static final String CONFERENCE_URI="/restcomm/%s/Accounts/%s/Conferences/%s";
     private static final String SUPER_ADMIN_ACCOUNT_SID="ACae6e420f425248d6a26948c17a9e2acf";
 
     public ConferenceTerminationHelper(final String accountSid, final String name, final Sid conferenceSid, final DaoManager storage) {
@@ -101,13 +101,7 @@ public class ConferenceTerminationHelper extends RestcommUntypedActor {
             logger.error("could not retrieve conferenceDetailRecord");
         } else {
             Account superAdminAccount = storage.getAccountsDao().getAccount(SUPER_ADMIN_ACCOUNT_SID);
-            /*ActorRef downloader = downloader();
-            URI uri = new URI(String.format(CONFERENCE_URI, RestcommConfiguration.getInstance().getMain().getApiVersion(), SUPER_ADMIN_ACCOUNT_SID, conferenceDetailRecord.getSid()));
 
-            final List<NameValuePair> parameters = new ArrayList<NameValuePair>();
-            parameters.add(new BasicNameValuePair("Status", "Completed"));
-            HttpRequestDescriptor descriptor = new HttpRequestDescriptor(UriUtils.resolve(uri));
-            downloader.tell(descriptor, "POST", parameters), self);*/
             CloseableHttpAsyncClient httpclient = HttpAsyncClients.createDefault();
             try {
                 httpclient.start();
@@ -118,39 +112,31 @@ public class ConferenceTerminationHelper extends RestcommUntypedActor {
 
                 URI uri = new URI("/restcomm"+conferenceDetailRecord.getUri());
                 uri = UriUtils.resolve(uri);
-                logger.info("conference api uri is: "+uri);
+                if (logger.isInfoEnabled())
+                    logger.info("conference api uri is: "+uri);
                 HttpPost request = new HttpPost(uri);
                 request.setHeader(HttpHeaders.AUTHORIZATION, authHeader);
+                request.setHeader("Accept", "application/json");
+
+                ArrayList<NameValuePair> postParameters = new ArrayList<NameValuePair>();
+                postParameters.add(new BasicNameValuePair("Status", "Completed"));
+                request.setEntity(new UrlEncodedFormEntity(postParameters, "UTF-8"));
+
                 Future<HttpResponse> future = httpclient.execute(request, null);
                 HttpResponse response = future.get();
                 if (logger.isInfoEnabled()) {
-                    logger.info("Response: " + response.getStatusLine());
-                    logger.info("Shutting down");
+                    logger.info("Conference Termination Response: " + response.getStatusLine());
                 }
-            } catch (InterruptedException | ExecutionException e) {
-                // TODO Auto-generated catch block
-                e.printStackTrace();
+            } catch (InterruptedException | ExecutionException | UnsupportedEncodingException e) {
+                logger.error("Exception while trying to terminate conference via api: ", e);
             } finally {
                 try {
                     httpclient.close();
                 } catch (IOException e) {
-                    // TODO Auto-generated catch block
-                    e.printStackTrace();
+                    logger.error("Exception while trying to clos httpclient: ", e);
                 }
             }
         }
-    }
-
-    protected ActorRef downloader() {
-        final Props props = new Props(new UntypedActorFactory() {
-            private static final long serialVersionUID = 1L;
-
-            @Override
-            public UntypedActor create() throws Exception {
-                return new Downloader();
-            }
-        });
-        return getContext().actorOf(props);
     }
 
     protected ConferenceDetailRecord getConferenceDetailRecord() throws ParseException{
