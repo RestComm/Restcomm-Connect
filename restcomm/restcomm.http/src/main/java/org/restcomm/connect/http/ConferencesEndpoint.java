@@ -29,8 +29,17 @@ import static javax.ws.rs.core.Response.Status.BAD_REQUEST;
 import static javax.ws.rs.core.Response.Status.NOT_FOUND;
 import static javax.ws.rs.core.Response.Status.UNAUTHORIZED;
 
+import java.io.IOException;
+import java.io.UnsupportedEncodingException;
+import java.net.URI;
+import java.net.URISyntaxException;
+import java.nio.charset.Charset;
 import java.text.ParseException;
+import java.util.ArrayList;
+import java.util.Iterator;
 import java.util.List;
+import java.util.concurrent.ExecutionException;
+import java.util.concurrent.Future;
 
 import javax.annotation.PostConstruct;
 import javax.servlet.ServletContext;
@@ -40,13 +49,24 @@ import javax.ws.rs.core.MultivaluedMap;
 import javax.ws.rs.core.Response;
 import javax.ws.rs.core.UriInfo;
 
+import org.apache.commons.codec.binary.Base64;
 import org.apache.commons.configuration.Configuration;
+import org.apache.http.HttpHeaders;
+import org.apache.http.HttpResponse;
+import org.apache.http.NameValuePair;
+import org.apache.http.client.entity.UrlEncodedFormEntity;
+import org.apache.http.client.methods.HttpPost;
+import org.apache.http.impl.nio.client.CloseableHttpAsyncClient;
+import org.apache.http.impl.nio.client.HttpAsyncClients;
+import org.apache.http.message.BasicNameValuePair;
 import org.apache.shiro.authz.AuthorizationException;
 import org.restcomm.connect.commons.annotations.concurrency.NotThreadSafe;
 import org.restcomm.connect.commons.dao.Sid;
+import org.restcomm.connect.commons.util.UriUtils;
 import org.restcomm.connect.dao.ConferenceDetailRecordsDao;
 import org.restcomm.connect.dao.DaoManager;
 import org.restcomm.connect.dao.entities.Account;
+import org.restcomm.connect.dao.entities.CallDetailRecord;
 import org.restcomm.connect.dao.entities.ConferenceDetailRecord;
 import org.restcomm.connect.dao.entities.ConferenceDetailRecordFilter;
 import org.restcomm.connect.dao.entities.ConferenceDetailRecordList;
@@ -72,6 +92,7 @@ public abstract class ConferencesEndpoint extends SecuredEndpoint {
     private GsonBuilder builder;
     private XStream xstream;
     private ConferenceDetailRecordListConverter listConverter;
+    private static final String SUPER_ADMIN_ACCOUNT_SID="ACae6e420f425248d6a26948c17a9e2acf";
 
     public ConferencesEndpoint() {
         super();
@@ -226,4 +247,55 @@ public abstract class ConferencesEndpoint extends SecuredEndpoint {
         }
     }
 
+    private void kickoutAllActiveParticipants(ConferenceDetailRecord conferenceDetailRecord){
+    	Account superAdminAccount = daoManager.getAccountsDao().getAccount(SUPER_ADMIN_ACCOUNT_SID);
+    	List<CallDetailRecord> callDetailRecords = daoManager.getCallDetailRecordsDao().getRunningCallDetailRecordsByConferenceSid(conferenceDetailRecord.getSid());
+
+    	if(callDetailRecords != null && !callDetailRecords.isEmpty()){
+            CloseableHttpAsyncClient httpclient = HttpAsyncClients.createDefault();
+            try {
+                httpclient.start();
+
+                String auth = superAdminAccount.getSid() + ":" + superAdminAccount.getAuthToken();
+                byte[] encodedAuth = Base64.encodeBase64(auth.getBytes(Charset.forName("ISO-8859-1")));
+                String authHeader = "Basic " + new String(encodedAuth);
+
+            	if (logger.isInfoEnabled())
+                    logger.info("total conference participants are: "+callDetailRecords.size());
+            	Iterator<CallDetailRecord> iterator = callDetailRecords.iterator();
+            	while(iterator.hasNext()){
+            		CallDetailRecord cdr = iterator.next();
+                    URI uri = new URI("/restcomm"+cdr.getUri());
+                    uri = UriUtils.resolve(uri);
+                    if (logger.isInfoEnabled())
+                        logger.info("call api uri is: "+uri);
+                    HttpPost request = new HttpPost(uri);
+                    request.setHeader(HttpHeaders.AUTHORIZATION, authHeader);
+                    request.setHeader("Accept", "application/json");
+                    
+                    ArrayList<NameValuePair> postParameters = new ArrayList<NameValuePair>();
+                    postParameters.add(new BasicNameValuePair("Status", "Completed"));
+                    request.setEntity(new UrlEncodedFormEntity(postParameters, "UTF-8"));
+
+                    Future<HttpResponse> future = httpclient.execute(request, null);
+                    HttpResponse response = future.get();
+                    if (logger.isInfoEnabled()) {
+                        logger.info("Conference Termination Response: " + response.getStatusLine());
+                    }
+            	}
+            
+            } catch (InterruptedException | ExecutionException | URISyntaxException | UnsupportedEncodingException e) {
+                logger.error("Exception while trying to terminate conference via api: ", e);
+            } finally {
+                try {
+                    httpclient.close();
+                } catch (IOException e) {
+                    logger.error("Exception while trying to clos httpclient: ", e);
+                }
+            }
+    	} else {
+        	if (logger.isInfoEnabled())
+                logger.info("no active participants found.");
+    	}
+    }
 }
