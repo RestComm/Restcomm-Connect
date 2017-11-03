@@ -13,6 +13,7 @@ import org.junit.BeforeClass;
 import org.restcomm.connect.commons.configuration.RestcommConfiguration;
 import org.restcomm.connect.commons.dao.Sid;
 import org.restcomm.connect.dao.ConferenceDetailRecordsDao;
+import org.restcomm.connect.dao.DaoManager;
 import org.restcomm.connect.dao.entities.ConferenceDetailRecord;
 import org.restcomm.connect.dao.mybatis.MybatisDaoManager;
 import org.restcomm.connect.telephony.api.ConferenceStateChanged;
@@ -31,7 +32,7 @@ public class ConferenceTestUtil {
     protected static Configuration configurationNode2;
     protected XMLConfiguration daoManagerConf = null;
 
-    protected static MybatisDaoManager daoManager;
+    protected static DaoManager daoManager;
     protected static final String CONFIG_PATH_NODE_1 = "/restcomm.xml";
     protected static final String CONFIG_PATH_NODE_2 = "/restcomm-node2.xml";
     protected static final String CONFIG_PATH_DAO_MANAGER = "/dao-manager.xml";

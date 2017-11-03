@@ -1,12 +1,20 @@
 package org.restcomm.connect.telephony;
 
 import static org.junit.Assert.assertTrue;
+import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.when;
 
 import java.net.MalformedURLException;
+import java.net.URI;
+import java.net.URISyntaxException;
 import java.net.UnknownHostException;
+import java.util.ArrayList;
+import java.util.List;
 
 import org.apache.commons.configuration.ConfigurationException;
 import org.apache.log4j.Logger;
+import org.joda.time.DateTime;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
@@ -14,7 +22,10 @@ import org.restcomm.connect.commons.configuration.RestcommConfiguration;
 import org.restcomm.connect.commons.dao.Sid;
 import org.restcomm.connect.commons.patterns.Observe;
 import org.restcomm.connect.commons.patterns.Observing;
+import org.restcomm.connect.dao.ConferenceDetailRecordsDao;
 import org.restcomm.connect.dao.DaoManager;
+import org.restcomm.connect.dao.entities.ConferenceDetailRecord;
+import org.restcomm.connect.dao.entities.ConferenceDetailRecordFilter;
 import org.restcomm.connect.mscontrol.api.MediaServerControllerFactory;
 import org.restcomm.connect.mscontrol.api.messages.JoinComplete;
 import org.restcomm.connect.mscontrol.api.messages.Leave;
@@ -46,7 +57,11 @@ public class ConferenceTest extends ConferenceTestUtil{
 
 	@After
 	public void after(){
-        daoManager.shutdown();
+        try {
+			daoManager.shutdown();
+		} catch (InterruptedException e) {
+			e.printStackTrace();
+		}
 	}
 	
     @Test
@@ -182,16 +197,27 @@ public class ConferenceTest extends ConferenceTestUtil{
 	}
 	
     @Test
-	public void testConferenceTimeout() throws InterruptedException {
+	public void testConferenceTimeout() throws InterruptedException, URISyntaxException {
         new JavaTestKit(system) {
             {
+            	daoManager = mock(DaoManager.class);
+            	ConferenceDetailRecordsDao conferenceDetailRecordsDao = mock(ConferenceDetailRecordsDao.class);
+            	Sid sid=Sid.generate(Sid.Type.CONFERENCE);
+            	ConferenceDetailRecord cdr = new ConferenceDetailRecord(sid, DateTime.now(), DateTime.now(), new Sid(ACCOUNT_SID_1), "RUNNING", "1111", "", new URI("/restcomm/2012-04-24/Accounts/ACCOUNT_SID_1/Conferences/sid"), "", "", true, "", "", "", "", "", "", true);
+            	when(conferenceDetailRecordsDao.getConferenceDetailRecord(any(Sid.class))).thenReturn(cdr);
+            	List list = new ArrayList<ConferenceDetailRecord>();
+            	list.add(cdr);
+            	when(conferenceDetailRecordsDao.getConferenceDetailRecords(any(ConferenceDetailRecordFilter.class))).thenReturn(list);
+            	when(daoManager.getConferenceDetailRecordsDao()).thenReturn(conferenceDetailRecordsDao);
             	// set conference timeout to 5 seconds
             	RestcommConfiguration.getInstance().getMain().setConferenceTimeout(3);
                 final ActorRef tester = getRef();
-                // Create MockFailingMmsControllerFactory
+                // Create MockMmsControllerFactory
                 MediaServerControllerFactory factory = new MockMmsControllerFactory(system, null);
                 // Create ConferenceCenter
                 final ActorRef conferenceCenter = conferenceCenter(factory, daoManager);
+                
+                
 
                 // get a fresh conference from conferenecneter
                 final CreateConference create = new CreateConference(CONFERENCE_FRIENDLY_NAME_1, new Sid(CALL_SID));
