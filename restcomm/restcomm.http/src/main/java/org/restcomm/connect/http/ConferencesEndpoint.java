@@ -232,9 +232,16 @@ public abstract class ConferencesEndpoint extends SecuredEndpoint {
         } else {
             try {
                 secure(account, cdr.getAccountSid(), SecuredType.SECURED_STANDARD);
-                //TODO: make LCM
             } catch (final AuthorizationException exception) {
                 return status(UNAUTHORIZED).build();
+            }
+
+            final String status = data.getFirst("Status");
+
+            if(status != null){
+                if(status.equalsIgnoreCase("completed")){
+                    kickoutAllActiveParticipants(cdr);
+                }
             }
             if (APPLICATION_XML_TYPE == responseType) {
                 final RestCommResponse response = new RestCommResponse(cdr);
@@ -248,10 +255,10 @@ public abstract class ConferencesEndpoint extends SecuredEndpoint {
     }
 
     private void kickoutAllActiveParticipants(ConferenceDetailRecord conferenceDetailRecord){
-    	Account superAdminAccount = daoManager.getAccountsDao().getAccount(SUPER_ADMIN_ACCOUNT_SID);
-    	List<CallDetailRecord> callDetailRecords = daoManager.getCallDetailRecordsDao().getRunningCallDetailRecordsByConferenceSid(conferenceDetailRecord.getSid());
+        Account superAdminAccount = daoManager.getAccountsDao().getAccount(SUPER_ADMIN_ACCOUNT_SID);
+        List<CallDetailRecord> callDetailRecords = daoManager.getCallDetailRecordsDao().getRunningCallDetailRecordsByConferenceSid(conferenceDetailRecord.getSid());
 
-    	if(callDetailRecords != null && !callDetailRecords.isEmpty()){
+        if(callDetailRecords != null && !callDetailRecords.isEmpty()){
             CloseableHttpAsyncClient httpclient = HttpAsyncClients.createDefault();
             try {
                 httpclient.start();
@@ -260,11 +267,11 @@ public abstract class ConferencesEndpoint extends SecuredEndpoint {
                 byte[] encodedAuth = Base64.encodeBase64(auth.getBytes(Charset.forName("ISO-8859-1")));
                 String authHeader = "Basic " + new String(encodedAuth);
 
-            	if (logger.isInfoEnabled())
+                if (logger.isInfoEnabled())
                     logger.info("total conference participants are: "+callDetailRecords.size());
-            	Iterator<CallDetailRecord> iterator = callDetailRecords.iterator();
-            	while(iterator.hasNext()){
-            		CallDetailRecord cdr = iterator.next();
+                Iterator<CallDetailRecord> iterator = callDetailRecords.iterator();
+                while(iterator.hasNext()){
+                    CallDetailRecord cdr = iterator.next();
                     URI uri = new URI("/restcomm"+cdr.getUri());
                     uri = UriUtils.resolve(uri);
                     if (logger.isInfoEnabled())
@@ -280,9 +287,9 @@ public abstract class ConferencesEndpoint extends SecuredEndpoint {
                     Future<HttpResponse> future = httpclient.execute(request, null);
                     HttpResponse response = future.get();
                     if (logger.isInfoEnabled()) {
-                        logger.info("Conference Termination Response: " + response.getStatusLine());
+                        logger.info("Call Termination Response: " + response.getStatusLine());
                     }
-            	}
+                }
             
             } catch (InterruptedException | ExecutionException | URISyntaxException | UnsupportedEncodingException e) {
                 logger.error("Exception while trying to terminate conference via api: ", e);
@@ -293,9 +300,9 @@ public abstract class ConferencesEndpoint extends SecuredEndpoint {
                     logger.error("Exception while trying to clos httpclient: ", e);
                 }
             }
-    	} else {
-        	if (logger.isInfoEnabled())
+        } else {
+            if (logger.isInfoEnabled())
                 logger.info("no active participants found.");
-    	}
+        }
     }
 }
