@@ -419,7 +419,7 @@ public class MgcpMediaGroup extends MediaGroup {
     }
 
     protected void stop(MgcpEvent signal) {
-        if (ivrInUse || (lastEvent != null && lastEvent.getName().equals(AUMgcpEvent.PLAY_RECORD))) {
+        if (ivrInUse || (lastEvent != null && lastEvent.getName().equalsIgnoreCase("pr"))) {
             final ActorRef self = self();
             ivr.tell(new StopEndpoint(signal), self);
             ivrInUse = false;
