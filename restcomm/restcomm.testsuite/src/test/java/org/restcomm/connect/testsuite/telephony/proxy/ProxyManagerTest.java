@@ -57,7 +57,7 @@ public final class ProxyManagerTest {
 
     private static SipStackTool tool1;
     private static SipStackTool tool2;
-
+    
     private SipStack augustSipStack;
     private SipPhone augustPhone;
     private static int augustPort = NetworkPortAssigner.retrieveNextPort();
@@ -67,6 +67,7 @@ public final class ProxyManagerTest {
     private SipPhone imsAugustPhone;
     private static int imsPort = NetworkPortAssigner.retrieveNextPort();
     private String imsContact = "sip:127.0.0.1:" + imsPort;
+    private boolean isRegisterRequestReceived = false;
     public ProxyManagerTest() {
         super();
     }
@@ -98,6 +99,13 @@ public final class ProxyManagerTest {
         }
         if (augustSipStack != null) {
             augustSipStack.dispose();
+        }
+
+        if (imsSipStack != null) {
+            imsSipStack.dispose();
+        }
+        if (imsAugustPhone != null) {
+            imsAugustPhone.dispose();
         }
 
         if (imsSipStack != null) {
