@@ -539,6 +539,7 @@ public class MockMediaGateway extends RestcommUntypedActor {
             if (events[0].getEventIdentifier().getName().equalsIgnoreCase("pr")) {
                 //Check for the Recording Length Timer parameter if the RQNT is about PlayRecord request
                 String[] paramsArray = ((EventName) events[0]).getEventIdentifier().getParms().split(" ");
+
                 for (String param : paramsArray) {
                     if (param.startsWith("rlt")) {
                         sleepTime = Integer.parseInt(param.replace("rlt=", ""));
@@ -552,26 +553,26 @@ public class MockMediaGateway extends RestcommUntypedActor {
                     sleepTime = 0;
                 }
                 if (filename != null) {
-                    try {
-                        Path path = Paths.get(filename.replaceFirst("file://",""));
-                        recordingFile = new File(filename.replaceFirst("file://",""));
-                        recordingFile.getParentFile().mkdir();
-                        recordingFile.createNewFile();
-//                        start = DateTime.now();
-//                        createRecordingFile = true;
+                    Path path = Paths.get(filename.replaceFirst("file://", ""));
+                    recordingFile = new File(filename.replaceFirst("file://", ""));
+                    recordingFile.getParentFile().mkdir();
+                }
+            } else if (events[0].getEventIdentifier().getName().equalsIgnoreCase("es")) {
+                String param = ((EventName) events[0]).getEventIdentifier().getParms();
 
+                if (param.equalsIgnoreCase("sg=es") && recordingFile != null) {
+                    try {
                         String msg = String.format("Will write to recording file %s for duration of %d", recordingFile, 3);
                         logger.info(msg);
                         URI waveFileUri = ClassLoader.getSystemResource("FiveMinutes.wav").toURI();
                         File waveFile = new File(waveFileUri);
                         writeRecording(waveFile, recordingFile, 3);
-
                     } catch (Exception e) {
                         String msg = String.format("Exception while trying to create Recording file %s, exception %s", filename, e);
                         logger.error(msg);
                     }
 
-                }
+            }
             } else if (events[0].getEventIdentifier().getName().equalsIgnoreCase("pa")) {
                 //If this is a Play Audio request, check that the parameter string ends with WAV
                 String[] paramsArray = ((EventName) events[0]).getEventIdentifier().getParms().split(" ");
