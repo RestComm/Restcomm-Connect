@@ -145,12 +145,21 @@ configDidProvisionManager() {
                 echo "Nexmo PROVISION_PROVIDER"
                 sed -i "s|phone-number-provisioning class=\".*\"|phone-number-provisioning class=\"org.restcomm.connect.provisioning.number.nexmo.NexmoPhoneNumberProvisioningManager\"|" $FILE
 
-                sed -i "/<callback-urls>/ {
+               if [[ -z "$8" ]]; then
+                  sed -i "/<callback-urls>/ {
+                    N; s|<voice url=\".*\" method=\".*\" />|<voice url=\"$5\" method=\"SIP\" />|
+                    N; s|<sms url=\".*\" method=\".*\" />|<sms url=\"\" method=\"\" />|
+                    N; s|<fax url=\".*\" method=\".*\" />|<fax url=\"\" method=\"\" />|
+                    N; s|<ussd url=\".*\" method=\".*\" />|<ussd url=\"\" method=\"\" />|
+                }" $FILE
+               else
+                   sed -i "/<callback-urls>/ {
                     N; s|<voice url=\".*\" method=\".*\" />|<voice url=\"$5:$8\" method=\"SIP\" />|
                     N; s|<sms url=\".*\" method=\".*\" />|<sms url=\"\" method=\"\" />|
                     N; s|<fax url=\".*\" method=\".*\" />|<fax url=\"\" method=\"\" />|
                     N; s|<ussd url=\".*\" method=\".*\" />|<ussd url=\"\" method=\"\" />|
                 }" $FILE
+                fi
 
                 sed -i "/<nexmo>/ {
                     N; s/<api-key>.*<\/api-key>/<api-key>$1<\/api-key>/g;s/<api-key\/>/<api-key>$1<\/api-key>/g
@@ -718,21 +727,18 @@ configRestcomm "$PUBLIC_IP"
 
 if [ "$ACTIVATE_LB" == "true" ] || [ "$ACTIVATE_LB" == "TRUE" ]; then
     HOSTFORDID=$LBHOST
-    PORTFORDID=$LB_EXTERNAL_PORT_UDP
-
 else
-    PORTFORDID=$SIP_PORT_UDP
     HOSTFORDID=$PUBLIC_IP
 
     #Check for port offset.
-    PORTFORDID=$((PORTFORDID + PORT_OFFSET))
+    DID_URIPORT=$((DID_URIPORT + PORT_OFFSET))
 fi
 
 if [ -z "$MS_ADDRESS" ]; then
 		MS_ADDRESS=$BIND_ADDRESS
 fi
 
-configDidProvisionManager "$DID_LOGIN" "$DID_PASSWORD" "$DID_ENDPOINT" "$DID_SITEID" "$HOSTFORDID" "$DID_ACCOUNTID" "$SMPP_SYSTEM_TYPE" "$PORTFORDID"
+configDidProvisionManager "$DID_LOGIN" "$DID_PASSWORD" "$DID_ENDPOINT" "$DID_SITEID" "$HOSTFORDID" "$DID_ACCOUNTID" "$SMPP_SYSTEM_TYPE" "$DID_URIPORT"
 configFaxService "$INTERFAX_USER" "$INTERFAX_PASSWORD"
 configSmsAggregator "$SMS_OUTBOUND_PROXY" "$SMS_PREFIX"
 configSpeechRecognizer "$ISPEECH_KEY"
