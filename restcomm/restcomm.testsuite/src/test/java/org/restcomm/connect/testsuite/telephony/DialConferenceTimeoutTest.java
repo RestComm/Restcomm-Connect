@@ -119,7 +119,13 @@ public class DialConferenceTimeoutTest {
         return conferenceArray.size();
     }
 
-    private int getParticipantsSize(final String name) {
+    private int getParticipantsSize(final String sid) {
+        JsonObject participants = RestcommConferenceParticipantsTool.getInstance().getParticipants(deploymentUrl.toString(), adminAccountSid, adminAuthToken, sid);
+        JsonArray participantsArray = participants.getAsJsonArray("calls");
+        return participantsArray.size();
+    }
+
+    private String getConferenceSid(final String name) {
         JsonObject conferences = RestcommConferenceTool.getInstance().getConferences(deploymentUrl.toString(),adminAccountSid, adminAuthToken);
         JsonArray conferenceArray = conferences.getAsJsonArray("conferences");
         String confSid = null;
@@ -128,23 +134,22 @@ public class DialConferenceTimeoutTest {
             String confName = confObj.get("friendly_name").getAsString();
             if (confName.equalsIgnoreCase(name)) {
                 confSid = confObj.get("sid").getAsString();
-                break;
+                return confSid;
             }
         }
-        JsonObject participants = RestcommConferenceParticipantsTool.getInstance().getParticipants(deploymentUrl.toString(), adminAccountSid, adminAuthToken, confSid);
-        JsonArray participantsArray = participants.getAsJsonArray("calls");
-        return participantsArray.size();
+        return null;
     }
 
+
     private final String confRoom1 = "confRoom1";
-    private String dialConfernceRcmlWithTimeLimit = "<Response><Dial><Conference>"+confRoom1+"</Conference></Dial></Response>";
+    private String dialConfernceRcml = "<Response><Dial><Conference>"+confRoom1+"</Conference></Dial></Response>";
     @Test
     public synchronized void testDialConferenceClientsWaitForDisconnect() throws InterruptedException {
         stubFor(get(urlPathEqualTo("/1111"))
                 .willReturn(aResponse()
                         .withStatus(200)
                         .withHeader("Content-Type", "text/xml")
-                        .withBody(dialConfernceRcmlWithTimeLimit)));
+                        .withBody(dialConfernceRcml)));
 
         final SipCall bobCall = bobPhone.createSipCall();
         bobCall.initiateOutgoingCall(bobContact, dialRestcomm, null, body, "application", "sdp", null, null);
@@ -181,7 +186,8 @@ public class DialConferenceTimeoutTest {
         assertTrue(!(georgeCall.getLastReceivedResponse().getStatusCode() >= 400));
 
         assertTrue(getConferencesSize()==1);
-        assertTrue(getParticipantsSize(confRoom1)==2);
+        String conferenceSid = getConferenceSid(confRoom1);
+        assertTrue(getParticipantsSize(conferenceSid)==2);
         int liveCalls = MonitoringServiceTool.getInstance().getStatistics(deploymentUrl.toString(), adminAccountSid, adminAuthToken);
         int liveCallsArraySize = MonitoringServiceTool.getInstance().getLiveCallsArraySize(deploymentUrl.toString(), adminAccountSid, adminAuthToken);
         logger.info("&&&&& LiveCalls: "+liveCalls);
@@ -208,7 +214,95 @@ public class DialConferenceTimeoutTest {
 
         Thread.sleep(1000);
         assertTrue(getConferencesSize()==1);
-        assertTrue(getParticipantsSize(confRoom1)==0);
+        assertTrue(getParticipantsSize(conferenceSid)==0);
+        liveCalls = MonitoringServiceTool.getInstance().getStatistics(deploymentUrl.toString(), adminAccountSid, adminAuthToken);
+        liveCallsArraySize = MonitoringServiceTool.getInstance().getLiveCallsArraySize(deploymentUrl.toString(), adminAccountSid, adminAuthToken);
+        logger.info("&&&&& LiveCalls: "+liveCalls);
+        logger.info("&&&&& LiveCallsArraySize: "+liveCallsArraySize);
+        assertTrue(liveCalls == 0);
+        assertTrue(liveCallsArraySize == 0);
+
+        metrics = MonitoringServiceTool.getInstance().getMetrics(deploymentUrl.toString(),adminAccountSid, adminAuthToken);
+        mgcpResources = MonitoringServiceTool.getInstance().getMgcpResources(metrics);
+        mgcpEndpoints = mgcpResources.get("MgcpEndpoints");
+        mgcpConnections = mgcpResources.get("MgcpConnections");
+
+        assertEquals(0, mgcpEndpoints);
+        assertEquals(0, mgcpConnections);
+    }
+
+    @Test
+    public synchronized void testDialConferenceTerminateConferenceViaAPI() throws Exception {
+        stubFor(get(urlPathEqualTo("/1111"))
+                .willReturn(aResponse()
+                        .withStatus(200)
+                        .withHeader("Content-Type", "text/xml")
+                        .withBody(dialConfernceRcml)));
+
+        final SipCall bobCall = bobPhone.createSipCall();
+        bobCall.initiateOutgoingCall(bobContact, dialRestcomm, null, body, "application", "sdp", null, null);
+        assertLastOperationSuccess(bobCall);
+        assertTrue(bobCall.waitOutgoingCallResponse(5 * 1000));
+        int responseBob = bobCall.getLastReceivedResponse().getStatusCode();
+        assertTrue(responseBob == Response.TRYING || responseBob == Response.RINGING);
+
+        if (responseBob == Response.TRYING) {
+            assertTrue(bobCall.waitOutgoingCallResponse(5 * 1000));
+            assertEquals(Response.RINGING, bobCall.getLastReceivedResponse().getStatusCode());
+        }
+
+        assertTrue(bobCall.waitOutgoingCallResponse(5 * 1000));
+        assertEquals(Response.OK, bobCall.getLastReceivedResponse().getStatusCode());
+        bobCall.sendInviteOkAck();
+        assertTrue(!(bobCall.getLastReceivedResponse().getStatusCode() >= 400));
+
+        final SipCall georgeCall = georgePhone.createSipCall();
+        georgeCall.initiateOutgoingCall(georgeContact, dialRestcomm, null, body, "application", "sdp", null, null);
+        assertLastOperationSuccess(georgeCall);
+        assertTrue(georgeCall.waitOutgoingCallResponse(5 * 1000));
+        int responseGeorge = georgeCall.getLastReceivedResponse().getStatusCode();
+        assertTrue(responseGeorge == Response.TRYING || responseGeorge == Response.RINGING);
+
+        if (responseGeorge == Response.TRYING) {
+            assertTrue(georgeCall.waitOutgoingCallResponse(5 * 1000));
+            assertEquals(Response.RINGING, georgeCall.getLastReceivedResponse().getStatusCode());
+        }
+
+        assertTrue(georgeCall.waitOutgoingCallResponse(5 * 1000));
+        assertEquals(Response.OK, georgeCall.getLastReceivedResponse().getStatusCode());
+        georgeCall.sendInviteOkAck();
+        assertTrue(!(georgeCall.getLastReceivedResponse().getStatusCode() >= 400));
+
+        assertTrue(getConferencesSize()==1);
+        String conferenceSid = getConferenceSid(confRoom1);
+        assertTrue(getParticipantsSize(conferenceSid)==2);
+        int liveCalls = MonitoringServiceTool.getInstance().getStatistics(deploymentUrl.toString(), adminAccountSid, adminAuthToken);
+        int liveCallsArraySize = MonitoringServiceTool.getInstance().getLiveCallsArraySize(deploymentUrl.toString(), adminAccountSid, adminAuthToken);
+        logger.info("&&&&& LiveCalls: "+liveCalls);
+        logger.info("&&&&& LiveCallsArraySize: "+liveCallsArraySize);
+        assertTrue(liveCalls == 2);
+        assertTrue(liveCallsArraySize == 2);
+
+        JsonObject metrics = MonitoringServiceTool.getInstance().getMetrics(deploymentUrl.toString(),adminAccountSid, adminAuthToken);
+        Map<String, Integer> mgcpResources = MonitoringServiceTool.getInstance().getMgcpResources(metrics);
+        int mgcpEndpoints = mgcpResources.get("MgcpEndpoints");
+        int mgcpConnections = mgcpResources.get("MgcpConnections");
+
+        assertTrue(mgcpEndpoints>0);
+        assertTrue(mgcpConnections>0);
+        
+        RestcommConferenceTool.getInstance().modifyConference(deploymentUrl.toString(),adminAccountSid, adminAuthToken, conferenceSid, "Completed");
+
+        // Wait for the media to play and the call to hangup.
+        bobCall.listenForDisconnect();
+        georgeCall.listenForDisconnect();
+
+        assertTrue(bobCall.waitForDisconnect(50 * 1000));
+        assertTrue(georgeCall.waitForDisconnect(50 * 1000));
+
+        Thread.sleep(1000);
+        assertTrue(getConferencesSize()==1);
+        assertTrue(getParticipantsSize(conferenceSid)==0);
         liveCalls = MonitoringServiceTool.getInstance().getStatistics(deploymentUrl.toString(), adminAccountSid, adminAuthToken);
         liveCallsArraySize = MonitoringServiceTool.getInstance().getLiveCallsArraySize(deploymentUrl.toString(), adminAccountSid, adminAuthToken);
         logger.info("&&&&& LiveCalls: "+liveCalls);
