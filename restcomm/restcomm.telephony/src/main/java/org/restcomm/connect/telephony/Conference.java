@@ -19,6 +19,7 @@
  */
 package org.restcomm.connect.telephony;
 
+import java.net.URI;
 import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.Iterator;
@@ -39,10 +40,13 @@ import org.restcomm.connect.commons.fsm.Transition;
 import org.restcomm.connect.commons.patterns.Observe;
 import org.restcomm.connect.commons.patterns.Observing;
 import org.restcomm.connect.commons.patterns.StopObserving;
+import org.restcomm.connect.commons.util.UriUtils;
 import org.restcomm.connect.dao.CallDetailRecordsDao;
 import org.restcomm.connect.dao.ConferenceDetailRecordsDao;
 import org.restcomm.connect.dao.DaoManager;
 import org.restcomm.connect.dao.entities.ConferenceDetailRecord;
+import org.restcomm.connect.http.client.Downloader;
+import org.restcomm.connect.http.client.HttpRequestDescriptor;
 import org.restcomm.connect.mscontrol.api.MediaServerControllerFactory;
 import org.restcomm.connect.mscontrol.api.messages.CreateMediaSession;
 import org.restcomm.connect.mscontrol.api.messages.JoinCall;
@@ -66,7 +70,10 @@ import org.restcomm.connect.telephony.api.StartConference;
 import org.restcomm.connect.telephony.api.StopConference;
 
 import akka.actor.ActorRef;
+import akka.actor.Props;
 import akka.actor.ReceiveTimeout;
+import akka.actor.UntypedActor;
+import akka.actor.UntypedActorFactory;
 import akka.event.Logging;
 import akka.event.LoggingAdapter;
 import jain.protocol.ip.mgcp.message.parms.ConnectionMode;
@@ -319,6 +326,7 @@ public final class Conference extends RestcommUntypedActor {
                 final Leave leave = new Leave();
                 call.tell(leave, super.source);
             }
+            evictRemoteNodeParticipants();
         }
 
     }
@@ -621,4 +629,13 @@ public final class Conference extends RestcommUntypedActor {
         }
         return 0;
     }
+
+	/**
+	 * evict participants of remote node
+	 */
+	private void evictRemoteNodeParticipants() {
+		if(sid != null){
+			
+		}
+	}
 }

@@ -36,10 +36,13 @@ import javax.annotation.PostConstruct;
 import javax.servlet.ServletContext;
 import javax.ws.rs.core.Context;
 import javax.ws.rs.core.MediaType;
+import javax.ws.rs.core.MultivaluedMap;
 import javax.ws.rs.core.Response;
 import javax.ws.rs.core.UriInfo;
 
 import org.apache.commons.configuration.Configuration;
+import org.apache.http.impl.nio.client.CloseableHttpAsyncClient;
+import org.apache.http.impl.nio.client.HttpAsyncClients;
 import org.apache.shiro.authz.AuthorizationException;
 import org.restcomm.connect.commons.annotations.concurrency.NotThreadSafe;
 import org.restcomm.connect.http.converter.ConferenceDetailRecordConverter;
@@ -193,5 +196,21 @@ public abstract class ConferencesEndpoint extends SecuredEndpoint {
             return null;
         }
     }
+
+    protected Response updateConference(String accountSid, String sid, MultivaluedMap<String, String> data,
+			MediaType applicationJsonType) {
+    	CloseableHttpAsyncClient httpclient = HttpAsyncClients.createDefault();
+        try {
+            httpclient.start();
+            HttpGet request = new HttpGet("http://httpbin.org/get");
+            Future<HttpResponse> future = httpclient.execute(request, null);
+            HttpResponse response = future.get();
+            System.out.println("Response: " + response.getStatusLine());
+            System.out.println("Shutting down");
+        } finally {
+            httpclient.close();
+        }
+        System.out.println("Done");
+	}
 
 }
