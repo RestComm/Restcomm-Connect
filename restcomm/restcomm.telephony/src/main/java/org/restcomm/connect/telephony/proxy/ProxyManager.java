@@ -104,7 +104,8 @@ public final class ProxyManager extends RestcommUntypedActor {
         if (outboundInterface == null)
             outboundInterface = (SipURI) factory.createSipURI(null, address);
         final String user = gateway.getUserName();
-        String contactUser = new String (user);
+        // github#2519, If the user laready has hort part, we dont need to add it any more
+        String contactUser = user;
         if (contactUser.contains("@")) {
             int index = contactUser.indexOf("@");
             contactUser = contactUser.substring(0, index);
@@ -208,6 +209,7 @@ public final class ProxyManager extends RestcommUntypedActor {
             final String user = gateway.getUserName();
             final String proxy = gateway.getProxy();
             final StringBuilder buffer = new StringBuilder();
+            // github#2519, If the user laready has hort part, we dont need to add it any more
             if (user.contains("@")) {
                 buffer.append("sip:").append(user);
             } else {

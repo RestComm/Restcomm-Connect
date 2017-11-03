@@ -3,6 +3,7 @@ package org.restcomm.connect.testsuite.telephony.proxy;
 import gov.nist.javax.sip.header.Authorization;
 import java.sql.SQLException;
 import java.text.ParseException;
+import java.util.*;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import javax.sip.InvalidArgumentException;
@@ -38,6 +39,8 @@ import org.junit.Ignore;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.restcomm.connect.commons.Version;
+import org.restcomm.connect.testsuite.NetworkPortAssigner;
+import org.restcomm.connect.testsuite.WebArchiveUtil;
 import org.restcomm.connect.testsuite.http.RestcommCallsTool;
 //import org.restcomm.connect.telephony.Version;
 
@@ -48,20 +51,22 @@ public final class ProxyManagerTest {
     @ArquillianResource
     private Deployer deployer;
 
-    final String deploymentUrl = "http://127.0.0.1:8080/restcomm/";
+    private static int restcommPort = 5080;
+    private static int restcommHTTPPort = 8080;
+    private static String restcommContact = "127.0.0.1:" + restcommPort;
+
     private static SipStackTool tool1;
     private static SipStackTool tool2;
-    
+
     private SipStack augustSipStack;
     private SipPhone augustPhone;
-    private String augustContact = "sip:august@127.0.0.1:5092";
-    
+    private static int augustPort = NetworkPortAssigner.retrieveNextPort();
+    private String augustContact = "sip:august@127.0.0.1:" + augustPort;
+
     private SipStack imsSipStack;
     private SipPhone imsAugustPhone;
-    private String imsContact = "sip:127.0.0.1";
-
-    private boolean isAuthorizationHasRightUserName = false;
-    private boolean isRegisterRequestReceived = false;
+    private static int imsPort = NetworkPortAssigner.retrieveNextPort();
+    private String imsContact = "sip:127.0.0.1:" + imsPort;
     public ProxyManagerTest() {
         super();
     }
@@ -74,12 +79,12 @@ public final class ProxyManagerTest {
 
     @Before
     public void before() throws Exception {
-        
-        imsSipStack = tool1.initializeSipStack(SipStack.PROTOCOL_UDP, "127.0.0.1", "5060", "127.0.0.1:5080");
 
-        augustSipStack = tool2.initializeSipStack(SipStack.PROTOCOL_UDP, "127.0.0.1", "5092", "127.0.0.1:5080");
-        augustPhone = augustSipStack.createSipPhone("127.0.0.1", SipStack.PROTOCOL_UDP, 5080, augustContact);
-        imsAugustPhone = imsSipStack.createSipPhone("127.0.0.1", SipStack.PROTOCOL_UDP, 5080, augustContact);
+        imsSipStack = tool1.initializeSipStack(SipStack.PROTOCOL_UDP, "127.0.0.1", String.valueOf(imsPort), restcommContact);
+
+        augustSipStack = tool2.initializeSipStack(SipStack.PROTOCOL_UDP, "127.0.0.1", String.valueOf(augustPort), restcommContact);
+        augustPhone = augustSipStack.createSipPhone("127.0.0.1", SipStack.PROTOCOL_UDP, restcommPort, augustContact);
+        imsAugustPhone = imsSipStack.createSipPhone("127.0.0.1", SipStack.PROTOCOL_UDP, restcommPort, augustContact);
         imsAugustPhone.setLoopback(true);
     }
 
@@ -101,83 +106,77 @@ public final class ProxyManagerTest {
         if (imsAugustPhone != null) {
             imsAugustPhone.dispose();
         }
-        
+
         deployer.undeploy("ProxyManagerTest");
     }
 
     @Test
-    public void testRegisterWithGateWay() throws ParseException, InterruptedException, SQLException {
+    public void testRegisterWithGateWayWhenUserNameContainHost() throws ParseException, InterruptedException, SQLException {
         deployer.deploy("ProxyManagerTest");
-        SipURI uri = augustSipStack.getAddressFactory().createSipURI(null, "127.0.0.1:5080");
-        final String userName = "august@127.0.0.1:5092";
-        isAuthorizationHasRightUserName = false;
-        isRegisterRequestReceived = false;
-        ExecutorService executorService = Executors.newSingleThreadExecutor();
-        executorService.execute(new Runnable() {
-            @Override
-            public void run() {
-            	imsAugustPhone.listenRequestMessage();
-                RequestEvent requestEvent = imsAugustPhone.waitRequest(10000);
-                assertNotNull(requestEvent);
-                if (requestEvent.getRequest() != null) {
-                    isRegisterRequestReceived = true;
-                }
-                try {
-                    Response response = imsSipStack.getMessageFactory().createResponse(401, requestEvent.getRequest());
-                    WWWAuthenticateHeader wwwAuthenticateHeader = imsSipStack.getHeaderFactory().createWWWAuthenticateHeader("Digest realm=\"ims.tp.pl\",\n" +
-                            "   nonce=\"b7c9036dbf357f7683f054aea940e9703dc8f84c1108\",\n" +
-                            "   opaque=\"ALU:QbkRBthOEgEQAkgVEwwHRAIBHgkdHwQCQ1lFRkZWDhMyIXBqLCs0Zj06ZTwhdHpgZmI_\",\n" +
-                            "   algorithm=MD5,\n" +
-                            "   qop=\"auth\"");
-                    response.setHeader(wwwAuthenticateHeader);
-                    ContactHeader contactHeader = augustSipStack.getHeaderFactory().createContactHeader();
-                    contactHeader.setAddress(augustSipStack.getAddressFactory().createAddress(imsContact));
-                    response.addHeader(contactHeader);
-                    imsAugustPhone.sendReply(requestEvent, response);
-                    requestEvent = imsAugustPhone.waitRequest(10000);
-                    response = imsSipStack.getMessageFactory().createResponse(200, requestEvent.getRequest());
-                    Authorization auth = (Authorization)requestEvent.getRequest().getHeader(Authorization.NAME);
-                    assertNotNull(auth);
-                    if (auth.getUsername().equals(userName)) {
-                        isAuthorizationHasRightUserName = true;
-                    }
-                    contactHeader = augustSipStack.getHeaderFactory().createContactHeader();
-                    contactHeader.setExpires(600);
-                    contactHeader.setAddress(augustSipStack.getAddressFactory().createAddress(imsContact));
-                    response.addHeader(contactHeader);
-                    imsAugustPhone.sendReply(requestEvent, response);
-                } catch (ParseException e) {
-                    e.printStackTrace();
-                    fail(e.getMessage());
-                }catch (InvalidArgumentException e) {
-                    e.printStackTrace();
-                    fail(e.getMessage());
-                }
+        SipURI uri = augustSipStack.getAddressFactory().createSipURI(null, restcommContact);
+        final String userName = "august@127.0.0.1:" + augustPort;
 
-            }
-        });
+        String deploymentUrl = "http://127.0.0.1:"+ restcommHTTPPort +"/restcomm/";
+        RestcommCallsTool.getInstance().setGateWay(deploymentUrl, adminAccountSid, adminAuthToken, "friendlyName",
+                userName, "abcdef", "127.0.0.1:" + imsPort, true, "3600");
 
-        RestcommCallsTool.getInstance().setGateWay(deploymentUrl, adminAccountSid, adminAuthToken, "friendlyName", 
-            userName, "abcdef", "127.0.0.1", true, "3600");
+        imsAugustPhone.listenRequestMessage();
+        RequestEvent requestEvent = imsAugustPhone.waitRequest(10000);
+        assertNotNull(requestEvent);
+        assertTrue(requestEvent.getRequest() != null);
+        try {
+            Response response = imsSipStack.getMessageFactory().createResponse(401, requestEvent.getRequest());
+            WWWAuthenticateHeader wwwAuthenticateHeader = imsSipStack.getHeaderFactory().createWWWAuthenticateHeader("Digest realm=\"ims.tp.pl\",\n" +
+                    "   nonce=\"b7c9036dbf357f7683f054aea940e9703dc8f84c1108\",\n" +
+                    "   opaque=\"ALU:QbkRBthOEgEQAkgVEwwHRAIBHgkdHwQCQ1lFRkZWDhMyIXBqLCs0Zj06ZTwhdHpgZmI_\",\n" +
+                    "   algorithm=MD5,\n" +
+                    "   qop=\"auth\"");
+            response.setHeader(wwwAuthenticateHeader);
+            ContactHeader contactHeader = augustSipStack.getHeaderFactory().createContactHeader();
+            contactHeader.setAddress(augustSipStack.getAddressFactory().createAddress(imsContact));
+            response.addHeader(contactHeader);
+            imsAugustPhone.sendReply(requestEvent, response);
+            requestEvent = imsAugustPhone.waitRequest(10000);
+            response = imsSipStack.getMessageFactory().createResponse(200, requestEvent.getRequest());
+            Authorization auth = (Authorization)requestEvent.getRequest().getHeader(Authorization.NAME);
+            assertNotNull(auth);
+            assertTrue(auth.getUsername().equals(userName));
+            contactHeader = augustSipStack.getHeaderFactory().createContactHeader();
+            contactHeader.setExpires(600);
+            contactHeader.setAddress(augustSipStack.getAddressFactory().createAddress(imsContact));
+            response.addHeader(contactHeader);
+            imsAugustPhone.sendReply(requestEvent, response);
+        } catch (ParseException e) {
+            e.printStackTrace();
+            fail(e.getMessage());
+        }catch (InvalidArgumentException e) {
+            e.printStackTrace();
+            fail(e.getMessage());
+        }
+    }
 
-        Thread.sleep(10000);
-        assertTrue(isAuthorizationHasRightUserName);
-        assertTrue(isRegisterRequestReceived);
+    public static void reconfigurePorts() {
+        if (System.getProperty("arquillian_sip_port") != null) {
+            restcommPort = Integer.valueOf(System.getProperty("arquillian_sip_port"));
+            restcommContact = "127.0.0.1:" + restcommPort;
+        }
+        if (System.getProperty("arquillian_http_port") != null) {
+            restcommHTTPPort = Integer.valueOf(System.getProperty("arquillian_http_port"));
+        }
     }
 
     @Deployment(name = "ProxyManagerTest", managed = false, testable = false)
     public static WebArchive createWebArchive() {
-        WebArchive archive = ShrinkWrap.create(WebArchive.class, "restcomm.war");
-        final WebArchive restcommArchive = ShrinkWrapMaven.resolver()
-                .resolve("org.restcomm:restcomm-connect.application:war:" + version).withoutTransitivity()
-                .asSingle(WebArchive.class);
-        archive = archive.merge(restcommArchive);
-        archive.delete("/WEB-INF/sip.xml");
-        archive.delete("/WEB-INF/conf/restcomm.xml");
-        archive.delete("/WEB-INF/data/hsql/restcomm.script");
-        archive.addAsWebInfResource("sip.xml");
-        archive.addAsWebInfResource("restcomm.xml", "conf/restcomm.xml");
-        archive.addAsWebInfResource("restcomm.script", "data/hsql/restcomm.script");
-        return archive;
+
+        reconfigurePorts();
+
+        Map<String,String> replacements = new HashMap();
+        //replace mediaport 2727
+        replacements.put("8080", String.valueOf(restcommHTTPPort));
+        replacements.put("5080", String.valueOf(restcommPort));
+
+        List<String> resources = new ArrayList(Arrays.asList("dial-client-entry_wActionUrl.xml"));
+        return WebArchiveUtil.createWebArchiveNoGw("restcomm.xml",
+                "restcomm.script",resources, replacements);
     }
 }

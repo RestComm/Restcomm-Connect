@@ -407,7 +407,7 @@ public class RestcommCallsTool {
 
         String response = null;
         try {
-            response = webResource.accept(MediaType.APPLICATION_XML).post(String.class, params);
+            response = webResource.accept(MediaType.APPLICATION_JSON).post(String.class, params);
         } catch (Exception e) {
             logger.error("Exception : ", e);
             UniformInterfaceException exception = (UniformInterfaceException)e;
