@@ -103,4 +103,15 @@ rcFilters.filter('toTrusted', ['$sce', function($sce){
         };
 }]);
 
+// Determines whethere an rcml-url refers to an 'RVD' or an 'external' application and returned
+rcFilters.filter('appKind', function () {
+    var r = "/restcomm-rvd/";
+    return function(rcmlUrl) {
+        if (!!rcmlUrl && rcmlUrl.match(r))
+            return "rvd";
+        else
+            return "external";
+    }
+});
+
 

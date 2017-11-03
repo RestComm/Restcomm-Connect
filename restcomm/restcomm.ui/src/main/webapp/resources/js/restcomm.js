@@ -14,7 +14,8 @@ var rcMod = angular.module('rcApp', [
   'nvd3',
   'ngSanitize',
   'ui.router',
-  'ui.carousel'
+  'ui.carousel',
+  'ngFileSaver'
 ]);
 
 // For all states that that have resolve sections that rely on a determined authorization status (AuthService.checkAccess()) and are children of 'restcomm' state, the 'authorize' value should be injected in the dependent 'resolve' values. See state 'restcomm.incoming-phone / localApps'.
@@ -93,6 +94,9 @@ rcMod.config(['$stateProvider','$urlRouterProvider', function($stateProvider, $u
         },
         identity: function (IdentityConfig) {
             return IdentityConfig.getIdentity();
+        },
+        dashboardConfig: function (PublicConfig) {
+
         }
     }
   });
@@ -148,6 +152,16 @@ rcMod.config(['$stateProvider','$urlRouterProvider', function($stateProvider, $u
         localApps: function (rappService, authorize) { return rappService.refreshLocalApps();}
     }
   });
+  $stateProvider.state('restcomm.applications',{
+    url:'/applications',
+    templateUrl: 'modules/applications.html',
+    controller: 'ApplicationsCtrl'
+  });
+  $stateProvider.state('restcomm.application-details',{
+      url:'/applications/:applicationSid',
+      templateUrl: 'modules/application-details.html',
+      controller: 'ApplicationDetailsCtrl'
+    });
   $stateProvider.state('restcomm.clients',{
     url:'/numbers/clients',
     templateUrl: 'modules/numbers-clients.html',

@@ -740,6 +740,20 @@ form[role=login] input:-webkit-autofill:focus{
     transition: all 0.7s ease 0s;
 }
 
+.dashboard-form input[type="text"] {
+    background: transparent;
+    font-size: 15px;
+    color: #bebebe;
+/*    width: 150px;*/
+    padding: 6px 15px 2px 8px;
+    border: none;
+    border-bottom: 1px solid #e4e4e4;
+    -webkit-transition: all 0.7s ease 0s;
+    -moz-transition: all 0.7s ease 0s;
+    -o-transition: all 0.7s ease 0s;
+    transition: all 0.7s ease 0s;
+}
+
 .search-form input[type="text"]:focus {
     width: 100%;
 }
@@ -820,6 +834,61 @@ form[role=login] input:-webkit-autofill:focus{
     }
 
 }
+
+/* -- Applications -----------------------------------------------------*/
+
+.apps-list {
+    font-size: 1.5em;
+    border-bottom: 1px solid #ddd;
+}
+
+.apps .apps-list-navigation {
+    color: #abacad;
+    text-align: right;
+    padding-right: 50px;
+    margin-bottom: 20px;
+}
+
+.apps-list .apps-list-kind {
+    width: 20%;
+}
+
+.apps-list .apps-list-type {
+    width: 20%;
+}
+
+.apps-list .apps-list-number {
+    width: 20%;
+}
+
+.app-details .app-details-content {
+    font-size: 1.1em;
+}
+
+.app-details .app-numbers-section {
+    font-size: 0.9em;
+}
+
+.app-details h3 {
+    margin-bottom: 20px;
+}
+
+.app-details .app-details-subheader {
+    margin-bottom: 40px;
+}
+
+.app-details .url-section {
+    margin-bottom: 30px;
+}
+
+.app-details .app-numbers-section {
+    margin-bottom: 20px;
+}
+
+.app-details .app-details-content {
+    min-height: 250px;
+}
+
 
 .rc-btn.delete-btn {
     background-color: #F44336;
