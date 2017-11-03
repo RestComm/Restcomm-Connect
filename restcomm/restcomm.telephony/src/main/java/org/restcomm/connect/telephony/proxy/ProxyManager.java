@@ -46,6 +46,7 @@ import java.util.concurrent.TimeUnit;
 
 import static javax.servlet.sip.SipServlet.OUTBOUND_INTERFACES;
 import static javax.servlet.sip.SipServletResponse.*;
+import javax.sip.header.ContactHeader;
 
 /**
  * @author quintana.thomas@gmail.com (Thomas Quintana)
@@ -103,13 +104,19 @@ public final class ProxyManager extends RestcommUntypedActor {
         if (outboundInterface == null)
             outboundInterface = (SipURI) factory.createSipURI(null, address);
         final String user = gateway.getUserName();
+        // github#2519, If the user laready has hort part, we dont need to add it any more
+        String contactUser = user;
+        if (contactUser.contains("@")) {
+            int index = contactUser.indexOf("@");
+            contactUser = contactUser.substring(0, index);
+        }
         final String host = outboundInterface.getHost();
         int port = outboundInterface.getPort();
         if (port == -1) {
             port = outboundInterface().getPort();
         }
         final StringBuilder buffer = new StringBuilder();
-        buffer.append("sip:").append(user).append("@").append(host).append(":").append(port);
+        buffer.append("sip:").append(contactUser).append("@").append(host).append(":").append(port);
         final Address contact = factory.createAddress(buffer.toString());
         contact.setExpires(expires);
         return contact;
@@ -202,9 +209,15 @@ public final class ProxyManager extends RestcommUntypedActor {
             final String user = gateway.getUserName();
             final String proxy = gateway.getProxy();
             final StringBuilder buffer = new StringBuilder();
-            buffer.append("sip:").append(user).append("@").append(proxy);
+            // github#2519, If the user laready has hort part, we dont need to add it any more
+            if (user.contains("@")) {
+                buffer.append("sip:").append(user);
+            } else {
+                buffer.append("sip:").append(user).append("@").append(proxy);
+            }
             final String aor = buffer.toString();
-            final int expires = (gateway.getTimeToLive() > 0 && gateway.getTimeToLive() < 3600) ? gateway.getTimeToLive() : ttl;
+            // Set maximum expire time to 3600s
+            final int expires = (gateway.getTimeToLive() > 0 && gateway.getTimeToLive() <= 3600) ? gateway.getTimeToLive() : ttl;
             final Address contact = contact(gateway, expires);
             // Issue http://code.google.com/p/restcomm/issues/detail?id=65
             SipServletRequest register = null;
@@ -212,12 +225,15 @@ public final class ProxyManager extends RestcommUntypedActor {
                 final String method = response.getRequest().getMethod();
                 register = response.getSession().createRequest(method);
             } else {
-                register = factory.createRequest(application, "REGISTER", contact.toString(), aor);
+                register = factory.createRequest(application, "REGISTER", aor, aor);
             }
             if (authentication != null && response != null) {
                 register.addAuthHeader(response, authentication);
             }
-            register.addAddressHeader("Contact", contact, false);
+            // If contact header is already in, dont add it any more.
+            if (register.getHeader(ContactHeader.NAME) == null) {
+                register.addAddressHeader("Contact", contact, false);
+            }
             final SipURI uri = factory.createSipURI(null, proxy);
             register.pushRoute(uri);
             register.setRequestURI(uri);
