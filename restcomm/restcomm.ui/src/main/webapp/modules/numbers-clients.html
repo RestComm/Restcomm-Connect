@@ -16,13 +16,13 @@
 <div class="row">
     <div class="col-md-12">
         <div ng-hide="(clientsList | filter:query).length > 0" class="jumbotron no-records-alert">
-            <h2><i class="fa fa-exclamation-circle"></i> No Restcomm clients <span ng-show="clientsList.length == 0">registered</span><span ng-show="clientsList.length > 0">matching query</span>. <small>Register one now!</small></h2>
+            <h2><i class="fa fa-exclamation-circle"></i> No Restcomm clients <span ng-show="clientsList.length === 0">registered</span><span ng-show="clientsList.length > 0">matching query</span>. <small>Register one now!</small></h2>
         </div>
 
-        <table ng-show="(clientsList | filter:query).length > 0" class="table table-hover clients-list" style="table-layout: fixed;" ng-cloak>
+        <table ng-show="(clientsList | filter:query).length > 0" class="table table-hover rc-list clients-list" style="table-layout: fixed;" ng-cloak>
             <thead style="color: #4a4a4b;">
             <th class="clients-list-username">Username</th>
-            <th class="clients-list-edit-icon hidden-sm hidden-xs"style="width: 30px;" class="hidden-sm hidden-xs">&nbsp;</th>
+            <th class="clients-list-edit-icon hidden-sm hidden-xs" style="width: 30px;">&nbsp;</th>
             <th class="clients-list-friendly-name hidden-sm hidden-xs">Friendly Name</th>
             <th class="clients-list-applications" >Applications</th>
             <th class="clients-list-delete-icon">&nbsp;</th>
@@ -37,9 +37,9 @@
                     <h5><i class="fa fa-pencil clickable" ng-click="editingFriendlyName = sc.login; $event.stopPropagation();"></i></h5>
                 </td>
                 <td class="clients-list-friendly-name hidden-sm hidden-xs">
-                    <div class="" ng-hide="editingFriendlyName == sc.login">{{ sc.friendly_name  }} </div>
-                    <div class="" ng-show="editingFriendlyName == sc.login">
-                        <input type="text" class="form-control" style="font-size: inherit; margin-left: -10px; padding-left: 10px;" onkeyup="if(event.keyCode == 13) {this.blur()}" ng-model="sc.friendly_name" ng-blur="editingFriendlyName = undefined; setFriendlyName(sc)" autofocus />
+                    <div class="" ng-hide="editingFriendlyName === sc.login">{{ sc.friendly_name  }} </div>
+                    <div class="" ng-show="editingFriendlyName === sc.login">
+                        <input type="text" class="form-control" style="font-size: inherit; margin-left: -10px; padding-left: 10px;" onkeyup="if(event.keyCode === 13) {this.blur()}" ng-model="sc.friendly_name" ng-blur="editingFriendlyName = undefined; setFriendlyName(sc)" autofocus />
                     </div>
                 </td>
                 <td class="clients-list-applications">
