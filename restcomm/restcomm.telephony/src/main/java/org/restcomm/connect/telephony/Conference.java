@@ -19,7 +19,6 @@
  */
 package org.restcomm.connect.telephony;
 
-import java.net.URI;
 import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.Iterator;
@@ -40,13 +39,10 @@ import org.restcomm.connect.commons.fsm.Transition;
 import org.restcomm.connect.commons.patterns.Observe;
 import org.restcomm.connect.commons.patterns.Observing;
 import org.restcomm.connect.commons.patterns.StopObserving;
-import org.restcomm.connect.commons.util.UriUtils;
 import org.restcomm.connect.dao.CallDetailRecordsDao;
 import org.restcomm.connect.dao.ConferenceDetailRecordsDao;
 import org.restcomm.connect.dao.DaoManager;
 import org.restcomm.connect.dao.entities.ConferenceDetailRecord;
-import org.restcomm.connect.http.client.Downloader;
-import org.restcomm.connect.http.client.HttpRequestDescriptor;
 import org.restcomm.connect.mscontrol.api.MediaServerControllerFactory;
 import org.restcomm.connect.mscontrol.api.messages.CreateMediaSession;
 import org.restcomm.connect.mscontrol.api.messages.JoinCall;
@@ -326,9 +322,9 @@ public final class Conference extends RestcommUntypedActor {
                 final Leave leave = new Leave();
                 call.tell(leave, super.source);
             }
-            evictRemoteNodeParticipants();
+            //tell conference termination helper to call conference api to terminate conference and kick all calls
+            conferenceTerminationHelper().tell(new StopConference(), self());
         }
-
     }
 
     private class Stopping extends AbstractAction {
@@ -609,8 +605,8 @@ public final class Conference extends RestcommUntypedActor {
         final long conferenceTotalLifeInMillis = RestcommConfiguration.getInstance().getMain().getConferenceTimeout()*1000;
         final long conferenceRemainingLife =  conferenceTotalLifeInMillis - conferenceAge();
         context().setReceiveTimeout(Duration.create(conferenceRemainingLife, TimeUnit.MILLISECONDS));
-        if(logger.isDebugEnabled())
-            logger.debug(String.format("conference timer started for: %s milliseconds", conferenceRemainingLife));
+        if(logger.isInfoEnabled())
+            logger.info(String.format("conference timer started for: %s milliseconds", conferenceRemainingLife));
     }
 
     /**
@@ -630,12 +626,15 @@ public final class Conference extends RestcommUntypedActor {
         return 0;
     }
 
-	/**
-	 * evict participants of remote node
-	 */
-	private void evictRemoteNodeParticipants() {
-		if(sid != null){
-			
-		}
-	}
+    protected ActorRef conferenceTerminationHelper() {
+        final Props props = new Props(new UntypedActorFactory() {
+            private static final long serialVersionUID = 1L;
+
+            @Override
+            public UntypedActor create() throws Exception {
+                return new ConferenceTerminationHelper(accountSid, friendlyName, sid, storage);
+            }
+        });
+        return getContext().actorOf(props);
+    }
 }

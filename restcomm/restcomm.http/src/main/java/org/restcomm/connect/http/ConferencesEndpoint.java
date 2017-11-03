@@ -41,12 +41,9 @@ import javax.ws.rs.core.Response;
 import javax.ws.rs.core.UriInfo;
 
 import org.apache.commons.configuration.Configuration;
-import org.apache.http.impl.nio.client.CloseableHttpAsyncClient;
-import org.apache.http.impl.nio.client.HttpAsyncClients;
 import org.apache.shiro.authz.AuthorizationException;
 import org.restcomm.connect.commons.annotations.concurrency.NotThreadSafe;
-import org.restcomm.connect.http.converter.ConferenceDetailRecordConverter;
-import org.restcomm.connect.http.converter.ConferenceDetailRecordListConverter;
+import org.restcomm.connect.commons.dao.Sid;
 import org.restcomm.connect.dao.ConferenceDetailRecordsDao;
 import org.restcomm.connect.dao.DaoManager;
 import org.restcomm.connect.dao.entities.Account;
@@ -54,7 +51,8 @@ import org.restcomm.connect.dao.entities.ConferenceDetailRecord;
 import org.restcomm.connect.dao.entities.ConferenceDetailRecordFilter;
 import org.restcomm.connect.dao.entities.ConferenceDetailRecordList;
 import org.restcomm.connect.dao.entities.RestCommResponse;
-import org.restcomm.connect.commons.dao.Sid;
+import org.restcomm.connect.http.converter.ConferenceDetailRecordConverter;
+import org.restcomm.connect.http.converter.ConferenceDetailRecordListConverter;
 
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
@@ -198,19 +196,34 @@ public abstract class ConferencesEndpoint extends SecuredEndpoint {
     }
 
     protected Response updateConference(String accountSid, String sid, MultivaluedMap<String, String> data,
-			MediaType applicationJsonType) {
-    	CloseableHttpAsyncClient httpclient = HttpAsyncClients.createDefault();
+            MediaType responseType) {
+        logger.info(String.format("updateConference accountsid: %s conferenceSid: %s", accountSid, sid));
+        Account account = daoManager.getAccountsDao().getAccount(accountSid);
         try {
-            httpclient.start();
-            HttpGet request = new HttpGet("http://httpbin.org/get");
-            Future<HttpResponse> future = httpclient.execute(request, null);
-            HttpResponse response = future.get();
-            System.out.println("Response: " + response.getStatusLine());
-            System.out.println("Shutting down");
-        } finally {
-            httpclient.close();
+            secure(account, "RestComm:Read:Conferences");
+        } catch (final AuthorizationException exception) {
+            return status(UNAUTHORIZED).build();
         }
-        System.out.println("Done");
-	}
+        final ConferenceDetailRecordsDao dao = daoManager.getConferenceDetailRecordsDao();
+        final ConferenceDetailRecord cdr = dao.getConferenceDetailRecord(new Sid(sid));
+        if (cdr == null) {
+            return status(NOT_FOUND).build();
+        } else {
+            try {
+                secure(account, cdr.getAccountSid(), SecuredType.SECURED_STANDARD);
+                //TODO: make LCM
+            } catch (final AuthorizationException exception) {
+                return status(UNAUTHORIZED).build();
+            }
+            if (APPLICATION_XML_TYPE == responseType) {
+                final RestCommResponse response = new RestCommResponse(cdr);
+                return ok(xstream.toXML(response), APPLICATION_XML).build();
+            } else if (APPLICATION_JSON_TYPE == responseType) {
+                return ok(gson.toJson(cdr), APPLICATION_JSON).build();
+            } else {
+                return null;
+            }
+        }
+    }
 
 }
