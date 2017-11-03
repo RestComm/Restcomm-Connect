@@ -263,10 +263,8 @@ public class MmsBridgeController extends MediaServerController {
         if (logger.isInfoEnabled()) {
             logger.info("Received MgcpGroupResponse: "+message.toString());
         }
-        if (recording) {
+        if (recording && stoppingStatePending) {
             recording = Boolean.FALSE;
-        }
-        if (stoppingStatePending) {
             stoppingStatePending = false;
             fsm.transition(message, stopping);
         }
