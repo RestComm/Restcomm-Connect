@@ -10,6 +10,7 @@
 </div>
 
 <hr>
+
 <div class="row ">
     <div class="col-md-12 col-xs-12">
         <form name="clientForm" class="form-horizontal profile-form">
@@ -27,6 +28,9 @@
             </div>
 
             <h3 class="details-section-title">Voice</h3>
+            <span class="pull-right details-advanced-link">
+                <a href="" class="number-advanced-toggle" ng-click="showVoiceAdvanced = !showVoiceAdvanced"><span ng-show="!showVoiceAdvanced">show</span><span ng-show="showVoiceAdvanced">hide</span> advanced</a>
+            </span>
             <div class="row details-box">
                 <div class="col-md-2 col-sm-2 col-xs-12 account-field-title">
                     <h4 class="details-field-title">Voice Request</h4>
@@ -46,11 +50,6 @@
                         <option value="POST">POST</option>
                         <option value="GET">GET</option>
                     </select>
-                </div>
-            </div>
-            <div class="row">
-                <div class="col-md-2 col-md-offset-10">
-                    <a href="" class="number-advanced-toggle" ng-click="showVoiceAdvanced = !showVoiceAdvanced"><span ng-show="showVoiceAdvanced">hide </span>advanced</a>
                 </div>
             </div>
             <div class="clearfix">&nbsp;</div>

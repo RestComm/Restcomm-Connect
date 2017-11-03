@@ -622,6 +622,10 @@ form[role=login] input:-webkit-autofill:focus{
     font-size: 20px;
     width: fit-content;
     margin-top: 15px;
+    display: inline-block;
+}
+.account-status + .account-status {
+    margin-left: 5px;
 }
 
 .account-status-active {
@@ -784,8 +788,12 @@ form[role=login] input:-webkit-autofill:focus{
 
 /* -- Clients --------------------------------------------------------------- */
 
+.rc-list {
+    font-size: 1.4em;
+    table-layout: fixed;
+}
+
 .clients-list {
-    font-size: 1.5em;
 }
 
 .clients-list .clients-list-username {
@@ -826,7 +834,6 @@ form[role=login] input:-webkit-autofill:focus{
 
     .clients-list .clients-list-username > div {
         font-size: 1.25em;
-        color: red;
     }
     .clients-list .clients-list-username > div+div {
         font-size: 0.8em;
@@ -890,6 +897,117 @@ form[role=login] input:-webkit-autofill:focus{
 }
 
 
+/* -- Numbers --------------------------------------------------------------- */
+
+.numbers-list {
+}
+
+.numbers-list .number-row {
+    height: 77px;
+}
+
+.numbers-list .numbers-list-number {
+    width: 20%;
+    vertical-align: middle;
+}
+
+.numbers-list .numbers-list-edit-icon {
+    width: 30px;
+    opacity: 0;
+    vertical-align: middle;
+}
+
+.number-row:hover .numbers-list-edit-icon {
+    opacity: 1;
+}
+
+.numbers-list .numbers-list-friendly-name {
+    width: 80%;
+    vertical-align: middle;
+}
+
+.numbers-list .numbers-list-features {
+    width: 20%;
+    vertical-align: middle;
+}
+
+.numbers-list .numbers-list-features div {
+    width: 34px;
+    display: inline-block;
+    text-align: center;
+}
+
+.numbers-list .numbers-list-features div > i {
+    font-size: 1.1em;
+}
+
+.numbers-list-features div:nth-child(2n) {
+    margin-right: calc(100% - 85px);
+}
+
+.numbers-list .numbers-list-delete-icon {
+    width: 10%;
+    vertical-align: middle;
+}
+
+.numbers-list-summary {
+    font-size: 0.75em;
+    opacity: 0.33;
+}
+
+.buttons-per-page button {
+    border: none;
+    border-radius: 0;
+    background-color: transparent;
+}
+
+.buttons-per-page button.active, .buttons-per-page button:active  {
+    background-color: transparent;
+    -webkit-box-shadow: none;
+    -moz-box-shadow: none;
+    box-shadow: none;
+}
+
+.buttons-per-page button.active {
+    border-bottom: 2px solid #44a5ab;
+}
+
+.buttons-per-page button:hover {
+    background-color: transparent;
+    font-weight: bold;
+}
+
+
+@media(max-width:768px) {
+    .numbers-list {
+        font-size: 1.1em;
+    }
+
+    .numbers-list .numbers-list-number {
+        width: 80%;
+        font-size: 1em;
+    }
+
+    .numbers-list .numbers-list-number > div+div {
+        font-size: 0.8em;
+        color: #bbbbbb;
+    }
+
+    .numbers-list .numbers-list-features div {
+        width: 22px;
+        display: inline-block;
+        text-align: center;
+    }
+
+    .numbers-list-features div:nth-child(2n) {
+        margin-right: calc(100% - 50px);
+    }
+
+}
+
+/* -- Details --------------------------------------------------------------- */
+
+
 .rc-btn.delete-btn {
     background-color: #F44336;
 }
@@ -920,6 +1038,12 @@ form[role=login] input:-webkit-autofill:focus{
 .details-section-title {
     color: #44a5ab;
     padding-top: 25px;
+}
+
+.details-advanced-link {
+    font-size: 0.75em;
+    margin-top: -20px;
+    margin-right: 20px;
 }
 
 .details-box {
@@ -1014,8 +1138,37 @@ form[role=login] input:-webkit-autofill:focus{
 
 
 
+/* -- Override UI Bootstrap Pagination Styles ------------------------------- */
 
+/* Regular page/link */
+.pagination > li > a, .pagination > li > span {
+    border: none;
+    font-size: 0.8em;
+    color: #bbbbbb;
+}
 
+.pagination > li > a:hover, .pagination > li > span:hover,
+.pagination > li > a:focus, .pagination > li > span:focus {
+    background-color: transparent;
+    color: #000;
+}
+
+/* Current page/link */
+.pagination > .active > a, .pagination > .active > span,
+.pagination > .active > a:hover, .pagination > .active > span:hover,
+.pagination > .active > a:focus, .pagination > .active > span:focus {
+    background-color: transparent;
+    border: none;
+    border-bottom: 2px solid #44a5ab;
+    color: #6d6e70;
+}
+
+/* Disabled page/link */
+.pagination > .disabled > span, .pagination > .disabled > span:hover,
+.pagination > .disabled > span:focus, .pagination > .disabled > a,
+.pagination > .disabled > a:hover, .pagination > .disabled > a:focus {
+    color: #eeeeee;
+}
 
 
 /* -- Old classes for cleanup ----------------------------------------------- */

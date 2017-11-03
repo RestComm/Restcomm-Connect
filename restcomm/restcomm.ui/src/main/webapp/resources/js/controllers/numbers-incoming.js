@@ -73,7 +73,7 @@ rcMod.controller('NumbersCtrl', function ($scope, $resource, $uibModal, $dialog,
 
   $scope.getNumbersList = function(page) {
    var params = createSearchParams();
-    RCommNumbers.get($.extend({accountSid: $scope.sid, Page: page, PageSize: $scope.entryLimit}, params), function(data) {	
+    RCommNumbers.get($.extend({accountSid: $scope.sid, Page: page, PageSize: $scope.entryLimit}, params), function(data) {
       $scope.numbersList = data.incomingPhoneNumbers;
       $scope.totalNumbers = data.total;
       $scope.noOfPages = data.num_pages;
