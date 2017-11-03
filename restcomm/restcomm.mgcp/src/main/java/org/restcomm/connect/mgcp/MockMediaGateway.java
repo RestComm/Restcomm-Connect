@@ -113,6 +113,7 @@ public class MockMediaGateway extends RestcommUntypedActor {
     private ActorRef monitoringService;
 
     private File recordingFile = null;
+    private int sleepTime;
 
     private ActorSystem system;
 
@@ -544,10 +545,8 @@ public class MockMediaGateway extends RestcommUntypedActor {
         final NotificationRequest rqnt = (NotificationRequest) message;
         EventName[] events = rqnt.getSignalRequests();
         //Thread sleep for the maximum recording length to simulate recording from RMS side
-        int sleepTime = 0;
         String filename = null;
         boolean failResponse = false;
-        int delayRespone = 0;
 
         if (events != null && events.length > 0 && events[0].getEventIdentifier() != null) {
             if (events[0].getEventIdentifier().getName().equalsIgnoreCase("pr")) {
@@ -572,21 +571,18 @@ public class MockMediaGateway extends RestcommUntypedActor {
                     recordingFile.getParentFile().mkdir();
                 }
             } else if (events[0].getEventIdentifier().getName().equalsIgnoreCase("es")) {
-                String param = ((EventName) events[0]).getEventIdentifier().getParms();
+                String signal = ((EventName) events[0]).getEventIdentifier().getParms().split("=")[1];
 
-                if (param.equalsIgnoreCase("sg=es") && recordingFile != null) {
+                if (signal.equalsIgnoreCase("pr") && recordingFile != null) {
                     try {
                         String msg = String.format("Will write to recording file %s for duration of %d", recordingFile, 3);
                         logger.info(msg);
                         URI waveFileUri = ClassLoader.getSystemResource("FiveMinutes.wav").toURI();
                         File waveFile = new File(waveFileUri);
-                        delayRespone = 0;
-                        if (delayRespone > 0) {
-                            try {
-                                Thread.sleep(delayRespone);
-                            } catch (InterruptedException e) {
-                            }
-                        }
+                        //Simulate Recording maxLength
+                        try {
+                            Thread.sleep(sleepTime*10);
+                        } catch (InterruptedException e) {}
                         writeRecording(waveFile, recordingFile, 3);
                     } catch (Exception e) {
                         String msg = String.format("Exception while trying to create Recording file %s, exception %s", filename, e);
@@ -617,20 +613,10 @@ public class MockMediaGateway extends RestcommUntypedActor {
         final JainMgcpResponseEvent response = new NotificationRequestResponse(self, code);
         final int transaction = rqnt.getTransactionHandle();
         response.setTransactionHandle(transaction);
-        try {
-            Thread.sleep(sleepTime*10);
-        } catch (InterruptedException e) {
-        }
-        String msg = String.format("About to send MockMediaGateway response after delay %d ms, response %s", delayRespone, response.toString());
+
+        String msg = String.format("About to send MockMediaGateway response %s", response.toString());
         logger.info(msg);
-        if (delayRespone > 0) {
-            try {
-                Thread.sleep(delayRespone);
-            } catch (InterruptedException e) {
-            }
-        }
         sender.tell(response, self);
-        logger.info("Response sent after delay: "+delayRespone);
     }
 
     private void notify(final Object message, final ActorRef sender) {
