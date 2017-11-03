@@ -141,6 +141,11 @@ input.ng-dirty.ng-invalid {
 	text-decoration: underline;
 }
 
+.bottom-row.row {
+    margin-bottom: 30px;
+}
+
+
 /* Index.html classes ------------------------------------------------------- */
 
 ul#rightMenu > li i {
