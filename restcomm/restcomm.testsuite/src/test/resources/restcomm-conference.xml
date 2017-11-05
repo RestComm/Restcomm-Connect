@@ -154,7 +154,7 @@
 				after that all participants will be asked to leave and conference will be closed.
 				default value is 14400 seconds/(4 hours).
 				Please provide value in seconds -->
-		<conference-timeout>5</conference-timeout>
+		<conference-timeout>60</conference-timeout>
 	</runtime-settings>
 
 	<!-- Configuration for the VoIP Innovations provisioning API. -->

@@ -46,6 +46,11 @@ import org.apache.http.impl.client.CloseableHttpClient;
 import org.apache.http.impl.client.HttpClientBuilder;
 import org.apache.http.impl.conn.PoolingHttpClientConnectionManager;
 import org.apache.http.ssl.SSLContexts;
+import org.apache.http.impl.nio.client.CloseableHttpAsyncClient;
+import org.apache.http.impl.nio.client.HttpAsyncClientBuilder;
+import org.apache.http.impl.nio.client.HttpAsyncClients;
+import org.apache.http.impl.nio.conn.PoolingNHttpClientConnectionManager;
+import org.apache.http.impl.nio.reactor.DefaultConnectingIOReactor;
 
 /**
  *
@@ -58,6 +63,7 @@ public class CustomHttpClientBuilder {
     }
 
     private static CloseableHttpClient defaultClient = null;
+    private static CloseableHttpAsyncClient closeableHttpAsyncClient = null;
 
     public static synchronized void stopDefaultClient() {
         if (defaultClient != null) {
@@ -73,9 +79,86 @@ public class CustomHttpClientBuilder {
         return defaultClient;
     }
 
+    public static synchronized CloseableHttpAsyncClient buildCloseableHttpAsyncClient(MainConfigurationSet config) {
+        if (closeableHttpAsyncClient == null) {
+        	closeableHttpAsyncClient = buildAsyncClient(config);
+        }
+        return closeableHttpAsyncClient;
+    }
+
     public static CloseableHttpClient build(MainConfigurationSet config) {
         int timeoutConnection = config.getResponseTimeout();
         return build(config, timeoutConnection);
+    }
+
+    public static CloseableHttpAsyncClient buildAsyncClient(MainConfigurationSet config) {
+        int timeoutConnection = config.getResponseTimeout();
+        return buildAsyncClient(config, timeoutConnection);
+    }
+
+    public static CloseableHttpAsyncClient buildAsyncClient(MainConfigurationSet config, int timeout) {
+        HttpAsyncClientBuilder builder = HttpAsyncClients.custom();
+
+        RequestConfig requestConfig = RequestConfig.custom()
+                .setConnectTimeout(timeout)
+                .setConnectionRequestTimeout(config.getDefaultHttpConnectionRequestTimeout())
+                .setSocketTimeout(timeout)
+                .setCookieSpec(CookieSpecs.STANDARD).build();
+        builder.setDefaultRequestConfig(requestConfig);
+
+        SslMode mode = config.getSslMode();
+        SSLConnectionSocketFactory sslsf = null;
+        if (mode == SslMode.strict) {
+            sslsf = buildStrictFactory().;
+        } else {
+            sslsf = buildAllowallFactory();
+        }
+        builder.setSSLSocketFactory(sslsf);
+
+        builder.setMaxConnPerRoute(config.getDefaultHttpMaxConnsPerRoute());
+        builder.setMaxConnTotal(config.getDefaultHttpMaxConns());
+        builder.setConnectionTimeToLive(config.getDefaultHttpTTL(), TimeUnit.MILLISECONDS);
+        if (config.getDefaultHttpRoutes() != null
+                && config.getDefaultHttpRoutes().size() > 0) {
+            if (sslsf == null) {
+                //strict mode with no system https properties
+                //taken from apache buider code
+                PublicSuffixMatcher publicSuffixMatcherCopy = PublicSuffixMatcherLoader.getDefault();
+                DefaultHostnameVerifier hostnameVerifierCopy = new DefaultHostnameVerifier(publicSuffixMatcherCopy);
+                sslsf = new SSLConnectionSocketFactory(
+                        SSLContexts.createDefault(),
+                        hostnameVerifierCopy);
+            }
+            Registry<ConnectionSocketFactory> reg = RegistryBuilder.<ConnectionSocketFactory>create()
+                    .register("http", PlainConnectionSocketFactory.getSocketFactory())
+                    .register("https", sslsf)
+                    .build();
+            final PoolingNHttpClientConnectionManager poolingmgr = new PoolingNHttpClientConnectionManager(ioreactor, connFactory, iosessionFactoryRegistry, schemePortResolver, dnsResolver, timeToLive, tunit)
+            final PoolingNHttpClientConnectionManager poolingmgr = new PoolingNHttpClientConnectionManager(
+            		null,
+            		null,
+            		reg,
+            		null,
+            		null,
+            		config.getDefaultHttpTTL(),
+            		TimeUnit.MILLISECONDS);
+            		/*new PoolingNHttpClientConnectionManager(
+                    reg,
+                    null,
+                    null,
+                    null,
+                    config.getDefaultHttpTTL(),
+                    TimeUnit.MILLISECONDS);*/
+            //ensure conn configuration is set again for new conn manager
+            poolingmgr.setMaxTotal(config.getDefaultHttpMaxConns());
+            poolingmgr.setDefaultMaxPerRoute(config.getDefaultHttpMaxConnsPerRoute());
+            for (InetSocketAddress addr : config.getDefaultHttpRoutes().keySet()) {
+                HttpRoute r = new HttpRoute(new HttpHost(addr.getHostName(), addr.getPort()));
+                poolingmgr.setMaxPerRoute(r, config.getDefaultHttpRoutes().get(addr));
+            }
+            builder.setConnectionManager(poolingmgr);
+        }
+        return builder.build();
     }
 
     public static CloseableHttpClient build(MainConfigurationSet config, int timeout) {
