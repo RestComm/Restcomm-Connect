@@ -226,7 +226,7 @@ public abstract class ConferencesEndpoint extends SecuredEndpoint {
             return status(UNAUTHORIZED).build();
         }
         final ConferenceDetailRecordsDao dao = daoManager.getConferenceDetailRecordsDao();
-        final ConferenceDetailRecord cdr = dao.getConferenceDetailRecord(new Sid(sid));
+        ConferenceDetailRecord cdr = dao.getConferenceDetailRecord(new Sid(sid));
         if (cdr == null) {
             return status(NOT_FOUND).build();
         } else {
@@ -241,6 +241,8 @@ public abstract class ConferencesEndpoint extends SecuredEndpoint {
             if(status != null){
                 if(status.equalsIgnoreCase("completed")){
                     kickoutAllActiveParticipants(cdr);
+                    //get updated conference record
+                    cdr = dao.getConferenceDetailRecord(new Sid(sid));
                 }
             }
             if (APPLICATION_XML_TYPE == responseType) {

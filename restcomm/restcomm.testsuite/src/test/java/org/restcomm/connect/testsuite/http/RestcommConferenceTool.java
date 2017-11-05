@@ -182,7 +182,7 @@ public class RestcommConferenceTool {
         Client jerseyClient = Client.create();
         jerseyClient.addFilter(new HTTPBasicAuthFilter(username, authToken));
 
-        String url = getAccountsUrl(deploymentUrl, username, true);
+        String url = getAccountsUrl(deploymentUrl, username, false);
 
         WebResource webResource = jerseyClient.resource(url);
 
@@ -194,8 +194,12 @@ public class RestcommConferenceTool {
 
         try {
             String response = webResource.path(conferenceSid).accept(MediaType.APPLICATION_JSON).post(String.class, params);
+            logger.info("response: "+response);
             JsonParser parser = new JsonParser();
-            jsonObject = parser.parse(response).getAsJsonObject();
+            JsonElement element = parser.parse(response);
+            logger.info("element: "+element);
+            
+            jsonObject = element.getAsJsonObject();
         } catch (Exception e) {
             logger.error("Exception : ", e);
             UniformInterfaceException exception = (UniformInterfaceException)e;

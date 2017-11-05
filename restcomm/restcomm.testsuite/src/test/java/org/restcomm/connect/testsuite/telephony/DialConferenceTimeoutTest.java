@@ -291,14 +291,15 @@ public class DialConferenceTimeoutTest {
         assertTrue(mgcpEndpoints>0);
         assertTrue(mgcpConnections>0);
         
+        //terminate the conference
         RestcommConferenceTool.getInstance().modifyConference(deploymentUrl.toString(),adminAccountSid, adminAuthToken, conferenceSid, "Completed");
 
         // Wait for the media to play and the call to hangup.
         bobCall.listenForDisconnect();
         georgeCall.listenForDisconnect();
 
-        assertTrue(bobCall.waitForDisconnect(50 * 1000));
-        assertTrue(georgeCall.waitForDisconnect(50 * 1000));
+        assertTrue(bobCall.waitForDisconnect(5 * 1000));
+        assertTrue(georgeCall.waitForDisconnect(5 * 1000));
 
         Thread.sleep(1000);
         assertTrue(getConferencesSize()==1);
