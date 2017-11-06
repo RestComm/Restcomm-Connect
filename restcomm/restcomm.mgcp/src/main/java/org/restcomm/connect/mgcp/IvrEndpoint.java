@@ -245,4 +245,12 @@ public final class IvrEndpoint extends GenericEndpoint {
             }
         }
     }
+
+    @Override
+    public void postStop () {
+        if (logger.isInfoEnabled()) {
+            logger.info("At IVR postStop()");
+        }
+        super.postStop();
+    }
 }
