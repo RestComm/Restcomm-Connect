@@ -420,6 +420,10 @@ public class MgcpMediaGroup extends MediaGroup {
 
     protected void stop(MgcpEvent signal) {
         if (ivrInUse || (lastEvent != null && lastEvent.getName().equalsIgnoreCase("pr"))) {
+            if (logger.isInfoEnabled()) {
+                String msg = String.format("About to stop IVR, with signal %s, last event %s", signal.toString(), lastEvent.toString());
+                logger.info(msg);
+            }
             final ActorRef self = self();
             ivr.tell(new StopEndpoint(signal), self);
             ivrInUse = false;

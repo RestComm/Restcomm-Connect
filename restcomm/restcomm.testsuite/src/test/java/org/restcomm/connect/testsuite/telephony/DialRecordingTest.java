@@ -488,7 +488,7 @@ public class DialRecordingTest {
         assertEquals(0, liveCallsArraySize);
     }
 
-	final String recordCall = "<Response><Record timeout=\"15\" maxLength=\"60\"/></Response>";
+	final String recordCall = "<Response><Record timeout=\"15\" maxLength=\"50\"/></Response>";
 	@Test
 	public synchronized void testRecordVerb() throws InterruptedException, ParseException {
 		stubFor(get(urlPathEqualTo("/1111"))
@@ -538,14 +538,14 @@ public class DialRecordingTest {
 
         bobCall.disconnect();
 
-		Thread.sleep(6000);
+		Thread.sleep(1000);
 
 		//Check recording
 		JsonArray recording = RestcommCallsTool.getInstance().getCallRecordings(deploymentUrl.toString(),adminAccountSid,adminAuthToken,callSid);
 		assertNotNull(recording);
 		assertEquals(1, recording.size());
 		double duration = recording.get(0).getAsJsonObject().get("duration").getAsDouble();
-		assertEquals(3.0, duration,0.5);
+		assertEquals(4.0, duration,0.5);
 
         metrics = MonitoringServiceTool.getInstance().getMetrics(deploymentUrl.toString(), adminAccountSid, adminAuthToken);
         assertNotNull(metrics);
@@ -661,7 +661,7 @@ public class DialRecordingTest {
 
 		bobCall.disconnect();
 
-		Thread.sleep(6000);
+		Thread.sleep(1000);
 
 		//Check recording
 		JsonArray recording = RestcommCallsTool.getInstance().getCallRecordings(deploymentUrl.toString(),adminAccountSid,adminAuthToken,callSid);
@@ -741,7 +741,7 @@ public class DialRecordingTest {
 		assertNotNull(recording);
 		assertEquals(1, recording.size());
 		double duration = recording.get(0).getAsJsonObject().get("duration").getAsDouble();
-		assertEquals(3.0, duration,0.5);
+		assertEquals(6.0, duration,0.5);
 
         logger.info("\n\n &&&&&& About to check liveCalls &&&&&& \n");
 
@@ -817,7 +817,7 @@ public class DialRecordingTest {
 		assertNotNull(recording);
 		assertEquals(1, recording.size());
 		double duration = recording.get(0).getAsJsonObject().get("duration").getAsDouble();
-		assertEquals(3.0, duration,0.5);
+		assertEquals(0.0, duration,0.5);
 
 		logger.info("\n\n &&&&&& About to check liveCalls &&&&&& \n");
 

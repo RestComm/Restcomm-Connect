@@ -75,6 +75,7 @@ import org.restcomm.connect.mscontrol.api.messages.Play;
 import org.restcomm.connect.mscontrol.api.messages.Record;
 import org.restcomm.connect.mscontrol.api.messages.StartRecording;
 import org.restcomm.connect.mscontrol.api.messages.Stop;
+import org.restcomm.connect.mscontrol.api.messages.RecordCompleted;
 import org.restcomm.connect.mscontrol.api.messages.StopMediaGroup;
 import org.restcomm.connect.mscontrol.api.messages.StopRecording;
 import org.restcomm.connect.mscontrol.api.messages.Unmute;
@@ -183,6 +184,7 @@ public final class Call extends RestcommUntypedActor {
     private final State completed;
     private final State failed;
     private final State inDialogRequest;
+    private final State stoppingRecord;
     private boolean fail;
 
     // SIP runtime stuff
@@ -333,6 +335,7 @@ public final class Call extends RestcommUntypedActor {
         this.completed = new State("completed", new Completed(source), null);
         this.failed = new State("failed", new Failed(source), null);
         this.inDialogRequest = new State("InDialogRequest", new InDialogRequest(source), null);
+        this.stoppingRecord = new State("StoppingRecord", new StoppingRecord(source), null);
 
         // Transitions for the FSM
         final Set<Transition> transitions = new HashSet<Transition>();
@@ -374,6 +377,7 @@ public final class Call extends RestcommUntypedActor {
         transitions.add(new Transition(this.dialing, this.noAnswer));
         transitions.add(new Transition(this.dialing, this.updatingMediaSession));
         transitions.add(new Transition(this.inProgress, this.stopping));
+        transitions.add(new Transition(this.inProgress, this.stoppingRecord));
         transitions.add(new Transition(this.inProgress, this.joining));
         transitions.add(new Transition(this.inProgress, this.leaving));
         transitions.add(new Transition(this.inProgress, this.failed));
@@ -393,6 +397,9 @@ public final class Call extends RestcommUntypedActor {
         transitions.add(new Transition(this.failingNoAnswer, this.canceling));
         transitions.add(new Transition(this.updatingMediaSession, this.inProgress));
         transitions.add(new Transition(this.updatingMediaSession, this.failed));
+        transitions.add(new Transition(this.stoppingRecord, this.stopping));
+        transitions.add(new Transition(this.stoppingRecord, this.failed));
+        transitions.add(new Transition(this.stoppingRecord, this.completed));
         transitions.add(new Transition(this.stopping, this.completed));
         transitions.add(new Transition(this.stopping, this.failed));
         transitions.add(new Transition(this.failed, this.completed));
@@ -739,6 +746,20 @@ public final class Call extends RestcommUntypedActor {
             onBridgeStateChanged((BridgeStateChanged) message, self, sender);
         } else if (CallHoldStateChange.class.equals(klass)) {
             onCallHoldStateChange((CallHoldStateChange)message, sender);
+        } else if (RecordCompleted.class.equals(klass)) {
+            onRecordCompleted(message);
+        }
+    }
+
+    private void onRecordCompleted (Object message) throws TransitionNotFoundException, TransitionFailedException, TransitionRollbackException {
+        if (conferencing) {
+            // Tell conference to remove the call from participants list
+            // before moving to a stopping state
+            conference.tell(new RemoveParticipant(self()), self());
+        } else {
+            // Clean media resources as necessary
+            if (!is(completed))
+                fsm.transition(message, stopping);
         }
     }
 
@@ -1747,6 +1768,19 @@ public final class Call extends RestcommUntypedActor {
 
     }
 
+    private final class StoppingRecord extends AbstractAction {
+
+        public StoppingRecord(final ActorRef source) {
+            super(source);
+        }
+
+        @Override
+        public void execute (Object message) throws Exception {
+            msController.tell(new Stop(), self());
+            recording = false;
+        }
+    }
+
     private final class Stopping extends AbstractAction {
 
         public Stopping(final ActorRef source) {
@@ -2076,14 +2110,17 @@ public final class Call extends RestcommUntypedActor {
             // Stop recording if necessary
             if (recording) {
                 if (!direction.contains("outbound")) {
-                    // Initial Call sent BYE
-                    recording = false;
-                    if(logger.isInfoEnabled()) {
-                        logger.info("Call Direction: " + direction);
-                        logger.info("Initial Call - Will stop recording now");
-                    }
-                    msController.tell(new Stop(false), self);
-                    // VoiceInterpreter will take care to prepare the Recording object
+
+                    fsm.transition(message, stoppingRecord);
+                    return;
+//                    // Initial Call sent BYE
+//                    recording = false;
+//                    if(logger.isInfoEnabled()) {
+//                        logger.info("Call Direction: " + direction);
+//                        logger.info("Initial Call - Will stop recording now");
+//                    }
+//                    msController.tell(new Stop(false), self);
+                    //Move to new FSM state here
                 } else if (direction.equalsIgnoreCase("outbound-api")){
                     //REST API Outgoing call, calculate recording
                     recordingDuration = (DateTime.now().getMillis() - recordingStart.getMillis())/1000;
@@ -2300,6 +2337,8 @@ public final class Call extends RestcommUntypedActor {
             fsm.transition(message, canceling);
         } else if (is(stopping)) {
             fsm.transition(message, completed);
+        } else if (is(stoppingRecord)) {
+            fsm.transition(message, stopping);
         }
     }
 
