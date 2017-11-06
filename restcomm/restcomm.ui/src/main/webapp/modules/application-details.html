@@ -1,69 +1,75 @@
 <div class="app-details">
-    <h3>{{app.friendly_name}}</h3>
-    <div class="app-details-content">
-        <div class="row app-details-subheader">
-            <div class="col-md-5">
-                <div class="app-details-type">
-                    <label>Application type</label>
-                    <span>{{app.kind}}</span>
+    <div class="row">
+        <div class="col-md-offset-2 col-md-8">
+
+            <h3>{{app.friendly_name}}</h3>
+            <div class="app-details-content">
+                <div class="row app-details-subheader">
+                    <div class="col-md-5">
+                        <div class="app-details-type">
+                            <label>Application type</label>
+                            <span>{{app.kind}}</span>
+                        </div>
+                    </div>
+                    <div class="col-md-4">
+                        <div class="app-details-date">
+                            <label>Date created</label>
+                            <span>{{app.date_created}}</span>
+                        </div>
+                    </div>
+                    <div ng-if="provider=='rvd'" class="col-md-3">
+                        <div class="app-details-export pull-right">
+                            <button  class="rc-btn save-btn" ng-click="downloadRvdApp(app)">
+                                <span><i class="fa fa-download"></i></span>
+                            </button>
+                        </div>
+
+
+                    </div>
+                </div>
+
+                <div ng-show="provider=='external'" class="row url-section">
+                    <div class="col-md-6">
+                        <form class="dashboard-form">
+                            <label>URL </label>
+                            <input name="url" type="text" size="40" placeholder="http(s)://" ng-model="app.rcml_url">
+                        </form>
+                    </div>
+                </div>
+
+                <div class="row app-numbers-section">
+                    <div class="col-md-12">
+                        <label>Numbers that are  using this application: </label>
+                        <span>Not implemented</span>
+                    </div>
                 </div>
             </div>
-            <div class="col-md-4">
-                <div class="app-details-date">
-                    <label>Date created</label>
-                    <span>{{app.date_created}}</span>
-                </div>
-            </div>
-            <div ng-if="provider=='rvd'" class="col-md-3">
-                <div class="app-details-export pull-right">
-                    <button  class="rc-btn save-btn" ng-click="downloadRvdApp(app)">
-                        <span><i class="fa fa-download"></i></span>
+
+            <div class="row bottom-row">
+                <div class="col-md-4 col-xs-2">
+                    <button class="rc-btn delete-btn" ng-click="confirmApplicationDelete(app)">
+                        <span class="hidden-xs">Delete Application</span>
+                        <span class="visible-xs"><i class="fa fa-trash-o"></i></span>
                     </button>
                 </div>
-
-
+                <div class="col-md-8 col-xs-10">
+                            <span class="pull-right">
+                                <button class="rc-btn close-btn" ng-click="$root.goTo('/applications')">
+                                    <span class="hidden-xs">Close</span>
+                                    <span class="visible-xs"><i class="fa fa-times"></i></span>
+                                </button>
+                                <button ng-if="provider=='rvd'" class="rc-btn save-btn" ng-click="editInDesigner(app)">
+                                    <span class="hidden-xs">Edit</span>
+                                    <span class="visible-xs"><i class="fa fa-pencil"></i></span>
+                                </button>
+                                <button ng-if="provider=='external'" class="rc-btn save-btn" ng-click="saveExternalApp(app)">
+                                    <span class="hidden-xs">Save</span>
+                                    <span class="visible-xs"><i class="fa fa-check"></i></span>
+                                </button>
+                            </span>
+                </div>
             </div>
-        </div>
 
-        <div ng-show="provider=='external'" class="row url-section">
-            <div class="col-md-6">
-                <form class="dashboard-form">
-                    <label>URL </label>
-                    <input name="url" type="text" size="40" placeholder="http(s)://" ng-model="app.rcml_url">
-                </form>
-            </div>
-        </div>
-
-        <div class="row app-numbers-section">
-            <div class="col-md-12">
-                <label>Numbers that are  using this application: </label>
-                <span>Not implemented</span>
-            </div>
-        </div>
-    </div>
-
-    <div class="row bottom-row">
-        <div class="col-md-4 col-xs-2">
-            <button class="rc-btn delete-btn" ng-click="confirmApplicationDelete(app)">
-                <span class="hidden-xs">Delete Application</span>
-                <span class="visible-xs"><i class="fa fa-trash-o"></i></span>
-            </button>
-        </div>
-        <div class="col-md-8 col-xs-10">
-                    <span class="pull-right">
-                        <button class="rc-btn close-btn" ng-click="$root.goTo('/applications')">
-                            <span class="hidden-xs">Close</span>
-                            <span class="visible-xs"><i class="fa fa-times"></i></span>
-                        </button>
-                        <button ng-if="provider=='rvd'" class="rc-btn save-btn" ng-disabled="editingPass && pwdStrength < 50" ng-click="editInDesigner(app)">
-                            <span class="hidden-xs">Edit</span>
-                            <span class="visible-xs"><i class="fa fa-pencil"></i></span>
-                        </button>
-                        <button ng-if="provider=='external'" class="rc-btn save-btn" ng-click="saveExternalApp(app)">
-                            <span class="hidden-xs">Save</span>
-                            <span class="visible-xs"><i class="fa fa-check"></i></span>
-                        </button>
-                    </span>
         </div>
     </div>
 </div>

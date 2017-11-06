@@ -1,0 +1,28 @@
+<div class="apps-wizzard">
+    <div class="row bottom-row">
+        <div class="col-md-6">
+            <h3>External application</h3>
+            <div class="pick-external-area">
+                <div><a href="#/applications/new"> Click here to create an external/URL application</a></div>
+            </div>
+        </div>
+        <div class="col-md-6">
+            <h3>RVD application</h3>
+            <div class="pick-rvd-area" ngf-drop="onFileDropped($files)" ngf-multiple="false">
+                <div><a href="#/applications/new"> Click here to create an rvd project</a></div>
+                <div>Or drop an rvd project</div>
+            </div>
+            <!--
+            <div ngf-drop="uploadFiles($files)" class="drop-box" ngf-drag-over-class="'dragover'" ngf-multiple="true" ngf-pattern="'image/*,application/pdf'">Drop Images or PDFs files here</div>
+            -->
+
+            <!--
+            REMOVE THIS
+            <div class='drop-area' ng-file-drop="onFileSelect($files)" ng-file-drag-over-class="dropping" ng-show="dropSupported">
+                <div class="drop-prompt">{{'Drop new media' | translate}}</div>
+            </div>
+            -->
+
+        </div>
+    </div>
+</div>

@@ -9,7 +9,7 @@ var rcMod = angular.module('rcApp', [
   'angular-md5',
   'ui.bootstrap.modal.dialog',
 //  'loadingOnAJAX',
-  'angularFileUpload',
+  'ngFileUpload',
   'ngPasswordStrength',
   'nvd3',
   'ngSanitize',
@@ -157,11 +157,21 @@ rcMod.config(['$stateProvider','$urlRouterProvider', function($stateProvider, $u
     templateUrl: 'modules/applications.html',
     controller: 'ApplicationsCtrl'
   });
+  $stateProvider.state('restcomm.application-creation-wizzard',{
+      url:'/applications/creation-wizzard',
+      templateUrl: 'modules/application-creation-wizzard.html',
+      controller: 'ApplicationCreationWizzardCtrl'
+  });
+  $stateProvider.state('restcomm.application-creation',{
+      url:'/applications/new',
+      templateUrl: 'modules/application-creation.html',
+      controller: 'ApplicationCreationCtrl'
+  });
   $stateProvider.state('restcomm.application-details',{
       url:'/applications/:applicationSid',
       templateUrl: 'modules/application-details.html',
       controller: 'ApplicationDetailsCtrl'
-    });
+  });
   $stateProvider.state('restcomm.clients',{
     url:'/numbers/clients',
     templateUrl: 'modules/numbers-clients.html',
