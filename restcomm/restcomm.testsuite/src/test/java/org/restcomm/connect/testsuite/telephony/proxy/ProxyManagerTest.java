@@ -54,6 +54,7 @@ public final class ProxyManagerTest {
     private static int restcommPort = 5080;
     private static int restcommHTTPPort = 8080;
     private static String restcommContact = "127.0.0.1:" + restcommPort;
+    private static int mediaPort = NetworkPortAssigner.retrieveNextPortByFile();
 
     private static SipStackTool tool1;
     private static SipStackTool tool2;
@@ -67,7 +68,6 @@ public final class ProxyManagerTest {
     private SipPhone imsAugustPhone;
     private static int imsPort = NetworkPortAssigner.retrieveNextPort();
     private String imsContact = "sip:127.0.0.1:" + imsPort;
-    private boolean isRegisterRequestReceived = false;
     public ProxyManagerTest() {
         super();
     }
@@ -182,9 +182,11 @@ public final class ProxyManagerTest {
 
         Map<String,String> replacements = new HashMap();
         //replace mediaport 2727
+        replacements.put("2727", String.valueOf(mediaPort));
         replacements.put("8080", String.valueOf(restcommHTTPPort));
         replacements.put("5080", String.valueOf(restcommPort));
-
+        replacements.put("5060", String.valueOf(imsPort));
+        replacements.put("5092", String.valueOf(augustPort));
         List<String> resources = new ArrayList(Arrays.asList("dial-client-entry_wActionUrl.xml"));
         return WebArchiveUtil.createWebArchiveNoGw("restcomm.xml",
                 "restcomm.script",resources, replacements);
