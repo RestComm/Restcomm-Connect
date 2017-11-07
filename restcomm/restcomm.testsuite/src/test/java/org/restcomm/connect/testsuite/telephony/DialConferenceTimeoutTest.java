@@ -132,7 +132,9 @@ public class DialConferenceTimeoutTest {
         for(int i = 0; i < conferenceArray.size(); i++) {
             JsonObject confObj = conferenceArray.get(i).getAsJsonObject();
             String confName = confObj.get("friendly_name").getAsString();
-            if (confName.equalsIgnoreCase(name)) {
+            String confStatus = confObj.get("status").getAsString();
+            logger.info("confStatus: "+confStatus);
+            if (confName.equalsIgnoreCase(name) && confStatus.matches("RUNNING.*")) {
                 confSid = confObj.get("sid").getAsString();
                 return confSid;
             }
@@ -186,13 +188,13 @@ public class DialConferenceTimeoutTest {
         assertTrue(!(georgeCall.getLastReceivedResponse().getStatusCode() >= 400));
 
         String conferenceSid = getConferenceSid(confRoom1);
-        assertTrue(getParticipantsSize(conferenceSid)==2);
+        assertEquals(2, getParticipantsSize(conferenceSid));
         int liveCalls = MonitoringServiceTool.getInstance().getStatistics(deploymentUrl.toString(), adminAccountSid, adminAuthToken);
         int liveCallsArraySize = MonitoringServiceTool.getInstance().getLiveCallsArraySize(deploymentUrl.toString(), adminAccountSid, adminAuthToken);
         logger.info("&&&&& LiveCalls: "+liveCalls);
         logger.info("&&&&& LiveCallsArraySize: "+liveCallsArraySize);
-        assertTrue(liveCalls == 2);
-        assertTrue(liveCallsArraySize == 2);
+        assertEquals(2, liveCalls);
+        assertEquals(2, liveCallsArraySize);
 
         JsonObject metrics = MonitoringServiceTool.getInstance().getMetrics(deploymentUrl.toString(),adminAccountSid, adminAuthToken);
         Map<String, Integer> mgcpResources = MonitoringServiceTool.getInstance().getMgcpResources(metrics);
@@ -202,9 +204,6 @@ public class DialConferenceTimeoutTest {
         assertTrue(mgcpEndpoints>0);
         assertTrue(mgcpConnections>0);
 
-        //wait for conference to timeout
-        //Thread.sleep(60000);
-
         // Wait for the media to play and the call to hangup.
         bobCall.listenForDisconnect();
         georgeCall.listenForDisconnect();
@@ -213,14 +212,14 @@ public class DialConferenceTimeoutTest {
         assertTrue(georgeCall.waitForDisconnect(80 * 1000));
 
         Thread.sleep(1000);
-        assertTrue(getConferencesSize()==1);
-        assertTrue(getParticipantsSize(conferenceSid)==0);
+        assertEquals(1, getConferencesSize());
+        assertEquals(0, getParticipantsSize(conferenceSid));
         liveCalls = MonitoringServiceTool.getInstance().getStatistics(deploymentUrl.toString(), adminAccountSid, adminAuthToken);
         liveCallsArraySize = MonitoringServiceTool.getInstance().getLiveCallsArraySize(deploymentUrl.toString(), adminAccountSid, adminAuthToken);
         logger.info("&&&&& LiveCalls: "+liveCalls);
         logger.info("&&&&& LiveCallsArraySize: "+liveCallsArraySize);
-        assertTrue(liveCalls == 0);
-        assertTrue(liveCallsArraySize == 0);
+        assertEquals(0, liveCalls);
+        assertEquals(0, liveCallsArraySize);
 
         metrics = MonitoringServiceTool.getInstance().getMetrics(deploymentUrl.toString(),adminAccountSid, adminAuthToken);
         mgcpResources = MonitoringServiceTool.getInstance().getMgcpResources(metrics);
@@ -280,8 +279,8 @@ public class DialConferenceTimeoutTest {
         int liveCallsArraySize = MonitoringServiceTool.getInstance().getLiveCallsArraySize(deploymentUrl.toString(), adminAccountSid, adminAuthToken);
         logger.info("&&&&& LiveCalls: "+liveCalls);
         logger.info("&&&&& LiveCallsArraySize: "+liveCallsArraySize);
-        assertTrue(liveCalls == 2);
-        assertTrue(liveCallsArraySize == 2);
+        assertEquals(2, liveCalls);
+        assertEquals(2, liveCallsArraySize);
 
         JsonObject metrics = MonitoringServiceTool.getInstance().getMetrics(deploymentUrl.toString(),adminAccountSid, adminAuthToken);
         Map<String, Integer> mgcpResources = MonitoringServiceTool.getInstance().getMgcpResources(metrics);
@@ -308,8 +307,8 @@ public class DialConferenceTimeoutTest {
         liveCallsArraySize = MonitoringServiceTool.getInstance().getLiveCallsArraySize(deploymentUrl.toString(), adminAccountSid, adminAuthToken);
         logger.info("&&&&& LiveCalls: "+liveCalls);
         logger.info("&&&&& LiveCallsArraySize: "+liveCallsArraySize);
-        assertTrue(liveCalls == 0);
-        assertTrue(liveCallsArraySize == 0);
+        assertEquals(0, liveCalls);
+        assertEquals(0, liveCallsArraySize);
 
         metrics = MonitoringServiceTool.getInstance().getMetrics(deploymentUrl.toString(),adminAccountSid, adminAuthToken);
         mgcpResources = MonitoringServiceTool.getInstance().getMgcpResources(metrics);
