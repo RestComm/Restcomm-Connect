@@ -648,7 +648,7 @@ public final class Conference extends RestcommUntypedActor {
                 logger.info("Conference: " + self().path()
                     + "At the postStop() method.");
             }
-            if(conferenceApiClient != null && !conferenceApiClient().isTerminated())
+            if(conferenceApiClient != null && !conferenceApiClient.isTerminated())
                 getContext().stop(conferenceApiClient);
 
             getContext().stop(self());
