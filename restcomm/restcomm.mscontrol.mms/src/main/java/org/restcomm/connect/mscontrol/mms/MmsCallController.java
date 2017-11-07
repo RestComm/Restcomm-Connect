@@ -343,42 +343,6 @@ public class MmsCallController extends MediaServerController {
             // Tell media group to stop recording
             mediaGroup.tell(message, null);
         }
-
-//            this.recording = false;
-//
-//            if (message.createRecord() && recordingUri != null) {
-//                Double duration;
-//                try {
-//                    duration = WavUtils.getAudioDuration(recordingUri);
-//                } catch (UnsupportedAudioFileException | IOException e) {
-//                    logger.error("Could not measure recording duration: " + e.getMessage(), e);
-//                    duration = 0.0;
-//                }
-//                if (!duration.equals(0.0)) {
-//                    if (logger.isInfoEnabled()) {
-//                        logger.info("Call wraping up recording. File already exists, duration: " + duration);
-//                    }
-//                    final Recording.Builder builder = Recording.builder();
-//                    builder.setSid(recordingSid);
-//                    builder.setAccountSid(accountId);
-//                    builder.setCallSid(callId);
-//                    builder.setDuration(duration);
-//                    builder.setApiVersion(runtimeSettings.getString("api-version"));
-//                    StringBuilder buffer = new StringBuilder();
-//                    buffer.append("/").append(runtimeSettings.getString("api-version")).append("/Accounts/")
-//                            .append(accountId.toString());
-//                    buffer.append("/Recordings/").append(recordingSid.toString());
-//                    builder.setUri(URI.create(buffer.toString()));
-//                    final Recording recording = builder.build();
-//                    RecordingsDao recordsDao = daoManager.getRecordingsDao();
-//                    recordsDao.addRecording(recording, MediaAttributes.MediaType.AUDIO_ONLY);
-//                }
-//            } else {
-//                if(logger.isInfoEnabled()) {
-//                    logger.info("Call wraping up recording. File doesn't exist since duration is 0");
-//                }
-//            }
-
     }
 
     /*
