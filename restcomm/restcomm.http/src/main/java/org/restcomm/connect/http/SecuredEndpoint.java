@@ -331,6 +331,9 @@ public abstract class SecuredEndpoint extends AbstractEndpoint {
         String operatedAccountSid = null;
         if (operatedAccount != null)
             operatedAccountSid = operatedAccount.getSid().toString();
+        if (isSuperAdmin()) {
+            return AuthOutcome.OK;
+        }
         // in case we're dealing with resources, we first make sure that they are accessed under their owner account.
         if (resourceAccountSid != null)
             if (! resourceAccountSid.equals(operatedAccountSid))
