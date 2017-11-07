@@ -25,7 +25,6 @@ import java.io.UnsupportedEncodingException;
 import java.net.URI;
 import java.net.URISyntaxException;
 import java.util.List;
-import java.util.concurrent.Future;
 
 import javax.xml.stream.XMLStreamException;
 
@@ -71,7 +70,7 @@ public final class HttpAsycClientHelper extends RestcommUntypedActor {
 
     public HttpAsycClientHelper () {
         super();
-        client = (CloseableHttpAsyncClient) CustomHttpClientBuilder.buildAsyncClient(RestcommConfiguration.getInstance().getMain());
+        client = (CloseableHttpAsyncClient) CustomHttpClientBuilder.buildCloseableHttpAsyncClient(RestcommConfiguration.getInstance().getMain());
     }
 
     @Override
@@ -92,6 +91,7 @@ public final class HttpAsycClientHelper extends RestcommUntypedActor {
                 execute(request, sender);
             } catch (final Exception exception) {
                 DownloaderResponse response = new DownloaderResponse(exception, "Problem while trying to exceute request");
+                sendResponse(sender, response);
             }
         }
     }
@@ -102,7 +102,7 @@ public final class HttpAsycClientHelper extends RestcommUntypedActor {
         HttpUriRequest request = null;
         HttpRequestDescriptor temp = descriptor;
         try {
-            
+
             request = request(temp);
             request.setHeader("http.protocol.content-charset", "UTF-8");
             if (descriptor.getTimeout() > 0){
@@ -113,14 +113,14 @@ public final class HttpAsycClientHelper extends RestcommUntypedActor {
                 setConnectionRequestTimeout(descriptor.getTimeout()).build());
                 client.execute(request, httpContext, getFutureCallback(request, sender));
             } else {
-                client.execute((HttpUriRequest) request, getFutureCallback(request, sender));
+                client.execute(request, getFutureCallback(request, sender));
             }
         } catch (Exception e) {
             logger.error("Problem while trying to execute http request {}, exception: {}", request.getRequestLine(), e);
             throw e;
         }
     }
-    
+
     private FutureCallback<HttpResponse> getFutureCallback(final HttpUriRequest request, final ActorRef sender){
         return new FutureCallback<HttpResponse>(){
 
