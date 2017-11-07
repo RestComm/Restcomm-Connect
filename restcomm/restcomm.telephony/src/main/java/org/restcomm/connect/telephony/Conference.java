@@ -117,6 +117,7 @@ public final class Conference extends RestcommUntypedActor {
     private ConferenceStateChanged.State waitingState;
 
     private final ActorRef conferenceCenter;
+    private ActorRef conferenceApiClient;
 
     public Conference(final String name, final MediaServerControllerFactory factory, final DaoManager storage, final ActorRef conferenceCenter) {
         super();
@@ -324,7 +325,8 @@ public final class Conference extends RestcommUntypedActor {
                 call.tell(leave, super.source);
             }
             //tell conference api client to call conference api to terminate conference and kick all calls
-            conferenceApiClient().tell(new StopConference(), self());
+            conferenceApiClient = conferenceApiClient();
+            conferenceApiClient.tell(new StopConference(), self());
         }
     }
 
@@ -637,5 +639,20 @@ public final class Conference extends RestcommUntypedActor {
             }
         });
         return getContext().actorOf(props);
+    }
+
+    @Override
+    public void postStop() {
+        if (!fsm.state().equals(uninitialized)) {
+            if(logger.isInfoEnabled()) {
+                logger.info("Conference: " + self().path()
+                    + "At the postStop() method.");
+            }
+            if(conferenceApiClient != null && !conferenceApiClient().isTerminated())
+                getContext().stop(conferenceApiClient);
+
+            getContext().stop(self());
+        }
+        super.postStop();
     }
 }
