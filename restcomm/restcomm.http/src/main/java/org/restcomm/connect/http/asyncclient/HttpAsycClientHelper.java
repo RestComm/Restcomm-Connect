@@ -230,8 +230,9 @@ public final class HttpAsycClientHelper extends RestcommUntypedActor {
     @Override
     public void postStop () {
         if (logger.isDebugEnabled()) {
-            logger.debug("Downloader at post stop");
+            logger.debug("HttpAsycClientHelper at post stop");
         }
+        getContext().stop(self());
         super.postStop();
     }
 }

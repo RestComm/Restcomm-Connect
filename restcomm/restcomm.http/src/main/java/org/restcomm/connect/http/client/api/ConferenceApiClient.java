@@ -17,27 +17,20 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>
  *
  */
-package org.restcomm.connect.telephony;
+package org.restcomm.connect.http.client.api;
 
-import java.io.IOException;
-import java.io.UnsupportedEncodingException;
 import java.net.URI;
 import java.net.URISyntaxException;
 import java.nio.charset.Charset;
 import java.text.ParseException;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.concurrent.ExecutionException;
-import java.util.concurrent.Future;
 
 import org.apache.commons.codec.binary.Base64;
+import org.apache.http.Header;
 import org.apache.http.HttpHeaders;
-import org.apache.http.HttpResponse;
 import org.apache.http.NameValuePair;
-import org.apache.http.client.entity.UrlEncodedFormEntity;
-import org.apache.http.client.methods.HttpPost;
-import org.apache.http.impl.nio.client.CloseableHttpAsyncClient;
-import org.apache.http.impl.nio.client.HttpAsyncClients;
+import org.apache.http.message.BasicHeader;
 import org.apache.http.message.BasicNameValuePair;
 import org.restcomm.connect.commons.dao.Sid;
 import org.restcomm.connect.commons.faulttolerance.RestcommUntypedActor;
@@ -46,14 +39,19 @@ import org.restcomm.connect.dao.DaoManager;
 import org.restcomm.connect.dao.entities.Account;
 import org.restcomm.connect.dao.entities.ConferenceDetailRecord;
 import org.restcomm.connect.dao.entities.ConferenceDetailRecordFilter;
+import org.restcomm.connect.http.asyncclient.HttpAsycClientHelper;
 import org.restcomm.connect.http.client.DownloaderResponse;
+import org.restcomm.connect.http.client.HttpRequestDescriptor;
 import org.restcomm.connect.telephony.api.StopConference;
 
 import akka.actor.ActorRef;
+import akka.actor.Props;
+import akka.actor.UntypedActor;
+import akka.actor.UntypedActorFactory;
 import akka.event.Logging;
 import akka.event.LoggingAdapter;
 
-public class ConferenceTerminationHelper extends RestcommUntypedActor {
+public class ConferenceApiClient extends RestcommUntypedActor {
 
     private final LoggingAdapter logger = Logging.getLogger(getContext().system(), this);
 
@@ -63,8 +61,11 @@ public class ConferenceTerminationHelper extends RestcommUntypedActor {
     private final Sid conferenceSid;
     private ConferenceDetailRecord conferenceDetailRecord;
     private static final String SUPER_ADMIN_ACCOUNT_SID="ACae6e420f425248d6a26948c17a9e2acf";
+    private ActorRef requestee;
 
-    public ConferenceTerminationHelper(final String accountSid, final String name, final Sid conferenceSid, final DaoManager storage) {
+    private ActorRef httpAsycClientHelper;
+
+    public ConferenceApiClient(final String accountSid, final String name, final Sid conferenceSid, final DaoManager storage) {
         super();
         this.accountSid = accountSid;
         this.name = name;
@@ -78,8 +79,8 @@ public class ConferenceTerminationHelper extends RestcommUntypedActor {
         ActorRef self = self();
 
         if (logger.isInfoEnabled()) {
-            logger.info(" ********** ConferenceTerminationHelper " + self().path() + " Sender: " + sender);
-            logger.info(" ********** ConferenceTerminationHelper " + self().path() + " Processing Message: " + klass.getName());
+            logger.info(" ********** ConferenceApiHelper " + self().path() + " Sender: " + sender);
+            logger.info(" ********** ConferenceApiHelper " + self().path() + " Processing Message: " + klass.getName());
         }
         if (StopConference.class.equals(klass)) {
             onStopConference((StopConference) message, self, sender);
@@ -91,55 +92,50 @@ public class ConferenceTerminationHelper extends RestcommUntypedActor {
     private void onDownloaderResponse(Object message, ActorRef self, ActorRef sender) {
         final DownloaderResponse response = (DownloaderResponse) message;
         if (logger.isInfoEnabled()) {
-            logger.info("Download Rcml response succeeded " + response.succeeded());
-            logger.info("Download Rcml response: " + response);
+            logger.info("Conference api response succeeded " + response.succeeded());
+            logger.info("Conference api response: " + response);
         }
+        requestee.tell(message, self);
     }
     protected void onStopConference(StopConference message, ActorRef self, ActorRef sender) throws URISyntaxException, ParseException {
+        requestee = sender;
         conferenceDetailRecord = getConferenceDetailRecord();
         if(conferenceDetailRecord == null){
             logger.error("could not retrieve conferenceDetailRecord");
         } else {
-            Account superAdminAccount = storage.getAccountsDao().getAccount(SUPER_ADMIN_ACCOUNT_SID);
-
-            CloseableHttpAsyncClient httpclient = HttpAsyncClients.createDefault();
             try {
-                httpclient.start();
-
-                String auth = superAdminAccount.getSid() + ":" + superAdminAccount.getAuthToken();
-                byte[] encodedAuth = Base64.encodeBase64(auth.getBytes(Charset.forName("ISO-8859-1")));
-                String authHeader = "Basic " + new String(encodedAuth);
-
                 URI uri = new URI("/restcomm"+conferenceDetailRecord.getUri());
                 uri = UriUtils.resolve(uri);
                 if (logger.isInfoEnabled())
                     logger.info("conference api uri is: "+uri);
-                HttpPost request = new HttpPost(uri);
-                request.setHeader(HttpHeaders.AUTHORIZATION, authHeader);
-                request.setHeader("Accept", "application/json");
+
+                Header[] headers = {
+                        new BasicHeader(HttpHeaders.AUTHORIZATION, getSuperAdminAuthenticationHeader())
+                        ,new BasicHeader("Content-type", "application/x-www-form-urlencoded")
+                        ,new BasicHeader("Accept", "application/json")
+                    };
 
                 ArrayList<NameValuePair> postParameters = new ArrayList<NameValuePair>();
                 postParameters.add(new BasicNameValuePair("Status", "Completed"));
-                request.setEntity(new UrlEncodedFormEntity(postParameters, "UTF-8"));
 
-                Future<HttpResponse> future = httpclient.execute(request, null);
-                HttpResponse response = future.get();
-                if (logger.isInfoEnabled()) {
-                    logger.info("Conference Termination Response: " + response.getStatusLine());
-                }
-            } catch (InterruptedException | ExecutionException | UnsupportedEncodingException e) {
+                httpAsycClientHelper = httpAsycClientHelper();
+                HttpRequestDescriptor httpRequestDescriptor =new HttpRequestDescriptor(uri, "POST", postParameters, -1, headers);
+                httpAsycClientHelper.tell(httpRequestDescriptor, self);
+            } catch (Exception e) {
                 logger.error("Exception while trying to terminate conference via api: ", e);
-            } finally {
-                try {
-                    httpclient.close();
-                } catch (IOException e) {
-                    logger.error("Exception while trying to clos httpclient: ", e);
-                }
             }
         }
     }
 
-    protected ConferenceDetailRecord getConferenceDetailRecord() throws ParseException{
+    private String getSuperAdminAuthenticationHeader(){
+        Account superAdminAccount = storage.getAccountsDao().getAccount(SUPER_ADMIN_ACCOUNT_SID);
+
+        String auth = superAdminAccount.getSid() + ":" + superAdminAccount.getAuthToken();
+        byte[] encodedAuth = Base64.encodeBase64(auth.getBytes(Charset.forName("ISO-8859-1")));
+        return "Basic " + new String(encodedAuth);
+    }
+
+    private ConferenceDetailRecord getConferenceDetailRecord() throws ParseException{
         if(conferenceSid == null){
             ConferenceDetailRecordFilter filter = new ConferenceDetailRecordFilter(accountSid, "RUNNING%", null, null, name, 1, 0);
             List<ConferenceDetailRecord> conferenceDetailRecords = storage.getConferenceDetailRecordsDao().getConferenceDetailRecords(filter);
@@ -152,5 +148,29 @@ public class ConferenceTerminationHelper extends RestcommUntypedActor {
         } else {
             return storage.getConferenceDetailRecordsDao().getConferenceDetailRecord(conferenceSid);
         }
+    }
+
+    private ActorRef httpAsycClientHelper(){
+        final Props props = new Props(new UntypedActorFactory() {
+            private static final long serialVersionUID = 1L;
+
+            @Override
+            public UntypedActor create() throws Exception {
+                return new HttpAsycClientHelper();
+            }
+        });
+        return getContext().actorOf(props);
+
+    }
+
+    @Override
+    public void postStop () {
+        if (logger.isInfoEnabled()) {
+            logger.info("ConferenceApiClient at post stop");
+        }
+        if(httpAsycClientHelper != null && !httpAsycClientHelper.isTerminated())
+            getContext().stop(httpAsycClientHelper);
+        getContext().stop(self());
+        super.postStop();
     }
 }

@@ -43,6 +43,7 @@ import org.restcomm.connect.dao.CallDetailRecordsDao;
 import org.restcomm.connect.dao.ConferenceDetailRecordsDao;
 import org.restcomm.connect.dao.DaoManager;
 import org.restcomm.connect.dao.entities.ConferenceDetailRecord;
+import org.restcomm.connect.http.client.api.ConferenceApiClient;
 import org.restcomm.connect.mscontrol.api.MediaServerControllerFactory;
 import org.restcomm.connect.mscontrol.api.messages.CreateMediaSession;
 import org.restcomm.connect.mscontrol.api.messages.JoinCall;
@@ -322,8 +323,8 @@ public final class Conference extends RestcommUntypedActor {
                 final Leave leave = new Leave();
                 call.tell(leave, super.source);
             }
-            //tell conference termination helper to call conference api to terminate conference and kick all calls
-            conferenceTerminationHelper().tell(new StopConference(), self());
+            //tell conference api client to call conference api to terminate conference and kick all calls
+            conferenceApiClient().tell(new StopConference(), self());
         }
     }
 
@@ -626,13 +627,13 @@ public final class Conference extends RestcommUntypedActor {
         return 0;
     }
 
-    protected ActorRef conferenceTerminationHelper() {
+    protected ActorRef conferenceApiClient() {
         final Props props = new Props(new UntypedActorFactory() {
             private static final long serialVersionUID = 1L;
 
             @Override
             public UntypedActor create() throws Exception {
-                return new ConferenceTerminationHelper(accountSid, friendlyName, sid, storage);
+                return new ConferenceApiClient(accountSid, friendlyName, sid, storage);
             }
         });
         return getContext().actorOf(props);
