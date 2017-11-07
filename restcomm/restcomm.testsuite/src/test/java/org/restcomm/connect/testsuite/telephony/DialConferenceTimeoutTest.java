@@ -298,10 +298,6 @@ public class DialConferenceTimeoutTest {
         bobCall.listenForDisconnect();
         georgeCall.listenForDisconnect();
 
-        assertTrue(bobCall.waitForDisconnect(5 * 1000));
-        assertTrue(georgeCall.waitForDisconnect(5 * 1000));
-
-        Thread.sleep(1000);
         assertTrue(getConferencesSize()==1);
         assertTrue(getParticipantsSize(conferenceSid)==0);
         liveCalls = MonitoringServiceTool.getInstance().getStatistics(deploymentUrl.toString(), adminAccountSid, adminAuthToken);
