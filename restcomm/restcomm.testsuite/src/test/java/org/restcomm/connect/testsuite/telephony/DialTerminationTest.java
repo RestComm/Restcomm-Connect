@@ -43,8 +43,8 @@ import com.google.gson.JsonObject;
  * Created by gvagenas on 5/19/16.
  */
 @RunWith(Arquillian.class)
-public class DialConferenceTimeoutTest {
-    private final static Logger logger = Logger.getLogger(DialConferenceTimeoutTest.class.getName());
+public class DialTerminationTest {
+    private final static Logger logger = Logger.getLogger(DialTerminationTest.class.getName());
 
     private static final String version = Version.getVersion();
     private static final byte[] bytes = new byte[]{118, 61, 48, 13, 10, 111, 61, 117, 115, 101, 114, 49, 32, 53, 51, 54, 53,
@@ -155,7 +155,7 @@ public class DialConferenceTimeoutTest {
     private final String confRoom1 = "confRoom1";
     private String dialConfernceRcml = "<Response><Dial><Conference>"+confRoom1+"</Conference></Dial></Response>";
     @Test
-    public synchronized void testDialConferenceClientsWaitForDisconnect() throws InterruptedException {
+    public synchronized void testDialConferenceTimeoutTest() throws InterruptedException {
         stubFor(get(urlPathEqualTo("/1111"))
                 .willReturn(aResponse()
                         .withStatus(200)
