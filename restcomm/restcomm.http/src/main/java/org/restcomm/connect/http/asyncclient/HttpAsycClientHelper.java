@@ -83,9 +83,8 @@ public final class HttpAsycClientHelper extends RestcommUntypedActor {
         }
         if (HttpRequestDescriptor.class.equals(klass)) {
             final HttpRequestDescriptor request = (HttpRequestDescriptor) message;
-            //TODO: change to debug before PR is merged
-            if (logger.isInfoEnabled()) {
-                logger.info("New HttpRequestDescriptor, method: " + request.getMethod() + " URI: " + request.getUri() + " parameters: " + request.getParametersAsString());
+            if (logger.isDebugEnabled()) {
+                logger.debug("New HttpRequestDescriptor, method: " + request.getMethod() + " URI: " + request.getUri() + " parameters: " + request.getParametersAsString());
             }
             try {
                 execute(request, sender);
@@ -126,9 +125,8 @@ public final class HttpAsycClientHelper extends RestcommUntypedActor {
 
             @Override
             public void completed(HttpResponse result) {
-                //TODO: change to debug or remove before PR is merged
-                if (logger.isInfoEnabled()) {
-                    logger.info(String.format("success on execution of http request. result %s", result));
+                if (logger.isDebugEnabled()) {
+                    logger.debug(String.format("success on execution of http request. result %s", result));
                 }
                 DownloaderResponse response = null;
                 try {
