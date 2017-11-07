@@ -113,10 +113,19 @@ public class DialConferenceTimeoutTest {
         Thread.sleep(4000);
     }
 
-    private int getConferencesSize() {
+    private int getActiveConferencesSize() {
         JsonObject conferences = RestcommConferenceTool.getInstance().getConferences(deploymentUrl.toString(),adminAccountSid, adminAuthToken);
         JsonArray conferenceArray = conferences.getAsJsonArray("conferences");
-        return conferenceArray.size();
+        int activeConfSize = 0;
+        for(int i = 0; i < conferenceArray.size(); i++) {
+            JsonObject confObj = conferenceArray.get(i).getAsJsonObject();
+            String confStatus = confObj.get("status").getAsString();
+            logger.info("confStatus: "+confStatus);
+            if (confStatus.matches("RUNNING.*")) {
+            	activeConfSize++;
+            }
+        }
+        return activeConfSize;
     }
 
     private int getParticipantsSize(final String sid) {
@@ -212,7 +221,7 @@ public class DialConferenceTimeoutTest {
         assertTrue(georgeCall.waitForDisconnect(80 * 1000));
 
         Thread.sleep(1000);
-        assertEquals(1, getConferencesSize());
+        assertEquals(0, getActiveConferencesSize());
         assertEquals(0, getParticipantsSize(conferenceSid));
         liveCalls = MonitoringServiceTool.getInstance().getStatistics(deploymentUrl.toString(), adminAccountSid, adminAuthToken);
         liveCallsArraySize = MonitoringServiceTool.getInstance().getLiveCallsArraySize(deploymentUrl.toString(), adminAccountSid, adminAuthToken);
@@ -272,9 +281,9 @@ public class DialConferenceTimeoutTest {
         georgeCall.sendInviteOkAck();
         assertTrue(!(georgeCall.getLastReceivedResponse().getStatusCode() >= 400));
 
-        assertTrue(getConferencesSize()==1);
+        assertEquals(1, getActiveConferencesSize());
         String conferenceSid = getConferenceSid(confRoom1);
-        assertTrue(getParticipantsSize(conferenceSid)==2);
+        assertEquals(2, getParticipantsSize(conferenceSid));
         int liveCalls = MonitoringServiceTool.getInstance().getStatistics(deploymentUrl.toString(), adminAccountSid, adminAuthToken);
         int liveCallsArraySize = MonitoringServiceTool.getInstance().getLiveCallsArraySize(deploymentUrl.toString(), adminAccountSid, adminAuthToken);
         logger.info("&&&&& LiveCalls: "+liveCalls);
@@ -297,12 +306,13 @@ public class DialConferenceTimeoutTest {
         bobCall.listenForDisconnect();
         georgeCall.listenForDisconnect();
 
-        assertTrue(bobCall.waitForDisconnect(50 * 1000));
-        assertTrue(georgeCall.waitForDisconnect(50 * 1000));
+        assertTrue(bobCall.waitForDisconnect(20 * 1000));
+        assertTrue(georgeCall.waitForDisconnect(20 * 1000));
 
         Thread.sleep(1000);
 
-        assertTrue(getParticipantsSize(conferenceSid)==0);
+        assertEquals(0, getActiveConferencesSize());
+        assertEquals(0, getParticipantsSize(conferenceSid));
         liveCalls = MonitoringServiceTool.getInstance().getStatistics(deploymentUrl.toString(), adminAccountSid, adminAuthToken);
         liveCallsArraySize = MonitoringServiceTool.getInstance().getLiveCallsArraySize(deploymentUrl.toString(), adminAccountSid, adminAuthToken);
         logger.info("&&&&& LiveCalls: "+liveCalls);
