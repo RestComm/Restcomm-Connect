@@ -43,8 +43,8 @@ import com.google.gson.JsonObject;
  * Created by gvagenas on 5/19/16.
  */
 @RunWith(Arquillian.class)
-public class DialTerminationTest {
-    private final static Logger logger = Logger.getLogger(DialTerminationTest.class.getName());
+public class DialConferenceTerminationTest {
+    private final static Logger logger = Logger.getLogger(DialConferenceTerminationTest.class.getName());
 
     private static final String version = Version.getVersion();
     private static final byte[] bytes = new byte[]{118, 61, 48, 13, 10, 111, 61, 117, 115, 101, 114, 49, 32, 53, 51, 54, 53,
