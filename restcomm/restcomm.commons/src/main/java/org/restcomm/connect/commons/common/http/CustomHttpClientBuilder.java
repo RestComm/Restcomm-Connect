@@ -77,9 +77,10 @@ public class CustomHttpClientBuilder {
         }
         if (closeableHttpAsyncClient != null) {
             try {
-				closeableHttpAsyncClient.close();
-			} catch (IOException e) {
-			}
+                if(closeableHttpAsyncClient.isRunning())
+                    closeableHttpAsyncClient.close();
+            } catch (IOException e) {
+            }
             closeableHttpAsyncClient = null;
         }
     }
@@ -94,6 +95,7 @@ public class CustomHttpClientBuilder {
     public static synchronized CloseableHttpAsyncClient buildCloseableHttpAsyncClient(MainConfigurationSet config) {
         if (closeableHttpAsyncClient == null) {
             closeableHttpAsyncClient = buildAsync(config);
+            closeableHttpAsyncClient.start();
         }
         return closeableHttpAsyncClient;
     }
@@ -103,12 +105,12 @@ public class CustomHttpClientBuilder {
         return build(config, timeoutConnection);
     }
 
-    public static CloseableHttpAsyncClient buildAsync(MainConfigurationSet config) {
+    private static CloseableHttpAsyncClient buildAsync(MainConfigurationSet config) {
         int timeoutConnection = config.getResponseTimeout();
         return buildAsync(config, timeoutConnection);
     }
 
-    public static CloseableHttpAsyncClient buildAsync(MainConfigurationSet config, int timeout) {
+    private static CloseableHttpAsyncClient buildAsync(MainConfigurationSet config, int timeout) {
         HttpAsyncClientBuilder builder = HttpAsyncClients.custom();
 
         RequestConfig requestConfig = RequestConfig.custom()
@@ -137,9 +139,8 @@ public class CustomHttpClientBuilder {
                     .register("http", NoopIOSessionStrategy.INSTANCE)
                     .register("https", sessionStrategy)
                     .build();
-            PoolingNHttpClientConnectionManager poolingmgr = null;
             try {
-                poolingmgr = new PoolingNHttpClientConnectionManager(
+                final PoolingNHttpClientConnectionManager poolingmgr = new PoolingNHttpClientConnectionManager(
                         new DefaultConnectingIOReactor(),
                         null,
                         reg,
@@ -162,7 +163,7 @@ public class CustomHttpClientBuilder {
         return builder.build();
     }
 
-    public static CloseableHttpClient build(MainConfigurationSet config, int timeout) {
+    private static CloseableHttpClient build(MainConfigurationSet config, int timeout) {
         HttpClientBuilder builder = HttpClients.custom();
 
         RequestConfig requestConfig = RequestConfig.custom()
