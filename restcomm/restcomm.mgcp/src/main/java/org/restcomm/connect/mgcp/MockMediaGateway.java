@@ -628,13 +628,14 @@ public class MockMediaGateway extends RestcommUntypedActor {
     private void stopRecording () {
         if (recordingFile != null) {
             endTime = DateTime.now();
-            int recordingDuration = (int) ((endTime.getMillis() - startTime.getMillis()) / 1000);
+            long recordingDuration = (int) ((endTime.getMillis() - startTime.getMillis()) / 1000);
             try {
-                String msg = String.format("Will write to recording file %s for duration of %d", recordingFile, recordingDuration);
+                int duration = (int) recordingDuration;
+                String msg = String.format("Will write to recording file %s for duration of %d", recordingFile, duration);
                 logger.info(msg);
                 URI waveFileUri = ClassLoader.getSystemResource("FiveMinutes.wav").toURI();
                 File waveFile = new File(waveFileUri);
-                writeRecording(waveFile, recordingFile, recordingDuration);
+                writeRecording(waveFile, recordingFile, duration);
             } catch (Exception e) {
                 String msg = String.format("Exception while trying to create Recording file %s, exception %s", recordingFile, e);
                 logger.error(msg);
@@ -660,10 +661,6 @@ public class MockMediaGateway extends RestcommUntypedActor {
 
         final Notify notify = new Notify(this, request.getEndpointIdentifier(), request.getRequestIdentifier(), events);
         notify.setTransactionHandle((int) transactionIdPool.get());
-        //Simulate Recording maxLength
-//        try {
-//            Thread.sleep(recordingMaxLength*10);
-//        } catch (InterruptedException e) {}
         System.out.println(notify.toString());
         sender.tell(notify, self);
     }
