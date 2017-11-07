@@ -66,7 +66,7 @@ public final class HttpRequestDescriptor {
     public HttpRequestDescriptor(final URI uri, final String method,
             final List<NameValuePair> parameters,
             final Integer timeout){
-    	this(uri, method, parameters, timeout, null);
+        this(uri, method, parameters, timeout, null);
     }
 
     public HttpRequestDescriptor(final URI uri, final String method, final List<NameValuePair> parameters) {

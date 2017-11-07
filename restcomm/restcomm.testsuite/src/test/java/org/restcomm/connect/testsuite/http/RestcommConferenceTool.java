@@ -193,7 +193,7 @@ public class RestcommConferenceTool {
         JsonObject jsonObject = null;
 
         try {
-            String response = webResource.path(conferenceSid).accept(MediaType.APPLICATION_JSON).post(String.class, params);
+            String response = webResource.path(conferenceSid+".json").accept(MediaType.APPLICATION_JSON).post(String.class, params);
             logger.info("response: "+response);
             JsonParser parser = new JsonParser();
             JsonElement element = parser.parse(response);

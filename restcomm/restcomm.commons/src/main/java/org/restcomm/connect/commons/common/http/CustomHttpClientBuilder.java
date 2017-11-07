@@ -19,6 +19,7 @@
  */
 package org.restcomm.connect.commons.common.http;
 
+import java.io.IOException;
 import java.net.InetSocketAddress;
 import java.security.KeyManagementException;
 import java.security.KeyStoreException;
@@ -74,6 +75,13 @@ public class CustomHttpClientBuilder {
             HttpClientUtils.closeQuietly(defaultClient);
             defaultClient = null;
         }
+        if (closeableHttpAsyncClient != null) {
+            try {
+				closeableHttpAsyncClient.close();
+			} catch (IOException e) {
+			}
+            closeableHttpAsyncClient = null;
+        }
     }
 
     public static synchronized CloseableHttpClient buildDefaultClient(MainConfigurationSet config) {
@@ -85,7 +93,7 @@ public class CustomHttpClientBuilder {
 
     public static synchronized CloseableHttpAsyncClient buildCloseableHttpAsyncClient(MainConfigurationSet config) {
         if (closeableHttpAsyncClient == null) {
-            closeableHttpAsyncClient = buildAsyncClient(config);
+            closeableHttpAsyncClient = buildAsync(config);
         }
         return closeableHttpAsyncClient;
     }
@@ -95,12 +103,12 @@ public class CustomHttpClientBuilder {
         return build(config, timeoutConnection);
     }
 
-    public static CloseableHttpAsyncClient buildAsyncClient(MainConfigurationSet config) {
+    public static CloseableHttpAsyncClient buildAsync(MainConfigurationSet config) {
         int timeoutConnection = config.getResponseTimeout();
-        return buildAsyncClient(config, timeoutConnection);
+        return buildAsync(config, timeoutConnection);
     }
 
-    public static CloseableHttpAsyncClient buildAsyncClient(MainConfigurationSet config, int timeout) {
+    public static CloseableHttpAsyncClient buildAsync(MainConfigurationSet config, int timeout) {
         HttpAsyncClientBuilder builder = HttpAsyncClients.custom();
 
         RequestConfig requestConfig = RequestConfig.custom()
@@ -112,7 +120,7 @@ public class CustomHttpClientBuilder {
 
         SslMode mode = config.getSslMode();
         SSLIOSessionStrategy sessionStrategy = null;
-        
+
         if (mode == SslMode.strict) {
             sessionStrategy = buildStrictSSLIOSessionStrategy();
         } else {
@@ -146,7 +154,7 @@ public class CustomHttpClientBuilder {
                     HttpRoute r = new HttpRoute(new HttpHost(addr.getHostName(), addr.getPort()));
                     poolingmgr.setMaxPerRoute(r, config.getDefaultHttpRoutes().get(addr));
                 }
-            builder.setConnectionManager(poolingmgr);
+                builder.setConnectionManager(poolingmgr);
             } catch (IOReactorException e) {
                 throw new RuntimeException("Error creating CloseableHttpAsyncClient", e);
             }
@@ -271,7 +279,7 @@ public class CustomHttpClientBuilder {
         try {
             SSLContextBuilder builder = new SSLContextBuilder();
             builder.loadTrustMaterial(null, new TrustSelfSignedStrategy());
-            
+
             SSLIOSessionStrategy sessionStrategy = new SSLIOSessionStrategy(
                     builder.build(),
                     getSSLPrototocolsFromSystemProperties(),
