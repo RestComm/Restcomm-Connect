@@ -202,15 +202,16 @@ public class DialConferenceTimeoutTest {
 
         assertTrue(mgcpEndpoints>0);
         assertTrue(mgcpConnections>0);
-        
-        Thread.sleep(5000);
+
+        //wait for conference to timeout
+        Thread.sleep(60000);
 
         // Wait for the media to play and the call to hangup.
         bobCall.listenForDisconnect();
         georgeCall.listenForDisconnect();
 
-        assertTrue(bobCall.waitForDisconnect(50 * 1000));
-        assertTrue(georgeCall.waitForDisconnect(50 * 1000));
+        assertTrue(bobCall.waitForDisconnect(80 * 1000));
+        assertTrue(georgeCall.waitForDisconnect(80 * 1000));
 
         Thread.sleep(1000);
         assertTrue(getConferencesSize()==1);
