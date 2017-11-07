@@ -185,7 +185,6 @@ public class DialConferenceTimeoutTest {
         georgeCall.sendInviteOkAck();
         assertTrue(!(georgeCall.getLastReceivedResponse().getStatusCode() >= 400));
 
-        assertTrue(getConferencesSize()==1);
         String conferenceSid = getConferenceSid(confRoom1);
         assertTrue(getParticipantsSize(conferenceSid)==2);
         int liveCalls = MonitoringServiceTool.getInstance().getStatistics(deploymentUrl.toString(), adminAccountSid, adminAuthToken);
@@ -204,7 +203,7 @@ public class DialConferenceTimeoutTest {
         assertTrue(mgcpConnections>0);
 
         //wait for conference to timeout
-        Thread.sleep(60000);
+        //Thread.sleep(60000);
 
         // Wait for the media to play and the call to hangup.
         bobCall.listenForDisconnect();
@@ -299,7 +298,11 @@ public class DialConferenceTimeoutTest {
         bobCall.listenForDisconnect();
         georgeCall.listenForDisconnect();
 
-        assertTrue(getConferencesSize()==1);
+        assertTrue(bobCall.waitForDisconnect(50 * 1000));
+        assertTrue(georgeCall.waitForDisconnect(50 * 1000));
+
+        Thread.sleep(1000);
+
         assertTrue(getParticipantsSize(conferenceSid)==0);
         liveCalls = MonitoringServiceTool.getInstance().getStatistics(deploymentUrl.toString(), adminAccountSid, adminAuthToken);
         liveCallsArraySize = MonitoringServiceTool.getInstance().getLiveCallsArraySize(deploymentUrl.toString(), adminAccountSid, adminAuthToken);
