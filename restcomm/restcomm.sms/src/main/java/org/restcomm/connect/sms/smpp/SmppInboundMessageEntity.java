@@ -57,7 +57,7 @@ public class SmppInboundMessageEntity {
             .append(",Encoding=")
             .append(smppEncoding);
 
-        return super.toString();
+        return builder.toString();
     }
 
 }
