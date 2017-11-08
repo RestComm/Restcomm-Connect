@@ -57,6 +57,7 @@ import akka.actor.UntypedActorContext;
 import akka.actor.UntypedActorFactory;
 import akka.event.Logging;
 import akka.event.LoggingAdapter;
+import org.restcomm.connect.dao.entities.MostOptimalNumberResponse;
 
 //import org.restcomm.connect.extension.api.ExtensionRequest;
 //import org.restcomm.connect.extension.api.ExtensionResponse;
@@ -144,29 +145,14 @@ public class SmppMessageHandler extends RestcommUntypedActor {
         String to = request.getSmppTo();
         String phone = to;
 
-        final PhoneNumberUtil phoneNumberUtil = PhoneNumberUtil.getInstance();
-
-        try {
-            phone = phoneNumberUtil.format(phoneNumberUtil.parse(to, "US"), PhoneNumberUtil.PhoneNumberFormat.E164);
-        } catch (Exception e) {}
         // Try to find an application defined for the phone number.
-        final IncomingPhoneNumbersDao numbersDao = storage.getIncomingPhoneNumbersDao();
-        List<IncomingPhoneNumber> numbers = numbersDao.getIncomingPhoneNumber(phone);
-        IncomingPhoneNumber number = null;
-        if(!numbers.isEmpty()){
-            number = numbers.get(0);
-        }
+        //TODO define how to find orgnanization context in SMPP message
+        Sid sourceOrgSid= null;
+        Sid destOrgSid= null;
 
-        if(number == null){
-            numbers = numbersDao.getIncomingPhoneNumber(to);
-            number = numbers.isEmpty() ? null : numbers.get(0);
-        }
+        MostOptimalNumberResponse mostOptimalNumber = OrganizationUtil.getMostOptimalIncomingPhoneNumber(storage, destOrgSid, phone, sourceOrgSid);
+        IncomingPhoneNumber number = mostOptimalNumber.number();
 
-        if(number == null){
-            // https://github.com/Mobicents/RestComm/issues/84 using wildcard as default application
-            numbers = numbersDao.getIncomingPhoneNumber("*");
-            number = numbers.isEmpty() ? null : numbers.get(0);
-        }
         try {
             if (number != null) {
                 ActorRef interpreter = null;
