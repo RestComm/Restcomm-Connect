@@ -39,17 +39,13 @@ public interface IncomingPhoneNumbersDao {
 
     List<IncomingPhoneNumber> getIncomingPhoneNumbersByFilter(IncomingPhoneNumberFilter incomingPhoneNumberFilter);
 
-    List<IncomingPhoneNumber> getIncomingPhoneNumber(String phoneNumber);
-
     void removeIncomingPhoneNumber(Sid sid);
 
     void removeIncomingPhoneNumbers(Sid accountSid);
 
     void updateIncomingPhoneNumber(IncomingPhoneNumber incomingPhoneNumber);
 
-    List<IncomingPhoneNumber> getAllIncomingPhoneNumbers();
-
-    List<IncomingPhoneNumber> getIncomingPhoneNumbersRegex();
+    List<IncomingPhoneNumber> getIncomingPhoneNumbersRegex(Sid orgSid);
 
     Integer getTotalIncomingPhoneNumbers(IncomingPhoneNumberFilter filter);
 }

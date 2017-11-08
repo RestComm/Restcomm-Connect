@@ -172,14 +172,18 @@
 	<select id="getCallDetailRecordsByInstanceId" parameterType="string" resultType="hashmap">
 		SELECT * FROM "restcomm_call_detail_records" WHERE "instanceid"=#{instanceid};
 	</select>
-
+  
   <select id="getInCompleteCallDetailRecordsByInstanceId" parameterType="string" resultType="hashmap">
     SELECT * FROM "restcomm_call_detail_records" WHERE "instanceid"=#{instanceid} AND (UPPER("status") = ('IN_PROGRESS') OR 
       UPPER("status") = ('IN-PROGRESS') OR UPPER("status") = ('RINGING') OR UPPER("status") = ('QUEUED'));
   </select>
-  
+
   <select id="getCallDetailRecordsByConferenceSid" parameterType="string" resultType="hashmap">
     SELECT * FROM "restcomm_call_detail_records" WHERE "conference_sid"=#{conference_sid};
+  </select>
+
+  <select id="getRunningCallDetailRecordsByConferenceSid" parameterType="string" resultType="hashmap">
+    SELECT * FROM "restcomm_call_detail_records" WHERE "conference_sid"=#{conference_sid} and "status" ='in-progress';
   </select>
 
   <select id="getCallDetailRecordsByMsId" parameterType="string" resultType="hashmap">
@@ -205,10 +209,9 @@
     		"end_conference_on_exit"=#{end_conference_on_exit}, "on_hold"=#{on_hold}, "ms_id"=#{ms_id} 
     WHERE "sid"=#{sid};
   </update>
-
   <update id="updateInCompleteCallDetailRecordsToCompletedByInstanceId" parameterType="string">
     UPDATE "restcomm_call_detail_records"
-      SET "status"='COMPLETED'
+      SET "status"='completed'
       WHERE "instanceid"=#{instanceid} AND (UPPER("status") = ('IN_PROGRESS') OR 
         UPPER("status") = ('IN-PROGRESS') OR UPPER("status") = ('RINGING') OR UPPER("status") = ('QUEUED'));
   </update>

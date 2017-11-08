@@ -36,6 +36,9 @@ import org.restcomm.connect.dao.entities.Organization;
 import com.google.i18n.phonenumbers.NumberParseException;
 import com.google.i18n.phonenumbers.PhoneNumberUtil;
 import com.google.i18n.phonenumbers.PhoneNumberUtil.PhoneNumberFormat;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
+import org.restcomm.connect.dao.entities.IncomingPhoneNumberFilter;
 
 /**
  * @author maria.farooq@telestax.com (Maria Farooq)
@@ -53,93 +56,104 @@ public class OrganizationUtil {
      */
     public static MostOptimalNumberResponse getMostOptimalIncomingPhoneNumber(DaoManager storage, SipServletRequest request, String phone,
             Sid sourceOrganizationSid) {
-        if(logger.isDebugEnabled())
-            logger.debug("getMostOptimalIncomingPhoneNumber: "+phone);
+        MostOptimalNumberResponse res = null;
+        Sid destinationOrganizationSid = getOrganizationSidBySipURIHost(storage, (SipURI) request.getRequestURI());
+        // try to get destinationOrganizationSid from toUril
+        destinationOrganizationSid = destinationOrganizationSid != null ? destinationOrganizationSid : getOrganizationSidBySipURIHost(storage, (SipURI) request.getTo().getURI());
+        if (destinationOrganizationSid == null) {
+            logger.error("destinationOrganizationSid is NULL: request Uri is: " + (SipURI) request.getRequestURI() + " To Uri is: " + (SipURI) request.getTo().getURI());
+            res = new MostOptimalNumberResponse(null, false);
+        } else {
+            if (logger.isDebugEnabled()) {
+                logger.debug("getMostOptimalIncomingPhoneNumber: sourceOrganizationSid: " + sourceOrganizationSid + " : destinationOrganizationSid: " + destinationOrganizationSid + " request Uri is: " + (SipURI) request.getRequestURI() + " To Uri is: " + (SipURI) request.getTo().getURI());
+            }
+            res = getMostOptimalIncomingPhoneNumber(storage, destinationOrganizationSid, phone, sourceOrganizationSid);
+        }
+        return res;
+    }
+
+    public static MostOptimalNumberResponse getMostOptimalIncomingPhoneNumber(DaoManager storage, Sid destinationOrganizationSid, String phone,
+            Sid sourceOrganizationSid) {
+        if (logger.isDebugEnabled()) {
+            logger.debug("getMostOptimalIncomingPhoneNumber: " + phone);
+        }
 
         IncomingPhoneNumber number = null;
         boolean failCall = false;
         List<IncomingPhoneNumber> numbers = new ArrayList<IncomingPhoneNumber>();
         final IncomingPhoneNumbersDao numbersDao = storage.getIncomingPhoneNumbersDao();
-        try{
-            Sid destinationOrganizationSid = getOrganizationSidBySipURIHost(storage, (SipURI)request.getRequestURI());
-            // try to get destinationOrganizationSid from toUril
-            destinationOrganizationSid = destinationOrganizationSid != null ? destinationOrganizationSid : getOrganizationSidBySipURIHost(storage, (SipURI)request.getTo().getURI());
-            if(destinationOrganizationSid == null){
-                logger.error("destinationOrganizationSid is NULL: request Uri is: "+(SipURI)request.getRequestURI()+ " To Uri is: "+(SipURI)request.getTo().getURI());
-            }else{
-                if(logger.isDebugEnabled())
-                    logger.debug("getMostOptimalIncomingPhoneNumber: sourceOrganizationSid: "+sourceOrganizationSid+" : destinationOrganizationSid: "+destinationOrganizationSid +" request Uri is: "+(SipURI)request.getRequestURI()+ " To Uri is: "+(SipURI)request.getTo().getURI());
+        try {
 
-                // Format the destination to an E.164 phone number.
-                final PhoneNumberUtil phoneNumberUtil = PhoneNumberUtil.getInstance();
-                String formatedPhone = null;
-                if (!(phone.contains("*") || phone.contains("#"))) {
-                    try {
-                        formatedPhone = phoneNumberUtil.format(phoneNumberUtil.parse(phone, "US"), PhoneNumberFormat.E164);
-                    } catch (NumberParseException e) {
-                        //logger.error("Exception when try to format : " + e);
-                    }
-                }
-                if (formatedPhone == null) {
-                    //Don't format to E.164 if phone contains # or * as this is
-                    //for a Regex or USSD short number
-                    formatedPhone = phone;
-                }else {
-                    //get all number with same number, by both formatedPhone and unformatedPhone
-                    numbers = OrganizationUtil.searchAndAddNumberToTheList(numbers, formatedPhone, numbersDao);
-                }
-                numbers = OrganizationUtil.searchAndAddNumberToTheList(numbers, phone, numbersDao);
-                if (phone.startsWith("+")) {
-                    //remove the (+) and check if exists
-                    phone= phone.replaceFirst("\\+","");
-                    numbers = OrganizationUtil.searchAndAddNumberToTheList(numbers, phone, numbersDao);
-                } else {
-                    //Add "+" add check if number exists
-                    phone = "+".concat(phone);
-                    numbers = OrganizationUtil.searchAndAddNumberToTheList(numbers, phone, numbersDao);
-                }
-                if(numbers == null || numbers.isEmpty()){
-                    // https://github.com/Mobicents/RestComm/issues/84 using wildcard as default application
-                    numbers = OrganizationUtil.searchAndAddNumberToTheList(numbers, "*", numbersDao);
-                }
-                if(numbers != null && !numbers.isEmpty()){
-                    // find number in same organization
-                    for(IncomingPhoneNumber n : numbers){
-                        if(n != null){
-                            if(logger.isDebugEnabled())
-                                logger.debug(String.format("getMostOptimalIncomingPhoneNumber: Got a similar number from DB: Analysis report: Number:Sid = %s : %s | Is Number pure sip? %s | Number's organizations: %s", n.getPhoneNumber(), n.getSid(), n.isPureSip(), n.getOrganizationSid()));
-                            if(n.getOrganizationSid().equals(destinationOrganizationSid)){
-                                /*
-                                 * check if request is coming from same org
-                                 * if not then only allow provider numbers
-                                 */
-                                if((sourceOrganizationSid != null && sourceOrganizationSid.equals(destinationOrganizationSid)) || (sourceOrganizationSid == null) || !n.isPureSip()){
-                                    number = n;
-                                    if(logger.isInfoEnabled())
-                                        logger.info(String.format("Found most optimal phone number: Number:Sid = %s : %s", n.getPhoneNumber(), n.getSid()));
-                                }else{
-                                    if(logger.isDebugEnabled())
-                                        logger.debug("not allowed to call this number due to organizational restrictions");
-                                }
-                            }else{
-                                if(logger.isDebugEnabled())
-                                    logger.debug(String.format("getMostOptimalIncomingPhoneNumber: Number:Sid = %s : %s does not belong to requested/destination organization: %s", n.getPhoneNumber(), n.getSid(), destinationOrganizationSid));
-                            }
-                            if(number != null)
-                                break;
-                        }
-                    }
-                    failCall = number == null;
+            // Format the destination to an E.164 phone number.
+            final PhoneNumberUtil phoneNumberUtil = PhoneNumberUtil.getInstance();
+            String formatedPhone = null;
+            if (!(phone.contains("*") || phone.contains("#"))) {
+                try {
+                    formatedPhone = phoneNumberUtil.format(phoneNumberUtil.parse(phone, "US"), PhoneNumberFormat.E164);
+                } catch (NumberParseException e) {
+                    //logger.error("Exception when try to format : " + e);
                 }
             }
-        }catch(Exception e){
+            if (formatedPhone == null) {
+                //Don't format to E.164 if phone contains # or * as this is
+                //for a Regex or USSD short number
+                formatedPhone = phone;
+            } else {
+                //get all number with same number, by both formatedPhone and unformatedPhone
+                numbers = OrganizationUtil.searchAndAddNumberToTheList(numbers, formatedPhone, numbersDao, destinationOrganizationSid);
+            }
+            numbers = OrganizationUtil.searchAndAddNumberToTheList(numbers, phone, numbersDao, destinationOrganizationSid);
+            if (phone.startsWith("+")) {
+                //remove the (+) and check if exists
+                phone = phone.replaceFirst("\\+", "");
+                numbers = OrganizationUtil.searchAndAddNumberToTheList(numbers, phone, numbersDao, destinationOrganizationSid);
+            } else {
+                //Add "+" add check if number exists
+                phone = "+".concat(phone);
+                numbers = OrganizationUtil.searchAndAddNumberToTheList(numbers, phone, numbersDao, destinationOrganizationSid);
+            }
+            if (numbers == null || numbers.isEmpty()) {
+                // https://github.com/Mobicents/RestComm/issues/84 using wildcard as default application
+                numbers = OrganizationUtil.searchAndAddNumberToTheList(numbers, "*", numbersDao, destinationOrganizationSid);
+            }
+            if (numbers != null && !numbers.isEmpty()) {
+                // find number in same organization
+                for (IncomingPhoneNumber n : numbers) {
+                    if (n != null) {
+                        if (logger.isDebugEnabled()) {
+                            logger.debug(String.format("getMostOptimalIncomingPhoneNumber: Got a similar number from DB: Analysis report: Number:Sid = %s : %s | Is Number pure sip? %s | Number's organizations: %s", n.getPhoneNumber(), n.getSid(), n.isPureSip(), n.getOrganizationSid()));
+                        }
+                        if (n.getOrganizationSid().equals(destinationOrganizationSid)) {
+                            /*
+                             * check if request is coming from same org
+                             * if not then only allow provider numbers
+                             */
+                            if ((sourceOrganizationSid != null && sourceOrganizationSid.equals(destinationOrganizationSid)) || (sourceOrganizationSid == null) || !n.isPureSip()) {
+                                number = n;
+                                if (logger.isInfoEnabled()) {
+                                    logger.info(String.format("Found most optimal phone number: Number:Sid = %s : %s", n.getPhoneNumber(), n.getSid()));
+                                }
+                            } else if (logger.isDebugEnabled()) {
+                                logger.debug("not allowed to call this number due to organizational restrictions");
+                            }
+                        } else if (logger.isDebugEnabled()) {
+                            logger.debug(String.format("getMostOptimalIncomingPhoneNumber: Number:Sid = %s : %s does not belong to requested/destination organization: %s", n.getPhoneNumber(), n.getSid(), destinationOrganizationSid));
+                        }
+                        if (number != null) {
+                            break;
+                        }
+                    }
+                }
+                failCall = number == null;
+            }
+        } catch (Exception e) {
             logger.error("Error while trying to retrive getMostOptimalIncomingPhoneNumber: ", e);
         }
-        if(logger.isDebugEnabled())
-            logger.debug(String.format("getMostOptimalIncomingPhoneNumber Resut: Found the number? %s | Is this number relevant? %s", number!=null, failCall));
+        if (logger.isDebugEnabled()) {
+            logger.debug(String.format("getMostOptimalIncomingPhoneNumber Resut: Found the number? %s | Is this number relevant? %s", number != null, failCall));
+        }
         return new MostOptimalNumberResponse(number, failCall);
     }
-
 
     /**
      * getOrganizationSidBySipURIHost
@@ -147,9 +161,10 @@ public class OrganizationUtil {
      * @param sipURI
      * @return Sid of Organization
      */
-    public static Sid getOrganizationSidBySipURIHost(DaoManager storage, final SipURI sipURI){
-        if(logger.isDebugEnabled())
+    public static Sid getOrganizationSidBySipURIHost(DaoManager storage, final SipURI sipURI) {
+        if (logger.isDebugEnabled()) {
             logger.debug(String.format("getOrganizationSidBySipURIHost sipURI = %s", sipURI));
+        }
         final String organizationDomainName = sipURI.getHost();
         Organization organization = storage.getOrganizationsDao().getOrganizationByDomainName(organizationDomainName);
         return organization == null ? null : organization.getSid();
@@ -157,10 +172,11 @@ public class OrganizationUtil {
 
     /**
      * getOrganizationSidByAccountSid
+     *
      * @param accountSid
      * @return Sid of Organization
      */
-    public static Sid getOrganizationSidByAccountSid(DaoManager storage, final Sid accountSid){
+    public static Sid getOrganizationSidByAccountSid(DaoManager storage, final Sid accountSid) {
         return storage.getAccountsDao().getAccount(accountSid).getOrganizationSid();
     }
 
@@ -170,15 +186,74 @@ public class OrganizationUtil {
      * @param numbersDao
      * @return
      */
-    private static List<IncomingPhoneNumber> searchAndAddNumberToTheList(List<IncomingPhoneNumber> numbers, String phone, IncomingPhoneNumbersDao numbersDao){
-        List<IncomingPhoneNumber> listOfNumbers = numbersDao.getIncomingPhoneNumber(phone);
-        if(listOfNumbers !=null && !listOfNumbers.isEmpty()){
-            if(numbers == null || numbers.isEmpty()){
+    private static List<IncomingPhoneNumber> searchAndAddNumberToTheList(List<IncomingPhoneNumber> numbers, String phone, IncomingPhoneNumbersDao numbersDao, Sid destOrg) {
+        IncomingPhoneNumberFilter.Builder builder = IncomingPhoneNumberFilter.Builder.builder();
+        builder.byPhoneNumber(phone);
+        builder.byOrgSid(destOrg.toString());
+        List<IncomingPhoneNumber> listOfNumbers = numbersDao.getIncomingPhoneNumbersByFilter(builder.build());
+
+        //check if there is a Regex match only if parameter is a String aka phone Number
+        String inboundPhoneNumber = null;
+        List<IncomingPhoneNumber> regexList = numbersDao.getIncomingPhoneNumbersRegex(destOrg);
+        if (regexList != null && regexList.size() > 0) {
+            inboundPhoneNumber = ((String) phone).replace("+1", "");
+            if (inboundPhoneNumber.matches("[\\d,*,#,+]+")) {
+                IncomingPhoneNumber matchingRegex = findFirstMatchingRegex(inboundPhoneNumber, regexList);
+                if (matchingRegex != null) {
+                    listOfNumbers.add(matchingRegex);
+                }
+            }
+        }
+
+        if (listOfNumbers != null && !listOfNumbers.isEmpty()) {
+            if (numbers == null || numbers.isEmpty()) {
                 numbers = listOfNumbers;
-            }else{
+            } else {
                 numbers.addAll(listOfNumbers);
             }
         }
         return numbers;
+    }
+
+    /**
+     *
+     * @param inboundPhoneNumber the number to be matched agaisnt the regex list
+     * @param listPhones the list of regexes to match
+     * @return the first matching regex from the list
+     */
+    public static IncomingPhoneNumber findFirstMatchingRegex(String inboundPhoneNumber, List<IncomingPhoneNumber> listPhones) {
+        String phoneRegexPattern = null;
+        IncomingPhoneNumber matchedRegex = null;
+        try {
+            if (logger.isInfoEnabled()) {
+                final String msg = String.format("Found %d Regex IncomingPhone numbers. Will try to match a REGEX for incoming phone number for phoneNumber : %s", listPhones.size(), inboundPhoneNumber);
+                logger.info(msg);
+            }
+            for (IncomingPhoneNumber listPhone : listPhones) {
+                if (listPhone.getPhoneNumber().startsWith("+")) {
+                    phoneRegexPattern = listPhone.getPhoneNumber().replace("+", "/+");
+                } else if (listPhone.getPhoneNumber().startsWith("*")) {
+                    phoneRegexPattern = listPhone.getPhoneNumber().replace("*", "/*");
+                } else {
+                    phoneRegexPattern = listPhone.getPhoneNumber();
+                }
+                Pattern p = Pattern.compile(phoneRegexPattern);
+                Matcher m = p.matcher(inboundPhoneNumber);
+                if (m.find()) {
+                    matchedRegex = listPhone;
+                } else if (logger.isInfoEnabled()) {
+                    String msg = String.format("Regex \"%s\" cannot be matched for phone number \"%s\"", phoneRegexPattern, inboundPhoneNumber);
+                    logger.info(msg);
+                }
+            }
+            logger.info("No matching phone number found, make sure your Restcomm Regex phone number is correctly defined");
+        } catch (Exception e) {
+            if (logger.isDebugEnabled()) {
+                String msg = String.format("Exception while trying to match for a REGEX for incoming phone number %s, exception: %s", inboundPhoneNumber, e);
+                logger.debug(msg);
+            }
+        }
+        return matchedRegex;
+
     }
 }

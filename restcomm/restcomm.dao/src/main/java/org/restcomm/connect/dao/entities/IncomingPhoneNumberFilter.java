@@ -24,7 +24,6 @@ import org.restcomm.connect.commons.annotations.concurrency.Immutable;
 /**
  * @author <a href="mailto:jean.deruelle@telestax.com">Jean Deruelle</a>
  */
-
 @Immutable
 public class IncomingPhoneNumberFilter {
 
@@ -35,9 +34,10 @@ public class IncomingPhoneNumberFilter {
     private final String sortDirection;
     private final Integer limit;
     private final Integer offset;
+    private final String orgSid;
 
     public IncomingPhoneNumberFilter(String accountSid, String friendlyName, String phoneNumber, String sortBy,
-            String sortDirection, Integer limit, Integer offset) {
+            String sortDirection, Integer limit, Integer offset, String orgSid) {
         this.accountSid = accountSid;
         this.friendlyName = friendlyName;
         // The LIKE keyword uses '%' to match any (including 0) number of characters, and '_' to match exactly one character
@@ -52,10 +52,10 @@ public class IncomingPhoneNumberFilter {
         this.sortDirection = sortDirection;
         this.limit = limit;
         this.offset = offset;
+        this.orgSid = orgSid;
     }
 
     public IncomingPhoneNumberFilter(String accountSid, String friendlyName, String phoneNumber) {
-        super();
         this.accountSid = accountSid;
         this.friendlyName = friendlyName;
         // The LIKE keyword uses '%' to match any (including 0) number of characters, and '_' to match exactly one character
@@ -69,6 +69,7 @@ public class IncomingPhoneNumberFilter {
         this.sortDirection = null;
         this.offset = null;
         this.limit = null;
+        this.orgSid = null;
     }
 
     public String getAccountSid() {
@@ -115,6 +116,70 @@ public class IncomingPhoneNumberFilter {
      */
     public Integer getOffset() {
         return offset;
+    }
+
+    public String getOrgSid() {
+        return orgSid;
+    }
+
+    public static final class Builder {
+
+        private String accountSid = null;
+        private String friendlyName = null;
+        private String phoneNumber = null;
+        private String sortBy = null;
+        private String sortDirection = null;
+        private Integer limit = null;
+        private Integer offset = null;
+        private String orgSid = null;
+
+        public static IncomingPhoneNumberFilter.Builder builder() {
+            return new IncomingPhoneNumberFilter.Builder();
+        }
+
+        public IncomingPhoneNumberFilter build() {
+            return new IncomingPhoneNumberFilter(accountSid, friendlyName, phoneNumber, sortBy, sortDirection, limit, offset, orgSid);
+        }
+
+        public Builder byAccountSid(String accountSid) {
+            this.accountSid = accountSid;
+            return this;
+        }
+
+        public Builder byFriendlyName(String friendlyName) {
+            this.friendlyName = friendlyName;
+            return this;
+        }
+
+        public Builder byPhoneNumber(String phoneNumber) {
+            this.phoneNumber = phoneNumber;
+            return this;
+        }
+
+        public Builder bySortBy(String sortBy) {
+            this.sortBy = sortBy;
+            return this;
+        }
+
+        public Builder bySortDirection(String sortDirection) {
+            this.sortDirection = sortDirection;
+            return this;
+        }
+
+        public Builder byLimit(Integer limit) {
+            this.limit = limit;
+            return this;
+        }
+
+        public Builder byOffset(Integer offset) {
+            this.offset = offset;
+            return this;
+        }
+
+        public Builder byOrgSid(String orgSid) {
+            this.orgSid = orgSid;
+            return this;
+        }
     }
 
 }

@@ -38,7 +38,6 @@
 		</if>
 		;
 	</select>
-        
         <!-- use artificial condition (1=1) that always evaluates to true to ease 
         query composition. 
         All parameters here are optional.
@@ -65,7 +64,7 @@
 			AND "date_updated" &lt;= DATE_ADD(#{dateUpdated},INTERVAL 1 DAY) order by date_created
 		</if>
 		;
-	</select>         
+	</select>        
 	<select id="getConferenceDetailRecordByUsingFilters" parameterType="org.restcomm.connect.dao.entities.ConferenceDetailRecordFilter" resultType="hashmap">
 		SELECT * FROM "restcomm_conference_detail_records" AS "restcomm_conference_detail_records" WHERE "account_sid"=#{accountSid}
         <if test="status != null">
@@ -123,6 +122,12 @@
             UPDATE 
         	"restcomm_conference_detail_records" 
         	SET "master_present"=#{master_present}, "date_updated"=#{date_updated}
+        	WHERE "sid"=#{sid};
+     </update>
+    <update id="updateModeratorPresent" parameterType="map">
+            UPDATE 
+        	"restcomm_conference_detail_records" 
+        	SET "moderator_present"=#{moderator_present}, "date_updated"=#{date_updated}
         	WHERE "sid"=#{sid};
      </update>
 

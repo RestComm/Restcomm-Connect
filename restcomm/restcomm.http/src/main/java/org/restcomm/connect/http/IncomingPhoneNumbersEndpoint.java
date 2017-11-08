@@ -314,7 +314,7 @@ public abstract class IncomingPhoneNumbersEndpoint extends SecuredEndpoint {
             }
 
             incomingPhoneNumberFilter = new IncomingPhoneNumberFilter(accountSid, friendlyNameFilter, phoneNumberFilter, sortBy,
-                    reverse, limit, offset);
+                    reverse, limit, offset,null);
 
             final List<IncomingPhoneNumber> incomingPhoneNumbers = dao.getIncomingPhoneNumbersByFilter(incomingPhoneNumberFilter);
 
