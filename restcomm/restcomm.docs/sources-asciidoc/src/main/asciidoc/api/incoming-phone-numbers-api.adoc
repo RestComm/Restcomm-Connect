@@ -526,4 +526,7 @@ curl -X GET  https://administrator%40company.com:77f8c12cc7b8f8423e5c38b03524916
 |^*222*...*...*500#$| the Regext (^*222*...*...*500#$) matches *222*888*999*500# or *222*444*321*500#  the dots maches any character
 |999...| Matches 999222, 999123, 999555 the dots matches any character
 
+WARNING: Watch out, Regex has been disabled for incoming SMPP/SMS messages because SMPP is not supporting Organizations.
+
+
 |=====================================================================================================================================================================================================================================================
