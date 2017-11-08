@@ -1,3 +1,22 @@
+/*
+ * TeleStax, Open Source Cloud Communications
+ * Copyright 2011-2014, Telestax Inc and individual contributors
+ * by the @authors tag.
+ *
+ * This program is free software: you can redistribute it and/or modify
+ * under the terms of the GNU Affero General Public License as
+ * published by the Free Software Foundation; either version 3 of
+ * the License, or (at your option) any later version.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU Affero General Public License for more details.
+ *
+ * You should have received a copy of the GNU Affero General Public License
+ * along with this program.  If not, see <http://www.gnu.org/licenses/>
+ *
+ */
 package org.restcomm.connect.sms.smpp;
 
 import java.io.IOException;
@@ -57,7 +76,6 @@ import akka.actor.UntypedActorContext;
 import akka.actor.UntypedActorFactory;
 import akka.event.Logging;
 import akka.event.LoggingAdapter;
-import org.restcomm.connect.dao.entities.MostOptimalNumberResponse;
 
 //import org.restcomm.connect.extension.api.ExtensionRequest;
 //import org.restcomm.connect.extension.api.ExtensionResponse;
@@ -138,6 +156,8 @@ public class SmppMessageHandler extends RestcommUntypedActor {
         }
     }
 
+
+
     private boolean redirectToHostedSmsApp(final ActorRef self, final SmppInboundMessageEntity request, final AccountsDao accounts,
                                            final ApplicationsDao applications, String id) throws IOException {
         boolean isFoundHostedApp = false;
@@ -145,13 +165,32 @@ public class SmppMessageHandler extends RestcommUntypedActor {
         String to = request.getSmppTo();
         String phone = to;
 
-        // Try to find an application defined for the phone number.
-        //TODO define how to find orgnanization context in SMPP message
-        Sid sourceOrgSid= null;
-        Sid destOrgSid= null;
+        final PhoneNumberUtil phoneNumberUtil = PhoneNumberUtil.getInstance();
 
-        MostOptimalNumberResponse mostOptimalNumber = OrganizationUtil.getMostOptimalIncomingPhoneNumber(storage, destOrgSid, phone, sourceOrgSid);
-        IncomingPhoneNumber number = mostOptimalNumber.number();
+        try {
+            phone = phoneNumberUtil.format(phoneNumberUtil.parse(to, "US"), PhoneNumberUtil.PhoneNumberFormat.E164);
+        } catch (Exception e) {}
+        // Try to find an application defined for the phone number.
+        final IncomingPhoneNumbersDao numbersDao = storage.getIncomingPhoneNumbersDao();
+        List<IncomingPhoneNumber> numbers = numbersDao.getIncomingPhoneNumber(phone);
+        IncomingPhoneNumber number = null;
+        if(!numbers.isEmpty()){
+            RegexRemover.removeRegexes(numbers);
+            number = numbers.get(0);
+        }
+
+        if(number == null){
+            numbers = numbersDao.getIncomingPhoneNumber(to);
+            RegexRemover.removeRegexes(numbers);
+            number = numbers.isEmpty() ? null : numbers.get(0);
+        }
+
+        if(number == null){
+            // https://github.com/Mobicents/RestComm/issues/84 using wildcard as default application
+            numbers = numbersDao.getIncomingPhoneNumber("*");
+            RegexRemover.removeRegexes(numbers);
+            number = numbers.isEmpty() ? null : numbers.get(0);
+        }
 
         try {
             if (number != null) {
