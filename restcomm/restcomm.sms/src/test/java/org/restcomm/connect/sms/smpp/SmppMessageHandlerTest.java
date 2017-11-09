@@ -72,8 +72,14 @@ public class SmppMessageHandlerTest {
 
         builder.setPhoneNumber("+1234");
         numbers.add(builder.build());
+        builder.setPhoneNumber("+1234*");
+        numbers.add(builder.build());
+        builder.setPhoneNumber("9887");
+        numbers.add(builder.build());
+        builder.setPhoneNumber("+");
+        numbers.add(builder.build());
         RegexRemover.removeRegexes(numbers);
-        assertTrue(!numbers.isEmpty());
+        assertEquals(3, numbers.size());
     }
 
 }
