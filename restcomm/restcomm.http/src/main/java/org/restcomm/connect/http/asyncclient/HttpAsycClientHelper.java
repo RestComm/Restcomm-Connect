@@ -90,7 +90,7 @@ public final class HttpAsycClientHelper extends RestcommUntypedActor {
                 execute(request, sender);
             } catch (final Exception exception) {
                 DownloaderResponse response = new DownloaderResponse(exception, "Problem while trying to exceute request");
-                sendResponse(sender, response);
+                sender.tell(response, self());
             }
         }
     }
@@ -135,33 +135,24 @@ public final class HttpAsycClientHelper extends RestcommUntypedActor {
                     logger.error("Exception while parsing response", e);
                     response = new DownloaderResponse(e, "Exception while parsing response");
                 }
-                sendResponse(sender, response);
+                sender.tell(response, self());
             }
 
             @Override
             public void failed(Exception ex) {
                 logger.error("got failure on executing http request {}, exception: {}", request.getRequestLine(), ex);
                 DownloaderResponse response = new DownloaderResponse(ex, "got failure on executing http request");
-                sendResponse(sender, response);
+                sender.tell(response, self());
             }
 
             @Override
             public void cancelled() {
                 logger.warning("got cancellation on executing http request {}", request.getRequestLine());
                 DownloaderResponse response = new DownloaderResponse(new Exception("got cancellation on executing http request"), "got cancellation on executing http request");
-                sendResponse(sender, response);
+                sender.tell(response, self());
             }};
     }
 
-    private void sendResponse(final ActorRef sender, Object response){
-        if (sender != null && !sender.isTerminated()) {
-            sender.tell(response, self());
-        } else {
-            if (logger.isInfoEnabled()) {
-                logger.info("DownloaderResponse wont be send because sender is :" + (sender.isTerminated() ? "terminated" : "null"));
-            }
-        }
-    }
     public HttpUriRequest request (final HttpRequestDescriptor descriptor) throws IllegalArgumentException, URISyntaxException,
             UnsupportedEncodingException {
         final URI uri = descriptor.getUri();
