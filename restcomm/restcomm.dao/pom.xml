@@ -67,6 +67,18 @@
 			<version>${project.version}</version>
 			<scope>provided</scope>
 		</dependency>
+                
+		<dependency>
+			<groupId>org.apache.tomcat</groupId>
+			<artifactId>tomcat-coyote</artifactId>
+			<scope>provided</scope>
+		</dependency>
+                                
+		<dependency>
+			<groupId>org.mobicents.servlet.sip.containers</groupId>
+			<artifactId>sip-servlets-catalina-7</artifactId>
+			<scope>provided</scope>
+		</dependency>                 
 
 		<dependency>
 			<groupId>com.googlecode.libphonenumber</groupId>

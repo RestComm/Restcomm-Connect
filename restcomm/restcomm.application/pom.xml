@@ -65,9 +65,14 @@
 		<dependency>
 			<groupId>org.mobicents.servlet.sip</groupId>
 			<artifactId>sip-servlets-spec</artifactId>
-			<version>${sipservletapi.version}</version>
 			<scope>provided</scope>
 		</dependency>
+                
+		<dependency>
+			<groupId>org.mobicents.servlet.sip.containers</groupId>
+			<artifactId>sip-servlets-catalina-7</artifactId>
+			<scope>provided</scope>
+		</dependency>                
 
 		<dependency>
 			<groupId>javax.servlet</groupId>
