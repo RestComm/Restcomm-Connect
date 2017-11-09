@@ -149,10 +149,6 @@ public class ConfDetailRecordsDaoTest extends DaoTest {
         manager.getConferenceDetailRecordsDao().addConferenceDetailRecord(cdr);
         ConferenceDetailRecord cdrResult = manager.getConferenceDetailRecordsDao().getConferenceDetailRecord(sid);
         assertEquals(cdr.getFriendlyName(), cdrResult.getFriendlyName());
-        ConferenceRecordCountFilter.Builder filterBuilder = ConferenceRecordCountFilter.builder();
-        ConferenceRecordCountFilter filter = filterBuilder.byMasterMsId("masterMsId").build();
-        Integer confCount = manager.getConferenceDetailRecordsDao().countByFilter(filter);
-        assertEquals(Integer.valueOf(1), confCount);
     }
 
 }
