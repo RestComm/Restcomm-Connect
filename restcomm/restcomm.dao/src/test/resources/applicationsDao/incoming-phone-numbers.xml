@@ -88,6 +88,9 @@
     <if test="phoneNumber != null">
       AND "n"."phone_number" like #{phoneNumber}
     </if>
+    <if test="applicationSid != null">
+      AND ("n"."voice_application_sid" = #{applicationSid} OR "n"."sms_application_sid" = #{applicationSid} OR "n"."ussd_application_sid" = #{applicationSid} OR "n"."refer_application_sid" = #{applicationSid})
+    </if>
     <choose>
       <when test="sortBy == 'phone_number'">
         order by "n"."phone_number" ${sortDirection}
@@ -111,6 +114,9 @@
     </if>
     <if test="phoneNumber != null">
       AND "phone_number" like #{phoneNumber}
+    </if>
+    <if test="applicationSid != null">
+      AND ("voice_application_sid" = #{applicationSid} OR "sms_application_sid" = #{applicationSid} OR "ussd_application_sid" = #{applicationSid} OR "refer_application_sid" = #{applicationSid})
     </if>
 
   </select>

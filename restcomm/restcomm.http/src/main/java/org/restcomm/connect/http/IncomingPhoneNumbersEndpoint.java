@@ -313,7 +313,7 @@ public abstract class IncomingPhoneNumbersEndpoint extends SecuredEndpoint {
                 return status(javax.ws.rs.core.Response.Status.BAD_REQUEST).build();
             }
 
-            incomingPhoneNumberFilter = new IncomingPhoneNumberFilter(accountSid, friendlyNameFilter, phoneNumberFilter, sortBy,
+            incomingPhoneNumberFilter = new IncomingPhoneNumberFilter(accountSid, friendlyNameFilter, phoneNumberFilter, null, sortBy,
                     reverse, limit, offset);
 
             final List<IncomingPhoneNumber> incomingPhoneNumbers = dao.getIncomingPhoneNumbersByFilter(incomingPhoneNumberFilter);
