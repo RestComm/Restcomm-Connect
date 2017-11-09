@@ -36,7 +36,7 @@ public class RegexRemover {
     static void removeRegexes(List<IncomingPhoneNumber> numbers) {
         if (numbers != null) {
             for (int i = 0; i < numbers.size(); i++) {
-                IncomingPhoneNumber nAux = numbers.get(0);
+                IncomingPhoneNumber nAux = numbers.get(i);
                 if (StringUtils.containsAny(nAux.getPhoneNumber(), REGEX_SPECIAL_CHARS)) {
                     numbers.remove(i);
                 }
