@@ -9,6 +9,7 @@ import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
 
 import java.net.URL;
+import java.util.HashMap;
 import java.util.Map;
 
 import javax.sip.message.Response;
@@ -21,16 +22,16 @@ import org.jboss.arquillian.container.mss.extension.SipStackTool;
 import org.jboss.arquillian.container.test.api.Deployment;
 import org.jboss.arquillian.junit.Arquillian;
 import org.jboss.arquillian.test.api.ArquillianResource;
-import org.jboss.shrinkwrap.api.ShrinkWrap;
 import org.jboss.shrinkwrap.api.spec.WebArchive;
-import org.jboss.shrinkwrap.resolver.api.maven.archive.ShrinkWrapMaven;
 import org.junit.After;
+import org.junit.AfterClass;
 import org.junit.Before;
 import org.junit.BeforeClass;
 import org.junit.Rule;
 import org.junit.Test;
 import org.junit.runner.RunWith;
-import org.restcomm.connect.commons.Version;
+import org.restcomm.connect.testsuite.NetworkPortAssigner;
+import org.restcomm.connect.testsuite.WebArchiveUtil;
 import org.restcomm.connect.testsuite.http.RestcommConferenceParticipantsTool;
 import org.restcomm.connect.testsuite.http.RestcommConferenceTool;
 import org.restcomm.connect.testsuite.tools.MonitoringServiceTool;
@@ -46,7 +47,6 @@ import com.google.gson.JsonObject;
 public class DialConferenceTerminationTest {
     private final static Logger logger = Logger.getLogger(DialConferenceTerminationTest.class.getName());
 
-    private static final String version = Version.getVersion();
     private static final byte[] bytes = new byte[]{118, 61, 48, 13, 10, 111, 61, 117, 115, 101, 114, 49, 32, 53, 51, 54, 53,
             53, 55, 54, 53, 32, 50, 51, 53, 51, 54, 56, 55, 54, 51, 55, 32, 73, 78, 32, 73, 80, 52, 32, 49, 50, 55, 46, 48, 46,
             48, 46, 49, 13, 10, 115, 61, 45, 13, 10, 99, 61, 73, 78, 32, 73, 80, 52, 32, 49, 50, 55, 46, 48, 46, 48, 46, 49,
@@ -57,11 +57,14 @@ public class DialConferenceTerminationTest {
     @ArquillianResource
     URL deploymentUrl;
 
+    private static int mediaPort = NetworkPortAssigner.retrieveNextPortByFile();
+
+    private static int mockPort = NetworkPortAssigner.retrieveNextPortByFile();
+    @Rule
+    public WireMockRule wireMockRule = new WireMockRule(mockPort);
+
     private String adminAccountSid = "ACae6e420f425248d6a26948c17a9e2acf";
     private String adminAuthToken = "77f8c12cc7b8f8423e5c38b035249166";
-
-    @Rule
-    public WireMockRule wireMockRule = new WireMockRule(8090); // No-args constructor defaults to port 8080
 
     private static SipStackTool tool1;
     private static SipStackTool tool3;
@@ -69,14 +72,19 @@ public class DialConferenceTerminationTest {
     // Bob is a simple SIP Client. Will not register with Restcomm
     private SipStack bobSipStack;
     private SipPhone bobPhone;
-    private String bobContact = "sip:bob@127.0.0.1:5090";
+    private static String bobPort = String.valueOf(NetworkPortAssigner.retrieveNextPortByFile());
+    private String bobContact = "sip:bob@127.0.0.1:" + bobPort;
 
     // George is a simple SIP Client. Will not register with Restcomm
     private SipStack georgeSipStack;
     private SipPhone georgePhone;
-    private String georgeContact = "sip:+131313@127.0.0.1:5070";
+    private static String georgePort = String.valueOf(NetworkPortAssigner.retrieveNextPortByFile());
+    private String georgeContact = "sip:+131313@127.0.0.1:" + georgePort;
 
-    private String dialRestcomm = "sip:1111@127.0.0.1:5080";
+    private static int restcommPort = 5080;
+    private static int restcommHTTPPort = 8080;
+    private static String restcommContact = "127.0.0.1:" + restcommPort;
+    private static String dialRestcomm = "sip:1111@"+restcommContact;
 
     @BeforeClass
     public static void beforeClass() throws Exception {
@@ -84,13 +92,23 @@ public class DialConferenceTerminationTest {
         tool3 = new SipStackTool("DialConferenceTool3");
     }
 
+    public static void reconfigurePorts() {
+        if (System.getProperty("arquillian_sip_port") != null) {
+            restcommPort = Integer.valueOf(System.getProperty("arquillian_sip_port"));
+            restcommContact = "127.0.0.1:" + restcommPort;
+        }
+        if (System.getProperty("arquillian_http_port") != null) {
+            restcommHTTPPort = Integer.valueOf(System.getProperty("arquillian_http_port"));
+        }
+    }
+
     @Before
     public void before() throws Exception {
-        bobSipStack = tool1.initializeSipStack(SipStack.PROTOCOL_UDP, "127.0.0.1", "5090", "127.0.0.1:5080");
-        bobPhone = bobSipStack.createSipPhone("127.0.0.1", SipStack.PROTOCOL_UDP, 5080, bobContact);
+        bobSipStack = tool1.initializeSipStack(SipStack.PROTOCOL_UDP, "127.0.0.1", bobPort, restcommContact);
+        bobPhone = bobSipStack.createSipPhone("127.0.0.1", SipStack.PROTOCOL_UDP, restcommPort, bobContact);
 
-        georgeSipStack = tool3.initializeSipStack(SipStack.PROTOCOL_UDP, "127.0.0.1", "5070", "127.0.0.1:5080");
-        georgePhone = georgeSipStack.createSipPhone("127.0.0.1", SipStack.PROTOCOL_UDP, 5080, georgeContact);
+        georgeSipStack = tool3.initializeSipStack(SipStack.PROTOCOL_UDP, "127.0.0.1", georgePort, restcommContact);
+        georgePhone = georgeSipStack.createSipPhone("127.0.0.1", SipStack.PROTOCOL_UDP, restcommPort, georgeContact);
     }
 
     @After
@@ -111,6 +129,12 @@ public class DialConferenceTerminationTest {
         Thread.sleep(3000);
         wireMockRule.resetRequests();
         Thread.sleep(4000);
+    }
+
+    @AfterClass
+    public static void afterClass() {
+        System.gc();
+        System.out.println("System.gc() run");
     }
 
     private int getActiveConferencesSize() {
@@ -329,22 +353,21 @@ public class DialConferenceTerminationTest {
         assertEquals(0, mgcpConnections);
     }
 
-    @Deployment(name = "DialConferenceTest", managed = true, testable = false)
+    @Deployment(name = "DialConferenceTerminationTest", managed = true, testable = false)
     public static WebArchive createWebArchiveNoGw() {
         logger.info("Packaging Test App");
-        WebArchive archive = ShrinkWrap.create(WebArchive.class, "restcomm.war");
-        final WebArchive restcommArchive = ShrinkWrapMaven.resolver()
-                .resolve("org.restcomm:restcomm-connect.application:war:" + version).withoutTransitivity()
-                .asSingle(WebArchive.class);
-        archive = archive.merge(restcommArchive);
-        archive.delete("/WEB-INF/sip.xml");
-        archive.delete("/WEB-INF/conf/restcomm.xml");
-        archive.delete("/WEB-INF/data/hsql/restcomm.script");
-        archive.addAsWebInfResource("sip.xml");
-        archive.addAsWebInfResource("restcomm-conference.xml", "conf/restcomm.xml");
-        archive.addAsWebInfResource("restcomm.script_dialTest_new", "data/hsql/restcomm.script");
-        logger.info("Packaged Test App");
-        return archive;
+        reconfigurePorts();
+
+        Map<String,String> replacements = new HashMap();
+        //replace mediaport 2727
+        replacements.put("2727", String.valueOf(mediaPort));
+        replacements.put("8080", String.valueOf(restcommHTTPPort));
+        replacements.put("8090", String.valueOf(mockPort));
+        replacements.put("5080", String.valueOf(restcommPort));
+        replacements.put("5070", String.valueOf(georgePort));
+        replacements.put("5090", String.valueOf(bobPort));
+        return WebArchiveUtil.createWebArchiveNoGw("restcomm-conference.xml",
+                "restcomm.script_dialTest_new", replacements);
     }
 
 }

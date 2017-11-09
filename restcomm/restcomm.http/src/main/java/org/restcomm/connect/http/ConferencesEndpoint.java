@@ -82,7 +82,6 @@ public abstract class ConferencesEndpoint extends SecuredEndpoint {
     private GsonBuilder builder;
     private XStream xstream;
     private ConferenceDetailRecordListConverter listConverter;
-    private static final String SUPER_ADMIN_ACCOUNT_SID="ACae6e420f425248d6a26948c17a9e2acf";
     protected ActorSystem system;
 
     public ConferencesEndpoint() {
@@ -213,7 +212,7 @@ public abstract class ConferencesEndpoint extends SecuredEndpoint {
         logger.info(String.format("updateConference accountsid: %s conferenceSid: %s", accountSid, sid));
         Account account = daoManager.getAccountsDao().getAccount(accountSid);
         try {
-            secure(account, "RestComm:Read:Conferences");
+            secure(account, "RestComm:Modify:Conferences");
         } catch (final AuthorizationException exception) {
             return status(UNAUTHORIZED).build();
         }
