@@ -3,30 +3,50 @@
         <div class="col-md-offset-2 col-md-8">
             <div class="app-creation-content">
 
-                <h3 ng-hide="droppedFiles">New Visual Designer application</h3>
+                <h3 ng-hide="droppedFiles || isExternalApp">New Visual Designer application</h3>
                 <h3 ng-show="droppedFiles">Import Visual Designer application</h3>
+                <h3 ng-show="isExternalApp">New External Application</h3>
+
+
 
                 <div class="row params-section">
                     <form class="dashboard-form">
-                        <div class="col-md-6 name-param">
-                            <label>Name </label>
-                            <input name="name" type="text" size="40" ng-model="appOptions.name">
-                        </div>
-                        <div class="col-md-6 kind-param">
-                            <label>Type </label>
-
-                            <div class="btn-group kind-selection">
-                                <button type="button" class="btn btn-selection dropdown-toggle" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
-                                    {{appOptions.kind}} <span class="caret"></span>
-                                </button>
-                                <!--<span class="dropdown-toggle kind-selection" data-toggle="dropdown">{{appOptions.kind}}</span>-->
-                                <ul class="dropdown-menu">
-                                    <li><button class="btn btn-link" ng-click='setKind(appOptions,"voice")'>voice</button></li>
-                                    <li><button class="btn btn-link" ng-click='setKind(appOptions,"sms")'>sms</button></li>
-                                    <li><button class="btn btn-link" ng-click='setKind(appOptions,"ussd")'>ussd</button></li>
-                                </ul>
+                        <div class="col-md-6 labeled-field">
+                            <div class="row">
+                                <div class="col-sm-2"><label>Name </label></div>
+                                <div class="col-sm-10"><input name="name" type="text" ng-model="appOptions.name"></div>
                             </div>
-
+                        </div>
+                        <div class="col-md-6 labeled-field">
+                            <div class="row">
+                                <div class="col-sm-2">
+                                    <label>Type </label>
+                                </div>
+                                <div class="col-sm-10">
+                                    <div class="btn-group kind-selection">
+                                        <button type="button" class="btn btn-selection dropdown-toggle" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
+                                            {{appOptions.kind}} <span class="caret"></span>
+                                        </button>
+                                        <!--<span class="dropdown-toggle kind-selection" data-toggle="dropdown">{{appOptions.kind}}</span>-->
+                                        <ul class="dropdown-menu">
+                                            <li><button class="btn btn-link" ng-click='setKind(appOptions,"voice")'>voice</button></li>
+                                            <li><button class="btn btn-link" ng-click='setKind(appOptions,"sms")'>sms</button></li>
+                                            <li><button class="btn btn-link" ng-click='setKind(appOptions,"ussd")'>ussd</button></li>
+                                        </ul>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        <div ng-show="isExternalApp" class="col-md-6 labeled-field">
+                            <div class="row">
+                                <div class="spacer20 hidden-xs"></div>
+                                <div class="col-sm-2">
+                                    <label>URL </label>
+                                </div>
+                                <div class="col-sm-10">
+                                    <input name="url" type="text" ng-model="appOptions.url">
+                                </div>
+                            </div>
                         </div>
                     </form>
                 </div>
@@ -40,7 +60,11 @@
                     <span class="hidden-xs">Close</span>
                     <span class="visible-xs"><i class="fa fa-times"></i></span>
                 </button>
-                <button ng-if="!droppedFiles" class="rc-btn save-btn" ng-click="createRvdApplication(appOptions)">
+                <button ng-if="!droppedFiles && !isExternalApp" class="rc-btn save-btn" ng-click="createRvdApplication(appOptions)">
+                    <span class="hidden-xs">Next</span>
+                    <span class="visible-xs"><i class="fa fa-chevron-right"></i></span>
+                </button>
+                <button ng-if="!droppedFiles && isExternalApp" class="rc-btn save-btn" ng-click="createExternalApplication(appOptions)">
                     <span class="hidden-xs">Next</span>
                     <span class="visible-xs"><i class="fa fa-chevron-right"></i></span>
                 </button>

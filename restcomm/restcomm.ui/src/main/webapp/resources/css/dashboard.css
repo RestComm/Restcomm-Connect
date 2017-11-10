@@ -892,24 +892,49 @@ form[role=login] input:-webkit-autofill:focus{
     margin-bottom: 20px;
 }
 
-.app-details .app-details-content {
+.app-details .app-details-content, .app-creation .app-creation-content {
     min-height: 250px;
 }
 
 /* temporary settings until properly implement app creation-wizzard */
-.apps-wizzard .pick-rvd-area {
-    min-height: 300px;
-    background-color: lightgoldenrodyellow;
+.apps-wizzard .pick-area {
+    text-align: center;
+    padding-top: 20px;
 }
 
-.apps-wizzard .pick-external-area {
-    min-height: 300px;
-    background-color: lightgoldenrodyellow;
+/*
+.apps-wizzard .pick-area {
+    padding-top: 60px;
+    padding-bottom: 60px;
+}*/
+
+.apps-wizzard .pick-area:not(:last-child) {
+    border-right: 2px solid #f0f0f0;
 }
 
-.app-creation .name-param input {
-    width: 80%;
+.apps-wizzard .top-spacer {
+    margin-top: 50px;
 }
+
+.apps-wizzard .pick-area .dragover {
+    background-color: #f0f0f0;
+    padding-bottom: 20px;
+    border-radius: 10px;
+}
+
+.apps-wizzard .pick-area img:hover {
+    opacity: 0.8;
+}
+
+.apps-wizzard .pick-area h4 {
+    color: #606060;
+}
+
+
+
+/*.app-creation .name-param input, .app-creation .url-param input {
+    width: 100%;
+}*/
 
 .app-creation .params-section {
     font-size: 1.2em;
@@ -1227,4 +1252,37 @@ input, button, select, textarea {
     margin-top: 5px;
     position: relative;
     display: inline-block;
+}
+
+/* rc-field is a wrapper for labeled input controls */
+.labeled-field {
+    margin-bottom: 20px;
+}
+.labeled-field label {
+    padding-top: 4px;
+}
+
+.labeled-field input {
+    width: 100%;
+}
+
+.spacer20 {
+    margin-top: 20px;
+}
+
+.spacer30 {
+    margin-top: 30px;
+}
+
+.spacer60 {
+    margin-top: 60px;
+}
+
+.rc-btn.discrete-btn {
+    background-color: white;
+    color: #d0d0d0;
+}
+.rc-btn.discrete-btn:hover {
+    background-color: #d0d0d0;
+    color: white;
 }
