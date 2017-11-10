@@ -230,12 +230,17 @@ public abstract class ConferencesEndpoint extends SecuredEndpoint {
             final String status = data.getFirst("Status");
 
             if(status != null){
-                if(status.equalsIgnoreCase("completed")){
+                if (status.equalsIgnoreCase("completed")) {
                     kickoutAllActiveParticipants(cdr);
                     //get updated conference record
                     cdr = dao.getConferenceDetailRecord(new Sid(sid));
+                }else {
+                    return status(BAD_REQUEST).build();
                 }
+            }else {
+                return status(BAD_REQUEST).build();
             }
+
             if (APPLICATION_XML_TYPE == responseType) {
                 final RestCommResponse response = new RestCommResponse(cdr);
                 return ok(xstream.toXML(response), APPLICATION_XML).build();
