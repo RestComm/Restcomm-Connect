@@ -36,18 +36,6 @@
   	SELECT * FROM "restcomm_incoming_phone_numbers" WHERE "phone_number" like '%*%' or "phone_number" like '%#%' or "phone_number" like '%^%' or "phone_number" like '%|%' or "phone_number" like '%.%' or "phone_number" like '%$%' or "phone_number" like '%\%' or "phone_number" like '%[%' or "phone_number" like '%]%' ;
     </select>
 
-  <!--
-  <select id="getIncomingPhoneNumbersByFriendlyName" parameterType="string" resultType="hashmap">
-    SELECT * FROM "restcomm_incoming_phone_numbers" WHERE "account_sid"=#{accountSid}
-    <if test="friendlyName != null">
-			AND "friendly_name"=#{friendlyName}
-	</if>
-	<if test="phoneNumber != null">
-			AND "phone_number" like #{phoneNumber}
-	</if>
-  </select>
-  -->
-
   <!-- along with the DID it returns the application frien-->
   <select id="getIncomingPhoneNumbersByFriendlyName" parameterType="org.restcomm.connect.dao.entities.IncomingPhoneNumberFilter" resultType="hashmap">
     SELECT
