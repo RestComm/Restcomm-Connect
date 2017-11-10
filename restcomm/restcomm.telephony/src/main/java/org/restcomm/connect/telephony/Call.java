@@ -396,6 +396,7 @@ public final class Call extends RestcommUntypedActor {
         transitions.add(new Transition(this.stopping, this.completed));
         transitions.add(new Transition(this.stopping, this.failed));
         transitions.add(new Transition(this.failed, this.completed));
+        transitions.add(new Transition(this.failed, this.stopping));
         transitions.add(new Transition(this.completed, this.stopping));
         transitions.add(new Transition(this.completed, this.failed));
 
@@ -1391,7 +1392,9 @@ public final class Call extends RestcommUntypedActor {
         public void execute(final Object message) throws Exception {
             if (isInbound()) {
                 try {
-                    if (invite.getSession().isValid()) {
+                    SipSession session = invite.getSession();
+                    SipSession.State sessionState = session.getState();
+                    if (session.isValid() && !sessionState.name().equalsIgnoreCase(SipSession.State.TERMINATED.name())) {
                         SipServletResponse resp = null;
                         if (message instanceof CallFail) {
                             resp = invite.createResponse(500, "Problem to setup the call");
@@ -2083,7 +2086,7 @@ public final class Call extends RestcommUntypedActor {
                         logger.info("Initial Call - Will stop recording now");
                     }
                     msController.tell(new Stop(false), self);
-                    // VoiceInterpreter will take care to prepare the Recording object
+                    return;
                 } else if (direction.equalsIgnoreCase("outbound-api")){
                     //REST API Outgoing call, calculate recording
                     recordingDuration = (DateTime.now().getMillis() - recordingStart.getMillis())/1000;
@@ -2300,6 +2303,8 @@ public final class Call extends RestcommUntypedActor {
             fsm.transition(message, canceling);
         } else if (is(stopping)) {
             fsm.transition(message, completed);
+        } else {
+            fsm.transition(message, stopping);
         }
     }
 

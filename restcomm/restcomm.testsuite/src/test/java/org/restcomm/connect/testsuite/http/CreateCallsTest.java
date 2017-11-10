@@ -749,6 +749,83 @@ public class CreateCallsTest {
         assertEquals(0, liveCallsArraySize);
     }
 
+    String dialClientWithRecord = "<Response><Dial record=\"true\"><Client>alice</Client></Dial></Response>";
+
+
+    /*  Calls REST API will create call to sipUnit client 'george' but there will be no answer within the timeout interval (10sec)
+        Restcomm should cancel the call and cleanup
+     */
+    @Test
+    public void createCallNumberWithRecord() throws InterruptedException, ParseException {
+
+        stubFor(post(urlPathEqualTo("/1111"))
+                .willReturn(aResponse()
+                        .withStatus(200)
+                        .withHeader("Content-Type", "text/xml")
+                        .withBody(dialClientWithRecord)));
+
+        SipCall georgeCall = georgePhone.createSipCall();
+        georgeCall.listenForIncomingCall();
+
+        // Register Alice Restcomm client
+        SipURI uri = aliceSipStack.getAddressFactory().createSipURI(null, "127.0.0.1:5080");
+        assertTrue(alicePhone.register(uri, "alice", "1234", aliceContact, 3600, 3600));
+
+        SipCall aliceCall = alicePhone.createSipCall();
+        aliceCall.listenForIncomingCall();
+
+        String from = "+15126002188";
+        String to = "131313";
+        String rcmlUrl = "http://127.0.0.1:8090/1111";
+
+        JsonElement callResult = RestcommCallsTool.getInstance().createCall(deploymentUrl.toString(), adminAccountSid,
+                adminAuthToken, from, to, rcmlUrl);
+        assertNotNull(callResult);
+
+        assertTrue(georgeCall.waitForIncomingCall(5000));
+        String receivedBody = new String(georgeCall.getLastReceivedRequest().getRawContent());
+        assertTrue(georgeCall.sendIncomingCallResponse(Response.RINGING, "Ringing-George", 3600));
+        assertTrue(georgeCall.sendIncomingCallResponse(Response.OK, "OK-George", 3600, receivedBody, "application", "sdp",
+                null, null));
+
+        String callSid = georgeCall.getLastReceivedRequest().getMessage().getHeader("X-RestComm-CallSid").toString().split(":")[1].trim();
+
+        // Restcomm now should execute RCML that will create a call to Alice Restcomm client
+        assertTrue(aliceCall.waitForIncomingCall(5000));
+        receivedBody = new String(aliceCall.getLastReceivedRequest().getRawContent());
+        assertTrue(aliceCall.sendIncomingCallResponse(Response.RINGING, "Ringing-Alice", 3600));
+        assertTrue(aliceCall.sendIncomingCallResponse(Response.OK, "OK-Alice", 3600, receivedBody, "application", "sdp", null,
+                null));
+
+        Thread.sleep(3000);
+
+        aliceCall.listenForDisconnect();
+
+        assertTrue(georgeCall.disconnect());
+        assertTrue(georgeCall.waitForAck(5000));
+
+        assertTrue(aliceCall.waitForDisconnect(5000));
+        assertTrue(aliceCall.respondToDisconnect());
+
+        Thread.sleep(2000);
+
+        JsonObject metrics = MonitoringServiceTool.getInstance().getMetrics(deploymentUrl.toString(),adminAccountSid, adminAuthToken);
+        assertNotNull(metrics);
+        int liveCalls = metrics.getAsJsonObject("Metrics").get("LiveCalls").getAsInt();
+        logger.info("LiveCalls: "+liveCalls);
+        int liveCallsArraySize = metrics.getAsJsonArray("LiveCallDetails").size();
+        logger.info("LiveCallsArraySize: "+liveCallsArraySize);
+        assertEquals(0, liveCalls);
+        assertEquals(0, liveCallsArraySize);
+
+        //Check recording
+        JsonArray recording = RestcommCallsTool.getInstance().getCallRecordings(deploymentUrl.toString(),adminAccountSid,adminAuthToken,callSid);
+        assertNotNull(recording);
+        assertEquals(1, recording.size());
+        double duration = recording.get(0).getAsJsonObject().get("duration").getAsDouble();
+        assertEquals(3.0, duration, 1.0);
+    }
+
     @Deployment(name = "CreateCallsTest", managed = true, testable = false)
     public static WebArchive createWebArchiveNoGw() {
         logger.info("Packaging Test App");
