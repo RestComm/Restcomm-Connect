@@ -51,6 +51,11 @@ import akka.actor.UntypedActorFactory;
 import akka.event.Logging;
 import akka.event.LoggingAdapter;
 
+/**
+ * @author mariafarooq
+ * Disposable conference api client to be used for one request and get destroyed after that.
+ *
+ */
 public class ConferenceApiClient extends RestcommUntypedActor {
 
     private final LoggingAdapter logger = Logging.getLogger(getContext().system(), this);
@@ -86,6 +91,8 @@ public class ConferenceApiClient extends RestcommUntypedActor {
             onStopConference((StopConference) message, self, sender);
         } else if (DownloaderResponse.class.equals(klass)) {
             onDownloaderResponse(message, self, sender);
+            // since this is a one time disposable client lets clean it off after it sends DownloaderResponse.
+            getContext().stop(self());
         }
     }
 
