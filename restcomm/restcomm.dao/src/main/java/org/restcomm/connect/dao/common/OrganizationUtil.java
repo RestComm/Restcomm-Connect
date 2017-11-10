@@ -66,31 +66,6 @@ public class OrganizationUtil {
         return res;
     }
 
-    /**
-     * @param storage DaoManager
-     * @param request SipServletRequest
-     * @param phone
-     * @param sourceOrganizationSid organization Sid of request initiator
-     * @return
-     */
-    public static MostOptimalNumberResponse getMostOptimalIncomingPhoneNumber(DaoManager storage, Sid destinationOrganizationSid, String phone,
-            Sid sourceOrganizationSid) {
-        MostOptimalNumberResponse res = null;
-        Sid destinationOrganizationSid = getOrganizationSidBySipURIHost(storage, (SipURI) request.getRequestURI());
-        // try to get destinationOrganizationSid from toUril
-        destinationOrganizationSid = destinationOrganizationSid != null ? destinationOrganizationSid : getOrganizationSidBySipURIHost(storage, (SipURI) request.getTo().getURI());
-        if (destinationOrganizationSid == null) {
-            logger.error("destinationOrganizationSid is NULL: request Uri is: " + (SipURI) request.getRequestURI() + " To Uri is: " + (SipURI) request.getTo().getURI());
-            res = new MostOptimalNumberResponse(null, false);
-        } else {
-            if (logger.isDebugEnabled()) {
-                logger.debug("getMostOptimalIncomingPhoneNumber: sourceOrganizationSid: " + sourceOrganizationSid + " : destinationOrganizationSid: " + destinationOrganizationSid + " request Uri is: " + (SipURI) request.getRequestURI() + " To Uri is: " + (SipURI) request.getTo().getURI());
-            }
-            res = getMostOptimalIncomingPhoneNumber(storage, destinationOrganizationSid, phone, sourceOrganizationSid);
-        }
-        return res;
-    }
-
     public static MostOptimalNumberResponse getMostOptimalIncomingPhoneNumber(DaoManager storage, Sid destinationOrganizationSid, String phone,
             Sid sourceOrganizationSid) {
         if (logger.isDebugEnabled()) {
