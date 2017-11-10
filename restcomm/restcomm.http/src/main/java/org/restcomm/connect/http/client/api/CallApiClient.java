@@ -49,6 +49,11 @@ import akka.actor.UntypedActorFactory;
 import akka.event.Logging;
 import akka.event.LoggingAdapter;
 
+/**
+ * @author mariafarooq
+ * Disposable call api client to be used for one request and get destroyed after that.
+ *
+ */
 public class CallApiClient extends RestcommUntypedActor {
 
     private final LoggingAdapter logger = Logging.getLogger(getContext().system(), this);
@@ -80,6 +85,8 @@ public class CallApiClient extends RestcommUntypedActor {
             onHangup((Hangup) message, self, sender);
         } else if (DownloaderResponse.class.equals(klass)) {
             onDownloaderResponse(message, self, sender);
+            // since this is a one time disposable client lets clean it off after it sends DownloaderResponse.
+            getContext().stop(self());
         }
     }
 
