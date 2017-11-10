@@ -221,10 +221,13 @@ public abstract class ConferencesEndpoint extends SecuredEndpoint {
         if (cdr == null) {
             return status(NOT_FOUND).build();
         } else {
-            try {
-                secure(account, cdr.getAccountSid(), SecuredType.SECURED_STANDARD);
-            } catch (final AuthorizationException exception) {
-                return status(UNAUTHORIZED).build();
+            //allow super admin to perform update on any conference - https://telestax.atlassian.net/browse/RESTCOMM-1171
+            if (!isSuperAdmin()) {
+                try {
+                    secure(account, cdr.getAccountSid(), SecuredType.SECURED_STANDARD);
+                } catch (final AuthorizationException exception) {
+                    return status(UNAUTHORIZED).build();
+                }
             }
 
             final String status = data.getFirst("Status");
@@ -238,7 +241,7 @@ public abstract class ConferencesEndpoint extends SecuredEndpoint {
                     return status(BAD_REQUEST).build();
                 }
             }else {
-                return status(BAD_REQUEST).build();
+                    return status(BAD_REQUEST).build();
             }
 
             if (APPLICATION_XML_TYPE == responseType) {
