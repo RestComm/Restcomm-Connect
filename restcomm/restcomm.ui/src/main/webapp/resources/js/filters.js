@@ -29,6 +29,33 @@ rcFilters.filter('noHTML', function () {
   }
 });
 
+rcFilters.filter("toDuration", function () {
+  return function(timeInSeconds) {
+    if (timeInSeconds < 60) {
+      return seconds + 's';
+    }
+    else if (timeInSeconds < 60 * 60) {
+      var minutes = parseInt(timeInSeconds / 60, 10);
+      var seconds = timeInSeconds % 60;
+      return minutes + 'm' + seconds + 's';
+    }
+    else if (seconds < 60 * 60 * 60) {
+      var hours = parseInt(timeInSeconds / 60 / 60, 10);
+      var minutes = parseInt((timeInSeconds - (hours * 60 * 60)) / 60, 10);
+      var seconds = timeInSeconds % 60;
+      return hours + 'h' + minutes + 'm' + seconds + 's';
+    }
+
+    return minutes+' minutes'+(seconds ? ' and '+seconds+' seconds' : '');
+  }
+});
+
+rcFilters.filter("toDate", [ '$filter', function ($filter) {
+  return function(dateStr, format) {
+    return $filter('date')(new Date(dateStr), format);
+  }
+}]);
+
 rcFilters.filter("timeago", function () {
   //time: the time
   //local: compared to what time? default: now

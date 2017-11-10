@@ -31,12 +31,14 @@
 
     <div class="row primary-tabs">
         <div class="col-md-8 col-md-offset-2 col-xs-12 primary-tabs-container">
-            <span ng-class="{'active': location.indexOf('/dashboard') === 0}">
+            <span ng-class="{'active': location.indexOf('/applications') === 0}">
                 <a ng-href="#/applications">Applications</a>
             </span>
+            <!--
             <span ng-class="{'active': location.indexOf('/dashboard') === 0}">
                 <a ng-href="#/dashboard">Dashboard</a>
             </span>
+            -->
             <span ng-class="{'active': location.indexOf('/numbers/incoming') === 0}">
                 <a ng-href="#/numbers/incoming">Numbers</a>
             </span>
@@ -58,7 +60,7 @@
     <div class="mobile-menu" ng-show="$root.mobileMenu">
         <ul class="nav">
             <li><a ng-href="#/applications" ng-click="$root.mobileMenu = false">Applications</a></li>
-            <li><a ng-href="#/dashboard" ng-click="$root.mobileMenu = false">Dashboard</a></li>
+            <!--<li><a ng-href="#/dashboard" ng-click="$root.mobileMenu = false">Dashboard</a></li>-->
             <li><a ng-href="#/numbers/incoming" ng-click="$root.mobileMenu = false">Numbers</a></li>
             <li><a ng-href="#/numbers/clients" ng-click="$root.mobileMenu = false">Clients</a></li>
             <li><a ng-href="#/logs" ng-click="$root.mobileMenu = false">Logs</a></li>
