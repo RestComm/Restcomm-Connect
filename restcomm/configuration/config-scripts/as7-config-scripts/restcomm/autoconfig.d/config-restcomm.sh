@@ -33,7 +33,13 @@ configRestcomm() {
 	static_address="$1"
 
 	sed -e  "s|<\!--.*<external-ip>.*<\/external-ip>.*-->|<external-ip>$static_address<\/external-ip>|" \
-		-e "s/<external-ip>.*<\/external-ip>/<external-ip>$static_address<\/external-ip>/g;s/<external-ip\/>/<external-ip>$static_address<\/external-ip>/g" \
+		-e "s|<external-ip>.*<\/external-ip>|<external-ip>$static_address<\/external-ip>|" \
+		 $FILE > $FILE.bak;
+
+	mv $FILE.bak $FILE
+	
+	sed -e  "s|<\!--.*<external-ip>.*<\/external-ip>.*-->|<external-ip>$static_address<\/external-ip>|" \
+		-e "s|<external-ip\/>|<external-ip>$static_address<\/external-ip>|" \
 		 $FILE > $FILE.bak;
 
 	mv $FILE.bak $FILE
@@ -51,7 +57,9 @@ configRestcomm() {
 	#Configure RESTCOMM_HOSTNAME at restcomm.xml. If not set "STATIC_ADDRESS" will be used.
 	if [ -n "$RESTCOMM_HOSTNAME" ]; then
   		echo "HOSTNAME $RESTCOMM_HOSTNAME"
-  		sed -i "s/<hostname>.*<\/hostname>/<hostname>${RESTCOMM_HOSTNAME}<\/hostname>/g;s/<hostname\/>/<hostname>${RESTCOMM_HOSTNAME}<\/hostname>/g" $FILE
+  		
+  		sed -i "s|<hostname>.*<\/hostname>|<hostname>${RESTCOMM_HOSTNAME}<\/hostname>|" $RESTCOMM_DEPLOY/WEB-INF/conf/restcomm.xml
+  		sed -i "s|<hostname\/>|<hostname>${RESTCOMM_HOSTNAME}<\/hostname>|" $RESTCOMM_DEPLOY/WEB-INF/conf/restcomm.xml
 
 	if ! grep "${BIND_ADDRESS}.*${RESTCOMM_HOSTNAME}" /etc/hosts ; then
         if hash host 2>/dev/null; then
@@ -65,7 +73,8 @@ configRestcomm() {
          fi
 fi
 	else
-  		sed -i "s/<hostname>.*<\/hostname>/<hostname>${PUBLIC_IP}<\/hostname>/g;s/<hostname\/>/<hostname>${PUBLIC_IP}<\/hostname>/g" $FILE
+  		sed -i "s|<hostname>.*<\/hostname>|<hostname>${PUBLIC_IP}<\/hostname>|" $RESTCOMM_DEPLOY/WEB-INF/conf/restcomm.xml
+  		sed -i "s|<hostname\/>|<hostname>${PUBLIC_IP}<\/hostname>|" $RESTCOMM_DEPLOY/WEB-INF/conf/restcomm.xml
  	fi
 }
 ## Description: OutBoundProxy configuration.
@@ -104,9 +113,17 @@ configVoipInnovations() {
 	FILE=$RESTCOMM_DEPLOY/WEB-INF/conf/restcomm.xml
 
 	sed -e "/<voip-innovations>/ {
-		N; s/<login>.*<\/login>/<login>$1<\/login>/g;s/<login\/>/<login>$1<\/login>/g
-        N; s/<password>.*<\/password>/<password>$2<\/password>/g;s/<password\/>/<password>$2<\/password>/g
-        N; s/<endpoint>.*<\/endpoint>/<endpoint>$3<\/endpoint>/g;s/<endpoint\/>/<endpoint>$3<\/endpoint>/g
+		N; s|<login>.*</login>|<login>$1</login>|
+        N; s|<password>.*</password>|<password>$2</password>|
+        N; s|<endpoint>.*</endpoint>|<endpoint>$3</endpoint>|
+	}" $FILE > $FILE.bak
+
+	mv $FILE.bak $FILE
+	
+	sed -e "/<voip-innovations>/ {
+		N; s|<login\/>|<login>$1</login>|
+        N; s|<password\/>|<password>$2</password>|
+        N; s|<endpoint\/>|<endpoint>$3</endpoint>|
 	}" $FILE > $FILE.bak
 
 	mv $FILE.bak $FILE
