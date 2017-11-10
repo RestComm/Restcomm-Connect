@@ -102,6 +102,7 @@ body {
     font-weight: 300;
 }
 
+a,
 a:link,
 a:active,
 a:visited {
@@ -552,7 +553,7 @@ form[role=login] input:-webkit-autofill:focus{
 /* -- Accounts -------------------------------------------------------------- */
 
 .accounts-tabs {
-    padding: 3%;
+    padding: 3% 0;
 }
 
 .accounts-tabs > div+div {
@@ -579,6 +580,12 @@ form[role=login] input:-webkit-autofill:focus{
 .accounts-tabs-mobile .active a {
     color: #555;
     font-weight: bold;
+    padding-left: 5px;
+    margin-left: -5px;
+}
+
+.accounts-tabs .active a {
+    border-left: 2px solid #48A6AC;
 }
 
 .profile-form {
@@ -789,8 +796,39 @@ form[role=login] input:-webkit-autofill:focus{
 /* -- Clients --------------------------------------------------------------- */
 
 .rc-list {
-    font-size: 1.4em;
+    font-size: 1.3em;
+    font-weight: 300;
     table-layout: fixed;
+}
+
+.rc-list tbody {
+    color: #6d6e70;
+}
+.rc-list tr {
+    height: 2.5em;
+}
+
+.rc-list thead {
+    color: #4a4a4b;
+    font-size: 1.1em;
+}
+
+.rc-list-summary {
+    font-size: 0.75em;
+    opacity: 0.33;
+}
+
+.rc-no-items {
+    margin-top: 100px;
+    background-color: white;
+    border: 1px solid #eee;
+    border-radius: 20px;
+    text-align: center;
+    color: #6d6e70;
+}
+
+.rc-no-items > h1 > i {
+    font-size: 3em;
 }
 
 .clients-list {
@@ -840,6 +878,250 @@ form[role=login] input:-webkit-autofill:focus{
         color: #bbbbbb;
     }
 
+}
+
+/* -- Logs / Calls ---------------------------------------------------------- */
+
+.logs-calls-list {
+    table-layout: auto;
+}
+
+.logs-calls-list .logs-calls-list-date {
+    width: 25%;
+}
+
+.logs-calls-list .logs-calls-list-from {
+    width: 15%;
+    text-align: center;
+}
+
+.logs-calls-list .logs-calls-list-to {
+    width: 15%;
+    text-align: center;
+}
+
+.logs-calls-list .logs-calls-list-direction {
+    width: 10%;
+    text-align: center;
+}
+
+.logs-calls-list .logs-calls-list-status {
+    width: 15%;
+    text-align: center;
+}
+
+.logs-calls-list .logs-calls-list-duration {
+    width: 10%;
+    text-align: center;
+}
+
+.logs-calls-list .logs-calls-list-price {
+    width: 10%;
+    text-align: center;
+}
+
+.logs-calls-list .logs-calls-list-accountsid {
+    font-size: 0.75em;
+    color: #aaa;
+    margin-top: -18px;
+}
+
+.logs-search-date {
+    width: calc(50% - 7px);
+    display: inline-block;
+}
+.logs-search-date + .logs-search-date {
+    margin-left: 10px;
+}
+
+.logs-search-field {
+    padding: 0 5px;
+}
+
+.logs-search-button {
+    padding: 5px 10px;
+    border-radius: 10px;
+    font-size: 2em;
+    background-color: #48A6AC;
+    color: white;
+    border: none;
+    top: 0;
+    position: absolute;
+    right: 0;
+}
+
+@media(max-width:768px) {
+    .logs-calls-list {
+        font-size: 1.1em;
+    }
+
+    .logs-calls-list.logs-calls-list-extra tr {
+        height: 5em;
+    }
+
+    .logs-calls-list .logs-calls-list-date {
+        width: 25%;
+        font-size: 1em;
+    }
+
+    .logs-calls-list .logs-calls-list-from {
+        width: 35%;
+    }
+
+    .logs-calls-list .logs-calls-list-direction {
+        width: 20%;
+    }
+
+    .logs-calls-list .logs-calls-list-duration {
+        width: 20%;
+    }
+
+    .logs-calls-list .logs-calls-list-accountsid {
+        position: absolute;
+        margin-top: -16px;
+    }
+
+    .logs-calls-list div+div {
+        padding-top: 3px;
+    }
+
+    .logs-search-button {
+        padding: 1px 7px 2px 7px;
+        top: -4px;
+        right: 10px;
+    }
+}
+
+/* -- Logs / Messages ------------------------------------------------------- */
+
+.logs-messages-list {
+}
+
+.logs-messages-list .logs-messages-list-date {
+    width: 25%;
+}
+
+.logs-messages-list .logs-messages-list-from {
+    width: 15%;
+    text-align: center;
+}
+
+.logs-messages-list .logs-messages-list-to {
+    width: 15%;
+    text-align: center;
+}
+
+.logs-messages-list .logs-messages-list-direction {
+    width: 10%;
+    text-align: center;
+}
+
+.logs-messages-list .logs-messages-list-status {
+    width: 15%;
+    text-align: center;
+}
+
+.logs-messages-list .logs-messages-list-body {
+    width: 10%;
+    text-align: center;
+}
+
+.logs-messages-list .logs-messages-list-cost {
+    width: 10%;
+    text-align: center;
+}
+
+
+/* -- Logs / Recordings ----------------------------------------------------- */
+
+.logs-recordings-list {
+}
+
+.logs-recordings-list .logs-recordings-list-date {
+    width: 25%;
+}
+
+.logs-recordings-list .logs-recordings-list-from {
+    width: 15%;
+    text-align: center;
+}
+
+.logs-recordings-list .logs-recordings-list-to {
+    width: 15%;
+    text-align: center;
+}
+
+.logs-recordings-list .logs-recordings-list-duration {
+    width: 20%;
+    text-align: center;
+}
+
+.logs-recordings-list .logs-recordings-list-call-sid {
+    width: 55%;
+    text-align: center;
+}
+
+.logs-recordings-list .logs-recordings-list-download {
+    width: 10%;
+    text-align: center;
+}
+
+/* -- Logs / Transcriptions ------------------------------------------------- */
+
+.logs-transcriptions-list {
+}
+
+.logs-transcriptions-list .logs-transcriptions-list-date {
+    width: 25%;
+}
+
+.logs-transcriptions-list .logs-transcriptions-list-status {
+    width: 10%;
+    text-align: center;
+}
+
+.logs-transcriptions-list .logs-transcriptions-list-duration {
+    width: 10%;
+    text-align: center;
+}
+
+.logs-transcriptions-list .logs-transcriptions-list-recording-sid {
+    width: 25%;
+    text-align: center;
+}
+
+.logs-transcriptions-list .logs-transcriptions-list-text {
+    width: 30%;
+    text-align: center;
+}
+
+/* -- Logs / Notifications -------------------------------------------------- */
+
+.logs-notifications-list {
+}
+
+.logs-notifications-list .logs-notifications-list-date {
+    width: 25%;
+}
+
+.logs-notifications-list .logs-notifications-list-type {
+    width: 10%;
+    text-align: center;
+}
+
+.logs-notifications-list .logs-notifications-list-code {
+    width: 10%;
+    text-align: center;
+}
+
+.logs-notifications-list .logs-notifications-list-call-sid {
+    width: 25%;
+    text-align: center;
+}
+
+.logs-notifications-list .logs-notifications-list-text {
+    width: 30%;
+    text-align: center;
 }
 
 /* -- Applications -----------------------------------------------------*/
@@ -997,11 +1279,6 @@ form[role=login] input:-webkit-autofill:focus{
 .numbers-list .numbers-list-delete-icon {
     width: 10%;
     vertical-align: middle;
-}
-
-.numbers-list-summary {
-    font-size: 0.75em;
-    opacity: 0.33;
 }
 
 .buttons-per-page button {
@@ -1192,10 +1469,25 @@ button.btn-selection {
 
 
 
+input[type=date]::-webkit-inner-spin-button,
+input[type=date]::-webkit-outer-spin-button {
+    -webkit-appearance: none;
+    margin: 0;
+}
+
+input[type="date"]::-webkit-clear-button {
+}
+
+input[type="date"]::-webkit-calendar-picker-indicator {
+}
 
 
 
 /* -- Override UI Bootstrap Pagination Styles ------------------------------- */
+
+.pagination {
+    margin: 0;
+}
 
 /* Regular page/link */
 .pagination > li > a, .pagination > li > span {

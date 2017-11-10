@@ -18,7 +18,7 @@ rcMod.controller('LogsNotificationsCtrl', function ($scope, $resource, $timeout,
   $scope.currentPage = 1; //current page
   $scope.maxSize = 5; //pagination max size
   $scope.entryLimit = 10; //max rows for data table
-  $scope.reverse = false;
+  $scope.reverse = true;
   $scope.predicate = "date_created";
 
   $scope.setEntryLimit = function(limit) {
@@ -73,8 +73,13 @@ rcMod.controller('LogsNotificationsCtrl', function ($scope, $resource, $timeout,
     var params = $scope.search ? createSearchParams($scope.search) : {LocalOnly: true};
     RCommLogsNotifications.search($.extend({accountSid: $scope.sid, Page: page, PageSize: $scope.entryLimit}, params), function(data) {
       $scope.notificationsLogsList = data.notifications;
-      $scope.totalNotification = data.total;
+      $scope.totalNotifications = data.total;
       $scope.noOfPages = data.num_pages;
+      $scope.start = parseInt(data.start) + 1;
+      $scope.end = parseInt(data.end);
+      if ($scope.end != $scope.totalNotifications) {
+        ++$scope.end;
+      }
     });
   }
 

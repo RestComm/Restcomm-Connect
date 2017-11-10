@@ -20,7 +20,7 @@ rcMod.controller('LogsCallsCtrl', function($scope, $resource, $timeout, $uibModa
   $scope.maxSize = 5; //pagination max size
   $scope.entryLimit = 10; //max rows for data table
   $scope.noOfPages = 1; //max rows for data table
-  $scope.reverse = false;
+  $scope.reverse = true;
   $scope.predicate = "date_created";
 
   $scope.setEntryLimit = function(limit) {
@@ -39,8 +39,13 @@ rcMod.controller('LogsCallsCtrl', function($scope, $resource, $timeout, $uibModa
       $scope.callsLogsList = data.calls;
       $scope.totalCalls = data.total;
       $scope.noOfPages = data.num_pages;
+      $scope.start = parseInt(data.start) + 1;
+      $scope.end = parseInt(data.end);
+      if ($scope.end != $scope.totalCalls) {
+        ++$scope.end;
+      }
     });
-  }
+  };
 
   $scope.filter = function() {
     $timeout(function() { //wait for 'filtered' to be changed

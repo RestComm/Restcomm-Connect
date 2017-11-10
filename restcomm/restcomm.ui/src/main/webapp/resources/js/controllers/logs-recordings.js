@@ -19,7 +19,7 @@ rcMod.controller('LogsRecordingsCtrl', function($scope, $resource, $timeout, $ui
   $scope.currentPage = 1; //current page
   $scope.maxSize = 5; //pagination max size
   $scope.entryLimit = 10; //max rows for data table
-  $scope.reverse = false;
+  $scope.reverse = true;
   $scope.predicate = "date_created";
 
   $scope.setEntryLimit = function(limit) {
@@ -63,10 +63,15 @@ rcMod.controller('LogsRecordingsCtrl', function($scope, $resource, $timeout, $ui
     var params = $scope.search ? createSearchParams($scope.search) : {LocalOnly: true};
     RCommLogsRecordings.search($.extend({accountSid: $scope.sid, Page: page, PageSize: $scope.entryLimit}, params), function(data) {
       $scope.recordingsLogsList = data.recordings;
-      $scope.totalRecording = data.total;
+      $scope.totalRecordings = data.total;
       $scope.noOfPages = data.num_pages;
+      $scope.start = parseInt(data.start) + 1;
+      $scope.end = parseInt(data.end);
+      if ($scope.end != $scope.totalRecordings) {
+        ++$scope.end;
+      }
     });
-  }
+  };
   
   var createSearchParams = function(search) {
     var params = {};
