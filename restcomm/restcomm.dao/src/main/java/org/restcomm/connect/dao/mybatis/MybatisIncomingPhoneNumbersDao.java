@@ -24,6 +24,7 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import org.apache.commons.lang.StringUtils;
 
 import org.apache.ibatis.session.SqlSession;
 import org.apache.ibatis.session.SqlSessionFactory;
@@ -99,6 +100,8 @@ public final class MybatisIncomingPhoneNumbersDao implements IncomingPhoneNumber
         }
     }
 
+    public static final char[] REGEX_SPECIAL_CHARS = {'*', '#', '^', '|', '.', '\\', '$', '[', ']'};
+
     @Override
     public List<IncomingPhoneNumber> getIncomingPhoneNumbersRegex(Sid orgSid) {
         final SqlSession session = sessions.openSession();
@@ -107,7 +110,10 @@ public final class MybatisIncomingPhoneNumbersDao implements IncomingPhoneNumber
             final List<IncomingPhoneNumber> incomingPhoneNumbers = new ArrayList<IncomingPhoneNumber>();
             if (results != null && !results.isEmpty()) {
                 for (final Map<String, Object> result : results) {
-                    incomingPhoneNumbers.add(toIncomingPhoneNumber(result));
+                    String number = DaoUtils.readString(result.get(PHONE_NUM));
+                    if (StringUtils.containsAny(number, REGEX_SPECIAL_CHARS)) {
+                        incomingPhoneNumbers.add(toIncomingPhoneNumber(result));
+                    }
                 }
             }
             return incomingPhoneNumbers;
