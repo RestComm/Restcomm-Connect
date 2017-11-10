@@ -33,6 +33,7 @@ import com.google.i18n.phonenumbers.PhoneNumberUtil;
 import com.google.i18n.phonenumbers.PhoneNumberUtil.PhoneNumberFormat;
 import com.google.i18n.phonenumbers.Phonenumber.PhoneNumber;
 import org.apache.commons.configuration.Configuration;
+import org.apache.commons.lang.StringUtils;
 import org.apache.http.NameValuePair;
 import org.apache.http.message.BasicNameValuePair;
 import org.joda.time.DateTime;
@@ -128,7 +129,6 @@ import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.TimeUnit;
 import java.util.regex.Pattern;
-import org.apache.commons.lang.StringUtils;
 
 import static akka.pattern.Patterns.ask;
 
@@ -1918,6 +1918,9 @@ public abstract class BaseVoiceInterpreter extends RestcommUntypedActor {
                 // Update the application.
 //                callback();
             }
+
+            Recording recording = null;
+
             final NotificationsDao notifications = storage.getNotificationsDao();
             // Create a record of the recording.
             Double duration = WavUtils.getAudioDuration(recordingUri);
@@ -1926,100 +1929,98 @@ public abstract class BaseVoiceInterpreter extends RestcommUntypedActor {
                     String msg = String.format("Recording file %s, duration is 0 and will return",recordingUri);
                     logger.info(msg);
                 }
-                return;
-            } else if(logger.isDebugEnabled()) {
-                logger.debug("File already exists, length: "+ (new File(recordingUri).length()));
-            }
-
-            if (logger.isDebugEnabled()) {
-                logger.debug("Recording duration: "+duration);
-            }
-
-            final Recording.Builder builder = Recording.builder();
-            builder.setSid(recordingSid);
-            builder.setAccountSid(accountId);
-            builder.setCallSid(callInfo.sid());
-            builder.setDuration(duration);
-            builder.setApiVersion(version);
-            StringBuilder buffer = new StringBuilder();
-            buffer.append("/").append(version).append("/Accounts/").append(accountId.toString());
-            buffer.append("/Recordings/").append(recordingSid.toString());
-            builder.setUri(URI.create(buffer.toString()));
-            final Recording recording = builder.build();
-            final RecordingsDao recordings = storage.getRecordingsDao();
-            recordings.addRecording(recording, recordingMediaType);
-
-            Attribute attribute = null;
-
-            if (checkAsrService()) {
-                // ASR service is enabled. Start transcription.
-                URI transcribeCallback = null;
-                attribute = verb.attribute("transcribeCallback");
-                if (attribute != null) {
-                    final String value = attribute.value();
-                    if (value != null && !value.isEmpty()) {
-                        try {
-                            transcribeCallback = URI.create(value);
-                        } catch (final Exception exception) {
-                            final Notification notification = notification(ERROR_NOTIFICATION, 11100, transcribeCallback
-                                    + " is an invalid URI.");
-                            notifications.addNotification(notification);
-                            sendMail(notification);
-                            final StopInterpreter stop = new StopInterpreter();
-                            source.tell(stop, source);
-                            return;
-                        }
-                    }
+            } else {
+                if (logger.isDebugEnabled()) {
+                    logger.debug("Recording File exists, length: " + (new File(recordingUri).length()));
+                    logger.debug("Recording duration: " + duration);
                 }
-                boolean transcribe = false;
-                if (transcribeCallback != null) {
-                    transcribe = true;
-                } else {
-                    attribute = verb.attribute("transcribe");
+
+                final Recording.Builder builder = Recording.builder();
+                builder.setSid(recordingSid);
+                builder.setAccountSid(accountId);
+                builder.setCallSid(callInfo.sid());
+                builder.setDuration(duration);
+                builder.setApiVersion(version);
+                StringBuilder buffer = new StringBuilder();
+                buffer.append("/").append(version).append("/Accounts/").append(accountId.toString());
+                buffer.append("/Recordings/").append(recordingSid.toString());
+                builder.setUri(URI.create(buffer.toString()));
+                recording = builder.build();
+                final RecordingsDao recordings = storage.getRecordingsDao();
+                recordings.addRecording(recording, recordingMediaType);
+
+                Attribute attribute = null;
+
+                if (checkAsrService()) {
+                    // ASR service is enabled. Start transcription.
+                    URI transcribeCallback = null;
+                    attribute = verb.attribute("transcribeCallback");
                     if (attribute != null) {
                         final String value = attribute.value();
                         if (value != null && !value.isEmpty()) {
-                            transcribe = Boolean.parseBoolean(value);
+                            try {
+                                transcribeCallback = URI.create(value);
+                            } catch (final Exception exception) {
+                                final Notification notification = notification(ERROR_NOTIFICATION, 11100, transcribeCallback
+                                        + " is an invalid URI.");
+                                notifications.addNotification(notification);
+                                sendMail(notification);
+                                final StopInterpreter stop = new StopInterpreter();
+                                source.tell(stop, source);
+                                return;
+                            }
                         }
                     }
-                }
-                if (transcribe && checkAsrService()) {
-                    final Sid sid = Sid.generate(Sid.Type.TRANSCRIPTION);
-                    final Transcription.Builder otherBuilder = Transcription.builder();
-                    otherBuilder.setSid(sid);
-                    otherBuilder.setAccountSid(accountId);
-                    otherBuilder.setStatus(Transcription.Status.IN_PROGRESS);
-                    otherBuilder.setRecordingSid(recordingSid);
-                    otherBuilder.setTranscriptionText("Transcription Text not available");
-                    otherBuilder.setDuration(duration);
-                    otherBuilder.setPrice(new BigDecimal("0.00"));
-                    buffer = new StringBuilder();
-                    buffer.append("/").append(version).append("/Accounts/").append(accountId.toString());
-                    buffer.append("/Transcriptions/").append(sid.toString());
-                    final URI uri = URI.create(buffer.toString());
-                    otherBuilder.setUri(uri);
-                    final Transcription transcription = otherBuilder.build();
-                    final TranscriptionsDao transcriptions = storage.getTranscriptionsDao();
-                    transcriptions.addTranscription(transcription);
-                    try {
-                        final Map<String, Object> attributes = new HashMap<String, Object>();
-                        attributes.put("callback", transcribeCallback);
-                        attributes.put("transcription", transcription);
-                        getAsrService().tell(new AsrRequest(new File(recordingUri), "en", attributes), source);
-                        outstandingAsrRequests++;
-                    } catch (final Exception exception) {
-                        logger.error(exception.getMessage(), exception);
+                    boolean transcribe = false;
+                    if (transcribeCallback != null) {
+                        transcribe = true;
+                    } else {
+                        attribute = verb.attribute("transcribe");
+                        if (attribute != null) {
+                            final String value = attribute.value();
+                            if (value != null && !value.isEmpty()) {
+                                transcribe = Boolean.parseBoolean(value);
+                            }
+                        }
                     }
-                }
-            } else {
-                if(logger.isDebugEnabled()){
-                    logger.debug("AsrService is not enabled");
+                    if (transcribe && checkAsrService()) {
+                        final Sid sid = Sid.generate(Sid.Type.TRANSCRIPTION);
+                        final Transcription.Builder otherBuilder = Transcription.builder();
+                        otherBuilder.setSid(sid);
+                        otherBuilder.setAccountSid(accountId);
+                        otherBuilder.setStatus(Transcription.Status.IN_PROGRESS);
+                        otherBuilder.setRecordingSid(recordingSid);
+                        otherBuilder.setTranscriptionText("Transcription Text not available");
+                        otherBuilder.setDuration(duration);
+                        otherBuilder.setPrice(new BigDecimal("0.00"));
+                        buffer = new StringBuilder();
+                        buffer.append("/").append(version).append("/Accounts/").append(accountId.toString());
+                        buffer.append("/Transcriptions/").append(sid.toString());
+                        final URI uri = URI.create(buffer.toString());
+                        otherBuilder.setUri(uri);
+                        final Transcription transcription = otherBuilder.build();
+                        final TranscriptionsDao transcriptions = storage.getTranscriptionsDao();
+                        transcriptions.addTranscription(transcription);
+                        try {
+                            final Map<String, Object> attributes = new HashMap<String, Object>();
+                            attributes.put("callback", transcribeCallback);
+                            attributes.put("transcription", transcription);
+                            getAsrService().tell(new AsrRequest(new File(recordingUri), "en", attributes), source);
+                            outstandingAsrRequests++;
+                        } catch (final Exception exception) {
+                            logger.error(exception.getMessage(), exception);
+                        }
+                    }
+                } else {
+                    if (logger.isDebugEnabled()) {
+                        logger.debug("AsrService is not enabled");
+                    }
                 }
             }
 
             // If action is present redirect to the action URI.
             String action = null;
-            attribute = verb.attribute(GatherAttributes.ATTRIBUTE_ACTION);
+            Attribute attribute = verb.attribute(GatherAttributes.ATTRIBUTE_ACTION);
             if (attribute != null) {
                 action = attribute.value();
                 if (action != null && !action.isEmpty()) {
@@ -2054,21 +2055,23 @@ public abstract class BaseVoiceInterpreter extends RestcommUntypedActor {
                         }
                     }
                     final List<NameValuePair> parameters = parameters();
-                    if (amazonS3Enabled) {
-                        //If Amazon S3 is enabled the Recordings DAO uploaded the wav file to S3 and changed the URI
-                        parameters.add(new BasicNameValuePair("RecordingUrl", recording.getFileUri().toURL().toString()));
-                        parameters.add(new BasicNameValuePair("PublicRecordingUrl", recording.getFileUri().toURL().toString()));
-                    } else {
-                        // Redirect to the action url.
-                        String httpRecordingUri = configuration.subset("runtime-settings").getString("recordings-uri");
-                        if (!httpRecordingUri.endsWith("/")) {
-                            httpRecordingUri += "/";
+                    if (recording != null) {
+                        if (amazonS3Enabled) {
+                            //If Amazon S3 is enabled the Recordings DAO uploaded the wav file to S3 and changed the URI
+                            parameters.add(new BasicNameValuePair("RecordingUrl", recording.getFileUri().toURL().toString()));
+                            parameters.add(new BasicNameValuePair("PublicRecordingUrl", recording.getFileUri().toURL().toString()));
+                        } else {
+                            // Redirect to the action url.
+                            String httpRecordingUri = configuration.subset("runtime-settings").getString("recordings-uri");
+                            if (!httpRecordingUri.endsWith("/")) {
+                                httpRecordingUri += "/";
+                            }
+                            String fileExtension = recordingMediaType.equals(MediaAttributes.MediaType.AUDIO_ONLY) ? ".wav" : ".mp4";
+                            httpRecordingUri += recordingSid.toString() + fileExtension;
+                            URI publicRecordingUri = UriUtils.resolve(new URI(httpRecordingUri));
+                            parameters.add(new BasicNameValuePair("RecordingUrl", recordingUri.toString()));
+                            parameters.add(new BasicNameValuePair("PublicRecordingUrl", publicRecordingUri.toString()));
                         }
-                        String fileExtension = recordingMediaType.equals(MediaAttributes.MediaType.AUDIO_ONLY) ? ".wav" : ".mp4";
-                        httpRecordingUri += recordingSid.toString() + fileExtension;
-                        URI publicRecordingUri = UriUtils.resolve(new URI(httpRecordingUri));
-                        parameters.add(new BasicNameValuePair("RecordingUrl", recordingUri.toString()));
-                        parameters.add(new BasicNameValuePair("PublicRecordingUrl", publicRecordingUri.toString()));
                     }
                     parameters.add(new BasicNameValuePair("RecordingDuration", Double.toString(duration)));
                     if (MediaGroupResponse.class.equals(klass)) {

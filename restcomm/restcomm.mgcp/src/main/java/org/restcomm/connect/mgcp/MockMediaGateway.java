@@ -23,6 +23,7 @@ import akka.actor.Actor;
 import akka.actor.ActorRef;
 import akka.actor.ActorSystem;
 import akka.actor.Props;
+import akka.actor.ReceiveTimeout;
 import akka.actor.UntypedActor;
 import akka.actor.UntypedActorContext;
 import akka.actor.UntypedActorFactory;
@@ -45,6 +46,7 @@ import jain.protocol.ip.mgcp.message.parms.EventName;
 import jain.protocol.ip.mgcp.message.parms.NotifiedEntity;
 import jain.protocol.ip.mgcp.message.parms.ReturnCode;
 import jain.protocol.ip.mgcp.pkg.MgcpEvent;
+import org.joda.time.DateTime;
 import org.mobicents.protocols.mgcp.jain.pkg.AUMgcpEvent;
 import org.mobicents.protocols.mgcp.jain.pkg.AUPackage;
 import org.restcomm.connect.commons.faulttolerance.RestcommUntypedActor;
@@ -54,6 +56,7 @@ import org.restcomm.connect.mgcp.stats.MgcpConnectionAdded;
 import org.restcomm.connect.mgcp.stats.MgcpConnectionDeleted;
 import org.restcomm.connect.mgcp.stats.MgcpEndpointAdded;
 import org.restcomm.connect.mgcp.stats.MgcpEndpointDeleted;
+import scala.concurrent.duration.Duration;
 
 import javax.sdp.SdpFactory;
 import javax.sdp.SdpParseException;
@@ -66,18 +69,22 @@ import javax.sound.sampled.UnsupportedAudioFileException;
 import java.io.File;
 import java.io.IOException;
 import java.net.InetAddress;
-import java.util.Collections;
 import java.net.URI;
+import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
+import java.nio.file.StandardCopyOption;
+import java.util.Collections;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.TimeUnit;
 
 /**
  * @author quintana.thomas@gmail.com (Thomas Quintana)
  */
 public class MockMediaGateway extends RestcommUntypedActor {
     private final LoggingAdapter logger = Logging.getLogger(getContext().system(), this);
+
     // Session description for the mock media gateway.
     private static final String sdp = "v=0\n" + "o=- 1362546170756 1 IN IP4 192.168.1.100\n" + "s=Mobicents Media Server\n"
             + "c=IN IP4 192.168.1.100\n" + "t=0 0\n" + "m=audio 63044 RTP/AVP 97 8 0 101\n" + "a=rtpmap:97 l16/8000\n"
@@ -110,35 +117,42 @@ public class MockMediaGateway extends RestcommUntypedActor {
     private ActorRef monitoringService;
 
     private File recordingFile = null;
+    private int recordingMaxLength;
+
+    private DateTime startTime;
+    private DateTime endTime;
 
     private ActorSystem system;
+    private NotificationRequest recordingRqnt;
+    private ActorRef recordingRqntSender;
 
-    public MockMediaGateway() {
+    public MockMediaGateway () {
         super();
         system = context().system();
         connEndpointMap = new ConcurrentHashMap<String, String>();
     }
 
-    private ActorRef getConnection(final Object message) {
+    private ActorRef getConnection (final Object message) {
         final CreateConnection request = (CreateConnection) message;
         final MediaSession session = request.session();
         final ActorRef gateway = self();
         final Props props = new Props(new UntypedActorFactory() {
             private static final long serialVersionUID = 1L;
+
             @Override
-            public UntypedActor create() throws Exception {
+            public UntypedActor create () throws Exception {
                 return new MockConnection(gateway, session, agent, timeout);
             }
         });
         ActorRef connection = system.actorOf(props);
         if (logger.isInfoEnabled()) {
-            String msg = String.format("MockMediaGateway, Added new Connection, path: %s",connection.path());
+            String msg = String.format("MockMediaGateway, Added new Connection, path: %s", connection.path());
             logger.info(msg);
         }
         return connection;
     }
 
-    private ActorRef getBridgeEndpoint(final Object message) {
+    private ActorRef getBridgeEndpoint (final Object message) {
         final CreateBridgeEndpoint request = (CreateBridgeEndpoint) message;
         final ActorRef gateway = self();
         final MediaSession session = request.session();
@@ -146,19 +160,19 @@ public class MockMediaGateway extends RestcommUntypedActor {
             private static final long serialVersionUID = 1L;
 
             @Override
-            public Actor create() throws Exception {
+            public Actor create () throws Exception {
                 return new BridgeEndpoint(gateway, session, agent, domain, timeout);
             }
         });
         ActorRef bridgeEndpoint = system.actorOf(props);
         if (logger.isInfoEnabled()) {
-            String msg = String.format("MockMediaGateway, Added Bridge endpoint, path: %s",bridgeEndpoint.path());
+            String msg = String.format("MockMediaGateway, Added Bridge endpoint, path: %s", bridgeEndpoint.path());
             logger.info(msg);
         }
         return bridgeEndpoint;
     }
 
-    private ActorRef getConferenceEndpoint(final Object message) {
+    private ActorRef getConferenceEndpoint (final Object message) {
         final ActorRef gateway = self();
         final CreateConferenceEndpoint request = (CreateConferenceEndpoint) message;
         final MediaSession session = request.session();
@@ -170,7 +184,7 @@ public class MockMediaGateway extends RestcommUntypedActor {
             private static final long serialVersionUID = 1L;
 
             @Override
-            public UntypedActor create() throws Exception {
+            public UntypedActor create () throws Exception {
                 return new ConferenceEndpoint(gateway, session, agent, domain, timeout, endpointName);
             }
         });
@@ -182,11 +196,11 @@ public class MockMediaGateway extends RestcommUntypedActor {
         return conferenceEndpoint;
     }
 
-    private MediaGatewayInfo getInfo(final Object message) {
+    private MediaGatewayInfo getInfo (final Object message) {
         return new MediaGatewayInfo(name, remoteIp, remotePort, useNat, externalIp);
     }
 
-    private ActorRef getIvrEndpoint(final Object message) {
+    private ActorRef getIvrEndpoint (final Object message) {
         final ActorRef gateway = self();
         final CreateIvrEndpoint request = (CreateIvrEndpoint) message;
         final MediaSession session = request.session();
@@ -196,19 +210,19 @@ public class MockMediaGateway extends RestcommUntypedActor {
             private static final long serialVersionUID = 1L;
 
             @Override
-            public UntypedActor create() throws Exception {
+            public UntypedActor create () throws Exception {
                 return new IvrEndpoint(gateway, session, agent, domain, timeout, endpointName);
             }
         });
         ActorRef ivrEndpoint = system.actorOf(props);
         if (logger.isInfoEnabled()) {
-            String msg = String.format("MockMediaGateway, Added Ivr endpoint, path: %s",ivrEndpoint.path());
+            String msg = String.format("MockMediaGateway, Added Ivr endpoint, path: %s", ivrEndpoint.path());
             logger.info(msg);
         }
         return ivrEndpoint;
     }
 
-    private ActorRef getLink(final Object message) {
+    private ActorRef getLink (final Object message) {
         final CreateLink request = (CreateLink) message;
         final ActorRef gateway = self();
         final MediaSession session = request.session();
@@ -216,19 +230,19 @@ public class MockMediaGateway extends RestcommUntypedActor {
             private static final long serialVersionUID = 1L;
 
             @Override
-            public UntypedActor create() throws Exception {
+            public UntypedActor create () throws Exception {
                 return new Link(gateway, session, agent, timeout);
             }
         });
         ActorRef link = system.actorOf(props);
         if (logger.isInfoEnabled()) {
-            String msg = String.format("MockMediaGateway, Added new Link, path: %s",link.path());
+            String msg = String.format("MockMediaGateway, Added new Link, path: %s", link.path());
             logger.info(msg);
         }
         return link;
     }
 
-    private ActorRef getPacketRelayEndpoint(final Object message) {
+    private ActorRef getPacketRelayEndpoint (final Object message) {
         final ActorRef gateway = self();
         final CreatePacketRelayEndpoint request = (CreatePacketRelayEndpoint) message;
         final MediaSession session = request.session();
@@ -236,23 +250,23 @@ public class MockMediaGateway extends RestcommUntypedActor {
             private static final long serialVersionUID = 1L;
 
             @Override
-            public UntypedActor create() throws Exception {
+            public UntypedActor create () throws Exception {
                 return new PacketRelayEndpoint(gateway, session, agent, domain, timeout);
             }
         });
         ActorRef packetRelayEndpoint = system.actorOf(props);
         if (logger.isInfoEnabled()) {
-            String msg = String.format("MockMediaGateway, Added PacketRelay endpoint, path: %s",packetRelayEndpoint.path());
+            String msg = String.format("MockMediaGateway, Added PacketRelay endpoint, path: %s", packetRelayEndpoint.path());
             logger.info(msg);
         }
         return packetRelayEndpoint;
     }
 
-    private MediaSession getSession() {
+    private MediaSession getSession () {
         return new MediaSession((int) sessionIdPool.get());
     }
 
-    private void powerOff(final Object message) {
+    private void powerOff (final Object message) {
         // Make sure we don't leave anything behind.
         name = null;
         localIp = null;
@@ -269,7 +283,7 @@ public class MockMediaGateway extends RestcommUntypedActor {
         transactionIdPool = null;
     }
 
-    private void powerOn(final Object message) {
+    private void powerOn (final Object message) {
         final PowerOnMediaGateway request = (PowerOnMediaGateway) message;
         name = request.getName();
         localIp = request.getLocalIp();
@@ -290,7 +304,7 @@ public class MockMediaGateway extends RestcommUntypedActor {
     }
 
     @Override
-    public void onReceive(final Object message) throws Exception {
+    public void onReceive (final Object message) throws Exception {
         final UntypedActorContext context = getContext();
         final Class<?> klass = message.getClass();
         final ActorRef self = self();
@@ -322,21 +336,21 @@ public class MockMediaGateway extends RestcommUntypedActor {
         } else if (DestroyConnection.class.equals(klass)) {
             final DestroyConnection request = (DestroyConnection) message;
             if (logger.isInfoEnabled()) {
-                String msg = String.format("MockMediaGateway, Connection destroyed, path %s",request.connection().path());
+                String msg = String.format("MockMediaGateway, Connection destroyed, path %s", request.connection().path());
                 logger.info(msg);
             }
             context.stop(request.connection());
         } else if (DestroyLink.class.equals(klass)) {
             final DestroyLink request = (DestroyLink) message;
             if (logger.isInfoEnabled()) {
-                String msg = String.format("MockMediaGateway, Link destroyed, path %s",request.link().path());
+                String msg = String.format("MockMediaGateway, Link destroyed, path %s", request.link().path());
                 logger.info(msg);
             }
             context.stop(request.link());
         } else if (DestroyEndpoint.class.equals(klass)) {
             final DestroyEndpoint request = (DestroyEndpoint) message;
             if (logger.isInfoEnabled()) {
-                String msg = String.format("MockMediaGateway, Endpoint destroyed, path %s",request.endpoint().path());
+                String msg = String.format("MockMediaGateway, Endpoint destroyed, path %s", request.endpoint().path());
                 logger.info(msg);
             }
             context.stop(request.endpoint());
@@ -344,15 +358,31 @@ public class MockMediaGateway extends RestcommUntypedActor {
             send(message, sender);
         } else if (message instanceof JainMgcpResponseEvent) {
             send(message);
+        } else if (message instanceof ReceiveTimeout) {
+            onReceiveTimeout(message);
         }
     }
 
+    private void onReceiveTimeout (Object message) {
+        if (logger.isInfoEnabled()) {
+            logger.info("Max recording length reached");
+        }
+        stopRecording();
+        notify(recordingRqnt, recordingRqntSender);
+    }
+
     private void writeRecording (File srcWaveFile, File outWaveFile, int duration) {
+        DateTime start = new DateTime();
+        DateTime end;
+        long operationDuration;
+
         AudioInputStream audioInputStream = null;
         AudioInputStream shortenedStream = null;
         try {
+            File tempFile = File.createTempFile("tempRecording", ".wav");
+            tempFile.deleteOnExit();
             if (outWaveFile.exists()) {
-                String msg = String.format("Recording file %s doesn't exist, will create it",outWaveFile);
+                String msg = String.format("Recording file %s doesn't exist, will create it", outWaveFile);
                 logger.warning(msg);
                 outWaveFile.createNewFile();
             }
@@ -366,7 +396,9 @@ public class MockMediaGateway extends RestcommUntypedActor {
             long framesOfAudioToCopy = duration * (int) format.getFrameRate();
             shortenedStream = new AudioInputStream(audioInputStream, format, framesOfAudioToCopy);
 
-            AudioSystem.write(shortenedStream, fileFormat.getType(), outWaveFile);
+            AudioSystem.write(shortenedStream, fileFormat.getType(), tempFile);
+
+            Files.move(tempFile.toPath(), outWaveFile.toPath(), StandardCopyOption.REPLACE_EXISTING);
 
             double recordedDuration = WavUtils.getAudioDuration(outWaveFile);
             String msg = String.format("Write to recording file %s completed, duration %6.0f", outWaveFile, recordedDuration);
@@ -386,7 +418,9 @@ public class MockMediaGateway extends RestcommUntypedActor {
             } catch (Exception e) {
                 e.printStackTrace();
             }
-            String msg = String.format("Write to recording file %s completed, and Finally ended", outWaveFile);
+            end = new DateTime();
+            operationDuration = (end.getMillis() - start.getMillis());
+            String msg = String.format("Write to recording file %s completed, operation duration %d ms", outWaveFile, operationDuration);
             logger.info(msg);
         }
 
@@ -454,10 +488,10 @@ public class MockMediaGateway extends RestcommUntypedActor {
         sender.tell(response, self);
     }
 
-    private void modifyConnection(final Object message, final ActorRef sender) {
+    private void modifyConnection (final Object message, final ActorRef sender) {
         final ActorRef self = self();
         final ModifyConnection mdcx = (ModifyConnection) message;
-        System.out.println("MDCX: \n" +mdcx.toString());
+        System.out.println("MDCX: \n" + mdcx.toString());
         if (logger.isInfoEnabled()) {
             String msg = String.format("Got MDCX for endpoint %s connId %s, mdcx: \n%s", mdcx.getEndpointIdentifier().getLocalEndpointName(), mdcx.getConnectionIdentifier(), mdcx);
             logger.info(msg);
@@ -465,7 +499,7 @@ public class MockMediaGateway extends RestcommUntypedActor {
         ReturnCode code;
         SessionDescription sessionDescription = null;
         boolean isNonValidSdp = false;
-        if (mdcx.getRemoteConnectionDescriptor()!=null) {
+        if (mdcx.getRemoteConnectionDescriptor() != null) {
             try {
                 sessionDescription = SdpFactory.getInstance().createSessionDescription(mdcx.getRemoteConnectionDescriptor().toString());
                 isNonValidSdp = sessionDescription.getSessionName().getValue().contains("NonValidSDP");
@@ -492,7 +526,7 @@ public class MockMediaGateway extends RestcommUntypedActor {
         }
     }
 
-    private void deleteConnection(final Object message, final ActorRef sender) {
+    private void deleteConnection (final Object message, final ActorRef sender) {
         final ActorRef self = self();
         final DeleteConnection dlcx = (DeleteConnection) message;
         if (dlcx.getConnectionIdentifier() == null) {
@@ -526,51 +560,41 @@ public class MockMediaGateway extends RestcommUntypedActor {
         sender.tell(response, self);
     }
 
-    protected void notificationResponse(final Object message, final ActorRef sender) {
+    protected void notificationResponse (final Object message, final ActorRef sender) {
         final ActorRef self = self();
         final NotificationRequest rqnt = (NotificationRequest) message;
         EventName[] events = rqnt.getSignalRequests();
         //Thread sleep for the maximum recording length to simulate recording from RMS side
-        int sleepTime = 0;
         String filename = null;
         boolean failResponse = false;
 
         if (events != null && events.length > 0 && events[0].getEventIdentifier() != null) {
             if (events[0].getEventIdentifier().getName().equalsIgnoreCase("pr")) {
+                startTime = DateTime.now();
                 //Check for the Recording Length Timer parameter if the RQNT is about PlayRecord request
                 String[] paramsArray = ((EventName) events[0]).getEventIdentifier().getParms().split(" ");
+
                 for (String param : paramsArray) {
                     if (param.startsWith("rlt")) {
-                        sleepTime = Integer.parseInt(param.replace("rlt=", ""));
+                        recordingMaxLength = Integer.parseInt(param.replace("rlt=", ""));
                     } else if (param.startsWith("ri")) {
                         filename = param.replace("ri=", "");
                     }
                 }
-                if (sleepTime == 36000) {
-                    //If maxLength is not set, rlt will be rlt=36000
-                    //In that case don't sleep at all
-                    sleepTime = 0;
+                //If maxLength is not set, rlt will be rlt=36000
+                if (recordingMaxLength != 36000) {
+                    getContext().setReceiveTimeout(Duration.create(recordingMaxLength*10, TimeUnit.MILLISECONDS));
                 }
                 if (filename != null) {
-                    try {
-                        Path path = Paths.get(filename.replaceFirst("file://",""));
-                        recordingFile = new File(filename.replaceFirst("file://",""));
-                        recordingFile.getParentFile().mkdir();
-                        recordingFile.createNewFile();
-//                        start = DateTime.now();
-//                        createRecordingFile = true;
+                    Path path = Paths.get(filename.replaceFirst("file://", ""));
+                    recordingFile = new File(filename.replaceFirst("file://", ""));
+                    recordingFile.getParentFile().mkdir();
+                }
+            } else if (events[0].getEventIdentifier().getName().equalsIgnoreCase("es")) {
+                String signal = ((EventName) events[0]).getEventIdentifier().getParms().split("=")[1];
 
-                        String msg = String.format("Will write to recording file %s for duration of %d", recordingFile, 3);
-                        logger.info(msg);
-                        URI waveFileUri = ClassLoader.getSystemResource("FiveMinutes.wav").toURI();
-                        File waveFile = new File(waveFileUri);
-                        writeRecording(waveFile, recordingFile, 3);
-
-                    } catch (Exception e) {
-                        String msg = String.format("Exception while trying to create Recording file %s, exception %s", filename, e);
-                        logger.error(msg);
-                    }
-
+                if (signal.equalsIgnoreCase("pr")) {
+                    stopRecording();
                 }
             } else if (events[0].getEventIdentifier().getName().equalsIgnoreCase("pa")) {
                 //If this is a Play Audio request, check that the parameter string ends with WAV
@@ -595,26 +619,53 @@ public class MockMediaGateway extends RestcommUntypedActor {
         final JainMgcpResponseEvent response = new NotificationRequestResponse(self, code);
         final int transaction = rqnt.getTransactionHandle();
         response.setTransactionHandle(transaction);
-        try {
-            Thread.sleep(sleepTime*10);
-        } catch (InterruptedException e) {
-        }
-        logger.info("About to send MockMediaGateway response: "+response.toString());
+
+        String msg = String.format("About to send MockMediaGateway response %s", response.toString());
+        logger.info(msg);
         sender.tell(response, self);
     }
 
-    private void notify(final Object message, final ActorRef sender) {
+    private void stopRecording () {
+        if (recordingFile != null) {
+            endTime = DateTime.now();
+            long recordingDuration = (int) ((endTime.getMillis() - startTime.getMillis()) / 1000);
+            try {
+                int duration = (int) recordingDuration;
+                String msg = String.format("Will write to recording file %s for duration of %d", recordingFile, duration);
+                logger.info(msg);
+                URI waveFileUri = ClassLoader.getSystemResource("FiveMinutes.wav").toURI();
+                File waveFile = new File(waveFileUri);
+                writeRecording(waveFile, recordingFile, duration);
+            } catch (Exception e) {
+                String msg = String.format("Exception while trying to create Recording file %s, exception %s", recordingFile, e);
+                logger.error(msg);
+            }
+        }
+    }
+
+    private void notify (final Object message, final ActorRef sender) {
         final ActorRef self = self();
         final NotificationRequest request = (NotificationRequest) message;
-        final MgcpEvent event = AUMgcpEvent.auoc.withParm("rc=100 dc=1");
+
+        MgcpEvent event = null;
+        if (request.getSignalRequests()[0].getEventIdentifier().getName().equalsIgnoreCase("es")
+                || request.getSignalRequests()[0].getEventIdentifier().getName().equalsIgnoreCase("pr")) {
+            //Looks like this is either an RQNT AU/ES or
+            //recording max length reached and we got the original recording RQNT
+            event = AUMgcpEvent.auoc.withParm("AU/pr ri=file://" + recordingFile.toPath() + " rc=100 dc=1");
+        } else {
+            event = AUMgcpEvent.auoc.withParm("rc=100 dc=1");
+        }
+
         final EventName[] events = {new EventName(AUPackage.AU, event)};
+
         final Notify notify = new Notify(this, request.getEndpointIdentifier(), request.getRequestIdentifier(), events);
         notify.setTransactionHandle((int) transactionIdPool.get());
         System.out.println(notify.toString());
         sender.tell(notify, self);
     }
 
-    private void respond(final Object message, final ActorRef sender) {
+    private void respond (final Object message, final ActorRef sender) {
         final Class<?> klass = message.getClass();
         if (jain.protocol.ip.mgcp.message.CreateConnection.class.equals(klass)) {
             createConnection(message, sender);
@@ -627,20 +678,34 @@ public class MockMediaGateway extends RestcommUntypedActor {
         }
     }
 
-    private void send(final Object message, final ActorRef sender) {
+
+    private void send (final Object message, final ActorRef sender) {
         final JainMgcpCommandEvent command = (JainMgcpCommandEvent) message;
         final int transactionId = (int) transactionIdPool.get();
         command.setTransactionHandle(transactionId);
         respond(message, sender);
-        if (NotificationRequest.class.equals(command.getClass())) {
-            final NotificationRequest request = (NotificationRequest) command;
-            final String id = Long.toString(requestIdPool.get());
-            request.getRequestIdentifier().setRequestIdentifier(id);
-            notify(message, sender);
+
+        EventName[] events = null;
+        if (message instanceof NotificationRequest) {
+            final NotificationRequest rqnt = (NotificationRequest) message;
+            events = rqnt.getSignalRequests();
+            if (events != null && events[0].getEventIdentifier().getName().equalsIgnoreCase("pr")) {
+                recordingRqnt = rqnt;
+                recordingRqntSender = sender();
+            }
+        }
+
+        if (events != null && !events[0].getEventIdentifier().getName().equalsIgnoreCase("pr")) {
+            if (NotificationRequest.class.equals(command.getClass())) {
+                final NotificationRequest request = (NotificationRequest) command;
+                final String id = Long.toString(requestIdPool.get());
+                request.getRequestIdentifier().setRequestIdentifier(id);
+                notify(request, sender);
+            }
         }
     }
 
-    private void send(final Object message) {
+    private void send (final Object message) {
         final JainMgcpResponseEvent response = (JainMgcpResponseEvent) message;
         System.out.println(response.toString());
     }
