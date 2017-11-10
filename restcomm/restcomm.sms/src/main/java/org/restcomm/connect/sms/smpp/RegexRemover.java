@@ -19,6 +19,7 @@
  */
 package org.restcomm.connect.sms.smpp;
 
+import java.util.ArrayList;
 import java.util.List;
 import org.apache.commons.lang.StringUtils;
 import org.restcomm.connect.dao.entities.IncomingPhoneNumber;
@@ -34,12 +35,19 @@ public class RegexRemover {
      * @param numbers
      */
     static void removeRegexes(List<IncomingPhoneNumber> numbers) {
+        //use a list to prevent conc access during iteration
+        List<IncomingPhoneNumber> toBeRemoved = new ArrayList();
         if (numbers != null) {
-            for (int i = 0; i < numbers.size(); i++) {
-                IncomingPhoneNumber nAux = numbers.get(i);
+            for (IncomingPhoneNumber nAux : numbers) {
                 if (StringUtils.containsAny(nAux.getPhoneNumber(), REGEX_SPECIAL_CHARS)) {
-                    numbers.remove(i);
+                    //mark this as to be removed later
+                    toBeRemoved.add(nAux);
                 }
+            }
+            //finally remove regexes
+            for (IncomingPhoneNumber nAux : toBeRemoved) {
+                //this is relying on Java default equals IncomingPhoneNumber
+                numbers.remove(nAux);
             }
         }
     }
