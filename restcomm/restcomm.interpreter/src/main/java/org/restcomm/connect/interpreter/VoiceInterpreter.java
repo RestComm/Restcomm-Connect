@@ -30,6 +30,7 @@ import akka.event.LoggingAdapter;
 import akka.pattern.AskTimeoutException;
 import akka.util.Timeout;
 import org.apache.commons.configuration.Configuration;
+import org.apache.commons.lang.StringUtils;
 import org.apache.http.HttpStatus;
 import org.apache.http.NameValuePair;
 import org.apache.http.client.ClientProtocolException;
@@ -53,6 +54,7 @@ import org.restcomm.connect.commons.util.UriUtils;
 import org.restcomm.connect.dao.CallDetailRecordsDao;
 import org.restcomm.connect.dao.NotificationsDao;
 import org.restcomm.connect.dao.entities.CallDetailRecord;
+import org.restcomm.connect.dao.entities.MediaAttributes;
 import org.restcomm.connect.dao.entities.Notification;
 import org.restcomm.connect.email.api.EmailResponse;
 import org.restcomm.connect.fax.FaxResponse;
@@ -202,6 +204,7 @@ public class VoiceInterpreter extends BaseVoiceInterpreter {
     Tag conferenceVerb;
     List<URI> conferenceWaitUris;
     private boolean playMusicForConference = false;
+    private MediaAttributes mediaAttributes;
     //Used for system apps, such as when WebRTC client is dialing out.
     //The rcml will be used instead of download the RCML
     private String rcml;
@@ -462,6 +465,7 @@ public class VoiceInterpreter extends BaseVoiceInterpreter {
         this.imsUaLogin = params.getImsUaLogin();
         this.imsUaPassword = params.getImsUaPassword();
         this.msResponsePending = false;
+        this.mediaAttributes = new MediaAttributes();
     }
 
     public static Props props(final VoiceInterpreterParams params) {
@@ -818,6 +822,9 @@ public class VoiceInterpreter extends BaseVoiceInterpreter {
             } else if (is(playing)) {
                 fsm.transition(message, ready);
             } else if (is(creatingRecording)) {
+                if (logger.isInfoEnabled()) {
+                    logger.info("Will move to finishRecording because of MediaGroupResponse");
+                }
                 fsm.transition(message, finishRecording);
             }
             // This is either MMS collected digits or SIP INFO DTMF. If the DTMF is from SIP INFO, then more DTMF might
@@ -959,6 +966,10 @@ public class VoiceInterpreter extends BaseVoiceInterpreter {
         } else if (Verbs.pause.equals(verb.name())) {
             fsm.transition(message, pausing);
         } else if (Verbs.hangup.equals(verb.name())) {
+            if (logger.isInfoEnabled()) {
+                String msg = String.format("Next verb is Hangup, current state is %s , callInfo state %s", fsm.state(), callInfo.state());
+                logger.info(msg);
+            }
             if (is(finishDialing)) {
                 fsm.transition(message, finished);
             } else {
@@ -1299,9 +1310,6 @@ public class VoiceInterpreter extends BaseVoiceInterpreter {
                             fsm.transition(message, finishDialing);
                         }
                     } else if (is(creatingRecording)) {
-                        // Ask callMediaGroup to stop recording so we have the recording file available
-                        // Issue #197: https://telestax.atlassian.net/browse/RESTCOMM-197
-                        call.tell(new StopMediaGroup(), null);
                         fsm.transition(message, finishRecording);
                     } else if ((is(bridged) || is(forking)) && call == sender()) {
                         if (!dialActionExecuted) {
@@ -1649,6 +1657,16 @@ public class VoiceInterpreter extends BaseVoiceInterpreter {
             final List<Tag> children = container.children();
             for (final Tag child : children) {
                 if (Nouns.conference.equals(child.name())) {
+                    return child;
+                }
+            }
+            return null;
+        }
+
+        protected Tag video(final Tag container) {
+            final List<Tag> children = container.children();
+            for (final Tag child : children) {
+                if (Nouns.video.equals(child.name())) {
                     return child;
                 }
             }
@@ -2012,6 +2030,106 @@ public class VoiceInterpreter extends BaseVoiceInterpreter {
             }
             return timeLimit;
         }
+
+        protected MediaAttributes.MediaType videoEnabled(final Tag container) {
+            boolean videoEnabled = false;
+            Attribute attribute = container.attribute("enable");
+            if (attribute != null) {
+                final String value = attribute.value();
+                if (value != null && !value.isEmpty()) {
+                    videoEnabled = Boolean.valueOf(value);
+                }
+            }
+            if (videoEnabled) {
+                return MediaAttributes.MediaType.AUDIO_VIDEO;
+            } else {
+                return MediaAttributes.MediaType.AUDIO_ONLY;
+            }
+        }
+
+        protected MediaAttributes.VideoMode videoMode(final Tag container){
+            MediaAttributes.VideoMode videoMode = MediaAttributes.VideoMode.MCU;
+            Attribute attribute = container.attribute("mode");
+            if (attribute != null) {
+                final String value = attribute.value();
+                if (value != null && !value.isEmpty()) {
+                    try {
+                        videoMode = MediaAttributes.VideoMode.getValueOf(value);
+                    } catch (IllegalArgumentException e) {
+                        final NotificationsDao notifications = storage.getNotificationsDao();
+                        final Notification notification = notification(WARNING_NOTIFICATION, 15001, value
+                                + " is not a valid mode value for <Video>");
+                        notifications.addNotification(notification);
+                    }
+                }
+            }
+            return videoMode;
+        }
+
+        protected MediaAttributes.VideoResolution videoResolution(final Tag container) {
+            MediaAttributes.VideoResolution videoResolution = MediaAttributes.VideoResolution.SEVEN_TWENTY_P;
+            Attribute attribute = container.attribute("resolution");
+            if (attribute != null) {
+                final String value = attribute.value();
+                if (value != null && !value.isEmpty()) {
+                    try {
+                        videoResolution = MediaAttributes.VideoResolution.getValueOf(value);
+                    } catch (IllegalArgumentException e) {
+                        final NotificationsDao notifications = storage.getNotificationsDao();
+                        final Notification notification = notification(WARNING_NOTIFICATION, 15002, value
+                                + " is not a valid resolution value for <Video>");
+                        notifications.addNotification(notification);
+                    }
+                }
+            }
+            return videoResolution;
+        }
+
+        protected MediaAttributes.VideoLayout videoLayout(final Tag container) {
+            MediaAttributes.VideoLayout videoLayout = MediaAttributes.VideoLayout.LINEAR;
+            Attribute attribute = container.attribute("layout");
+            if (attribute != null) {
+                final String value = attribute.value();
+                if (value != null && !value.isEmpty()) {
+                    try {
+                        videoLayout = MediaAttributes.VideoLayout.getValueOf(value);
+                    } catch (IllegalArgumentException e) {
+                        final NotificationsDao notifications = storage.getNotificationsDao();
+                        final Notification notification = notification(WARNING_NOTIFICATION, 15003, value
+                                + " is not a valid layout value for <Video>");
+                        notifications.addNotification(notification);
+                    }
+                }
+            }
+            return videoLayout;
+        }
+
+        protected String videoOverlay(final Tag container) {
+            String videoOverlay = null;
+            Attribute attribute = container.attribute("overlay");
+            if (attribute != null) {
+                final String value = attribute.value();
+                if (value != null && !value.isEmpty()) {
+                    videoOverlay = value;
+                }
+            }
+            return videoOverlay;
+        }
+
+        public void fetchMediaAttributes(final Tag container){
+            Tag video = video(container);
+            if(video != null){
+                MediaAttributes.MediaType mediaType = videoEnabled(video);
+                if (!MediaAttributes.MediaType.AUDIO_ONLY.equals(mediaType)) {
+                    final MediaAttributes.VideoMode videoMode = videoMode(video);
+                    final MediaAttributes.VideoResolution videoResolution = videoResolution(video);
+                    final MediaAttributes.VideoLayout videoLayout = videoLayout(video);
+                    final String videoOverlay = videoOverlay(video);
+                    mediaAttributes = new MediaAttributes(mediaType, videoMode, videoResolution, videoLayout,
+                            videoOverlay);
+                }
+            }
+        }
     }
 
     private final class StartDialing extends AbstractDialAction {
@@ -2062,7 +2180,22 @@ public class VoiceInterpreter extends BaseVoiceInterpreter {
                 // Handle conferencing.
                 final Tag child = conference(verb);
                 if (child != null) {
-                    final String name = child.text();
+                    String name = null;
+                    final Tag grandchild = video(child);
+                    if (grandchild == null) {
+                        name = child.text();
+                    } else {
+                        // Handle video conferencing
+                        Attribute attribute = child.attribute("name");
+                        if (attribute != null && !StringUtils.isEmpty(attribute.toString())) {
+                            name = attribute.value();
+                        } else {
+                            String errorMsg = "Attribute \"name\" not found or \"name\" value is empty inside <Conference> verb.";
+                            logger.error(errorMsg);
+                            throw new Exception(errorMsg);
+                        }
+                        fetchMediaAttributes(child);
+                    }
                     final StringBuilder buffer = new StringBuilder();
                     //conference account should be phone account. i.e account of whoever owns that phone number.
                     //https://github.com/RestComm/Restcomm-Connect/issues/1939
@@ -2076,7 +2209,7 @@ public class VoiceInterpreter extends BaseVoiceInterpreter {
                     if (callSid == null && callRecord != null) {
                         callSid = callRecord.getSid();
                     }
-                    final CreateConference create = new CreateConference(conferenceNameWithAccountAndFriendlyName, callSid);
+                    final CreateConference create = new CreateConference(conferenceNameWithAccountAndFriendlyName, callSid, mediaAttributes);
                     conferenceCenter.tell(create, source);
                 } else {
                     // Handle forking.
@@ -2155,13 +2288,20 @@ public class VoiceInterpreter extends BaseVoiceInterpreter {
                         statusCallbackEvent.add("completed");
                     }
                 }
+                fetchMediaAttributes(child);
+                String callee;
+                if(video(child) != null){
+                    callee = child.attribute("name").value();
+                } else {
+                    callee = child.text();
+                }
                 if (Nouns.client.equals(child.name())) {
                     if (call != null && callInfo != null) {
-                        create = new CreateCall(e164(callerId(verb)), e164(child.text()), null, null, callInfo.isFromApi(), timeout(verb),
-                                CreateCallType.CLIENT, accountId, callInfo.sid(), statusCallback, statusCallbackMethod, statusCallbackEvent);
+                        create = new CreateCall(e164(callerId(verb)), e164(callee), null, null, callInfo.isFromApi(), timeout(verb),
+                                CreateCallType.CLIENT, accountId, callInfo.sid(), statusCallback, statusCallbackMethod, statusCallbackEvent, mediaAttributes);
                     } else {
-                        create = new CreateCall(e164(callerId(verb)), e164(child.text()), null, null, false, timeout(verb),
-                                CreateCallType.CLIENT, accountId, null, statusCallback, statusCallbackMethod, statusCallbackEvent);
+                        create = new CreateCall(e164(callerId(verb)), e164(callee), null, null, false, timeout(verb),
+                                CreateCallType.CLIENT, accountId, null, statusCallback, statusCallbackMethod, statusCallbackEvent, mediaAttributes);
                     }
                 } else if (Nouns.number.equals(child.name())) {
                     if (call != null && callInfo != null) {
@@ -2173,11 +2313,11 @@ public class VoiceInterpreter extends BaseVoiceInterpreter {
                     }
                 } else if (Nouns.uri.equals(child.name())) {
                     if (call != null && callInfo != null) {
-                        create = new CreateCall(e164(callerId(verb)), e164(child.text()), null, null, callInfo.isFromApi(), timeout(verb),
-                                CreateCallType.SIP, accountId, callInfo.sid(), statusCallback, statusCallbackMethod, statusCallbackEvent);
+                        create = new CreateCall(e164(callerId(verb)), e164(callee), null, null, callInfo.isFromApi(), timeout(verb),
+                                CreateCallType.SIP, accountId, callInfo.sid(), statusCallback, statusCallbackMethod, statusCallbackEvent, mediaAttributes);
                     } else {
-                        create = new CreateCall(e164(callerId(verb)), e164(child.text()), null, null, false, timeout(verb),
-                                CreateCallType.SIP, accountId, null, statusCallback, statusCallbackMethod, statusCallbackEvent);
+                        create = new CreateCall(e164(callerId(verb)), e164(callee), null, null, false, timeout(verb),
+                                CreateCallType.SIP, accountId, null, statusCallback, statusCallbackMethod, statusCallbackEvent, mediaAttributes);
                     }
                 } else if (Nouns.SIP.equals(child.name())) {
                     // https://bitbucket.org/telestax/telscale-restcomm/issue/132/implement-twilio-sip-out
@@ -2202,11 +2342,11 @@ public class VoiceInterpreter extends BaseVoiceInterpreter {
                         }
                     }
                     if (call != null && callInfo != null) {
-                        create = new CreateCall(e164(callerId(verb)), e164(child.text()), username, password, false, timeout(verb),
-                                CreateCallType.SIP, accountId, callInfo.sid(), statusCallback, statusCallbackMethod, statusCallbackEvent);
+                        create = new CreateCall(e164(callerId(verb)), e164(callee), username, password, false, timeout(verb),
+                                CreateCallType.SIP, accountId, callInfo.sid(), statusCallback, statusCallbackMethod, statusCallbackEvent, mediaAttributes);
                     } else {
-                        create = new CreateCall(e164(callerId(verb)), e164(child.text()), username, password, false, timeout(verb),
-                                CreateCallType.SIP, accountId, null, statusCallback, statusCallbackMethod, statusCallbackEvent);
+                        create = new CreateCall(e164(callerId(verb)), e164(callee), username, password, false, timeout(verb),
+                                CreateCallType.SIP, accountId, null, statusCallback, statusCallbackMethod, statusCallbackEvent, mediaAttributes);
                     }
                 }
                 callManager.tell(create, source);
@@ -2749,7 +2889,7 @@ public class VoiceInterpreter extends BaseVoiceInterpreter {
                 //Adding conference record in DB
                 //For outbound call the CDR will be updated at Call.InProgress()
                 addConferenceStuffInCDR(conferenceSid);
-                final AddParticipant request = new AddParticipant(call);
+                final AddParticipant request = new AddParticipant(call, mediaAttributes);
                 conference.tell(request, source);
             } else {
                 // Ask the parser for the next action to take.
@@ -3261,7 +3401,7 @@ public class VoiceInterpreter extends BaseVoiceInterpreter {
 
         @Override
         public void execute(Object message) throws Exception {
-            final CreateBridge create = new CreateBridge();
+            final CreateBridge create = new CreateBridge(outboundCallInfo.mediaAttributes());
             bridgeManager.tell(create, super.source);
         }
 

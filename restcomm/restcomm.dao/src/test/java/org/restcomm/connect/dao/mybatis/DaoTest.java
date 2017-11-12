@@ -78,7 +78,7 @@ public class DaoTest {
         String content = FileUtils.readFileToString(new File(mybatisXmlPath));
         content = content.replaceAll("MYBATIS_SANDBOX_PATH",sandboxDir.getAbsolutePath());
         FileUtils.writeStringToFile(new File(sandboxDir.getAbsolutePath() + "/mybatis_updated.xml"),content);
-        
+
         XMLConfiguration xmlConfiguration = new XMLConfiguration();
         xmlConfiguration.setDelimiterParsingDisabled(true);
         xmlConfiguration.setAttributeSplittingDisabled(true);

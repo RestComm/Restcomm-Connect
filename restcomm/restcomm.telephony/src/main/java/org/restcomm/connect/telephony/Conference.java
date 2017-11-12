@@ -250,7 +250,8 @@ public final class Conference extends RestcommUntypedActor {
 
             ConferenceInfo information = createConferenceInfo();
             // Initialize the MS Controller
-            final CreateMediaSession createMediaSession = new CreateMediaSession(startConference.callSid(), information.name());
+            final CreateMediaSession createMediaSession = new CreateMediaSession(startConference.callSid(), information.name(),
+                    startConference.mediaAttributes());
             mscontroller.tell(createMediaSession, super.source);
         }
 
@@ -428,7 +429,7 @@ public final class Conference extends RestcommUntypedActor {
 
     private void onAddParticipant(AddParticipant message, ActorRef self, ActorRef sender) {
         if (isRunning()) {
-            final JoinCall joinCall = new JoinCall(message.call(), ConnectionMode.Confrnce, this.sid);
+            final JoinCall joinCall = new JoinCall(message.call(), ConnectionMode.Confrnce, this.sid, message.mediaAttributes());
             this.mscontroller.tell(joinCall, self);
         }else{
             logger.error("Received AddParticipant for Call: "+message.call().path()+" but the state is: "+fsm.state().toString());

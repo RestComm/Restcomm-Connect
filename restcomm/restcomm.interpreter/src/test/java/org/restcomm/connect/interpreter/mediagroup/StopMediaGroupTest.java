@@ -55,6 +55,7 @@ import org.restcomm.connect.telephony.api.*;
 import junit.runner.Version;
 
 import java.net.URI;
+import org.restcomm.connect.dao.entities.MediaAttributes;
 
 /**
  * @author guilherme.jansen@telestax.com
@@ -241,7 +242,8 @@ public class StopMediaGroupTest {
                         false,
                         false,
                         false,
-                        new DateTime())), observer);
+                        new DateTime(),
+                        new MediaAttributes())), observer);
                 expectMsgClass(Observe.class);
                 expectMsgClass(HttpRequestDescriptor.class);
                 interpreter.tell(new DownloaderResponse(getOkRcml(requestUri, dialRcmlNoAction)), observer);
@@ -295,7 +297,8 @@ public class StopMediaGroupTest {
                         false,
                         false,
                         false,
-                        new DateTime())), observer);
+                        new DateTime(),
+                        new MediaAttributes())), observer);
                 expectMsgClass(Observe.class);
                 expectMsgClass(HttpRequestDescriptor.class);
                 interpreter.tell(new DownloaderResponse(getOkRcml(requestUri, dialRcmlAction)), observer);
@@ -349,7 +352,8 @@ public class StopMediaGroupTest {
                         false,
                         false,
                         false,
-                        new DateTime())), observer);
+                        new DateTime(),
+                        new MediaAttributes())), observer);
                 expectMsgClass(Observe.class);
                 expectMsgClass(HttpRequestDescriptor.class);
                 interpreter.tell(new DownloaderResponse(getOkRcml(requestUri, dialRcmlNoAction)), observer);

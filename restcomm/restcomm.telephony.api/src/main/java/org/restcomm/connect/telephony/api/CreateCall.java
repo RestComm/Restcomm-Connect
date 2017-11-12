@@ -22,6 +22,7 @@ package org.restcomm.connect.telephony.api;
 import org.restcomm.connect.commons.annotations.concurrency.Immutable;
 import org.restcomm.connect.commons.dao.Sid;
 import org.restcomm.connect.commons.telephony.CreateCallType;
+import org.restcomm.connect.dao.entities.MediaAttributes;
 import org.restcomm.connect.extension.api.IExtensionCreateCallRequest;
 
 import java.net.URI;
@@ -53,17 +54,26 @@ public final class CreateCall implements IExtensionCreateCallRequest{
     private String outboundProxy;
     private Map<String,ArrayList<String>> outboundProxyHeaders;
     private boolean allowed = true;
+    private final MediaAttributes mediaAttributes;
 
     public CreateCall(final String from, final String to, final String username, final String password,
-            final boolean isFromApi, final int timeout, final CreateCallType type, final Sid accountId, final Sid parentCallSid,
-            final URI statusCallbackUrl, final String statusCallbackMethod, final List<String> statusCallbackEvent
-            ) {
-        this(from, to, username, password, isFromApi, timeout, type, accountId, parentCallSid, statusCallbackUrl, statusCallbackMethod, statusCallbackEvent, "", null);
+                      final boolean isFromApi, final int timeout, final CreateCallType type, final Sid accountId, final Sid parentCallSid,
+                      final URI statusCallbackUrl, final String statusCallbackMethod, final List<String> statusCallbackEvent) {
+        this(from, to, username, password, isFromApi, timeout, type, accountId, parentCallSid, statusCallbackUrl, statusCallbackMethod,
+                statusCallbackEvent, "", null, new MediaAttributes());
     }
+
     public CreateCall(final String from, final String to, final String username, final String password,
-            final boolean isFromApi, final int timeout, final CreateCallType type, final Sid accountId, final Sid parentCallSid,
-            final URI statusCallbackUrl, final String statusCallbackMethod, final List<String> statusCallbackEvent,
-            final String outboundProxy, final Map<String,ArrayList<String>> outboundProxyHeaders) {
+                      final boolean isFromApi, final int timeout, final CreateCallType type, final Sid accountId, final Sid parentCallSid,
+                      final URI statusCallbackUrl, final String statusCallbackMethod, final List<String> statusCallbackEvent, final MediaAttributes mediaAttributes) {
+        this(from, to, username, password, isFromApi, timeout, type, accountId, parentCallSid, statusCallbackUrl, statusCallbackMethod,
+                statusCallbackEvent, "", null, mediaAttributes);
+    }
+
+    public CreateCall(final String from, final String to, final String username, final String password,
+                      final boolean isFromApi, final int timeout, final CreateCallType type, final Sid accountId, final Sid parentCallSid,
+                      final URI statusCallbackUrl, final String statusCallbackMethod, final List<String> statusCallbackEvent,
+                      final String outboundProxy, final Map<String,ArrayList<String>> outboundProxyHeaders, final MediaAttributes mediaAttributes) {
         super();
         this.from = from;
         this.to = to;
@@ -79,6 +89,7 @@ public final class CreateCall implements IExtensionCreateCallRequest{
         this.statusCallbackEvent = statusCallbackEvent;
         this.outboundProxy = outboundProxy;
         this.outboundProxyHeaders = outboundProxyHeaders;
+        this.mediaAttributes = mediaAttributes;
     }
 
     public String from() {
@@ -292,5 +303,9 @@ public final class CreateCall implements IExtensionCreateCallRequest{
     @Override
     public String toString() {
         return "From: "+from+", To: "+to+", Type: "+callType.name()+", AccountId: "+accountId+", isFromApi: "+isFromApi+", parentCallSidExists: "+isParentCallSidExists();
+    }
+
+    public MediaAttributes mediaAttributes() {
+        return mediaAttributes;
     }
 }

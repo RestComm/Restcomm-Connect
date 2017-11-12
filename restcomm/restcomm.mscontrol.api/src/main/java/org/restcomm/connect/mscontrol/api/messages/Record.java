@@ -24,6 +24,7 @@ import java.util.ArrayList;
 import java.util.List;
 
 import org.restcomm.connect.commons.annotations.concurrency.Immutable;
+import org.restcomm.connect.dao.entities.MediaAttributes;
 
 /**
  * @author quintana.thomas@gmail.com (Thomas Quintana)
@@ -37,23 +38,26 @@ public final class Record {
     private final int timeout;
     private final int length;
     private final String endInputKey;
+    private final MediaAttributes.MediaType media;
 
-    public Record(final URI recordingId, final List<URI> prompts, final int timeout, final int length, final String endInputKey) {
+    public Record(final URI recordingId, final List<URI> prompts, final int timeout, final int length, final String endInputKey, final MediaAttributes.MediaType mediaType) {
         super();
         this.destination = recordingId;
         this.prompts = prompts;
         this.timeout = timeout;
         this.length = length;
         this.endInputKey = endInputKey;
+        this.media = mediaType;
     }
 
-    public Record(final URI recordingId, final int timeout, final int length, final String endInputKey) {
+    public Record(final URI recordingId, final int timeout, final int length, final String endInputKey, final MediaAttributes.MediaType mediaType) {
         super();
         this.destination = recordingId;
         this.prompts = empty;
         this.timeout = timeout;
         this.length = length;
         this.endInputKey = endInputKey;
+        this.media = mediaType;
     }
 
     public URI destination() {
@@ -82,5 +86,9 @@ public final class Record {
 
     public boolean hasEndInputKey() {
         return (endInputKey != null && !endInputKey.isEmpty());
+    }
+
+    public MediaAttributes.MediaType media() {
+        return media;
     }
 }

@@ -11,12 +11,31 @@ The `<Client>` noun supports the following attributes that modify its behavior:
 [cols=",,",options="header",]
 |==========================================================================
 |Attribute Name |Allowed Values |Default Value
+|name |String |none
 |url |any url |none
 |method |`GET`, `POST` |`POST`
 |statusCallbackEvent |`initiated`, `ringing`, `answered`, `completed` |none
 |statusCallback |any url |none
 |statusCallbackMethod |`GET`, `POST` |`POST`
 |==========================================================================
+
+==== name
+
+The 'name' attribute allows you to inform the client who will answer to a video call. This attribute should be used only when `<Video>` noun is nested, otherwise client's name should be informed as value of the tag `<Client>`.
+
+Client's name without `<Video>` noun nesting.
+
+----
+<Client>alice</Client>
+----
+
+Client's name with `<Video>` noun nesting.
+
+----
+<Client name="alice"><Video enable=”true”></Video></Client>
+----
+
+For more information, please read <<video-rcml.adoc#video,Video noun documentation>>.
 
 ==== url
 
@@ -125,5 +144,22 @@ In this case, we want to receive a webhook for each call progress event when dia
                                         thomas
          </Client>
 </Dial>
+</Response>
+----
+
+[[examples-4]]
+=== Example 4: Video call to Client
+
+The following RCML dials to alice enabling video.
+
+----
+<?xml version="1.0" encoding="UTF-8"?>
+<Response>
+    <Dial>
+	    <Client name="alice">
+	        <Video enable=”true”>
+    	    </Video>
+	    </Client>
+    </Dial>
 </Response>
 ----

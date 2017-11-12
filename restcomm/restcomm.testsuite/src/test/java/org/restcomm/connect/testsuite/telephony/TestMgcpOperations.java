@@ -179,12 +179,10 @@ public class TestMgcpOperations {
         assertNotNull(metrics);
         int mgcpEndpoints = metrics.getAsJsonObject("Metrics").get("MgcpEndpoints").getAsInt();
         int mgcpConnections = metrics.getAsJsonObject("Metrics").get("MgcpConnections").getAsInt();
-        int mgcpLinks = metrics.getAsJsonObject("Metrics").get("MgcpLinks").getAsInt();
         int liveCalls = metrics.getAsJsonObject("Metrics").get("LiveCalls").getAsInt();
 
         logger.info("MgcpEndpoints: "+mgcpEndpoints);
         logger.info("MgcpConnections: "+mgcpConnections);
-        logger.info("MgcpLinks: "+mgcpLinks);
         logger.info("LiveCalls: "+liveCalls);
 //        int liveCallsArraySize = metrics.getAsJsonArray("LiveCallDetails").size();
 //        logger.info("LiveCallsArraySize: "+liveCallsArraySize);
@@ -207,12 +205,10 @@ public class TestMgcpOperations {
         assertNotNull(metrics);
         mgcpEndpoints = metrics.getAsJsonObject("Metrics").get("MgcpEndpoints").getAsInt();
         mgcpConnections = metrics.getAsJsonObject("Metrics").get("MgcpConnections").getAsInt();
-        mgcpLinks = metrics.getAsJsonObject("Metrics").get("MgcpLinks").getAsInt();
         liveCalls = metrics.getAsJsonObject("Metrics").get("LiveCalls").getAsInt();
 
         logger.info("MgcpEndpoints at the end: "+mgcpEndpoints);
         logger.info("MgcpConnections at the end: "+mgcpConnections);
-        logger.info("MgcpLinks at the end: "+mgcpLinks);
         logger.info("Live calls at the end: "+liveCalls);
 
 
@@ -232,7 +228,6 @@ public class TestMgcpOperations {
         }
         assertEquals(0, liveCalls);
         assertEquals(0, mgcpEndpoints);
-        assertEquals(0, mgcpLinks);
         assertEquals(0, mgcpConnections);
     }
 

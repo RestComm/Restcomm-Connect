@@ -4,7 +4,7 @@
 	<parent>
 		<groupId>org.restcomm</groupId>
 		<artifactId>restcomm-connect</artifactId>
-		<version>8.2.0-SNAPSHOT</version>
+		<version>8.3.0-SNAPSHOT</version>
 	</parent>
 
 	<artifactId>restcomm-connect.telephony</artifactId>
@@ -64,9 +64,20 @@
 		<dependency>
 			<groupId>org.mobicents.servlet.sip</groupId>
 			<artifactId>sip-servlets-spec</artifactId>
-			<version>${sipservletapi.version}</version>
 			<scope>provided</scope>
 		</dependency>
+                
+		<dependency>
+			<groupId>org.apache.tomcat</groupId>
+			<artifactId>tomcat-jasper</artifactId>
+			<scope>provided</scope>
+		</dependency>
+                
+		<dependency>
+			<groupId>org.mobicents.servlet.sip.containers</groupId>
+			<artifactId>sip-servlets-catalina-7</artifactId>
+			<scope>provided</scope>
+		</dependency>                            
 
 		<dependency>
 			<groupId>javax.servlet</groupId>

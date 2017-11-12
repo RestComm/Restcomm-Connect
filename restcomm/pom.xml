@@ -10,7 +10,7 @@
 
   <groupId>org.restcomm</groupId>
   <artifactId>restcomm-connect</artifactId>
-  <version>8.2.0-SNAPSHOT</version>
+  <version>8.3.0-SNAPSHOT</version>
   <packaging>pom</packaging>
   <name>RestComm-Connect</name>
   <description>A unified communications platform for web developers.</description>
@@ -121,7 +121,7 @@
 		<mobicents.checkstyle.version>1.0.0.FINAL</mobicents.checkstyle.version>
 		<checkstyle.plugin.version>2.9.1</checkstyle.plugin.version>
 		<mgcpunit.version>1.0.0-ALPHA2</mgcpunit.version>
-		<aws.sdk.version>1.11.86</aws.sdk.version>
+		<aws.sdk.version>1.11.179</aws.sdk.version>
 		<!-- SMPP Testing -->
 		<ch.smpp.version>5.0.8</ch.smpp.version>
 		<ch-commons-util.version>6.0.2</ch-commons-util.version>
@@ -564,14 +564,14 @@
 			<groupId>org.apache.tomcat</groupId>
 			<artifactId>tomcat-coyote</artifactId>
 			<version>${tomcat7.version}</version>
-			<scope>provided</scope>
+			<scope>test</scope>
 		</dependency>
 
 		<dependency>
 			<groupId>org.apache.tomcat</groupId>
 			<artifactId>tomcat-jasper</artifactId>
 			<version>${tomcat7.version}</version>
-			<scope>provided</scope>
+			<scope>test</scope>
 		</dependency>
 
 		<dependency>
@@ -585,20 +585,21 @@
 			<groupId>org.mobicents.servlet.sip.containers</groupId>
 			<artifactId>sip-servlets-catalina-7</artifactId>
 			<version>${sipservletapi.version}</version>
-			<scope>provided</scope>
+			<scope>test</scope>
 		</dependency>
 
 		<dependency>
 			<groupId>org.mobicents.servlet.sip</groupId>
 			<artifactId>sip-servlets-application-router</artifactId>
 			<version>${sipservletapi.version}</version>
-			<scope>provided</scope>
+			<scope>test</scope>
 		</dependency>
 
 		<dependency>
 			<groupId>org.hsqldb</groupId>
 			<artifactId>hsqldb</artifactId>
 			<version>${hsqldb.version}</version>
+                        <scope>test</scope>
 		</dependency>
 
 		<!--
