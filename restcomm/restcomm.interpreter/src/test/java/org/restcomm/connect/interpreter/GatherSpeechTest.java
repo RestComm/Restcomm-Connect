@@ -79,6 +79,7 @@ import akka.actor.Props;
 import akka.actor.UntypedActorFactory;
 import akka.testkit.JavaTestKit;
 import akka.testkit.TestActorRef;
+import org.restcomm.connect.dao.entities.MediaAttributes;
 
 /**
  * Created by gdubina on 6/24/17.
@@ -242,7 +243,8 @@ public class GatherSpeechTest {
                         false,
                         false,
                         false,
-                        new DateTime())), observer);
+                        new DateTime(),
+                        new MediaAttributes())), observer);
 
                 expectMsgClass(Observe.class);
 
@@ -308,7 +310,8 @@ public class GatherSpeechTest {
                         false,
                         false,
                         false,
-                        new DateTime())), observer);
+                        new DateTime(),
+                        new MediaAttributes())), observer);
 
                 expectMsgClass(Observe.class);
 
@@ -358,7 +361,8 @@ public class GatherSpeechTest {
                         false,
                         false,
                         false,
-                        new DateTime())), observer);
+                        new DateTime(),
+                        new MediaAttributes())), observer);
 
                 expectMsgClass(Observe.class);
 
@@ -434,7 +438,8 @@ public class GatherSpeechTest {
                         false,
                         false,
                         false,
-                        new DateTime())), observer);
+                        new DateTime(),
+                        new MediaAttributes())), observer);
 
                 expectMsgClass(Observe.class);
 
@@ -494,7 +499,8 @@ public class GatherSpeechTest {
                         false,
                         false,
                         false,
-                        new DateTime())), observer);
+                        new DateTime(),
+                        new MediaAttributes())), observer);
 
                 expectMsgClass(Observe.class);
 
@@ -586,7 +592,8 @@ public class GatherSpeechTest {
                         false,
                         false,
                         false,
-                        new DateTime())), observer);
+                        new DateTime(),
+                        new MediaAttributes())), observer);
 
                 expectMsgClass(Observe.class);
 

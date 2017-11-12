@@ -75,7 +75,7 @@ public class ConferenceTestUtil {
 	protected void startDaoManager() throws ConfigurationException, MalformedURLException{
         daoManagerConf = (XMLConfiguration)createDaoManagerCfg(CONFIG_PATH_DAO_MANAGER);
         daoManager = new MybatisDaoManager();
-        daoManager.configure(configurationNode1, daoManagerConf );
+        daoManager.configure(configurationNode1, daoManagerConf, null);
         daoManager.start();
 	}
 

@@ -13,21 +13,21 @@ Prerequisites
 
 Here you have three alternativess:
 
-* Don't perform a local installation and use RaaS (RestComm as a Service).
+* Don't perform a local installation and use Restcomm Cloud.
 * Install the latest link:https://hub.docker.com/r/restcomm/restcomm/[Restcomm Docker image] locally (i.e. $ docker pull restcomm/restcomm to get it from docker hub). For more information please check link:http://www.telestax.com/rapid-webrtc-application-development-with-restcomm-and-docker/ and link:https://github.com/RestComm/Restcomm-Docker#restcomm-docker-image. If you aren't familiar with docker you can have a quick intro here https://www.docker.com/
 
 [[restcomm-client-androidsdk]]
 2. Restcomm WebRTC Android SDK
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-Once you have installed the  Restcomm platform (or you are using RaaS) you are ready to start taking advantage of Restcomm's features from your Android Applications. Here's what you need to do:
+Once you have installed the Restcomm platform (or you are using Cloud) you are ready to start taking advantage of Restcomm's features from your Android Applications. Here's what you need to do:
 
-* Grab the latest Restcomm WebRTC Android SDK release from GitHub: https://github.com/RestComm/restcomm-android-sdk/releases/tag/v1.0.0-BETA6. At the time of this writing it is v1.0.0-beta6 and the bundle you need to download is restcomm-android-sdk-1.0.0-beta6.tar.bz2
+* Grab the latest Restcomm WebRTC Android SDK release from GitHub: https://github.com/RestComm/restcomm-android-sdk/releases/tag/v1.0.5-BETA7. At the time of this writing it is v1.0.5-beta7 and the bundle you need to download is restcomm-android-sdk-1.0.5-beta7.tar.bz2
 * Extract it:
 +
 [source,theme:github,toolbar:2,lang:default,decode:true]
 ----
-$ tar -jxvf restcomm-android-sdk-1.0.0-beta6.tar.bz2
+$ tar -jxvf restcomm-android-sdk-1.0.0-beta7.tar.bz2
 ----
 
 [[use-the-existing-sample-androidapp-helloworld]]
@@ -37,7 +37,7 @@ Use the existing sample Android App, 'HelloWorld'
 To illustrate the SDK, first we'll be using one of the sample Apps provided in the bundle, called HelloWorld:
 
 * Open Hello World sample Android Studio project from $ANDROID_SDK/Examples/restcomm-helloworld
-* Open MainActivity.java source file within Hello World, search for string 'CHANGEME' and perform required changes in the Restcomm instance IP address/domain name. This will depend on which alternative you picked above for Restcomm: a. if you used RaaS then you don't need to update the IP address (i.e. the RaaS domain name is used by default). b. if you used the Docker image then you should use the local IP address that Restcomm uses when coming up:
+* Open MainActivity.java source file within Hello World, search for string 'CHANGEME' and perform required changes in the Restcomm instance IP address/domain name. This will depend on which alternative you picked above for Restcomm: a. if you used Cloud then you don't need to update the IP address (i.e. the Cloud domain name is used by default). b. if you used the Docker image then you should use the local IP address that Restcomm uses when coming up:
 +
 [source,theme:github,toolbar:1,lang:java,mark:6,23,decode:true]
 ----

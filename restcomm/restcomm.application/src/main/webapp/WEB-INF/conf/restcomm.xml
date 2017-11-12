@@ -582,6 +582,16 @@
 		<use-hostname-to-resolve-relative-url>true</use-hostname-to-resolve-relative-url>
 		<!-- Optionally provide the hostname to be used, otherwise Java will try to get the hostname of the machine JVM is running -->
 		<hostname></hostname>
+		<!-- HTTP Connection Pooling configuration -set to default/example values for now, commented- -->
+		<!--
+		<connection-request-timeout>2000</connection-request-timeout>
+		<max-conn-total>200</max-conn-total>
+		<max-conn-per-route>2</max-conn-per-route>
+		<connection-time-to-live>30000</connection-time-to-live>
+		<routes-host>127.0.0.1,www.restcomm.org</routes-host>
+		<routes-port>8099,80</routes-port>
+		<routes-conn>5,10</routes-conn>
+		-->
 	</http-client>
 
 	<!-- Control notifications sent to rcmlserver (RVD)

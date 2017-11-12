@@ -123,6 +123,8 @@ public class MgcpMediaGroup extends MediaGroup {
     protected final String primaryEndpointId;
     protected final String secondaryEndpointId;
 
+    private boolean recording;
+
     public MgcpMediaGroup(final ActorRef gateway, final MediaSession session, final ActorRef endpoint) {
         this(gateway, session, endpoint, null, null);
     }
@@ -253,8 +255,12 @@ public class MgcpMediaGroup extends MediaGroup {
         } else {
             event = new MediaGroupResponse<>(response.cause(), response.error());
         }
-        if (originator != null)
+        if (originator != null) {
             this.originator.tell(event, self);
+            if (recording) {
+                recording = false;
+            }
+        }
         if (ivrResponse == null || (mgcpCollectedResult != null && !(mgcpCollectedResult.isPartial()))) {
             ivrInUse = false;
         }
@@ -335,6 +341,9 @@ public class MgcpMediaGroup extends MediaGroup {
                 }
             }
         } else if (StopMediaGroup.class.equals(klass)) {
+            if (logger.isInfoEnabled()) {
+                logger.info("Got StopMediaGroup, current state: "+fsm.state().toString());
+            }
             if (acquiringLink.equals(state) || initializingLink.equals(state)) {
                 fsm.transition(message, inactive);
             } else if (active.equals(state) || openingLink.equals(state) || updatingLink.equals(state)) {
@@ -356,7 +365,9 @@ public class MgcpMediaGroup extends MediaGroup {
                 // Send message to originator telling media group has been stopped
                 // Needed for call bridging scenario, where inbound call must stop
                 // ringing before attempting to perform join operation.
-                sender().tell(new MediaGroupResponse<String>("stopped"), self());
+
+                if (!recording)
+                    sender().tell(new MediaGroupResponse<String>("stopped"), self());
             } else if (IvrEndpointResponse.class.equals(klass)) {
                 notification(message);
             }
@@ -404,14 +415,18 @@ public class MgcpMediaGroup extends MediaGroup {
         this.originator = sender();
         ivr.tell(builder.build(), self);
         ivrInUse = true;
+        recording = true;
     }
 
     protected void stop(MgcpEvent signal) {
-        if (ivrInUse) {
+        if (ivrInUse || (lastEvent != null && lastEvent.getName().equalsIgnoreCase("pr"))) {
+            if (logger.isInfoEnabled()) {
+                String msg = String.format("About to stop IVR, with signal %s, last event %s", signal.toString(), lastEvent.toString());
+                logger.info(msg);
+            }
             final ActorRef self = self();
             ivr.tell(new StopEndpoint(signal), self);
             ivrInUse = false;
-            originator = null;
         }
     }
 
@@ -630,9 +645,6 @@ public class MgcpMediaGroup extends MediaGroup {
             for (final ActorRef observer : observers) {
                 observer.tell(event, source);
             }
-
-//            // Terminate the actor
-//            getContext().stop(self());
         }
     }
 

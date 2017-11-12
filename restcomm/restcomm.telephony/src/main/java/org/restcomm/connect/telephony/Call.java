@@ -49,12 +49,13 @@ import org.restcomm.connect.commons.fsm.TransitionRollbackException;
 import org.restcomm.connect.commons.patterns.Observe;
 import org.restcomm.connect.commons.patterns.Observing;
 import org.restcomm.connect.commons.patterns.StopObserving;
-import org.restcomm.connect.commons.util.DNSUtils;
 import org.restcomm.connect.commons.telephony.CreateCallType;
+import org.restcomm.connect.commons.util.DNSUtils;
 import org.restcomm.connect.commons.util.SdpUtils;
 import org.restcomm.connect.dao.CallDetailRecordsDao;
 import org.restcomm.connect.dao.DaoManager;
 import org.restcomm.connect.dao.entities.CallDetailRecord;
+import org.restcomm.connect.dao.entities.MediaAttributes;
 import org.restcomm.connect.http.client.Downloader;
 import org.restcomm.connect.http.client.HttpRequestDescriptor;
 import org.restcomm.connect.mscontrol.api.MediaServerControllerFactory;
@@ -241,6 +242,7 @@ public final class Call extends RestcommUntypedActor {
     private URI recordingUri;
     private Sid recordingSid;
     private Sid parentCallSid;
+    private MediaAttributes mediaAttributes;
 
     // Runtime Setting
     private Configuration runtimeSettings;
@@ -394,6 +396,7 @@ public final class Call extends RestcommUntypedActor {
         transitions.add(new Transition(this.stopping, this.completed));
         transitions.add(new Transition(this.stopping, this.failed));
         transitions.add(new Transition(this.failed, this.completed));
+        transitions.add(new Transition(this.failed, this.stopping));
         transitions.add(new Transition(this.completed, this.stopping));
         transitions.add(new Transition(this.completed, this.failed));
 
@@ -428,6 +431,10 @@ public final class Call extends RestcommUntypedActor {
             final Configuration imsAuthentication = runtime.subset("ims-authentication");
             this.actAsImsUa = imsAuthentication.getBoolean("act-as-ims-ua");
         }
+        /* The initialization of mediaAttributes variable assumes the call as AUDIO_ONLY by default.
+        The real value is later replaced when the call is queued, as any of {@link MediaAttribute.MediaType}
+         */
+        this.mediaAttributes = new MediaAttributes();
     }
 
     ActorRef downloader() {
@@ -469,7 +476,7 @@ public final class Call extends RestcommUntypedActor {
             } else {
                 to = ((TelURL) this.to).getPhoneNumber();
             }
-            final CallInfo info = new CallInfo(id, external, type, direction, created, forwardedFrom, name, from, to, invite, lastResponse, webrtc, muted, isFromApi, callUpdatedTime);
+            final CallInfo info = new CallInfo(id, external, type, direction, created, forwardedFrom, name, from, to, invite, lastResponse, webrtc, muted, isFromApi, callUpdatedTime, mediaAttributes);
             return new CallResponse<CallInfo>(info);
         } catch (Exception e) {
             if (logger.isInfoEnabled()) {
@@ -864,6 +871,7 @@ public final class Call extends RestcommUntypedActor {
             timeout = request.timeout();
             direction = request.isFromApi() ? OUTBOUND_API : OUTBOUND_DIAL;
             webrtc = request.isWebrtc();
+            mediaAttributes = request.getMediaAttributes();
 
             // Notify the observers.
             external = CallStateChanged.State.QUEUED;
@@ -1384,7 +1392,9 @@ public final class Call extends RestcommUntypedActor {
         public void execute(final Object message) throws Exception {
             if (isInbound()) {
                 try {
-                    if (invite.getSession().isValid()) {
+                    SipSession session = invite.getSession();
+                    SipSession.State sessionState = session.getState();
+                    if (session.isValid() && !sessionState.name().equalsIgnoreCase(SipSession.State.TERMINATED.name())) {
                         SipServletResponse resp = null;
                         if (message instanceof CallFail) {
                             resp = invite.createResponse(500, "Problem to setup the call");
@@ -1444,7 +1454,7 @@ public final class Call extends RestcommUntypedActor {
             // Initialize the MS Controller
             CreateMediaSession command = null;
             if (isOutbound()) {
-                command = new CreateMediaSession("sendrecv", "", true, webrtc, id);
+                command = new CreateMediaSession("sendrecv", "", true, webrtc, id, mediaAttributes);
             } else {
                 if (!liveCallModification) {
                     command = generateRequest(invite);
@@ -1495,7 +1505,19 @@ public final class Call extends RestcommUntypedActor {
             }
             offer = SdpUtils.patch(sipMessage.getContentType(), sdp, externalIp);
         }
-        return new CreateMediaSession("sendrecv", offer, false, webrtc, inboundCallSid);
+
+        //Prepare media attributes to be used by call controller
+        final boolean isAudioSdp = SdpUtils.isAudioSDP(sipMessage.getContentType(), sipMessage.getRawContent());
+        final boolean isVideoSdp = SdpUtils.isVideoSDP(sipMessage.getContentType(), sipMessage.getRawContent());
+        if(isAudioSdp && isVideoSdp){
+            //Call with audio and video
+            mediaAttributes = new MediaAttributes(MediaAttributes.MediaType.AUDIO_VIDEO, MediaAttributes.VideoResolution.SEVEN_TWENTY_P);
+        } else if (isVideoSdp) {
+            //Call with video and no audio
+            mediaAttributes = new MediaAttributes(MediaAttributes.MediaType.VIDEO_ONLY, MediaAttributes.VideoResolution.SEVEN_TWENTY_P);
+        } //mediaAttributes remains with default value (AUDIO_ONLY) if both isAudioSdp and isVideoSdp are false
+
+        return new CreateMediaSession("sendrecv", offer, false, webrtc, inboundCallSid, mediaAttributes);
     }
 
     private final class UpdatingMediaSession extends AbstractAction {
@@ -1748,8 +1770,10 @@ public final class Call extends RestcommUntypedActor {
             }
 
             msController.tell(new CloseMediaSession(), source);
-            //Don't wait for ever for the CallController response
-            context().setReceiveTimeout(Duration.create(2000, TimeUnit.SECONDS));
+
+            //Github issue 2261 - https://github.com/RestComm/Restcomm-Connect/issues/2261
+            //Set a ReceivedTimeout duration to make sure call doesn't block waiting for the response from MmsCallController
+            context().setReceiveTimeout(Duration.create(2000, TimeUnit.MILLISECONDS));
         }
     }
 
@@ -1970,22 +1994,29 @@ public final class Call extends RestcommUntypedActor {
             for (final ActorRef observer : observers) {
                 observer.tell(infoResponse, self());
             }
+
         } else if (is(stopping)) {
+            if (logger.isInfoEnabled()) {
+                //Github issue 2261 - https://github.com/RestComm/Restcomm-Connect/issues/2261
+                String msg = "Seems that MmsCallControler response from stopping never arrived, move the FSM accordingly";
+                logger.info(msg);
+            }
+            context().setReceiveTimeout(Duration.Undefined());
             if (fail) {
                 if (logger.isDebugEnabled()) {
-                    logger.debug("At Call Stopping state, moving to Failed state");
+                    logger.debug("OnReceiveTimeout - moving to Failed state");
                 }
                 fsm.transition(message, failed);
             } else {
                 if (logger.isDebugEnabled()) {
-                    logger.debug("At Call Stopping state, moving to Completed state");
+                    logger.debug("OnReceiveTimeout - moving to Completed state");
                 }
                 fsm.transition(message, completed);
             }
         } else if(logger.isInfoEnabled()) {
-                logger.info("Timeout received for Call : "+self().path()+" isTerminated(): "+self().isTerminated()+". Sender: " + sender.path().toString() + " State: " + this.fsm.state()
-                        + " Direction: " + direction + " From: " + from + " To: " + to);
-            }
+            logger.info("Timeout received for Call : "+self().path()+" isTerminated(): "+self().isTerminated()+". Sender: " + sender.path().toString() + " State: " + this.fsm.state()
+                + " Direction: " + direction + " From: " + from + " To: " + to);
+        }
     }
 
     private void onSipServletRequest(SipServletRequest message, ActorRef self, ActorRef sender) throws Exception {
@@ -2055,7 +2086,7 @@ public final class Call extends RestcommUntypedActor {
                         logger.info("Initial Call - Will stop recording now");
                     }
                     msController.tell(new Stop(false), self);
-                    // VoiceInterpreter will take care to prepare the Recording object
+                    return;
                 } else if (direction.equalsIgnoreCase("outbound-api")){
                     //REST API Outgoing call, calculate recording
                     recordingDuration = (DateTime.now().getMillis() - recordingStart.getMillis())/1000;
@@ -2238,6 +2269,10 @@ public final class Call extends RestcommUntypedActor {
             if (logger.isDebugEnabled()) {
                 logger.debug("Got Hangup but already in completed state");
             }
+            CallStateChanged event = new CallStateChanged(external);
+            for (final ActorRef observer : observers) {
+                observer.tell(event, self());
+            }
             return;
         }
 
@@ -2268,6 +2303,8 @@ public final class Call extends RestcommUntypedActor {
             fsm.transition(message, canceling);
         } else if (is(stopping)) {
             fsm.transition(message, completed);
+        } else {
+            fsm.transition(message, stopping);
         }
     }
 
@@ -2510,6 +2547,7 @@ public final class Call extends RestcommUntypedActor {
 
             case INACTIVE:
                 if (is(stopping)) {
+                    context().setReceiveTimeout(Duration.Undefined());
                     if (logger.isDebugEnabled()) {
                         String msg = String.format("On MediaServerContollerStateChanged, message: INACTIVE, Call state: %s, Fail: %s", fsm.state(), fail);
                         logger.debug(msg);
@@ -2526,12 +2564,6 @@ public final class Call extends RestcommUntypedActor {
                         }
                         fsm.transition(message, completed);
                     }
-
-//                    if (fail) {
-//                        fsm.transition(message, failed);
-//                    } else {
-//                        fsm.transition(message, completed);
-//                    }
                 } else if (is(canceling)) {
                     fsm.transition(message, canceled);
                 } else if (is(failingBusy)) {

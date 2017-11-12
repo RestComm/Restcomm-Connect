@@ -25,6 +25,7 @@ import javax.servlet.sip.SipServletResponse;
 import org.joda.time.DateTime;
 import org.restcomm.connect.commons.annotations.concurrency.Immutable;
 import org.restcomm.connect.commons.dao.Sid;
+import org.restcomm.connect.dao.entities.MediaAttributes;
 import org.restcomm.connect.commons.telephony.CreateCallType;
 
 /**
@@ -48,10 +49,11 @@ public final class CallInfo {
     private final boolean webrtc;
     private boolean muted;
     private boolean isFromApi;
+    private final MediaAttributes mediaAttributes;
 
     public CallInfo(final Sid sid, final CallStateChanged.State state, final CreateCallType type, final String direction,
                     final DateTime dateCreated, final String forwardedFrom, final String fromName, final String from, final String to,
-                    final SipServletRequest invite, final SipServletResponse lastResponse, final boolean webrtc, final boolean muted, final boolean isFromApi, final DateTime dateConUpdated) {
+                    final SipServletRequest invite, final SipServletResponse lastResponse, final boolean webrtc, final boolean muted, final boolean isFromApi, final DateTime dateConUpdated, final MediaAttributes mediaAttributes) {
         super();
         this.sid = sid;
         this.state = state;
@@ -68,6 +70,7 @@ public final class CallInfo {
         this.webrtc = webrtc;
         this.muted = muted;
         this.isFromApi = isFromApi;
+        this.mediaAttributes = mediaAttributes;
     }
 
     public DateTime dateCreated() {
@@ -136,5 +139,9 @@ public final class CallInfo {
 
     public boolean isFromApi() {
         return isFromApi;
+    }
+
+    public MediaAttributes mediaAttributes(){
+        return this.mediaAttributes;
     }
 }

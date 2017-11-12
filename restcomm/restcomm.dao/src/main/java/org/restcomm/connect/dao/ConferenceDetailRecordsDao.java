@@ -25,6 +25,7 @@ import org.joda.time.DateTime;
 import org.restcomm.connect.dao.entities.ConferenceDetailRecord;
 import org.restcomm.connect.dao.entities.ConferenceDetailRecordFilter;
 import org.restcomm.connect.commons.dao.Sid;
+import org.restcomm.connect.dao.entities.ConferenceRecordCountFilter;
 
 /**
  * @author maria-farooq@live.com (Maria Farooq)
@@ -43,6 +44,8 @@ public interface ConferenceDetailRecordsDao {
     List<ConferenceDetailRecord> getConferenceDetailRecordsByDateUpdated(DateTime dateUpdated);
 
     Integer getTotalConferenceDetailRecords(ConferenceDetailRecordFilter filter);
+
+    Integer countByFilter(ConferenceRecordCountFilter filter);
 
     int addConferenceDetailRecord(ConferenceDetailRecord cdr);
 

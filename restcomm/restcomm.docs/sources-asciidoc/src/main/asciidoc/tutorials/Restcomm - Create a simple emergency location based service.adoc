@@ -1,0 +1,447 @@
+[[restcomm-ussdrvd_geolocation-tutorial]]
+= *Restcomm – Building a USSD triggered Geolocation project using Restcomm Visual Designer*
+
+[[introduction]]
+Introduction and Rationale
+~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+Throughout this tutorial we will explain how to create an emergency location based service by developing a simple USSD RVD project. This RVD project makes use of either Restcomm http://documentation.telestax.com/connect/api/geolocation-api.html[Geolocation API] and http://documentation.telestax.com/core/gmlc/GMLC_Admin_Guide.html#gmlc[Restcomm GMLC] for retrieving the most basic location information from a GSM cellular network (i.e. Cell Global Identification or CGI) and http://documentation.telestax.com/connect/api/sms-api.html[SMS API] for sending such gathered location information -furtherly processed to the correspondent CGI's geographic coordinates- via an SMS to a PSAP (Public Safety Answering Point). USSD session ends with processed location information back to the service initiator via RestcommONE-Connect and RestommONE USSD Gateway. 
+
+This tutorial is inspired on TechTeamCo TADHack Popayan 2017 co-winners, as can bee seen in http://blog.tadhack.com/2017/10/02/tadhack-global-2017-winners/[TADHack Global 2017 blog].
+
+[[requirements]]
+Requirements
+~~~~~~~~~~~~
+
+* Latest RestcommONE-Connect release.
+* Latest RestcommONE USSD Gateway release.
+* Latest RestcommONE GMLC release.
+* Know how to install and run the aforementioned platforms in a single server, like explained in the "Running USSD SMSC and Restcomm on the same server" http://docs.telestax.com/smsc-quick-start-user-guide/[tutorial] . Here, we will use GMLC instead of SMSC.
+* Know how to use Restcomm Visual Designer and build a USSD RVD project.
+* Latest Restcomm USSD Phone Simulator release (please refer to this open source https://github.com/RestComm/phone-simulator[link] with installation and usage tutorial by our partner "Somos Discovery" from Nicaragua).
+* SCTP installed in your system (any Linux OS flavour supports it by installing lksctp software).
+* Latest Jitsi SIP Phone (or similar).
+* Latest Apache 2 Server and PHP installed and running in your system.
+
+
+[[step-1-start-RestcommONE-Connect]]
+Step 1 - Configure and Start RestcommONE-Connect
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+Throughout this tutorial we will make use of Restcomm-Connect, USSD Gateway and GMLC platforms running on the same server. For the sake of simplicity and making the used PHP scripts universally functional, we will bind every platform to the loopback IP (i.e. 127.0.0.1). Therefore, set network configuration at $RESTCOMM_HOME/bin/restcomm/*restcomm.conf* as below (left any field not mentioned here as default):
+
+[source,lang:default,decode:true]
+----
+NET_INTERFACE='l0'
+PRIVATE_IP='127.0.0.1'
+SUBNET_MASK='255.0.0.0'
+NETWORK='127.0.0.0'
+BROADCAST_ADDRESS='127.0.0.255'
+----
+
+Also, set the following SIP ports to *506x* in the same configuration file:
+[source,lang:default,decode:true]
+----
+#Connectors port configuration. !!IMPORTANT!! If LB is used this ports will be used from LB to send traffic to RC.Under LB this port
+SIP_PORT_UDP='5060'             #LB UDP port. Default is 5080
+SIP_PORT_TCP='5060'             #LB TCP port. Default is 5080
+SIP_PORT_TLS='5061'             #LB TLS port. Default is 5081
+SIP_PORT_WS='5062'              #LB WS port. Default is 5082
+SIP_PORT_WSS='5063'             #LB WSS port. Default is 5083
+----
+
+Likewise, set either USSD Gateway and GMLC URIs at $RESTCOMM_HOME/standalone/deployments/restcomm.war/WEB-INF/conf/*restcomm.xml* like the following:
+[source,lang:default,decode:true]
+----
+<!-- TelScale USSD Gateway -->
+    <ussd-gateway>
+      <ussd-gateway-uri>127.0.0.1:5260</ussd-gateway-uri>
+      <ussd-gateway-user/>
+      <ussd-gateway-password/>
+    </ussd-gateway>
+    <!-- TelScale GMLC -->
+    <gmlc>
+      <gmlc-uri>http://127.0.0.1:8180/restcomm/gmlc/rest?msisdn=</gmlc-uri>
+      <!-- Change GMLC-IP:port to appropriate value-->
+      <gmlc-user/>
+      <gmlc-password/>
+    </gmlc>
+----
+
+After saving these configuration files changes, start restcomm by running $RESTCOMM_HOME/bin/restcomm/*start-restcomm.sh* (e.g. via *sudo ./start-restcomm.sh*). You can then visualize RestcommONE-Connect console via *tmux* and attaching it to *restcomm* (e.g via *sudo tmux attach -t restcomm*).
+
+[[step-2-start-RestcommONE-GMLC]]
+Step 2 - Start RestcommONE GMLC in simulator mode
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+* As we will need to run GMLC in simulator mode and not conflict with the USSD Gateway, SCTP ports will need to be changed in order to make either simulators run together in the same server (we assumed you followed the aforementioned tutorial for this at this point). Therefore, go to $GMLC_HOME/jboss-5.1.0.GA/server/simulator/data/ and change peer and host ports to "8013" and "8014" respectively in *SCTPManagement_sctp.xml*. It should look like this:
+[source,lang:default,decode:true]
+----
+<?xml version="1.0" encoding="UTF-8" ?>
+<connectdelay value="5000"/>
+<servers>
+        <server name="serv1" started="true" hostAddress="127.0.0.1" hostPort="8014" ipChannelType="0" acceptAnonymousConnections="false" maxConcurrentConnectionsCount="0" extraHostAddresseSize="0">
+                <associations>
+                        <string value="ass1"/>
+                </associations>
+        </server>
+</servers>
+<associations>
+        <name value="ass1"/>
+        <association name="ass1" assoctype="SERVER" hostAddress="" hostPort="0" peerAddress="127.0.0.1" peerPort="8013" serverName="serv1" ipChannelType="0" extraHostAddresseSize="0"/>
+</associations>
+----
+* Then, go to $GMLC_HOME/tools/restcomm-jss7-simulator/bin/ and modify ports accordingly in both *SimSCTPServer_main_sctp.xml*
+[source,lang:default,decode:true]
+----
+<?xml version="1.0" encoding="UTF-8" ?>
+<connectdelay value="10000"/>
+<servers/>
+<associations>
+        <name value="Ass_main"/>
+        <association name="Ass_main" assoctype="CLIENT" hostAddress="127.0.0.1" hostPort="8013" peerAddress="127.0.0.1" peerPort="8014" ipChannelType="0" extraHostAddresseSize="0"/>
+</associations>
+----
+
+and *main_simulator2.xml* (only *m3ua* element shown next):
+[source,lang:default,decode:true]
+----
+<m3ua storePcapTrace="true" isSctpServer="false" localPort="8013" localPort2="0" remotePort="8014" remotePort2="0" ipChannelType="SCTP" dpc="2" dpc2="0" opc="1" opc2="0" si="3" routingConext="101" networkAppearance="102" trafficModeType="2" m3uaFunctionality="IPSP" m3uaExchangeType="SE" routingLabelFormat="ITU" m3uaIPSPType="CLIENT">
+----
+
+* Go to $GMLC_HOME/jboss-5.1.0.GA/bin/ and start the GMLC in simulator mode by executing the following:
+*sudo ./run.sh -c simulator -Djboss.service.binding.set=ports-01*
+* Go to $GMLC_HOME/tools/telscale-jss7-simulator/bin/ and run jSS7 simulator by executing the following:
+*sudo ./run.sh gui*
+* On the GUI press the following buttons in this sequence: *Start*, then *Run test* and *Start*.
+* After about 20 seconds you should see that SCTP association is *connected* and M3UA is *active*, like in the following image:
+
+image:./images/911-jSS7-sim-ATI-Server_connected-active.png[911-jSS7-sim-ATI-Server_connected-active,align=center,width=680,height=729]
+
+
+[[step-3-start-RestcommONE-USSDGateway]]
+Step 3 - Start RestcommONE USSD Gateway in simulator mode
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+* Go to $USSDgw_HOME/jboss-5.1.0.GA/bin/ and start the USSD Gateway in simulator mode by executing the following:
+*sudo ./run.sh -c simulator -Djboss.service.binding.set=ports-02*
+* Go to the USSD phone simulator path (wherever you downloaded it) and start it. The following image should pop up:
+
+image:./images/911_USSD_Phone_Sim_conf.png[USSD_Phone_Sim_conf,align=center,width=450,height=300].
+
+
+* Except for the "Phone" parameter (you can set any number there), leave the other parameters like in the above image. Notice that the IP Channel type is set to *SCTP* (again, you need SCTP installed in your OS Linux distribution -Ubuntu, Debian, Red Hat Enterprise Linux, CentOS, Fedora, Mint, etc.-). Also, host and peer ports are left default (we only changed those for GMLC and its jSS7 simulator -would we use SMSC in simulator mode, we should change them too for making three simulators work together in the same machine-).
+* Press *Start* button. After a few seconds the following image should pop up with the cursor blinking:
+
+image:./images/911_call_phone-sim_start.png[USSD_Phone_Sim_started,align=center,width=280,height=400]
+
+
+If you wish to use jSS7 simulator instead of the USSD Phone Simulator, proceed as follows:
+
+* Go to $USSDgw_HOME/tools/telscale-jss7-simulator/bin/ and start the jSS7 simulator by executing the following:
+*sudo ./run.sh gui*
+* On the GUI press the following buttons in this sequence: *Start*, then *Run test* and *Start*.
+* After about 20 seconds you should see that SCTP association is *connected* and M3UA is *active*.
+
+
+[[step-4-PHP-Scripts-MySQL-database]]
+Step 4 - Setup the external services code and database
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+For this tutorial, we will need to call Restcomm Geolocation API and Restcomm SMS API through "External service" modules in the correspondent RVD project. Then, we need to prepare such REST Web Services; for such, we will use simple PHP/json scripts. Likewise, we will connect to a MySQL database which will comprise a very simple database with only one table for matching CGI information with geographic coordinates (of course, this could be much complex, but we will stick to this for the sake of simplicity). So, we will use the following scripts and place them in the following path: */var/www/html/Geolocation/*:
+
+*geolocation.php* is a simple PHP script that calls Restcomm Geolocation API with a couple of parameters and returns the result in JSON format:
+[source,lang:default,decode:true]
+----
+<?php
+	/*
+     * Geolocation
+     * A Telestax Restcomm Geolocation API demo
+     * Author: Fernando Mendioroz
+    */
+
+	// check if cURL is installed
+	if(!function_exists("curl_init")) {
+		die("cURL extension is not installed");
+	}
+
+    $targetIdentifier=$_REQUEST["target"];
+	
+	// HTTP query parameters
+	$data = array("DeviceIdentifier" => $targetIdentifier, "StatusCallback" => "http://10.0.0.1:8080/ACae6e420f425248d6a26948c17a9e2acf");
+	$post_data = json_encode($data);
+        
+	// HTTP query headers
+	$http_header = array('Content-Type: application/x-www-form-urlencoded');
+
+	// HTTP query URL
+	$url = 'http://ACae6e420f425248d6a26948c17a9e2acf:f8bc1274677b173d1a1cf3b9924eaa7e@127.0.0.1:8080/restcomm/2012-04-24/Accounts/ACae6e420f425248d6a26948c17a9e2acf/Geolocation/Immediate.json';
+
+	// Open connection
+	$ch = curl_init($url);
+	// Set cURL opts
+	curl_setopt_array($ch, array(
+    				CURLOPT_POST => TRUE,
+    				CURLOPT_RETURNTRANSFER => TRUE,
+    				CURLOPT_HTTPHEADER => $http_header,
+    				CURLOPT_POSTFIELDS => http_build_query($data),
+	));
+	
+	// Execute request
+	$curl_result = curl_exec($ch);
+
+	// Close connection
+	curl_close($ch);
+	
+	// get the result and parse to JSON
+	$json_result = json_decode($curl_result, true); 
+	// search for the geolocation data and encode to json
+	$geodata = "geolocation_data";
+	$geolocation = seekValue($json_result, $geodata);
+    $json_geolocation = json_encode($geolocation, true);
+	//return the geolocation data result in json format 
+    echo $json_geolocation;
+
+
+	function seekValue($multiDimensionalArray, $arrayKey) {
+  		foreach($multiDimensionalArray as $key => $value) {
+    			if($key == $arrayKey) {
+      				$output = $value;
+    			} elseif(is_array($value)) {
+      				$output = seek($value, $arrayKey);
+    			}
+  		}
+  		return $output;
+	}
+
+?>
+----
+
+*convertCGItoCoordinates.php* is a simple PHP script that gathers the CGI information and sends a query to a MySQL database for retrieving the correspondent geographic coordinates of the base station node foci. These values are returned back to RestcommONE-Connect in JSON format:
+[source,lang:default,decode:true]
+----
+<?php
+
+	header('Content-Type: application/json');
+
+    /*
+    * Geolocation
+    * A Telestax Restcomm Geolocation API demo
+	* Process gathered GCI into corresponding base station node foci geo coordinates
+    * Author: Fernando Mendioroz
+    */
+
+    $cid = $_REQUEST["cid"];
+    $lac = $_REQUEST["lac"];
+	$mcc = $_REQUEST["mcc"];
+    $mnc = $_REQUEST["mnc"];
+	
+	//Connection to MySQL DB
+    $con=mysqli_connect("localhost","root","mysql10","geolocation");
+
+    if (mysqli_connect_errno()) {
+    	echo "Failed to connect to MySQL: " . mysqli_connect_error();
+    }
+
+    //get current phone number appointment day
+    $result = mysqli_query($con,"SELECT nodeLatitude,nodeLongitude FROM geolocation.base_station_data WHERE cellId=$cid AND lac=$lac AND mcc=$mcc AND mnc=$mnc");
+
+    // Get from MySQL query the base station geographic coordinates and transform into variables for later processing
+    while($row = mysqli_fetch_array($result)) {
+            $node_foci_latitude = $row['nodeLatitude'];
+            $node_foci_longitude = $row['nodeLongitude'];
+    }
+
+	$cell_coordinates = array ("cell_latitude" => $node_foci_latitude, "cell_longitude" => $node_foci_longitude );
+
+	// Output the response as JSON
+    $json_coordinates_response = json_encode($cell_coordinates);
+
+    //echo $car_status;
+    echo $json_coordinates_response;
+?>
+----
+
+For the latter to work properly, MySQL must be running in the server, accesssible throug the user *root* and password *mysql10*. A database named *geolocation* must be placed with at least the *base_station_data* table with the following structure:
+[source,lang:default,decode:true]
+----
+mysql> DESCRIBE base_station_data;
++-----------------+-------------+------+-----+---------+----------------+
+| Field           | Type        | Null | Key | Default | Extra          |
++-----------------+-------------+------+-----+---------+----------------+
+| idBaseStation   | int(5)      | NO   | PRI | NULL    | auto_increment |
+| baseStationName | varchar(10) | NO   |     | NULL    |                |
+| cellId          | varchar(5)  | NO   | MUL | NULL    |                |
+| lac             | varchar(5)  | NO   | MUL | NULL    |                |
+| mcc             | varchar(3)  | NO   | MUL | NULL    |                |
+| mnc             | varchar(2)  | NO   | MUL | NULL    |                |
+| nodeLatitude    | varchar(15) | NO   |     | NULL    |                |
+| nodeLongitude   | varchar(16) | NO   |     | NULL    |                |
+| azimuth         | varchar(12) | NO   |     | NULL    |                |
++-----------------+-------------+------+-----+---------+----------------+
+----
+
+Additionally, this table should have at least one record, so that the following results from this query:
+[source,lang:default,decode:true]
+----
+mysql> SELECT nodeLatitude,nodeLongitude FROM geolocation.base_station_data WHERE cellId='221' AND lac='32000' AND mcc='250' AND mnc='1';
++--------------+---------------+
+| nodeLatitude | nodeLongitude |
++--------------+---------------+
+| 35,827910W   | 10,422890S    |
++--------------+---------------+
+----
+Of course, all the preceding location data is ficticious, only set this way for testing/simulating purposes.
+
+* *send_sms_thru_api.php* is a simple PHP script that calls Restcomm SMS API for sending the gathered and processed location information to the PSAP via SMS:
+[source,lang:default,decode:true]
+----
+<?php
+	/*
+     * Geolocation
+     * A Telestax Restcomm Geolocation API demo
+	 * Use of SMS API to send location information
+     * Author: Fernando Mendioroz
+    */	
+
+	// check if cURL is installed
+	if(!function_exists("curl_init")) {
+		die("cURL extension is not installed");
+	}
+
+    $destination = $_REQUEST["sms_destination"];
+	$origin = $_REQUEST["sms_origin"];
+	$body = $_REQUEST["sms_body"];
+    $sos_origin = $_REQUEST["originator"];
+    $cell_id = $_REQUEST["cid"];
+    $loc_area_code = $_REQUEST["lac"];
+	$clatitude = $_REQUEST["c_lat"];
+	$clongitude = $_REQUEST["c_long"];
+	$sms_body = "Your help is requested from {$sos_origin}, location: Cell-ID={$cell_id}, area-code={$loc_area_code}, latitude={$clatitude}, longitude={$clongitude}.";
+
+	// HTTP query parameters
+	$data = array("To" => $destination, "From" => $origin, "Body" => $sms_body);
+	$post_data = json_encode($data);
+        
+	// HTTP query headers
+	$http_header = array('Content-Type: application/x-www-form-urlencoded');
+
+	// HTTP query URL
+	$url = 'http://ACae6e420f425248d6a26948c17a9e2acf:f8bc1274677b173d1a1cf3b9924eaa7e@127.0.0.1:8080/restcomm/2012-04-24/Accounts/ACae6e420f425248d6a26948c17a9e2acf/SMS/Messages.json';
+
+	// Open connection
+	$ch = curl_init($url);
+	// Set cURL opts
+	curl_setopt_array($ch, array(
+    				CURLOPT_POST => TRUE,
+    				CURLOPT_RETURNTRANSFER => TRUE,
+    				CURLOPT_HTTPHEADER => $http_header,
+    				CURLOPT_POSTFIELDS => http_build_query($data),
+				));
+	
+	// Execute request
+	$curl_result = curl_exec($ch);
+
+	// Close connection
+	curl_close($ch);
+	
+	// get the result and parse to JSON
+	$json_result = json_decode($curl_result, true); 
+	//return the SMS API result in json format 
+        echo $sms_body;
+
+?>
+----
+
+*Note*: In this example the authorization token is set to *f8bc1274677b173d1a1cf3b9924eaa7e* as a result of setting administrator@company.com user password to "FerM19711219" in RestcommONE-Connect (therefore, sid equals *ACae6e420f425248d6a26948c17a9e2acf*). Should you use a different user and or password, you should then change the PHP scripts accordingly.
+
+[[step-5-RVD_USSD_Project]]
+Step 5 - Login to Restcomm and build the USSD RVD project
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+* Login to RestcommONE-Connect at http://127.0.0.1:8080 with default user administrator@company.com and password "RestComm".
+* Change default password to "FerM19711219" (if you wish to set it to a different value, take into consideration the generated authentication token for setting it at the PHP scripts calls to Restcomm Geolocation and SMS APIs).
+* Once successfully logged in, go to http://127.0.0.1:8080/restcomm-rvd/#/login (you can do this by simply clicking in Visual Designer link once in the dashboard).
+* Start a USSD project (in this tutorial we will call it "USSD_Emergency_Geolocation").
+* Rename the Welcome module to *Retrieve_CGI* and remove its default content. Drag and drop the "External Service" verb into the module's palette and set the Service Url http://127.0.0.1/Geolocation/geolocation.php. Click on "add service parameter" and set "Name" to "target" and "Value" to "$core_From". Click on "Add assignment" as many times needed so you have the following parameters of scope "application": *cid*, *lac*, *mcc*, *mnc*, *mscvlrOrSgsnOrMme* and *loc_age_mins* whose values come from *cell_id*, *location_area_code*, *mobile_country_code*, *mobile_network_code*, *network_entity_address* and *location_age* respectively. On making a route decision, mark it as *fixed* to Continue to the *Get_GCI_Coordinates* module. Optionally, on "Remote error" set *Loc_Error* module and on "On timeout" set *Loc_Timeout* modules (recommended). At the end, the module should look like in the following image:
+
+image:./images/911_RVD_Retrieve_CGI_module.png[USSD_RVD_Retrieve_GCI,align=center,width=680,height=729]
+
+* Add a new module named *Get_CGI_Coordinates*. Drag and drop the "External Service" verb into the module's palette and set the Service Url http://127.0.0.1/Geolocation/convertCGItoCoordinates.php. Click four times on "add service parameter" and set "Name" to "cid", "lac", "mcc" and "mnc", while "Value" respectively to "$cid", "$lac", "$mcc" and "$mnc". Click on "Add assignment" two times needed so you have the following parameters of scope "application": *cell_lat*, *cell_long* whose values come from *cell_latitude* and *cell_longitude* respectively. On making a route decision, mark it as *fixed* to Continue to the *Menu* module. Optionally, on "Remote error" set *Loc_Error* module and on "On timeout" set *Loc_Timeout* modules (recommended). At the end, the module should look like in the following image:
+
+image:./images/911_RVD_Get_CGI_Coordinates_module.png[USSD_RVD_Get_Cordinates,align=center,width=680,height=630]
+
+* Add a new module named *Menu*. Drag and drop a "USSD Collect" verb into the module's palette. Place the following USSD messages in three different lines (so it appears like that in the user's handset): "Welcome to Restcomm. We have detected your location.", "Are you in an emergency situation?" and "Press 1 for NO, press 2 for YES". Set Menu option "1" to Continue to *Out* module, while option "2" to Continue to *Send_SMS* module.
+
+* Add a new module named *Out*. Drag and drop a "USSD Message" verb into the module's palette and insert the following ending session text "Great! You are fine, have a nice day!".
+
+* Add a new module named *Send_SMS*. Drag and drop the "External Service" verb and set the Service Url http://127.0.0.1/Geolocation/send_sms_thru_api.php. Click seven times on "add service parameter" and set "Name" to "sms_destination", "sms_origin", "originator", "cid", "lac", "c_lat" and "c_long" while "Value" respectively to "5555" (the PSAP number), "911", "$core_From" "$cid", "$lac", "$cell_lat" and "$cell_long". No "Add assignment" will be done, as the external service isn't meant to return any value back to the application but send an SMS through the SMS API. On making a route decision, mark it as *fixed* to Continue to the *USSD_End* module. Optionally, on "Remote error" set *SMS_Error* module and on "On timeout" set *SMS_Timeout* modules (recommended). At the end, the module should look like the following image:
+
+image:./images/911_RVD_Send_SMS_module.png[USSD_RVD_Send_SMS,align=center,width=680,height=600]
+
+* Add four modules named *Loc_Error*, *Loc_Timeout*, *SMS_Error* and *SMS_Timeout*. You are free to choose either to send an ending message by drag and drop a "USSD Message" verb or let the user try again by drag and drop a "USSD Collect" verb, giving the user the ability to start all over and attempt another location service. Therefore, you should Continue to the welcome module *Retrieve_CGI*. For example, if you chose the latter option, *Loc_Error* could look like the following image:
+
+image:./images/911_RVD_Loc_Error_module.png[USSD_RVD_Loc_Error,width=680,height=480]
+
+The RVD project is then built. You can graphically check how it is setup by clicking on *Diagram*. You should then see something similar to the following image:
+
+image:./images/911_RVD_USSD_SOS_Geolocation_diagram.png[USSD_RVD_SOS_Geolocation_diagram,align=center,width=8000,height=500]
+
+
+[[step-6-RegisterNumber]]
+Step 6 - Register a SIP Number and assign it to the USSD RVD project
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+* Go to http://127.0.0.1:8080/#/numbers/incoming by clicking on *Numbers* on RestcommONE-Connect console or dashboard and click on *+Register number*. Set *Number* to +++*911#+++ and *Friendly Name* to "USSD SOS Location" (or whatever you like as friendly name). Then assign *USSD_Emergency_Geolocation* as *RVD Application* in *USSD Request* section under *USSD*. In the end it should look like next:
+
+image:./images/911_USSD_SIP_number.png[USSD_SIP_Num_App,align=center,width=680,height=500]
+
+Click on *Save Changes* and verify the new +++*911#+++ is correctly added and set to the desired *USSD_Emergency_Geolocation* application (*Features* column) at http://127.0.0.1:8080/#/numbers/incoming. 
+
+
+[[step-7-RegisterNumber]]
+Step 7 - Create the corresponding routing rule in RestcommONE USSD Gateway
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+* Go to http://127.0.0.1:8280/ussd-management/# (admin/admin) and in *Routing Rule* click on *+Create rule* and "Short Code" to +++*911#+++, "Type" to *SIP*, "URL or SIP Proxy" to *127.0.0.1:5060* and click on "Create" (leaving on default values both "Network Id" and "Exact match"). At the end you should see the *Routing Rule" created like in the image below:
+
+image:./images/911_USSDgw_Routing_Rule.png[USSD_Routing_Rule,align=center,width=900,height=500]
+
+[[step-8-SetJitsi]]
+Step 8 - Start and configure SIP Phone
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+We will use Jitsi as SIP Phone in this tutorial. After you've installed it, go to *Tools/Options/Accounts/Add*. Then, on *Network* select SIP, on *SIP Id* set *5555* and click "Add". You should then have added *5555* as registrarless SIP account, which should be seen as "Online". 
+
+Finally, We are ready to go.
+
+[[step-9-Test]]
+Step 9 - Test the emergency location based service triggered by USSD
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+* Go to the USSD Phone simulator, dial +++*911#+++ and click call like in the image below:
+
+image:./images/911_call_phone-sim.png[USSD_Phone_Sim_dial,align=center,width=280,height=380]
+
+After receiving the USSD request and started the correspondent RVD project logic, RestcommONE-Connect sends the MAP ATI request to the GMLC via the Restcomm Geolocation API, which reached the jSS7 simulator. The latter responds with a GCI value, which in JSON is formatted to the following by the script *geolocation.php*: {"cell_id":"221","location_area_code":"32000","mobile_country_code":250,"mobile_network_code":"1","network_entity_address":5555555666,"location_age":5} and stored in the correspondent RVD application variables after the first external service execution. MAP ATI can be seen received and answered back in the jSS7 simulator like in the image snapshot:
+
+image:./images/911_jSS7-sim-ATI-Server_ATI_resp.png[jSS7-sim_MAP-ATI,align=center,width=680,height=729]
+
+* GCI information is converted to geographic coordinates after the MySQL query performed by *convertCGItoCoordinates.php* as per the RVD project logic.
+
+* You will be prompted with the following text in the USSD Phone simulator "Welcome to Restcomm. We have detected your location. Are you in an emergency situation?" Press 1 for NO, press 2 for YES", like in the following image:
+
+image:./images/911_menu_phone-sim_menu.png[USSD_Phone_Sim_Menu,align=center,width=280,height=380]
+
+* Set the answer to "2" and click on the buttom *Enviar*. 
+
+* At this point, the RVD project logic follows by sending an SMS to the PSAP via the SMS API (through the external service call to *send_sms_thru_api.php* in the *Send_SMS* RVD module), which results to be the registrarless SIP account 5555 residing in Jitsi. Then you will see the message arriving at Jitsi (acting as PSAP), like in the image below:
+
+image:./images/911_jitsi_sms.png[Jitsi_SMS,align=center,width=320,height=450]
+
+As you can see, the SMS received at Jitsi's account 5555 from 911 corresponds to the service logic, informing that the initiator number (in this case, identified by the number "86399413") is requesting help and is located in the geographic coordinates of the correspondent CGI (as stored in the database).
+
+* Immediately after (actually it's sensed as simultaneously), the USSD phone simulator receives almost the same information like it can be seen in the following image, which ends the USSD session. By this, the initiator of the emergency service, is adviced that his/her position has been acquired and the PSAP has been informed about it.
+
+image:./images/911_loc-response_phone-sim.png[USSD_Phone_end_message_w_location,align=center,width=280,height=380]
+

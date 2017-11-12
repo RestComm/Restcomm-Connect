@@ -255,7 +255,7 @@ public abstract class RecordingsEndpoint extends SecuredEndpoint {
         }
     }
 
-    protected Response getRecordingWav (String accountSid, String sid) {
+    protected Response getRecordingFile (String accountSid, String sid) {
         Account operatedAccount = accountsDao.getAccount(accountSid);
 //        secure(operatedAccount, "RestComm:Read:Recordings");
 
@@ -270,13 +270,18 @@ public abstract class RecordingsEndpoint extends SecuredEndpoint {
             URI recordingUri = null;
             try {
                 if (recording.getS3Uri() != null) {
-                    recordingUri = s3AccessTool.getPublicUrl(recording.getSid() + ".wav");
+                    String fileExtension = recording.getS3Uri().toString().endsWith("wav") ? ".wav" : ".mp4";
+                    recordingUri = s3AccessTool.getPublicUrl(recording.getSid() + fileExtension);
                     if (securityLevel.equals(RecordingSecurityLevel.REDIRECT)) {
                         return temporaryRedirect(recordingUri).build();
                     } else {
                         String contentType = recordingUri.toURL().openConnection().getContentType();
                         if (contentType == null || contentType.isEmpty()) {
-                            contentType = "audio/x-wav";
+                            if (fileExtension.equals(".wav")) {
+                                contentType = "audio/x-wav";
+                            } else {
+                                contentType = "video/mp4";
+                            }
                         }
                         //Fetch recording and serve it from here
                         return ok(recordingUri.toURL().openStream(), contentType).build();
@@ -288,19 +293,29 @@ public abstract class RecordingsEndpoint extends SecuredEndpoint {
                     if (!path.endsWith("/")) {
                         path += "/";
                     }
-                    path += sid.toString() + ".wav";
+                    String fileExtension = ".wav";
+                    if (recording.getFileUri() != null) {
+                        fileExtension = recording.getFileUri().toString().endsWith("wav") ? ".wav" : ".mp4";
+                    }
+                    path += sid.toString() + fileExtension;
 
                     File recordingFile = new File(URI.create(path));
                     if (recordingFile.exists()) {
                         //Fetch recording and serve it from here
-                        return ok(recordingFile, "audio/x-wav").build();
+                        String contentType;
+                        if (fileExtension.equals(".wav")) {
+                            contentType = "audio/x-wav";
+                        } else {
+                            contentType = "video/mp4";
+                        }
+                        return ok(recordingFile, contentType).build();
                     } else {
                         return status(NOT_FOUND).build();
                     }
                 }
             } catch (Exception e) {
                 if (logger.isInfoEnabled()) {
-                    logger.info("Problem during preparation of Recording wav file link, ",e);
+                    logger.info("Problem during preparation of Recording file link, ", e);
                 }
             }
         }
