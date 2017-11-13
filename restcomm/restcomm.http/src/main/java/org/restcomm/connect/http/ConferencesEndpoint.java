@@ -228,14 +228,10 @@ public abstract class ConferencesEndpoint extends SecuredEndpoint {
 
             final String status = data.getFirst("Status");
 
-            if(status != null){
-                if (status.equalsIgnoreCase("completed")) {
-                    kickoutAllActiveParticipants(cdr, effectiveAccount);
-                    //get updated conference record
-                    cdr = dao.getConferenceDetailRecord(new Sid(sid));
-                }else {
-                    return status(BAD_REQUEST).build();
-                }
+            if(status != null && status.equalsIgnoreCase("completed")){
+                kickoutAllActiveParticipants(cdr, effectiveAccount);
+                //get updated conference record
+                cdr = dao.getConferenceDetailRecord(new Sid(sid));
             }else {
                     return status(BAD_REQUEST).build();
             }
@@ -259,13 +255,13 @@ public abstract class ConferencesEndpoint extends SecuredEndpoint {
                 logger.debug("no active participants found.");
         } else {
            try {
+               if (callManager == null)
+                   callManager = (ActorRef) context.getAttribute("org.restcomm.connect.telephony.CallManager");
                if (logger.isDebugEnabled())
                     logger.debug("total conference participants are: "+callDetailRecords.size());
                Iterator<CallDetailRecord> iterator = callDetailRecords.iterator();
                 while(iterator.hasNext()){
                     final CallDetailRecord CallDR = iterator.next();
-                    if (callManager == null)
-                        callManager = (ActorRef) context.getAttribute("org.restcomm.connect.telephony.CallManager");
                     callManager.tell(new Hangup("Conference Terminated", effectiveAccount.getSid(), CallDR), null);
                 }
             } catch (Exception e) {
