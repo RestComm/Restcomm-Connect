@@ -178,11 +178,11 @@ public class ClientsDialTest {
     URL deploymentUrl;
 
     private static int mediaPort = NetworkPortAssigner.retrieveNextPortByFile();
-    
+
     private static int mockPort = NetworkPortAssigner.retrieveNextPortByFile();
     @Rule
     public WireMockRule wireMockRule = new WireMockRule(mockPort);
-    
+
     private static SipStackTool tool1;
     private static SipStackTool tool2;
     private static SipStackTool tool3;
@@ -202,7 +202,7 @@ public class ClientsDialTest {
     private SipStack mariaSipStack;
     private SipPhone mariaPhone;
     private static String mariaPort = String.valueOf(NetworkPortAssigner.retrieveNextPortByFile());
-    private String mariaContact = "sip:maria@127.0.0.1:" + mariaPort;    
+    private String mariaContact = "sip:maria@127.0.0.1:" + mariaPort;
     private String mariaRestcommClientSid;
 
     // Dimitris is a Restcomm Client **without** VoiceURL. This Restcomm Client can dial anything.
@@ -216,24 +216,24 @@ public class ClientsDialTest {
     // of the VoiceURL will be executed.
     private SipStack aliceSipStack;
     private SipPhone alicePhone;
-    private static String alicePort = String.valueOf(NetworkPortAssigner.retrieveNextPortByFile());    
+    private static String alicePort = String.valueOf(NetworkPortAssigner.retrieveNextPortByFile());
     private String aliceContact = "sip:alice@127.0.0.1:" + alicePort;
-    
+
 
     private SipStack aliceSipStack2;
     private SipPhone alicePhone2;
-    private static String alicePort2 = String.valueOf(NetworkPortAssigner.retrieveNextPortByFile());     
+    private static String alicePort2 = String.valueOf(NetworkPortAssigner.retrieveNextPortByFile());
     private String aliceContact2 = "sip:alice@127.0.0.1:" + alicePort2;
 
     // George is a simple SIP Client. Will not register with Restcomm
     private SipStack georgeSipStack;
     private SipPhone georgePhone;
-    private static String georgePort = String.valueOf(NetworkPortAssigner.retrieveNextPortByFile());    
+    private static String georgePort = String.valueOf(NetworkPortAssigner.retrieveNextPortByFile());
     private String georgeContact = "sip:"+pstnNumber+"@127.0.0.1:" + georgePort;
 
     private SipStack clientWithAppSipStack;
     private SipPhone clientWithAppPhone;
-    private static String clientWithAppPort = String.valueOf(NetworkPortAssigner.retrieveNextPortByFile()); 
+    private static String clientWithAppPort = String.valueOf(NetworkPortAssigner.retrieveNextPortByFile());
     private String clientWithAppContact = "sip:clientWithApp@127.0.0.1:" + clientWithAppPort;
     private String clientWithAppClientSid;
 
@@ -256,16 +256,16 @@ public class ClientsDialTest {
 
     private SipStack externalSipStack;
     private SipPhone externalPhone;
-    private static String externalPort = String.valueOf(NetworkPortAssigner.retrieveNextPortByFile());    
+    private static String externalPort = String.valueOf(NetworkPortAssigner.retrieveNextPortByFile());
     private String externalContact = "sip:external@127.0.0.1:" + externalPort;
 
     private String adminAccountSid = "ACae6e420f425248d6a26948c17a9e2acf";
     private String adminAuthToken = "77f8c12cc7b8f8423e5c38b035249166";
 
     private static int restcommPort = 5080;
-    private static int restcommHTTPPort = 8080;    
-    private static String restcommContact = "127.0.0.1:" + restcommPort;  
-    
+    private static int restcommHTTPPort = 8080;
+    private static String restcommContact = "127.0.0.1:" + restcommPort;
+
     @BeforeClass
     public static void beforeClass() throws Exception {
         tool1 = new SipStackTool("ClientsDialTest1");
@@ -279,16 +279,16 @@ public class ClientsDialTest {
         tool9 = new SipStackTool("ClientsDialTest9");
         tool10 = new SipStackTool("ClientsDialTest10");
     }
-    
-    public static void reconfigurePorts() {     
+
+    public static void reconfigurePorts() {
         if (System.getProperty("arquillian_sip_port") != null) {
             restcommPort = Integer.valueOf(System.getProperty("arquillian_sip_port"));
-            restcommContact = "127.0.0.1:" + restcommPort;          
-        } 
+            restcommContact = "127.0.0.1:" + restcommPort;
+        }
         if (System.getProperty("arquillian_http_port") != null) {
-            restcommHTTPPort = Integer.valueOf(System.getProperty("arquillian_http_port"));       
-        }         
-    }    
+            restcommHTTPPort = Integer.valueOf(System.getProperty("arquillian_http_port"));
+        }
+    }
 
     @Before
     public void before() throws Exception {
@@ -324,7 +324,7 @@ public class ClientsDialTest {
 
         leftySipStack = tool9.initializeSipStack(SipStack.PROTOCOL_UDP, "127.0.0.1", leftyPort, restcommContact);
         leftyPhone = leftySipStack.createSipPhone("127.0.0.1", SipStack.PROTOCOL_UDP, restcommPort, leftyContact);
-        
+
         externalSipStack = tool10.initializeSipStack(SipStack.PROTOCOL_UDP, "127.0.0.1", externalPort, restcommContact);
         externalPhone = externalSipStack.createSipPhone("127.0.0.1", SipStack.PROTOCOL_UDP, restcommPort, externalContact);
     }
@@ -402,6 +402,7 @@ public class ClientsDialTest {
     }
 
     @Test
+    @Category(UnstableTests.class)
     public void testClientsCallEachOther() throws ParseException, InterruptedException {
 
         assertNotNull(mariaRestcommClientSid);
@@ -954,6 +955,7 @@ public class ClientsDialTest {
     }
 
     @Test
+    @Category(UnstableTests.class)
     public synchronized void testDialClientAliceWithExtraParamsAtContactHeader() throws InterruptedException, ParseException {
         stubFor(get(urlPathEqualTo("/1111"))
                 .willReturn(aResponse()
@@ -1406,12 +1408,12 @@ public class ClientsDialTest {
         reconfigurePorts();
 
         Map<String,String> replacements = new HashMap();
-        //replace mediaport 2727 
-        replacements.put("2727", String.valueOf(mediaPort)); 
+        //replace mediaport 2727
+        replacements.put("2727", String.valueOf(mediaPort));
         replacements.put("8080", String.valueOf(restcommHTTPPort));
         replacements.put("8090", String.valueOf(mockPort));
         replacements.put("5080", String.valueOf(restcommPort));
-        replacements.put("5070", String.valueOf(georgePort));        
+        replacements.put("5070", String.valueOf(georgePort));
         replacements.put("5090", String.valueOf(bobPort));
         replacements.put("5091", String.valueOf(alicePort));
         replacements.put("5092", String.valueOf(mariaPort));
@@ -1422,7 +1424,7 @@ public class ClientsDialTest {
         replacements.put("5097", String.valueOf(bobPort));
         replacements.put("5098", String.valueOf(leftyPort));
         replacements.put("5099", String.valueOf(externalPort));
-        
+
         List<String> resources = new ArrayList(
                 Arrays.asList(
                 "dial-conference-entry.xml",
@@ -1431,10 +1433,10 @@ public class ClientsDialTest {
                 "dial-client-entry.xml",
                 "dial-number-entry.xml"));
         return WebArchiveUtil.createWebArchiveNoGw(
-                "restcomm.xml", 
+                "restcomm.xml",
                 "restcomm.script_dialTest",
                 resources,
                 replacements);
-    }     
+    }
 
 }

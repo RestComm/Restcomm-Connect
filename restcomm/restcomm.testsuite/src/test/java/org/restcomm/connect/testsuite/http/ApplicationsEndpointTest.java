@@ -50,6 +50,8 @@ import org.restcomm.connect.commons.dao.Sid;
 import com.google.gson.JsonArray;
 import com.google.gson.JsonObject;
 import com.sun.jersey.core.util.MultivaluedMapImpl;
+import org.junit.experimental.categories.Category;
+import org.restcomm.connect.testsuite.UnstableTests;
 
 /**
  * @author guilherme.jansen@telestax.com
@@ -75,6 +77,7 @@ public class ApplicationsEndpointTest {
     }
 
     @Test
+    @Category(UnstableTests.class)
     public void testCreateAndGetApplication() throws ParseException, IllegalArgumentException, ClientProtocolException,
             IOException {
         // Define application attributes

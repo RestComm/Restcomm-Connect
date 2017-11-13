@@ -51,6 +51,8 @@ import static com.github.tomakehurst.wiremock.client.WireMock.postRequestedFor;
 import static com.github.tomakehurst.wiremock.client.WireMock.stubFor;
 import static com.github.tomakehurst.wiremock.client.WireMock.urlMatching;
 import static com.github.tomakehurst.wiremock.client.WireMock.verify;
+import org.junit.experimental.categories.Category;
+import org.restcomm.connect.testsuite.UnstableTests;
 
 /**
  * @author otsakir@gmail.com - Orestis Tsakiridis
@@ -96,6 +98,7 @@ public class AccountsEndpointClosingTest extends EndpointTest {
 
     // verify that DID provider (nexmo) was contacted to cancel the numbers when the account is removed
     @Test
+    @Category(UnstableTests.class)
     public void removeAccountAndReleaseProvidedNumbers() {
         stubFor(post(urlMatching("/nexmo/number/cancel/.*/.*/US/12223334444"))
                 .willReturn(aResponse()

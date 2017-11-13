@@ -497,7 +497,7 @@ public class TestDialVerbPartTwo {
             "<Sms to=\"bob\" from=\"+12223334499\">Hello World!</Sms></Response>";
     private String dialConferenceNoDialActionRcml = "<Response><Dial><Conference>test</Conference></Dial></Response>";
     @Test
-    @Category(UnstableTests.class)    
+    @Category(UnstableTests.class)
     public synchronized void testDialConferenceNoDialAction_SendSms() throws InterruptedException, ParseException {
         stubFor(get(urlPathEqualTo("/1111"))
                 .willReturn(aResponse()
@@ -694,6 +694,7 @@ public class TestDialVerbPartTwo {
     }
 
     @Test //Test case for issue 320
+    @Category(UnstableTests.class)
     public synchronized void testDialClientAliceWithRecordAndStatusCallbackForAppForThreeCalls() throws InterruptedException, ParseException, MalformedURLException {
         stubFor(get(urlPathEqualTo("/1111"))
                 .willReturn(aResponse()
