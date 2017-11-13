@@ -72,7 +72,7 @@ public class CallApiClient extends RestcommUntypedActor {
         this.callSid = callSid;
         this.storage = storage;
         //actor will only live in memory for one hour
-        context().setReceiveTimeout(Duration.create(3600, TimeUnit.MILLISECONDS));
+        context().setReceiveTimeout(Duration.create(3600, TimeUnit.SECONDS));
     }
     @Override
     public void onReceive(Object message) throws Exception {
