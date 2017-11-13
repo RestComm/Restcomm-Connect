@@ -1440,8 +1440,7 @@ public final class CallManager extends RestcommUntypedActor {
                 return new CallApiClient(sid, storage);
             }
         });
-        return system.actorOf(props);
-
+        return getContext().actorOf(props);
     }
 
     private void ack(SipServletRequest request) throws IOException {
