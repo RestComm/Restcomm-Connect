@@ -13,9 +13,7 @@ import org.jboss.arquillian.container.test.api.Deployer;
 import org.jboss.arquillian.container.test.api.Deployment;
 import org.jboss.arquillian.junit.Arquillian;
 import org.jboss.arquillian.test.api.ArquillianResource;
-import org.jboss.shrinkwrap.api.ShrinkWrap;
 import org.jboss.shrinkwrap.api.spec.WebArchive;
-import org.jboss.shrinkwrap.resolver.api.maven.archive.ShrinkWrapMaven;
 import org.junit.*;
 import org.junit.runner.RunWith;
 import org.restcomm.connect.commons.Version;
@@ -38,7 +36,9 @@ import static org.cafesip.sipunit.SipAssert.assertLastOperationSuccess;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
 import static org.junit.Assert.assertNotNull;
+import org.junit.experimental.categories.Category;
 import org.restcomm.connect.testsuite.NetworkPortAssigner;
+import org.restcomm.connect.testsuite.UnstableTests;
 import org.restcomm.connect.testsuite.WebArchiveUtil;
 
 /**
@@ -64,11 +64,11 @@ public class DialForkAnswerDelayTest {
     URL deploymentUrl;
 
     private static int mediaPort = NetworkPortAssigner.retrieveNextPortByFile();
-    
+
     private static int mockPort = NetworkPortAssigner.retrieveNextPortByFile();
     @Rule
     public WireMockRule wireMockRule = new WireMockRule(mockPort);
-    
+
     private static SipStackTool tool1;
     private static SipStackTool tool2;
     private static SipStackTool tool3;
@@ -108,10 +108,10 @@ public class DialForkAnswerDelayTest {
 
     private String adminAccountSid = "ACae6e420f425248d6a26948c17a9e2acf";
     private String adminAuthToken = "77f8c12cc7b8f8423e5c38b035249166";
-    
+
     private static int restcommPort = 5080;
-    private static int restcommHTTPPort = 8080;        
-    private static String restcommContact = "127.0.0.1:" + restcommPort;      
+    private static int restcommHTTPPort = 8080;
+    private static String restcommContact = "127.0.0.1:" + restcommPort;
     private String dialAliceRcmlWithPlay;
 
     @BeforeClass
@@ -122,22 +122,22 @@ public class DialForkAnswerDelayTest {
         tool4 = new SipStackTool("DialForkAnswerDelay4");
         tool5 = new SipStackTool("DialForkAnswerDelay5");
     }
-    
-    public static void reconfigurePorts() { 
+
+    public static void reconfigurePorts() {
         if (System.getProperty("arquillian_sip_port") != null) {
             restcommPort = Integer.valueOf(System.getProperty("arquillian_sip_port"));
-            restcommContact = "127.0.0.1:" + restcommPort; 
+            restcommContact = "127.0.0.1:" + restcommPort;
         }
         if (System.getProperty("arquillian_http_port") != null) {
             restcommHTTPPort = Integer.valueOf(System.getProperty("arquillian_http_port"));
-        }        
+        }
     }
 
 
     @Before
     public void before() throws Exception {
         dialAliceRcmlWithPlay = "<Response><Play>" + deploymentUrl.toString() + "/audio/demo-prompt.wav</Play><Dial><Client>alice</Client></Dial></Response>";
-        
+
         bobSipStack = tool1.initializeSipStack(SipStack.PROTOCOL_UDP, "127.0.0.1", bobPort, restcommContact);
         bobPhone = bobSipStack.createSipPhone("127.0.0.1", SipStack.PROTOCOL_UDP, restcommPort, bobContact);
 
@@ -996,6 +996,7 @@ public class DialForkAnswerDelayTest {
     private String rcmlToReturn = "<Response><Dial timeout=\"50\"><Uri>sip:fotini@127.0.0.1:" + fotiniPort + "</Uri></Dial></Response>";
     //Non regression test for https://telestax.atlassian.net/browse/RESTCOMM-585
     @Test //TODO Fails when the whole test class runs but Passes when run individually
+    @Category(UnstableTests.class)
     public synchronized void testDialForkNoAnswerExecuteRCML_ReturnedFromActionURL() throws InterruptedException, ParseException, MalformedURLException {
 
         stubFor(get(urlPathEqualTo("/1111"))
@@ -1133,6 +1134,7 @@ public class DialForkAnswerDelayTest {
     private String dialAliceRcml = "<Response><Dial><Client>alice</Client></Dial></Response>";
 
     @Test //TODO Fails when the whole test class runs but Passes when run individually
+    @Category(UnstableTests.class)
     public void testDialClientAlice() throws ParseException, InterruptedException, MalformedURLException {
         stubFor(get(urlPathEqualTo("/1111"))
                 .willReturn(aResponse()
@@ -1471,19 +1473,19 @@ public class DialForkAnswerDelayTest {
         reconfigurePorts();
 
         Map<String,String> replacements = new HashMap();
-        //replace mediaport 2727 
-        replacements.put("2727", String.valueOf(mediaPort));        
+        //replace mediaport 2727
+        replacements.put("2727", String.valueOf(mediaPort));
         replacements.put("8080", String.valueOf(restcommHTTPPort));
         replacements.put("8090", String.valueOf(mockPort));
         replacements.put("5080", String.valueOf(restcommPort));
-        replacements.put("5070", String.valueOf(georgePort));        
+        replacements.put("5070", String.valueOf(georgePort));
         replacements.put("5090", String.valueOf(bobPort));
         replacements.put("5091", String.valueOf(alicePort));
         replacements.put("5092", String.valueOf(henriquePort));
         replacements.put("5093", String.valueOf(fotiniPort));
-        
+
         List<String> resources = new ArrayList(Arrays.asList("hello-play.xml"));
-        return WebArchiveUtil.createWebArchiveNoGw("rrestcomm-delay.xml", 
+        return WebArchiveUtil.createWebArchiveNoGw("restcomm-delay.xml",
                 "restcomm.script_dialForkTest",resources, replacements);
-    }     
+    }
 }

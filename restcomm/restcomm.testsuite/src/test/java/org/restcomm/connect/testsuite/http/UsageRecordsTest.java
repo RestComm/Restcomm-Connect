@@ -24,7 +24,6 @@ import static org.junit.Assert.*;
 
 import com.sun.jersey.api.client.UniformInterfaceException;
 import com.google.gson.JsonElement;
-import com.google.gson.JsonArray;
 import com.google.gson.JsonObject;
 
 import org.apache.log4j.Logger;
@@ -38,9 +37,10 @@ import org.jboss.shrinkwrap.resolver.api.maven.archive.ShrinkWrapMaven;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.restcomm.connect.commons.Version;
-import org.restcomm.connect.testsuite.http.RestcommUsageRecordsTool;
 
 import java.net.URL;
+import org.junit.experimental.categories.Category;
+import org.restcomm.connect.testsuite.UnstableTests;
 
 /**
  * @author <a href="mailto:abdulazizali@acm.org">abdulazizali77</a>
@@ -82,6 +82,7 @@ public class UsageRecordsTest {
     }
 
     @Test
+    @Category(UnstableTests.class)
     public void getUsageRecordsDaily() {
         JsonElement response = RestcommUsageRecordsTool.getInstance().getUsageRecordsDaily(deploymentUrl.toString(),
                 adminAccountSid, adminAuthToken, "", true);
@@ -120,6 +121,7 @@ public class UsageRecordsTest {
     }
 
     @Test
+    @Category(UnstableTests.class)
     public void getUsageRecordsMonthly() {
         JsonElement response = RestcommUsageRecordsTool.getInstance().getUsageRecordsMonthly(deploymentUrl.toString(),
                 adminAccountSid, adminAuthToken, "", true);
@@ -155,6 +157,7 @@ public class UsageRecordsTest {
     }
 
     @Test
+    @Category(UnstableTests.class)
     public void getUsageRecordsYearly() {
         JsonElement response = RestcommUsageRecordsTool.getInstance().getUsageRecordsYearly(deploymentUrl.toString(),
                 adminAccountSid, adminAuthToken, "", true);
@@ -185,11 +188,12 @@ public class UsageRecordsTest {
         assertTrue(usage_unit.equals("minutes"));
         assertTrue(price_unit.equals("USD"));
         assertTrue(uri.equals("/2012-04-24/Accounts/ACae6e420f425248d6a26948c17a9e2acf/Usage/Records/Yearly.json?Category=Calls&EndDate=2016-01-01&StartDate=2016-12-31"));
-        
+
         //TODO: test other categories
     }
 
     @Test
+    @Category(UnstableTests.class)
     public void getUsageRecordsAlltime() {
         JsonElement response = RestcommUsageRecordsTool.getInstance().getUsageRecordsAllTime(deploymentUrl.toString(),
                 adminAccountSid, adminAuthToken, "", true);
