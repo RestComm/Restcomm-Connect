@@ -89,7 +89,7 @@ public class CallApiClient extends RestcommUntypedActor {
         } else if (DownloaderResponse.class.equals(klass)) {
             onDownloaderResponse(message, self, sender);
         } else if (message instanceof ReceiveTimeout) {
-        	getContext().stop(self());
+            getContext().stop(self());
         }
     }
 
