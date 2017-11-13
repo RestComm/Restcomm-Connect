@@ -211,6 +211,7 @@ public abstract class ConferencesEndpoint extends SecuredEndpoint {
             MediaType responseType) {
         logger.info(String.format("updateConference accountsid: %s conferenceSid: %s", accountSid, sid));
         Account account = daoManager.getAccountsDao().getAccount(accountSid);
+        Account effectiveAccount = userIdentityContext.getEffectiveAccount();
         try {
             secure(account, "RestComm:Modify:Conferences");
         } catch (final AuthorizationException exception) {
@@ -234,7 +235,7 @@ public abstract class ConferencesEndpoint extends SecuredEndpoint {
 
             if(status != null){
                 if (status.equalsIgnoreCase("completed")) {
-                    kickoutAllActiveParticipants(cdr);
+                    kickoutAllActiveParticipants(cdr, effectiveAccount);
                     //get updated conference record
                     cdr = dao.getConferenceDetailRecord(new Sid(sid));
                 }else {
@@ -255,20 +256,20 @@ public abstract class ConferencesEndpoint extends SecuredEndpoint {
         }
     }
 
-    private void kickoutAllActiveParticipants(ConferenceDetailRecord conferenceDetailRecord){
+    private void kickoutAllActiveParticipants(ConferenceDetailRecord conferenceDetailRecord, Account effectiveAccount){
         List<CallDetailRecord> callDetailRecords = daoManager.getCallDetailRecordsDao().getRunningCallDetailRecordsByConferenceSid(conferenceDetailRecord.getSid());
 
         if(callDetailRecords == null || callDetailRecords.isEmpty()){
-            if (logger.isInfoEnabled())
-                logger.info("no active participants found.");
+            if (logger.isDebugEnabled())
+                logger.debug("no active participants found.");
         } else {
            try {
-               if (logger.isInfoEnabled())
-                    logger.info("total conference participants are: "+callDetailRecords.size());
+               if (logger.isDebugEnabled())
+                    logger.debug("total conference participants are: "+callDetailRecords.size());
                Iterator<CallDetailRecord> iterator = callDetailRecords.iterator();
                 while(iterator.hasNext()){
                     ActorRef callApiClient = callApiClient(iterator.next().getSid());
-                    callApiClient.tell(new Hangup(), null);
+                    callApiClient.tell(new Hangup("Conference Terminated", effectiveAccount.getSid()), null);
                 }
             } catch (Exception e) {
                 logger.error("Exception while trying to terminate conference via api: ", e);

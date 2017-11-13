@@ -21,22 +21,17 @@ package org.restcomm.connect.http.client.api;
 
 import java.net.URI;
 import java.net.URISyntaxException;
-import java.nio.charset.Charset;
 import java.text.ParseException;
 import java.util.ArrayList;
 import java.util.List;
 
-import org.apache.commons.codec.binary.Base64;
 import org.apache.http.Header;
-import org.apache.http.HttpHeaders;
 import org.apache.http.NameValuePair;
-import org.apache.http.message.BasicHeader;
 import org.apache.http.message.BasicNameValuePair;
 import org.restcomm.connect.commons.dao.Sid;
 import org.restcomm.connect.commons.faulttolerance.RestcommUntypedActor;
 import org.restcomm.connect.commons.util.UriUtils;
 import org.restcomm.connect.dao.DaoManager;
-import org.restcomm.connect.dao.entities.Account;
 import org.restcomm.connect.dao.entities.ConferenceDetailRecord;
 import org.restcomm.connect.dao.entities.ConferenceDetailRecordFilter;
 import org.restcomm.connect.http.asyncclient.HttpAsycClientHelper;
@@ -65,7 +60,6 @@ public class ConferenceApiClient extends RestcommUntypedActor {
     private final String name;
     private final Sid conferenceSid;
     private ConferenceDetailRecord conferenceDetailRecord;
-    private static final String SUPER_ADMIN_ACCOUNT_SID="ACae6e420f425248d6a26948c17a9e2acf";
     private ActorRef requestee;
 
     private ActorRef httpAsycClientHelper;
@@ -116,11 +110,7 @@ public class ConferenceApiClient extends RestcommUntypedActor {
                 if (logger.isInfoEnabled())
                     logger.info("conference api uri is: "+uri);
 
-                Header[] headers = {
-                        new BasicHeader(HttpHeaders.AUTHORIZATION, getSuperAdminAuthenticationHeader())
-                        ,new BasicHeader("Content-type", "application/x-www-form-urlencoded")
-                        ,new BasicHeader("Accept", "application/json")
-                    };
+                Header[] headers = RestcommApiClientUtil.getBasicHeaders(message.getRequestingAccountSid(), storage);
 
                 ArrayList<NameValuePair> postParameters = new ArrayList<NameValuePair>();
                 postParameters.add(new BasicNameValuePair("Status", "Completed"));
@@ -132,14 +122,6 @@ public class ConferenceApiClient extends RestcommUntypedActor {
                 logger.error("Exception while trying to terminate conference via api: ", e);
             }
         }
-    }
-
-    private String getSuperAdminAuthenticationHeader(){
-        Account superAdminAccount = storage.getAccountsDao().getAccount(SUPER_ADMIN_ACCOUNT_SID);
-
-        String auth = superAdminAccount.getSid() + ":" + superAdminAccount.getAuthToken();
-        byte[] encodedAuth = Base64.encodeBase64(auth.getBytes(Charset.forName("ISO-8859-1")));
-        return "Basic " + new String(encodedAuth);
     }
 
     private ConferenceDetailRecord getConferenceDetailRecord() throws ParseException{

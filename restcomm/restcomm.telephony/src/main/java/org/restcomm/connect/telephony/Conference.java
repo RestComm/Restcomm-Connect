@@ -119,6 +119,8 @@ public final class Conference extends RestcommUntypedActor {
     private final ActorRef conferenceCenter;
     private ActorRef conferenceApiClient;
 
+    private static final Sid SUPER_ADMIN_ACCOUNT_SID = new Sid("ACae6e420f425248d6a26948c17a9e2acf");
+
     public Conference(final String name, final MediaServerControllerFactory factory, final DaoManager storage, final ActorRef conferenceCenter) {
         super();
         final ActorRef source = self();
@@ -326,7 +328,7 @@ public final class Conference extends RestcommUntypedActor {
             }
             //tell conference api client to call conference api to terminate conference and kick all calls
             conferenceApiClient = conferenceApiClient();
-            conferenceApiClient.tell(new StopConference(), self());
+            conferenceApiClient.tell(message, self());
         }
     }
 
@@ -574,7 +576,7 @@ public final class Conference extends RestcommUntypedActor {
         if (logger.isInfoEnabled()) {
             logger.info("Conference Received Timeout, will stop conference now.");
         }
-        onStopConference(new StopConference(), self, sender);
+        onStopConference(new StopConference(SUPER_ADMIN_ACCOUNT_SID), self, sender);
     }
     /**
      * get global total no of participants from db

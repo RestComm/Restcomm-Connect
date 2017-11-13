@@ -20,6 +20,7 @@
 package org.restcomm.connect.telephony.api;
 
 import org.restcomm.connect.commons.annotations.concurrency.Immutable;
+import org.restcomm.connect.commons.dao.Sid;
 
 /**
  * @author quintana.thomas@gmail.com (Thomas Quintana)
@@ -28,9 +29,15 @@ import org.restcomm.connect.commons.annotations.concurrency.Immutable;
 public final class Hangup {
     private String message;
     private Integer sipResponse;
+    private Sid requestingAccountSid;
 
     public Hangup() {
         super();
+    }
+
+    public Hangup(final String message, final Sid requestingAccountSid) {
+        this.message = message;
+        this.requestingAccountSid = requestingAccountSid;
     }
 
     public Hangup(final String message, final Integer sipResponse) {
@@ -54,8 +61,15 @@ public final class Hangup {
         return sipResponse;
     }
 
+    /**
+     * @return accountSid for account initiating this hangup request.
+     */
+    public Sid getRequestingAccountSid() {
+        return requestingAccountSid;
+    }
+
     @Override
     public String toString() {
-        return "Hangup [message=" + message + ", sipResponse=" + sipResponse + "]";
+        return "Hangup [message=" + message + ", sipResponse=" + sipResponse + ", terminatingAccountSid=" + requestingAccountSid + "]";
     }
 }
