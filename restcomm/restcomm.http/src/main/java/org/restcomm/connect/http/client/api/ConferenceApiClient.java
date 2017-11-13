@@ -24,6 +24,7 @@ import java.net.URISyntaxException;
 import java.text.ParseException;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.concurrent.TimeUnit;
 
 import org.apache.http.Header;
 import org.apache.http.NameValuePair;
@@ -41,10 +42,12 @@ import org.restcomm.connect.telephony.api.StopConference;
 
 import akka.actor.ActorRef;
 import akka.actor.Props;
+import akka.actor.ReceiveTimeout;
 import akka.actor.UntypedActor;
 import akka.actor.UntypedActorFactory;
 import akka.event.Logging;
 import akka.event.LoggingAdapter;
+import scala.concurrent.duration.Duration;
 
 /**
  * @author mariafarooq
@@ -70,6 +73,8 @@ public class ConferenceApiClient extends RestcommUntypedActor {
         this.name = name;
         this.conferenceSid = conferenceSid;
         this.storage = storage;
+        //actor will only live in memory for one hour
+        context().setReceiveTimeout(Duration.create(3600, TimeUnit.MILLISECONDS));
     }
     @Override
     public void onReceive(Object message) throws Exception {
@@ -85,8 +90,8 @@ public class ConferenceApiClient extends RestcommUntypedActor {
             onStopConference((StopConference) message, self, sender);
         } else if (DownloaderResponse.class.equals(klass)) {
             onDownloaderResponse(message, self, sender);
-            // since this is a one time disposable client lets clean it off after it sends DownloaderResponse.
-            getContext().stop(self());
+        } else if (message instanceof ReceiveTimeout) {
+        	getContext().stop(self());
         }
     }
 
@@ -97,12 +102,15 @@ public class ConferenceApiClient extends RestcommUntypedActor {
             logger.info("Conference api response: " + response);
         }
         requestee.tell(message, self);
+        // since this is a one time disposable client lets clean it off after it sends DownloaderResponse.
+        getContext().stop(self());
     }
     protected void onStopConference(StopConference message, ActorRef self, ActorRef sender) throws URISyntaxException, ParseException {
         requestee = sender;
         conferenceDetailRecord = getConferenceDetailRecord();
         if(conferenceDetailRecord == null){
-            logger.error("could not retrieve conferenceDetailRecord");
+            logger.error("could not retrieve cdr by provided Sid");
+            onDownloaderResponse(new DownloaderResponse(new IllegalArgumentException("could not retrieve cdr by provided Sid")), self, sender);
         } else {
             try {
                 URI uri = new URI("/restcomm"+conferenceDetailRecord.getUri());
@@ -119,7 +127,7 @@ public class ConferenceApiClient extends RestcommUntypedActor {
                 HttpRequestDescriptor httpRequestDescriptor =new HttpRequestDescriptor(uri, "POST", postParameters, -1, headers);
                 httpAsycClientHelper.tell(httpRequestDescriptor, self);
             } catch (Exception e) {
-                logger.error("Exception while trying to terminate conference via api: ", e);
+                logger.error("Exception while trying to terminate conference via api {} ", e);
             }
         }
     }
