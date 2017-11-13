@@ -53,7 +53,6 @@ import org.restcomm.connect.dao.entities.ConferenceDetailRecord;
 import org.restcomm.connect.dao.entities.ConferenceDetailRecordFilter;
 import org.restcomm.connect.dao.entities.ConferenceDetailRecordList;
 import org.restcomm.connect.dao.entities.RestCommResponse;
-import org.restcomm.connect.http.client.api.CallApiClient;
 import org.restcomm.connect.http.converter.ConferenceDetailRecordConverter;
 import org.restcomm.connect.http.converter.ConferenceDetailRecordListConverter;
 import org.restcomm.connect.telephony.api.Hangup;
@@ -63,10 +62,6 @@ import com.google.gson.GsonBuilder;
 import com.thoughtworks.xstream.XStream;
 
 import akka.actor.ActorRef;
-import akka.actor.ActorSystem;
-import akka.actor.Props;
-import akka.actor.UntypedActor;
-import akka.actor.UntypedActorFactory;
 
 /**
  * @author quintana.thomas@gmail.com (Thomas Quintana)
@@ -82,7 +77,7 @@ public abstract class ConferencesEndpoint extends SecuredEndpoint {
     private GsonBuilder builder;
     private XStream xstream;
     private ConferenceDetailRecordListConverter listConverter;
-    protected ActorSystem system;
+    protected ActorRef callManager;
 
     public ConferencesEndpoint() {
         super();
@@ -93,7 +88,7 @@ public abstract class ConferencesEndpoint extends SecuredEndpoint {
         configuration = (Configuration) context.getAttribute(Configuration.class.getName());
         configuration = configuration.subset("runtime-settings");
         daoManager = (DaoManager) context.getAttribute(DaoManager.class.getName());
-        system = (ActorSystem) context.getAttribute(ActorSystem.class.getName());
+        callManager = (ActorRef) context.getAttribute("org.restcomm.connect.telephony.CallManager");
         super.init(configuration);
         ConferenceDetailRecordConverter converter = new ConferenceDetailRecordConverter(configuration);
         listConverter = new ConferenceDetailRecordListConverter(configuration);
@@ -268,25 +263,14 @@ public abstract class ConferencesEndpoint extends SecuredEndpoint {
                     logger.debug("total conference participants are: "+callDetailRecords.size());
                Iterator<CallDetailRecord> iterator = callDetailRecords.iterator();
                 while(iterator.hasNext()){
-                    ActorRef callApiClient = callApiClient(iterator.next().getSid());
-                    callApiClient.tell(new Hangup("Conference Terminated", effectiveAccount.getSid()), null);
+                    final CallDetailRecord CallDR = iterator.next();
+                    if (callManager == null)
+                        callManager = (ActorRef) context.getAttribute("org.restcomm.connect.telephony.CallManager");
+                    callManager.tell(new Hangup("Conference Terminated", effectiveAccount.getSid(), CallDR), null);
                 }
             } catch (Exception e) {
                 logger.error("Exception while trying to terminate conference via api: ", e);
             }
         }
-    }
-
-    private ActorRef callApiClient(final Sid sid){
-        final Props props = new Props(new UntypedActorFactory() {
-            private static final long serialVersionUID = 1L;
-
-            @Override
-            public UntypedActor create() throws Exception {
-                return new CallApiClient(sid, daoManager);
-            }
-        });
-        return system.actorOf(props);
-
     }
 }

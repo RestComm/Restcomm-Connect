@@ -60,6 +60,10 @@ public class CallApiClient extends RestcommUntypedActor {
 
     private ActorRef httpAsycClientHelper;
 
+    /**
+     * @param callSid
+     * @param storage
+     */
     public CallApiClient(final Sid callSid, final DaoManager storage) {
         super();
         this.callSid = callSid;

@@ -97,6 +97,7 @@ import org.restcomm.connect.extension.api.IExtensionCreateCallRequest;
 import org.restcomm.connect.extension.api.RestcommExtensionException;
 import org.restcomm.connect.extension.api.RestcommExtensionGeneric;
 import org.restcomm.connect.extension.controller.ExtensionController;
+import org.restcomm.connect.http.client.api.CallApiClient;
 import org.restcomm.connect.http.client.rcmlserver.resolver.RcmlserverResolver;
 import org.restcomm.connect.interpreter.StartInterpreter;
 import org.restcomm.connect.interpreter.StopInterpreter;
@@ -1403,7 +1404,44 @@ public final class CallManager extends RestcommUntypedActor {
             sender.tell(switchProxy(), self);
         } else if (GetProxies.class.equals(klass)) {
             sender.tell(getProxies(message), self);
+        } else if (Hangup.class.equals(klass)) {
+            onHangup((Hangup) message, self, sender);
         }
+    }
+
+    private void onHangup(Hangup message, ActorRef self, ActorRef sender) {
+        if(message.getCallDetailRecord() == null){
+            if (logger.isDebugEnabled()) {
+                logger.debug("cdr for hangup is null");
+            }
+        } else {
+            // check if it is a local or remote call.
+            if(message.getCallDetailRecord().getInstanceId().equals(RestcommConfiguration.getInstance().getMain().getInstanceId())){
+                ActorRef callTobeHangup = lookup(new GetCall(message.getCallDetailRecord().getCallPath()));
+                if (callTobeHangup != null){
+                    callTobeHangup.tell(message, self);
+                } else {
+                    //call is already terminated nothing to do
+                }
+            } else {
+                //make LCM to hangup the remote call
+                ActorRef callApiClient = callApiClient(message.getCallDetailRecord().getSid());
+                callApiClient.tell(message, self);
+            }
+        }
+    }
+
+    private ActorRef callApiClient(final Sid sid){
+        final Props props = new Props(new UntypedActorFactory() {
+            private static final long serialVersionUID = 1L;
+
+            @Override
+            public UntypedActor create() throws Exception {
+                return new CallApiClient(sid, storage);
+            }
+        });
+        return system.actorOf(props);
+
     }
 
     private void ack(SipServletRequest request) throws IOException {
