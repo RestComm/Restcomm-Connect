@@ -480,7 +480,9 @@
                                 <include>**/connect/testsuite/*Test.java</include>
                             </includes>
                             <redirectTestOutputToFile>true</redirectTestOutputToFile>
+                            <!-- let rerun attempts bedefined form env
                             <rerunFailingTestsCount>2</rerunFailingTestsCount>
+                            -->
                             <!-- let ci script set forkcount.Dont increase over 65
         since that will make ports over the maximum allowed by OS.
                             on local env set depending on available mem
@@ -500,6 +502,7 @@
                                 <arquillian_http_port>${surefire.forkNumber}509</arquillian_http_port>
                                 <arquillian_sip_port>${surefire.forkNumber}508</arquillian_sip_port>
                             </systemPropertyVariables>
+                            <excludedGroups>org.restcomm.connect.testsuite.UnstableTests</excludedGroups>
                         </configuration>
                         <executions>
                             <execution>
@@ -517,8 +520,8 @@
                         <artifactId>maven-surefire-plugin</artifactId>
                         <version>2.19.1</version>
                         <configuration>
-                            <argLine>-Xms1024m -Xmx2048m -XX:MaxPermSize=1024m</argLine>
-                            <!-- <excludes> <exclude>**/SmsSessionTest.java</exclude> </excludes> -->
+                            <argLine>-Xms256m -Xmx2048m -XX:MaxPermSize=1024m</argLine>
+                            <!-- let surefire run sequentially by setting 1-->
                             <forkCount>1</forkCount>
                             <reuseForks>false</reuseForks>
                             <skipTests>${skipUTs}</skipTests>
@@ -549,6 +552,7 @@
                                 <exclude>**/sms/*Test.java</exclude>
                                 <exclude>**/connect/testsuite/*Test.java</exclude>
                             </excludes>
+                            <excludedGroups>org.restcomm.connect.testsuite.UnstableTests</excludedGroups>
                         </configuration>
                     </plugin>
                 </plugins>
