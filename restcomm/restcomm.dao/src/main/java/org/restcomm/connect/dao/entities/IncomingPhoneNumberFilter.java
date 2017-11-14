@@ -35,9 +35,10 @@ public class IncomingPhoneNumberFilter {
     private final Integer limit;
     private final Integer offset;
     private final String orgSid;
+    private final Boolean pureSIP;
 
     public IncomingPhoneNumberFilter(String accountSid, String friendlyName, String phoneNumber, String sortBy,
-            String sortDirection, Integer limit, Integer offset, String orgSid) {
+            String sortDirection, Integer limit, Integer offset, String orgSid, Boolean pureSIP) {
         this.accountSid = accountSid;
         this.friendlyName = friendlyName;
         // The LIKE keyword uses '%' to match any (including 0) number of characters, and '_' to match exactly one character
@@ -53,6 +54,7 @@ public class IncomingPhoneNumberFilter {
         this.limit = limit;
         this.offset = offset;
         this.orgSid = orgSid;
+        this.pureSIP = pureSIP;
     }
 
     public IncomingPhoneNumberFilter(String accountSid, String friendlyName, String phoneNumber) {
@@ -70,6 +72,7 @@ public class IncomingPhoneNumberFilter {
         this.offset = null;
         this.limit = null;
         this.orgSid = null;
+        this.pureSIP = null;
     }
 
     public String getAccountSid() {
@@ -122,6 +125,11 @@ public class IncomingPhoneNumberFilter {
         return orgSid;
     }
 
+    @Override
+    public String toString() {
+        return "IncomingPhoneNumberFilter{" + "accountSid=" + accountSid + ", friendlyName=" + friendlyName + ", phoneNumber=" + phoneNumber + ", sortBy=" + sortBy + ", sortDirection=" + sortDirection + ", limit=" + limit + ", offset=" + offset + ", orgSid=" + orgSid + ", pureSIP=" + pureSIP + '}';
+    }
+
     public static final class Builder {
 
         private String accountSid = null;
@@ -132,17 +140,23 @@ public class IncomingPhoneNumberFilter {
         private Integer limit = null;
         private Integer offset = null;
         private String orgSid = null;
+        private Boolean pureSIP = null;
 
         public static IncomingPhoneNumberFilter.Builder builder() {
             return new IncomingPhoneNumberFilter.Builder();
         }
 
         public IncomingPhoneNumberFilter build() {
-            return new IncomingPhoneNumberFilter(accountSid, friendlyName, phoneNumber, sortBy, sortDirection, limit, offset, orgSid);
+            return new IncomingPhoneNumberFilter(accountSid, friendlyName, phoneNumber, sortBy, sortDirection, limit, offset, orgSid, pureSIP);
         }
 
         public Builder byAccountSid(String accountSid) {
             this.accountSid = accountSid;
+            return this;
+        }
+
+        public Builder byPureSIP(Boolean pureSIP) {
+            this.pureSIP = pureSIP;
             return this;
         }
 
@@ -156,23 +170,16 @@ public class IncomingPhoneNumberFilter {
             return this;
         }
 
-        public Builder bySortBy(String sortBy) {
+        public Builder sortedBy(String sortBy,String sortDirection) {
             this.sortBy = sortBy;
-            return this;
-        }
-
-        public Builder bySortDirection(String sortDirection) {
             this.sortDirection = sortDirection;
             return this;
         }
 
-        public Builder byLimit(Integer limit) {
-            this.limit = limit;
-            return this;
-        }
 
-        public Builder byOffset(Integer offset) {
-            this.offset = offset;
+        public Builder limited(Integer limit, Integer offset) {
+            this.limit = limit;
+             this.offset = offset;
             return this;
         }
 

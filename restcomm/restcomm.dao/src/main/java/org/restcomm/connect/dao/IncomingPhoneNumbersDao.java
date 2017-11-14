@@ -45,7 +45,7 @@ public interface IncomingPhoneNumbersDao {
 
     void updateIncomingPhoneNumber(IncomingPhoneNumber incomingPhoneNumber);
 
-    List<IncomingPhoneNumber> getIncomingPhoneNumbersRegex(Sid orgSid);
+    List<IncomingPhoneNumber> getIncomingPhoneNumbersRegex(IncomingPhoneNumberFilter incomingPhoneNumberFilter);
 
     Integer getTotalIncomingPhoneNumbers(IncomingPhoneNumberFilter filter);
 }

@@ -24,7 +24,6 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-import org.apache.commons.lang.StringUtils;
 
 import org.apache.ibatis.session.SqlSession;
 import org.apache.ibatis.session.SqlSessionFactory;
@@ -100,20 +99,15 @@ public final class MybatisIncomingPhoneNumbersDao implements IncomingPhoneNumber
         }
     }
 
-    public static final char[] REGEX_SPECIAL_CHARS = {'*', '#', '^', '|', '.', '\\', '$', '[', ']'};
-
     @Override
-    public List<IncomingPhoneNumber> getIncomingPhoneNumbersRegex(Sid orgSid) {
+    public List<IncomingPhoneNumber> getIncomingPhoneNumbersRegex(IncomingPhoneNumberFilter incomingPhoneNumberFilter) {
         final SqlSession session = sessions.openSession();
         try {
-            final List<Map<String, Object>> results = session.selectList(namespace + "getIncomingPhoneNumbersRegex", orgSid);
-            final List<IncomingPhoneNumber> incomingPhoneNumbers = new ArrayList<IncomingPhoneNumber>();
+            final List<Map<String, Object>> results = session.selectList(namespace + "getIncomingPhoneNumbersRegex", incomingPhoneNumberFilter);
+            final List<IncomingPhoneNumber> incomingPhoneNumbers = new ArrayList<IncomingPhoneNumber>(results.size());
             if (results != null && !results.isEmpty()) {
                 for (final Map<String, Object> result : results) {
-                    String number = DaoUtils.readString(result.get(PHONE_NUM));
-                    if (StringUtils.containsAny(number, REGEX_SPECIAL_CHARS)) {
-                        incomingPhoneNumbers.add(toIncomingPhoneNumber(result));
-                    }
+                    incomingPhoneNumbers.add(toIncomingPhoneNumber(result));
                 }
             }
             return incomingPhoneNumbers;
@@ -128,7 +122,7 @@ public final class MybatisIncomingPhoneNumbersDao implements IncomingPhoneNumber
         try {
             final List<Map<String, Object>> results = session.selectList(namespace + "getIncomingPhoneNumbersByFriendlyName",
                     filter);
-            final List<IncomingPhoneNumber> incomingPhoneNumbers = new ArrayList<IncomingPhoneNumber>();
+            final List<IncomingPhoneNumber> incomingPhoneNumbers = new ArrayList<IncomingPhoneNumber>(results.size());
             if (results != null && !results.isEmpty()) {
                 for (final Map<String, Object> result : results) {
                     incomingPhoneNumbers.add(toIncomingPhoneNumber(result));
