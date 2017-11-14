@@ -38,6 +38,7 @@ import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
 import org.restcomm.connect.commons.dao.Sid;
+import org.restcomm.connect.commons.telephony.CreateCallType;
 import org.restcomm.connect.dao.CallDetailRecordsDao;
 import org.restcomm.connect.dao.entities.CallDetailRecord;
 import org.restcomm.connect.dao.entities.CallDetailRecordFilter;
@@ -105,6 +106,7 @@ public class CallDetailRecordsDaoTest extends DaoTest {
         builder.setApiVersion("2012-04-24");
         builder.setCallerName("Alice");
         builder.setUri(url);
+        builder.setType(CreateCallType.PSTN);
         CallDetailRecord cdr = builder.build();
         final CallDetailRecordsDao cdrs = manager.getCallDetailRecordsDao();
         // Create a new CDR in the data store.
@@ -129,6 +131,7 @@ public class CallDetailRecordsDaoTest extends DaoTest {
         assertTrue(result.getApiVersion().equals(cdr.getApiVersion()));
         assertTrue(result.getCallerName().equals(cdr.getCallerName()));
         assertTrue(result.getUri().equals(cdr.getUri()));
+        assertTrue(result.getType().equals(cdr.getType()));
         // Update the CDR.
         cdr = cdr.setDuration(2);
         cdr = cdr.setPrice(new BigDecimal("1.00"));
@@ -145,6 +148,31 @@ public class CallDetailRecordsDaoTest extends DaoTest {
         cdrs.removeCallDetailRecord(sid);
         // Validate that the CDR was removed.
         assertTrue(cdrs.getCallDetailRecord(sid) == null);
+    }
+
+    @Test
+    public void testReadByType() {
+        Sid accountSid = new Sid("AC00000000000000000000000000000001");
+        CallDetailRecordsDao dao = manager.getCallDetailRecordsDao();
+        try {
+            CallDetailRecordFilter filterPSTN = new CallDetailRecordFilter(accountSid.toString(), null, null, null, null, null, null, null, null, 0, 0, CreateCallType.PSTN);
+            CallDetailRecordFilter filterUSSD = new CallDetailRecordFilter(accountSid.toString(), null, null, null, null, null, null, null, null, 0, 0, CreateCallType.USSD);
+            CallDetailRecordFilter filterSIP = new CallDetailRecordFilter(accountSid.toString(), null, null, null, null, null, null, null, null, 0, 0, CreateCallType.SIP);
+            CallDetailRecordFilter filterCLIENT = new CallDetailRecordFilter(accountSid.toString(), null, null, null, null, null, null, null, null, 0, 0, CreateCallType.CLIENT);
+            List<CallDetailRecord> callsPstn = dao.getCallDetailRecords(filterPSTN);
+            List<CallDetailRecord> callsUssd = dao.getCallDetailRecords(filterUSSD);
+            List<CallDetailRecord> callsSip = dao.getCallDetailRecords(filterSIP);
+            List<CallDetailRecord> callsClient = dao.getCallDetailRecords(filterCLIENT);
+            Assert.assertEquals(4, callsPstn.size());
+            Assert.assertEquals(3, callsUssd.size());
+            Assert.assertEquals(2, callsSip.size());
+            Assert.assertEquals(1, callsClient.size());
+            Assert.assertEquals(4, dao.getTotalCallDetailRecords(filterPSTN).intValue());
+            Assert.assertEquals(3, dao.getTotalCallDetailRecords(filterUSSD).intValue());
+            Assert.assertEquals(2, dao.getTotalCallDetailRecords(filterSIP).intValue());
+            Assert.assertEquals(1, dao.getTotalCallDetailRecords(filterCLIENT).intValue());
+        } catch (ParseException e) {
+        }
     }
 
     @Test
@@ -435,7 +463,7 @@ public class CallDetailRecordsDaoTest extends DaoTest {
         // read from a single account but using the 'accountSidSet' interface
         List<String> accountSidSet = new ArrayList<String>();
         accountSidSet.add("AC00000000000000000000000000000000");
-        CallDetailRecordFilter filter = new CallDetailRecordFilter(null, accountSidSet, null, null, null, null, null, null, null, null, null);
+        CallDetailRecordFilter filter = new CallDetailRecordFilter(null, accountSidSet, null, null, null, null, null, null, null, null, null, null);
         Assert.assertEquals(12, dao.getTotalCallDetailRecords(filter).intValue());
         // read cdrs of three accounts
         accountSidSet.add("AC00000000000000000000000000000000");
@@ -446,13 +474,13 @@ public class CallDetailRecordsDaoTest extends DaoTest {
         accountSidSet.clear();
         Assert.assertEquals(0, dao.getTotalCallDetailRecords(filter).intValue());
         // if both an accountSid and a accountSid set are passed, only accountSidSet is taken into account
-        filter = new CallDetailRecordFilter("ACae6e420f425248d6a26948c17a9e2acf", accountSidSet, null, null, null, null, null, null, null, null, null);
+        filter = new CallDetailRecordFilter("ACae6e420f425248d6a26948c17a9e2acf", accountSidSet, null, null, null, null, null, null, null, null, null, null);
         accountSidSet.add("AC00000000000000000000000000000000");
         accountSidSet.add("AC11111111111111111111111111111111");
         accountSidSet.add("AC22222222222222222222222222222222");
         Assert.assertEquals(25, dao.getTotalCallDetailRecords(filter).intValue());
         // if no (null) accountSidSet is passed the method still works
-        filter = new CallDetailRecordFilter("AC00000000000000000000000000000000", null, null, null, null, null, null, null, null, null, null);
+        filter = new CallDetailRecordFilter("AC00000000000000000000000000000000", null, null, null, null, null, null, null, null, null, null, null);
         Assert.assertEquals(12, dao.getTotalCallDetailRecords(filter).intValue());
     }
 }
