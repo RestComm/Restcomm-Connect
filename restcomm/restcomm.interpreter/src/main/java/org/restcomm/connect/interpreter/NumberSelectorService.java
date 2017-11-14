@@ -58,10 +58,12 @@ public class NumberSelectorService {
             try {
                 final PhoneNumberUtil phoneNumberUtil = PhoneNumberUtil.getInstance();
                 String usFormatNum = phoneNumberUtil.format(phoneNumberUtil.parse(phone, "US"), PhoneNumberUtil.PhoneNumberFormat.E164);
-                if (logger.isDebugEnabled()) {
-                    logger.debug("Adding US Format num to queries:" + usFormatNum);
+                if (!numberQueries.contains(usFormatNum)) {
+                    if (logger.isDebugEnabled()) {
+                        logger.debug("Adding US Format num to queries:" + usFormatNum);
+                    }
+                    numberQueries.add(usFormatNum);
                 }
-                numberQueries.add(usFormatNum);
             } catch (NumberParseException e) {
                 //logger.error("Exception when try to format : " + e);
             }
@@ -69,18 +71,21 @@ public class NumberSelectorService {
         if (phone.startsWith("+")) {
             //remove the (+) and check if exists
             String noPlusNum = phone.replaceFirst("\\+", "");
-            if (logger.isDebugEnabled()) {
-                logger.debug("Adding No Plus Num:" + noPlusNum);
+            if (!numberQueries.contains(noPlusNum)) {
+                if (logger.isDebugEnabled()) {
+                    logger.debug("Adding No Plus Num:" + noPlusNum);
+                }
+                numberQueries.add(noPlusNum);
             }
-            numberQueries.add(noPlusNum);
         } else {
             String plusNum = "+".concat(phone);
-            if (logger.isDebugEnabled()) {
-                logger.debug("Adding Plus Num:" + plusNum);
+            if (!numberQueries.contains(plusNum)) {
+                if (logger.isDebugEnabled()) {
+                    logger.debug("Adding Plus Num:" + plusNum);
+                }
+                numberQueries.add(plusNum);
             }
-            numberQueries.add(plusNum);
         }
-        numberQueries.add("*");
         return numberQueries;
     }
 
@@ -89,8 +94,11 @@ public class NumberSelectorService {
         IncomingPhoneNumber matchedNumber = null;
         IncomingPhoneNumberFilter.Builder filterBuilder = IncomingPhoneNumberFilter.Builder.builder();
         filterBuilder.byPhoneNumber(number);
-        filterBuilder.byOrgSid(destinationOrganizationSid.toString());
-        if (!sourceOrganizationSid.equals(destinationOrganizationSid)) {
+        if (destinationOrganizationSid != null) {
+            filterBuilder.byOrgSid(destinationOrganizationSid.toString());
+        }
+        if (sourceOrganizationSid!= null &&
+                !sourceOrganizationSid.equals(destinationOrganizationSid)) {
             filterBuilder.byPureSIP(Boolean.FALSE);
         }
         IncomingPhoneNumberFilter numFilter = filterBuilder.build();
@@ -154,7 +162,8 @@ public class NumberSelectorService {
 
         @Override
         public int compare(IncomingPhoneNumber o1, IncomingPhoneNumber o2) {
-            return Integer.compare(o1.getPhoneNumber().length(), o2.getPhoneNumber().length());
+            //put o2 first to make longest first in coll
+            return Integer.compare(o2.getPhoneNumber().length(), o1.getPhoneNumber().length());
         }
 
     }
