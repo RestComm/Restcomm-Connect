@@ -313,10 +313,14 @@ public abstract class IncomingPhoneNumbersEndpoint extends SecuredEndpoint {
                 return status(javax.ws.rs.core.Response.Status.BAD_REQUEST).build();
             }
 
-            incomingPhoneNumberFilter = new IncomingPhoneNumberFilter(accountSid, friendlyNameFilter, phoneNumberFilter, sortBy,
-                    reverse, limit, offset,null);
+            IncomingPhoneNumberFilter.Builder filterBuilder = IncomingPhoneNumberFilter.Builder.builder();
+            filterBuilder.byAccountSid(accountSid);
+            filterBuilder.byFriendlyName(friendlyNameFilter);
+            filterBuilder.byPhoneNumber(phoneNumberFilter);
+            filterBuilder.sortedBy(sortBy, reverse);
+            filterBuilder.limited(limit, offset);
 
-            final List<IncomingPhoneNumber> incomingPhoneNumbers = dao.getIncomingPhoneNumbersByFilter(incomingPhoneNumberFilter);
+            final List<IncomingPhoneNumber> incomingPhoneNumbers = dao.getIncomingPhoneNumbersByFilter(filterBuilder.build());
 
             listConverter.setCount(total);
             listConverter.setPage(pageAsInt);
@@ -357,7 +361,9 @@ public abstract class IncomingPhoneNumbersEndpoint extends SecuredEndpoint {
             }
             Boolean isSip = Boolean.parseBoolean(isSIP);
             Boolean available = true;
-            List<IncomingPhoneNumber> incomingPhoneNumbers = dao.getIncomingPhoneNumber(number);
+            IncomingPhoneNumberFilter.Builder filterBuilder = IncomingPhoneNumberFilter.Builder.builder();
+            filterBuilder.byPhoneNumber(number);
+            List<IncomingPhoneNumber> incomingPhoneNumbers = dao.getIncomingPhoneNumbersByFilter(filterBuilder.build());
             /* check if number is occupied by same organization or different.
              * if it is occupied by different organization then we can add it in current.
              * but it has to be pure sip as provider numbers must be unique even across organizations.
