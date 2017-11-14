@@ -6,15 +6,23 @@
 <mapper namespace="org.mobicents.servlet.sip.restcomm.dao.CallDetailRecordsDao">
   <insert id="addCallDetailRecord" parameterType="map">
     INSERT INTO "restcomm_call_detail_records" ("sid", "instanceid", "parent_call_sid", "date_created", "date_updated", "account_sid", "recipient", "sender", "phone_number_sid", "status",
-    "start_time", "end_time", "duration", "price", "direction", "answered_by", "api_version", "forwarded_from", "caller_name", "uri", "call_path", "ring_duration", "conference_sid", "muted", "start_conference_on_enter", "end_conference_on_exit", "on_hold")
+    "start_time", "end_time", "duration", "price", "direction", "answered_by", "api_version", "forwarded_from", "caller_name", "uri", "call_path", "ring_duration", "conference_sid", "muted", "start_conference_on_enter", "end_conference_on_exit", "on_hold", "ms_id", "call_type")
     VALUES (#{sid}, #{instanceid}, #{parent_call_sid}, #{date_created},
     #{date_updated}, #{account_sid}, #{to}, #{from}, #{phone_number_sid}, #{status}, #{start_time}, #{end_time}, #{duration}, #{price}, #{direction},
-    #{answered_by}, #{api_version}, #{forwarded_from}, #{caller_name}, #{uri}, #{call_path}, #{ring_duration}, #{conference_sid}, #{muted}, #{start_conference_on_enter}, #{end_conference_on_exit}, #{on_hold});
+    #{answered_by}, #{api_version}, #{forwarded_from}, #{caller_name}, #{uri}, #{call_path}, #{ring_duration}, #{conference_sid}, #{muted}, #{start_conference_on_enter}, #{end_conference_on_exit}, #{on_hold}, #{ms_id}, #{call_type});
   </insert>
-
+  
   <select id="getCallDetailRecord" parameterType="string" resultType="hashmap">
     SELECT * FROM "restcomm_call_detail_records" WHERE "sid"=#{sid};
   </select>
+
+	<select id="getInProgressCallsByClientName" parameterType="string" resultType="int">
+		SELECT COUNT(*) FROM "restcomm_call_detail_records" WHERE (UPPER("status") = ('IN_PROGRESS') OR UPPER("status") = ('IN-PROGRESS')) AND "parent_call_sid" IS NULL AND "sender"=#{sender};
+	</select>
+
+	<select id="getInProgressCallsByAccountSid" parameterType="string" resultType="int">
+		SELECT COUNT(*) FROM "restcomm_call_detail_records" WHERE (UPPER("status") = ('IN_PROGRESS') OR UPPER("status") = ('IN-PROGRESS')) AND "parent_call_sid" IS NULL AND "account_sid"=#{accountSid};
+	</select>
 
   <!-- Issue 153: https://bitbucket.org/telestax/telscale-restcomm/issue/153 -->
   <!-- Issue 153: https://bitbucket.org/telestax/telscale-restcomm/issue/110 -->
@@ -62,7 +70,9 @@
     <if test="endTime != null">
       AND "end_time" &lt;= DATE_ADD(#{endTime},INTERVAL 1 DAY)
     </if>
-
+    <if test="callType != null">
+      AND "call_type" = #{callType}
+    </if>
   </select>
 
   <!-- Issue 153: https://bitbucket.org/telestax/telscale-restcomm/issue/153 -->
@@ -111,8 +121,12 @@
     <if test="endTime != null">
       AND "end_time" &lt;= DATE_ADD(#{endTime},INTERVAL 1 DAY)
     </if>
+    <if test="callType != null">
+      AND "call_type" = #{callType}
+    </if>
     order by "start_time"
     LIMIT #{limit} OFFSET #{offset}
+
   </select>
 
   <!-- Issue 1215: https://github.com/RestComm/Restcomm-Connect/issues/1215 -->
