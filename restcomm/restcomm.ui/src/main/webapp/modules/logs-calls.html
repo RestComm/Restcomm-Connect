@@ -1,9 +1,20 @@
 <div class="row accounts-tabs-mobile visible-xs">
-    <div class="col-xs-2  col-xs-offset-1 active"><a href="#/logs/calls"><i class="fa fa-phone" style="font-size: 1.5em;"></i></a></div>
-    <div class="col-xs-2"><a href="#/logs/messages"><i class="fa fa-comments-o" style="font-size: 1.5em;"></i></a></div>
-    <div class="col-xs-2"><a href="#/logs/recordings"><i class="fa fa-dot-circle-o" style="font-size: 1.5em;"></i> </a></div>
-    <div class="col-xs-2"><a href="#/logs/transcriptions"><i class="fa fa-file-text-o" style="font-size: 1.5em;"></i> </a></div>
-    <div class="col-xs-2"><a href="#/logs/notifications"><i class="fa fa-exclamation" style="font-size: 1.5em;"></i> </a></div>
+    <div class="col-xs-2  col-xs-offset-1 active"><a href="#/logs/calls"><i class="fa fa-phone"></i></a></div>
+    <div class="col-xs-2"><a href="#/logs/messages"><i class="fa fa-comments-o"></i></a></div>
+    <div class="col-xs-2"><a href="#/logs/recordings"><i class="fa fa-dot-circle-o"></i> </a></div>
+    <div class="col-xs-2"><a href="#/logs/transcriptions"><i class="fa fa-file-text-o"></i> </a></div>
+    <div class="col-xs-2"><a href="#/logs/notifications"><i class="fa fa-exclamation-circle"></i> </a></div>
+</div>
+
+<div class="row text-center">
+    <div class="col-xs-8 col-xs-offset-2">
+        <h3 class="no-top-margin visible-xs">Calls</h3>
+    </div>
+    <div class="col-xs-2" ng-show="showSearchToggle">
+        <button class="btn btn-link logs-search-toggle pull-right" ng-click="showSearch = !showSearch">
+            <i class="fa fa-search"></i><i class="fa fa-chevron-down" ng-hide="showSearch"></i><i class="fa fa-chevron-up" ng-show="showSearch"></i>
+        </button>
+    </div>
 </div>
 
 <div class="row">
@@ -23,8 +34,9 @@
         </div>
         <br>
         -->
-        <form>
+        <form ng-show="!showSearchToggle || showSearch">
             <div class="row">
+                <div class="clearfix visible-xs">&nbsp;</div>
                 <div class="col-md-2 col-xs-6 logs-search-field">
                     <input type="text" class="form-control" placeholder="From" ng-model="search.from" />
                 </div>
@@ -37,8 +49,8 @@
                     <input type="date" class="form-control logs-search-date" placeholder="End Date" ng-model="search.end_time" />
                 </div>
                 <div class="clearfix visible-xs">&nbsp;</div>
-                <div class="col-md-2 col-xs-10 logs-search-field">
-                    <select class="form-control" style="width: 110px;" ng-model="search.status">
+                <div class="col-md-2 col-xs-4 logs-search-field">
+                    <select class="form-control" ng-model="search.status">
                         <option value="">All Statuses</option>
                         <option value="queued">Queued</option>
                         <option value="ringing">Ringing</option>
@@ -49,28 +61,24 @@
                         <option value="no-answer">No Answer</option>
                     </select>
                 </div>
+                <div class="col-xs-6 text-center logs-search-field logs-search-checkbox visible-xs">
+                    <input type="checkbox" id="search-sub-accounts" class="logs-search-checkbox" ng-true-value="true" ng-false-value="false" ng-model="search.sub_accounts" title="Includes calls from sub-accounts and displays account info">
+                    <label class="logs-search-checkbox-span" for="search-sub-accounts">&nbsp;Search Sub-Accounts</label>
+                </div>
                 <div class="col-md-1 col-xs-2">
                     <button class="logs-search-button" type="submit" ng-click="getCallsList()"><i class="fa fa-search"></i> </button>
                 </div>
             </div>
             <div class="row">
-                <div class="col-md-4 logs-search-field visible-xs" style="margin-top: -30px; font-size: 1.1em;">
-                    <label class="logs-search-checkbox-span" style="font-weight: normal; margin-top: 5px; margin-left: 38%;">
-                        <input type="checkbox" class="logs-search-checkbox" ng-true-value="true" ng-false-value="false" ng-model="search.sub_accounts" title="Includes calls from sub-accounts and displays account info">
-                        &nbsp;Search Sub-Accounts
-                    </label>
-                </div>
-                <div class="col-md-4 logs-search-field hidden-xs" style="font-size: 1.1em;">
-                    <label class="logs-search-checkbox-span" style="font-weight: normal; margin-top: 8px;">
-                        <input type="checkbox" style="vertical-align: text-top;" class="logs-search-checkbox" ng-true-value="true" ng-false-value="false" ng-model="search.sub_accounts" title="Includes calls from sub-accounts and displays account info">
-                        &nbsp;Search Sub-Accounts
-                    </label>
+                <div class="col-md-4 logs-search-field logs-search-checkbox hidden-xs">
+                    <input type="checkbox" class="logs-search-checkbox" ng-true-value="true" ng-false-value="false" ng-model="search.sub_accounts" title="Includes calls from sub-accounts and displays account info">
+                    <label class="logs-search-checkbox-span">&nbsp;Search Sub-Accounts</label>
                 </div>
             </div>
-        </form>
 
-        <hr class="hidden-xs small">
-        <br class="visible-xs"><br class="visible-xs">
+            <hr class="hidden-xs small">
+            <br class="visible-xs"><br class="visible-xs">
+        </form>
 
         <div ng-hide="!callsLogsList || (callsLogsList | filter:query).length > 0" class="jumbotron rc-no-items">
             <h1><i class="fa fa-phone"></i> </h1>
@@ -82,11 +90,6 @@
             <div class="col-md-12">
             <table ng-show="(callsLogsList | filter:query).length > 0" class="table table-hover rc-list logs-calls-list" ng-class="{'logs-calls-list-extra': search.sub_accounts}">
                 <thead>
-                <th class="logs-calls-list-date visible-xs">Date <span ng-show="search.sub_accounts"> <br> Account SID</span></th>
-                <th class="logs-calls-list-from visible-xs">From<br>To</th>
-                <th class="logs-calls-list-direction visible-xs">Direction<br>Status</th>
-                <th class="logs-calls-list-duration visible-xs">Duration<br>Price</th>
-
                 <th class="logs-calls-list-date hidden-xs">Date <span ng-show="search.sub_accounts"> / Account SID</span></th>
                 <th class="logs-calls-list-from hidden-xs">From</th>
                 <th class="logs-calls-list-to hidden-xs">To</th>
@@ -94,28 +97,34 @@
                 <th class="logs-calls-list-status hidden-xs">Status</th>
                 <th class="logs-calls-list-duration hidden-xs">Duration</th>
                 <th class="logs-calls-list-price hidden-xs">Price</th>
+
+                <th class="logs-calls-list-date visible-xs">Date <span ng-show="search.sub_accounts"> <br> Account SID</span></th>
+                <th class="logs-calls-list-from visible-xs">From<br>To</th>
+                <th class="logs-calls-list-direction visible-xs">Direction<br>Status</th>
+                <th class="logs-calls-list-duration visible-xs">Duration<br>Price</th>
                 </thead>
                 <tbody>
                 <tr ng-repeat="call in filtered = (callsLogsList | filter:query | orderBy:sort:reverse)" class="logs-table-row">
-                    <td class="logs-calls-list-date hidden-xs">
+                    <td class="logs-calls-list-date rc-list-date hidden-xs">
                         <a href="" ng-click="showCallDetailsModal(call)">
                             {{ call.date_created  | toDate:'yyyy-MM-dd HH:mm:ss' }}
                             <div class="logs-calls-list-accountsid" ng-show="search.sub_accounts"><br>{{ call.account_sid }}</div>
                         </a>
                     </td>
-                    <td class="logs-calls-list-date visible-xs">
+                    <td class="logs-calls-list-date rc-list-date visible-xs">
                         <a href="" ng-click="showCallDetailsModal(call)">
-                            <div style="line-height: 1.75em; font-size: 0.75em;">{{ call.date_created | toDate:'yyyy-MM-dd' }}</div>
-                            <div style="font-size: 1em;">{{ call.date_created | toDate:'HH:mm:ss' }}</div>
+                            <div>{{ call.date_created | toDate:'yyyy-MM-dd' }}</div>
+                            <div>{{ call.date_created | toDate:'HH:mm:ss' }}</div>
 
-                            <!--<div class="logs-calls-list-accountsid" ng-show="search.sub_accounts"><br>Account SID {{ call.account_sid }}</div>-->
+                            <span class="logs-calls-list-accountsid" ng-show="search.sub_accounts">{{ call.account_sid }}</span>
                         </a>
                     </td>
-                    <td class="hidden-xs"><div class="text-center">{{ call.from ? call.from : '?' }}</div></td>
-                    <td class="hidden-xs"><div class="text-center">{{ call.to ? call.to : '?' }}</div></td>
-                    <td class="visible-xs logs-calls-list-from">
+                    <td class="logs-calls-list-from hidden-xs"><div class="text-center">{{ call.from ? call.from : '?' }}</div></td>
+                    <td class="logs-calls-list-to hidden-xs"><div class="text-center">{{ call.to ? call.to : '?' }}</div></td>
+                    <td class="logs-calls-list-from visible-xs">
                         <div class="text-center">{{ call.to ? call.to : '?' }}</div>
-                        <div class="text-center">{{ call.from ? call.from : '?' }}</div></td>
+                        <div class="text-center">{{ call.from ? call.from : '?' }}</div>
+                    </td>
                     <td class="hidden-xs"><div class="text-center" uib-tooltip="{{ call.direction }}"><i ng-class="call.direction == 'inbound' ? 'fa fa-sign-in' : (call.direction == 'outbound-api' ? 'fa fa-sign-out' : 'fa fa-cloud')"></i><!-- {{ call.direction ? call.direction : '?' }} --></div></td>
                     <td class="hidden-xs"><div class="text-center">{{ call.status ? call.status : '?' | lowercase }}</div></td>
                     <td class="visible-xs logs-calls-list-direction">
