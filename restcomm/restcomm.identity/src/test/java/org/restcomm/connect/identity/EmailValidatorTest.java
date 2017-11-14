@@ -29,18 +29,23 @@ import org.junit.Test;
 public class EmailValidatorTest {
     @Test
     public void emailValidationTest() {
-        Assert.assertFalse(EmailValidator.isValidEmailFormat("1234"));
-        Assert.assertFalse(EmailValidator.isValidEmailFormat("asdf123"));
-        Assert.assertFalse(EmailValidator.isValidEmailFormat("asd@123"));
-        Assert.assertFalse(EmailValidator.isValidEmailFormat("γιωργος123#!@"));
-        Assert.assertFalse(EmailValidator.isValidEmailFormat("\"Test email\"@meail.com"));
+        Assert.assertFalse(EmailValidator.isValidEmailFormat("user"));
+        Assert.assertFalse(EmailValidator.isValidEmailFormat("user.email"));
+        Assert.assertFalse(EmailValidator.isValidEmailFormat("user@.email"));
         Assert.assertFalse(EmailValidator.isValidEmailFormat("user@.email.com"));
-        Assert.assertFalse(EmailValidator.isValidEmailFormat("Test email <test-user@email.com>"));
-        Assert.assertFalse(EmailValidator.isValidEmailFormat("123.test.email@email.test.com"));
+        Assert.assertFalse(EmailValidator.isValidEmailFormat("user@email.c"));
+        Assert.assertFalse(EmailValidator.isValidEmailFormat(".user@email.c"));
+        Assert.assertFalse(EmailValidator.isValidEmailFormat("user()@email.c"));
+        Assert.assertFalse(EmailValidator.isValidEmailFormat("user!!@email.c"));
+        Assert.assertFalse(EmailValidator.isValidEmailFormat("test..user@email"));
+        Assert.assertFalse(EmailValidator.isValidEmailFormat("test user@email.com"));
+        Assert.assertFalse(EmailValidator.isValidEmailFormat("user@email@test.com"));
+        Assert.assertFalse(EmailValidator.isValidEmailFormat("user@email.2j"));
 
-        Assert.assertTrue(EmailValidator.isValidEmailFormat("testemail@127.0.0.1"));
         Assert.assertTrue(EmailValidator.isValidEmailFormat("test.email@email.test.com"));
         Assert.assertTrue(EmailValidator.isValidEmailFormat("test-email@email-test.com"));
         Assert.assertTrue(EmailValidator.isValidEmailFormat("testemail@email.com"));
+        Assert.assertTrue(EmailValidator.isValidEmailFormat("user+100@email.com"));
+        Assert.assertTrue(EmailValidator.isValidEmailFormat("user-100@email-test.com"));
     }
 }
