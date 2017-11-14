@@ -617,6 +617,7 @@ public class UssdCall extends RestcommUntypedActor {
                 buffer.append(id.toString());
                 final URI uri = URI.create(buffer.toString());
                 builder.setUri(uri);
+                builder.setType(type);
                 outgoingCallRecord = builder.build();
                 callDetailrecordsDao.addCallDetailRecord(outgoingCallRecord);
             }

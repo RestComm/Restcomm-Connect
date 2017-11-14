@@ -917,6 +917,7 @@ public final class Call extends RestcommUntypedActor {
                     builder.setCallPath(self().path().toString());
                     builder.setParentCallSid(parentCallSid);
                     outgoingCallRecord = builder.build();
+                    builder.setType(type);
                     recordsDao.addCallDetailRecord(outgoingCallRecord);
                 } else {
                     cdr.setStatus(external.name());
