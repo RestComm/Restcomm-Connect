@@ -1,9 +1,20 @@
 <div class="row accounts-tabs-mobile visible-xs">
-    <div class="col-xs-2 col-xs-offset-1"><a href="#/logs/calls"><i class="fa fa-phone" style="font-size: 1.5em;"></i></a></div>
-    <div class="col-xs-2"><a href="#/logs/messages"><i class="fa fa-comments-o" style="font-size: 1.5em;"></i></a></div>
-    <div class="col-xs-2"><a href="#/logs/recordings"><i class="fa fa-dot-circle-o" style="font-size: 1.5em;"></i> </a></div>
-    <div class="col-xs-2 active"><a href="#/logs/transcriptions"><i class="fa fa-file-text-o" style="font-size: 1.5em;"></i> </a></div>
-    <div class="col-xs-2"><a href="#/logs/notifications"><i class="fa fa-exclamation-circle" style="font-size: 1.5em;"></i> </a></div>
+    <div class="col-xs-2 col-xs-offset-1"><a href="#/logs/calls"><i class="fa fa-phone"></i></a></div>
+    <div class="col-xs-2"><a href="#/logs/messages"><i class="fa fa-comments-o"></i></a></div>
+    <div class="col-xs-2"><a href="#/logs/recordings"><i class="fa fa-dot-circle-o"></i> </a></div>
+    <div class="col-xs-2 active"><a href="#/logs/transcriptions"><i class="fa fa-file-text-o"></i> </a></div>
+    <div class="col-xs-2"><a href="#/logs/notifications"><i class="fa fa-exclamation-circle"></i> </a></div>
+</div>
+
+<div class="row text-center">
+    <div class="col-xs-8 col-xs-offset-2">
+        <h3 class="no-top-margin visible-xs">Transcriptions</h3>
+    </div>
+    <div class="col-xs-2" ng-show="showSearchToggle">
+        <button class="btn btn-link logs-search-toggle pull-right" ng-click="showSearch = !showSearch">
+            <i class="fa fa-search"></i><i class="fa fa-chevron-down" ng-hide="showSearch"></i><i class="fa fa-chevron-up" ng-show="showSearch"></i>
+        </button>
+    </div>
 </div>
 
 <div class="row">
@@ -15,8 +26,9 @@
         <div><a href="#/logs/notifications">Notifications</a></div>
     </div>
     <div class="col-md-10">
-        <form>
+        <form ng-show="!showSearchToggle || showSearch">
             <div class="row">
+                <div class="clearfix visible-xs">&nbsp;</div>
                 <div class="col-md-1 col-xs-6 logs-search-field">
                     <input type="text" class="form-control" placeholder="From" ng-model="search.from" disabled />
                 </div>
@@ -29,15 +41,17 @@
                     <input type="date" class="form-control logs-search-date" placeholder="End Date" ng-model="search.end_time" />
                 </div>
                 <div class="clearfix visible-xs">&nbsp;</div>
-                <div class="col-md-4  col-xs-6 logs-search-field">
+                <div class="col-md-4 col-xs-10 logs-search-field">
                     <input type="text" class="form-control" placeholder="Transcription Text" ng-model="search.transcription_text" />
                 </div>
-                <div class="col-md-1  col-xs-6 logs-search-field">
+                <div class="col-md-1 col-xs-2 logs-search-field">
                     <button class="logs-search-button" type="submit" ng-click="getTranscriptionsList()"><i class="fa fa-search"></i> </button>
                 </div>
             </div>
+
+            <hr class="hidden-xs small">
+            <br class="visible-xs"><br class="visible-xs">
         </form>
-        <hr>
 
         <div ng-hide="!transcriptionsLogsList || (transcriptionsLogsList | filter:query).length > 0" class="jumbotron rc-no-items">
             <h1><i class="fa fa-file-text-o"></i> </h1>
@@ -46,48 +60,69 @@
         </div>
 
         <div class="row">
-            <table ng-show="(transcriptionsLogsList | filter:query).length > 0" class="table table-hover rc-list logs-transcriptions-list">
-                <thead>
-                <th class="logs-transcriptions-list-date visible-xs">Date</span></th>
-                <th class="logs-transcriptions-list-duration visible-xs">Direction<br>Status</th>
-                <th class="logs-transcriptions-list-download visible-xs">Duration<br>Price</th>
+            <div class="col-md-12">
+                <table ng-show="(transcriptionsLogsList | filter:query).length > 0" class="table table-hover rc-list logs-transcriptions-list">
+                    <thead>
+                    <th class="logs-transcriptions-list-date visible-xs">Date</span></th>
+                    <th class="logs-transcriptions-list-status visible-xs">Status<br>Duration</th>
+                    <th class="logs-transcriptions-list-recording-sid visible-xs">Recording SID<br>Text</th>
 
-                <th class="logs-transcriptions-list-date hidden-xs">Date</th>
-                <th class="logs-transcriptions-list-status hidden-xs">Status</th>
-                <th class="logs-transcriptions-list-duration hidden-xs">Duration</th>
-                <th class="logs-transcriptions-list-recording-sid hidden-xs">Recording SID</th>
-                <th class="logs-transcriptions-list-text hidden-xs">Text</th>
-                </thead>
-                <tbody>
-                <tr ng-repeat="transcription in filtered = (transcriptionsLogsList | filter:query | orderBy:sort:reverse)">
-                    <td class="logs-transcriptions-list-date"><a href="" ng-click="showTranscriptionDetailsModal(transcription)">{{ transcription.date_created | toDate:'yyyy-MM-dd HH:mm:ss' }}</a></td>
-                    <td class="logs-transcriptions-list-status"><div class="text-center">{{ transcription.status ? transcription.status : '?' }}</div></td>
-                    <td class="logs-transcriptions-list-duration"><div class="text-center">{{ transcription.duration ? transcription.duration : '?' }}s</div></td>
-                    <td class="logs-transcriptions-list-recording-sid"><div class="text-center fit-to-size"><a href="/restcomm/2012-04-24/Accounts/{{ transcription.account_sid }}/Transcriptions/{{ transcription.sid }}">{{ transcription.recording_sid }}</a></div></td>
-                    <td class="logs-transcriptions-list-text"><div class="text-center fit-to-size" title="{{ transcription.transcription_text }}">{{ transcription.transcription_text.length > 35 ? (transcription.transcription_text | limitTo:32) + '...' : transcription.transcription_text }}</div></td>
-                </tr>
-                </tbody>
-                <tfoot>
-                <td colspan="99">
-                    <div class="row">
-                        <div class="col-md-4">
-                            <small class="rc-list-summary">{{ start }} to {{ end }} of {{ totalTranscriptions }} Transcription{{ totalTranscriptions == 1 ? "" : "s" }}</small>
+                    <th class="logs-transcriptions-list-date hidden-xs">Date</th>
+                    <th class="logs-transcriptions-list-status hidden-xs">Status</th>
+                    <th class="logs-transcriptions-list-duration hidden-xs">Duration</th>
+                    <th class="logs-transcriptions-list-recording-sid hidden-xs">Recording SID</th>
+                    <th class="logs-transcriptions-list-text hidden-xs">Text</th>
+                    </thead>
+                    <tbody>
+                    <tr ng-repeat="transcription in filtered = (transcriptionsLogsList | filter:query | orderBy:sort:reverse)">
+                        <td class="logs-transcriptions-list-date rc-list-date hidden-xs">
+                            <a href="" ng-click="showTranscriptionDetailsModal(transcription)">{{ transcription.date_created | toDate:'yyyy-MM-dd HH:mm:ss' }}</a>
+                        </td>
+                        <td class="logs-transcriptions-list-date rc-list-date visible-xs">
+                            <a href="" ng-click="showTranscriptionDetailsModal(transcription)">
+                                <div>{{ transcription.date_created | toDate:'yyyy-MM-dd' }}</div>
+                                <div>{{ transcription.date_created | toDate:'HH:mm:ss' }}</div>
+                            </a>
+                        </td>
+
+                        <td class="logs-transcriptions-list-status hidden-xs"><div class="text-center">{{ transcription.status ? transcription.status : '?' }}</div></td>
+                        <td class="logs-transcriptions-list-duration hidden-xs"><div class="text-center">{{ transcription.duration ? transcription.duration : '?' }}s</div></td>
+                        <td class="logs-transcriptions-list-recording-sid hidden-xs"><div class="text-center fit-to-size"><a href="/restcomm/2012-04-24/Accounts/{{ transcription.account_sid }}/Transcriptions/{{ transcription.sid }}">{{ transcription.recording_sid }}</a></div></td>
+                        <td class="logs-transcriptions-list-text hidden-xs"><div class="text-center fit-to-size" title="{{ transcription.transcription_text }}">{{ transcription.transcription_text.length > 35 ? (transcription.transcription_text | limitTo:32) + '...' : transcription.transcription_text }}</div></td>
+
+                        <td class="logs-transcriptions-list-status visible-xs">
+                            <div class="text-center">{{ transcription.status ? transcription.status : '?' }}</div>
+                            <div class="text-center">{{ transcription.duration ? transcription.duration : '?' }}s</div>
+                        </td>
+                        <td class="logs-transcriptions-list-recording-sid visible-xs">
+                            <div class="text-center fit-to-size"><a href="/restcomm/2012-04-24/Accounts/{{ transcription.account_sid }}/Transcriptions/{{ transcription.sid }}">{{ transcription.recording_sid }}</a></div>
+                            <div class="text-center fit-to-size" title="{{ transcription.transcription_text }}">{{ transcription.transcription_text.length > 35 ? (transcription.transcription_text | limitTo:32) + '...' : transcription.transcription_text }}</div>
+                        </td>
+                    </tr>
+                    </tbody>
+                    <tfoot>
+                    <td colspan="99">
+                        <div class="row">
+                            <div class="col-md-4">
+                                <small class="rc-list-summary">{{ start }} to {{ end }} of {{ totalTranscriptions }} Transcription{{ totalTranscriptions == 1 ? "" : "s" }}</small>
+                            </div>
+                            <div class="col-md-4">
+                                <form class="form-inline text-center">
+                                    <div class="btn-group buttons-per-page">
+                                        <button type="button" class="btn btn-default btn-sm" ng-class="{'active':entryLimit === 10}" ng-click="setEntryLimit(10)">10</button>
+                                        <button type="button" class="btn btn-default btn-sm" ng-class="{'active':entryLimit === 25}" ng-click="setEntryLimit(25)">25</button>
+                                        <button type="button" class="btn btn-default btn-sm" ng-class="{'active':entryLimit === 50}" ng-click="setEntryLimit(50)">50</button>
+                                    </div>
+                                </form>
+                            </div>
+                            <div class="col-md-4">
+                                <uib-pagination class="pagination pagination-sm pull-right" total-items="totalTranscriptions" items-per-page="entryLimit" ng-model="currentPage" ng-change="pageChanged()" data-boundary-links="true" data-current-page="currentPage" max-size="maxSize" previous-text="<" next-text=">" first-text="<<" last-text=">>"></uib-pagination>
+                            </div>
                         </div>
-                        <div class="col-md-4">
-                            <form class="form-inline text-center">
-                                <div class="btn-group buttons-per-page">
-                                    <button type="button" class="btn btn-default btn-sm" ng-class="{'active':entryLimit === 10}" ng-click="setEntryLimit(10)">10</button>
-                                    <button type="button" class="btn btn-default btn-sm" ng-class="{'active':entryLimit === 25}" ng-click="setEntryLimit(25)">25</button>
-                                    <button type="button" class="btn btn-default btn-sm" ng-class="{'active':entryLimit === 50}" ng-click="setEntryLimit(50)">50</button>
-                                </div>
-                            </form>
-                        </div>
-                        <div class="col-md-4">
-                            <uib-pagination class="pagination pagination-sm pull-right" total-items="totalTranscriptions" items-per-page="entryLimit" ng-model="currentPage" ng-change="pageChanged()" data-boundary-links="true" data-current-page="currentPage" max-size="maxSize" previous-text="<" next-text=">" first-text="<<" last-text=">>"></uib-pagination>
-                        </div>
-                    </div>
-                </tfoot>
-            </table>
+                    </td>
+                    </tfoot>
+                </table>
+            </div>
         </div>
     </div>
 </div>

@@ -7,7 +7,10 @@ rcMod.controller('LogsMessagesCtrl', function ($scope, $resource, $timeout, $uib
   $scope.Math = window.Math;
 
   $scope.sid = SessionService.get("sid");
-  
+
+  // search toggle only on mobile view
+  $scope.showSearchToggle = window.outerWidth <= 768;
+
   // default search values
   $scope.search = {
     local_only: true,

@@ -1,9 +1,20 @@
 <div class="row accounts-tabs-mobile visible-xs">
-    <div class="col-xs-2 col-xs-offset-1"><a href="#/logs/calls"><i class="fa fa-phone" style="font-size: 1.5em;"></i></a></div>
-    <div class="col-xs-2 active"><a href="#/logs/messages"><i class="fa fa-comments-o" style="font-size: 1.5em;"></i></a></div>
-    <div class="col-xs-2"><a href="#/logs/recordings"><i class="fa fa-dot-circle-o" style="font-size: 1.5em;"></i> </a></div>
-    <div class="col-xs-2"><a href="#/logs/transcriptions"><i class="fa fa-file-text-o" style="font-size: 1.5em;"></i> </a></div>
-    <div class="col-xs-2"><a href="#/logs/notifications"><i class="fa fa-exclamation-circle" style="font-size: 1.5em;"></i> </a></div>
+    <div class="col-xs-2 col-xs-offset-1"><a href="#/logs/calls"><i class="fa fa-phone"></i></a></div>
+    <div class="col-xs-2 active"><a href="#/logs/messages"><i class="fa fa-comments-o"></i></a></div>
+    <div class="col-xs-2"><a href="#/logs/recordings"><i class="fa fa-dot-circle-o"></i> </a></div>
+    <div class="col-xs-2"><a href="#/logs/transcriptions"><i class="fa fa-file-text-o"></i> </a></div>
+    <div class="col-xs-2"><a href="#/logs/notifications"><i class="fa fa-exclamation-circle"></i> </a></div>
+</div>
+
+<div class="row text-center">
+    <div class="col-xs-8 col-xs-offset-2">
+        <h3 class="no-top-margin visible-xs">Messages</h3>
+    </div>
+    <div class="col-xs-2" ng-show="showSearchToggle">
+        <button class="btn btn-link logs-search-toggle pull-right" ng-click="showSearch = !showSearch">
+            <i class="fa fa-search"></i><i class="fa fa-chevron-down" ng-hide="showSearch"></i><i class="fa fa-chevron-up" ng-show="showSearch"></i>
+        </button>
+    </div>
 </div>
 
 <div class="row">
@@ -15,8 +26,9 @@
         <div><a href="#/logs/notifications">Notifications</a></div>
     </div>
     <div class="col-md-10">
-        <form>
+        <form ng-show="!showSearchToggle || showSearch">
             <div class="row">
+                <div class="clearfix visible-xs">&nbsp;</div>
                 <div class="col-md-2 col-xs-6 logs-search-field">
                     <input type="text" class="form-control" placeholder="From" ng-model="search.from" />
                 </div>
@@ -25,19 +37,21 @@
                 </div>
                 <div class="clearfix visible-xs">&nbsp;</div>
                 <div class="col-md-5 col-xs-12 logs-search-field">
-                    <input type="date" class="form-control logs-search-date" placeholder="Start Date" ng-model="search.start_time" />
+                    <input type="date" class="form-control logs-search-date" placeholder="Start Date"  ng-model="search.start_time" />
                     <input type="date" class="form-control logs-search-date" placeholder="End Date" ng-model="search.end_time" />
                 </div>
                 <div class="clearfix visible-xs">&nbsp;</div>
-                <div class="col-md-2  col-xs-6 logs-search-field">
+                <div class="col-md-2  col-xs-10 logs-search-field">
                     <input type="text" class="form-control" placeholder="Message Body" ng-model="search.body" />
                 </div>
-                <div class="col-md-1  col-xs-6 logs-search-field">
+                <div class="col-md-1  col-xs-2 logs-search-field">
                     <button class="logs-search-button" type="submit" ng-click="getMessagesList()"><i class="fa fa-search"></i> </button>
                 </div>
             </div>
+
+            <hr class="hidden-xs small">
+            <br class="visible-xs"><br class="visible-xs">
         </form>
-        <hr>
 
         <div ng-hide="!messagesLogsList || (messagesLogsList | filter:query).length > 0" class="jumbotron rc-no-items">
             <h1><i class="fa fa-comment-o"></i> </h1>
@@ -46,49 +60,79 @@
         </div>
 
         <div class="row">
-            <table ng-show="(messagesLogsList | filter:query).length > 0" class="table table-hover rc-list logs-messages-list">
-                <thead class="logs-table-header">
-                <th class="logs-messages-list-date">Date</th>
-                <th class="logs-messages-list-from">From</th>
-                <th class="logs-messages-list-to">To</th>
-                <th class="logs-messages-list-direction">Direction</th>
-                <th class="logs-messages-list-status">Status</th>
-                <th class="logs-messages-list-body">Body</th>
-                <th class="logs-messages-list-cost">Cost</th>
-                </thead>
-                <tbody>
-                    <tr ng-repeat="message in filtered = (messagesLogsList | filter:query | orderBy:sort:reverse)" class="logs-table-row">
-                        <td class="logs-messages-list-date"><a href="" ng-click="showMessageDetailsModal(message)">{{ message.date_created | toDate:'yyyy-MM-dd HH:mm:ss' }}</a></td>
-                        <td class="logs-messages-list-from"><div class="text-center">{{ message.from ? message.from : '?' }}</div></td>
-                        <td class="logs-messages-list-to"><div class="text-center">{{ message.to ? message.to : '?' }}</div></td>
-                        <td class="logs-messages-list-direction"><div class="text-center" uib-tooltip="{{ message.direction }}"><i ng-class="message.direction == 'inbound' ? 'fa fa-sign-in' : (message.direction == 'outbound-call' ? 'fa fa-cloud' : (message.direction == 'outbound-reply' ? 'fa fa-reply' : 'fa fa-code'))"></i></div></td>
-                        <td class="logs-messages-list-status"><div class="text-center">{{ message.status ? message.status : '?' }}</div></td>
-                        <td class="logs-messages-list-body"><div class="text-center fit-to-size" uib-tooltip="{{ message.body }}">{{ message.body ? (message.body.length > 15 ? (message.body | limitTo:12) + '...' : message.body) : '. . .' }}</div></td>
-                        <td class="logs-messages-list-cost"><div class="text-center">$ {{ message.price ? message.price : '0.00' }}</div></td>
-                    </tr>
-                </tbody>
-                <tfoot>
-                    <td colspan="99">
-                        <div class="row">
-                            <div class="col-md-4">
-                                <small class="rc-list-summary">{{ start }} to {{ end }} of {{ totalMessages }} Message{{ totalMessages == 1 ? "" : "s" }}</small>
-                            </div>
-                            <div class="col-md-4">
-                            <form class="form-inline text-center">
-                                <div class="btn-group buttons-per-page">
-                                    <button type="button" class="btn btn-default btn-sm" ng-class="{'active':entryLimit === 10}" ng-click="setEntryLimit(10)">10</button>
-                                    <button type="button" class="btn btn-default btn-sm" ng-class="{'active':entryLimit === 25}" ng-click="setEntryLimit(25)">25</button>
-                                    <button type="button" class="btn btn-default btn-sm" ng-class="{'active':entryLimit === 50}" ng-click="setEntryLimit(50)">50</button>
+            <div class="col-md-12">
+                <table ng-show="(messagesLogsList | filter:query).length > 0" class="table table-hover rc-list logs-messages-list">
+                    <thead class="logs-table-header">
+                    <th class="logs-messages-list-date hidden-xs">Date</th>
+                    <th class="logs-messages-list-from hidden-xs">From</th>
+                    <th class="logs-messages-list-to hidden-xs">To</th>
+                    <th class="logs-messages-list-direction hidden-xs">Direction</th>
+                    <th class="logs-messages-list-status hidden-xs">Status</th>
+                    <th class="logs-messages-list-body hidden-xs">Body</th>
+                    <th class="logs-messages-list-cost hidden-xs">Cost</th>
+
+                    <th class="logs-messages-list-date visible-xs">Date</th>
+                    <th class="logs-messages-list-from visible-xs">From<br>To</th>
+                    <th class="logs-messages-list-direction visible-xs">Direction<br>Status</th>
+                    <th class="logs-messages-list-body visible-xs">Body<br>Cost</th>
+                    </thead>
+                    <tbody>
+                        <tr ng-repeat="message in filtered = (messagesLogsList | filter:query | orderBy:sort:reverse)" class="logs-table-row">
+                            <td class="logs-messages-list-date rc-list-date hidden-xs">
+                                <a href="" ng-click="showMessageDetailsModal(message)">{{ message.date_created | toDate:'yyyy-MM-dd HH:mm:ss' }}</a>
+                            </td>
+                            <td class="logs-messages-list-date rc-list-date visible-xs">
+                                <a href="" ng-click="showMessageDetailsModal(message)">
+                                    <div>{{ message.date_created | toDate:'yyyy-MM-dd' }}</div>
+                                    <div>{{ message.date_created | toDate:'HH:mm:ss' }}</div>
+                                </a>
+                            </td>
+
+                            <td class="logs-messages-list-from hidden-xs"><div class="text-center">{{ message.from ? message.from : '?' }}</div></td>
+                            <td class="logs-messages-list-to hidden-xs"><div class="text-center">{{ message.to ? message.to : '?' }}</div></td>
+                            <td class="logs-messages-list-from visible-xs">
+                                <div class="text-center">{{ message.to ? message.to : '?' }}</div>
+                                <div class="text-center">{{ message.from ? message.from : '?' }}</div>
+                            </td>
+
+                            <td class="logs-messages-list-direction hidden-xs"><div class="text-center" uib-tooltip="{{ message.direction }}"><i ng-class="message.direction == 'inbound' ? 'fa fa-sign-in' : (message.direction == 'outbound-call' ? 'fa fa-cloud' : (message.direction == 'outbound-reply' ? 'fa fa-reply' : 'fa fa-code'))"></i></div></td>
+                            <td class="logs-messages-list-status hidden-xs"><div class="text-center">{{ message.status ? message.status : '?' }}</div></td>
+                            <td class="logs-messages-list-direction visible-xs">
+                                <div class="text-center"><i ng-class="message.direction == 'inbound' ? 'fa fa-sign-in' : (message.direction == 'outbound-call' ? 'fa fa-cloud' : (message.direction == 'outbound-reply' ? 'fa fa-reply' : 'fa fa-code'))"></i></div>
+                                <div class="text-center">{{ message.status ? message.status : '?' }}</div>
+                            </td>
+
+                            <td class="logs-messages-list-body hidden-xs"><div class="text-center fit-to-size" uib-tooltip="{{ message.body }}">{{ message.body }}</div></td>
+                            <td class="logs-messages-list-cost hidden-xs"><div class="text-center">$ {{ message.price ? message.price : '0.00' }}</div></td>
+                            <td class="logs-messages-list-body visible-xs">
+                                <div class="text-center"><div class="text-center fit-to-size" uib-tooltip="{{ message.body }}">{{ message.body }}</div></div>
+                                <div class="text-center">$ {{ message.price ? message.price : '0.00' }}</div>
+                            </td>
+                        </tr>
+                    </tbody>
+                    <tfoot>
+                        <td colspan="99">
+                            <div class="row">
+                                <div class="col-md-4">
+                                    <small class="rc-list-summary">{{ start }} to {{ end }} of {{ totalMessages }} Message{{ totalMessages == 1 ? "" : "s" }}</small>
                                 </div>
-                            </form>
+                                <div class="col-md-4">
+                                <form class="form-inline text-center">
+                                    <div class="btn-group buttons-per-page">
+                                        <button type="button" class="btn btn-default btn-sm" ng-class="{'active':entryLimit === 10}" ng-click="setEntryLimit(10)">10</button>
+                                        <button type="button" class="btn btn-default btn-sm" ng-class="{'active':entryLimit === 25}" ng-click="setEntryLimit(25)">25</button>
+                                        <button type="button" class="btn btn-default btn-sm" ng-class="{'active':entryLimit === 50}" ng-click="setEntryLimit(50)">50</button>
+                                    </div>
+                                </form>
+                                </div>
+                                <div class="col-md-4">
+                                  <uib-pagination class="pagination pagination-sm pull-right" total-items="totalMessages" items-per-page="entryLimit" ng-change="pageChanged()" ng-model="currentPage" data-boundary-links="true" data-current-page="currentPage" max-size="maxSize" previous-text="<" next-text=">" first-text="<<" last-text=">>"></uib-pagination>
+                                </div>
                             </div>
-                            <div class="col-md-4">
-                              <uib-pagination class="pagination pagination-sm pull-right" total-items="totalMessages" items-per-page="entryLimit" ng-change="pageChanged()" ng-model="currentPage" data-boundary-links="true" data-current-page="currentPage" max-size="maxSize" previous-text="<" next-text=">" first-text="<<" last-text=">>"></uib-pagination>
-                            </div>
-                        </div>
-                    </td>
-                </tfoot>
-            </table>
+                        </td>
+                    </tfoot>
+                </table>
+            </div>
         </div>
     </div>
 </div>

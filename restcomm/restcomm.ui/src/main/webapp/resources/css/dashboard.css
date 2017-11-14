@@ -570,6 +570,7 @@ form[role=login] input:-webkit-autofill:focus{
     padding: 20px 20px;
     font-weight: normal;
     text-align: center;
+    font-size: 1.5em;
 }
 
 .accounts-tabs-mobile .active  {
@@ -818,6 +819,20 @@ form[role=login] input:-webkit-autofill:focus{
     opacity: 0.33;
 }
 
+@media(max-width:768px) {
+    .rc-list {
+        font-size: 1.1em;
+    }
+}
+
+.rc-list .rc-list-date.visible-xs > a > div {
+    line-height: 1.75em;
+    font-size: 0.75em;
+}
+.rc-list .rc-list-date.visible-xs > a > div + div {
+    font-size: 1em;
+}
+
 .rc-no-items {
     margin-top: 100px;
     background-color: white;
@@ -829,6 +844,12 @@ form[role=login] input:-webkit-autofill:focus{
 
 .rc-no-items > h1 > i {
     font-size: 3em;
+}
+
+@media(max-width:768px) {
+    .rc-no-items {
+        margin-top: 0;
+    }
 }
 
 .clients-list {
@@ -880,6 +901,74 @@ form[role=login] input:-webkit-autofill:focus{
 
 }
 
+/* -- Logs ------------------------------------------------------------------ */
+
+.logs-search-toggle {
+    color: #6d6e70 !important;
+    margin-bottom: 10px;
+}
+
+.logs-search-date {
+    width: calc(50% - 7px);
+    display: inline-block;
+}
+.logs-search-date + .logs-search-date {
+    margin-left: 10px;
+}
+
+.logs-search-field {
+    padding: 0 5px;
+}
+
+.logs-search-checkbox {
+    margin-top: 7px;
+}
+
+.logs-search-checkbox input[type="checkbox"] {
+    font-size: 2em;
+}
+
+.logs-search-checkbox label {
+    font-weight: normal;
+    font-size: 1em;
+}
+
+@media(max-width:768px) {
+    .logs-search-checkbox input[type="checkbox"] {
+    }
+
+    .logs-search-checkbox label {
+        font-weight: normal;
+        font-size: 1em;
+    }
+}
+
+.logs-search-field input,
+.logs-search-field select {
+    /*-webkit-appearance: none;*/
+}
+
+.logs-search-button {
+    padding: 5px 10px;
+    border-radius: 10px;
+    font-size: 2em;
+    background-color: #48A6AC;
+    color: white;
+    border: none;
+    top: 0;
+    position: absolute;
+    right: 0;
+    z-index: 1; /* needed for mobile, FIXME */
+}
+
+@media(max-width:768px) {
+    .logs-search-button {
+        padding: 1px 7px 2px 7px;
+        top: -4px;
+        right: 10px;
+    }
+}
+
 /* -- Logs / Calls ---------------------------------------------------------- */
 
 .logs-calls-list {
@@ -926,35 +1015,7 @@ form[role=login] input:-webkit-autofill:focus{
     margin-top: -18px;
 }
 
-.logs-search-date {
-    width: calc(50% - 7px);
-    display: inline-block;
-}
-.logs-search-date + .logs-search-date {
-    margin-left: 10px;
-}
-
-.logs-search-field {
-    padding: 0 5px;
-}
-
-.logs-search-button {
-    padding: 5px 10px;
-    border-radius: 10px;
-    font-size: 2em;
-    background-color: #48A6AC;
-    color: white;
-    border: none;
-    top: 0;
-    position: absolute;
-    right: 0;
-}
-
 @media(max-width:768px) {
-    .logs-calls-list {
-        font-size: 1.1em;
-    }
-
     .logs-calls-list.logs-calls-list-extra tr {
         height: 5em;
     }
@@ -978,17 +1039,11 @@ form[role=login] input:-webkit-autofill:focus{
 
     .logs-calls-list .logs-calls-list-accountsid {
         position: absolute;
-        margin-top: -16px;
+        margin-top: 0px;
     }
 
     .logs-calls-list div+div {
         padding-top: 3px;
-    }
-
-    .logs-search-button {
-        padding: 1px 7px 2px 7px;
-        top: -4px;
-        right: 10px;
     }
 }
 
@@ -1031,6 +1086,24 @@ form[role=login] input:-webkit-autofill:focus{
     text-align: center;
 }
 
+@media(max-width:768px) {
+    .logs-messages-list .logs-messages-list-date {
+        width: 25%;
+        font-size: 1em;
+    }
+
+    .logs-messages-list .logs-messages-list-from {
+        width: 35%;
+    }
+
+    .logs-messages-list .logs-messages-list-direction {
+        width: 20%;
+    }
+
+    .logs-messages-list .logs-messages-list-body {
+        width: 30%;
+    }
+}
 
 /* -- Logs / Recordings ----------------------------------------------------- */
 
@@ -1066,6 +1139,18 @@ form[role=login] input:-webkit-autofill:focus{
     text-align: center;
 }
 
+@media(max-width:768px) {
+    .logs-recordings-list .logs-recordings-list-date {
+        width: 25%;
+        font-size: 1em;
+    }
+
+    .logs-recordings-list .logs-recordings-list-duration {
+        width: 75%;
+        text-align: left;
+    }
+}
+
 /* -- Logs / Transcriptions ------------------------------------------------- */
 
 .logs-transcriptions-list {
@@ -1095,6 +1180,21 @@ form[role=login] input:-webkit-autofill:focus{
     text-align: center;
 }
 
+@media(max-width:768px) {
+    .logs-transcriptions-list .logs-transcriptions-list-date {
+        width: 25%;
+        font-size: 1em;
+    }
+
+    .logs-transcriptions-list .logs-transcriptions-list-status {
+        width: 30%;
+    }
+
+    .logs-transcriptions-list .logs-transcriptions-list-recording-sid {
+        width: 45%;
+    }
+}
+
 /* -- Logs / Notifications -------------------------------------------------- */
 
 .logs-notifications-list {
@@ -1122,6 +1222,21 @@ form[role=login] input:-webkit-autofill:focus{
 .logs-notifications-list .logs-notifications-list-text {
     width: 30%;
     text-align: center;
+}
+
+@media(max-width:768px) {
+    .logs-notifications-list .logs-notifications-list-date {
+        width: 25%;
+        font-size: 1em;
+    }
+
+    .logs-notifications-list .logs-notifications-list-type {
+        width: 20%;
+    }
+
+    .logs-notifications-list .logs-notifications-list-call-sid {
+        width: 55%;
+    }
 }
 
 /* -- Applications -----------------------------------------------------*/
