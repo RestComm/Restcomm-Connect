@@ -159,7 +159,8 @@ muted BOOLEAN,
 start_conference_on_enter BOOLEAN,
 end_conference_on_exit BOOLEAN,
 on_hold BOOLEAN,
-ms_id VARCHAR(34)
+ms_id VARCHAR(34),
+call_type VARCHAR(34)
 );
 
 CREATE TABLE restcomm_conference_detail_records (
