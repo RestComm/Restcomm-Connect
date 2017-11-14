@@ -46,6 +46,7 @@ import org.joda.time.DateTime;
 import org.mobicents.javax.servlet.sip.SipSessionExt;
 import org.restcomm.connect.commons.configuration.RestcommConfiguration;
 import org.restcomm.connect.commons.dao.Sid;
+import org.restcomm.connect.commons.telephony.CreateCallType;
 import org.restcomm.connect.commons.util.DNSUtils;
 import org.restcomm.connect.dao.CallDetailRecordsDao;
 import org.restcomm.connect.dao.DaoManager;
@@ -191,6 +192,7 @@ import org.restcomm.connect.telephony.api.CallStateChanged;
                  builder.setUri(uri);
 
                  CallDetailRecordsDao records = daoManager.getCallDetailRecordsDao();
+                 builder.setType(CreateCallType.CLIENT);
                  CallDetailRecord callRecord = builder.build();
                  records.addCallDetailRecord(callRecord);
 
@@ -348,6 +350,7 @@ import org.restcomm.connect.telephony.api.CallStateChanged;
              buffer.append(fromClient.getSid().toString());
              final URI uri = URI.create(buffer.toString());
              builder.setUri(uri);
+             builder.setType(CreateCallType.CLIENT);
 
              CallDetailRecordsDao records = daoManager.getCallDetailRecordsDao();
              CallDetailRecord callRecord = builder.build();

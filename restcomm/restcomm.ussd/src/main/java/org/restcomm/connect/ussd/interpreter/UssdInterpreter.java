@@ -722,6 +722,7 @@ public class UssdInterpreter extends RestcommUntypedActor {
                 final URI uri = URI.create(buffer.toString());
                 builder.setUri(uri);
                 builder.setCallPath(ussdCall.path().toString());
+                builder.setType(callInfo.type());
                 callRecord = builder.build();
                 records.addCallDetailRecord(callRecord);
             }
