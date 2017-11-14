@@ -38,6 +38,7 @@ import org.joda.time.format.DateTimeFormat;
 import org.joda.time.format.DateTimeFormatter;
 import org.restcomm.connect.commons.annotations.concurrency.ThreadSafe;
 import org.restcomm.connect.commons.dao.Sid;
+import org.restcomm.connect.commons.telephony.CreateCallType;
 import org.restcomm.connect.dao.CallDetailRecordsDao;
 import org.restcomm.connect.dao.DaoUtils;
 import org.restcomm.connect.dao.entities.CallDetailRecord;
@@ -344,9 +345,10 @@ public final class MybatisCallDetailRecordsDao implements CallDetailRecordsDao {
         final Boolean startConferenceOnEnter = DaoUtils.readBoolean(map.get("start_conference_on_enter"));
         final Boolean endConferenceOnExit = DaoUtils.readBoolean(map.get("end_conference_on_exit"));
         final Boolean onHold = DaoUtils.readBoolean(map.get("on_hold"));
+        final CreateCallType type = CreateCallType.valueOf((String)map.get("call_type"));
         return new CallDetailRecord(sid, instanceId, parentCallSid, conferenceSid, dateCreated, dateUpdated, accountSid, to, from, phoneNumberSid, status,
                 startTime, endTime, duration, price, priceUnit, direction, answeredBy, apiVersion, forwardedFrom, callerName,
-                uri, callPath, ringDuration, muted, startConferenceOnEnter, endConferenceOnExit, onHold, msId);
+                uri, callPath, ringDuration, muted, startConferenceOnEnter, endConferenceOnExit, onHold, msId, type);
     }
 
     private Map<String, Object> toMap(final CallDetailRecord cdr) {
@@ -379,6 +381,7 @@ public final class MybatisCallDetailRecordsDao implements CallDetailRecordsDao {
         map.put("end_conference_on_exit", cdr.isEndConferenceOnExit());
         map.put("on_hold", cdr.isOnHold());
         map.put("ms_id", cdr.getMsId());
+        map.put("call_type", cdr.getType());
         return map;
     }
 }

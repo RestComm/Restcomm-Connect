@@ -25,6 +25,7 @@ import java.util.Date;
 import java.util.List;
 
 import org.restcomm.connect.commons.annotations.concurrency.Immutable;
+import org.restcomm.connect.commons.telephony.CreateCallType;
 
 /**
  * @author <a href="mailto:gvagenas@gmail.com">gvagenas</a>
@@ -45,14 +46,15 @@ public class CallDetailRecordFilter {
     private final Integer limit;
     private final Integer offset;
     private final String instanceid;
+    private final CreateCallType callType;
 
     public CallDetailRecordFilter(String accountSid, List<String> accountSidSet, String recipient, String sender, String status, String startTime, String endTime,
-                                  String parentCallSid, String conferenceSid, Integer limit, Integer offset) throws ParseException {
-        this(accountSid, accountSidSet, recipient,sender,status,startTime,endTime,parentCallSid, conferenceSid, limit,offset,null);
+                                  String parentCallSid, String conferenceSid, Integer limit, Integer offset, CreateCallType type) throws ParseException {
+        this(accountSid, accountSidSet, recipient,sender,status,startTime,endTime,parentCallSid, conferenceSid, limit, offset, type, null);
     }
 
     public CallDetailRecordFilter(String accountSid, List<String> accountSidSet, String recipient, String sender, String status, String startTime, String endTime,
-                                  String parentCallSid, String conferenceSid, Integer limit, Integer offset, String instanceId) throws ParseException {
+                                  String parentCallSid, String conferenceSid, Integer limit, Integer offset, CreateCallType type, String instanceId) throws ParseException {
         this.accountSid = accountSid;
         this.accountSidSet = accountSidSet;
 
@@ -88,6 +90,11 @@ public class CallDetailRecordFilter {
             this.instanceid = instanceId;
         } else {
             this.instanceid = null;
+        }
+        if (type != null) {
+            this.callType = type;
+        } else {
+            this.callType = null;
         }
     }
 
@@ -133,6 +140,10 @@ public class CallDetailRecordFilter {
 
     public int getOffset() {
         return offset;
+    }
+
+    public CreateCallType getType() {
+        return callType;
     }
 
     public String getInstanceid() { return instanceid; }
