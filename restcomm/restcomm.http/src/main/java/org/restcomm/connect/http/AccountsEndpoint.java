@@ -63,9 +63,12 @@ import org.restcomm.connect.http.converter.AccountListConverter;
 import org.restcomm.connect.http.converter.RestCommResponseConverter;
 import org.restcomm.connect.http.exceptions.AccountAlreadyClosed;
 import org.restcomm.connect.http.exceptions.AuthorizationException;
+import org.restcomm.connect.http.exceptions.EmailAlreadyExisted;
 import org.restcomm.connect.http.exceptions.InsufficientPermission;
+import org.restcomm.connect.http.exceptions.InvalidEmailFormat;
 import org.restcomm.connect.http.exceptions.PasswordTooWeak;
 import org.restcomm.connect.http.exceptions.RcmlserverNotifyError;
+import org.restcomm.connect.identity.EmailValidator;
 import org.restcomm.connect.identity.passwords.PasswordValidator;
 import org.restcomm.connect.identity.passwords.PasswordValidatorFactory;
 import org.restcomm.connect.provisioning.number.api.PhoneNumberProvisioningManager;
@@ -461,7 +464,8 @@ public class AccountsEndpoint extends SecuredEndpoint {
      * @return
      * @throws AccountAlreadyClosed
      */
-    private Account prepareAccountForUpdate(final Account account, final MultivaluedMap<String, String> data) throws AccountAlreadyClosed, PasswordTooWeak {
+    private Account prepareAccountForUpdate(final Account account, final MultivaluedMap<String, String> data)
+            throws AccountAlreadyClosed, PasswordTooWeak, EmailAlreadyExisted, InvalidEmailFormat {
         Account result = account;
         boolean isPasswordReset = false;
         Account.Status newStatus = null;
@@ -506,12 +510,22 @@ public class AccountsEndpoint extends SecuredEndpoint {
                 } else
                     throw new AuthorizationException();
             }
-        } catch (AuthorizationException | AccountAlreadyClosed | PasswordTooWeak e) {
+            if (data.containsKey("EmailAddress")) {
+                String newEmailAddress = data.getFirst("EmailAddress").toLowerCase();
+                if (!EmailValidator.isValidEmailFormat(newEmailAddress)) {
+                    throw new InvalidEmailFormat();
+                }
+                if (accountsDao.getAccount(newEmailAddress) != null) {
+                    throw new EmailAlreadyExisted();
+                }
+                result = result.setEmailAddress(newEmailAddress);
+            }
+        } catch (AuthorizationException | AccountAlreadyClosed | PasswordTooWeak | EmailAlreadyExisted | InvalidEmailFormat e) {
             // some exceptions should reach outer layers and result in 403
             throw e;
         } catch (Exception e) {
             if (logger.isInfoEnabled()) {
-                logger.info("Exception during Account update: "+e.getStackTrace());
+                logger.info("Exception during Account update: " + e.getStackTrace());
             }
         }
         return result;
