@@ -519,7 +519,29 @@ curl -X GET  https://administrator%40company.com:77f8c12cc7b8f8423e5c38b03524916
 === Logic
 The following diagram depicts the main logic regarding incoming phone numbers, 
 and regular expressions during an actual call:
-plantuml::uml/incoming_number_logic.puml[format="png", align="center"]
+
+[plantuml,Regex Logic]
+....
+:Retrieve Number from DB (In IncomingOrganization);
+
+if (Number Matched?) then (yes)
+  :Trigger linked Application;
+else (no)
+  if (IncomingOrganization != null?) then (yes)
+    :Retrieve Regexes In IncomingOrganization;
+    :Sort Regexes by Length;
+    repeat
+      if (Number Matched?) then (yes)
+        :Trigger linked Application;
+      endif
+    repeat while (more regexes || !matched?)
+  else (no)
+    :No application found;
+  endif
+endif
+
+....
+
 
 As we can see, the perfect match against the incoming number will be attempted 
 first. Then, if no matching is found the regular expressions associated to the 
