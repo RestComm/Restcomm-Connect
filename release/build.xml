@@ -1,85 +1,50 @@
 <?xml version="1.0"?>
 <project basedir="." default="release" name="restcomm.release">
-  <property environment="sys"/>
-  <property location="${ant.file.restcomm.release}/../target" name="release.dir"/>
-  <property location="${ant.file.restcomm.release}/../target-tomcat" name="release.tomcat.dir"/>
-  <property location="${ant.file.restcomm.release}/../target-as7" name="release.as7.dir"/>
-  <property location="${ant.file.restcomm.release}/.." name="base.dir"/>
-  <property location="${release.dir}/docs" name="docs.dir"/>
-  <property location="${release.dir}/docs/restcomm" name="restcomm.docs.dir"/>
-  <property location="${release.tomcat.dir}/docs/restcomm" name="restcomm.docs.tomcat.dir"/>
-  <property location="${release.as7.dir}/docs/restcomm" name="restcomm.docs.as7.dir"/>
-  <property name="olympus.build" value="18"/>
-  <property location="${workspace.restcomm.dir}/configuration" name="configuration.directory"/>
-
-  <!--mobicents binaries versions-->
-  <property name="sipservlets-build" value="782"/>
-  <property name="restcomm-sipservlets-as7.version" value="3.1.${sipservlets-build}"/>
-  <!--<property name="jain-sip-ri.version" value="7.0.3.190" />-->
-  <property name="restcomm-media.version" value="6.0"/>
-  <property name="restcomm-media.build" value="23"/>
-  <!--property name="mobicents-diameter.version" value="6.1.2.GA" /-->
-
-  <!-- mobicents SIP Servlets 7.x on JBoss AS7-->
-  <property name="restcomm-sipservlets.as7.distro.version" value="${restcomm-sipservlets-as7.version}-jboss-as-7.2.0.Final"/>
-  <property name="restcomm-sipservlets.as7.download.distro.file" value="restcomm-sip-servlets-${restcomm-sipservlets.as7.distro.version}.zip"/>
-  <property name="restcomm-sipservlets.as7.download.url" value="https://mobicents.ci.cloudbees.com/job/RestcommSipServlets-Release/${sipservlets-build}/artifact/${restcomm-sipservlets.as7.download.distro.file}"/>
-  <property name="restcomm-sipservlets.as7.distro.zip.path" value="${checkout.dir}/${restcomm-sipservlets.as7.download.distro.file}"/>
-
-  <property name="restcomm-media.download.distro.file" value="restcomm-media-server.zip"/>
-  <!--<property name="mobicents-media.download.url" value="https://github.com/Mobicents/mediaserver/releases/download/3.0.2.FINAL/mms-server-3.0.2.Final.zip" />-->
-  <!--property name="mobicents-media.download.url" value="https://mobicents.ci.cloudbees.com/view/MediaServer/job/Mobicents-MediaServer-2.x/lastSuccessfulBuild/artifact/bootstrap/target/mms-server.zip" /-->
-  <!--property name="mobicents-media.download.url" value="https://mobicents.ci.cloudbees.com/view/MediaServer/job/Mobicents-MediaServer-4.x/lastSuccessfulBuild/artifact/bootstrap/target/mms-server.zip"/-->
-  <property name="restcomm-media.download.url" value="https://mobicents.ci.cloudbees.com/view/MediaServer/job/Restcomm-MediaServer-6.x/${restcomm-media.build}/artifact/bootstrap/target/restcomm-media-server.zip"/>
-  <property name="restcomm-media.distro.zip.path" value="${checkout.dir}/${restcomm-media.download.distro.file}"/>
-
-  <!-- <property name="restcomm-olympus.download.url" value="https://mobicents.ci.cloudbees.com/job/Olympus/${olympus.build}/artifact/target/olympus.war"/> -->
-  <property name="restcomm-olympus.download.url" value="https://mobicents.ci.cloudbees.com/job/Olympus-2.X/lastSuccessfulBuild/artifact/target/olympus.war"/>
-  <property name="restcomm-olympus.path" value="${configuration.directory}/olympus.war"/>
-
-  <!-- Determine RVD retrieval URL
-
-       If 'rvd.version' command-line parameter is set, the binary is retrieved from sonatype maven repo.
-       Otherwise, the latest release binary from github is fetched.
-
-       Result assigned to: restcomm-rvd.download.url
-  -->
-  <!-- determine rvd github download url -->
-  <get src="https://api.github.com/repos/RestComm/visual-designer/releases/latest" dest="${configuration.directory}/rvd-latest-release.json"></get>
-  <replaceregexp file="${configuration.directory}/rvd-latest-release.json" match='.*"browser_download_url":"([^"]+)".*' replace="\1"/>
-  <loadfile property="restcomm-rvd.github-download.url" srcFile="${configuration.directory}/rvd-latest-release.json"/>
-  <property name="restcomm-rvd.path" value="${configuration.directory}/restcomm-rvd.war"/>
-  <delete file="${configuration.directory}/rvd-latest-release.json"/>
-
-  <condition property="restcomm-rvd.download.url" value="https://oss.sonatype.org/content/groups/public/org/restcomm/restcomm-connect-rvd/${rvd.version}/restcomm-connect-rvd-${rvd.version}.war" else="${restcomm-rvd.github-download.url}">
-    <isset property="rvd.version"></isset>
-  </condition>
-  <echo>Will retrieve RVD from ${restcomm-rvd.download.url}</echo>
-  <!-- check actual availability of RVD at the determined URL-->
-  <fail message="RVD binary not available at ${restcomm-rvd.download.url}">
-    <condition>
-      <not>
-        <http url="${restcomm-rvd.download.url}"></http>
-      </not>
-    </condition>
-  </fail>
-
-  <property name="release.build.goals" value="clean install -Dmaven.test.skip=true"/>
-  <property name="release.build.test.goals" value="clean install -Dmaven.test.failure.ignore=true"/>
-  <property name="release.ts.deploy.goals" value="clean deploy"/>
-
   <condition else="mvn" property="mvn.executable" value="${sys.M2_HOME}\bin\mvn.bat">
     <os family="windows"/>
   </condition>
-
   <taskdef onerror="fail" resource="net/sf/antcontrib/antlib.xml">
     <classpath>
       <pathelement location="${ant.file.restcomm.release}/../ant-contrib-1.0b3.jar"/>
     </classpath>
   </taskdef>
+  <property environment="sys"/>
+  <property name="mvn.arg" value=""/>
+  <property name="release.dir" location="${ant.file.restcomm.release}/../target"/>
+  <property name="release.tomcat.dir" location="${ant.file.restcomm.release}/../target-tomcat"/>
+  <property name="release.as7.dir" location="${ant.file.restcomm.release}/../target-as7"/>
+  <property name="base.dir" location="${ant.file.restcomm.release}/.."/>
+  <property name="docs.dir" location="${release.dir}/docs"/>
+  <property name="restcomm.docs.dir" location="${release.dir}/docs/restcomm"/>
+  <property name="restcomm.docs.tomcat.dir" location="${release.tomcat.dir}/docs/restcomm"/>
+  <property name="restcomm.docs.as7.dir" location="${release.as7.dir}/docs/restcomm"/>
+  <property name="workspace.restcomm.dir" location="${base.dir}/../restcomm"/>
+  <property name="configuration.directory" location="${workspace.restcomm.dir}/configuration"/>
+  <property name="download.dir" location="${base.dir}/ddd"/>
 
-  <target depends="clean,get-deps,extract-deps,build-restcomm, copy-restcomm, copy-docs, make-final-zip" name="release"/>
-  <target depends="get-deps,extract-deps,build-restcomm, copy-restcomm, copy-docs, make-final-zip" name="release-no-clean"/>
+  <property name="restcomm.release.version" value="8.x.x-SNAPSHOT"/>
+
+  <!-- mobicents SIP Servlets 7.x on JBoss AS7-->
+  <property name="restcomm-sipservlets.as7.download.distro.file" value="restcomm-sip-servlets.zip"/>
+  <property name="restcomm-sipservlets.as7.distro.zip.path" value="${download.dir}/${restcomm-sipservlets.as7.download.distro.file}"/>
+
+  <property name="restcomm-media.download.distro.file" value="media-server-standalone.zip"/>
+  <property name="restcomm-media.distro.zip.path" value="${download.dir}/${restcomm-media.download.distro.file}"/>
+
+  <property name="restcomm-olympus.download.distro.file" value="olympus.war"/>
+  <property name="restcomm-olympus.distro.file.path" value="${download.dir}/${restcomm-olympus.download.distro.file}"/>
+  <property name="restcomm-olympus.path" value="${configuration.directory}/olympus.war"/>
+
+  <property name="restcomm-rvd.download.distro.file" value="restcomm-rvd.war"/>
+  <property name="restcomm-rvd.distro.file.path" value="${download.dir}/${restcomm-rvd.download.distro.file}"/>
+  <property name="restcomm-rvd.path" value="${configuration.directory}/restcomm-rvd.war"/>
+
+  <property name="release.build.goals" value="clean install -Dmaven.test.skip=true"/>
+  <property name="release.build.test.goals" value="clean install -Dmaven.test.failure.ignore=true"/>
+  <property name="release.ts.deploy.goals" value="clean deploy"/>
+
+  <target depends="clean,deps,build-restcomm, copy-restcomm, copy-docs, make-final-zip" name="release"/>
+  <target depends="deps,build-restcomm, copy-restcomm, copy-docs, make-final-zip" name="release-no-clean"/>
 
   <target name="deploy">
     <ant antfile="${ant.file.restcomm.release}" target="release">
@@ -105,87 +70,50 @@
     </ant>
   </target>
 
-  <!--GET mobicents-Sip=Servlets & mobicents-Media-Server & mobicents Diameter - downloads-->
-
-  <target depends="get-restcomm-sipservlets-as7,get-restcomm-media,get-olympus,get-rvd" name="get-deps"/>
-  <target depends="extract-restcomm-sipservlets-as7,extract-restcomm-media" name="extract-deps"/>
+  <target name="deps" depends="deps-restcomm-sipservlets-as7,deps-restcomm-media, deps-olympus, deps-rvd"/>
 
   <!--SipServlets JBoss AS7 -->
-  <available file="${restcomm-sipservlets.as7.distro.zip.path}" property="got.restcomm-sipservlets-as7"/>
-  <target name="get-restcomm-sipservlets-as7" unless="got.restcomm-sipservlets-as7">
-    <echo>Downloading Restcomm SipServlets JBoss AS7 version: ${restcomm-sipservlets-as7.version}</echo>
-    <exec executable="wget" failonerror="true">
-      <arg value="${restcomm-sipservlets.as7.download.url}"/>
-    </exec>
-    <move file="${base.dir}/${restcomm-sipservlets.as7.download.distro.file}" todir="${checkout.dir}"/>
-  </target>
-
-  <target depends="get-restcomm-sipservlets-as7" name="extract-restcomm-sipservlets-as7">
-    <delete dir="${checkout.restcomm-sipservlets-as7.dir}" failonerror="false"/>
+  <target name="deps-restcomm-sipservlets-as7">
     <unzip dest="${release.as7.dir}" src="${restcomm-sipservlets.as7.distro.zip.path}">
-      <mapper from="restcomm-sip-servlets-${restcomm-sipservlets-as7.version}-jboss-as-7.2.0.Final/*" to="*" type="glob"/>
+      <cutdirsmapper dirs="1"/>
     </unzip>
   </target>
 
   <!--Media-->
-  <available file="${restcomm-media.distro.zip.path}" property="got.restcomm-media"/>
-  <target name="get-restcomm-media" unless="got.restcomm-media">
-    <echo>Downloading Restcomm Media version: ${restcomm-media.version}.${restcomm-media.build}</echo>
-    <exec executable="wget" failonerror="true">
-      <arg value="${restcomm-media.download.url}"/>
-    </exec>
-    <move file="${base.dir}/restcomm-media-server.zip" todir="${checkout.dir}"/>
-    <move file="${checkout.dir}/restcomm-media-server.zip" tofile="${checkout.dir}/${restcomm-media.download.distro.file}"/>
-  </target>
-
-  <!--Olympus-->
-  <available file="${restcomm-olympus.path}" property="got.olympus"/>
-  <target name="get-olympus" unless="got.olympus">
-    <echo>Downloading Restcomm Olympus version: ${olympus.version}</echo>
-    <exec executable="wget" failonerror="true">
-      <arg value="${restcomm-olympus.download.url}"/>
-    </exec>
-    <move file="${base.dir}/olympus.war" todir="${configuration.directory}"/>
-  </target>
-
-  <!-- RVD -->
-  <available file="${restcomm-rvd.path}" property="got.rvd"/>
-  <target name="get-rvd" unless="got.rvd">
-    <echo>Downloading latest version of Visual Designer</echo>
-    <exec executable="wget" failonerror="true">
-      <arg value="${restcomm-rvd.download.url}"/>
-    </exec>
-    <move file="${base.dir}/restcomm-rvd.war" todir="${configuration.directory}"/>
-  </target>
-
-  <target depends="get-restcomm-media" name="extract-restcomm-media">
-    <delete dir="${checkout.restcomm-media.dir}" failonerror="false"/>
+  <target name="deps-restcomm-media">
     <delete dir="${release.as7.dir}/mobicents-media-server" failonerror="false"/>
-    <!--unzip src="${mobicents-media.distro.zip.path}" dest="${release.dir}/mobicents-media"/-->
-    <unzip dest="${release.as7.dir}/mediaserver" src="${restcomm-media.distro.zip.path}"/>
-    <move todir="${release.as7.dir}/mediaserver">
-      <fileset dir="${release.as7.dir}/mediaserver/restcomm-media-server"/>
-    </move>
-    <!-- copy failonerror="true" file="${configuration.directory}/mms-server-beans.xml" tofile="${release.as7.dir}/mediaserver/deploy/server-beans.xml"/ -->
+    <unzip dest="${release.as7.dir}/mediaserver" src="${restcomm-media.distro.zip.path}">
+      <cutdirsmapper dirs="1"/>
+    </unzip>
     <chmod dir="${release.as7.dir}/mediaserver" includes="**/*.sh" perm="ugo+rx"/>
     <chmod dir="${release.as7.dir}/mediaserver/bin" includes="**/*.sh" perm="ugo+rx"/>
     <chmod dir="${release.as7.dir}/mediaserver/.autoconfig" includes="**/*.sh" perm="ugo+rx"/>
     <chmod dir="${release.as7.dir}/mediaserver/.autoconfig/autoconfig.d" includes="**/*.sh" perm="ugo+rx"/>
   </target>
 
+  <!--Olympus-->
+  <available file="${restcomm-olympus.path}" property="got.olympus"/>
+  <target name="deps-olympus" unless="got.olympus">
+    <copy failonerror="true" file="${restcomm-olympus.distro.file.path}" todir="${configuration.directory}"/>
+  </target>
+
+  <!-- RVD -->
+  <available file="${restcomm-rvd.path}" property="got.rvd"/>
+  <target name="deps-rvd" unless="got.rvd">
+    <copy failonerror="true" file="${restcomm-rvd.distro.file.path}" todir="${configuration.directory}"/>
+  </target>
+
+
   <target name="build-restcomm">
     <echo>Building Restcomm</echo>
     <echo>Restcomm workspace dir: "${workspace.restcomm.dir}"</echo>
     <exec dir="${workspace.restcomm.dir}" executable="${mvn.executable}" failonerror="true">
       <arg line="${release.build.goals}"/>
+      <arg line="${mvn.arg}"/>
     </exec>
-    <!--
-    <exec dir="${workspace.restcomm.dir}/restcomm.docs" executable="${mvn.executable}" failonerror="true">
-      <arg line="${release.build.goals} -Pmobicents"/>
-    </exec>
-  -->
     <exec dir="${workspace.restcomm.dir}/restcomm.provisioning.number.api" executable="${mvn.executable}" failonerror="true">
       <arg line="javadoc:javadoc"/>
+      <arg line="${mvn.arg}"/>
     </exec>
   </target>
 
