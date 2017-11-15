@@ -20,10 +20,14 @@ Inside file
 ddd-versions.properties
 ```
 you will find the configuration of the deliverables, which are going to be downloaded. In case you want to use default and predefined versions
-as you cloned from the repository, do not change anything. For adavance usage and testing a different versions, it is your responsibility to 
+as you cloned from the repository, do not change anything. For advance usage and testing a different versions, it is your responsibility to 
 define proper versions.
+For those able to access the [TeleStax](http://www.telestax.com/), Inc. infrastructure and AWS S3, take advantage of using the 
+```
+ant -f ddd-s3-box.xml s3
+```
 
-To build the Rescomm Connect project itself please use:
+To build the Restcomm Connect project itself please use:
 ```
 ant -f build.xml
 ```
