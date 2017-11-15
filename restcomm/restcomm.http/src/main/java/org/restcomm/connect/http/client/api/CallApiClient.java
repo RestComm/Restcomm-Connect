@@ -34,6 +34,7 @@ import org.restcomm.connect.commons.util.UriUtils;
 import org.restcomm.connect.dao.DaoManager;
 import org.restcomm.connect.dao.entities.CallDetailRecord;
 import org.restcomm.connect.http.asyncclient.HttpAsycClientHelper;
+import org.restcomm.connect.http.client.CallApiResponse;
 import org.restcomm.connect.http.client.DownloaderResponse;
 import org.restcomm.connect.http.client.HttpRequestDescriptor;
 import org.restcomm.connect.telephony.api.Hangup;
@@ -101,7 +102,13 @@ public class CallApiClient extends RestcommUntypedActor {
             logger.info("Call api response: " + response);
         }
         requestee = requestee == null ? sender : requestee;
-        requestee.tell(message, self);
+        CallApiResponse apiResponse;
+        if (response.succeeded()) {
+            apiResponse = new CallApiResponse(response.get());
+        } else {
+            apiResponse = new CallApiResponse(response.cause(), response.error());
+        }
+        requestee.tell(apiResponse, self);
     }
 
     protected void onHangup(Hangup message, ActorRef self, ActorRef sender) throws URISyntaxException, ParseException {
