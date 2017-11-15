@@ -34,7 +34,7 @@
   </select>
 
   <select id="getIncomingPhoneNumbersRegex"  resultType="hashmap">
-        SELECT * FROM restcomm_incoming_phone_numbers WHERE phone_number like '%*%' or phone_number like '%#%' or phone_number like '%^%' or phone_number like '%|%' or phone_number like '%.%' or phone_number like '%$%' or phone_number like '%\%' or phone_number like '%[%' or phone_number like '%]%' 
+        SELECT * FROM restcomm_incoming_phone_numbers WHERE ( phone_number like '%*%' or phone_number like '%#%' or phone_number like '%^%' or phone_number like '%|%' or phone_number like '%.%' or phone_number like '%$%' or phone_number like '%\%' or phone_number like '%[%' or phone_number like '%]%' )
         <if test="friendlyName != null">
             AND friendly_name=#{friendlyName}
         </if>
