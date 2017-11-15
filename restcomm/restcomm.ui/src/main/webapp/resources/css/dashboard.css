@@ -352,14 +352,20 @@ form[role=login] input:-webkit-autofill:focus{
 
 .user-dropdown-menu {
     position: absolute !important;
-    min-width: 150px;
+    min-width: 180px;
     box-shadow: 0 8px 16px 0 rgba(0,0,0,0.2);
+    font-size: 1.1em;
+    padding: 10px;
 }
 
 .user-dropdown-menu i {
-    min-width: 20px;
+    min-width: 30px;
     text-align: center;
     margin-right: 10px;
+}
+
+.user-dropdown-menu a {
+    color: #6d6e70 !important;
 }
 
 .user-dropdown-menu a:hover {
@@ -691,9 +697,10 @@ form[role=login] input:-webkit-autofill:focus{
 }
 
 .account-sid-auth-token-input {
-    width: calc(100% - 25px);
+    width: calc(100% - 30px);
     border: none;
     background-color: transparent;
+    margin-left: 5px;
 }
 
 .auth-token-toggle {
@@ -788,6 +795,11 @@ form[role=login] input:-webkit-autofill:focus{
     font-weight: 300;
 }
 
+.nv-axis .tick > text {
+    fill: #999;
+}
+
+
 @media(max-width:768px) {
     .nv-x.nv-axis .tick:nth-of-type(even) > text {
         display: none;
@@ -814,6 +826,12 @@ form[role=login] input:-webkit-autofill:focus{
     font-size: 1.1em;
 }
 
+.rc-list .rc-list-inplace-edit {
+    font-size: inherit;
+    margin-left: -10px;
+    padding-left: 10px;
+}
+
 .rc-list-summary {
     font-size: 0.75em;
     opacity: 0.33;
@@ -834,7 +852,7 @@ form[role=login] input:-webkit-autofill:focus{
 }
 
 .rc-no-items {
-    margin-top: 100px;
+    margin-top: 40px;
     background-color: white;
     border: 1px solid #eee;
     border-radius: 20px;
