@@ -33,19 +33,22 @@
     </select>
     <!-- Does a search in the DB and find phone numbers that contain characters different from -->
     <select id="getIncomingPhoneNumbersRegex"  parameterType="org.restcomm.connect.dao.entities.IncomingPhoneNumberFilter" resultType="hashmap">
-        SELECT * FROM "restcomm_incoming_phone_numbers" WHERE "phone_number" like '%*%' or "phone_number" like '%#%' or "phone_number" like '%^%' or "phone_number" like '%|%' or "phone_number" like '%.%' or "phone_number" like '%$%' or "phone_number" like '%\%' or "phone_number" like '%[%' or "phone_number" like '%]%' 
+        SELECT * FROM "restcomm_incoming_phone_numbers" WHERE "phone_number" like '%*%' or "phone_number" like '%#%' or "phone_number" like '%^%' or "phone_number" like '%|%' or "phone_number" like '%.%' or "phone_number" like '%$%' or "phone_number" like '%\%' or "phone_number" like '%[%' or "phone_number" like '%]%'
         <if test="friendlyName != null">
             AND "friendly_name"=#{friendlyName}
         </if>
         <if test="phoneNumber != null">
-            AND "phone_number" like #{phoneNumber}
+            AND "phone_number" = #{phoneNumber}
         </if>
         <if test="orgSid != null">
-            AND "organization_sid" like #{orgSid}
+            AND "organization_sid" = #{orgSid}
         </if>
         <if test="accountSid != null">
-            AND "account_sid" like #{accountSid}
+            AND "account_sid" = #{accountSid}
         </if>
+        <if test="pureSIP != null">
+            AND "pure_sip" = #{pureSIP}
+        </if>               
         <choose>
             <when test="sortBy == 'phone_number'">
                 order by "phone_number" ${sortDirection}
@@ -81,14 +84,17 @@
             AND "n"."friendly_name"=#{friendlyName}
         </if>
         <if test="phoneNumber != null">
-            AND "n"."phone_number" like #{phoneNumber}
+            AND "n"."phone_number"=#{phoneNumber}
         </if>
         <if test="orgSid != null">
-            AND "n"."organization_sid" like #{orgSid}
+            AND "n"."organization_sid"=#{orgSid}
         </if>
         <if test="accountSid != null">
-            AND "n"."account_sid" like #{accountSid}
+            AND "n"."account_sid"=#{accountSid}
         </if>
+        <if test="pureSIP != null">
+            AND "n"."pure_sip" = #{pureSIP}
+        </if>           
         <choose>
             <when test="sortBy == 'phone_number'">
                 order by "n"."phone_number" ${sortDirection}
@@ -113,14 +119,17 @@
             AND "friendly_name"=#{friendlyName}
         </if>
         <if test="phoneNumber != null">
-            AND "phone_number" like #{phoneNumber}
+            AND "phone_number"=#{phoneNumber}
         </if>
         <if test="orgSid != null">
-            AND "organization_sid" like #{orgSid}
+            AND "organization_sid"=#{orgSid}
         </if>
         <if test="accountSid != null">
-            AND "account_sid" like #{accountSid}
+            AND "account_sid"=#{accountSid}
         </if>
+        <if test="pureSIP != null">
+            AND "pure_sip"=#{pureSIP}
+        </if>        
         ;
     </select>
   

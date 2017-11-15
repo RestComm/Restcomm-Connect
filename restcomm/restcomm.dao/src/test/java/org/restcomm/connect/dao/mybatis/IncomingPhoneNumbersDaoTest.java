@@ -212,6 +212,7 @@ public class IncomingPhoneNumbersDaoTest {
         // Read the incoming phone number from the data store.
         IncomingPhoneNumberFilter.Builder filterBuilder = IncomingPhoneNumberFilter.Builder.builder();
         filterBuilder.byPhoneNumber("+12223334444");
+        filterBuilder.byAccountSid(account.toString());
         List<IncomingPhoneNumber> incomingPhoneNumbers = numbers.getIncomingPhoneNumbersByFilter(filterBuilder.build());
         assertNotNull (incomingPhoneNumbers);
         assertEquals (1, incomingPhoneNumbers.size());
@@ -256,6 +257,7 @@ public class IncomingPhoneNumbersDaoTest {
         builder.setSmsApplicationSid(application);
         builder.setUri(url);
         builder.setOrganizationSid(org1);
+        builder.setPureSip(Boolean.FALSE);
         IncomingPhoneNumber number = builder.build();
         final IncomingPhoneNumber.Builder builder2 = IncomingPhoneNumber.builder();
         builder2.setSid(sid2);
@@ -278,6 +280,7 @@ public class IncomingPhoneNumbersDaoTest {
         builder2.setSmsApplicationSid(application);
         builder2.setUri(url);
         builder2.setOrganizationSid(org2);
+        builder2.setPureSip(Boolean.FALSE);
 
         IncomingPhoneNumber number2 = builder2.build();
         final IncomingPhoneNumbersDao numbers = manager.getIncomingPhoneNumbersDao();
@@ -290,6 +293,7 @@ public class IncomingPhoneNumbersDaoTest {
         IncomingPhoneNumberFilter.Builder filterBuilder = IncomingPhoneNumberFilter.Builder.builder();
         filterBuilder.byPhoneNumber("+12223334444");
         filterBuilder.byOrgSid(org2.toString());
+        filterBuilder.byPureSIP(Boolean.FALSE);
         IncomingPhoneNumberFilter numFilter = filterBuilder.build();
         List<IncomingPhoneNumber> incomingPhoneNumbers = numbers.getIncomingPhoneNumbersByFilter(numFilter);
         assertNotNull(incomingPhoneNumbers);
@@ -330,6 +334,7 @@ public class IncomingPhoneNumbersDaoTest {
         builder.setSmsApplicationSid(application);
         builder.setUri(url);
         builder.setOrganizationSid(org1);
+        builder.setPureSip(Boolean.FALSE);
         IncomingPhoneNumber number = builder.build();
         final IncomingPhoneNumber.Builder builder2 = IncomingPhoneNumber.builder();
         builder2.setSid(sid2);
@@ -352,6 +357,7 @@ public class IncomingPhoneNumbersDaoTest {
         builder2.setSmsApplicationSid(application);
         builder2.setUri(url);
         builder2.setOrganizationSid(org2);
+        builder2.setPureSip(Boolean.FALSE);
 
         IncomingPhoneNumber number2 = builder2.build();
         final IncomingPhoneNumbersDao numbers = manager.getIncomingPhoneNumbersDao();
@@ -363,6 +369,7 @@ public class IncomingPhoneNumbersDaoTest {
         // Read the incoming phone number from the data store.
         IncomingPhoneNumberFilter.Builder filterBuilder = IncomingPhoneNumberFilter.Builder.builder();
         filterBuilder.byOrgSid(org2.toString());
+        filterBuilder.byPureSIP(Boolean.FALSE);
         IncomingPhoneNumberFilter numFilter = filterBuilder.build();
         List<IncomingPhoneNumber> incomingPhoneNumbers = numbers.getIncomingPhoneNumbersRegex(numFilter);
         assertNotNull(incomingPhoneNumbers);

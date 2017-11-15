@@ -41,13 +41,6 @@ public class IncomingPhoneNumberFilter {
             String sortDirection, Integer limit, Integer offset, String orgSid, Boolean pureSIP) {
         this.accountSid = accountSid;
         this.friendlyName = friendlyName;
-        // The LIKE keyword uses '%' to match any (including 0) number of characters, and '_' to match exactly one character
-        // Add here the '%' keyword so +15126002188 will be the same as 15126002188 and 6002188
-        if (phoneNumber != null) {
-            phoneNumber = "%" + phoneNumber + "%";
-            phoneNumber = phoneNumber.replaceAll("\\*", "_");
-        }
-
         this.phoneNumber = phoneNumber;
         this.sortBy = sortBy;
         this.sortDirection = sortDirection;
@@ -60,12 +53,6 @@ public class IncomingPhoneNumberFilter {
     public IncomingPhoneNumberFilter(String accountSid, String friendlyName, String phoneNumber) {
         this.accountSid = accountSid;
         this.friendlyName = friendlyName;
-        // The LIKE keyword uses '%' to match any (including 0) number of characters, and '_' to match exactly one character
-        // Add here the '%' keyword so +15126002188 will be the same as 15126002188 and 6002188
-        if (phoneNumber != null) {
-            phoneNumber = "%" + phoneNumber + "%";
-            phoneNumber = phoneNumber.replaceAll("\\*", "_");
-        }
         this.phoneNumber = phoneNumber;
         this.sortBy = null;
         this.sortDirection = null;
@@ -123,6 +110,10 @@ public class IncomingPhoneNumberFilter {
 
     public String getOrgSid() {
         return orgSid;
+    }
+
+    public Boolean getPureSIP() {
+        return pureSIP;
     }
 
     @Override
