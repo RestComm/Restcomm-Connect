@@ -52,6 +52,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import org.junit.BeforeClass;
+import org.junit.experimental.categories.Category;
 import org.restcomm.connect.commons.Version;
 
 /**
@@ -67,19 +68,19 @@ public class RvdProjectsMigratorWorkspaceMigratedTest {
     private Deployer deployer;
     @ArquillianResource
     URL deploymentUrl;
-    
+
     private static int mediaPort = NetworkPortAssigner.retrieveNextPortByFile();
-    private static int smtpPort = NetworkPortAssigner.retrieveNextPortByFile();      
+    private static int smtpPort = NetworkPortAssigner.retrieveNextPortByFile();
 
     private String adminUsername = "administrator@company.com";
     private String adminAccountSid = "ACae6e420f425248d6a26948c17a9e2acf";
     private String adminAuthToken = "77f8c12cc7b8f8423e5c38b035249166";
     private static GreenMail mailServer;
-    
+
     private static int restcommPort = 5080;
     private static int restcommHTTPPort = 8080;
-    private static String restcommContact = "127.0.0.1:" + restcommPort;    
-    
+    private static String restcommContact = "127.0.0.1:" + restcommPort;
+
     public static void reconfigurePorts() throws Exception {
         if (System.getProperty("arquillian_sip_port") != null) {
             restcommPort = Integer.valueOf(System.getProperty("arquillian_sip_port"));
@@ -87,8 +88,8 @@ public class RvdProjectsMigratorWorkspaceMigratedTest {
         }
         if (System.getProperty("arquillian_http_port") != null) {
             restcommHTTPPort = Integer.valueOf(System.getProperty("arquillian_http_port"));
-        }       
-    }      
+        }
+    }
 
     @AfterClass
     public static void stopMailServer() {
@@ -110,6 +111,7 @@ public class RvdProjectsMigratorWorkspaceMigratedTest {
     }
 
     @Test
+    @Category(UnstableTests.class)
     public void checkIncomingPhoneNumbers() {
         JsonArray incomingPhoneNumbersListJson = RestcommRvdProjectsMigratorTool.getInstance().getEntitiesList(
                 deploymentUrl.toString(), adminUsername, adminAuthToken, adminAccountSid,
@@ -151,6 +153,7 @@ public class RvdProjectsMigratorWorkspaceMigratedTest {
     }
 
     @Test
+    @Category(UnstableTests.class)
     public void checkEmail() throws IOException, MessagingException, InterruptedException {
         mailServer.waitForIncomingEmail(60000, 1);
         MimeMessage[] messages = mailServer.getReceivedMessages();
@@ -173,7 +176,7 @@ public class RvdProjectsMigratorWorkspaceMigratedTest {
 
         Map<String, String> replacements = new HashMap();
         replacements.put("3025", String.valueOf(smtpPort));
-        //replace mediaport 2727 
+        //replace mediaport 2727
         replacements.put("2727", String.valueOf(mediaPort));
         replacements.put("8080", String.valueOf(restcommHTTPPort));
         replacements.put("5080", String.valueOf(restcommPort));
@@ -182,15 +185,15 @@ public class RvdProjectsMigratorWorkspaceMigratedTest {
         ));
 
         WebArchive archive = WebArchiveUtil.createWebArchiveNoGw("restcomm_workspaceMigration.xml",
-                "restcomm.script_projectMigratorWorkspaceMigratedTest", 
+                "restcomm.script_projectMigratorWorkspaceMigratedTest",
                 resources, replacements);
-        
+
         String source = "src/test/resources/workspace-migration-scenarios/migrated";
         String target = "workspace-migration";
         File f = new File(source);
-        addFiles(archive, f, source, target);        
+        addFiles(archive, f, source, target);
         return archive;
-    }     
+    }
 
     private static void addFiles(WebArchive war, File dir, String source, String target) throws Exception {
         if (!dir.isDirectory()) {
@@ -206,7 +209,7 @@ public class RvdProjectsMigratorWorkspaceMigratedTest {
         }
     }
 
-    @BeforeClass    
+    @BeforeClass
     public static void startEmailServer() {
         ServerSetup setup = new ServerSetup(smtpPort, "127.0.0.1", "smtp");
         mailServer = new GreenMail(setup);

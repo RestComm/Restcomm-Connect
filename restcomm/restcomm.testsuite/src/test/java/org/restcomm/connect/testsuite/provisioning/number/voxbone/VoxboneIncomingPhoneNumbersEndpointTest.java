@@ -54,7 +54,9 @@ import com.sun.jersey.api.client.ClientResponse;
 import com.sun.jersey.api.client.WebResource;
 import com.sun.jersey.api.client.filter.HTTPBasicAuthFilter;
 import com.sun.jersey.core.util.MultivaluedMapImpl;
+import org.junit.experimental.categories.Category;
 import org.restcomm.connect.commons.Version;
+import org.restcomm.connect.testsuite.UnstableTests;
 
 /**
  * @author <a href="mailto:jean.deruelle@telestax.com">Jean Deruelle</a>
@@ -76,12 +78,12 @@ public class VoxboneIncomingPhoneNumbersEndpointTest {
     private String adminAccountSid = "ACae6e420f425248d6a26948c17a9e2acf";
     private String adminAuthToken = "77f8c12cc7b8f8423e5c38b035249166";
     private String baseURL = "2012-04-24/Accounts/" + adminAccountSid + "/";
-    
+
     @Rule
     public WireMockRule wireMockRule = new WireMockRule(8090); // No-args constructor defaults to port 8080
-    
+
     /*
-     * Check the list of available Countries 
+     * Check the list of available Countries
      * http://www.voxbone.com/apidoc/resource_InventoryServiceRest.html#path__country.html
      */
     @Test
@@ -110,17 +112,18 @@ public class VoxboneIncomingPhoneNumbersEndpointTest {
         assertTrue(!response.trim().equalsIgnoreCase("[]"));
         JsonParser parser = new JsonParser();
         JsonArray jsonResponse = parser.parse(response).getAsJsonArray();
-        
+
         System.out.println(jsonResponse.toString());
         System.out.println(jsonResponse.size());
-        
+
         assertTrue(jsonResponse.size() == 57);
     }
-    
+
     /*
-     * 
+     *
      */
     @Test
+    @Category(UnstableTests.class)
     public void testPurchaseAndDeletePhoneNumberSuccess() {
         stubFor(put(urlEqualTo("/test/configuration/voiceuri"))
                 .willReturn(aResponse()
@@ -157,7 +160,7 @@ public class VoxboneIncomingPhoneNumbersEndpointTest {
                     .withStatus(200)
                     .withHeader("Content-Type", "application/json")
                     .withBody(VoxboneIncomingPhoneNumbersEndpointTestUtils.cancelDidSuccessResponse)));
-        
+
         // Get Account using admin email address and user email address
     	Client jerseyClient = Client.create();
         jerseyClient.addFilter(new HTTPBasicAuthFilter(adminUsername, adminAuthToken));
@@ -177,17 +180,17 @@ public class VoxboneIncomingPhoneNumbersEndpointTest {
         assertTrue(!response.trim().equalsIgnoreCase("[]"));
         JsonParser parser = new JsonParser();
         JsonObject jsonResponse = parser.parse(response).getAsJsonObject();
-        
+
         System.out.println(jsonResponse.toString());
         assertTrue(VoxboneIncomingPhoneNumbersEndpointTestUtils.match(jsonResponse.toString(),VoxboneIncomingPhoneNumbersEndpointTestUtils.jSonResultPurchaseNumber));
-        
+
         String phoneNumberSid = jsonResponse.get("sid").getAsString();
         provisioningURL = deploymentUrl + baseURL + "IncomingPhoneNumbers/" + phoneNumberSid + ".json";
         webResource = jerseyClient.resource(provisioningURL);
         clientResponse = webResource.type(MediaType.APPLICATION_FORM_URLENCODED_TYPE).accept("application/json").delete(ClientResponse.class);
         assertTrue(clientResponse.getStatus() == 204);
     }
-    
+
     /*
      */
 //    @Test
@@ -197,13 +200,13 @@ public class VoxboneIncomingPhoneNumbersEndpointTest {
 //                    .withStatus(200)
 //                    .withHeader("Content-Type", "application/json")
 //                    .withBody(VoxboneIncomingPhoneNumbersEndpointTestUtils.purchaseNumberSuccessResponse)));
-//        
+//
 //        stubFor(post(urlMatching("/nexmo/number/update/.*/.*/ES/34911067000.*"))
 //                .willReturn(aResponse()
 //                    .withStatus(200)
 //                    .withHeader("Content-Type", "application/json")
 //                    .withBody(VoxboneIncomingPhoneNumbersEndpointTestUtils.purchaseNumberSuccessResponse)));
-//        
+//
 //        stubFor(post(urlMatching("/nexmo/number/cancel/.*/.*/ES/34911067000"))
 //                .willReturn(aResponse()
 //                    .withStatus(200)
@@ -228,17 +231,17 @@ public class VoxboneIncomingPhoneNumbersEndpointTest {
 //        assertTrue(!response.trim().equalsIgnoreCase("[]"));
 //        JsonParser parser = new JsonParser();
 //        JsonObject jsonResponse = parser.parse(response).getAsJsonObject();
-//        
+//
 //        System.out.println(jsonResponse.toString());
 //        assertTrue(VoxboneIncomingPhoneNumbersEndpointTestUtils.match(jsonResponse.toString(),VoxboneIncomingPhoneNumbersEndpointTestUtils.jSonResultDeletePurchaseNumber));
-//        
+//
 //        String phoneNumberSid = jsonResponse.get("sid").getAsString();
 //        provisioningURL = deploymentUrl + baseURL + "IncomingPhoneNumbers/" + phoneNumberSid + ".json";
 //        webResource = jerseyClient.resource(provisioningURL);
 //        clientResponse = webResource.type(MediaType.APPLICATION_FORM_URLENCODED_TYPE).accept("application/json").delete(ClientResponse.class);
 //        assertTrue(clientResponse.getStatus() == 204);
 //    }
-    
+
     /*
      * https://www.twilio.com/docs/api/rest/incoming-phone-numbers#list-post-example-1
      * Purchases a new phone number for your account.
@@ -260,7 +263,7 @@ public class VoxboneIncomingPhoneNumbersEndpointTest {
                 .willReturn(aResponse()
                     .withStatus(400)
                     .withHeader("Content-Type", "application/json")));
-        
+
         // Get Account using admin email address and user email address
         Client jerseyClient = Client.create();
         jerseyClient.addFilter(new HTTPBasicAuthFilter(adminUsername, adminAuthToken));
@@ -294,13 +297,13 @@ public class VoxboneIncomingPhoneNumbersEndpointTest {
 //                    .withStatus(200)
 //                    .withHeader("Content-Type", "application/json")
 //                    .withBody(VoxboneIncomingPhoneNumbersEndpointTestUtils.purchaseNumberSuccessResponse)));
-//        
+//
 //        stubFor(post(urlMatching("/nexmo/number/update/.*/.*/FR/33911067000.*"))
 //                .willReturn(aResponse()
 //                    .withStatus(200)
 //                    .withHeader("Content-Type", "application/json")
 //                    .withBody(VoxboneIncomingPhoneNumbersEndpointTestUtils.purchaseNumberSuccessResponse)));
-//        
+//
 //        stubFor(post(urlMatching("/nexmo/number/cancel/.*/.*/FR/33911067000"))
 //                .willReturn(aResponse()
 //                    .withStatus(200)
@@ -325,7 +328,7 @@ public class VoxboneIncomingPhoneNumbersEndpointTest {
 //        assertTrue(!response.trim().equalsIgnoreCase("[]"));
 //        JsonParser parser = new JsonParser();
 //        JsonObject jsonResponse = parser.parse(response).getAsJsonObject();
-//        
+//
 //        System.out.println(jsonResponse.toString());
 //        assertTrue(VoxboneIncomingPhoneNumbersEndpointTestUtils.match(jsonResponse.toString(),VoxboneIncomingPhoneNumbersEndpointTestUtils.jSonResultUpdatePurchaseNumber));
 //
@@ -346,13 +349,13 @@ public class VoxboneIncomingPhoneNumbersEndpointTest {
 //        jsonResponse = parser.parse(response).getAsJsonObject();
 //        System.out.println(jsonResponse.toString());
 //        assertTrue(VoxboneIncomingPhoneNumbersEndpointTestUtils.match(jsonResponse.toString(),VoxboneIncomingPhoneNumbersEndpointTestUtils.jSonResultUpdateSuccessPurchaseNumber));
-//        
+//
 //        provisioningURL = deploymentUrl + baseURL + "IncomingPhoneNumbers/" + phoneNumberSid + ".json";
 //        webResource = jerseyClient.resource(provisioningURL);
 //        clientResponse = webResource.type(MediaType.APPLICATION_FORM_URLENCODED_TYPE).accept("application/json").delete(ClientResponse.class);
 //        assertTrue(clientResponse.getStatus() == 204);
 //    }
-    
+
     @Deployment(name = "VoxboneIncomingPhoneNumbersEndpointTest", managed = true, testable = false)
     public static WebArchive createWebArchiveNoGw() {
         logger.info("Packaging Test App");
