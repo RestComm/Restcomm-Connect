@@ -583,7 +583,7 @@ public final class Conference extends RestcommUntypedActor {
         if (logger.isInfoEnabled()) {
             logger.info("Conference Received Timeout, will stop conference now.");
         }
-        onStopConference(new StopConference(SUPER_ADMIN_ACCOUNT_SID), self, sender);
+        onStopConference(new StopConference(), self, sender);
     }
 
     private void onCallApiResponse(CallApiResponse message, ActorRef self, ActorRef sender) {
