@@ -60,7 +60,9 @@ import org.restcomm.connect.testsuite.tools.MonitoringServiceTool;
 import com.github.tomakehurst.wiremock.junit.WireMockRule;
 import com.google.gson.JsonObject;
 import java.util.Arrays;
+import org.junit.experimental.categories.Category;
 import org.restcomm.connect.testsuite.NetworkPortAssigner;
+import org.restcomm.connect.testsuite.UnstableTests;
 import org.restcomm.connect.testsuite.WebArchiveUtil;
 
 /**
@@ -498,6 +500,7 @@ public class ImsClientsDialAnswerDelayTest {
     }
 
     @Test
+    @Category(UnstableTests.class)
     public void testWebRTCClientIncomingADisconnect() throws InterruptedException, ParseException {
         logger.info("testWebRTCClientIncomingADisconnect");
 
@@ -550,6 +553,7 @@ public class ImsClientsDialAnswerDelayTest {
     }
 
     @Test
+    @Category(UnstableTests.class)    
     public void testWebRTCClientIncomingBusy() throws InterruptedException, ParseException {
         logger.info("testWebRTCClientIncomingBusy");
 
@@ -579,6 +583,7 @@ public class ImsClientsDialAnswerDelayTest {
     }
 
     @Test
+    @Category(UnstableTests.class)
     public void testWebRTCClientIncomingFail() throws InterruptedException, ParseException {
         logger.info("testWebRTCClientIncomingFail");
 
@@ -608,6 +613,7 @@ public class ImsClientsDialAnswerDelayTest {
     }
 
     @Test
+    @Category(UnstableTests.class)
     public void testWebRTCClientIncomingAHold() throws SipException, InterruptedException, ParseException, InvalidArgumentException {
         logger.info("testWebRTCClientIncomingAHold");
 
@@ -689,6 +695,7 @@ public class ImsClientsDialAnswerDelayTest {
     }
 
     @Test
+    @Category(UnstableTests.class)
     public void testWebRTCClientIncomingBHold() throws SipException, InvalidArgumentException, InterruptedException, ParseException {
         logger.info("testWebRTCClientIncomingBHold");
 
@@ -772,6 +779,7 @@ public class ImsClientsDialAnswerDelayTest {
     }
 
     @Test
+    @Category(UnstableTests.class)
     public void testWebRTCClientIncomingRequestTimeout() throws InterruptedException, ParseException {
         logger.info("testWebRTCClientIncomingRequestTimeout");
 
