@@ -20,15 +20,15 @@
         </div>
 
         <table ng-show="(numbersList | filter:query).length > 0" class="table table-hover rc-list numbers-list" ng-cloak>
-            <thead style="color: #4a4a4b;">
+            <thead>
             <th class="numbers-list-number">Number</th>
-            <th class="numbers-list-edit-icon hidden-sm hidden-xs" style="width: 30px;">&nbsp;</th>
+            <th class="numbers-list-edit-icon hidden-sm hidden-xs">&nbsp;</th>
             <th class="numbers-list-friendly-name hidden-sm hidden-xs">Name</th>
             <th class="numbers-list-features" >Features</th>
             <th class="numbers-list-delete-icon">&nbsp;</th>
             </thead>
 
-            <tbody style="color: #6d6e70;">
+            <tbody>
             <tr class="number-row" ng-repeat="pn in filtered = (numbersList | filter:query| orderBy:predicate:reverse)" ng-click="$root.goTo('/numbers/incoming/' + pn.sid)">
                 <td class="numbers-list-number">
                     <div>{{ pn.phone_number  }}</a></div>
@@ -40,7 +40,7 @@
                 <td class="numbers-list-friendly-name hidden-sm hidden-xs">
                     <div ng-hide="editingFriendlyName === pn.phone_number">{{ pn.friendly_name  }} </div>
                     <div ng-show="editingFriendlyName === pn.phone_number">
-                        <input type="text" class="form-control" style="font-size: inherit; margin-left: -10px; padding-left: 10px;" onkeyup="if(event.keyCode === 13) {this.blur()}" ng-model="pn.friendly_name" ng-blur="editingFriendlyName = undefined; setFriendlyName(pn)" autofocus />
+                        <input type="text" class="form-control rc-list-inplace-edit" onkeyup="if(event.keyCode === 13) {this.blur()}" ng-model="pn.friendly_name" ng-blur="editingFriendlyName = undefined; setFriendlyName(pn)" autofocus />
                     </div>
                 </td>
 
@@ -68,11 +68,10 @@
                 <td colspan="99">
                     <div class="row">
                         <div class="col-md-4">
-                            <small class="numbers-list-summary">{{start}} to {{end}} of {{ totalNumbers }} Number{{ totalNumbers == 1 ? "" : "s" }}</small>
+                            <small class="rc-list-summary">{{ start }} to {{ end }} of {{ totalNumbers }} Number{{ totalNumbers == 1 ? "" : "s" }}</small>
                         </div>
                         <div class="col-md-4">
                             <form class="form-inline text-center">
-                                <h6>Items / Page</h6>
                                 <div class="btn-group buttons-per-page">
                                     <button type="button" class="btn btn-default btn-sm" ng-class="{'active':entryLimit === 10}" ng-click="setEntryLimit(10)">10</button>
                                     <button type="button" class="btn btn-default btn-sm" ng-class="{'active':entryLimit === 25}" ng-click="setEntryLimit(25)">25</button>
@@ -81,13 +80,11 @@
                             </form>
                         </div>
                         <div class="col-md-4">
-                            <uib-pagination style="float:right" class="pagination pagination-sm" ng-change="pageChanged()" total-items="totalNumbers" items-per-page="entryLimit" ng-model="currentPage" data-boundary-links="true" data-current-page="currentPage" max-size="maxSize" previous-text="<" next-text=">" first-text="<<" last-text=">>"></uib-pagination>
+                            <uib-pagination class="pagination pagination-sm pull-right" ng-change="pageChanged()" total-items="totalNumbers" items-per-page="entryLimit" ng-model="currentPage" data-boundary-links="true" data-current-page="currentPage" max-size="maxSize" previous-text="<" next-text=">" first-text="<<" last-text=">>"></uib-pagination>
                         </div>
                     </div>
                 </td>
         </tfoot>
         </table>
-
-
     </div>
 </div>

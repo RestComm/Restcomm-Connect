@@ -1,6 +1,6 @@
 <div class="row accounts-tabs-mobile visible-xs">
-    <div class="col-xs-5"><a href="#/profile/{{sid}}">Main Account</a></div>
-    <div class="col-xs-5 col-xs-offset-2 active"><a href="#/subaccounts">Sub Accounts</a></div>
+    <div class="col-xs-5"><a href="#/profile/{{sid}}"><i class="fa fa-user"></i></a></div>
+    <div class="col-xs-5 col-xs-offset-2 active"><a href="#/subaccounts"><i class="fa fa-users"></i></a></div>
 </div>
 
 <div class="row">
@@ -17,12 +17,12 @@
                 </form>
             </div>
             <div  class="col-md-4 col-md-offset-4 col-xs-6">
-                <button class="rc-btn pull-right hidden-xs" ng-click="showRegisterAccountModal();"><b>+</b> New Account</button>
-                <button class="rc-btn rc-btn-sm pull-right visible-xs" ng-click="showRegisterAccountModal();"><b>+</b> New Account</button>
+                <button class="rc-btn pull-right hidden-xs" ng-click="showRegisterAccountModal()"><b>+</b> New Account</button>
+                <button class="rc-btn rc-btn-sm pull-right visible-xs" ng-click="showRegisterAccountModal()"><b>+</b> New Account</button>
             </div>
         </div>
         <hr>
-        <div class="row visible-md visible-lg">
+        <div class="row visible-md visible-lg" ng-show="filtered.length > 0">
             <div class="col-md-2 col-md-offset-1">
                 <strong>Name</strong>
             </div>
@@ -36,9 +36,15 @@
                 <strong>Status</strong>
             </div>
         </div>
-        <div>
-            &nbsp;
+
+        <div>&nbsp;</div>
+
+        <div ng-hide="filtered.length > 0" class="jumbotron rc-no-items">
+            <h1><i class="fa fa-users"></i> </h1>
+            <h2>No Sub Accounts</h2>
+            <h5>Why don't you get some friends in?</h5>
         </div>
+
         <div class="row sub-accounts-row" ng-repeat="subAccount in filtered = (subAccountsList | filter:search | orderBy:predicate:reverse) | startFrom:(currentPage-1)*entryLimit | limitTo:entryLimit" ng-click="$root.goTo('/profile/' + subAccount.sid)">
             <div class="col-md-3 col-xs-6">
                 <div class="account-logo">{{ subAccount.friendly_name  | limitTo : 1 }}</div>

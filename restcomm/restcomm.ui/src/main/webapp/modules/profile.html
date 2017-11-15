@@ -1,7 +1,8 @@
 <div class="row accounts-tabs-mobile visible-xs">
-    <div class="col-xs-5 active"><a href="#/profile/{{sid}}">Main Account</a></div>
-    <div class="col-xs-5 col-xs-offset-2"><a href="#/subaccounts">Sub Accounts</a></div>
+    <div class="col-xs-5 active"><a href="#/profile/{{sid}}"><i class="fa fa-user"></i></a></div>
+    <div class="col-xs-5 col-xs-offset-2"><a href="#/subaccounts"><i class="fa fa-users"></i></a></div>
 </div>
+
 <div class="row">
     <div class="col-md-2 accounts-tabs hidden-xs">
         <div class="active"><a href="#/profile/{{sid}}">Main Account</a></div>
@@ -22,12 +23,13 @@
         <form name="profileForm" class="form-horizontal profile-form">
             <div class="row">
                 <div class="col-md-2 col-sm-2 col-xs-12 account-field-title">Account SID</div>
-                <div class="col-md-4 col-sm-4 col-xs-12 account-field-value">{{ urlAccount.sid }}</div>
-                <div class="clearfix visible-xs">&nbsp;</div>
+                <div class="col-md-6 col-sm-4 col-xs-12 account-field-value">{{ urlAccount.sid }}</div>
+            </div>
+            <div class="row">
                 <div class="col-md-2 col-sm-2 col-xs-12 account-field-title">Auth Token</div>
-                <div class="col-md-4 col-sm-4 col-xs-12 account-field-value">
-                    <input type="{{authTokenType}}" class="account-sid-auth-token-input" value="{{ loggedAccount.auth_token }}" readonly ng-init="authTokenType = 'password'">
+                <div class="col-md-6 col-sm-4 col-xs-12 account-field-value">
                     <img src="resources/img/v2/d-r-pass-visible.png" class="auth-token-toggle" ng-click="authTokenType = (authTokenType === 'password' ? 'text' : 'password')">
+                    <input type="{{authTokenType}}" class="account-sid-auth-token-input" value="{{ loggedAccount.auth_token }}" readonly ng-init="authTokenType = 'password'" ng-click="authTokenType = 'text'" uib-tooltip="Click to view" tooltip-enable="authTokenType === 'password'">
                 </div>
             </div>
             <div class="row">
@@ -63,7 +65,7 @@
         <div>
             <button class="btn btn-primary pull-right margin-left-10" ng-click="updateProfile()" ng-show="profileForm.$dirty" ng-disabled="(newPassword && pwdStrength < 50) || passwordsDiffer">Save</button>
             <button class="btn btn-default pull-right margin-left-10" ng-click="resetChanges()" ng-show="profileForm.$dirty">Reset Changes</button>
-            <button class="btn sign-in-btn pull-left" ng-show="urlAccount.status != 'closed'" ng-disabled="loggedAccount.sid === urlAccount.sid" ng-click="closeAccount(urlAccount)">Close Account</button>
+            <button class="rc-btn btn btn-danger pull-left" ng-show="urlAccount.status != 'closed'" ng-disabled="loggedAccount.sid === urlAccount.sid" ng-click="closeAccount(urlAccount)">Close Account</button>
         </div>
     </div>
 </div>
