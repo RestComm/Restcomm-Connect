@@ -4,23 +4,49 @@
 
 <div class="row">
     <div class="col-md-12">
-        <div id="search-register">
-            <div id="search">
-                <form method="get" action="/search">
-                    <img id="search-icon" src="resources/img/v2/search-icon.png">
-                    <input name="q" type="text" size="40" placeholder="Search..." ng-model="query.phone_number">
-                </form>
-            </div>
-            <div>
-                <a href="#/numbers/register-incoming" class="btn-register pull-right"><b>+</b> Register number</a>
-            </div>
+        <form class="form-horizontal" role="form">
+                <!--<div class="form-inline">-->
+                <div class="row">
+                <div ng-show="numbersList.length > 0 || query">
+                    <div class="col-sm-4">
+                        <div class="input-group">
+                            <span class="input-group-addon">Number</span>
+                            <input type="text"
+                                class="input-sm form-control" placeholder="Phone Number"
+                                ng-model="query.phone_number" />
+                        </div>
+                    </div>
+                    <div class="col-sm-3">
+                        <div class="input-group">
+                            <span class="input-group-addon">Name</span>
+                            <input type="text"
+                                class="input-sm form-control" placeholder="Friendly Name"
+                                ng-model="query.friendly_name" />
+                        </div>
+                    </div>
+                    <div class="col-md-2">
+                        <button type="button" class="btn btn-default" ng-click="getNumbersList()">
+                            <span class="glyphicon glyphicon-search"></span> Search
+                        </button>
+                    </div>
+                </div>
+                    <div>
+                        <a href="#/numbers/register-incoming" class="btn-register pull-right"><b>+</b> Register number</a>
+                    </div>
+                </div>
+                <button class="btn btn-default hidden" disabled>
+                    <i class="fa fa-filter"></i> Filter
+                
+                </button>
+            </form>
+            
         </div>
 
-        <div ng-hide="(numbersList | filter:query).length > 0" class="jumbotron no-records-alert">
+        <div ng-hide="(numbersList).length > 0" class="jumbotron no-records-alert">
             <h2><i class="fa fa-exclamation-circle"></i> No incoming numbers <span ng-show="numbersList.length == 0">registered</span> <span ng-show="numbersList.length > 0">matching query</span>. <small>Register one now!</small></h2>
         </div>
 
-        <table ng-show="(numbersList | filter:query).length > 0" class="table table-hover" ng-cloak>
+        <table ng-show="(numbersList).length > 0" class="table table-hover" ng-cloak>
             <thead style="font-size: 18px;">
              <th class="width-20pc" ng-click="sortBy('phone_number');toggleD=!toggleD;reverse=toggleD;pageChanged()">
             Number<span class="pull-right" ng-show="predicate === 'phone_number'"><i ng-class="{'fa fa-chevron-up':toggleD,'fa fa-chevron-down':!toggleD}"></i></span></th>
@@ -31,7 +57,7 @@
             <th class="width-10pc">&nbsp;</th>
             </thead>
             <tbody>
-            <tr class="number-row" ng-repeat="pn in filtered = (numbersList | filter:query| orderBy:predicate:reverse)">
+            <tr class="number-row" ng-repeat="pn in filtered = (numbersList | orderBy:predicate:reverse)">
                 <td><h4><a href="#/numbers/incoming/{{pn.sid}}">{{ pn.phone_number  }}</a></h4></td>
                 <td class="edit-number"><h5><i class="fa fa-pencil clickable" ng-click="editingFriendlyName = pn.phone_number"></i></h5></td>
                 <td>

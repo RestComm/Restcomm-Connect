@@ -39,7 +39,6 @@ public class IncomingPhoneNumberFilter {
     public IncomingPhoneNumberFilter(String accountSid, String friendlyName, String phoneNumber, String sortBy,
             String sortDirection, Integer limit, Integer offset) {
         this.accountSid = accountSid;
-        this.friendlyName = friendlyName;
         // The LIKE keyword uses '%' to match any (including 0) number of characters, and '_' to match exactly one character
         // Add here the '%' keyword so +15126002188 will be the same as 15126002188 and 6002188
         if (phoneNumber != null) {
@@ -47,6 +46,10 @@ public class IncomingPhoneNumberFilter {
             phoneNumber = phoneNumber.replaceAll("\\*", "_");
         }
 
+        if (friendlyName != null) {
+            friendlyName = "%" + friendlyName + "%";
+        }
+        this.friendlyName = friendlyName;
         this.phoneNumber = phoneNumber;
         this.sortBy = sortBy;
         this.sortDirection = sortDirection;
