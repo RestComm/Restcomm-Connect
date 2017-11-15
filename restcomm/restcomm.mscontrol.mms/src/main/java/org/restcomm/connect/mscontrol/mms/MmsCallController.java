@@ -220,6 +220,7 @@ public class MmsCallController extends MediaServerController {
         transitions.add(new Transition(this.openingRemoteConnection, this.active));
         transitions.add(new Transition(this.openingRemoteConnection, this.failed));
         transitions.add(new Transition(this.openingRemoteConnection, this.pending));
+        transitions.add(new Transition(this.active, this.acquiringMediaSession));
         transitions.add(new Transition(this.active, this.muting));
         transitions.add(new Transition(this.active, this.unmuting));
         transitions.add(new Transition(this.active, this.updatingRemoteConnection));
@@ -365,7 +366,11 @@ public class MmsCallController extends MediaServerController {
         } else if (StopObserving.class.equals(klass)) {
             onStopObserving((StopObserving) message, self, sender);
         } else if (CreateMediaSession.class.equals(klass)) {
-            onCreateMediaSession((CreateMediaSession) message, self, sender);
+            if (is(active)) {
+                fsm.transition(message, acquiringMediaSession);
+            } else {
+                onCreateMediaSession((CreateMediaSession) message, self, sender);
+            }
         } else if (CloseMediaSession.class.equals(klass)) {
             onCloseMediaSession((CloseMediaSession) message, self, sender);
         } else if (UpdateMediaSession.class.equals(klass)) {
@@ -685,8 +690,10 @@ public class MmsCallController extends MediaServerController {
         @SuppressWarnings("unchecked")
         @Override
         public void execute(final Object message) throws Exception {
-            final MediaGatewayResponse<MediaGatewayInfo> response = (MediaGatewayResponse<MediaGatewayInfo>) message;
-            gatewayInfo = response.get();
+            if (message instanceof MediaGatewayResponse) {
+                final MediaGatewayResponse<MediaGatewayInfo> response = (MediaGatewayResponse<MediaGatewayInfo>) message;
+                gatewayInfo = response.get();
+            }
             mediaGateway.tell(new org.restcomm.connect.mgcp.CreateMediaSession(), source);
         }
     }

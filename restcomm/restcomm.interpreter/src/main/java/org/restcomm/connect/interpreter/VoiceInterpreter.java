@@ -936,7 +936,7 @@ public class VoiceInterpreter extends BaseVoiceInterpreter {
             }
             return;
         }
-        if (CallStateChanged.State.RINGING == callState) {
+        if (CallStateChanged.State.RINGING == callState || CallStateChanged.State.WAIT_FOR_ANSWER == callState) {
             if (Verbs.reject.equals(verb.name())) {
                 fsm.transition(message, rejecting);
             } else if (Verbs.pause.equals(verb.name())) {

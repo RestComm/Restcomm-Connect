@@ -365,6 +365,8 @@ public final class Call extends RestcommUntypedActor {
         transitions.add(new Transition(this.waitingForAnswer, this.canceling));
         transitions.add(new Transition(this.waitingForAnswer, this.completed));
         transitions.add(new Transition(this.waitingForAnswer, this.stopping));
+        transitions.add(new Transition(this.waitingForAnswer, this.failed));
+        transitions.add(new Transition(this.waitingForAnswer, this.initializing));
         transitions.add(new Transition(this.dialing, this.canceling));
         transitions.add(new Transition(this.dialing, this.stopping));
         transitions.add(new Transition(this.dialing, this.failingBusy));
@@ -1945,7 +1947,7 @@ public final class Call extends RestcommUntypedActor {
     private void onAnswer(Answer message, ActorRef self, ActorRef sender) throws Exception {
         inboundCallSid = message.callSid();
         inboundConfirmCall = message.confirmCall();
-        if (is(ringing) && !invite.getSession().getState().equals(SipSession.State.TERMINATED)) {
+        if ((is(ringing) || is(waitingForAnswer))&& !invite.getSession().getState().equals(SipSession.State.TERMINATED)) {
                 fsm.transition(message, initializing);
         } else {
             fsm.transition(message, canceled);
