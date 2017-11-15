@@ -368,7 +368,7 @@ public class IncomingPhoneNumbersDaoTest {
 
         // Read the incoming phone number from the data store.
         IncomingPhoneNumberFilter.Builder filterBuilder = IncomingPhoneNumberFilter.Builder.builder();
-        filterBuilder.byOrgSid(org2.toString());
+        filterBuilder.byOrgSid(org1.toString());
         filterBuilder.byPureSIP(Boolean.FALSE);
         IncomingPhoneNumberFilter numFilter = filterBuilder.build();
         List<IncomingPhoneNumber> incomingPhoneNumbers = numbers.getIncomingPhoneNumbersRegex(numFilter);
