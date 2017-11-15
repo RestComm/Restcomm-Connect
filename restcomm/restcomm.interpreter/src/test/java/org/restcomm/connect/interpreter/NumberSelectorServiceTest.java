@@ -59,8 +59,10 @@ public class NumberSelectorServiceTest {
         IncomingPhoneNumber found = service.searchNumber(number, srcSid, destSid);
 
         Assert.assertNull(found);
-        inOrder.verify(numDao, calls(3)).getIncomingPhoneNumbersByFilter((IncomingPhoneNumberFilter) any());
-        inOrder.verify(numDao, calls(1)).getIncomingPhoneNumbersRegex((IncomingPhoneNumberFilter) any());
+        inOrder.verify(numDao, times(2)).getIncomingPhoneNumbersByFilter((IncomingPhoneNumberFilter) any());
+        inOrder.verify(numDao, times(1)).getIncomingPhoneNumbersRegex((IncomingPhoneNumberFilter) any());
+        inOrder.verify(numDao, times(1)).getIncomingPhoneNumbersByFilter((IncomingPhoneNumberFilter) any());
+
     }
 
     @Test
@@ -82,7 +84,7 @@ public class NumberSelectorServiceTest {
 
         Assert.assertNotNull(found);
         Assert.assertEquals(number, found.getPhoneNumber());
-        inOrder.verify(numDao, calls(1)).getIncomingPhoneNumbersByFilter((IncomingPhoneNumberFilter) any());
+        inOrder.verify(numDao, times(1)).getIncomingPhoneNumbersByFilter((IncomingPhoneNumberFilter) any());
         verify(numDao, never()).getIncomingPhoneNumbersRegex((IncomingPhoneNumberFilter) any());
     }
 
@@ -106,7 +108,7 @@ public class NumberSelectorServiceTest {
 
         Assert.assertNotNull(found);
         Assert.assertEquals(number, found.getPhoneNumber());
-        inOrder.verify(numDao, calls(2)).getIncomingPhoneNumbersByFilter((IncomingPhoneNumberFilter) any());
+        inOrder.verify(numDao, times(2)).getIncomingPhoneNumbersByFilter((IncomingPhoneNumberFilter) any());
         verify(numDao, never()).getIncomingPhoneNumbersRegex((IncomingPhoneNumberFilter) any());
     }
 
@@ -130,7 +132,7 @@ public class NumberSelectorServiceTest {
 
         Assert.assertNotNull(found);
         Assert.assertEquals(number, found.getPhoneNumber());
-        inOrder.verify(numDao, calls(2)).getIncomingPhoneNumbersByFilter((IncomingPhoneNumberFilter) any());
+        inOrder.verify(numDao, times(2)).getIncomingPhoneNumbersByFilter((IncomingPhoneNumberFilter) any());
         verify(numDao, never()).getIncomingPhoneNumbersRegex((IncomingPhoneNumberFilter) any());
     }
 
@@ -153,7 +155,7 @@ public class NumberSelectorServiceTest {
 
         Assert.assertNotNull(found);
         Assert.assertEquals(number, found.getPhoneNumber());
-        inOrder.verify(numDao, calls(1)).getIncomingPhoneNumbersByFilter((IncomingPhoneNumberFilter) any());
+        inOrder.verify(numDao, times(1)).getIncomingPhoneNumbersByFilter((IncomingPhoneNumberFilter) any());
         verify(numDao, never()).getIncomingPhoneNumbersRegex((IncomingPhoneNumberFilter) any());
     }
 
@@ -170,7 +172,9 @@ public class NumberSelectorServiceTest {
         numbers.add(builder.build());
         IncomingPhoneNumbersDao numDao = Mockito.mock(IncomingPhoneNumbersDao.class);
         when(numDao.getIncomingPhoneNumbersByFilter((IncomingPhoneNumberFilter) any())).
-                thenReturn(emptyList, emptyList, numbers);
+                thenReturn(emptyList,emptyList, numbers);
+        when(numDao.getIncomingPhoneNumbersRegex((IncomingPhoneNumberFilter) any())).
+                thenReturn(emptyList);
         InOrder inOrder = inOrder(numDao);
         NumberSelectorService service = new NumberSelectorService(numDao);
 
@@ -178,8 +182,8 @@ public class NumberSelectorServiceTest {
 
         Assert.assertNotNull(found);
         Assert.assertEquals(star, found.getPhoneNumber());
-        inOrder.verify(numDao, calls(3)).getIncomingPhoneNumbersByFilter((IncomingPhoneNumberFilter) any());
-        verify(numDao, never()).getIncomingPhoneNumbersRegex((IncomingPhoneNumberFilter) any());
+        inOrder.verify(numDao, times(2)).getIncomingPhoneNumbersByFilter((IncomingPhoneNumberFilter) any());
+        inOrder.verify(numDao, times(1)).getIncomingPhoneNumbersRegex((IncomingPhoneNumberFilter) any());
     }
 
     @Test
@@ -203,7 +207,7 @@ public class NumberSelectorServiceTest {
         IncomingPhoneNumber found = service.searchNumber("1234", srcSid, destSid);
 
         Assert.assertNull(found);
-        inOrder.verify(numDao, calls(3)).getIncomingPhoneNumbersByFilter((IncomingPhoneNumberFilter) any());
+        inOrder.verify(numDao, times(3)).getIncomingPhoneNumbersByFilter((IncomingPhoneNumberFilter) any());
         inOrder.verify(numDao, never()).getIncomingPhoneNumbersRegex((IncomingPhoneNumberFilter) any());
 
     }
@@ -223,7 +227,7 @@ public class NumberSelectorServiceTest {
         numbers.add(builder.build());
         IncomingPhoneNumbersDao numDao = Mockito.mock(IncomingPhoneNumbersDao.class);
         when(numDao.getIncomingPhoneNumbersByFilter((IncomingPhoneNumberFilter) any())).
-                thenReturn(emptyNumbers, emptyNumbers, emptyNumbers);
+                thenReturn(emptyNumbers, emptyNumbers);
         when(numDao.getIncomingPhoneNumbersRegex((IncomingPhoneNumberFilter) any())).
                 thenReturn(numbers);
         InOrder inOrder = inOrder(numDao);
@@ -233,8 +237,8 @@ public class NumberSelectorServiceTest {
 
         Assert.assertNotNull(found);
         Assert.assertEquals(longestRegex, found.getPhoneNumber());
-        inOrder.verify(numDao, calls(3)).getIncomingPhoneNumbersByFilter((IncomingPhoneNumberFilter) any());
-        inOrder.verify(numDao, calls(1)).getIncomingPhoneNumbersRegex((IncomingPhoneNumberFilter) any());
+        inOrder.verify(numDao, times(2)).getIncomingPhoneNumbersByFilter((IncomingPhoneNumberFilter) any());
+        inOrder.verify(numDao, times(1)).getIncomingPhoneNumbersRegex((IncomingPhoneNumberFilter) any());
 
     }
 
