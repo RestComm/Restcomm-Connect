@@ -45,19 +45,17 @@ import org.junit.Test;
 import org.restcomm.connect.commons.configuration.RestcommConfiguration;
 import org.restcomm.connect.commons.dao.Sid;
 import org.restcomm.connect.dao.CallDetailRecordsDao;
-import org.restcomm.connect.dao.ConferenceDetailRecordsDao;
 import org.restcomm.connect.dao.DaoManager;
 import org.restcomm.connect.dao.entities.CallDetailRecord;
-import org.restcomm.connect.dao.entities.ConferenceDetailRecord;
 import org.restcomm.connect.http.client.DownloaderResponse;
 import org.restcomm.connect.telephony.api.Hangup;
-import org.restcomm.connect.telephony.api.StopConference;
 
 import com.github.tomakehurst.wiremock.junit.WireMockRule;
 
 import akka.actor.ActorRef;
 import akka.actor.ActorSystem;
 import akka.actor.Props;
+import akka.actor.ReceiveTimeout;
 import akka.actor.UntypedActor;
 import akka.actor.UntypedActorFactory;
 import akka.testkit.JavaTestKit;
@@ -72,7 +70,6 @@ public final class ApiClientTests {
     
     private static int MOCK_PORT = 8099;
     private static final Sid TEST_CALL_SID = new Sid("ID8deb35fc5121429fa96635aebe3976d2-CA6d61e3877f3c47828a26efc498a9e8f9");
-    private static final Sid TEST_CONFERENCE_SID = new Sid("CF6d61e3877f3c47828a26efc498a9e8f9");
     private static final String TEST_CALL_URI = "/2012-04-24/Accounts/ACae6e420f425248d6a26948c17a9e2acf/Calls/ID8deb35fc5121429fa96635aebe3976d2-CA6d61e3877f3c47828a26efc498a9e8f9";
 
     @Rule
@@ -108,19 +105,37 @@ public final class ApiClientTests {
         return props;
     }
 
-    private Props ConferenceApiClientProps(final DaoManager storage){
-    	final Props props =  new Props(new UntypedActorFactory() {
-            private static final long serialVersionUID = 1L;
-
-            @Override
-            public UntypedActor create() throws Exception {
-                return new ConferenceApiClient(null, null, null, storage);
-            }
-        });
-        return props;
-    }
     @Test
-    public void testCallApiClientTermination() throws URISyntaxException, IOException, InterruptedException {
+    public void testCallApiTimeoutTermination() throws URISyntaxException, IOException, InterruptedException {
+        stubFor(get(urlMatching("/testGet")).willReturn(aResponse()
+                .withStatus(200)
+                .withHeader("Content-Type", "application/json")
+                .withBody("expectedBody")));        
+        new JavaTestKit(system) {
+            {
+                final ActorRef observer = getRef();
+                DaoManager daoManager = mock(DaoManager.class);
+                CallDetailRecord.Builder cdrBuilder = CallDetailRecord.builder();
+                cdrBuilder.setSid(TEST_CALL_SID);
+                cdrBuilder.setUri(new URI(TEST_CALL_URI));
+                CallDetailRecord cdr = cdrBuilder.build();
+                CallDetailRecordsDao cdrDao = mock(CallDetailRecordsDao.class);
+                when(daoManager.getCallDetailRecordsDao()).thenReturn(cdrDao);
+                when(cdrDao.getCallDetailRecord(any(Sid.class))).thenReturn(cdr);
+                
+                ActorRef callApiClient = system.actorOf(CallApiClientProps(daoManager));
+                callApiClient.tell(new ReceiveTimeout() {}, observer);
+                final FiniteDuration timeout = FiniteDuration.create(15, TimeUnit.SECONDS);
+                final DownloaderResponse response = expectMsgClass(timeout, DownloaderResponse.class);
+                assertFalse(response.succeeded());
+                Thread.sleep(1000);
+                assertTrue(callApiClient.isTerminated());
+            }
+        };
+    }
+
+    @Test
+    public void testCallApiClientFailedResponse() throws URISyntaxException, IOException, InterruptedException {
         stubFor(get(urlMatching("/testGet")).willReturn(aResponse()
                 .withStatus(200)
                 .withHeader("Content-Type", "application/json")
@@ -139,41 +154,9 @@ public final class ApiClientTests {
                 
                 ActorRef callApiClient = system.actorOf(CallApiClientProps(daoManager));
                 callApiClient.tell(new Hangup("test", new Sid("ACae6e420f425248d6a26948c17a9e2acf"), null), observer);
-                final FiniteDuration timeout = FiniteDuration.create(30, TimeUnit.SECONDS);
+                final FiniteDuration timeout = FiniteDuration.create(15, TimeUnit.SECONDS);
                 final DownloaderResponse response = expectMsgClass(timeout, DownloaderResponse.class);
-                Thread.sleep(5000);
-                System.out.println("go");
                 assertFalse(response.succeeded());
-                assertTrue(callApiClient.isTerminated());
-            }
-        };
-    }
-
-    @Test
-    public void testConferenceApiClientTermination() throws URISyntaxException, IOException, InterruptedException {
-        stubFor(get(urlMatching("/testGet")).willReturn(aResponse()
-                .withStatus(200)
-                .withHeader("Content-Type", "application/json")
-                .withBody("expectedBody")));        
-        new JavaTestKit(system) {
-            {
-                final ActorRef observer = getRef();
-                DaoManager daoManager = mock(DaoManager.class);
-                ConferenceDetailRecord.Builder cdrBuilder = ConferenceDetailRecord.builder();
-                cdrBuilder.setSid(TEST_CONFERENCE_SID);
-                ConferenceDetailRecord cdr = cdrBuilder.build();
-                ConferenceDetailRecordsDao cdrDao = mock(ConferenceDetailRecordsDao.class);
-                when(daoManager.getConferenceDetailRecordsDao()).thenReturn(cdrDao);
-                when(cdrDao.getConferenceDetailRecord(any(Sid.class))).thenReturn(cdr);
-                
-                ActorRef cnfApiClient = system.actorOf(ConferenceApiClientProps(daoManager));
-                cnfApiClient.tell(new StopConference(), observer);
-                final FiniteDuration timeout = FiniteDuration.create(30, TimeUnit.SECONDS);
-                final DownloaderResponse response = expectMsgClass(timeout, DownloaderResponse.class);
-                Thread.sleep(5000);
-                System.out.println("go");
-                assertFalse(response.succeeded());
-                assertTrue(cnfApiClient.isTerminated());
             }
         };
     }

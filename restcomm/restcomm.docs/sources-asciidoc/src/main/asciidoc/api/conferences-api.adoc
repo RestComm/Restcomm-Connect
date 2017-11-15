@@ -29,31 +29,15 @@ The <Conference> represents a single conference originated and terminated from a
 === Supported Operations
 **HTTP GET**. Returns the representation of a Conference resource, including the properties above.
 
-.Get Conference by ConferenceSid
-====
-curl -X GET https://[AccountSid]:[AuthToken]@<Your-Restcomm-Domain>/2012-04-24/Accounts/[AccountSid]/Conferences/CFXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX.json
-====
+==== Example: Get Conference by ConferenceSid
+
+....
+curl -H "Authorization: Basic <MY_ENCODED_CREDENTIALS>" https://IP/restcomm/2012-04-24/Accounts/{AccountSid}/Conferences/{ConferenceSid}
+....
 
 
 **HTTP POST**.
-Updates the status of a Conference.
-
-You may update the properties of a Conference via POSTing the following parameter:
-
-|====
-| PARAMETER | DESCRIPTION
-| Status | Specifying ``Completed`` will end the conference and kick all participants
-|====
-
-Returns a representation of the Conference identified by {ConferenceSid} with the updated status.
-
-.Terminate a Conference
-====
-[source,java]
-----
-curl -X POST https://[AccountSid]:[AuthToken]@<Your-Restcomm-Domain>/2012-04-24/Accounts/[AccountSid]/Conferences/CFXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX.json -d "Status=completed"
-----
-====
+Not supported
 
 **HTTP PUT**.
 Not supported

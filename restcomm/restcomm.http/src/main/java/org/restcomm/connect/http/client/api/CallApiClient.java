@@ -89,6 +89,7 @@ public class CallApiClient extends RestcommUntypedActor {
         } else if (DownloaderResponse.class.equals(klass)) {
             onDownloaderResponse(message, self, sender);
         } else if (message instanceof ReceiveTimeout) {
+            onDownloaderResponse(new DownloaderResponse(new Exception("Call Api stayed active too long")), self, sender);
             getContext().stop(self());
         }
     }
@@ -99,9 +100,8 @@ public class CallApiClient extends RestcommUntypedActor {
             logger.info("Call api response succeeded " + response.succeeded());
             logger.info("Call api response: " + response);
         }
+        requestee = requestee == null ? sender : requestee;
         requestee.tell(message, self);
-        // since this is a one time disposable client lets clean it off after it sends DownloaderResponse.
-        getContext().stop(self());
     }
 
     protected void onHangup(Hangup message, ActorRef self, ActorRef sender) throws URISyntaxException, ParseException {
@@ -127,6 +127,7 @@ public class CallApiClient extends RestcommUntypedActor {
                 httpAsycClientHelper.tell(httpRequestDescriptor, self);
             } catch (Exception e) {
                 logger.error("Exception while trying to terminate call via api {} ", e);
+                onDownloaderResponse(new DownloaderResponse(e), self, sender);
             }
         }
     }
