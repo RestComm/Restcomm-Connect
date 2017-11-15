@@ -31,7 +31,6 @@ import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
 import com.google.gson.JsonParser;
 import com.sun.jersey.api.client.Client;
-import com.sun.jersey.api.client.UniformInterfaceException;
 import com.sun.jersey.api.client.WebResource;
 import com.sun.jersey.api.client.filter.HTTPBasicAuthFilter;
 import com.sun.jersey.core.util.MultivaluedMapImpl;
@@ -165,47 +164,6 @@ public class RestcommConferenceTool {
         JsonParser parser = new JsonParser();
         JsonObject jsonObject = parser.parse(response).getAsJsonObject();
 
-        return jsonObject;
-    }
-    
-    /**
-     * @param deploymentUrl
-     * @param username
-     * @param authToken
-     * @param conferenceSid
-     * @param status
-     * @return
-     * @throws Exception
-     */
-    public JsonObject modifyConference(String deploymentUrl, String username, String authToken, String conferenceSid, String status) throws Exception {
-
-        Client jerseyClient = Client.create();
-        jerseyClient.addFilter(new HTTPBasicAuthFilter(username, authToken));
-
-        String url = getAccountsUrl(deploymentUrl, username, false);
-
-        WebResource webResource = jerseyClient.resource(url);
-
-        MultivaluedMap<String, String> params = new MultivaluedMapImpl();
-        if (status != null)
-            params.add("Status", status);
-
-        JsonObject jsonObject = null;
-
-        try {
-            String response = webResource.path(conferenceSid+".json").accept(MediaType.APPLICATION_JSON).post(String.class, params);
-            logger.info("response: "+response);
-            JsonParser parser = new JsonParser();
-            JsonElement element = parser.parse(response);
-            logger.info("element: "+element);
-            
-            jsonObject = element.getAsJsonObject();
-        } catch (Exception e) {
-            logger.error("Exception : ", e);
-            UniformInterfaceException exception = (UniformInterfaceException)e;
-            jsonObject = new JsonObject();
-            jsonObject.addProperty("Exception",exception.getResponse().getStatus());
-        }
         return jsonObject;
     }
 }
