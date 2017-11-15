@@ -179,6 +179,7 @@ public class NumberSelectorService {
         IncomingPhoneNumber numberFound = null;
         IncomingPhoneNumberFilter.Builder filterBuilder = IncomingPhoneNumberFilter.Builder.builder();
         filterBuilder.byOrgSid(destOrg.toString());
+        filterBuilder.byPureSIP(Boolean.FALSE);
         List<IncomingPhoneNumber> regexList = numbersDao.getIncomingPhoneNumbersRegex(filterBuilder.build());
         if (logger.isDebugEnabled()) {
             logger.debug(String.format("Found %d Regex IncomingPhone numbers.", regexList.size()));
