@@ -33,7 +33,8 @@ public class ConferenceTestUtil {
     protected XMLConfiguration daoManagerConf = null;
 
     protected static DaoManager daoManager;
-    protected static final String CONFIG_PATH_NODE_1 = "/restcomm.xml";
+
+	protected static final String CONFIG_PATH_NODE_1 = "/restcomm.xml";
     protected static final String CONFIG_PATH_NODE_2 = "/restcomm-node2.xml";
     protected static final String CONFIG_PATH_DAO_MANAGER = "/dao-manager.xml";
 
@@ -43,6 +44,7 @@ public class ConferenceTestUtil {
     protected static final String CALL_SID ="CAae6e420f425248d6a26948c17a9e2acf";
 
     protected static final String ACCOUNT_SID_1 ="ACae6e420f425248d6a26948c17a9e2acf";
+	public static Sid TEST_CNF_SID = new Sid("CF6d61e3877f3c47828a26efc498a9e8f9");
 
     @BeforeClass
     public static void beforeClass() throws Exception {

@@ -71,4 +71,10 @@ public final class ConferenceInfo {
     public int globalParticipants(){
         return globalParticipants;
     }
+
+    @Override
+    public String toString() {
+        return "ConferenceInfo [sid=" + sid + ", participants=" + participants + ", state=" + state + ", name=" + name
+                + ", moderatorPresent=" + moderatorPresent + ", globalParticipants=" + globalParticipants + "]";
+    }
 }

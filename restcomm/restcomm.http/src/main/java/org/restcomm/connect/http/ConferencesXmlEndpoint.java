@@ -23,11 +23,9 @@ import static javax.ws.rs.core.MediaType.APPLICATION_JSON_TYPE;
 import static javax.ws.rs.core.MediaType.APPLICATION_XML_TYPE;
 
 import javax.ws.rs.GET;
-import javax.ws.rs.POST;
 import javax.ws.rs.Path;
 import javax.ws.rs.PathParam;
 import javax.ws.rs.core.Context;
-import javax.ws.rs.core.MultivaluedMap;
 import javax.ws.rs.core.Response;
 import javax.ws.rs.core.UriInfo;
 
@@ -59,18 +57,6 @@ public final class ConferencesXmlEndpoint extends ConferencesEndpoint {
     @GET
     public Response getConferences(@PathParam("accountSid") final String accountSid, @Context UriInfo info) {
         return getConferences(accountSid, info, APPLICATION_XML_TYPE);
-    }
-
-    @Path("/{sid}.json")
-    @POST
-    public Response updateConferenceAsJson(@PathParam("accountSid") final String accountSid, @PathParam("sid") final String sid, final MultivaluedMap<String, String> data) {
-        return updateConference(accountSid, sid, data, APPLICATION_JSON_TYPE);
-    }
-
-    @Path("/{sid}")
-    @POST
-    public Response updateConferenceAsXml(@PathParam("accountSid") final String accountSid, @PathParam("sid") final String sid, final MultivaluedMap<String, String> data) {
-        return updateConference(accountSid, sid, data, APPLICATION_XML_TYPE);
     }
 
 }

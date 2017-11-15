@@ -30,38 +30,32 @@ import static javax.ws.rs.core.Response.Status.NOT_FOUND;
 import static javax.ws.rs.core.Response.Status.UNAUTHORIZED;
 
 import java.text.ParseException;
-import java.util.Iterator;
 import java.util.List;
 
 import javax.annotation.PostConstruct;
 import javax.servlet.ServletContext;
 import javax.ws.rs.core.Context;
 import javax.ws.rs.core.MediaType;
-import javax.ws.rs.core.MultivaluedMap;
 import javax.ws.rs.core.Response;
 import javax.ws.rs.core.UriInfo;
 
 import org.apache.commons.configuration.Configuration;
 import org.apache.shiro.authz.AuthorizationException;
 import org.restcomm.connect.commons.annotations.concurrency.NotThreadSafe;
-import org.restcomm.connect.commons.dao.Sid;
+import org.restcomm.connect.http.converter.ConferenceDetailRecordConverter;
+import org.restcomm.connect.http.converter.ConferenceDetailRecordListConverter;
 import org.restcomm.connect.dao.ConferenceDetailRecordsDao;
 import org.restcomm.connect.dao.DaoManager;
 import org.restcomm.connect.dao.entities.Account;
-import org.restcomm.connect.dao.entities.CallDetailRecord;
 import org.restcomm.connect.dao.entities.ConferenceDetailRecord;
 import org.restcomm.connect.dao.entities.ConferenceDetailRecordFilter;
 import org.restcomm.connect.dao.entities.ConferenceDetailRecordList;
 import org.restcomm.connect.dao.entities.RestCommResponse;
-import org.restcomm.connect.http.converter.ConferenceDetailRecordConverter;
-import org.restcomm.connect.http.converter.ConferenceDetailRecordListConverter;
-import org.restcomm.connect.telephony.api.Hangup;
+import org.restcomm.connect.commons.dao.Sid;
 
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
 import com.thoughtworks.xstream.XStream;
-
-import akka.actor.ActorRef;
 
 /**
  * @author quintana.thomas@gmail.com (Thomas Quintana)
@@ -77,7 +71,6 @@ public abstract class ConferencesEndpoint extends SecuredEndpoint {
     private GsonBuilder builder;
     private XStream xstream;
     private ConferenceDetailRecordListConverter listConverter;
-    protected ActorRef callManager;
 
     public ConferencesEndpoint() {
         super();
@@ -88,7 +81,6 @@ public abstract class ConferencesEndpoint extends SecuredEndpoint {
         configuration = (Configuration) context.getAttribute(Configuration.class.getName());
         configuration = configuration.subset("runtime-settings");
         daoManager = (DaoManager) context.getAttribute(DaoManager.class.getName());
-        callManager = (ActorRef) context.getAttribute("org.restcomm.connect.telephony.CallManager");
         super.init(configuration);
         ConferenceDetailRecordConverter converter = new ConferenceDetailRecordConverter(configuration);
         listConverter = new ConferenceDetailRecordListConverter(configuration);
@@ -202,71 +194,4 @@ public abstract class ConferencesEndpoint extends SecuredEndpoint {
         }
     }
 
-    protected Response updateConference(String accountSid, String sid, MultivaluedMap<String, String> data,
-            MediaType responseType) {
-        logger.info(String.format("updateConference accountsid: %s conferenceSid: %s", accountSid, sid));
-        Account account = daoManager.getAccountsDao().getAccount(accountSid);
-        Account effectiveAccount = userIdentityContext.getEffectiveAccount();
-        try {
-            secure(account, "RestComm:Modify:Conferences");
-        } catch (final AuthorizationException exception) {
-            return status(UNAUTHORIZED).build();
-        }
-        final ConferenceDetailRecordsDao dao = daoManager.getConferenceDetailRecordsDao();
-        ConferenceDetailRecord cdr = dao.getConferenceDetailRecord(new Sid(sid));
-        if (cdr == null) {
-            return status(NOT_FOUND).build();
-        } else {
-            //allow super admin to perform update on any conference - https://telestax.atlassian.net/browse/RESTCOMM-1171
-            if (!isSuperAdmin()) {
-                try {
-                    secure(account, cdr.getAccountSid(), SecuredType.SECURED_STANDARD);
-                } catch (final AuthorizationException exception) {
-                    return status(UNAUTHORIZED).build();
-                }
-            }
-
-            final String status = data.getFirst("Status");
-
-            if(status != null && status.equalsIgnoreCase("completed")){
-                kickoutAllActiveParticipants(cdr, effectiveAccount);
-                //get updated conference record
-                cdr = dao.getConferenceDetailRecord(new Sid(sid));
-            }else {
-                    return status(BAD_REQUEST).build();
-            }
-
-            if (APPLICATION_XML_TYPE == responseType) {
-                final RestCommResponse response = new RestCommResponse(cdr);
-                return ok(xstream.toXML(response), APPLICATION_XML).build();
-            } else if (APPLICATION_JSON_TYPE == responseType) {
-                return ok(gson.toJson(cdr), APPLICATION_JSON).build();
-            } else {
-                return null;
-            }
-        }
-    }
-
-    private void kickoutAllActiveParticipants(ConferenceDetailRecord conferenceDetailRecord, Account effectiveAccount){
-        List<CallDetailRecord> callDetailRecords = daoManager.getCallDetailRecordsDao().getRunningCallDetailRecordsByConferenceSid(conferenceDetailRecord.getSid());
-
-        if(callDetailRecords == null || callDetailRecords.isEmpty()){
-            if (logger.isDebugEnabled())
-                logger.debug("no active participants found.");
-        } else {
-           try {
-               if (callManager == null)
-                   callManager = (ActorRef) context.getAttribute("org.restcomm.connect.telephony.CallManager");
-               if (logger.isDebugEnabled())
-                    logger.debug("total conference participants are: "+callDetailRecords.size());
-               Iterator<CallDetailRecord> iterator = callDetailRecords.iterator();
-                while(iterator.hasNext()){
-                    final CallDetailRecord CallDR = iterator.next();
-                    callManager.tell(new Hangup("Conference Terminated", effectiveAccount.getSid(), CallDR), null);
-                }
-            } catch (Exception e) {
-                logger.error("Exception while trying to terminate conference via api: ", e);
-            }
-        }
-    }
 }
