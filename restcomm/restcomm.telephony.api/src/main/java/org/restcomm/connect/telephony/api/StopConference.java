@@ -20,30 +20,13 @@
 package org.restcomm.connect.telephony.api;
 
 import org.restcomm.connect.commons.annotations.concurrency.Immutable;
-import org.restcomm.connect.commons.dao.Sid;
 
 /**
  * @author quintana.thomas@gmail.com (Thomas Quintana)
- * @author maria.farooq
  */
 @Immutable
 public final class StopConference {
-
-    private Sid requestingAccountSid;
-
     public StopConference() {
         super();
-    }
-
-    public StopConference(final Sid requestingAccountSid) {
-        super();
-        this.requestingAccountSid = requestingAccountSid;
-    }
-
-    /**
-     * @return accountSid for account initiating this StopConference request.
-     */
-    public Sid getRequestingAccountSid() {
-        return requestingAccountSid;
     }
 }
