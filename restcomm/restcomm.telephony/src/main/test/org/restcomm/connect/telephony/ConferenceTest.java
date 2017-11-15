@@ -1,6 +1,7 @@
 package org.restcomm.connect.telephony;
 
 import static org.junit.Assert.assertTrue;
+import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertEquals;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.mock;
@@ -27,6 +28,8 @@ import org.restcomm.connect.dao.CallDetailRecordsDao;
 import org.restcomm.connect.dao.ConferenceDetailRecordsDao;
 import org.restcomm.connect.dao.DaoManager;
 import org.restcomm.connect.dao.entities.CallDetailRecord;
+import org.restcomm.connect.http.client.CallApiResponse;
+import org.restcomm.connect.http.client.api.CallApiClient;
 import org.restcomm.connect.mscontrol.api.MediaServerControllerFactory;
 import org.restcomm.connect.mscontrol.api.messages.JoinComplete;
 import org.restcomm.connect.mscontrol.api.messages.Leave;
@@ -222,7 +225,7 @@ public class ConferenceTest extends ConferenceTestUtil{
             	when(daoManager.getConferenceDetailRecordsDao()).thenReturn(conferenceDetailRecordsDao);
             	when(daoManager.getCallDetailRecordsDao()).thenReturn(callDetailRecordsDao);
 
-            	// set conference timeout to 5 seconds
+            	// set conference timeout to 10 seconds
             	RestcommConfiguration.getInstance().getMain().setConferenceTimeout(10);
 
             	final ActorRef tester = getRef();
@@ -253,6 +256,21 @@ public class ConferenceTest extends ConferenceTestUtil{
                 expectMsgClass(finiteDuration, JoinComplete.class);
 
                 expectMsgClass(finiteDuration, Leave.class);
+                
+                ActorRef testActor = system.actorOf(new Props(new UntypedActorFactory() {
+                    private static final long serialVersionUID = 1L;
+
+                    @Override
+                    public UntypedActor create() throws Exception {
+                        return new CallApiClient(TEST_CALL_SID, daoManager);
+                    }
+                }));
+                assertFalse(testActor.isTerminated());
+                //send a CallApiResponse to conference on behalf of CallApiClient to see if it stops it
+                conferene.tell(new CallApiResponse(new Exception("testing")), testActor);
+                //wait a bit
+                Thread.sleep(500);
+                assertTrue(testActor.isTerminated());
                 
                 //tell conference that call left on behalf of the call actor
                 conferene.tell(new Left(tester), tester);

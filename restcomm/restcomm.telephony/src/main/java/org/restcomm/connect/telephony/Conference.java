@@ -44,7 +44,7 @@ import org.restcomm.connect.dao.ConferenceDetailRecordsDao;
 import org.restcomm.connect.dao.DaoManager;
 import org.restcomm.connect.dao.entities.CallDetailRecord;
 import org.restcomm.connect.dao.entities.ConferenceDetailRecord;
-import org.restcomm.connect.http.client.DownloaderResponse;
+import org.restcomm.connect.http.client.CallApiResponse;
 import org.restcomm.connect.http.client.api.CallApiClient;
 import org.restcomm.connect.mscontrol.api.MediaServerControllerFactory;
 import org.restcomm.connect.mscontrol.api.messages.CreateMediaSession;
@@ -108,8 +108,6 @@ public final class Conference extends RestcommUntypedActor {
     private Sid sid;
     private final List<ActorRef> calls;
     private final List<ActorRef> observers;
-    //list of callApiClients created by Conference
-    private List<ActorRef> callApiClients;
 
     private boolean moderatorPresent = false;
 
@@ -240,8 +238,8 @@ public final class Conference extends RestcommUntypedActor {
             onStopRecording((StopRecording) message, self, sender);
         } else if (message instanceof ReceiveTimeout) {
             onReceiveTimeout((ReceiveTimeout) message, self, sender);
-        } else if (DownloaderResponse.class.equals(klass)) {
-            onDownloaderResponse((DownloaderResponse) message, self, sender);
+        } else if (CallApiResponse.class.equals(klass)) {
+            onCallApiResponse((CallApiResponse) message, self, sender);
         }
     }
 
@@ -588,17 +586,11 @@ public final class Conference extends RestcommUntypedActor {
         onStopConference(new StopConference(SUPER_ADMIN_ACCOUNT_SID), self, sender);
     }
 
-    private void onDownloaderResponse(DownloaderResponse message, ActorRef self, ActorRef sender) {
-        //make sure we only remove sender that is callApiClient and was created by this conference actor
-        //so we don't kill a sender that has accidently broadcast a DownloaderResponse to this conference.
-        if(callApiClients.contains(sender)){
-            if (logger.isInfoEnabled()) {
-                logger.info(String.format("Conference will stop sender of DownloaderResponse: %s", sender));
-            }
-            getContext().stop(sender);
-        }else{
-            logger.warning(String.format("Conference receieved an unexpected DownloaderResponse by: %s current expected actor list is:", sender, callApiClients));
+    private void onCallApiResponse(CallApiResponse message, ActorRef self, ActorRef sender) {
+        if (logger.isInfoEnabled()) {
+            logger.info(String.format("Conference will stop sender of CallApiResponse: %s", sender));
         }
+        getContext().stop(sender);
     }
 
     /**
@@ -693,11 +685,7 @@ public final class Conference extends RestcommUntypedActor {
                 return new CallApiClient(callSid, storage);
             }
         });
-        if(callApiClients == null)
-            callApiClients = new ArrayList<ActorRef>();
-        ActorRef cac = getContext().actorOf(props);
-        callApiClients.add(cac);
-        return cac;
+        return getContext().actorOf(props);
     }
 
     @Override

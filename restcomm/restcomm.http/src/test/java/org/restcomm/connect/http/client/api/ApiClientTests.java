@@ -47,7 +47,7 @@ import org.restcomm.connect.commons.dao.Sid;
 import org.restcomm.connect.dao.CallDetailRecordsDao;
 import org.restcomm.connect.dao.DaoManager;
 import org.restcomm.connect.dao.entities.CallDetailRecord;
-import org.restcomm.connect.http.client.DownloaderResponse;
+import org.restcomm.connect.http.client.CallApiResponse;
 import org.restcomm.connect.telephony.api.Hangup;
 
 import com.github.tomakehurst.wiremock.junit.WireMockRule;
@@ -126,7 +126,7 @@ public final class ApiClientTests {
                 ActorRef callApiClient = system.actorOf(CallApiClientProps(daoManager));
                 callApiClient.tell(new ReceiveTimeout() {}, observer);
                 final FiniteDuration timeout = FiniteDuration.create(15, TimeUnit.SECONDS);
-                final DownloaderResponse response = expectMsgClass(timeout, DownloaderResponse.class);
+                final CallApiResponse response = expectMsgClass(timeout, CallApiResponse.class);
                 assertFalse(response.succeeded());
                 Thread.sleep(1000);
                 assertTrue(callApiClient.isTerminated());
@@ -155,7 +155,7 @@ public final class ApiClientTests {
                 ActorRef callApiClient = system.actorOf(CallApiClientProps(daoManager));
                 callApiClient.tell(new Hangup("test", new Sid("ACae6e420f425248d6a26948c17a9e2acf"), null), observer);
                 final FiniteDuration timeout = FiniteDuration.create(15, TimeUnit.SECONDS);
-                final DownloaderResponse response = expectMsgClass(timeout, DownloaderResponse.class);
+                final CallApiResponse response = expectMsgClass(timeout, CallApiResponse.class);
                 assertFalse(response.succeeded());
             }
         };
