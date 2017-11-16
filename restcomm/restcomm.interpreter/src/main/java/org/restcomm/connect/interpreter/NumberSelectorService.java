@@ -201,8 +201,10 @@ public class NumberSelectorService {
         IncomingPhoneNumber numberfound = findByNumber(numberQueries, sourceOrganizationSid, destinationOrganizationSid);
         if (numberfound == null) {
             //only use regex if perfect match didnt worked
-            if (destinationOrganizationSid != null
+            if (destinationOrganizationSid != null &&
+                    destinationOrganizationSid.equals(sourceOrganizationSid)
                     && phone.matches("[\\d,*,#,+]+")) {
+                //check regex if source and dest orgs are the same
                 //only use regex if org available
                 //check if there is a Regex match only if parameter is a String aka phone Number
                 numberfound = findByRegex(numberQueries, sourceOrganizationSid, destinationOrganizationSid);

@@ -44,7 +44,7 @@ public class NumberSelectorServiceTest {
     @Test
     public void testNoMatch() {
         Sid srcSid = Sid.generate(Sid.Type.ORGANIZATION);
-        Sid destSid = Sid.generate(Sid.Type.ORGANIZATION);
+        Sid destSid = srcSid;
         String number = "1234";
         List<IncomingPhoneNumber> emptyNumbers = new ArrayList();
 
@@ -162,7 +162,7 @@ public class NumberSelectorServiceTest {
     @Test
     public void testStarMatch() {
         Sid srcSid = Sid.generate(Sid.Type.ORGANIZATION);
-        Sid destSid = Sid.generate(Sid.Type.ORGANIZATION);
+        Sid destSid = srcSid;
         String number = "1234";
         String star = "*";
         List<IncomingPhoneNumber> emptyList = new ArrayList();
@@ -215,7 +215,7 @@ public class NumberSelectorServiceTest {
     @Test
     public void testRegexMatch() {
         Sid srcSid = Sid.generate(Sid.Type.ORGANIZATION);
-        Sid destSid = Sid.generate(Sid.Type.ORGANIZATION);
+        Sid destSid = srcSid;
         String regex = "12.*";
         String longestRegex = "123.*";
         List<IncomingPhoneNumber> emptyNumbers = new ArrayList();
