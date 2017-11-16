@@ -43,12 +43,6 @@ rcMod.controller('UserMenuCtrl', function($scope, $http, $resource, $rootScope, 
   }
   getAccountList();
 
-  // when new sub-account is created make sure the list is updated
-  $scope.$on("account-created", function () {
-    getAccountList();
-  });
-  //}
-
   // add account -------------------------------------------------------------
 
   $scope.showAboutModal = function () {
@@ -127,10 +121,14 @@ rcMod.controller('SubAccountsCtrl', function($scope, $resource, $stateParams, $u
       },
       function () {
         // what to do on modal dismiss...
-        $scope.subAccountsList = accountsList;
       }
     );
   };
+
+  $scope.$on("account-created", function () {
+    console.log("Received account-created notification");
+    $scope.subAccountsList = RCommAccounts.query();
+  });
 
   var RegisterAccountModalCtrl = function ($scope, $uibModalInstance, RCommAccounts, Notifications, AuthService, $rootScope) {
     var loggedUserAccount = AuthService.getAccount();
@@ -201,8 +199,10 @@ rcMod.controller('ProfileCtrl', function($scope, $resource, $stateParams, Sessio
   });
 
   $scope.setAccountStatus = function (status) {
-    $scope.urlAccount.status = status;
-    $scope.profileForm.$setDirty(); // set it manually since there is no model to bind to
+    if ($scope.urlAccount.sid !== $scope.sid) {
+      $scope.urlAccount.status = status;
+      $scope.profileForm.$setDirty(); // set it manually since there is no model to bind to
+    }
   };
 
   $scope.resetChanges = function () {
@@ -224,16 +224,11 @@ rcMod.controller('ProfileCtrl', function($scope, $resource, $stateParams, Sessio
       $scope.newPassword2 = '';
       $scope.profileForm.$setPristine();
       Notifications.success('Profile updated successfully.');
-    }, function() {
+    }, function(error) {
       // error
-      Notifications.error('Failure updating profile. Please check data and try again.');
+      Notifications.error('Failure updating profile' + (error.data && error.data.message ? ' (' + error.data.message + ')' : '') + '. Please check data and try again.');
     });
   };
-
-  $scope.$on("account-created", function () {
-    console.log("Received account-created notification");
-    $scope.loggedSubAccounts = RCommAccounts.query();
-  });
 
   $scope.closeAccount = function (account) {
     var title = 'Close account';

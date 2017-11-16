@@ -13,7 +13,7 @@
             <div class="col-md-4 col-xs-6">
                 <form class="search-form">
                     <img class="search-icon" src="resources/img/v2/search-icon.png">
-                    <input name="q" type="text" size="40" placeholder="Search..." ng-model="query.phone_number">
+                    <input name="q" type="text" size="40" placeholder="Search..." ng-model="search.friendly_name">
                 </form>
             </div>
             <div  class="col-md-4 col-md-offset-4 col-xs-6">
@@ -22,22 +22,6 @@
             </div>
         </div>
         <hr>
-        <div class="row visible-md visible-lg" ng-show="filtered.length > 0">
-            <div class="col-md-2 col-md-offset-1">
-                <strong>Name</strong>
-            </div>
-            <div class="col-md-4">
-                <strong>Account SID</strong>
-            </div>
-            <div class="col-md-2">
-                <strong>Role</strong>
-            </div>
-            <div class="col-md-3">
-                <strong>Status</strong>
-            </div>
-        </div>
-
-        <div>&nbsp;</div>
 
         <div ng-hide="filtered.length > 0" class="jumbotron rc-no-items">
             <h1><i class="fa fa-users"></i> </h1>
@@ -45,24 +29,56 @@
             <h5>Why don't you get some friends in?</h5>
         </div>
 
-        <div class="row sub-accounts-row" ng-repeat="subAccount in filtered = (subAccountsList | filter:search | orderBy:predicate:reverse) | startFrom:(currentPage-1)*entryLimit | limitTo:entryLimit" ng-click="$root.goTo('/profile/' + subAccount.sid)">
-            <div class="col-md-3 col-xs-6">
-                <div class="account-logo">{{ subAccount.friendly_name  | limitTo : 1 }}</div>
-                <div class="fit-to-size"><a href="#/profile/{{subAccount.sid}}">{{ subAccount.friendly_name }}</a></div>
-                <div class="visible-xs sub-account-role-mobile">Administrator</div>
-            </div>
-            <div class="col-md-4 col-xs-3">
-                <div class="fit-to-size">{{ subAccount.sid }}</div>
-            </div>
-            <div class="col-md-2 hidden-xs hidden-sm">
-                <div class="fit-to-size">{{ subAccount.role || "Administrator" }}</div>
-            </div>
-            <div class="col-md-3 col-xs-2">
-                <div class="account-status-active-text">{{ subAccount.status }}</div>
-            </div>
-            <div class="col-md-3 col-xs-1 visible-xs">
-                <div><i class="fa fa-chevron-right"></i></div>
-            </div>
-        </div>
+        <table ng-show="(subAccountsList | filter:search).length > 0" class="table table-hover rc-list sub-accounts-list" ng-cloak>
+            <thead>
+            <th class="sub-accounts-list-name">Name</th>
+            <th class="sub-accounts-list-account-sid">Account SID</th>
+            <th class="sub-accounts-list-role hidden-xs" >Role</th>
+            <th class="sub-accounts-list-status">Status</th>
+            <th class="sub-accounts-list-action"></th>
+            </thead>
+            <tbody>
+            <tr class="sub-accounts-row" ng-repeat="subAccount in filtered = (subAccountsList | filter:search | orderBy:predicate:reverse) | startFrom:(currentPage-1)*entryLimit | limitTo:entryLimit" ng-click="$root.goTo('/profile/' + subAccount.sid)">
+                <td class="sub-accounts-list-name">
+                    <div class="account-logo">{{ subAccount.friendly_name  | limitTo : 1 | uppercase }}</div>
+                    <div class="fit-to-size"><a href="#/profile/{{subAccount.sid}}">{{ subAccount.friendly_name }}</a></div>
+                    <small><small class="visible-xs">Administrator</small></small>
+                </td>
+                <td class="sub-accounts-list-account-sid">
+                    <div class="fit-to-size">{{ subAccount.sid }}</div>
+                </td>
+                <td class="sub-accounts-list-role hidden-xs hidden-sm">
+                    <div class="fit-to-size">{{ subAccount.role || "Administrator" }}</div>
+                </td>
+                <td class="sub-accounts-list-status">
+                    <div class="account-status-{{ subAccount.status }}-text">{{ subAccount.status }}</div>
+                </td>
+                <td class="sub-accounts-list-action visible-xs">
+                    <div><i class="fa fa-chevron-right"></i></div>
+                </td>
+            </tr>
+            </tbody>
+            <tfoot>
+            <td colspan="4">
+                <div class="row">
+                    <div class="col-md-4">
+                        <small class="rc-list-summary">{{ filtered.length }} Account{{ filtered.length == 1 ? "" : "s" }}</small>
+                    </div>
+                    <div class="col-md-4">
+                        <form class="form-inline text-center">
+                            <div class="btn-group buttons-per-page">
+                                <button type="button" class="btn btn-default btn-sm" ng-class="{'active':entryLimit === 10}" ng-click="setEntryLimit(10)">10</button>
+                                <button type="button" class="btn btn-default btn-sm" ng-class="{'active':entryLimit === 25}" ng-click="setEntryLimit(25)">25</button>
+                                <button type="button" class="btn btn-default btn-sm" ng-class="{'active':entryLimit === 50}" ng-click="setEntryLimit(50)">50</button>
+                            </div>
+                        </form>
+                    </div>
+                    <div class="col-md-4">
+                        <uib-pagination class="pagination pagination-sm pull-right" ng-change="pageChanged()" total-items="filtered.length" items-per-page="entryLimit" ng-model="currentPage" data-boundary-links="true" data-current-page="currentPage" max-size="maxSize" previous-text="<" next-text=">" first-text="<<" last-text=">>"></uib-pagination>
+                    </div>
+                </div>
+            </td>
+            </tfoot>
+        </table>
     </div>
 </div>
