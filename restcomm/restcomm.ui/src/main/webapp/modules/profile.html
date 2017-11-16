@@ -1,12 +1,12 @@
 <div class="row accounts-tabs-mobile visible-xs">
-    <div class="col-xs-5 active"><a href="#/profile/{{sid}}"><i class="fa fa-user"></i></a></div>
-    <div class="col-xs-5 col-xs-offset-2"><a href="#/subaccounts"><i class="fa fa-users"></i></a></div>
+    <div class="col-xs-5" ng-class="{'active': urlAccount.sid === sid }"><a href="#/profile/{{sid}}"><i class="fa fa-user"></i></a></div>
+    <div class="col-xs-5 col-xs-offset-2" ng-class="{'active': urlAccount.sid !== sid }"><a href="#/subaccounts"><i class="fa fa-users"></i></a></div>
 </div>
 
 <div class="row">
     <div class="col-md-2 accounts-tabs hidden-xs">
-        <div class="active"><a href="#/profile/{{sid}}">Main Account</a></div>
-        <div class=""><a href="#/subaccounts">Sub Accounts</a></div>
+        <div ng-class="{'active': urlAccount.sid === sid }"><a href="#/profile/{{sid}}">Main Account</a></div>
+        <div ng-class="{'active': urlAccount.sid !== sid }"><a href="#/subaccounts">Sub Accounts</a></div>
     </div>
     <div class="col-md-10">
         <div class="row">
@@ -14,8 +14,8 @@
                 <div class="account-logo">{{ urlAccount.friendly_name  | limitTo : 1 | uppercase }}</div>
                 <div class="account-info">
                     <div class="account-name">{{ urlAccount.friendly_name }}</div>
-                    <div class="account-type">Main Account</div>
-                    <div class="account-status account-status-active">{{ urlAccount.status | uppercase }}</div>
+                    <div class="account-type">{{ urlAccount.sid === sid ? 'Main Account' : 'Sub Account' }}</div>
+                    <div class="account-status account-status-{{ urlAccount.status | lowercase }}" ng-class="{'clickable': urlAccount.sid !== sid }" ng-click="setAccountStatus(urlAccount.status === 'active' ? 'suspended' : 'active')">{{ urlAccount.status | uppercase }}</div>
                 </div>
             </div>
         </div>
@@ -53,6 +53,9 @@
             <div class="row">
                 <div class="col-md-2 col-sm-2 col-xs-12 account-field-title"><strong>Password</strong></div>
                 <div class="col-md-4 col-sm-4 col-xs-12 account-field-value">
+                    <div ng-show="newPassword" class="password-strength" ng-password-strength="newPassword" strength="pwdStrength" css-mode="bootstrap" inner-class="progress-bar" inner-class-prefix="progress-bar-" style="padding: inherit;">
+                        <uib-progressbar value="pwdStrength"></uib-progressbar>
+                    </div>
                     <input id="newPassword" name="newPassword" type="password" class="form-control" ng-class="{'password-transparent' : newPassword}" placeholder="New Password" ng-model="newPassword" />
                 </div>
                 <div class="clearfix visible-xs">&nbsp;</div>
@@ -62,10 +65,26 @@
                 </div>
             </div>
         </form>
-        <div>
-            <button class="btn btn-primary pull-right margin-left-10" ng-click="updateProfile()" ng-show="profileForm.$dirty" ng-disabled="(newPassword && pwdStrength < 50) || passwordsDiffer">Save</button>
-            <button class="btn btn-default pull-right margin-left-10" ng-click="resetChanges()" ng-show="profileForm.$dirty">Reset Changes</button>
-            <button class="rc-btn btn btn-danger pull-left" ng-show="urlAccount.status != 'closed'" ng-disabled="loggedAccount.sid === urlAccount.sid" ng-click="closeAccount(urlAccount)">Close Account</button>
+
+        <div class="row">
+            <div class="col-md-4 col-xs-2">
+                <button class="btn btn-danger rc-btn" ng-show="urlAccount.status != 'closed'" ng-disabled="loggedAccount.sid === urlAccount.sid" ng-click="closeAccount(urlAccount)">
+                    <span class="hidden-xs">Close Account</span>
+                    <span class="visible-xs"><i class="fa fa-trash-o"></i></span>
+                </button>
+            </div>
+            <div class="col-md-8 col-xs-10">
+                <span class="pull-right">
+                    <button class="rc-btn close-btn" ng-click="resetChanges()" ng-show="profileForm.$dirty">
+                        <span class="hidden-xs">Reset Changes</span>
+                        <span class="visible-xs"><i class="fa fa-times"></i></span>
+                    </button>
+                    <button class="rc-btn save-btn" ng-click="updateProfile()" ng-show="profileForm.$dirty" ng-disabled="(newPassword && pwdStrength < 50) || passwordsDiffer">
+                        <span class="hidden-xs">Save Changes</span>
+                        <span class="visible-xs"><i class="fa fa-check"></i></span>
+                    </button>
+                </span>
+            </div>
         </div>
     </div>
 </div>

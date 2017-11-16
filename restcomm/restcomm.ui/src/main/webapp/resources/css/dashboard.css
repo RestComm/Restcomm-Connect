@@ -131,6 +131,46 @@ a:visited {
     -webkit-user-select: none;
 }
 
+.rc-btn:disabled {
+    opacity: 0.2;
+}
+
+.btn-danger {
+    background-color: #F44336;
+}
+
+.btn-danger:hover {
+    background-color: #d34039;
+}
+
+.rc-btn.close-btn {
+    background-color: #d1d1d1;
+    color: #7f7e7e;
+}
+.rc-btn.close-btn:hover {
+    background-color: #c8c7c7;
+}
+
+.rc-btn.save-btn {
+    background-color: #44a4ab;
+}
+.rc-btn.save-btn:hover {
+    background-color: #3b8f96;
+}
+
+.rc-btn.close-btn + .rc-btn.save-btn {
+    margin-left: 50px;
+}
+
+.rc-btn.discrete-btn {
+    background-color: white;
+    color: #d0d0d0;
+}
+.rc-btn.discrete-btn:hover {
+    background-color: #d0d0d0;
+    color: white;
+}
+
 .rc-btn.rc-btn-sm {
     font-size: 15px;
     padding: 6px 15px;
@@ -638,8 +678,20 @@ form[role=login] input:-webkit-autofill:focus{
     margin-top: 15px;
     display: inline-block;
 }
+
 .account-status + .account-status {
     margin-left: 5px;
+}
+
+.account-status-uninitialized,
+.account-status-inactive {
+    border: 3px solid #626262;
+    color: #626262;
+}
+
+.account-status-uninitialized-text,
+.account-status-inactive-text {
+    color: #626262;
 }
 
 .account-status-active {
@@ -649,6 +701,24 @@ form[role=login] input:-webkit-autofill:focus{
 
 .account-status-active-text {
     color: #7EBA5A;
+}
+
+.account-status-suspended {
+    border: 3px solid #E0402F;
+    color: #E0402F;
+}
+
+.account-status-suspended-text {
+    color: #E0402F;
+}
+
+.account-status-closed {
+    border: 3px solid #E0402F;
+    color: #E0402F;
+}
+
+.account-status-closed-text {
+    color: #E0402F;
 }
 
 @media(max-width:768px) {
@@ -674,7 +744,6 @@ form[role=login] input:-webkit-autofill:focus{
 
     .account-status {
         padding: 5px;
-        border: 2px solid #7EBA5A;
         border-radius: 7px;
         font-size: 1em;
     }
@@ -709,22 +778,6 @@ form[role=login] input:-webkit-autofill:focus{
 
 /* -- Sub-Accounts ---------------------------------------------------------- */
 
-.sub-accounts-row {
-    border-bottom: 2px solid #eee;
-    font-size: 1.25em;
-    color: #AAA;
-    font-weight: 300;
-    padding: 10px 0;
-    line-height: 35px;
-    cursor: pointer;
-}
-
-@media(max-width:768px) {
-    .sub-accounts-row > div:first-child {
-        line-height: 25px;
-    }
-}
-
 .sub-accounts-row .account-logo {
     font-size: 1.4em;
     line-height: 35px;
@@ -739,6 +792,67 @@ form[role=login] input:-webkit-autofill:focus{
     line-height: 0.6em;
 }
 
+.sub-accounts-list .sub-accounts-list-name {
+    width: 30%;
+    vertical-align: middle;
+    line-height: 35px;
+}
+
+.sub-accounts-list .sub-accounts-list-account-sid {
+    width: 35%;
+    vertical-align: middle;
+}
+
+.sub-accounts-list .sub-accounts-list-role {
+    width: 20%;
+    vertical-align: middle;
+}
+
+.sub-accounts-list .sub-accounts-list-status {
+    width: 15%;
+    vertical-align: middle;
+}
+
+@media(max-width:768px) {
+    .sub-accounts-list .sub-accounts-list-name {
+        width: 35%;
+        line-height: 1.2em;
+    }
+
+    .sub-accounts-list .sub-accounts-list-name .account-logo {
+        margin-right: 8px;
+    }
+
+    .sub-accounts-list .sub-accounts-list-role {
+    }
+
+    .sub-accounts-list .sub-accounts-list-status {
+        width: 20%;
+        vertical-align: middle;
+    }
+    .sub-accounts-list .sub-accounts-list-action {
+        width: 25px;
+        vertical-align: middle;
+    }
+}
+
+
+
+
+@media(max-width:768px) {
+    .clients-list {
+        font-size: 1.1em;
+    }
+
+    .clients-list .clients-list-username > div {
+        font-size: 1.25em;
+    }
+    .clients-list .clients-list-username > div+div {
+        font-size: 0.8em;
+        color: #bbbbbb;
+    }
+
+}
 
 .search-form .search-icon {
     margin-right: -30px;
@@ -840,6 +954,9 @@ form[role=login] input:-webkit-autofill:focus{
 @media(max-width:768px) {
     .rc-list {
         font-size: 1.1em;
+        margin-left: -10px;
+        width: calc(100% + 18px);
+        max-width: none;
     }
 }
 
@@ -1466,34 +1583,6 @@ form[role=login] input:-webkit-autofill:focus{
 
 /* -- Details --------------------------------------------------------------- */
 
-
-.rc-btn.delete-btn {
-    background-color: #F44336;
-}
-
-.rc-btn.delete-btn:hover {
-    background-color: #d34039;
-}
-
-.rc-btn.close-btn {
-    background-color: #d1d1d1;
-    color: #7f7e7e;
-}
-.rc-btn.close-btn:hover {
-    background-color: #c8c7c7;
-}
-
-.rc-btn.save-btn {
-    background-color: #44a4ab;
-}
-.rc-btn.save-btn:hover {
-    background-color: #3b8f96;
-}
-
-.rc-btn.close-btn + .rc-btn.save-btn {
-    margin-left: 50px;
-}
-
 .details-section-title {
     color: #44a5ab;
     padding-top: 25px;
@@ -1701,13 +1790,4 @@ input, button, select, textarea {
 
 .spacer60 {
     margin-top: 60px;
-}
-
-.rc-btn.discrete-btn {
-    background-color: white;
-    color: #d0d0d0;
-}
-.rc-btn.discrete-btn:hover {
-    background-color: #d0d0d0;
-    color: white;
 }
