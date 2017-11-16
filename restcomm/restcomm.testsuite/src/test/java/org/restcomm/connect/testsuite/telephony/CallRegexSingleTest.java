@@ -62,10 +62,15 @@ import static com.github.tomakehurst.wiremock.client.WireMock.getRequestedFor;
 import static com.github.tomakehurst.wiremock.client.WireMock.stubFor;
 import static com.github.tomakehurst.wiremock.client.WireMock.urlPathEqualTo;
 import static com.github.tomakehurst.wiremock.client.WireMock.urlPathMatching;
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.Map;
 import static org.cafesip.sipunit.SipAssert.assertLastOperationSuccess;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertTrue;
+import org.restcomm.connect.testsuite.NetworkPortAssigner;
+import org.restcomm.connect.testsuite.WebArchiveUtil;
 
 /**
  * Test for Regex for IncomingPhoneNumbers
@@ -91,9 +96,12 @@ public class CallRegexSingleTest {
     @ArquillianResource
     URL deploymentUrl;
 
+    private static int mediaPort = NetworkPortAssigner.retrieveNextPortByFile();
+    
+    private static int mockPort = NetworkPortAssigner.retrieveNextPortByFile();
     @Rule
-    public WireMockRule wireMockRule = new WireMockRule(8090); // No-args constructor defaults to port 8080
-
+    public WireMockRule wireMockRule = new WireMockRule(mockPort);
+    
     private static SipStackTool tool1;
     private static SipStackTool tool2;
     private static SipStackTool tool3;
@@ -103,34 +111,43 @@ public class CallRegexSingleTest {
     // Bob is a simple SIP Client. Will not register with Restcomm
     private SipStack bobSipStack;
     private SipPhone bobPhone;
-    private String bobContact = "sip:bob@127.0.0.1:5090";
+    private static String bobPort = String.valueOf(NetworkPortAssigner.retrieveNextPortByFile()); 
+    private String bobContact = "sip:bob@127.0.0.1:" + bobPort;
 
     // Alice is a Restcomm Client with VoiceURL. This Restcomm Client can register with Restcomm and whatever will dial the RCML
     // of the VoiceURL will be executed.
     private SipStack aliceSipStack;
     private SipPhone alicePhone;
-    private String aliceContact = "sip:alice@127.0.0.1:5091";
+    private static String alicePort = String.valueOf(NetworkPortAssigner.retrieveNextPortByFile());    
+    private String aliceContact = "sip:alice@127.0.0.1:" + alicePort;
 
     // Henrique is a simple SIP Client. Will not register with Restcomm
-    private SipStack henriqueSipStack;
-    private SipPhone henriquePhone;
-    private String henriqueContact = "sip:henrique@127.0.0.1:5092";
+    private SipStack bobSipStackOrg1;
+    private SipPhone bobPhoneOrg1;
+    private static String bobPort2 = String.valueOf(NetworkPortAssigner.retrieveNextPortByFile());
+    private String bobContactOrg1 = "sip:bob@org1.restcomm.com";
 
     // George is a simple SIP Client. Will not register with Restcomm
-    private SipStack georgeSipStack;
-    private SipPhone georgePhone;
-    private String georgeContact = "sip:+131313@127.0.0.1:5070";
+    private SipStack aliceSipStackOrg1;
+    private SipPhone alicePhoneOrg1;
+    private static String alicePort2 = String.valueOf(NetworkPortAssigner.retrieveNextPortByFile());
+    private String aliceContactOrg1 = "sip:alice@org1.restcomm.com";
 
     // subaccountclient is a simple SIP Client. Will register with Restcomm
     private SipStack subAccountClientSipStack;
     private SipPhone subAccountClientPhone;
-    private String subAccountClientContact = "sip:subaccountclient@127.0.0.1:5093";
+    private static String subaccountPort = String.valueOf(NetworkPortAssigner.retrieveNextPortByFile());
+    private String subAccountClientContact = "sip:subaccountclient@127.0.0.1:" + subaccountPort;
 
     private String adminAccountSid = "ACae6e420f425248d6a26948c17a9e2acf";
     private String adminAuthToken = "77f8c12cc7b8f8423e5c38b035249166";
 
     private String subAccountSid = "ACae6e420f425248d6a26948c17a9e2acg";
     private String subAuthToken = "77f8c12cc7b8f8423e5c38b035249166";
+    
+    private static int restcommPort = 5080;
+    private static int restcommHTTPPort = 8080;        
+    private static String restcommContact = "127.0.0.1:" + restcommPort;     
 
     @BeforeClass
     public static void beforeClass() throws Exception {
@@ -140,23 +157,33 @@ public class CallRegexSingleTest {
         tool4 = new SipStackTool("DialActionTest4");
         tool5 = new SipStackTool("DialActionTest5");
     }
+    
+    public static void reconfigurePorts() { 
+        if (System.getProperty("arquillian_sip_port") != null) {
+            restcommPort = Integer.valueOf(System.getProperty("arquillian_sip_port"));
+            restcommContact = "127.0.0.1:" + restcommPort; 
+        } 
+        if (System.getProperty("arquillian_http_port") != null) {
+            restcommHTTPPort = Integer.valueOf(System.getProperty("arquillian_http_port"));
+        }        
+    }
 
     @Before
     public void before() throws Exception {
-        bobSipStack = tool1.initializeSipStack(SipStack.PROTOCOL_UDP, "127.0.0.1", "5090", "127.0.0.1:5080");
-        bobPhone = bobSipStack.createSipPhone("127.0.0.1", SipStack.PROTOCOL_UDP, 5080, bobContact);
+        bobSipStack = tool1.initializeSipStack(SipStack.PROTOCOL_UDP, "127.0.0.1", bobPort, restcommContact);
+        bobPhone = bobSipStack.createSipPhone("127.0.0.1", SipStack.PROTOCOL_UDP, restcommPort, bobContact);
 
-        aliceSipStack = tool2.initializeSipStack(SipStack.PROTOCOL_UDP, "127.0.0.1", "5091", "127.0.0.1:5080");
-        alicePhone = aliceSipStack.createSipPhone("127.0.0.1", SipStack.PROTOCOL_UDP, 5080, aliceContact);
+        aliceSipStack = tool2.initializeSipStack(SipStack.PROTOCOL_UDP, "127.0.0.1", alicePort, restcommContact);
+        alicePhone = aliceSipStack.createSipPhone("127.0.0.1", SipStack.PROTOCOL_UDP, restcommPort, aliceContact);
 
-        henriqueSipStack = tool3.initializeSipStack(SipStack.PROTOCOL_UDP, "127.0.0.1", "5092", "127.0.0.1:5080");
-        henriquePhone = henriqueSipStack.createSipPhone("127.0.0.1", SipStack.PROTOCOL_UDP, 5080, henriqueContact);
+        bobSipStackOrg1 = tool3.initializeSipStack(SipStack.PROTOCOL_UDP, "127.0.0.1", bobPort2, restcommContact);
+        bobPhoneOrg1 = bobSipStackOrg1.createSipPhone("127.0.0.1", SipStack.PROTOCOL_UDP, restcommPort, bobContactOrg1);
 
-        georgeSipStack = tool4.initializeSipStack(SipStack.PROTOCOL_UDP, "127.0.0.1", "5070", "127.0.0.1:5080");
-        georgePhone = georgeSipStack.createSipPhone("127.0.0.1", SipStack.PROTOCOL_UDP, 5080, georgeContact);
+        aliceSipStackOrg1 = tool4.initializeSipStack(SipStack.PROTOCOL_UDP, "127.0.0.1", alicePort2, restcommContact);
+        alicePhoneOrg1 = aliceSipStackOrg1.createSipPhone("127.0.0.1", SipStack.PROTOCOL_UDP, restcommPort, aliceContactOrg1);
 
-        subAccountClientSipStack = tool5.initializeSipStack(SipStack.PROTOCOL_UDP, "127.0.0.1", "5093", "127.0.0.1:5080");
-        subAccountClientPhone = subAccountClientSipStack.createSipPhone("127.0.0.1", SipStack.PROTOCOL_UDP, 5080, subAccountClientContact);
+        subAccountClientSipStack = tool5.initializeSipStack(SipStack.PROTOCOL_UDP, "127.0.0.1", subaccountPort, restcommContact);
+        subAccountClientPhone = subAccountClientSipStack.createSipPhone("127.0.0.1", SipStack.PROTOCOL_UDP, restcommPort, subAccountClientContact);
     }
 
     @After
@@ -175,18 +202,18 @@ public class CallRegexSingleTest {
             alicePhone.dispose();
         }
 
-        if (henriqueSipStack != null) {
-            henriqueSipStack.dispose();
+        if (bobSipStackOrg1 != null) {
+            bobSipStackOrg1.dispose();
         }
-        if (henriquePhone != null) {
-            henriquePhone.dispose();
+        if (bobPhoneOrg1 != null) {
+            bobPhoneOrg1.dispose();
         }
 
-        if (georgePhone != null) {
-            georgePhone.dispose();
+        if (alicePhoneOrg1 != null) {
+            alicePhoneOrg1.dispose();
         }
-        if (georgeSipStack != null) {
-            georgeSipStack.dispose();
+        if (aliceSipStackOrg1 != null) {
+            aliceSipStackOrg1.dispose();
         }
 
         if (subAccountClientPhone != null) {
@@ -208,6 +235,38 @@ public class CallRegexSingleTest {
 
     private String dialAliceRcml = "<Response><Dial><Client>alice</Client></Dial></Response>";
 
+    /**
+     * @throws ParseException
+     * @throws InterruptedException
+     * @throws MalformedURLException
+     */
+    @Test
+    public void testDial7777RegexOfDifferentOrganization() throws ParseException, InterruptedException, MalformedURLException {
+        //matches regex expression "7777|8888" but belongs to domain 127.0.0.1 
+    	// hence anyone from org1.restcomm.com should not be allowed to reach this regex
+    	// https://github.com/RestComm/Restcomm-Connect/issues/2293
+        stubFor(get(urlPathEqualTo("/regex"))
+                .willReturn(aResponse()
+                        .withStatus(200)
+                        .withHeader("Content-Type", "text/xml")
+                        .withBody(dialAliceRcml)));
+
+        // Create outgoing call with first phone
+        final SipCall bobCallOrg1 = bobPhoneOrg1.createSipCall();
+        bobCallOrg1.initiateOutgoingCall(bobContactOrg1, "sip:7777@" + restcommContact, null, body, "application", "sdp", null, null);
+        assertLastOperationSuccess(bobCallOrg1);
+        assertTrue(bobCallOrg1.waitOutgoingCallResponse(5 * 1000));
+        final int response = bobCallOrg1.getLastReceivedResponse().getStatusCode();
+        assertTrue(response == Response.TRYING || response == Response.RINGING);
+        logger.info("Last response: " + response);
+
+        if (response == Response.TRYING) {
+            assertTrue(bobCallOrg1.waitOutgoingCallResponse(5 * 1000));
+            assertEquals(Response.NOT_FOUND, bobCallOrg1.getLastReceivedResponse().getStatusCode());
+            logger.info("Last response: " + bobCallOrg1.getLastReceivedResponse().getStatusCode());
+        }
+    }
+    
     @Test
     public void testDialClientAlice7777() throws ParseException, InterruptedException, MalformedURLException {
         //matches regex expression "7777|8888"
@@ -217,7 +276,7 @@ public class CallRegexSingleTest {
                         .withHeader("Content-Type", "text/xml")
                         .withBody(dialAliceRcml)));
 
-        SipURI uri = aliceSipStack.getAddressFactory().createSipURI(null, "127.0.0.1:5080");
+        SipURI uri = aliceSipStack.getAddressFactory().createSipURI(null, restcommContact);
         assertTrue(alicePhone.register(uri, "alice", "1234", aliceContact, 3600, 3600));
 
         // Prepare second phone to receive call
@@ -226,7 +285,7 @@ public class CallRegexSingleTest {
 
         // Create outgoing call with first phone
         final SipCall bobCall = bobPhone.createSipCall();
-        bobCall.initiateOutgoingCall(bobContact, "sip:7777@127.0.0.1:5080", null, body, "application", "sdp", null, null);
+        bobCall.initiateOutgoingCall(bobContact, "sip:7777@" + restcommContact, null, body, "application", "sdp", null, null);
         assertLastOperationSuccess(bobCall);
         assertTrue(bobCall.waitOutgoingCallResponse(5 * 1000));
         final int response = bobCall.getLastReceivedResponse().getStatusCode();
@@ -312,7 +371,7 @@ public class CallRegexSingleTest {
                         .withHeader("Content-Type", "text/xml")
                         .withBody(dialAliceRcml)));
 
-        SipURI uri = aliceSipStack.getAddressFactory().createSipURI(null, "127.0.0.1:5080");
+        SipURI uri = aliceSipStack.getAddressFactory().createSipURI(null, restcommContact);
         assertTrue(alicePhone.register(uri, "alice", "1234", aliceContact, 3600, 3600));
 
         // Prepare second phone to receive call
@@ -321,7 +380,7 @@ public class CallRegexSingleTest {
 
         // Create outgoing call with first phone
         final SipCall bobCall = bobPhone.createSipCall();
-        bobCall.initiateOutgoingCall(bobContact, "sip:8888@127.0.0.1:5080", null, body, "application", "sdp", null, null);
+        bobCall.initiateOutgoingCall(bobContact, "sip:8888@" + restcommContact, null, body, "application", "sdp", null, null);
         assertLastOperationSuccess(bobCall);
         assertTrue(bobCall.waitOutgoingCallResponse(5 * 1000));
         final int response = bobCall.getLastReceivedResponse().getStatusCode();
@@ -401,22 +460,22 @@ public class CallRegexSingleTest {
     @Deployment(name = "DialAction", managed = true, testable = false)
     public static WebArchive createWebArchiveNoGw() {
         logger.info("Packaging Test App");
-        WebArchive archive = ShrinkWrap.create(WebArchive.class, "restcomm.war");
-        final WebArchive restcommArchive = ShrinkWrapMaven.resolver()
-                .resolve("org.restcomm:restcomm-connect.application:war:" + version).withoutTransitivity()
-                .asSingle(WebArchive.class);
-        archive = archive.merge(restcommArchive);
-        archive.delete("/WEB-INF/sip.xml");
-        archive.delete("/WEB-INF/conf/restcomm.xml");
-        archive.delete("/WEB-INF/data/hsql/restcomm.script");
-        archive.delete("/WEB-INF/classes/application.conf");
-        archive.addAsWebInfResource("sip.xml");
-        archive.addAsWebInfResource("restcomm_callRegex.xml", "conf/restcomm.xml");
-        archive.addAsWebInfResource("restcomm.script_callRegexTest2", "data/hsql/restcomm.script");
-        archive.addAsWebInfResource("akka_application.conf", "classes/application.conf");
-        archive.addAsWebResource("dial-client-entry_wActionUrl.xml");
-        logger.info("Packaged Test App");
-        return archive;
-    }
+        reconfigurePorts();
+
+        Map<String,String> replacements = new HashMap();
+        //replace mediaport 2727 
+        replacements.put("2727", String.valueOf(mediaPort));        
+        replacements.put("8080", String.valueOf(restcommHTTPPort));
+        replacements.put("8090", String.valueOf(mockPort));
+        replacements.put("5080", String.valueOf(restcommPort));
+        replacements.put("5070", String.valueOf(alicePort2));        
+        replacements.put("5090", String.valueOf(bobPort));
+        replacements.put("5091", String.valueOf(alicePort));
+        replacements.put("5092", String.valueOf(bobPort2));
+        replacements.put("5093", String.valueOf(subaccountPort));         
+        List<String> resources = new ArrayList(Arrays.asList("dial-client-entry_wActionUrl.xml"));
+        return WebArchiveUtil.createWebArchiveNoGw("restcomm_callRegex.xml", 
+                "restcomm.script_callRegexTest2",resources, replacements);
+    }     
 
 }

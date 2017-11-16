@@ -32,6 +32,7 @@ The Restcomm Connect Advanced Tutorials will show you how to integrate multiple 
 
 * <<Running USSD SMSC and Restcomm on the Same Server.adoc#ussd-smsc-restconn,Running USSD SMSC and Restcomm on the Same Server>>
 * <<Restcomm - Sending SMS through SMPP to SMSC Gateway.adoc#smpp,Sending SMS through SMPP to SMSC Gateway>>
+* <<Restcomm - Create a simple emergency location based service.adoc#,Create a simple emergency location based service with Restcomm and GMLC, triggered by USSD and reported through SMS>>
 * <<Restcomm - Load Testing - Part 1.adoc#load-1,Load Testing - Part 1>>
 * <<Restcomm - Load Testing - Part 2.adoc#load-2,Load Testing - Part 2>>
 * <<Restcomm_SIP_Refer_Support.adoc#sip_refer_support,Restcomm SIP Refer support>>

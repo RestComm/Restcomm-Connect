@@ -252,4 +252,12 @@ public final class PhoneNumberParameters {
     public void setPhoneNumberType(PhoneNumberType phoneNumberType) {
         this.phoneNumberType = phoneNumberType;
     }
+
+    @Override
+    public String toString() {
+        return "PhoneNumberParameters [voiceUrl=" + voiceUrl + ", voiceMethod=" + voiceMethod
+                + ", doVoiceCallerIdLookup=" + doVoiceCallerIdLookup + ", smsUrl=" + smsUrl + ", smsMethod=" + smsMethod
+                + ", ussdUrl=" + ussdUrl + ", ussdMethod=" + ussdMethod + ", faxUrl=" + faxUrl + ", faxMethod="
+                + faxMethod + ", phoneNumberType=" + phoneNumberType + "]";
+    }
 }

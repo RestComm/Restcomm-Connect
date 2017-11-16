@@ -31,9 +31,7 @@ startRestcomm() {
 	    echo "MGMT_PASS, MGMT_USER is set will be added to MGMNT configuration"
         grep -q "$MGMT_USER" $RESTCOMM_HOME/standalone/configuration/mgmt-users.properties || $RESTCOMM_HOME/bin/add-user.sh "$MGMT_USER" "$MGMT_PASS" -s
         #Management bind address
-        if [ -n "$GRAYLOG_SERVER" ]; then
             ExtraOpts="-Djboss.bind.address.management=$bind_address"
-        fi
     fi
 
 	case $run_mode in

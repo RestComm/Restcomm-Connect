@@ -38,6 +38,7 @@ import org.apache.ibatis.session.SqlSessionFactory;
 import org.apache.log4j.Logger;
 import org.joda.time.DateTime;
 import org.restcomm.connect.commons.annotations.concurrency.ThreadSafe;
+import org.restcomm.connect.dao.DaoUtils;
 import org.restcomm.connect.dao.RegistrationsDao;
 import org.restcomm.connect.dao.entities.Registration;
 import org.restcomm.connect.commons.dao.Sid;
@@ -70,13 +71,40 @@ public final class MybatisRegistrationsDao implements RegistrationsDao {
     }
 
     @Override
-    public Registration getRegistration(String user) {
+    public List<Registration> getRegistrationsByLocation(String user, String location) {
+        final SqlSession session = sessions.openSession();
+        try {
+            final Map<String, Object> map = new HashMap<String, Object>();
+            map.put("user_name", user);
+            map.put("location", location.concat("%"));
+
+            final List<Map<String, Object>> results = session.selectList(namespace + "getRegistrationsByLocation", map);
+            final List<Registration> records = new ArrayList<Registration>();
+            if (results != null && !results.isEmpty()) {
+                for (final Map<String, Object> result : results) {
+                    records.add(toPresenceRecord(result));
+                }
+                if (!records.isEmpty()) {
+                    Collections.sort(records);
+                }
+            }
+            return records;
+        } finally {
+            session.close();
+        }
+    }
+
+    @Override
+    public Registration getRegistration(String user, Sid organizationSid) {
         final SqlSession session = sessions.openSession();
         try {
             // https://bitbucket.org/telestax/telscale-restcomm/issue/107/dial-fails-to-call-a-client-registered
             // we get all registrations and sort them by latest updated date so that we target the device where the user last
             // updated the registration
-            final List<Map<String, Object>> results = session.selectList(namespace + "getRegistration", user);
+            final Map<String, Object> map = new HashMap<String, Object>();
+            map.put("user_name", user);
+            map.put("organization_sid", writeSid(organizationSid));
+            final List<Map<String, Object>> results = session.selectList(namespace + "getRegistration", map);
             final List<Registration> records = new ArrayList<Registration>();
             if (results != null && !results.isEmpty()) {
                 for (final Map<String, Object> result : results) {
@@ -148,13 +176,16 @@ public final class MybatisRegistrationsDao implements RegistrationsDao {
     }
 
     @Override
-    public List<Registration> getRegistrations(String user) {
+    public List<Registration> getRegistrations(String user, Sid organizationSid) {
         final SqlSession session = sessions.openSession();
         try {
             // https://bitbucket.org/telestax/telscale-restcomm/issue/107/dial-fails-to-call-a-client-registered
             // we get all registrations and sort them by latest updated date so that we target the device where the user last
             // updated the registration
-            final List<Map<String, Object>> results = session.selectList(namespace + "getRegistration", user);
+            final Map<String, Object> map = new HashMap<String, Object>();
+            map.put("user_name", user);
+            map.put("organization_sid", writeSid(organizationSid));
+            final List<Map<String, Object>> results = session.selectList(namespace + "getRegistration", map);
             final List<Registration> records = new ArrayList<Registration>();
             if (results != null && !results.isEmpty()) {
                 for (final Map<String, Object> result : results) {
@@ -239,6 +270,7 @@ public final class MybatisRegistrationsDao implements RegistrationsDao {
         map.put("ttl", registration.getTimeToLive());
         map.put("webrtc", registration.isWebRTC());
         map.put("isLBPresent", registration.isLBPresent());
+        map.put("organization_sid", DaoUtils.writeSid(registration.getOrganizationSid()));
         return map;
     }
 
@@ -259,7 +291,8 @@ public final class MybatisRegistrationsDao implements RegistrationsDao {
         if (readBoolean(map.get("isLBPresent")) != null) {
             isLBPresent = readBoolean(map.get("isLBPresent"));
         }
+        final Sid organizationSid = readSid(map.get("organization_sid"));
         return new Registration(sid, instanceId, dateCreated, dateUpdated, dateExpires, addressOfRecord, dislplayName, userName, userAgent,
-                timeToLive, location, webRTC, isLBPresent);
+                timeToLive, location, webRTC, isLBPresent, organizationSid);
     }
 }

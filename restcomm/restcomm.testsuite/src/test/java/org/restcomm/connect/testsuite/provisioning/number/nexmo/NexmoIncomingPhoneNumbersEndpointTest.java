@@ -24,6 +24,7 @@ import static com.github.tomakehurst.wiremock.client.WireMock.aResponse;
 import static com.github.tomakehurst.wiremock.client.WireMock.post;
 import static com.github.tomakehurst.wiremock.client.WireMock.stubFor;
 import static com.github.tomakehurst.wiremock.client.WireMock.urlMatching;
+import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
 
 import java.net.URL;
@@ -184,18 +185,19 @@ public class NexmoIncomingPhoneNumbersEndpointTest {
         ClientResponse clientResponse = webResource.type(MediaType.APPLICATION_FORM_URLENCODED_TYPE).accept("application/json").post(ClientResponse.class, formData);
         Assert.assertEquals(200, clientResponse.getStatus());
         String response = clientResponse.getEntity(String.class);
-        System.out.println(response);
+        logger.info("testDeletePhoneNumberSuccess response for buyNumber: "+response);
         assertTrue(!response.trim().equalsIgnoreCase("[]"));
         JsonParser parser = new JsonParser();
         JsonObject jsonResponse = parser.parse(response).getAsJsonObject();
 
-        System.out.println(jsonResponse.toString());
+        logger.info("testDeletePhoneNumberSuccess jsonResponse for buyNumber: "+jsonResponse.toString());
         assertTrue(NexmoIncomingPhoneNumbersEndpointTestUtils.match(jsonResponse.toString(),NexmoIncomingPhoneNumbersEndpointTestUtils.jSonResultDeletePurchaseNumber));
 
         String phoneNumberSid = jsonResponse.get("sid").getAsString();
         provisioningURL = deploymentUrl + baseURL + "IncomingPhoneNumbers/" + phoneNumberSid + ".json";
         webResource = jerseyClient.resource(provisioningURL);
         clientResponse = webResource.type(MediaType.APPLICATION_FORM_URLENCODED_TYPE).accept("application/json").delete(ClientResponse.class);
+        logger.info("testDeletePhoneNumberSuccess delete response: "+clientResponse);
         assertTrue(clientResponse.getStatus() == 204);
     }
 
@@ -225,7 +227,7 @@ public class NexmoIncomingPhoneNumbersEndpointTest {
         formData.add("FriendlyName", "My Company Line");
         formData.add("VoiceMethod", "GET");
         ClientResponse clientResponse = webResource.type(MediaType.APPLICATION_FORM_URLENCODED_TYPE).accept("application/json").post(ClientResponse.class, formData);
-        Assert.assertEquals(403, clientResponse.getStatus());
+        assertEquals(400, clientResponse.getStatus());
         String response = clientResponse.getEntity(String.class);
         System.out.println(response);
         assertTrue(!response.trim().equalsIgnoreCase("[]"));
@@ -248,7 +250,7 @@ public class NexmoIncomingPhoneNumbersEndpointTest {
                     .withHeader("Content-Type", "application/json")
                     .withBody(NexmoIncomingPhoneNumbersEndpointTestUtils.purchaseNumberSuccessResponse)));
 
-        stubFor(post(urlMatching("/nexmo/number/update/.*/.*/FR/33911067000.*"))
+        stubFor(post(urlMatching("/nexmo/number/update/.*/.*/FR/33911067000.*voiceCallbackValue=%2B33911067000%40127.0.0.1%3A5080.*"))
                 .willReturn(aResponse()
                     .withStatus(200)
                     .withHeader("Content-Type", "application/json")

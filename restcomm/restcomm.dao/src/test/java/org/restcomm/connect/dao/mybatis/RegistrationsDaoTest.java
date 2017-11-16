@@ -60,18 +60,19 @@ public final class RegistrationsDaoTest {
     @Test
     public void createReadUpdateDelete() {
         final Sid sid = Sid.generate(Sid.Type.REGISTRATION);
+        final Sid orgSid = Sid.generate(Sid.Type.ORGANIZATION);
         final DateTime now = DateTime.now();
         String username = "tom_" + now;
         String displayName = "Tom_" + now;
         Registration registration = new Registration(sid, "instanceId", now, now, now, "sip:tom@company.com", displayName, username,
-                "TestUserAgent/1.0", 3600, "sip:tom@company.com", true, false);
+                "TestUserAgent/1.0", 3600, "sip:tom@company.com", true, false, orgSid);
         final RegistrationsDao registrations = manager.getRegistrationsDao();
         // Create a new registration in the data store.
         assertFalse(registrations.hasRegistration(registration));
         registrations.addRegistration(registration);
         assertTrue(registrations.hasRegistration(registration));
         // Read the registration from the data store.
-        Registration result = registrations.getRegistration(username);
+        Registration result = registrations.getRegistration(username, orgSid);
         // Validate the results.
         assertTrue(registrations.getRegistrations().size() >= 1);
         assertTrue(result.getSid().equals(registration.getSid()));
@@ -89,7 +90,7 @@ public final class RegistrationsDaoTest {
         registration = registration.setTimeToLive(3600);
         registrations.updateRegistration(registration);
         // Read the updated registration from the data store.
-        result = registrations.getRegistration(username);
+        result = registrations.getRegistration(username, orgSid);
         // Validate the results.
         assertTrue(result.getSid().equals(registration.getSid()));
         assertTrue(result.getDateCreated().equals(registration.getDateCreated()));
@@ -111,17 +112,18 @@ public final class RegistrationsDaoTest {
     @Test
     public void checkHasRegistrationWithoutUA() {
         final Sid sid = Sid.generate(Sid.Type.REGISTRATION);
+        final Sid orgSid = Sid.generate(Sid.Type.ORGANIZATION);
         final DateTime now = DateTime.now();
         String username = "tom_" + now;
         String displayName = "Tom_" + now;
         Registration registration = new Registration(sid, "instanceId", now, now, now, "sip:tom@company.com", displayName, username, null,
-                3600, "sip:tom@company.com", true, false);
+                3600, "sip:tom@company.com", true, false, orgSid);
         final RegistrationsDao registrations = manager.getRegistrationsDao();
         // Create a new registration in the data store.
         assertFalse(registrations.hasRegistration(registration));
         registrations.addRegistration(registration);
         assertTrue(registrations.getRegistrations().size() > 0);
-        assertNotNull(registrations.getRegistration(username));
+        assertNotNull(registrations.getRegistration(username, orgSid));
         // Expected to fail if UA is null
         assertFalse(registrations.hasRegistration(registration));
     }
@@ -129,17 +131,18 @@ public final class RegistrationsDaoTest {
     @Test
     public void checkHasRegistrationWithoutDisplayName() {
         final Sid sid = Sid.generate(Sid.Type.REGISTRATION);
+        final Sid orgSid = Sid.generate(Sid.Type.ORGANIZATION);
         final DateTime now = DateTime.now();
         String username = "tom_" + now;
         String displayName = null;
         Registration registration = new Registration(sid, "instanceId",  now, now, now, "sip:tom@company.com", displayName, username,
-                "TestUserAgent/1.0", 3600, "sip:tom@company.com", false, false);
+                "TestUserAgent/1.0", 3600, "sip:tom@company.com", false, false, orgSid);
         final RegistrationsDao registrations = manager.getRegistrationsDao();
         // Create a new registration in the data store.
         assertFalse(registrations.hasRegistration(registration));
         registrations.addRegistration(registration);
         assertTrue(registrations.getRegistrations().size() > 0);
-        assertNotNull(registrations.getRegistration(username));
+        assertNotNull(registrations.getRegistration(username, orgSid));
         // Expected to fail if Display Name is null
         assertFalse(registrations.hasRegistration(registration));
     }

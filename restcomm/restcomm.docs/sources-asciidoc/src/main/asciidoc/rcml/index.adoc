@@ -41,6 +41,7 @@ You can use different combinations of the verbs below to create all kinds of int
 * <<sms-rcml.adoc#sms,SMS - Send an SMS message during a phone call>>
 * <<ussd-collect-rcml.adoc#ussd-collect,USSD Collect - Collect USSD>>
 * <<geolocation-rcml.adoc#geolocation,Geolocation - Gather geolocation information>>
+* <<video-rcml.adoc#video,Video - Configure and enable video for calls and conferences>>
 
 == How Restcomm  Interacts with Your Application
 

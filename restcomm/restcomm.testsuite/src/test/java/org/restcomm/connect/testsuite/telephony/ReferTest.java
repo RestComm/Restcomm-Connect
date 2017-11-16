@@ -725,7 +725,7 @@ public class ReferTest {
         assertEquals(Response.OK, bobCall.getLastReceivedResponse().getStatusCode());
         assertTrue(bobCall.sendInviteOkAck());
 
-        assertTrue(georgeCall.waitForIncomingCall(5000));
+        assertTrue(georgeCall.waitForIncomingCall(6000));
         assertTrue(georgeCall.sendIncomingCallResponse(Response.TRYING, "George-Trying", 3600));
         assertTrue(georgeCall.sendIncomingCallResponse(Response.RINGING, "George-Ringing", 3600));
 
@@ -1015,7 +1015,7 @@ public class ReferTest {
         archive.delete("/WEB-INF/classes/application.conf");
         archive.addAsWebInfResource("sip.xml");
         archive.addAsWebInfResource("restcomm_calllifecycle.xml", "conf/restcomm.xml");
-        archive.addAsWebInfResource("restcomm.script_referMessageTest", "data/hsql/restcomm.script");
+        archive.addAsWebInfResource("restcomm.script_ReferMessageTest", "data/hsql/restcomm.script");
         archive.addAsWebInfResource("akka_application.conf", "classes/application.conf");
         logger.info("Packaged Test App");
         return archive;

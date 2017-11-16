@@ -10,6 +10,8 @@ import com.sun.jersey.api.client.filter.HTTPBasicAuthFilter;
 import org.apache.log4j.Logger;
 
 import javax.ws.rs.core.MediaType;
+import java.util.Map;
+import java.util.concurrent.ConcurrentHashMap;
 
 /**
  * Created by gvagenas on 11/25/15.
@@ -51,11 +53,24 @@ public class MonitoringServiceTool {
         return parser.parse(response).getAsJsonObject();
     }
 
-    public JsonObject getMetrics(String deploymentUrl, String username, String authToken) {
-        return getMetrics(deploymentUrl, username, authToken, true);
+    public Map<String, Integer> getMgcpResources(JsonObject metrics) {
+        Integer mgcpEndpoints = metrics.getAsJsonObject("Metrics").get("MgcpEndpoints").getAsInt();
+        Integer mgcpConnections = metrics.getAsJsonObject("Metrics").get("MgcpConnections").getAsInt();
+
+        Map<String, Integer> mgcpResources = new ConcurrentHashMap<String, Integer>();
+
+        mgcpResources.put("MgcpEndpoints", mgcpEndpoints);
+        mgcpResources.put("MgcpConnections", mgcpConnections);
+
+
+        return mgcpResources;
     }
 
-    public JsonObject getMetrics(String deploymentUrl, String username, String authToken, boolean callDetails) {
+    public JsonObject getMetrics(String deploymentUrl, String username, String authToken) {
+        return getMetrics(deploymentUrl, username, authToken, true, true);
+    }
+
+    public JsonObject getMetrics(String deploymentUrl, String username, String authToken, boolean callDetails, boolean mgcpStats) {
         Client jerseyClient = Client.create();
         jerseyClient.addFilter(new HTTPBasicAuthFilter(username, authToken));
         String url = getAccountsUrl(deploymentUrl, username);
@@ -63,6 +78,9 @@ public class MonitoringServiceTool {
 
         if (callDetails) {
             webResource = webResource.queryParam("LiveCallDetails","true");
+        }
+        if (mgcpStats) {
+            webResource = webResource.queryParam("MgcpStats", "true");
         }
 
         String response = null;

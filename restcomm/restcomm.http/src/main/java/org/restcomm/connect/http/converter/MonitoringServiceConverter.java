@@ -28,6 +28,9 @@ import com.google.gson.JsonSerializer;
 import com.thoughtworks.xstream.converters.MarshallingContext;
 import com.thoughtworks.xstream.io.HierarchicalStreamWriter;
 import org.apache.commons.configuration.Configuration;
+import org.joda.time.DateTime;
+import org.joda.time.format.DateTimeFormat;
+import org.joda.time.format.DateTimeFormatter;
 import org.restcomm.connect.commons.Version;
 import org.restcomm.connect.commons.util.UriUtils;
 import org.restcomm.connect.telephony.api.CallInfo;
@@ -43,8 +46,14 @@ import java.util.Map;
  */
 public class MonitoringServiceConverter extends AbstractConverter implements JsonSerializer<MonitoringServiceResponse>{
 
+    private String dateTimeNow;
+
     public MonitoringServiceConverter(Configuration configuration) {
         super(configuration);
+        DateTime now = DateTime.now();
+        DateTimeFormatter fmt = DateTimeFormat.forPattern("EEE, dd MMM yyyy kk:mm:ss");
+        dateTimeNow = fmt.print(now);
+
     }
 
     @Override
@@ -61,6 +70,7 @@ public class MonitoringServiceConverter extends AbstractConverter implements Jso
         JsonArray callsArray = new JsonArray();
 
         //First add InstanceId and Version details
+        result.addProperty("DateTime", dateTimeNow);
         result.addProperty("InstanceId", monitoringServiceResponse.getInstanceId().getId().toString());
         result.addProperty("Version", Version.getVersion());
         result.addProperty("Revision", Version.getRevision());
@@ -97,6 +107,10 @@ public class MonitoringServiceConverter extends AbstractConverter implements Jso
         final Map<String, Integer> countersMap = monitoringServiceResponse.getCountersMap();
         Iterator<String> counterIterator = countersMap.keySet().iterator();
         Iterator<String> durationIterator = durationMap.keySet().iterator();
+
+        writer.startNode("DateTime");
+        writer.setValue(dateTimeNow);
+        writer.endNode();
 
         writer.startNode("InstanceId");
         writer.setValue(monitoringServiceResponse.getInstanceId().getId().toString());

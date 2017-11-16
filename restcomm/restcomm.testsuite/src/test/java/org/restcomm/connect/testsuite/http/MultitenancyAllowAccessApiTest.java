@@ -18,7 +18,7 @@
  * Software Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA
  * 02110-1301 USA, or see the FSF site: http://www.fsf.org.
  */
-	
+
 package org.restcomm.connect.testsuite.http;
 
 import static org.junit.Assert.assertTrue;
@@ -38,15 +38,17 @@ import org.jboss.shrinkwrap.api.ShrinkWrap;
 import org.jboss.shrinkwrap.api.spec.WebArchive;
 import org.jboss.shrinkwrap.resolver.api.maven.archive.ShrinkWrapMaven;
 import org.junit.Test;
+import org.junit.experimental.categories.Category;
 import org.junit.runner.RunWith;
 
 import org.restcomm.connect.commons.Version;
+import org.restcomm.connect.testsuite.UnstableTests;
 import wiremock.org.apache.http.client.ClientProtocolException;
 
 /**
  * The aim of this scenario is to ensure that an account can manage its own information and the information from its sub
  * accounts. Accounts and Applications endpoints are tested separately due its particularities.
- * 
+ *
  * @author guilherme.jansen@telestax.com
  */
 @RunWith(Arquillian.class)
@@ -75,16 +77,16 @@ public class MultitenancyAllowAccessApiTest {
     private final static String jsonExtension = ".json";
 
     private enum Endpoint {
-        
+
         INCOMING_PHONE_NUMBERS("IncomingPhoneNumbers", true, false, true, true, new HashMap<String,String>(){{ put("PhoneNumber","1111"); put("AreaCode","100"); }}, "PNff22dc8d1cdf4d449d666ac09f0bb110", "PN9f9cf955aeb94ebb9d2e09cead5683a4"),
-        CALLS("Calls", true, false, false, false, null, "CA9aa1b61e9b864477a820d5c1c9d9bb7d", "CAc6a057e16aa74cb0923c538725ffcf01"), 
-        SMS_MESSAGES("SMS/Messages", true, false, false, false, null, "SMa272937700b3461bb5d68a3569c61bf1", "SMa272937700b3461bb5d68a3569c61bf2"), 
+        CALLS("Calls", true, false, false, false, null, "CA9aa1b61e9b864477a820d5c1c9d9bb7d", "CAc6a057e16aa74cb0923c538725ffcf01"),
+        SMS_MESSAGES("SMS/Messages", true, false, false, false, null, "SMa272937700b3461bb5d68a3569c61bf1", "SMa272937700b3461bb5d68a3569c61bf2"),
         CLIENTS("Clients", true, true, true, true, new HashMap<String,String>(){{ put("Login","test"); put("Password","Restcomm12"); }}, "CLe95ba029114147c9a9aa42becd0518c0", "CL9bfcb54ead2b44e6bae03f337967a249"),
         OUTGOING_CALLER_IDS("OutgoingCallerIds", true, true, false, true, new HashMap<String,String>(){{ put("PhoneNumber","1111"); }}, "PNfa413fdbf3944932b37bef4bd661c7f7", "PN5a33fa8232d84578af023b1e81e30f67"),
         RECORDINGS("Recordings", true, false, false, false, null, "REacaffdf107da4dc3926e37bddfff44ed", "REacaffdf107da4dc3926e37bddfff44ee"),
         TRANSCRIPTIONS("Transcriptions", true, false, false, true, null, "TRacaffdf107da4dc3926e37bddfff44ee", "TRacaffdf107da4dc3926e37bddfff44ed"),
         NOTIFICATIONS("Notifications", true, false, false, false, null, "NO8927433ce9514b70ac0a76cd36601b9e", "NO8927433ce9514b70ac0a76cd36601b9d");
-        
+
         String name;
         boolean get;
         boolean postList;
@@ -93,7 +95,7 @@ public class MultitenancyAllowAccessApiTest {
         HashMap<String, String> postParams;
         String elementSameAccount;
         String elementSubaccount;
-        
+
         Endpoint(String name, boolean get, boolean postList, boolean postElement, boolean delete, HashMap<String,String> postParams, String elementSameAccount, String elementSubaccount){
             this.name = name;
             this.get = get;
@@ -104,7 +106,7 @@ public class MultitenancyAllowAccessApiTest {
             this.elementSameAccount = elementSameAccount;
             this.elementSubaccount = elementSubaccount;
         }
-        
+
     }
 
     @Test
@@ -163,6 +165,7 @@ public class MultitenancyAllowAccessApiTest {
     }
 
     @Test
+    @Category(UnstableTests.class)
     public void getElementSameAccount() throws ClientProtocolException, IOException {
         String baseUrl = deploymentUrl.toString() + apiPath + primaryAccountSid + "/";
         for (Endpoint endpoint : Endpoint.values()) {
@@ -176,6 +179,7 @@ public class MultitenancyAllowAccessApiTest {
     }
 
     @Test
+    @Category(UnstableTests.class)
     public void getElementSubaccount() throws ClientProtocolException, IOException {
         String baseUrl = deploymentUrl.toString() + apiPath + subaccountaAccountSid + "/";
         for (Endpoint endpoint : Endpoint.values()) {
@@ -252,7 +256,7 @@ public class MultitenancyAllowAccessApiTest {
         assertTrue(statusCode == httpOk);
         statusCode = RestcommMultitenancyTool.getInstance().post(baseUrl + jsonExtension, primaryUsername, accountsPassword, new HashMap<String,String>(){{ put("EmailAddress","test@test.com"); put("Password","RestComm12");}});
         Assert.assertEquals(httpOk, statusCode);
-        
+
         // Sub account
         baseUrl = deploymentUrl.toString() + apiPath.substring(0, apiPath.length()-1);
         statusCode = RestcommMultitenancyTool.getInstance().get(baseUrl + jsonExtension + "/" + subaccountbAccountSid, primaryUsername, accountsPassword);

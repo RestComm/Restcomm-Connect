@@ -132,6 +132,9 @@ public abstract class ClientsEndpoint extends SecuredEndpoint {
         buffer.append("/").append(getApiVersion(data)).append("/Accounts/").append(accountSid.toString())
                 .append("/Clients/").append(sid.toString());
         builder.setUri(URI.create(buffer.toString()));
+        if (data.containsKey("IsPushEnabled") && getBoolean("IsPushEnabled", data)) {
+            builder.setPushClientIdentity(sid.toString());
+        }
         return builder.build();
     }
 
@@ -187,7 +190,8 @@ public abstract class ClientsEndpoint extends SecuredEndpoint {
     }
 
     public Response putClient(final String accountSid, final MultivaluedMap<String, String> data, final MediaType responseType) {
-        secure(accountsDao.getAccount(accountSid), "RestComm:Create:Clients");
+        final Account account = accountsDao.getAccount(accountSid);
+        secure(account, "RestComm:Create:Clients");
         try {
             validate(data);
         } catch (final NullPointerException | IllegalArgumentException exception) {
@@ -195,7 +199,7 @@ public abstract class ClientsEndpoint extends SecuredEndpoint {
         }
 
         // Issue 109: https://bitbucket.org/telestax/telscale-restcomm/issue/109
-        Client client = dao.getClient(data.getFirst("Login"));
+        Client client = dao.getClient(data.getFirst("Login"), account.getOrganizationSid());
         if (client == null) {
             try {
                 client = createFrom(new Sid(accountSid), data);
@@ -223,13 +227,14 @@ public abstract class ClientsEndpoint extends SecuredEndpoint {
             final MediaType responseType) {
         Account operatedAccount = accountsDao.getAccount(accountSid);
         secure(operatedAccount, "RestComm:Modify:Clients");
-        final Client client = dao.getClient(new Sid(sid));
+        Client client = dao.getClient(new Sid(sid));
         if (client == null) {
             return status(NOT_FOUND).build();
         } else {
             secure(operatedAccount, client.getAccountSid(), SecuredType.SECURED_STANDARD );
             try {
-                dao.updateClient(update(client, data));
+                client = update(client, data);
+                dao.updateClient(client);
             } catch (PasswordTooWeak passwordTooWeak) {
                 return status(BAD_REQUEST).entity(buildErrorResponseBody("Password too weak",responseType)).type(responseType).build();
             }
@@ -257,10 +262,9 @@ public abstract class ClientsEndpoint extends SecuredEndpoint {
         }
     }
 
-    private Client update(final Client client, final MultivaluedMap<String, String> data) throws PasswordTooWeak {
-        Client result = client;
+    private Client update(Client client, final MultivaluedMap<String, String> data) throws PasswordTooWeak {
         if (data.containsKey("FriendlyName")) {
-            result = result.setFriendlyName(data.getFirst("FriendlyName"));
+            client = client.setFriendlyName(data.getFirst("FriendlyName"));
         }
         if (data.containsKey("Password")) {
             String password = data.getFirst("Password");
@@ -268,32 +272,39 @@ public abstract class ClientsEndpoint extends SecuredEndpoint {
             if (!validator.isStrongEnough(password)) {
                 throw new PasswordTooWeak();
             }
-            result = result.setPassword(password);
+            client = client.setPassword(password);
         }
         if (data.containsKey("Status")) {
-            result = result.setStatus(getStatus(data));
+            client = client.setStatus(getStatus(data));
         }
         if (data.containsKey("VoiceUrl")) {
             URI uri = getUrl("VoiceUrl", data);
-            result = result.setVoiceUrl(isEmpty(uri.toString()) ? null : uri);
+            client = client.setVoiceUrl(isEmpty(uri.toString()) ? null : uri);
         }
         if (data.containsKey("VoiceMethod")) {
-            result = result.setVoiceMethod(getMethod("VoiceMethod", data));
+            client = client.setVoiceMethod(getMethod("VoiceMethod", data));
         }
         if (data.containsKey("VoiceFallbackUrl")) {
             URI uri = getUrl("VoiceFallbackUrl", data);
-            result = result.setVoiceFallbackUrl(isEmpty(uri.toString()) ? null :uri);
+            client = client.setVoiceFallbackUrl(isEmpty(uri.toString()) ? null :uri);
         }
         if (data.containsKey("VoiceFallbackMethod")) {
-            result = result.setVoiceFallbackMethod(getMethod("VoiceFallbackMethod", data));
+            client = client.setVoiceFallbackMethod(getMethod("VoiceFallbackMethod", data));
         }
         if (data.containsKey("VoiceApplicationSid")) {
             if (org.apache.commons.lang.StringUtils.isEmpty(data.getFirst("VoiceApplicationSid"))) {
-                result = result.setVoiceApplicationSid(null);
+                client = client.setVoiceApplicationSid(null);
             } else {
-                result = result.setVoiceApplicationSid(getSid("VoiceApplicationSid", data));
+                client = client.setVoiceApplicationSid(getSid("VoiceApplicationSid", data));
             }
         }
-        return result;
+        if (data.containsKey("IsPushEnabled")) {
+            if (getBoolean("IsPushEnabled", data)) {
+                client = client.setPushClientIdentity(client.getSid().toString());
+            } else {
+                client = client.setPushClientIdentity(null);
+            }
+        }
+        return client;
     }
 }

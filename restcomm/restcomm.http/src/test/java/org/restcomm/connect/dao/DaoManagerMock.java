@@ -165,4 +165,9 @@ public class DaoManagerMock implements DaoManager {
     public void shutdown() throws InterruptedException {
 
     }
+
+    @Override
+    public OrganizationsDao getOrganizationsDao() {
+        return null;
+    }
 }

@@ -101,7 +101,7 @@ public class SdpUtils {
                 if (Connection.IP4.equals(origin.getAddressType())) {
                     final InetAddress address;
                     try {
-                        address = InetAddress.getByName(origin.getAddress());
+                        address = DNSUtils.getByName(origin.getAddress());
                         final String ip = address.getHostAddress();
                         if (!IPUtils.isRoutableAddress(ip)) {
                             origin.setAddress(externalIp);
@@ -119,7 +119,7 @@ public class SdpUtils {
         if (connection != null) {
             if (Connection.IN.equals(connection.getNetworkType())) {
                 if (Connection.IP4.equals(connection.getAddressType())) {
-                    final InetAddress address = InetAddress.getByName(connection.getAddress());
+                    final InetAddress address = DNSUtils.getByName(connection.getAddress());
                     final String ip = address.getHostAddress();
                     if (!IPUtils.isRoutableAddress(ip)) {
                         connection.setAddress(externalIp);
@@ -139,6 +139,30 @@ public class SdpUtils {
             }
         }
         return isWebRTC;
+    }
+
+    public static boolean isAudioSDP(final String contentType, final byte[] data) throws SdpParseException {
+        boolean isAudioSdp = false;
+        if (contentType.equalsIgnoreCase("application/sdp")) {
+            String sdp = getSdp(contentType, data);
+            if (sdp != null && sdp.contains("m=audio") || sdp.contains("m=AUDIO")
+                    || sdp.contains("m=Audio")) {
+                isAudioSdp = true;
+            }
+        }
+        return isAudioSdp;
+    }
+
+    public static boolean isVideoSDP(final String contentType, final byte[] data) throws SdpParseException {
+        boolean isVideoSdp = false;
+        if (contentType.equalsIgnoreCase("application/sdp")) {
+            String sdp = getSdp(contentType, data);
+            if (sdp != null && sdp.contains("m=video") || sdp.contains("m=VIDEO")
+                    || sdp.contains("m=Video")) {
+                isVideoSdp = true;
+            }
+        }
+        return isVideoSdp;
     }
 
 }
