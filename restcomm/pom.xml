@@ -5,7 +5,7 @@
 	<parent>
 		<groupId>org.restcomm</groupId>
 		<artifactId>restcomm-parent</artifactId>
-		<version>3.0.4</version>
+		<version>4.0.1</version>
 	</parent>
 
   <groupId>org.restcomm</groupId>
@@ -90,6 +90,7 @@
 		<commons-codec.version>1.10</commons-codec.version>
 		<commons-lang.version>2.6</commons-lang.version>
 		<jain.mgcp.version>1.0</jain.mgcp.version>
+                <jain-sip-api.version>1.2.0</jain-sip-api.version>
 		<mobicents.mgcp.impl.version>6.0.23</mobicents.mgcp.impl.version>
 		<javamail.version>1.4</javamail.version>
 		<servletapi.version>2.5</servletapi.version>
@@ -130,7 +131,7 @@
 		<netty.version>3.9.6.Final</netty.version>
 		<logback.version>1.1.3</logback.version>
 		<maven-artifact.version>3.1.0</maven-artifact.version>
-		<smpp-extensions.version>1.0.13</smpp-extensions.version>
+		<smpp-extensions.version>7.1.0-77</smpp-extensions.version>
 		<mockito-core.version>2.8.9</mockito-core.version>
 
 	</properties>
