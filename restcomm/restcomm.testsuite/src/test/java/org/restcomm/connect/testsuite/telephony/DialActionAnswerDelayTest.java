@@ -67,7 +67,9 @@ import com.github.tomakehurst.wiremock.verification.LoggedRequest;
 import com.google.gson.JsonObject;
 import java.util.HashMap;
 import java.util.Map;
+import org.junit.experimental.categories.Category;
 import org.restcomm.connect.testsuite.NetworkPortAssigner;
+import org.restcomm.connect.testsuite.UnstableTests;
 import org.restcomm.connect.testsuite.WebArchiveUtil;
 
 /**
@@ -210,6 +212,7 @@ public class DialActionAnswerDelayTest {
     }
 
     @Test
+    @Category(UnstableTests.class)
     public void testDialActionInvalidCall() throws ParseException, InterruptedException {
 
         stubFor(post(urlPathMatching("/DialAction.*"))

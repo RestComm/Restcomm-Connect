@@ -55,6 +55,8 @@ import static com.github.tomakehurst.wiremock.client.WireMock.*;
 import static org.cafesip.sipunit.SipAssert.assertLastOperationSuccess;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
+import org.junit.experimental.categories.Category;
+import org.restcomm.connect.testsuite.UnstableTests;
 
 /**
  * @author oleg.agafonov@telestax.com (Oleg Agafonov)
@@ -138,6 +140,7 @@ public class CallPushNotificationServerTest {
     private String dialAliceRcml = "<Response><Dial><Client>alice</Client></Dial></Response>";
 
     @Test
+    @Category(UnstableTests.class)
     public void testRcmlCall() throws ParseException, InterruptedException, MalformedURLException {
 
         stubFor(get(urlPathEqualTo("/1111"))

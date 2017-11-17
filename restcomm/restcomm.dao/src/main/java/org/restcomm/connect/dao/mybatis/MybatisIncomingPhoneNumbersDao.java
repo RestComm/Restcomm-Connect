@@ -48,7 +48,6 @@ public final class MybatisIncomingPhoneNumbersDao implements IncomingPhoneNumber
     private static final String namespace = "org.mobicents.servlet.sip.restcomm.dao.IncomingPhoneNumbersDao.";
     private final SqlSessionFactory sessions;
     private final Logger logger = Logger.getLogger(MybatisIncomingPhoneNumbersDao.class.getName());
-    private List<IncomingPhoneNumber> listPhones;
 
     public MybatisIncomingPhoneNumbersDao(final SqlSessionFactory sessions) {
         super();
@@ -89,13 +88,13 @@ public final class MybatisIncomingPhoneNumbersDao implements IncomingPhoneNumber
                 }
             }
             //check if there is a Regex match only if parameter is a String aka phone Number
-            listPhones = getIncomingPhoneNumbersRegex();
+            List<IncomingPhoneNumber> listPhones = getIncomingPhoneNumbersRegex();
             if (listPhones != null && listPhones.size() > 0) {
                 inboundPhoneNumber = ((String)parameter).replace("+1", "");
                 if (inboundPhoneNumber.matches("[\\d,*,#,+]+")) {
-                    IncomingPhoneNumber incomingPhoneNumber = checkIncomingPhoneNumberRegexMatch(selector, inboundPhoneNumber);
+                    IncomingPhoneNumber incomingPhoneNumber = checkIncomingPhoneNumberRegexMatch(selector, inboundPhoneNumber, listPhones);
                     if(incomingPhoneNumber != null)
-                        incomingPhoneNumbers.add(checkIncomingPhoneNumberRegexMatch(selector, inboundPhoneNumber));
+                        incomingPhoneNumbers.add(checkIncomingPhoneNumberRegexMatch(selector, inboundPhoneNumber, listPhones));
                 }
             }
         }finally {
@@ -104,7 +103,7 @@ public final class MybatisIncomingPhoneNumbersDao implements IncomingPhoneNumber
         return incomingPhoneNumbers;
     }
 
-   public IncomingPhoneNumber checkIncomingPhoneNumberRegexMatch ( String selector, String inboundPhoneNumber){
+   public IncomingPhoneNumber checkIncomingPhoneNumberRegexMatch ( String selector, String inboundPhoneNumber, List<IncomingPhoneNumber>  listPhones){
                final SqlSession session = sessions.openSession();
                String phoneRegexPattern = null;
                try {

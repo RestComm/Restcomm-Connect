@@ -1,0 +1,46 @@
+@startuml
+title __Record Verb - Part 1 (Start Recording)__ diagram - VoiceMail call flow (November 6, 2017)
+
+entity VoiceInterpreter
+entity Call
+entity MmsCallController
+entity MgcpMediaGroup
+entity IvrEndpoint
+entity MediaGateway
+
+rnote over VoiceInterpreter
+    Single leg call, VoiceInterpreter
+    executes Record verb.
+endnote
+
+VoiceInterpreter -> Call: Record
+rnote over MmsCallController
+    onRecord() method
+endnote
+Call -> MmsCallController: Record
+MmsCallController -> MgcpMediaGroup: Record
+rnote over MgcpMediaGroup
+    **sender** is VoiceInterpreter
+    so when MgcpMediaGroup
+    will have to notify **originator**
+    VoiceInterpreter will get
+    the message
+endnote
+MgcpMediaGroup -> IvrEndpoint: PlayRecord
+IvrEndpoint -> MediaGateway: RQNT AU/PR
+MediaGateway -> IvrEndpoint: 200 Transaction Executed Normally
+
+create control Filesystem
+MediaGateway -> Filesystem: write recording file
+
+
+legend right
+    RQNT 4 mobicents/ivr/2@127.0.0.1:2427 MGCP 1.0
+    N: restcomm@127.0.0.1:64915
+    R: AU/oc(N),AU/of(N)
+    X: 0
+    S: AU/pr(ip=beep.wav ri=file:RE237cc6a557d74f74950d4d89124d8350.wav cb=true prt=150 pst=150 rlt=500 eik=1234567890*# )
+endlegend
+
+
+@enduml
