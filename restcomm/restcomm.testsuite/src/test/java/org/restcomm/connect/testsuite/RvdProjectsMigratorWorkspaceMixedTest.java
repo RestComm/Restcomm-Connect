@@ -54,12 +54,15 @@ import java.util.List;
 import java.util.Map;
 import org.junit.experimental.categories.Category;
 import org.restcomm.connect.commons.Version;
-import static org.restcomm.connect.testsuite.RvdProjectsMigratorWorkspaceMigratedTest.reconfigurePorts;
+import org.restcomm.connect.commons.annotations.ParallelClassTests;
+import org.restcomm.connect.commons.annotations.UnstableTests;
+import org.restcomm.connect.commons.annotations.WithInMinsTests;
 
 /**
  * @author guilherme.jansen@telestax.com
  */
 @RunWith(Arquillian.class)
+@Category(value={WithInMinsTests.class, ParallelClassTests.class})
 public class RvdProjectsMigratorWorkspaceMixedTest {
 
     private final static Logger logger = Logger.getLogger(RvdProjectsMigratorWorkspaceMixedTest.class);
@@ -69,7 +72,7 @@ public class RvdProjectsMigratorWorkspaceMixedTest {
     private Deployer deployer;
     @ArquillianResource
     URL deploymentUrl;
-    
+
     private static int mediaPort = NetworkPortAssigner.retrieveNextPortByFile();
     private static int smtpPort = NetworkPortAssigner.retrieveNextPortByFile();
 
@@ -82,12 +85,12 @@ public class RvdProjectsMigratorWorkspaceMixedTest {
     private static ArrayList<String> didSids;
     private static ArrayList<String> clientSids;
     private static GreenMail mailServer;
-    
+
     private static int restcommPort = 5080;
     private static int restcommHTTPPort = 8080;
-    private static String restcommContact = "127.0.0.1:" + restcommPort;    
+    private static String restcommContact = "127.0.0.1:" + restcommPort;
 
-    
+
     public static void reconfigurePorts() throws Exception {
         if (System.getProperty("arquillian_sip_port") != null) {
             restcommPort = Integer.valueOf(System.getProperty("arquillian_sip_port"));
@@ -95,9 +98,9 @@ public class RvdProjectsMigratorWorkspaceMixedTest {
         }
         if (System.getProperty("arquillian_http_port") != null) {
             restcommHTTPPort = Integer.valueOf(System.getProperty("arquillian_http_port"));
-        }       
+        }
     }
-    
+
     @BeforeClass
     public static void before() {
         applicationNames = new ArrayList<String>();
@@ -191,7 +194,7 @@ public class RvdProjectsMigratorWorkspaceMixedTest {
     }
 
     @Test
-    @Category(UnstableTests.class)    
+    @Category(UnstableTests.class)
     public void checkClients() {
         // Check those who should be migrated
         JsonArray clientsListJson = RestcommRvdProjectsMigratorTool.getInstance().getEntitiesList(deploymentUrl.toString(),
@@ -262,10 +265,10 @@ public class RvdProjectsMigratorWorkspaceMixedTest {
     public static WebArchive createWebArchiveRestcomm() throws Exception {
         logger.info("Packaging Test App");
         reconfigurePorts();
-        
+
         Map<String, String> replacements = new HashMap();
         replacements.put("3025", String.valueOf(smtpPort));
-        //replace mediaport 2727 
+        //replace mediaport 2727
         replacements.put("2727", String.valueOf(mediaPort));
         replacements.put("8080", String.valueOf(restcommHTTPPort));
         replacements.put("5080", String.valueOf(restcommPort));
@@ -275,13 +278,13 @@ public class RvdProjectsMigratorWorkspaceMixedTest {
 
         WebArchive archive = WebArchiveUtil.createWebArchiveNoGw("restcomm_workspaceMigration.xml",
                 "restcomm.script_projectMigratorWorkspaceMixedTest", resources, replacements);
-        
+
         String source = "src/test/resources/workspace-migration-scenarios/mixed";
         String target = "workspace-migration";
         File f = new File(source);
-        addFiles(archive, f, source, target);        
+        addFiles(archive, f, source, target);
         return archive;
-    }    
+    }
 
     private static void addFiles(WebArchive war, File dir, String source, String target) throws Exception {
         if (!dir.isDirectory()) {
