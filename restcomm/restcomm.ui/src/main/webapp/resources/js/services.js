@@ -716,7 +716,7 @@ rcServices.factory('RvdProjectImporter', function($q, Upload) {
             }).progress(function(evt) {
                 //console.log('percent: ' + parseInt(100.0 * evt.loaded / evt.total));
             }).success(function(data, status, headers, config) {
-                deferred.resolve();
+                deferred.resolve(data[0]);
             }).error(function(data, status, headers, config) {
                 if (status == 400 && data && data.exception && data.exception.className == "UnsupportedProjectVersion") {
                     console.log(data.exception.message);

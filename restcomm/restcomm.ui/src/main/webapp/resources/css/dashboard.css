@@ -164,7 +164,7 @@ a:visited {
 
 .rc-btn.discrete-btn {
     background-color: white;
-    color: #d0d0d0;
+    color: #9e9f9f;
 }
 .rc-btn.discrete-btn:hover {
     background-color: #d0d0d0;
@@ -1379,25 +1379,40 @@ form[role=login] input:-webkit-autofill:focus{
 .apps-list {
     font-size: 1.5em;
     border-bottom: 1px solid #ddd;
+    margin-top: 20px;
 }
 
 .apps .apps-list-navigation {
     color: #abacad;
-    text-align: right;
-    padding-right: 50px;
     margin-bottom: 20px;
 }
 
-.apps-list .apps-list-kind {
-    width: 20%;
+.apps-list td.apps-list-name {
+    vertical-align: middle;
+}
+
+.apps-list td.apps-list-kind {
+    vertical-align: middle;
+}
+.apps-list th.apps-list-kind {
+    width: 10%;
 }
 
 .apps-list .apps-list-type {
-    width: 20%;
+    vertical-align: middle;
+}
+.apps-list th.apps-list-type {
+    width: 23%;
 }
 
 .apps-list .apps-list-number {
     width: 20%;
+    vertical-align: middle;
+}
+
+.apps-list div.app-feature {
+    width: 26px;
+    display: inline-block;
 }
 
 .app-details .app-details-content {
@@ -1416,8 +1431,10 @@ form[role=login] input:-webkit-autofill:focus{
     margin-bottom: 40px;
 }
 
+/* TODO remove this and respective occurences of url-section when time comes */
 .app-details .url-section {
-    margin-bottom: 30px;
+    margin-top: 30px;
+    margin-bottom: 20px;
 }
 
 .app-details .app-numbers-section {
@@ -1428,37 +1445,50 @@ form[role=login] input:-webkit-autofill:focus{
     min-height: 250px;
 }
 
-/* temporary settings until properly implement app creation-wizzard */
-.apps-wizzard .pick-area {
+.app-details .details-section-title {
+    padding-top: 0;
+}
+
+.app-details .account-logo {
+    font-size: 4em;
+}
+
+/* temporary settings until properly implement app creation-wizard */
+.apps-wizard .pick-area {
     text-align: center;
     padding-top: 20px;
 }
 
 /*
-.apps-wizzard .pick-area {
+.apps-wizard .pick-area {
     padding-top: 60px;
     padding-bottom: 60px;
 }*/
 
-.apps-wizzard .pick-area:not(:last-child) {
+.apps-wizard .pick-area:not(:last-child) {
     border-right: 2px solid #f0f0f0;
 }
 
-.apps-wizzard .top-spacer {
+.apps-wizard .top-spacer {
     margin-top: 50px;
 }
 
-.apps-wizzard .pick-area .dragover {
+.apps-wizard .pick-area .dragover {
     background-color: #f0f0f0;
     padding-bottom: 20px;
     border-radius: 10px;
 }
 
-.apps-wizzard .pick-area img:hover {
+.apps-wizard .pick-area img {
     opacity: 0.8;
 }
 
-.apps-wizzard .pick-area h4 {
+
+.apps-wizard .pick-area img:hover {
+    opacity: 1.0;
+}
+
+.apps-wizard .pick-area h4 {
     color: #606060;
 }
 
@@ -1651,6 +1681,13 @@ form[role=login] input:-webkit-autofill:focus{
     font-weight: 400;
     color: #6d6e70;
 }
+
+/* experimental link underline feature */
+
+.rc-link:hover {
+    text-decoration: underline;
+}
+
 
 .rc-textbox.rc-textbox-advanced {
     border: 2px solid #ffdacb;

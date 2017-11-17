@@ -7,7 +7,10 @@ angular.module('rcApp.controllers').controller('ApplicationDetailsCtrl', functio
     var accountSid = SessionService.get("sid");
     var applicationSid = $stateParams.applicationSid;
     $scope.app = RCommApplications.get({accountSid: accountSid, applicationSid: applicationSid}, function () {
-        $scope.provider = $filter('appKind')($scope.app.rcml_url);
+        $scope.provider = $filter('appProvider')($scope.app.rcml_url);
+    }, function () {
+        Notifications.error("Could not retrieve application " + applicationSid);
+        $location.path("/applications");
     });
     // TODO also retrieve IncomingNumbers list for specific application
 
@@ -29,18 +32,26 @@ angular.module('rcApp.controllers').controller('ApplicationDetailsCtrl', functio
     $scope.downloadRvdApp = function(app) {
         var downloadUrl =  '/restcomm-rvd/services/projects/' + app.sid + '/archive?projectName=' + app.friendly_name; // TODO remove '/restcomm-rvd/' hardcoded value and use one from PublicConfig service
         FileRetriever.download(downloadUrl, app.friendly_name + ".zip").catch(function () {
-            notifications.error("Error downloading project archive");
+            Notifications.error("Error downloading project archive");
         });
     }
 });
 
-angular.module('rcApp.controllers').controller('ApplicationCreationWizzardCtrl', function ($scope, $rootScope, $location) {
-    console.log("IN ApplicaitonCreationWizzardCtrl");
+angular.module('rcApp.controllers').controller('ApplicationCreationWizardCtrl', function ($scope, $rootScope, $location, Notifications) {
+    console.log("IN ApplicaitonCreationWizardCtrl");
 
     $scope.onFileDropped = function(files) {
-        $rootScope.droppedFiles = files;
-        $location.path("/applications/new");
-
+        // filename should end in .zip
+        if (files[0]) {
+            var m = files[0].name.match(RegExp("(.+)\\.zip$","i"));
+            if ( ! (m && m[1]) ) {
+                Notifications.error("This doesn't look like a .zip archive!");
+                return;
+            } else {
+                $rootScope.droppedFiles = files;
+                $location.path("/applications/new");
+            }
+        }
     }
 });
 
@@ -61,26 +72,28 @@ angular.module('rcApp.controllers').controller('ApplicationCreationCtrl', functi
     $scope.createRvdApplication = function(options) {
         RvdProjects.create({applicationSid: options.name, kind:options.kind}, null, function (data) { // RVD does not have an intuitive API :-( // NOTE 'null' is VERY IMPORTANT here as it makes $resource and the kind as a query parameter
             Notifications.success("RVD application created");
+            $location.path("/applications/" + data.sid);
             window.open("/restcomm-rvd#/designer/" + data.sid + "=" + data.name);
-
         });
 
     }
 
-
     // if we're importing, use imported filename to suggest a name for the newly created project
     if (droppedFiles) {
-        var m = droppedFiles[0].name.match(RegExp("(.+)\\.zip$"));
+        var m = droppedFiles[0].name.match(RegExp("(.+)\\.zip$", "i"));
         if ( m && m[1] ) {
             appOptions.name = m[1];
+        } else {
+            $scope.fileLooksWrong = true;
         }
     }
 
     $scope.importProjectFromFile = function(files, nameOverride) {
         if (files[0]) {
-            RvdProjectImporter.import(files[0], nameOverride).then(function () {
-                Notifications.success("Application imported successfully");
-                $location.path("/applications");
+            RvdProjectImporter.import(files[0], nameOverride).then(function (result) {
+                Notifications.success("Application '" + result.name + "' imported successfully");
+                $location.path("/applications/" + result.id);
+                window.open("/restcomm-rvd#/designer/" + result.id + "=" + result.name);
             }, function (message) {
                 Notifications.error(message);
             });
@@ -103,7 +116,7 @@ angular.module('rcApp.controllers').controller('ApplicationExternalCreationCtrl'
 
     $scope.createExternalApplication = function(app) {
         console.log('creating external app');
-        RCommApplications.save({accountSid: accountSid}, $httpParamSerializer({RcmlUrl: app.rcml_url, FriendlyName: app.name}), function () {
+        RCommApplications.save({accountSid: accountSid}, $httpParamSerializer({RcmlUrl: app.rcml_url, FriendlyName: app.name, Kind: app.kind}), function () {
             Notifications.success("Application '" + app.name + " ' created");
             $location.path( "/applications" );
         });
