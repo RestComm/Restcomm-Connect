@@ -81,14 +81,13 @@ fi
 configOutboundProxy(){
     echo "Configure outbound-proxy"
     FILE=$RESTCOMM_DEPLOY/WEB-INF/conf/restcomm.xml
-    sed -e "s|<outbound-proxy-uri>.*<\/outbound-proxy-uri>|<outbound-proxy-uri>$OUTBOUND_PROXY<\/outbound-proxy-uri>|" \
-		-e "s|<outbound-proxy-user>.*<\/outbound-proxy-user>|<outbound-proxy-user>$OUTBOUND_PROXY_USERNAME<\/outbound-proxy-user>|"  \
-		-e "s|<outbound-proxy-password>.*<\/outbound-proxy-password>|<outbound-proxy-password>$OUTBOUND_PROXY_PASSWORD<\/outbound-proxy-password>|" $FILE > $FILE.bak;
-	mv $FILE.bak $FILE
-	sed -e "s|<outbound-proxy-uri/>|<outbound-proxy-uri>$OUTBOUND_PROXY<\/outbound-proxy-uri>|" \
-		-e "s|<outbound-proxy-user/>|<outbound-proxy-user>$OUTBOUND_PROXY_USERNAME<\/outbound-proxy-user>|"  \
-		-e "s|<outbound-proxy-password/>|<outbound-proxy-password>$OUTBOUND_PROXY_PASSWORD<\/outbound-proxy-password>|" $FILE > $FILE.bak;
-	mv $FILE.bak $FILE
+    sed -i "s|<outbound-proxy-uri>.*<\/outbound-proxy-uri>|<outbound-proxy-uri>$OUTBOUND_PROXY<\/outbound-proxy-uri>|" $FILE
+    sed -i "s|<outbound-proxy-user>.*<\/outbound-proxy-user>|<outbound-proxy-user>$OUTBOUND_PROXY_USERNAME<\/outbound-proxy-user>|"  $FILE
+    sed -i "s|<outbound-proxy-password>.*<\/outbound-proxy-password>|<outbound-proxy-password>$OUTBOUND_PROXY_PASSWORD<\/outbound-proxy-password>|" $FILE
+	
+    sed -i "s|<outbound-proxy-uri\/>|<outbound-proxy-uri>$OUTBOUND_PROXY<\/outbound-proxy-uri>|" $FILE
+    sed -i "s|<outbound-proxy-user\/>|<outbound-proxy-user>$OUTBOUND_PROXY_USERNAME<\/outbound-proxy-user>|"  $FILE
+    sed -i "s|<outbound-proxy-password\/>|<outbound-proxy-password>$OUTBOUND_PROXY_PASSWORD<\/outbound-proxy-password>|" $FILE
 }
 ## Description: Push notification server configuration.
 configPushNotificationServer() {
@@ -138,24 +137,45 @@ configDidProvisionManager() {
     if [[ "$PROVISION_PROVIDER" == "VI" || "$PROVISION_PROVIDER" == "vi" ]]; then
         sed -e "s|phone-number-provisioning class=\".*\"|phone-number-provisioning class=\"org.restcomm.connect.provisioning.number.vi.VoIPInnovationsNumberProvisioningManager\"|" $FILE > $FILE.bak
 
-        sed -e "/<voip-innovations>/ {
-            N; s/<login>.*<\/login>/<login>$1<\/login>/g;s/<login\/>/<login>$1<\/login>/g
-            N; s/<password>.*<\/password>/<password>$2<\/password>/g;s/<password\/>/<password>$2<\/password>/g
-            N; s/<endpoint>.*<\/endpoint>/<endpoint>$3<\/endpoint>/g;s/<endpoint\/>/<endpoint>$3<\/endpoint>/g
-        }" $FILE.bak > $FILE
-        sed -i "s/<outboudproxy-user-at-from-header>.*<\/outboudproxy-user-at-from-header>/<outboudproxy-user-at-from-header>"false"<\/outboudproxy-user-at-from-header>/g;s/<outboudproxy-user-at-from-header\/>/<outboudproxy-user-at-from-header>"false"<\/outboudproxy-user-at-from-header>/g" $FILE
+		mv $FILE.bak $FILE
+
+		sed -i "/<voip-innovations>/ {
+			N; s|<login>.*</login>|<login>$1</login>|
+        	N; s|<password>.*</password>|<password>$2</password>|
+        	N; s|<endpoint>.*</endpoint>|<endpoint>$3</endpoint>|
+		}" $FILE
+	
+		sed -i "/<voip-innovations>/ {
+			N; s|<login\/>|<login>$1</login>|
+        	N; s|<password\/>|<password>$2</password>|
+        	N; s|<endpoint\/>|<endpoint>$3</endpoint>|
+		}" $FILE
+
+        sed -i "s|<outboudproxy-user-at-from-header>.*<\/outboudproxy-user-at-from-header>|<outboudproxy-user-at-from-header>"false"<\/outboudproxy-user-at-from-header>|" $FILE
+        sed -i "s|<outboudproxy-user-at-from-header\/>|<outboudproxy-user-at-from-header>"false"<\/outboudproxy-user-at-from-header>|" $FILE
         echo 'Configured Voip Innovation credentials'
     else
         if [[ "$PROVISION_PROVIDER" == "BW" || "$PROVISION_PROVIDER" == "bw" ]]; then
         sed -e "s|phone-number-provisioning class=\".*\"|phone-number-provisioning class=\"org.restcomm.connect.provisioning.number.bandwidth.BandwidthNumberProvisioningManager\"|" $FILE > $FILE.bak
 
-        sed -e "/<bandwidth>/ {
-        	N; s/<username>.*<\/username>/<username>$1<\/username>/g;s/<username\/>/<username>$1<\/username>/g
-            N; s/<password>.*<\/password>/<password>$2<\/password>/g;s/<password\/>/<password>$2<\/password>/g
-            N; s/<accountId>.*<\/accountId>/<accountId>$6<\/accountId>/g;s/<accountId\/>/<accountId>$6<\/accountId>/g
-            N; s/<siteId>.*<\/siteId>/<siteId>$4<\/siteId>/g;s/<siteId\/>/<siteId>$4<\/siteId>/g
-        }" $FILE.bak > $FILE
-        sed -i "s/<outboudproxy-user-at-from-header>.*<\/outboudproxy-user-at-from-header>/<outboudproxy-user-at-from-header>"false"<\/outboudproxy-user-at-from-header>/g;s/<outboudproxy-user-at-from-header\/>/<outboudproxy-user-at-from-header>"false"<\/outboudproxy-user-at-from-header>/g" $FILE
+		mv $FILE.bak $FILE
+		
+        sed -i "/<bandwidth>/ {
+            N; s|<username>.*</username>|<username>$1</username>|
+            N; s|<password>.*</password>|<password>$2</password>|
+            N; s|<accountId>.*</accountId>|<accountId>$6</accountId>|
+            N; s|<siteId>.*</siteId>|<siteId>$4</siteId>|
+        }" $FILE
+        
+        sed -i "/<bandwidth>/ {
+            N; s|<username\/>|<username>$1</username>|
+            N; s|<password\/>|<password>$2</password>|
+            N; s|<accountId\/>|<accountId>$6</accountId>|
+            N; s|<siteId\/>|<siteId>$4</siteId>|
+        }" $FILE
+        
+        sed -i "s|<outboudproxy-user-at-from-header>.*<\/outboudproxy-user-at-from-header>|<outboudproxy-user-at-from-header>"false"<\/outboudproxy-user-at-from-header>|" $FILE
+        sed -i "s|<outboudproxy-user-at-from-header\/>|<outboudproxy-user-at-from-header>"false"<\/outboudproxy-user-at-from-header>|" $FILE
         echo 'Configured Bandwidth credentials'
         else
             if [[ "$PROVISION_PROVIDER" == "NX" || "$PROVISION_PROVIDER" == "nx" ]]; then
@@ -179,13 +199,21 @@ configDidProvisionManager() {
                 fi
 
                 sed -i "/<nexmo>/ {
-                    N; s/<api-key>.*<\/api-key>/<api-key>$1<\/api-key>/g;s/<api-key\/>/<api-key>$1<\/api-key>/g
-                    N; s/<api-secret>.*<\/api-secret>/<api-secret>$2<\/api-secret>/g;s/<api-secret\/>/<api-secret>$2<\/api-secret>/g
+                    N; s|<api-key>.*</api-key>|<api-key>$1</api-key>|
+                    N; s|<api-secret>.*</api-secret>|<api-secret>$2</api-secret>|
                     N
-                    N; s/<smpp-system-type>.*<\/smpp-system-type>/<smpp-system-type>$7<\/smpp-system-type>/g;s/<smpp-system-type\/>/<smpp-system-type>$7<\/smpp-system-type>/g;
+                    N; s|<smpp-system-type>.*</smpp-system-type>|<smpp-system-type>$7</smpp-system-type>|
+                }" $FILE
+                
+				sed -i "/<nexmo>/ {
+                    N; s|<api-key\/>|<api-key>$1</api-key>|
+                    N; s|<api-secret\/>|<api-secret>$2</api-secret>|
+                    N
+                    N; s|<smpp-system-type\/>|<smpp-system-type>$7</smpp-system-type>|
                 }" $FILE
 
-                sed -i"." "s/<outboudproxy-user-at-from-header>.*<\/outboudproxy-user-at-from-header>/<outboudproxy-user-at-from-header>"true"<\/outboudproxy-user-at-from-header>/g;s/<outboudproxy-user-at-from-header\/>/<outboudproxy-user-at-from-header>"true"<\/outboudproxy-user-at-from-header>/g" $FILE
+                sed -i "s|<outboudproxy-user-at-from-header>.*<\/outboudproxy-user-at-from-header>|<outboudproxy-user-at-from-header>"true"<\/outboudproxy-user-at-from-header>|" $FILE
+                sed -i "s|<outboudproxy-user-at-from-header\/>|<outboudproxy-user-at-from-header>"true"<\/outboudproxy-user-at-from-header>|" $FILE
 
             else
                 if [[ "$PROVISION_PROVIDER" == "VB" || "$PROVISION_PROVIDER" == "vb" ]]; then
@@ -199,11 +227,16 @@ configDidProvisionManager() {
                     N; s|<ussd url=\".*\" method=\".*\" />|<ussd url=\"\+\{E164\}\@$5:$8\" method=\"SIP\" />|
                 }" $FILE
 
-                sed -i"." "/<voxbone>/ {
-                    N; s/<username>.*<\/username>/<username>$1<\/username>/g;s/<username\/>/<username>$1<\/username>/g
-                    N; s/<password>.*<\/password>/<password>$2<\/password>/g;s/<password\/>/<password>$2<\/password>/g
+                 sed -i "/<voxbone>/ {
+                    N; s|<username>.*</username>|<username>$1</username>|
+                    N; s|<password>.*</password>|<password>$2</password>|
                 }" $FILE
-                sed -i "s/<outboudproxy-user-at-from-header>.*<\/outboudproxy-user-at-from-header>/<outboudproxy-user-at-from-header>"false"<\/outboudproxy-user-at-from-header>/g;s/<outboudproxy-user-at-from-header\/>/<outboudproxy-user-at-from-header>"false"<\/outboudproxy-user-at-from-header>/g" $FILE
+                sed -i "/<voxbone>/ {
+                    N; s|<username\/>|<username>$1</username>|
+                    N; s|<password\/>|<password>$2</password>|
+                }" $FILE
+                sed -i "s|<outboudproxy-user-at-from-header>.*<\/outboudproxy-user-at-from-header>|<outboudproxy-user-at-from-header>"false"<\/outboudproxy-user-at-from-header>|" $FILE
+                sed -i "s|<outboudproxy-user-at-from-header\/>|<outboudproxy-user-at-from-header>"false"<\/outboudproxy-user-at-from-header>|" $FILE
 
                 fi
             fi
@@ -217,12 +250,16 @@ configDidProvisionManager() {
 configFaxService() {
 	FILE=$RESTCOMM_DEPLOY/WEB-INF/conf/restcomm.xml
 
-	sed -e "/<fax-service.*>/ {
-		N; s/<user>.*<\/user>/<user>$1<\/user>/g;s/<user\/>/<user>$1<\/user>/g
-		N; s/<password>.*<\/password>/<password>$2<\/password>/g;s/<password\/>/<password>$2<\/password>/g
-	}" $FILE > $FILE.bak
+	sed -i "/<fax-service.*>/ {
+		N; s|<user>.*</user>|<user>$1</user>|
+		N; s|<password>.*</password>|<password>$2</password>|
+	}" $FILE
+	
+	sed -i "/<fax-service.*>/ {
+		N; s|<user\/>|<user>$1</user>|
+		N; s|<password\/>|<password>$2</password>|
+	}" $FILE
 
-	mv $FILE.bak $FILE
 	echo 'Configured Fax Service credentials'
 }
 
@@ -232,12 +269,15 @@ configFaxService() {
 configSmsAggregator() {
 	FILE=$RESTCOMM_DEPLOY/WEB-INF/conf/restcomm.xml
 
-	sed -e "/<sms-aggregator.*>/ {
-		N; s/<outbound-prefix>.*<\/outbound-prefix>/<outbound-prefix>$2<\/outbound-prefix>/g;s/<outbound-prefix\/>/<outbound-prefix>$2<\/outbound-prefix>/g
-		N; s/<outbound-endpoint>.*<\/outbound-endpoint>/<outbound-endpoint>$1<\/outbound-endpoint>/g;s/<outbound-endpoint\/>/<outbound-endpoint>$1<\/outbound-endpoint>/g
-	}" $FILE > $FILE.bak
-
-	mv $FILE.bak $FILE
+	sed -i "/<sms-aggregator.*>/ {
+		N; s|<outbound-prefix>.*</outbound-prefix>|<outbound-prefix>$2</outbound-prefix>|
+		N; s|<outbound-endpoint>.*</outbound-endpoint>|<outbound-endpoint>$1</outbound-endpoint>|
+	}" $FILE
+	
+	sed -i "/<sms-aggregator.*>/ {
+		N; s|<outbound-prefix\/>|<outbound-prefix>$2</outbound-prefix>|
+		N; s|<outbound-endpoint\/>|<outbound-endpoint>$1</outbound-endpoint>|
+	}" $FILE
 	echo "Configured Sms Aggregator using OUTBOUND PROXY $1"
 }
 
@@ -247,11 +287,14 @@ configSpeechRecognizer() {
     if [ -n "$ISPEECH_KEY" ]; then
         FILE=$RESTCOMM_DEPLOY/WEB-INF/conf/restcomm.xml
 
-        sed -e "/<speech-recognizer.*>/ {
+        sed -i "/<speech-recognizer.*>/ {
             N; s|<api-key.*></api-key>|<api-key production=\"true\">$1</api-key>|
-        }" $FILE > $FILE.bak
+        }" $FILE
+        
+        sed -i "/<speech-recognizer.*>/ {
+            N; s|<api-key.*\/>|<api-key production=\"true\">$1</api-key>|
+        }" $FILE
 
-        mv $FILE.bak $FILE
         echo 'Configured the Speech Recognizer'
     fi
 }
@@ -281,14 +324,20 @@ configAcapela() {
          FILE=$RESTCOMM_DEPLOY/WEB-INF/conf/restcomm.xml
          sed -i 's|<speech-synthesizer active=".*"/>|<speech-synthesizer active="acapela"/>|' $FILE
 
-	        sed -e "/<acapela class=\"org.restcomm.connect.tts.acapela.AcapelaSpeechSynthesizer\">/ {
+	        sed -i "/<acapela class=\"org.restcomm.connect.tts.acapela.AcapelaSpeechSynthesizer\">/ {
 		        N
-		        N; s/<application>.*<\/application>/<application>$1<\/application>/g;s/<application\/>/<application>$1<\/application>/g
-		        N; s/<login>.*<\/login>/<login>$2<\/login>/g;s/<login\/>/<login>$2<\/login>/g
-		        N; s/<password>.*<\/password>/<password>$3<\/password>/g;s/<password\/>/<password>$3<\/password>/g
-	        }" $FILE > $FILE.bak
+		        N; s|<application>.*</application>|<application>$1</application>|
+		        N; s|<login>.*</login>|<login>$2</login>|
+		        N; s|<password>.*</password>|<password>$3</password>|
+	        }" $FILE
+	        
+	        sed -i "/<acapela class=\"org.restcomm.connect.tts.acapela.AcapelaSpeechSynthesizer\">/ {
+		        N
+		        N; s|<application\/>|<application>$1</application>|
+		        N; s|<login\/>|<login>$2</login>|
+		        N; s|<password\/>|<password>$3</password>|
+	        }" $FILE
 
-        mv $FILE.bak $FILE
         echo 'Configured Acapela Speech Synthesizer'
  fi
 }
@@ -301,11 +350,14 @@ configVoiceRSS() {
         FILE=$RESTCOMM_DEPLOY/WEB-INF/conf/restcomm.xml
          sed -i 's|<speech-synthesizer active=".*"/>|<speech-synthesizer active="voicerss"/>|' $FILE
 
-         sed -e "/<service-root>http:\/\/api.voicerss.org<\/service-root>/ {
-         N; s/<apikey>.*<\/apikey>/<apikey>$1<\/apikey>/g;s/<apikey\/>/<apikey>$1<\/apikey>/g
-         }" $FILE > $FILE.bak
+         sed -i "/<service-root>http:\/\/api.voicerss.org<\/service-root>/ {
+         N; s|<apikey>.*</apikey>|<apikey>$1</apikey>|
+         }" $FILE
 
-         mv $FILE.bak $FILE
+         sed -i "/<service-root>http:\/\/api.voicerss.org<\/service-root>/ {
+         N; s|<apikey\/>|<apikey>$1</apikey>|
+         }" $FILE
+
          echo 'Configured VoiceRSS Speech Synthesizer'
 
  	else
@@ -324,14 +376,20 @@ configAWSPolly() {
          FILE=$RESTCOMM_DEPLOY/WEB-INF/conf/restcomm.xml
          sed -i 's|<speech-synthesizer active=".*"/>|<speech-synthesizer active="awspolly"/>|' $FILE
 
-	        sed -e "/<awspolly class=\"org.restcomm.connect.tts.awspolly.AWSPollySpeechSyntetizer\">/ {
+	        sed -i "/<awspolly class=\"org.restcomm.connect.tts.awspolly.AWSPollySpeechSyntetizer\">/ {
 		        N
-		        N; s/<aws-access-key>.*<\/aws-access-key>/<aws-access-key>$1<\/aws-access-key>/g;s/<aws-access-key\/>/<aws-access-key>$1<\/aws-access-key>/g
-		        N; s/<aws-secret-key>.*<\/aws-secret-key>/<aws-secret-key>$2<\/aws-secret-key>/g;s/<aws-secret-key\/>/<aws-secret-key>$2<\/aws-secret-key>/g
-		        N; s/<aws-region>.*<\/aws-region>/<aws-region>$3<\/aws-region>/g;s/<aws-region\/>/<aws-region>$3<\/aws-region>/g
-	        }" $FILE > $FILE.bak
+		        N; s|<aws-access-key>.*</aws-access-key>|<aws-access-key>$1</aws-access-key>|
+		        N; s|<aws-secret-key>.*</aws-secret-key>|<aws-secret-key>$2</aws-secret-key>|
+		        N; s|<aws-region>.*</aws-region>|<aws-region>$3</aws-region>|
+	        }" $FILE
+	        
+	        sed -i "/<awspolly class=\"org.restcomm.connect.tts.awspolly.AWSPollySpeechSyntetizer\">/ {
+		        N
+		        N; s|<aws-access-key\/>|<aws-access-key>$1</aws-access-key>|
+		        N; s|<aws-secret-key\/>|<aws-secret-key>$2</aws-secret-key>|
+		        N; s|<aws-region\/>|<aws-region>$3</aws-region>|
+	        }" $FILE
 
-        mv $FILE.bak $FILE
         echo 'Configured AWS Polly Speech Synthesizer'
  fi
 }
@@ -355,28 +413,44 @@ configTelestaxProxy() {
 	FILE=$RESTCOMM_DEPLOY/WEB-INF/conf/restcomm.xml
 	enabled="$1"
 	if [ "$enabled" == "true" ] || [ "$enabled" == "TRUE" ]; then
-		sed -e "/<telestax-proxy>/ {
-		N; s/<enabled>.*<\/enabled>/<enabled>$1<\/enabled>/g;s/<enabled\/>/<enabled>$1<\/enabled>/g
-		N; s/<login>.*<\/login>/<login>$2<\/login>/g;s/<login\/>/<login>$2<\/login>/g
-		N; s/<password>.*<\/password>/<password>$3<\/password>/g;s/<password\/>/<password>$3<\/password>/g
-		N; s/<endpoint>.*<\/endpoint>/<endpoint>$4<\/endpoint>/g;s/<endpoint\/>/<endpoint>$4<\/endpoint>/g
-		N; s/<siteId>.*<\/siteId>/<siteId>$6<\/siteId>/g;s/<siteId\/>/<siteId>$6<\/siteId>/g
-		N; s/<uri>.*<\/uri>/<uri>http:\/\/$5:2080<\/uri>/g;s/<uri\/>/<uri>http:\/\/$5:2080<\/uri>/g
-		}" $FILE > $FILE.bak
+		sed -i "/<telestax-proxy>/ {
+			N; s|<enabled>.*</enabled>|<enabled>$1</enabled>|
+		N; s|<login>.*</login>|<login>$2</login>|
+		N; s|<password>.*</password>|<password>$3</password>|
+		N; s|<endpoint>.*</endpoint>|<endpoint>$4</endpoint>|
+		N; s|<siteId>.*</siteId>|<siteId>$6</siteId>|
+		N; s|<uri>.*</uri>|<uri>http:\/\/$5:2080</uri>|
+		}" $FILE
+		
+		sed -i "/<telestax-proxy>/ {
+			N; s|<enabled\/>|<enabled>$1</enabled>|
+		N; s|<login\/>|<login>$2</login>|
+		N; s|<password\/>|<password>$3</password>|
+		N; s|<endpoint\/>|<endpoint>$4</endpoint>|
+		N; s|<siteId\/>|<siteId>$6</siteId>|
+		N; s|<uri\/>|<uri>http:\/\/$5:2080</uri>|
+		}" $FILE
 
-		mv $FILE.bak $FILE
 		echo 'Enabled TeleStax Proxy'
 	else
-		sed -e "/<telestax-proxy>/ {
-			N; s/<enabled>.*<\/enabled>/<enabled>false<\/enabled>/g;s/<enabled\/>/<enabled>false<\/enabled>/g
-			N; s/<login>.*<\/login>/<login><\/login>/g;s/<login\/>/<login><\/login>/g
-			N; s/<password>.*<\/password>/<password><\/password>/g;s/<password\/>/<password><\/password>/g
-			N; s/<endpoint>.*<\/endpoint>/<endpoint><\/endpoint>/g;s/<endpoint\/>/<endpoint><\/endpoint>/g
-			N; s/<siteId>.*<\/siteId>/<siteId><\/siteId>/g;s/<siteId\/>/<siteId><\/siteId>/g
-			N; s/<uri>.*<\/uri>/<uri>http:\/\/127.0.0.1:2080<\/uri>/g;s/<uri\/>/<uri>http:\/\/127.0.0.1:2080<\/uri>/g
-		}" $FILE > $FILE.bak
+		sed -i "/<telestax-proxy>/ {
+			N; s|<enabled>.*</enabled>|<enabled>false</enabled>|
+			N; s|<login>.*</login>|<login></login>|
+			N; s|<password>.*</password>|<password></password>|
+			N; s|<endpoint>.*</endpoint>|<endpoint></endpoint>|
+			N; s|<siteid>.*</siteid>|<siteid></siteid>|
+			N; s|<uri>.*</uri>|<uri>http:\/\/127.0.0.1:2080</uri>|
+		}" $FILE
+		
+		sed -i "/<telestax-proxy>/ {
+			N; s|<enabled\/>|<enabled>false</enabled>|
+			N; s|<login\/>|<login></login>|
+			N; s|<password\/>|<password></password>|
+			N; s|<endpoint\/>|<endpoint></endpoint>|
+			N; s|<siteid\/>|<siteid></siteid>|
+			N; s|<uri\/>|<uri>http:\/\/127.0.0.1:2080</uri>|
+		}" $FILE
 
-		mv $FILE.bak $FILE
 		echo 'Disabled TeleStax Proxy'
 	fi
 }
@@ -397,13 +471,13 @@ configMediaServerManager() {
     local LOCALMGCP=$((LOCALMGCP + PORT_OFFSET))
     local REMOTEMGCP=$((REMOTEMGCP + PORT_OFFSET))
 
-    sed -e "s/<local-address>.*<\/local-address>/<local-address>$bind_address<\/local-address>/g;s/<local-address\/>/<local-address>$bind_address<\/local-address>/g" \
-        -e "s/<local-port>.*<\/local-port>/<local-port>$LOCALMGCP<\/local-port>/g;s/<local-port\/>/<local-port>$LOCALMGCP<\/local-port>/g" \
-        -e "s/<remote-address>.*<\/remote-address>/<remote-address>$ms_address<\/remote-address>/g;s/<remote-address\/>/<remote-address>$ms_address<\/remote-address>/g" \
-        -e "s/<remote-port>.*<\/remote-port>/<remote-port>$REMOTEMGCP<\/remote-port>/g;s/<remote-port\/>/<remote-port>$REMOTEMGCP<\/remote-port>/g" \
-        -e "s/<response-timeout>.*<\/response-timeout>/<response-timeout>$MGCP_RESPONSE_TIMEOUT<\/response-timeout>/g;s/<response-timeout\/>/<response-timeout>$MGCP_RESPONSE_TIMEOUT<\/response-timeout>/g" \
-        -e "s/<\!--.*<external-address>.*<\/external-address>.*-->/<external-address>$ms_external_address<\/external-address>/g;" \
-        -e "s/<external-address>.*<\/external-address>/<external-address>$ms_external_address<\/external-address>/g;s/<external-address\/>/<external-address>$ms_external_address<\/external-address>/g" $FILE > $FILE.bak
+    sed -e "s|<local-address>.*</local-address>|<local-address>$bind_address</local-address>|" \
+        -e "s|<local-port>.*</local-port>|<local-port>$LOCALMGCP</local-port>|" \
+        -e "s|<remote-address>.*</remote-address>|<remote-address>$ms_address</remote-address>|" \
+        -e "s|<remote-port>.*</remote-port>|<remote-port>$REMOTEMGCP</remote-port>|" \
+        -e "s|<response-timeout>.*</response-timeout>|<response-timeout>$MGCP_RESPONSE_TIMEOUT</response-timeout>|" \
+        -e "s|<\!--.*<external-address>.*</external-address>.*-->|<external-address>$ms_external_address</external-address>|" \
+        -e "s|<external-address>.*</external-address>|<external-address>$ms_external_address</external-address>|" $FILE > $FILE.bak
 
     mv $FILE.bak $FILE
     echo 'Configured Media Server Manager'
@@ -436,41 +510,65 @@ configSMPPAccount() {
 
 
 	if [ "$activate" == "true" ] || [ "$activate" == "TRUE" ]; then
-		sed -e	"/<smpp class=\"org.restcomm.connect.sms.smpp.SmppService\"/{
+		sed -i	"/<smpp class=\"org.restcomm.connect.sms.smpp.SmppService\"/{
 			N
 			N
 			N
 			N
-			N; s/<systemid>.*<\/systemid>/<systemid>$systemID<\/systemid>/g;s/<systemid\/>/<systemid>$systemID<\/systemid>/g
-			N; s/<peerip>.*<\/peerip>/<peerip>$peerIP<\/peerip>/g;s/<peerip\/>/<peerip>$peerIP<\/peerip>/g
-			N; s/<peerport>.*<\/peerport>/<peerport>$peerPort<\/peerport>/g;s/<peerport\/>/<peerport>$peerPort<\/peerport>/g
+			N; s|<systemid>.*</systemid>|<systemid>$systemID</systemid>|
+			N; s|<peerip>.*</peerip>|<peerip>$peerIP</peerip>|
+			N; s|<peerport>.*</peerport>|<peerport>$peerPort</peerport>|
 			N
 			N
-			N; s/<password>.*<\/password>/<password>$password<\/password>/g;s/<password\/>/<password>$password<\/password>/g
-			N; s/<systemtype>.*<\/systemtype>/<systemtype>$systemType<\/systemtype>/g;s/<systemtype\/>/<systemtype>$systemType<\/systemtype>/g
-		}" $FILE > $FILE.bak
-
-		mv $FILE.bak $FILE
+			N; s|<password>.*</password>|<password>$password</password>|
+			N; s|<systemtype>.*</systemtype>|<systemtype>$systemType</systemtype>|
+		}" $FILE
+		
+		sed -i	"/<smpp class=\"org.restcomm.connect.sms.smpp.SmppService\"/{
+			N
+			N
+			N
+			N
+			N; s|<systemid\/>$systemID</systemid>|
+			N; s|<peerip\/>|<peerip>$peerIP</peerip>|
+			N; s|<peerport\/>|<peerport>$peerPort</peerport>|
+			N
+			N
+			N; s|<password\/>|<password>$password</password>|
+			N; s|<systemtype\/>|<systemtype>$systemType</systemtype>|
+		}" $FILE
 
         sed -i "s|<connection activateAddressMapping=\"false\" sourceAddressMap=\"\" destinationAddressMap=\"\" tonNpiValue=\"1\">|<connection activateAddressMapping=\"false\" sourceAddressMap=\"${sourceMap}\" destinationAddressMap=\"${destinationMap}\" tonNpiValue=\"1\">|" $FILE
 		echo 'Configured SMPP Account Details'
 
 	else
-		sed -e	"/<smpp class=\"org.restcomm.connect.sms.smpp.SmppService\"/{
+		sed -i	"/<smpp class=\"org.restcomm.connect.sms.smpp.SmppService\"/{
 			N
 			N
 			N
 			N
-			N; s/<systemid>.*<\/systemid>/<systemid><\/systemid>/g;s/<systemid\/>/<systemid><\/systemid>/g
-			N; s/<peerip>.*<\/peerip>/<peerip><\/peerip>/g;s/<peerip\/>/<peerip><\/peerip>/g
-			N; s/<peerport>.*<\/peerport>/<peerport><\/peerport>/g;s/<peerport\/>/<peerport><\/peerport>/g
+			N; s|<systemid>.*</systemid>|<systemid></systemid>|
+			N; s|<peerip>.*</peerip>|<peerip></peerip>|
+			N; s|<peerport>.*</peerport>|<peerport></peerport>|
 			N
 			N
-			N; s/<password>.*<\/password>/<password><\/password>/g;s/<password\/>/<password><\/password>/g
-			N; s/<systemtype>.*<\/systemtype>/<systemtype><\/systemtype>/g;s/<systemtype\/>/<systemtype><\/systemtype>/g
-		}" $FILE > $FILE.bak
+			N; s|<password>.*</password>|<password></password>|
+			N; s|<systemtype>.*</systemtype>|<systemtype></systemtype>|
+		}" $FILE
 
-		mv $FILE.bak $FILE
+		sed -i	"/<smpp class=\"org.restcomm.connect.sms.smpp.SmppService\"/{
+			N
+			N
+			N
+			N
+			N; s|<systemid\/>|<systemid></systemid>|
+			N; s|<peerip\/>|<peerip></peerip>|
+			N; s|<peerport\/>|<peerport></peerport>|
+			N
+			N
+			N; s|<password\/>|<password></password>|
+			N; s|<systemtype\/>|<systemtype></systemtype>|
+		}" $FILE
 
         sed -i "s|<connection activateAddressMapping=\"false\" sourceAddressMap=\"\" destinationAddressMap=\"\" tonNpiValue=\"1\">|<connection activateAddressMapping=\"false\" sourceAddressMap=\"\" destinationAddressMap=\"\" tonNpiValue=\"1\">|" $FILE
 		echo 'Configured SMPP Account Details'
@@ -497,15 +595,14 @@ configRestCommURIs() {
 
 		# STATIC_ADDRESS will be populated by user or script before
 		REMOTE_ADDRESS="${SCHEME}://${PUBLIC_IP}:${PORT}"
-		sed -e "s|<prompts-uri>.*</prompts-uri>|<prompts-uri>$REMOTE_ADDRESS/restcomm/audio<\/prompts-uri>|" \
-		-e "s|<cache-uri>.*/cache-uri>|<cache-uri>$REMOTE_ADDRESS/restcomm/cache</cache-uri>|" \
-		-e "s|<error-dictionary-uri>.*</error-dictionary-uri>|<error-dictionary-uri>$REMOTE_ADDRESS/restcomm/errors</error-dictionary-uri>|" $FILE > $FILE.bak
-		mv $FILE.bak $FILE
 
-		sed -e "s|<prompts-uri/>|<prompts-uri>$REMOTE_ADDRESS/restcomm/audio<\/prompts-uri>|" \
-		-e "s|<cache-uri/>|<cache-uri>$REMOTE_ADDRESS/restcomm/cache</cache-uri>|" \
-		-e "s|<error-dictionary-uri/>|<error-dictionary-uri>$REMOTE_ADDRESS/restcomm/errors</error-dictionary-uri>|" $FILE > $FILE.bak
-		mv $FILE.bak $FILE
+		sed -i "s|<prompts-uri>.*</prompts-uri>|<prompts-uri>$REMOTE_ADDRESS/restcomm/audio<\/prompts-uri>|" $FILE
+		sed -i "s|<cache-uri>.*/cache-uri>|<cache-uri>$REMOTE_ADDRESS/restcomm/cache</cache-uri>|" $FILE
+		sed -i "s|<error-dictionary-uri>.*</error-dictionary-uri>|<error-dictionary-uri>$REMOTE_ADDRESS/restcomm/errors</error-dictionary-uri>|" $FILE
+
+		sed -i "s|<prompts-uri/>|<prompts-uri>$REMOTE_ADDRESS/restcomm/audio<\/prompts-uri>|" $FILE
+		sed -i "s|<cache-uri/>|<cache-uri>$REMOTE_ADDRESS/restcomm/cache</cache-uri>|" $FILE
+		sed -i "s|<error-dictionary-uri/>|<error-dictionary-uri>$REMOTE_ADDRESS/restcomm/errors</error-dictionary-uri>|" $FILE
 
 		echo "Updated prompts-uri cache-uri error-dictionary-uri External MSaddress for "
 	fi
@@ -517,13 +614,14 @@ updateRecordingsPath() {
 	FILE=$RESTCOMM_DEPLOY/WEB-INF/conf/restcomm.xml
 
 	if [ -n "$RECORDINGS_PATH" ]; then
-		sed -e "s|<recordings-path>.*</recordings-path>|<recordings-path>file://${RECORDINGS_PATH}<\/recordings-path>|" $FILE > $FILE.bak
+		sed -i "s|<recordings-path>.*</recordings-path>|<recordings-path>file://${RECORDINGS_PATH}<\/recordings-path>|" $FILE
+		sed -i "s|<recordings-path\/>|<recordings-path>file://${RECORDINGS_PATH}<\/recordings-path>|" $FILE
 		echo "Updated RECORDINGS_PATH "
 
 	else
-		sed -e "s|<recordings-path>.*</recordings-path>|<recordings-path>file://\${restcomm:home}/recordings<\/recordings-path>|" $FILE > $FILE.bak
+		sed -i "s|<recordings-path>.*</recordings-path>|<recordings-path>file://\${restcomm:home}/recordings<\/recordings-path>|" $FILE
+		sed -i "s|<recordings-path\/>|<recordings-path>file://\${restcomm:home}/recordings<\/recordings-path>|" $FILE
 	fi
-	mv $FILE.bak $FILE
 	echo 'Configured Recordings path'
 }
 
@@ -571,25 +669,31 @@ otherRestCommConf(){
 	if [ -n "$USSDGATEWAYURI" ]; then
   		echo "USSD GATEWAY configuration"
   		FILE=$RESTCOMM_DEPLOY/WEB-INF/conf/restcomm.xml
-        sed -e "s|<ussd-gateway-uri>.*</ussd-gateway-uri>|<ussd-gateway-uri>$USSDGATEWAYURI</ussd-gateway-uri>|" \
-        	-e "s|<ussd-gateway-user>.*</ussd-gateway-user>|<ussd-gateway-user>$USSDGATEWAYUSER</ussd-gateway-user>|" \
-        	-e "s|<ussd-gateway-password>.*</ussd-gateway-password>|<ussd-gateway-password>$USSDGATEWAYPASSWORD</ussd-gateway-password>|" $FILE > $FILE.bak
-          mv $FILE.bak $FILE
-		sed -e "s|<ussd-gateway-uri/>|<ussd-gateway-uri>$USSDGATEWAYURI</ussd-gateway-uri>|" \
-             -e "s|<ussd-gateway-user/>|<ussd-gateway-user>$USSDGATEWAYUSER</ussd-gateway-user>|" \
-             -e "s|<ussd-gateway-password/>|<ussd-gateway-password>$USSDGATEWAYPASSWORD</ussd-gateway-password>|" $FILE > $FILE.bak
-          mv $FILE.bak $FILE
+        sed -i "s|<ussd-gateway-uri>.*</ussd-gateway-uri>|<ussd-gateway-uri>$USSDGATEWAYURI</ussd-gateway-uri>|" $FILE
+        sed -i "s|<ussd-gateway-user>.*</ussd-gateway-user>|<ussd-gateway-user>$USSDGATEWAYUSER</ussd-gateway-user>|" $FILE
+        sed -i "s|<ussd-gateway-password>.*</ussd-gateway-password>|<ussd-gateway-password>$USSDGATEWAYPASSWORD</ussd-gateway-password>|" $FILE
+        
+        sed -i "s|<ussd-gateway-uri/>|<ussd-gateway-uri>$USSDGATEWAYURI</ussd-gateway-uri>|" $FILE
+        sed -i "s|<ussd-gateway-user/>|<ussd-gateway-user>$USSDGATEWAYUSER</ussd-gateway-user>|" $FILE
+        sed -i "s|<ussd-gateway-password/>|<ussd-gateway-password>$USSDGATEWAYPASSWORD</ussd-gateway-password>|" $FILE
 	fi
 
 	echo "HTTP_RESPONSE_TIMEOUT $HTTP_RESPONSE_TIMEOUT"
-	sed -e "/<http-client>/ {
+	sed -i"." "/<http-client>/ {
 			N
 			N;
 			N;
 			N;
-			N; s/<response-timeout>.*<\/response-timeout>/<response-timeout>$HTTP_RESPONSE_TIMEOUT<\/response-timeout>/g;s/<response-timeout\/>/<response-timeout>$HTTP_RESPONSE_TIMEOUT<\/response-timeout>/g
-		}" $FILE > $FILE.bak
-    mv $FILE.bak $FILE
+			N; s|<response-timeout>.*</response-timeout>|<response-timeout>$HTTP_RESPONSE_TIMEOUT</response-timeout>|
+		}" $FILE
+		
+	sed -i"." "/<http-client>/ {
+			N
+			N;
+			N;
+			N;
+			N; s|<response-timeout\/>|<response-timeout>$HTTP_RESPONSE_TIMEOUT</response-timeout>|
+		}" $FILE
 
     echo "CACHE_NO_WAV $CACHE_NO_WAV"
     sed -i "s|<cache-no-wav>.*</cache-no-wav>|<cache-no-wav>${CACHE_NO_WAV}</cache-no-wav>|" $FILE
