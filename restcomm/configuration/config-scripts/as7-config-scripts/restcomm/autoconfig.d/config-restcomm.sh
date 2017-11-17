@@ -32,17 +32,11 @@ configRestcomm() {
 	FILE=$RESTCOMM_DEPLOY/WEB-INF/conf/restcomm.xml
 	static_address="$1"
 
-	sed -e  "s|<\!--.*<external-ip>.*<\/external-ip>.*-->|<external-ip>$static_address<\/external-ip>|" \
-		-e "s|<external-ip>.*<\/external-ip>|<external-ip>$static_address<\/external-ip>|" \
-		 $FILE > $FILE.bak;
-
-	mv $FILE.bak $FILE
+	sed -i  "s|<\!--.*<external-ip>.*<\/external-ip>.*-->|<external-ip>$static_address<\/external-ip>|" $FILE
+	sed -i "s|<external-ip>.*<\/external-ip>|<external-ip>$static_address<\/external-ip>|" $FILE
 	
-	sed -e  "s|<\!--.*<external-ip>.*<\/external-ip>.*-->|<external-ip>$static_address<\/external-ip>|" \
-		-e "s|<external-ip\/>|<external-ip>$static_address<\/external-ip>|" \
-		 $FILE > $FILE.bak;
+	sed -i "s|<external-ip\/>|<external-ip>$static_address<\/external-ip>|" $FILE
 
-	mv $FILE.bak $FILE
 	echo 'Updated RestComm configuration'
 
     #If "STRICT" no self-signed certificate is permitted.
