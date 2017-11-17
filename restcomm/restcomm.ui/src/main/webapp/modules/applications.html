@@ -3,46 +3,64 @@
         <div class="col-md-4 col-xs-6">
             <form class="search-form">
                 <img class="search-icon" src="resources/img/v2/search-icon.png">
-                <input name="q" type="text" size="40" placeholder="Search..." ng-model="query.friendly_name">
+                <input name="q" type="text" size="40" placeholder="Search..." ng-model="query.friendly_name" uib-tooltip="Search by application name" tooltip-popup-delay="1000">
             </form>
         </div>
         <div  class="col-md-4 col-md-offset-4 col-xs-6">
-            <button class="rc-btn pull-right hidden-xs" ng-click="$root.goTo('/applications/creation-wizzard')"><b>+</b> Add New App</button>
-            <button class="rc-btn rc-btn-sm pull-right visible-xs" ng-click="$root.goTo('/applications/creation-wizzard')"><b>+</b> Add New App</button>
+            <button class="rc-btn pull-right hidden-xs" ng-click="$root.goTo('/applications/creation-wizard')"><b>+</b> Add New App</button>
+            <button class="rc-btn rc-btn-sm pull-right visible-xs" ng-click="$root.goTo('/applications/creation-wizard')"><b>+</b> Add New App</button>
         </div>
     </div>
 
-    <div class="row">&nbsp;</div>
+<!--    <div class="row">&nbsp;</div>-->
 
     <div class="row">
         <div class="col-md-12">
+            <!--
             <div ng-hide="(appsList | filter:query).length > 0" class="jumbotron">
                 <h2><i class="fa fa-exclamation-circle"></i> No applications found</h2>
             </div>
+            -->
 
-            <table ng-show="(appsList | filter:query).length > 0" class="table table-hover apps-list" style="table-layout: fixed;" ng-cloak>
+            <div ng-hide="(appsList | filter:query).length > 0" class="jumbotron rc-no-items">
+                <h1><i class="fa fa-cogs"></i> </h1>
+                <h2>No applications found</h2>
+                <h5 ng-show="!appsList || appsList.length==0">Let's build something!</h5>
+            </div>
+
+            <table ng-show="(appsList | filter:query).length > 0" class="table table-hover apps-list rc-list" style="table-layout: fixed;" ng-cloak>
                 <thead style="color: #4a4a4b;">
                 <th class="apps-list-name">Name</th>
                 <th class="apps-list-type">Type</th>
-                <th class="apps-list-kind" >(need name)</th>
-                <th class="apps-list-number hidden-sm hidden-xs" >Number</th>
+                <th class="apps-list-number hidden-xs" >Number</th>
                 </thead>
                 <tbody style="color: #6d6e70;">
-                <tr class="number-row" ng-repeat="app in filtered = (appsList | filter:query)" ng-click="$root.goTo('/applications/' + app.sid)">
+                <tr class="number-row" ng-repeat="app in filtered = (appsList | filter:query)">
                     <td class="apps-list-name">
-                        <div><a href="#/applications/{{app.sid}}">{{ app.friendly_name }}</a></div>
+                        <div><a class="rc-link" href="#/applications/{{app.sid}}">{{ app.friendly_name }}</a></div>
+                        <div class="visible-xs">
+                            <span ng-show="app.numbers[0].phone_number">{{ app.numbers[0].phone_number }}<span ng-show="app.numbers[1]"> and more</span></span><!-- <a ng-hide="app.numbers[0].phone_number" href="#/numbers/incoming">assign</a> -->
+                            <span ng-show="!app.numbers[0].phone_number"><a href="#/numbers/incoming">assign</a></span>
+                        </div>
                     </td>
                     <td class="apps-list-type">
-                        <div>{{ app.rcml_url | appKind }}</div>
+                        <div>
+                            <div ng-show="app.kind=='voice'" class="app-feature" uib-tooltip="Voice application" tooltip-append-to-body="true" tooltip-popup-delay="1000"><i class="fa fa-microphone"></i></div>
+                            <div ng-show="app.kind=='sms'" class="app-feature" uib-tooltip="SMS application" tooltip-append-to-body="true" tooltip-popup-delay="1000"><i class="fa fa-comment"></i></div>
+                            <div ng-show="app.kind=='ussd'" class="app-feature" uib-tooltip="USSD application" tooltip-append-to-body="true" tooltip-popup-delay="1000"><i  class="fa fa-sitemap"></i></div>
+                            {{ app.rcml_url | appProvider }}
+                        </div>
                     </td>
-                    <td class="apps-list-kind">{{app.kind}}</td>
-                    <td class="apps-list-number hidden-sm hidden-xs">{{app.numbers[0].phone_number}}</td>
+                    <td class="apps-list-number hidden-xs" >
+                        <span ng-show="app.numbers[0].phone_number">{{ app.numbers[0].phone_number }}<span ng-show="app.numbers[1]"> and more</span></span><!-- <a ng-hide="app.numbers[0].phone_number" href="#/numbers/incoming">assign</a> -->
+                        <span ng-show="!app.numbers[0].phone_number" uib-tooltip="This application is not assigned to any numbers" tooltip-append-to-body="true" tooltip-popup-delay="1000"><a href="#/numbers/incoming">assign</a></span>
+                    </td>
                 </tr>
                 </tbody>
             </table>
         </div>
     </div>
     <div class="row">
-        <div class="col-md-offset-9 col-md-3 apps-list-navigation">Showing {{(appsList | filter:query).length}} from {{appsList.length}} Applications</div>
+        <div class="col-md-3 apps-list-navigation" ng-hide="!appsList || appsList.length==0">Showing {{(appsList | filter:query).length}} from {{appsList.length}} Applications</div>
     </div>
 </div>

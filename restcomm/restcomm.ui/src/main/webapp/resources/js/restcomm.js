@@ -157,10 +157,10 @@ rcMod.config(['$stateProvider','$urlRouterProvider', function($stateProvider, $u
     templateUrl: 'modules/applications.html',
     controller: 'ApplicationsCtrl'
   });
-  $stateProvider.state('restcomm.application-creation-wizzard',{
-      url:'/applications/creation-wizzard',
-      templateUrl: 'modules/application-creation-wizzard.html',
-      controller: 'ApplicationCreationWizzardCtrl'
+  $stateProvider.state('restcomm.application-creation-wizard',{
+      url:'/applications/creation-wizard',
+      templateUrl: 'modules/application-creation-wizard.html',
+      controller: 'ApplicationCreationWizardCtrl'
   });
   $stateProvider.state('restcomm.application-creation',{
       url:'/applications/new',

@@ -131,13 +131,25 @@ rcFilters.filter('toTrusted', ['$sce', function($sce){
 }]);
 
 // Determines whethere an rcml-url refers to an 'RVD' or an 'external' application and returned
-rcFilters.filter('appKind', function () {
+rcFilters.filter('appProvider', function () {
     var r = "/restcomm-rvd/";
     return function(rcmlUrl) {
         if (!!rcmlUrl && rcmlUrl.match(r))
             return "rvd";
         else
             return "external";
+    }
+});
+
+
+// converts a date string to unixDate
+rcFilters.filter('unixDate', function () {
+    return function(dateString) {
+        if (dateString) {
+            var d = new Date(dateString);
+            return d;
+        }
+        return dateString;
     }
 });
 
