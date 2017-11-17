@@ -31,13 +31,14 @@ public class IncomingPhoneNumberFilter {
     private final String accountSid;
     private final String friendlyName;
     private final String phoneNumber;
+    private final String applicationSid;
     private final String sortBy;
     private final String sortDirection;
     private final Integer limit;
     private final Integer offset;
 
-    public IncomingPhoneNumberFilter(String accountSid, String friendlyName, String phoneNumber, String sortBy,
-            String sortDirection, Integer limit, Integer offset) {
+    public IncomingPhoneNumberFilter(String accountSid, String friendlyName, String phoneNumber, String applicationSid, String sortBy,
+                                     String sortDirection, Integer limit, Integer offset) {
         this.accountSid = accountSid;
         this.friendlyName = friendlyName;
         // The LIKE keyword uses '%' to match any (including 0) number of characters, and '_' to match exactly one character
@@ -48,13 +49,14 @@ public class IncomingPhoneNumberFilter {
         }
 
         this.phoneNumber = phoneNumber;
+        this.applicationSid = applicationSid;
         this.sortBy = sortBy;
         this.sortDirection = sortDirection;
         this.limit = limit;
         this.offset = offset;
     }
 
-    public IncomingPhoneNumberFilter(String accountSid, String friendlyName, String phoneNumber) {
+    public IncomingPhoneNumberFilter(String accountSid, String friendlyName, String phoneNumber, String applicationSid) {
         super();
         this.accountSid = accountSid;
         this.friendlyName = friendlyName;
@@ -65,6 +67,7 @@ public class IncomingPhoneNumberFilter {
             phoneNumber = phoneNumber.replaceAll("\\*", "_");
         }
         this.phoneNumber = phoneNumber;
+        this.applicationSid = applicationSid;
         this.sortBy = null;
         this.sortDirection = null;
         this.offset = null;

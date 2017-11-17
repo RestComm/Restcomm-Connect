@@ -292,6 +292,7 @@ public abstract class IncomingPhoneNumbersEndpoint extends SecuredEndpoint {
         try{
             String phoneNumberFilter = info.getQueryParameters().getFirst("PhoneNumber");
             String friendlyNameFilter = info.getQueryParameters().getFirst("FriendlyName");
+            String applicationSid = info.getQueryParameters().getFirst("ApplicationSid");
             String page = info.getQueryParameters().getFirst("Page");
             String reverse = info.getQueryParameters().getFirst("Reverse");
             String pageSize = info.getQueryParameters().getFirst("PageSize");
@@ -306,14 +307,14 @@ public abstract class IncomingPhoneNumbersEndpoint extends SecuredEndpoint {
             int pageAsInt = Integer.parseInt(page);
             int offset = (page == "0") ? 0 : (((pageAsInt - 1) * limit) + limit);
             IncomingPhoneNumberFilter incomingPhoneNumberFilter = new IncomingPhoneNumberFilter(accountSid, friendlyNameFilter,
-                    phoneNumberFilter);
+                    phoneNumberFilter, applicationSid);
             final int total = dao.getTotalIncomingPhoneNumbers(incomingPhoneNumberFilter);
 
             if (pageAsInt > (total / limit)) {
                 return status(javax.ws.rs.core.Response.Status.BAD_REQUEST).build();
             }
 
-            incomingPhoneNumberFilter = new IncomingPhoneNumberFilter(accountSid, friendlyNameFilter, phoneNumberFilter, sortBy,
+            incomingPhoneNumberFilter = new IncomingPhoneNumberFilter(accountSid, friendlyNameFilter, phoneNumberFilter, applicationSid, sortBy,
                     reverse, limit, offset);
 
             final List<IncomingPhoneNumber> incomingPhoneNumbers = dao.getIncomingPhoneNumbersByFilter(incomingPhoneNumberFilter);

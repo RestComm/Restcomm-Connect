@@ -176,6 +176,7 @@ The following query string parameters allow you to limit the list returned. Note
 |*Parameter* |*Description*
 |PhoneNumber |Only show the incoming phone number resources that match this pattern. You can specify partial numbers and use '*' as a wildcard for any digit.
 |FriendlyName |Only show the incoming phone number resources with friendly names that exactly match this name.
+|ApplicationSid |Only show the incoming phone number resources associated with the specified application sid.
 |Beta |Include phone numbers new to the Restcomm platform. Possible values are either true or false. Default is true.
 |============================================================================================================================================================
 
