@@ -36,9 +36,10 @@ public class IncomingPhoneNumberFilter {
     private final Integer offset;
     private final String orgSid;
     private final Boolean pureSIP;
+    private SearchFilterMode filterMode;
 
-    public IncomingPhoneNumberFilter(String accountSid, String friendlyName, String phoneNumber, String sortBy,
-            String sortDirection, Integer limit, Integer offset, String orgSid, Boolean pureSIP) {
+    private IncomingPhoneNumberFilter(String accountSid, String friendlyName, String phoneNumber, String sortBy,
+            String sortDirection, Integer limit, Integer offset, String orgSid, Boolean pureSIP, SearchFilterMode filterMode) {
         this.accountSid = accountSid;
         this.friendlyName = friendlyName;
         this.phoneNumber = phoneNumber;
@@ -48,6 +49,7 @@ public class IncomingPhoneNumberFilter {
         this.offset = offset;
         this.orgSid = orgSid;
         this.pureSIP = pureSIP;
+        this.filterMode = filterMode;
     }
 
     public IncomingPhoneNumberFilter(String accountSid, String friendlyName, String phoneNumber) {
@@ -60,6 +62,7 @@ public class IncomingPhoneNumberFilter {
         this.limit = null;
         this.orgSid = null;
         this.pureSIP = null;
+        this.filterMode = SearchFilterMode.PERFECT_MATCH;
     }
 
     public String getAccountSid() {
@@ -116,6 +119,10 @@ public class IncomingPhoneNumberFilter {
         return pureSIP;
     }
 
+    public SearchFilterMode getFilterMode() {
+        return filterMode;
+    }
+
     @Override
     public String toString() {
         return "IncomingPhoneNumberFilter{" + "accountSid=" + accountSid + ", friendlyName=" + friendlyName + ", phoneNumber=" + phoneNumber + ", sortBy=" + sortBy + ", sortDirection=" + sortDirection + ", limit=" + limit + ", offset=" + offset + ", orgSid=" + orgSid + ", pureSIP=" + pureSIP + '}';
@@ -132,13 +139,24 @@ public class IncomingPhoneNumberFilter {
         private Integer offset = null;
         private String orgSid = null;
         private Boolean pureSIP = null;
+        private SearchFilterMode filterMode = SearchFilterMode.PERFECT_MATCH;
 
         public static IncomingPhoneNumberFilter.Builder builder() {
             return new IncomingPhoneNumberFilter.Builder();
         }
 
         public IncomingPhoneNumberFilter build() {
-            return new IncomingPhoneNumberFilter(accountSid, friendlyName, phoneNumber, sortBy, sortDirection, limit, offset, orgSid, pureSIP);
+
+            return new IncomingPhoneNumberFilter(accountSid,
+                    friendlyName,
+                    phoneNumber,
+                    sortBy,
+                    sortDirection,
+                    limit,
+                    offset,
+                    orgSid,
+                    pureSIP,
+                    filterMode);
         }
 
         public Builder byAccountSid(String accountSid) {
@@ -161,16 +179,20 @@ public class IncomingPhoneNumberFilter {
             return this;
         }
 
-        public Builder sortedBy(String sortBy,String sortDirection) {
+        public Builder sortedBy(String sortBy, String sortDirection) {
             this.sortBy = sortBy;
             this.sortDirection = sortDirection;
             return this;
         }
 
+        public Builder usingMode(SearchFilterMode mode) {
+            this.filterMode = mode;
+            return this;
+        }
 
         public Builder limited(Integer limit, Integer offset) {
             this.limit = limit;
-             this.offset = offset;
+            this.offset = offset;
             return this;
         }
 

@@ -35,6 +35,7 @@ import org.restcomm.connect.dao.entities.IncomingPhoneNumberFilter;
 import org.restcomm.connect.commons.dao.Sid;
 import org.restcomm.connect.commons.annotations.concurrency.ThreadSafe;
 import org.restcomm.connect.dao.entities.IncomingPhoneNumber;
+import org.restcomm.connect.dao.entities.SearchFilterMode;
 
 /**
  * @author quintana.thomas@gmail.com (Thomas Quintana)
@@ -116,11 +117,27 @@ public final class MybatisIncomingPhoneNumbersDao implements IncomingPhoneNumber
         }
     }
 
+    private String convertIntoSQLWildcard(String value) {
+        String wildcarded = value;
+        // The LIKE keyword uses '%' to match any (including 0) number of characters, and '_' to match exactly one character
+        // Add here the '%' keyword so +15126002188 will be the same as 15126002188 and 6002188
+        if (wildcarded != null) {
+            wildcarded = "%" + wildcarded + "%";
+        }
+        return wildcarded;
+    }
+
     @Override
     public List<IncomingPhoneNumber> getIncomingPhoneNumbersByFilter(IncomingPhoneNumberFilter filter) {
         final SqlSession session = sessions.openSession();
         try {
-            final List<Map<String, Object>> results = session.selectList(namespace + "getIncomingPhoneNumbersByFriendlyName",
+
+            String query = "getIncomingPhoneNumbersByFriendlyName";
+            if (filter.getFilterMode().equals(SearchFilterMode.WILDCARD_MATCH)) {
+                query = "searchNumbersWithWildcardMode";
+            }
+
+            final List<Map<String, Object>> results = session.selectList(namespace + query,
                     filter);
             final List<IncomingPhoneNumber> incomingPhoneNumbers = new ArrayList<IncomingPhoneNumber>(results.size());
             if (results != null && !results.isEmpty()) {

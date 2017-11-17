@@ -112,6 +112,55 @@
         ;
     </select>
   
+    <!-- along with the DID it returns the application frien-->
+    <select id="searchNumbersWithWildcardMode" parameterType="org.restcomm.connect.dao.entities.IncomingPhoneNumberFilter" resultType="hashmap">
+        <bind name="numberPattern" value="'%' + _parameter.getPhoneNumber() + '%'" />
+        <bind name="friendlyPattern" value="'%' + _parameter.getfriendlyName() + '%'" />
+        SELECT
+        "n".*,
+        "a_voice"."friendly_name" "voice_application_name",
+        "a_sms"."friendly_name" "sms_application_name",
+        "a_ussd"."friendly_name" "ussd_application_name",
+        "a_refer"."friendly_name" "refer_application_name"
+        FROM "restcomm_incoming_phone_numbers" "n"
+        LEFT OUTER JOIN "restcomm_applications" "a_voice"  ON "n"."voice_application_sid" = "a_voice"."sid"
+        LEFT OUTER JOIN "restcomm_applications" "a_sms" ON "n"."sms_application_sid" = "a_sms"."sid"
+        LEFT OUTER JOIN "restcomm_applications" "a_ussd" ON "n"."ussd_application_sid" = "a_ussd"."sid"
+        LEFT OUTER JOIN "restcomm_applications" "a_refer" ON "n"."refer_application_sid" = "a_refer"."sid"
+        WHERE '1'='1'
+        <if test="friendlyName != null">
+            AND "n"."friendly_name" like #{friendlyPattern}
+        </if>
+        <if test="phoneNumber != null">
+            AND "n"."phone_number" like #{numberPattern}
+        </if>
+        <if test="orgSid != null">
+            AND "n"."organization_sid"=#{orgSid}
+        </if>
+        <if test="accountSid != null">
+            AND "n"."account_sid"=#{accountSid}
+        </if>
+        <if test="pureSIP != null">
+            AND "n"."pure_sip" = #{pureSIP}
+        </if>           
+        <choose>
+            <when test="sortBy == 'phone_number'">
+                order by "n"."phone_number" ${sortDirection}
+            </when>
+            <when test="sortBy == 'friendly_name'">
+                order by "n"."friendly_name" ${sortDirection}
+            </when>
+            <otherwise>
+                order by "n"."phone_number" ${sortDirection}
+            </otherwise>
+        </choose>   
+        <if test="limit != null">
+            LIMIT #{limit} OFFSET #{offset}
+        </if>
+        ;
+    </select>
+  
+  
     <select id="getTotalIncomingPhoneNumbersByUsingFilters" parameterType="org.restcomm.connect.dao.entities.IncomingPhoneNumberFilter" resultType="int">
         SELECT COUNT(*) FROM "restcomm_incoming_phone_numbers" WHERE '1'='1'
 

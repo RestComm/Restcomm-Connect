@@ -37,6 +37,7 @@ import org.restcomm.connect.dao.IncomingPhoneNumbersDao;
 import org.restcomm.connect.dao.entities.IncomingPhoneNumber;
 import org.restcomm.connect.dao.entities.IncomingPhoneNumberFilter;
 import org.restcomm.connect.commons.dao.Sid;
+import org.restcomm.connect.dao.entities.SearchFilterMode;
 
 /**
  * @author quintana.thomas@gmail.com (Thomas Quintana)
@@ -168,13 +169,16 @@ public class IncomingPhoneNumbersDaoTest {
     @Test
     public void applicationFriendlyNameReturned() {
         final IncomingPhoneNumbersDao dao = manager.getIncomingPhoneNumbersDao();
-        IncomingPhoneNumberFilter incomingPhoneNumberFilter = new IncomingPhoneNumberFilter("ACae6e420f425248d6a26948c17a9e2acf", null, null,"phone_number","ASC",50,0, null, null);
-        List<IncomingPhoneNumber> phoneNumbers = dao.getIncomingPhoneNumbersByFilter(incomingPhoneNumberFilter);
+        IncomingPhoneNumberFilter.Builder filterBuilder = IncomingPhoneNumberFilter.Builder.builder();
+        filterBuilder.byAccountSid("ACae6e420f425248d6a26948c17a9e2acf");
+        filterBuilder.sortedBy("phone_number", "ASC");
+        filterBuilder.limited(50, 0);
+        List<IncomingPhoneNumber> phoneNumbers = dao.getIncomingPhoneNumbersByFilter(filterBuilder.build());
         Assert.assertEquals("Only a single phone number expected",1, phoneNumbers.size());
         IncomingPhoneNumber number = phoneNumbers.get(0);
-        Assert.assertEquals(number.getVoiceApplicationName(), "app0");
-        Assert.assertEquals(number.getSmsApplicationName(), "app1");
-        Assert.assertEquals(number.getUssdApplicationName(), "app2");
+        Assert.assertEquals("app0", number.getVoiceApplicationName());
+        Assert.assertEquals("app1", number.getSmsApplicationName());
+        Assert.assertEquals("app2", number.getUssdApplicationName());
     }
 
     @Test
@@ -218,6 +222,16 @@ public class IncomingPhoneNumbersDaoTest {
         assertEquals (1, incomingPhoneNumbers.size());
         IncomingPhoneNumber result = incomingPhoneNumbers.get(0);
         assertEquals(number.getSid(), result.getSid());
+
+        //use wildcard mode now
+        filterBuilder = IncomingPhoneNumberFilter.Builder.builder();
+        filterBuilder.byPhoneNumber("2223334444");
+        filterBuilder.byAccountSid(account.toString());
+        filterBuilder.usingMode(SearchFilterMode.WILDCARD_MATCH);
+        incomingPhoneNumbers = numbers.getIncomingPhoneNumbersByFilter(filterBuilder.build());
+        assertNotNull (incomingPhoneNumbers);
+        assertEquals (1, incomingPhoneNumbers.size());
+
         // Delete the incoming phone number.
         numbers.removeIncomingPhoneNumber(sid);
         // Validate that the incoming phone number was removed.
