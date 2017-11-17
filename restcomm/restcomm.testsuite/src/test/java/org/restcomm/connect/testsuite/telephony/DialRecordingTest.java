@@ -20,9 +20,7 @@ import org.jboss.arquillian.container.test.api.Deployer;
 import org.jboss.arquillian.container.test.api.Deployment;
 import org.jboss.arquillian.junit.Arquillian;
 import org.jboss.arquillian.test.api.ArquillianResource;
-import org.jboss.shrinkwrap.api.ShrinkWrap;
 import org.jboss.shrinkwrap.api.spec.WebArchive;
-import org.jboss.shrinkwrap.resolver.api.maven.archive.ShrinkWrapMaven;
 import org.joda.time.DateTime;
 import org.junit.After;
 import org.junit.Before;
@@ -47,7 +45,6 @@ import static com.github.tomakehurst.wiremock.client.WireMock.post;
 import static com.github.tomakehurst.wiremock.client.WireMock.stubFor;
 import static com.github.tomakehurst.wiremock.client.WireMock.urlPathEqualTo;
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -55,9 +52,10 @@ import static org.cafesip.sipunit.SipAssert.assertLastOperationSuccess;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertTrue;
+import org.junit.experimental.categories.Category;
 import org.restcomm.connect.testsuite.NetworkPortAssigner;
+import org.restcomm.connect.testsuite.UnstableTests;
 import org.restcomm.connect.testsuite.WebArchiveUtil;
-import static org.restcomm.connect.testsuite.telephony.DialForkTest.reconfigurePorts;
 
 /**
  * Created by gvagenas on 08/01/2017.
@@ -257,6 +255,14 @@ public class DialRecordingTest {
 
         JsonObject metrics = MonitoringServiceTool.getInstance().getMetrics(deploymentUrl.toString(), adminAccountSid, adminAuthToken);
         assertNotNull(metrics);
+
+        Map<String, Integer> mgcpResources = MonitoringServiceTool.getInstance().getMgcpResources(metrics);
+        int mgcpEndpoints = mgcpResources.get("MgcpEndpoints");
+        int mgcpConnections = mgcpResources.get("MgcpConnections");
+
+        assertEquals(0, mgcpEndpoints);
+        assertEquals(0, mgcpConnections);
+
         int liveCalls = metrics.getAsJsonObject("Metrics").get("LiveCalls").getAsInt();
         logger.info("LiveCalls: " + liveCalls);
         int liveCallsArraySize = metrics.getAsJsonArray("LiveCallDetails").size();
@@ -345,6 +351,14 @@ public class DialRecordingTest {
 
         JsonObject metrics = MonitoringServiceTool.getInstance().getMetrics(deploymentUrl.toString(), adminAccountSid, adminAuthToken);
         assertNotNull(metrics);
+
+        Map<String, Integer> mgcpResources = MonitoringServiceTool.getInstance().getMgcpResources(metrics);
+        int mgcpEndpoints = mgcpResources.get("MgcpEndpoints");
+        int mgcpConnections = mgcpResources.get("MgcpConnections");
+
+        assertEquals(0, mgcpEndpoints);
+        assertEquals(0, mgcpConnections);
+
         int liveCalls = metrics.getAsJsonObject("Metrics").get("LiveCalls").getAsInt();
         logger.info("LiveCalls: " + liveCalls);
         int liveCallsArraySize = metrics.getAsJsonArray("LiveCallDetails").size();
@@ -415,6 +429,14 @@ public class DialRecordingTest {
 
 		JsonObject metrics = MonitoringServiceTool.getInstance().getMetrics(deploymentUrl.toString(),adminAccountSid, adminAuthToken);
 		assertNotNull(metrics);
+
+        Map<String, Integer> mgcpResources = MonitoringServiceTool.getInstance().getMgcpResources(metrics);
+        int mgcpEndpoints = mgcpResources.get("MgcpEndpoints");
+        int mgcpConnections = mgcpResources.get("MgcpConnections");
+
+        assertEquals(0, mgcpEndpoints);
+        assertEquals(0, mgcpConnections);
+
 		int liveCalls = metrics.getAsJsonObject("Metrics").get("LiveCalls").getAsInt();
 		logger.info("LiveCalls: "+liveCalls);
 		int liveCallsArraySize = metrics.getAsJsonArray("LiveCallDetails").size();
@@ -423,7 +445,7 @@ public class DialRecordingTest {
 		assertEquals(0, liveCallsArraySize);
 	}
 
-	@Test @Ignore //Currently using the MockMediaGateway its not possible to test this use case
+	@Test //@Ignore //Currently using the MockMediaGateway its not possible to test this use case
 	public synchronized void testDialClientAlice_AliceDisconnects_NoRecording() throws InterruptedException, ParseException {
 		stubFor(get(urlPathEqualTo("/1111"))
 				.willReturn(aResponse()
@@ -467,28 +489,35 @@ public class DialRecordingTest {
 		assertTrue(aliceCall.sendIncomingCallResponse(Response.OK, "OK-Alice", 3600, receivedBody, "application", "sdp", null,
 				null));
 		assertTrue(aliceCall.waitForAck(50 * 1000));
-
 		aliceCall.disconnect();
 
 		assertTrue(bobCall.waitForDisconnect(30 * 1000));
 		assertTrue(bobCall.respondToDisconnect());
 
-		//Check recording
-		JsonArray recording = RestcommCallsTool.getInstance().getCallRecordings(deploymentUrl.toString(),adminAccountSid,adminAuthToken,callSid);
-		assertNotNull(recording);
-		assertEquals(0, recording.size());
-
         JsonObject metrics = MonitoringServiceTool.getInstance().getMetrics(deploymentUrl.toString(), adminAccountSid, adminAuthToken);
         assertNotNull(metrics);
+
+        Map<String, Integer> mgcpResources = MonitoringServiceTool.getInstance().getMgcpResources(metrics);
+        int mgcpEndpoints = mgcpResources.get("MgcpEndpoints");
+        int mgcpConnections = mgcpResources.get("MgcpConnections");
+
+        assertEquals(0, mgcpEndpoints);
+        assertEquals(0, mgcpConnections);
+
         int liveCalls = metrics.getAsJsonObject("Metrics").get("LiveCalls").getAsInt();
         logger.info("LiveCalls: " + liveCalls);
         int liveCallsArraySize = metrics.getAsJsonArray("LiveCallDetails").size();
         logger.info("LiveCallsArraySize: " + liveCallsArraySize);
         assertEquals(0, liveCalls);
         assertEquals(0, liveCallsArraySize);
+
+        //Check recording
+        JsonArray recording = RestcommCallsTool.getInstance().getCallRecordings(deploymentUrl.toString(),adminAccountSid,adminAuthToken,callSid);
+        assertNotNull(recording);
+        assertEquals(0, recording.size());
     }
 
-	final String recordCall = "<Response><Record timeout=\"15\" maxLength=\"60\"/></Response>";
+	final String recordCall = "<Response><Record timeout=\"15\" maxLength=\"50\"/></Response>";
 	@Test
 	public synchronized void testRecordVerb() throws InterruptedException, ParseException {
 		stubFor(get(urlPathEqualTo("/1111"))
@@ -538,17 +567,25 @@ public class DialRecordingTest {
 
         bobCall.disconnect();
 
-		Thread.sleep(6000);
+		Thread.sleep(1000);
 
 		//Check recording
 		JsonArray recording = RestcommCallsTool.getInstance().getCallRecordings(deploymentUrl.toString(),adminAccountSid,adminAuthToken,callSid);
 		assertNotNull(recording);
 		assertEquals(1, recording.size());
 		double duration = recording.get(0).getAsJsonObject().get("duration").getAsDouble();
-		assertEquals(3.0, duration,0.5);
+		assertEquals(5.0, duration,1.5);
 
         metrics = MonitoringServiceTool.getInstance().getMetrics(deploymentUrl.toString(), adminAccountSid, adminAuthToken);
         assertNotNull(metrics);
+
+        Map<String, Integer> mgcpResources = MonitoringServiceTool.getInstance().getMgcpResources(metrics);
+        int mgcpEndpoints = mgcpResources.get("MgcpEndpoints");
+        int mgcpConnections = mgcpResources.get("MgcpConnections");
+
+        assertEquals(0, mgcpEndpoints);
+        assertEquals(0, mgcpConnections);
+
         liveCalls = metrics.getAsJsonObject("Metrics").get("LiveCalls").getAsInt();
         logger.info("LiveCalls: " + liveCalls);
         liveCallsArraySize = metrics.getAsJsonArray("LiveCallDetails").size();
@@ -557,7 +594,7 @@ public class DialRecordingTest {
         assertEquals(0, liveCallsArraySize);
     }
 
-	@Test @Ignore //Currently using the MockMediaGateway its not possible to test this use case
+	@Test //@Ignore //Currently using the MockMediaGateway its not possible to test this use case
 	public synchronized void testRecordVerb_Disconnect_NoRecordFile() throws InterruptedException, ParseException {
 		stubFor(get(urlPathEqualTo("/1111"))
 				.willReturn(aResponse()
@@ -590,14 +627,27 @@ public class DialRecordingTest {
 		assertEquals(Response.OK, bobCall.getLastReceivedResponse().getStatusCode());
 
 		bobCall.sendInviteOkAck();
-		assertTrue(!(bobCall.getLastReceivedResponse().getStatusCode() >= 400));
+        bobCall.disconnect();
+
 		String callSid = bobCall.getLastReceivedResponse().getMessage().getHeader("X-RestComm-CallSid").toString().split(":")[1].trim();
 
-		bobCall.disconnect();
+		Thread.sleep(5000);
 
-		Thread.sleep(3000);
+        //Check recording
+        JsonArray recording = RestcommCallsTool.getInstance().getCallRecordings(deploymentUrl.toString(),adminAccountSid,adminAuthToken,callSid);
+        assertNotNull(recording);
+        assertEquals(0, recording.size());
 
-		JsonObject metrics = MonitoringServiceTool.getInstance().getMetrics(deploymentUrl.toString(),adminAccountSid, adminAuthToken);
+        JsonObject metrics = MonitoringServiceTool.getInstance().getMetrics(deploymentUrl.toString(),adminAccountSid, adminAuthToken);
+
+        Map<String, Integer> mgcpResources = MonitoringServiceTool.getInstance().getMgcpResources(metrics);
+        int mgcpEndpoints = mgcpResources.get("MgcpEndpoints");
+        int mgcpConnections = mgcpResources.get("MgcpConnections");
+
+        assertEquals(0, mgcpEndpoints);
+        assertEquals(0, mgcpConnections);
+
+
 		assertNotNull(metrics);
 		int liveCalls = metrics.getAsJsonObject("Metrics").get("LiveCalls").getAsInt();
 		logger.info("LiveCalls: "+liveCalls);
@@ -605,11 +655,6 @@ public class DialRecordingTest {
 		logger.info("LiveCallsArraySize: "+liveCallsArraySize);
 		assertEquals(0,liveCalls);
 		assertEquals(0, liveCallsArraySize);
-
-		//Check recording
-		JsonArray recording = RestcommCallsTool.getInstance().getCallRecordings(deploymentUrl.toString(),adminAccountSid,adminAuthToken,callSid);
-		assertNotNull(recording);
-		assertEquals(0, recording.size());
 	}
 
 	final String recordCallWithAction = "<Response><Record timeout=\"15\" maxLength=\"60\" action=\"http://127.0.0.1:"+mockPort+"/record-action\"/></Response>";
@@ -661,7 +706,7 @@ public class DialRecordingTest {
 
 		bobCall.disconnect();
 
-		Thread.sleep(6000);
+		Thread.sleep(1000);
 
 		//Check recording
 		JsonArray recording = RestcommCallsTool.getInstance().getCallRecordings(deploymentUrl.toString(),adminAccountSid,adminAuthToken,callSid);
@@ -677,6 +722,14 @@ public class DialRecordingTest {
 
         metrics = MonitoringServiceTool.getInstance().getMetrics(deploymentUrl.toString(), adminAccountSid, adminAuthToken);
         assertNotNull(metrics);
+
+        Map<String, Integer> mgcpResources = MonitoringServiceTool.getInstance().getMgcpResources(metrics);
+        int mgcpEndpoints = mgcpResources.get("MgcpEndpoints");
+        int mgcpConnections = mgcpResources.get("MgcpConnections");
+
+        assertEquals(0, mgcpEndpoints);
+        assertEquals(0, mgcpConnections);
+
         liveCalls = metrics.getAsJsonObject("Metrics").get("LiveCalls").getAsInt();
         logger.info("LiveCalls: " + liveCalls);
         liveCallsArraySize = metrics.getAsJsonArray("LiveCallDetails").size();
@@ -686,6 +739,7 @@ public class DialRecordingTest {
     }
 
     @Test
+    @Category(UnstableTests.class)
     public synchronized void testRecordCallWithActionWithMaxRecordingReached() throws InterruptedException, ParseException {
         stubFor(get(urlPathEqualTo("/1111"))
                 .willReturn(aResponse()
@@ -741,12 +795,20 @@ public class DialRecordingTest {
 		assertNotNull(recording);
 		assertEquals(1, recording.size());
 		double duration = recording.get(0).getAsJsonObject().get("duration").getAsDouble();
-		assertEquals(3.0, duration,0.5);
+		assertEquals(6.0, duration,0.5);
 
         logger.info("\n\n &&&&&& About to check liveCalls &&&&&& \n");
 
         metrics = MonitoringServiceTool.getInstance().getMetrics(deploymentUrl.toString(), adminAccountSid, adminAuthToken);
         assertNotNull(metrics);
+
+        Map<String, Integer> mgcpResources = MonitoringServiceTool.getInstance().getMgcpResources(metrics);
+        int mgcpEndpoints = mgcpResources.get("MgcpEndpoints");
+        int mgcpConnections = mgcpResources.get("MgcpConnections");
+
+        assertEquals(0, mgcpEndpoints);
+        assertEquals(0, mgcpConnections);
+
         liveCalls = metrics.getAsJsonObject("Metrics").get("LiveCalls").getAsInt();
         logger.info("LiveCalls: " + liveCalls);
         liveCallsArraySize = metrics.getAsJsonArray("LiveCallDetails").size();
@@ -817,18 +879,26 @@ public class DialRecordingTest {
 		assertNotNull(recording);
 		assertEquals(1, recording.size());
 		double duration = recording.get(0).getAsJsonObject().get("duration").getAsDouble();
-		assertEquals(3.0, duration,0.5);
+		assertEquals(0.0, duration,0.5);
 
 		logger.info("\n\n &&&&&& About to check liveCalls &&&&&& \n");
 
 		metrics = MonitoringServiceTool.getInstance().getMetrics(deploymentUrl.toString(),adminAccountSid, adminAuthToken);
 		assertNotNull(metrics);
+
+        Map<String, Integer> mgcpResources = MonitoringServiceTool.getInstance().getMgcpResources(metrics);
+        int mgcpEndpoints = mgcpResources.get("MgcpEndpoints");
+        int mgcpConnections = mgcpResources.get("MgcpConnections");
+
 		liveCalls = metrics.getAsJsonObject("Metrics").get("LiveCalls").getAsInt();
 		logger.info("LiveCalls: "+liveCalls);
 		liveCallsArraySize = metrics.getAsJsonArray("LiveCallDetails").size();
 		logger.info("LiveCallsArraySize: "+liveCallsArraySize);
 		assertEquals(0,liveCalls);
 		assertEquals(0, liveCallsArraySize);
+
+        assertEquals(0, mgcpEndpoints);
+        assertEquals(0, mgcpConnections);
 }
 
     @Test

@@ -1,0 +1,66 @@
+@startuml
+
+actor Bob
+entity VoiceInterpreter
+entity Call
+entity MmsCallController
+entity MgcpMediaGroup
+entity IvrEndpoint
+entity MediaGateway
+
+Bob -> Call: BYE
+
+rnote over Call
+    Call actor will move
+    to StoppingRecord state
+endnote
+
+Call -> MmsCallController: Stop
+MmsCallController -> MgcpMediaGroup: Stop
+MgcpMediaGroup -> IvrEndpoint: StopEndpoint
+IvrEndpoint -> MediaGateway: RQNT AU/es(sg=pr)
+create control Filesystem
+MediaGateway -> Filesystem: move temp rec file to requested file
+MediaGateway -> IvrEndpoint: 200 Transaction Executed Normally
+MediaGateway -> IvrEndpoint: NTFY O:AU/oc AU/pr
+
+IvrEndpoint -> MgcpMediaGroup: IvrResponse
+rnote over MgcpMediaGroup
+        When recording started,
+        originator (sender)
+        was set to VoiceInterpreter,
+        thus MgcpMediaGateway
+        will notifiy directly
+        VoiceInterpreter
+endnote
+MgcpMediaGroup -> VoiceInterpreter: MediaGatewayResponse
+
+rnote over VoiceInterpreter
+    VoiceInterpreter will
+    move to FinishRecording
+    state to create recording
+    entry in the DB and next
+    will either execute
+    Verb Action or will
+    ask for the next verb
+endnote
+
+VoiceInterpreter -> Call: Hangup
+
+legend right
+RQNT 147483675 mobicents/ivr/3@192.168.1.190 MGCP 1.0
+N:restcomm@192.168.1.190:2727
+X:5
+S:AU/es(sg=pr)
+R:AU/oc(N),AU/of(N)
+
+---
+
+NTFY 4 mobicents/ivr/6@192.168.1.190 MGCP 1.0
+O:AU/oc(AU/pr ri=file:RE808f6769f68648129b1a36c532d80675.wav na=1 vi=false rc=100)
+X:8
+N:restcomm@192.168.1.190:2727
+endlegend
+
+
+@enduml

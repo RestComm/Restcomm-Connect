@@ -51,8 +51,10 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 import java.util.Map;
+import org.junit.experimental.categories.Category;
 import org.restcomm.connect.commons.Version;
 import org.restcomm.connect.testsuite.NetworkPortAssigner;
+import org.restcomm.connect.testsuite.UnstableTests;
 import org.restcomm.connect.testsuite.WebArchiveUtil;
 
 /**
@@ -68,35 +70,35 @@ public class SmsEndpointTest {
     private Deployer deployer;
     @ArquillianResource
     URL deploymentUrl;
-    
-    private static int mediaPort = NetworkPortAssigner.retrieveNextPortByFile();      
+
+    private static int mediaPort = NetworkPortAssigner.retrieveNextPortByFile();
 
     private static SipStackTool tool1;
     private SipStack bobSipStack;
     private SipPhone bobPhone;
-    private static String bobPort = String.valueOf(NetworkPortAssigner.retrieveNextPortByFile());     
+    private static String bobPort = String.valueOf(NetworkPortAssigner.retrieveNextPortByFile());
     private String bobContact = "sip:1213@127.0.0.1:" + bobPort;
 
     private static SipStackTool tool2;
     private SipStack aliceSipStack;
     private SipPhone alicePhone;
-    private static String alicePort = String.valueOf(NetworkPortAssigner.retrieveNextPortByFile());     
+    private static String alicePort = String.valueOf(NetworkPortAssigner.retrieveNextPortByFile());
     private String aliceContact = "sip:alice@127.0.0.1:" + alicePort;
 
     private static SipStackTool tool3;
     private SipStack aliceSipStackOrg2;
     private SipPhone alicePhoneOrg2;
-    private static String alicePort2 = String.valueOf(NetworkPortAssigner.retrieveNextPortByFile());     
+    private static String alicePort2 = String.valueOf(NetworkPortAssigner.retrieveNextPortByFile());
     private String aliceContactOrg2 = "sip:alice@org2.restcomm.com:" + alicePort2;
 
     private String adminAccountSid = "ACae6e420f425248d6a26948c17a9e2acf";
     private String adminAuthToken = "77f8c12cc7b8f8423e5c38b035249166";
 
     private String adminAccountSidOrg2 = "ACae6e420f425248d6a26948c17a9e2acg";
-    
+
     private static int restcommPort = 5080;
     private static int restcommHTTPPort = 8080;
-    private static String restcommContact = "127.0.0.1:" + restcommPort;      
+    private static String restcommContact = "127.0.0.1:" + restcommPort;
 
     @BeforeClass
     public static void beforeClass() throws Exception {
@@ -104,14 +106,14 @@ public class SmsEndpointTest {
         tool2 = new SipStackTool("SmsTest2");
         tool3 = new SipStackTool("SmsTest3");
     }
-    public static void reconfigurePorts() {    
+    public static void reconfigurePorts() {
         if (System.getProperty("arquillian_sip_port") != null) {
             restcommPort = Integer.valueOf(System.getProperty("arquillian_sip_port"));
             restcommContact = "127.0.0.1:" + restcommPort;
         }
         if (System.getProperty("arquillian_http_port") != null) {
             restcommHTTPPort = Integer.valueOf(System.getProperty("arquillian_http_port"));
-        }         
+        }
     }
 
     @Before
@@ -196,12 +198,13 @@ public class SmsEndpointTest {
     }
 
     /**
-     * Try to send sms to alice: 
-     * alice exist in both org1 and org2 
+     * Try to send sms to alice:
+     * alice exist in both org1 and org2
      * make sure only proper alice gets the msg (the one that exists in source account's organization)
      * @throws ParseException
      */
     @Test
+    @Category(UnstableTests.class)
     public void sendSmsTestToClientExistingInDifferentOrganizations() throws ParseException {
     	// Prepare alice org2 phone to receive call
         SipURI uri = aliceSipStackOrg2.getAddressFactory().createSipURI(null, restcommContact);
@@ -214,7 +217,7 @@ public class SmsEndpointTest {
         assertTrue(alicePhone.register(urialiceSipStack, "alice", "1234", aliceContact, 3600, 3600));
     	SipCall aliceCall = alicePhone.createSipCall();
     	aliceCall.listenForMessage();
-        
+
         String from = "+15126002188";
         String to = "client:alice";
         String body = "Hello Alice!";
@@ -229,7 +232,7 @@ public class SmsEndpointTest {
         assertTrue(aliceCallOrg2.sendMessageResponse(202, "Accepted", 3600));
         String messageReceived = new String(messageRequest.getRawContent());
         assertTrue(messageReceived.equals(body));
-        
+
         assertTrue(!aliceCall.waitForMessage(10000));
     }
 
@@ -345,7 +348,7 @@ public class SmsEndpointTest {
     public static WebArchive createWebArchiveNoGw() {
         logger.info("Packaging Test App");
         reconfigurePorts();
-        
+
         Map<String, String> webInfResources = new HashMap();
         webInfResources.put("restcomm_for_SMSEndpointTest.xml", "conf/restcomm.xml");
         webInfResources.put("restcomm.script_dialTest", "data/hsql/restcomm.script");
@@ -354,9 +357,9 @@ public class SmsEndpointTest {
         webInfResources.put("sip.xml", "sip.xml");
 
         Map<String, String> replacements = new HashMap();
-        //replace mediaport 2727 
+        //replace mediaport 2727
         replacements.put("2727", String.valueOf(mediaPort));
-        replacements.put("8080", String.valueOf(restcommHTTPPort));        
+        replacements.put("8080", String.valueOf(restcommHTTPPort));
         replacements.put("5080", String.valueOf(restcommPort));
         replacements.put("5090", String.valueOf(bobPort));
         replacements.put("5091", String.valueOf(alicePort));
@@ -368,5 +371,5 @@ public class SmsEndpointTest {
         return WebArchiveUtil.createWebArchiveNoGw(webInfResources,
                 resources,
                 replacements);
-    }     
+    }
 }

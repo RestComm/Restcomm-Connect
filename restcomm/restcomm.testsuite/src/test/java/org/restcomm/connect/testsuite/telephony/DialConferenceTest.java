@@ -39,6 +39,7 @@ import static org.cafesip.sipunit.SipAssert.assertLastOperationSuccess;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertTrue;
+import static org.junit.Assert.assertEquals;
 
 /**
  * Created by gvagenas on 5/19/16.
@@ -217,14 +218,14 @@ public class DialConferenceTest {
         georgeCall.sendInviteOkAck();
         assertTrue(!(georgeCall.getLastReceivedResponse().getStatusCode() >= 400));
 
-        assertTrue(getConferencesSize()==1);
-        assertTrue(getParticipantsSize(confRoom1)==2);
+        assertEquals(1, getConferencesSize());
+        assertEquals(2, getParticipantsSize(confRoom1));
         int liveCalls = MonitoringServiceTool.getInstance().getStatistics(deploymentUrl.toString(), adminAccountSid, adminAuthToken);
         int liveCallsArraySize = MonitoringServiceTool.getInstance().getLiveCallsArraySize(deploymentUrl.toString(), adminAccountSid, adminAuthToken);
         logger.info("&&&&& LiveCalls: "+liveCalls);
         logger.info("&&&&& LiveCallsArraySize: "+liveCallsArraySize);
-        assertTrue(liveCalls == 2);
-        assertTrue(liveCallsArraySize == 2);
+        assertEquals(2, liveCalls);
+        assertEquals(2, liveCallsArraySize);
 
         JsonObject metrics = MonitoringServiceTool.getInstance().getMetrics(deploymentUrl.toString(),adminAccountSid, adminAuthToken);
         Map<String, Integer> mgcpResources = MonitoringServiceTool.getInstance().getMgcpResources(metrics);
@@ -242,14 +243,14 @@ public class DialConferenceTest {
         assertTrue(georgeCall.waitForDisconnect(50 * 1000));
 
         Thread.sleep(1000);
-        assertTrue(getConferencesSize()==1);
-        assertTrue(getParticipantsSize(confRoom1)==0);
+        assertEquals(1, getConferencesSize());
+        assertEquals(0, getParticipantsSize(confRoom1));
         liveCalls = MonitoringServiceTool.getInstance().getStatistics(deploymentUrl.toString(), adminAccountSid, adminAuthToken);
         liveCallsArraySize = MonitoringServiceTool.getInstance().getLiveCallsArraySize(deploymentUrl.toString(), adminAccountSid, adminAuthToken);
         logger.info("&&&&& LiveCalls: "+liveCalls);
         logger.info("&&&&& LiveCallsArraySize: "+liveCallsArraySize);
-        assertTrue(liveCalls == 0);
-        assertTrue(liveCallsArraySize == 0);
+        assertEquals(0, liveCalls);
+        assertEquals(0, liveCallsArraySize);
 
         metrics = MonitoringServiceTool.getInstance().getMetrics(deploymentUrl.toString(),adminAccountSid, adminAuthToken);
         mgcpResources = MonitoringServiceTool.getInstance().getMgcpResources(metrics);
