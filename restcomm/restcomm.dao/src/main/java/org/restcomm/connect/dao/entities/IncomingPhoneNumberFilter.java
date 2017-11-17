@@ -145,7 +145,27 @@ public class IncomingPhoneNumberFilter {
             return new IncomingPhoneNumberFilter.Builder();
         }
 
+        /**
+         * Prepare fields with SQL wildcards
+         * 
+         * @param value
+         * @return
+         */
+        private String convertIntoSQLWildcard(String value) {
+            String wildcarded = value;
+            // The LIKE keyword uses '%' to match any (including 0) number of characters, and '_' to match exactly one character
+            // Add here the '%' keyword so +15126002188 will be the same as 15126002188 and 6002188
+            if (wildcarded != null) {
+                wildcarded = "%" + wildcarded + "%";
+            }
+            return wildcarded;
+        }
+
         public IncomingPhoneNumberFilter build() {
+            if (filterMode.equals(SearchFilterMode.WILDCARD_MATCH)) {
+                phoneNumber = convertIntoSQLWildcard(phoneNumber);
+                friendlyName = convertIntoSQLWildcard(friendlyName);
+            }
 
             return new IncomingPhoneNumberFilter(accountSid,
                     friendlyName,

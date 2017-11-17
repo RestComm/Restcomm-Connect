@@ -114,8 +114,6 @@
   
     <!-- along with the DID it returns the application frien-->
     <select id="searchNumbersWithWildcardMode" parameterType="org.restcomm.connect.dao.entities.IncomingPhoneNumberFilter" resultType="hashmap">
-        <bind name="numberPattern" value="'%' + _parameter.getPhoneNumber() + '%'" />
-        <bind name="friendlyPattern" value="'%' + _parameter.getfriendlyName() + '%'" />
         SELECT
         "n".*,
         "a_voice"."friendly_name" "voice_application_name",
@@ -129,10 +127,10 @@
         LEFT OUTER JOIN "restcomm_applications" "a_refer" ON "n"."refer_application_sid" = "a_refer"."sid"
         WHERE '1'='1'
         <if test="friendlyName != null">
-            AND "n"."friendly_name" like #{friendlyPattern}
+            AND "n"."friendly_name" like #{friendlyName}
         </if>
         <if test="phoneNumber != null">
-            AND "n"."phone_number" like #{numberPattern}
+            AND "n"."phone_number" like #{phoneNumber}
         </if>
         <if test="orgSid != null">
             AND "n"."organization_sid"=#{orgSid}
@@ -165,10 +163,10 @@
         SELECT COUNT(*) FROM "restcomm_incoming_phone_numbers" WHERE '1'='1'
 
         <if test="friendlyName != null">
-            AND "friendly_name"=#{friendlyName}
+            AND "friendly_name" like #{friendlyName}
         </if>
         <if test="phoneNumber != null">
-            AND "phone_number"=#{phoneNumber}
+            AND "phone_number" like #{phoneNumber}
         </if>
         <if test="orgSid != null">
             AND "organization_sid"=#{orgSid}

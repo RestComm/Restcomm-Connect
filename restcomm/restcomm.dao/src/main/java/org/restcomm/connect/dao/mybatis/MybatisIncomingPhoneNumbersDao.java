@@ -117,15 +117,7 @@ public final class MybatisIncomingPhoneNumbersDao implements IncomingPhoneNumber
         }
     }
 
-    private String convertIntoSQLWildcard(String value) {
-        String wildcarded = value;
-        // The LIKE keyword uses '%' to match any (including 0) number of characters, and '_' to match exactly one character
-        // Add here the '%' keyword so +15126002188 will be the same as 15126002188 and 6002188
-        if (wildcarded != null) {
-            wildcarded = "%" + wildcarded + "%";
-        }
-        return wildcarded;
-    }
+
 
     @Override
     public List<IncomingPhoneNumber> getIncomingPhoneNumbersByFilter(IncomingPhoneNumberFilter filter) {
