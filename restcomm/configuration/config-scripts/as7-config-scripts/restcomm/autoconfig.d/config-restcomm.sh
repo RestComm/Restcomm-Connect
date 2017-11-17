@@ -471,13 +471,13 @@ configMediaServerManager() {
     local LOCALMGCP=$((LOCALMGCP + PORT_OFFSET))
     local REMOTEMGCP=$((REMOTEMGCP + PORT_OFFSET))
 
-    sed -e "s|<local-address>.*</local-address>|<local-address>$bind_address</local-address>|" \
-        -e "s|<local-port>.*</local-port>|<local-port>$LOCALMGCP</local-port>|" \
-        -e "s|<remote-address>.*</remote-address>|<remote-address>$ms_address</remote-address>|" \
-        -e "s|<remote-port>.*</remote-port>|<remote-port>$REMOTEMGCP</remote-port>|" \
-        -e "s|<response-timeout>.*</response-timeout>|<response-timeout>$MGCP_RESPONSE_TIMEOUT</response-timeout>|" \
-        -e "s|<\!--.*<external-address>.*</external-address>.*-->|<external-address>$ms_external_address</external-address>|" \
-        -e "s|<external-address>.*</external-address>|<external-address>$ms_external_address</external-address>|" $FILE > $FILE.bak
+    sed -e "s/<local-address>.*<\/local-address>/<local-address>$bind_address<\/local-address>/g;s/<local-address\/>/<local-address>$bind_address<\/local-address>/g" \
+        -e "s/<local-port>.*<\/local-port>/<local-port>$LOCALMGCP<\/local-port>/g;s/<local-port\/>/<local-port>$LOCALMGCP<\/local-port>/g" \
+        -e "s/<remote-address>.*<\/remote-address>/<remote-address>$ms_address<\/remote-address>/g;s/<remote-address\/>/<remote-address>$ms_address<\/remote-address>/g" \
+        -e "s/<remote-port>.*<\/remote-port>/<remote-port>$REMOTEMGCP<\/remote-port>/g;s/<remote-port\/>/<remote-port>$REMOTEMGCP<\/remote-port>/g" \
+        -e "s/<response-timeout>.*<\/response-timeout>/<response-timeout>$MGCP_RESPONSE_TIMEOUT<\/response-timeout>/g;s/<response-timeout\/>/<response-timeout>$MGCP_RESPONSE_TIMEOUT<\/response-timeout>/g" \
+        -e "s/<\!--.*<external-address>.*<\/external-address>.*-->/<external-address>$ms_external_address<\/external-address>/g;" \
+        -e "s/<external-address>.*<\/external-address>/<external-address>$ms_external_address<\/external-address>/g;s/<external-address\/>/<external-address>$ms_external_address<\/external-address>/g" $FILE > $FILE.bak
 
     mv $FILE.bak $FILE
     echo 'Configured Media Server Manager'
