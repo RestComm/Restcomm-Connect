@@ -88,15 +88,13 @@ configPushNotificationServer() {
     echo "Configure push-notification-server"
     FILE=$RESTCOMM_DEPLOY/WEB-INF/conf/restcomm.xml
     
-	sed -e "s|<push-notification-server-enabled>.*<\/push-notification-server-enabled>|<push-notification-server-enabled>$PUSH_NOTIFICATION_SERVER_ENABLED<\/push-notification-server-enabled>|" \
-	-e "s|<push-notification-server-url>.*<\/push-notification-server-url>|<push-notification-server-url>$PUSH_NOTIFICATION_SERVER_URL<\/push-notification-server-url>|;"  \
-	-e "s|<push-notification-server-delay>.*<\/push-notification-server-delay>|<push-notification-server-delay>$PUSH_NOTIFICATION_SERVER_DELAY<\/push-notification-server-delay>|" $FILE > $FILE.bak;
-	mv $FILE.bak $FILE
-
-	sed -e "s|<push-notification-server-enabled\/>|<push-notification-server-enabled>$PUSH_NOTIFICATION_SERVER_ENABLED<\/push-notification-server-enabled>|" \
-	-e "s|<push-notification-server-url\/>|<push-notification-server-url>$PUSH_NOTIFICATION_SERVER_URL<\/push-notification-server-url>|"  \
-	-e "s|<push-notification-server-delay\/>|<push-notification-server-delay>$PUSH_NOTIFICATION_SERVER_DELAY<\/push-notification-server-delay>|" $FILE > $FILE.bak;
-	mv $FILE.bak $FILE	
+	sed -i "s|<push-notification-server-enabled>.*<\/push-notification-server-enabled>|<push-notification-server-enabled>$PUSH_NOTIFICATION_SERVER_ENABLED<\/push-notification-server-enabled>|" $FILE
+	sed -i "s|<push-notification-server-url>.*<\/push-notification-server-url>|<push-notification-server-url>$PUSH_NOTIFICATION_SERVER_URL<\/push-notification-server-url>|;" $FILE
+	sed -i "s|<push-notification-server-delay>.*<\/push-notification-server-delay>|<push-notification-server-delay>$PUSH_NOTIFICATION_SERVER_DELAY<\/push-notification-server-delay>|" $FILE
+	
+	sed -i "s|<push-notification-server-enabled\/>|<push-notification-server-enabled>$PUSH_NOTIFICATION_SERVER_ENABLED<\/push-notification-server-enabled>|" $FILE
+	sed -i "s|<push-notification-server-url\/>|<push-notification-server-url>$PUSH_NOTIFICATION_SERVER_URL<\/push-notification-server-url>|" $FILE
+	sed -i "s|<push-notification-server-delay\/>|<push-notification-server-delay>$PUSH_NOTIFICATION_SERVER_DELAY<\/push-notification-server-delay>|" $FILE
 }
 ## Description: Configures Voip Innovations Credentials
 ## Parameters : 1.Login
@@ -105,21 +103,18 @@ configPushNotificationServer() {
 configVoipInnovations() {
 	FILE=$RESTCOMM_DEPLOY/WEB-INF/conf/restcomm.xml
 
-	sed -e "/<voip-innovations>/ {
+	sed -i "/<voip-innovations>/ {
 		N; s|<login>.*</login>|<login>$1</login>|
-        N; s|<password>.*</password>|<password>$2</password>|
-        N; s|<endpoint>.*</endpoint>|<endpoint>$3</endpoint>|
-	}" $FILE > $FILE.bak
-
-	mv $FILE.bak $FILE
+       	N; s|<password>.*</password>|<password>$2</password>|
+       	N; s|<endpoint>.*</endpoint>|<endpoint>$3</endpoint>|
+	}" $FILE
 	
-	sed -e "/<voip-innovations>/ {
+	sed -i "/<voip-innovations>/ {
 		N; s|<login\/>|<login>$1</login>|
-        N; s|<password\/>|<password>$2</password>|
-        N; s|<endpoint\/>|<endpoint>$3</endpoint>|
-	}" $FILE > $FILE.bak
+       	N; s|<password\/>|<password>$2</password>|
+       	N; s|<endpoint\/>|<endpoint>$3</endpoint>|
+	}" $FILE
 
-	mv $FILE.bak $FILE
 	echo 'Configured Voip Innovation credentials'
 }
 
