@@ -42,7 +42,7 @@ import org.junit.experimental.categories.Category;
 import org.junit.runner.RunWith;
 
 import org.restcomm.connect.commons.Version;
-import org.restcomm.connect.testsuite.UnstableTests;
+import org.restcomm.connect.commons.annotations.UnstableTests;
 import wiremock.org.apache.http.client.ClientProtocolException;
 
 /**

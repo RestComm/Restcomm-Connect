@@ -57,6 +57,9 @@ import org.restcomm.connect.testsuite.http.RestcommCallsTool;
 
 import com.google.gson.JsonArray;
 import com.google.gson.JsonObject;
+import org.junit.experimental.categories.Category;
+import org.restcomm.connect.commons.annotations.SequentialClassTests;
+import org.restcomm.connect.commons.annotations.WithInMinsTests;
 import org.restcomm.connect.testsuite.tools.MonitoringServiceTool;
 
 /**
@@ -66,6 +69,7 @@ import org.restcomm.connect.testsuite.tools.MonitoringServiceTool;
  * @author <a href="mailto:gvagenas@gmail.com">gvagenas</a>
  */
 @RunWith(Arquillian.class)
+@Category(value={WithInMinsTests.class, SequentialClassTests.class})
 public class RegisterClientTest {
 
     private static final String version = Version.getVersion();

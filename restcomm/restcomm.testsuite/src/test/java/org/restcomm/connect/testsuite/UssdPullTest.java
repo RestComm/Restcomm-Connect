@@ -54,14 +54,18 @@ import org.junit.Before;
 import org.junit.BeforeClass;
 import org.junit.Ignore;
 import org.junit.Test;
+import org.junit.experimental.categories.Category;
 import org.junit.runner.RunWith;
 import org.restcomm.connect.commons.Version;
+import org.restcomm.connect.commons.annotations.ParallelClassTests;
+import org.restcomm.connect.commons.annotations.WithInMinsTests;
 
 /**
  * @author <a href="mailto:gvagenas@gmail.com">gvagenas</a>
  *
  */
 @RunWith(Arquillian.class)
+@Category(value={WithInMinsTests.class, ParallelClassTests.class})
 public class UssdPullTest {
 
     private final static Logger logger = Logger.getLogger(UssdPullTest.class.getName());
@@ -89,7 +93,7 @@ public class UssdPullTest {
     public static void beforeClass() throws Exception {
         tool1 = new SipStackTool("UssdPullTest");
     }
-    
+
     public static void reconfigurePorts() {
         if (System.getProperty("arquillian_sip_port") != null) {
             restcommPort = Integer.valueOf(System.getProperty("arquillian_sip_port"));
@@ -382,7 +386,7 @@ public class UssdPullTest {
         ackRequest.setContent(null, contentTypeHeader);
 
         assertNotNull(bobPhone.sendRequestWithTransaction(ackRequest, false, cancelTransaction.getServerTransaction().getDialog()));
-//        
+//
 //        assertTrue(bobCall.waitOutgoingCallResponse(5 * 1000));
 //        int responseBob = bobCall.getLastReceivedResponse().getStatusCode();
 //        assertTrue(responseBob == Response.TRYING || responseBob == Response.RINGING);
@@ -390,16 +394,16 @@ public class UssdPullTest {
 //        if (responseBob == Response.TRYING || responseBob == Response.RINGING) {
 //            SipTransaction cancelTransaction = bobCall.sendCancel();
 //            assertNotNull(cancelTransaction);
-//            
+//
 //            bobCall.waitForAnswer(5 * 1000);
 //            assertEquals(Response.REQUEST_TERMINATED, bobCall.getLastReceivedResponse().getStatusCode());
-//            
+//
 //            Request ackRequest = cancelTransaction.getServerTransaction().getDialog().createRequest(Request.ACK);
 //            ContentTypeHeader contentTypeHeader = bobCall.getHeaderFactory().createContentTypeHeader("application", "vnd.3gpp.ussd+xml");
 //            ackRequest.setContent(null, contentTypeHeader);
 //
 //            assertNotNull(bobPhone.sendRequestWithTransaction(ackRequest, false, cancelTransaction.getServerTransaction().getDialog()));
-//        } 
+//        }
 
     }
 
@@ -438,15 +442,15 @@ public class UssdPullTest {
     public static WebArchive createWebArchiveNoGw() {
         logger.info("Packaging Test App");
         reconfigurePorts();
-        
+
         Map<String,String> webInfResources = new HashMap();
         webInfResources.put("restcomm.xml", "conf/restcomm.xml");
         webInfResources.put("org/restcomm/connect/ussd/restcomm.script_ussdPullTest", "data/hsql/restcomm.script");
         webInfResources.put("akka_application.conf", "classes/application.conf");
-        webInfResources.put("sip.xml", "/sip.xml");        
+        webInfResources.put("sip.xml", "/sip.xml");
 
         Map<String, String> replacements = new HashMap();
-        //replace mediaport 2727 
+        //replace mediaport 2727
         replacements.put("2727", String.valueOf(mediaPort));
         replacements.put("8080", String.valueOf(restcommHTTPPort));
         replacements.put("5080", String.valueOf(restcommPort));
@@ -458,8 +462,8 @@ public class UssdPullTest {
                 "org/restcomm/connect/ussd/ussd-rcml-character-limit-exceed.xml"
         ));
 
-        return WebArchiveUtil.createWebArchiveNoGw(webInfResources, 
-                resources, 
+        return WebArchiveUtil.createWebArchiveNoGw(webInfResources,
+                resources,
                 replacements);
     }
 

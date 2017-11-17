@@ -71,12 +71,16 @@ import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertNull;
 import static org.junit.Assert.assertTrue;
+import org.junit.experimental.categories.Category;
+import org.restcomm.connect.commons.annotations.SequentialClassTests;
+import org.restcomm.connect.commons.annotations.WithInMinsTests;
 
 /**
  * Test for SIP Refer support according to the RFC5589 spec in order to provide call transfer capabilities to deskphone
  * sip clients that use SIP Refer to implement call transfer.
  */
 @RunWith(Arquillian.class)
+@Category(value={WithInMinsTests.class, SequentialClassTests.class})
 public class ReferTest {
 
     private final static Logger logger = Logger.getLogger(ReferTest.class.getName());

@@ -67,6 +67,9 @@ import com.github.tomakehurst.wiremock.verification.LoggedRequest;
 import com.google.gson.JsonObject;
 import java.util.HashMap;
 import java.util.Map;
+import org.junit.experimental.categories.Category;
+import org.restcomm.connect.commons.annotations.ParallelClassTests;
+import org.restcomm.connect.commons.annotations.WithInMinsTests;
 import org.restcomm.connect.testsuite.NetworkPortAssigner;
 import org.restcomm.connect.testsuite.WebArchiveUtil;
 import org.restcomm.connect.testsuite.tools.MonitoringServiceTool;
@@ -79,6 +82,7 @@ import org.restcomm.connect.testsuite.tools.MonitoringServiceTool;
  *
  */
 @RunWith(Arquillian.class)
+@Category(value={WithInMinsTests.class, ParallelClassTests.class})
 public class DialActionTest {
 
     private final static Logger logger = Logger.getLogger(DialActionTest.class.getName());

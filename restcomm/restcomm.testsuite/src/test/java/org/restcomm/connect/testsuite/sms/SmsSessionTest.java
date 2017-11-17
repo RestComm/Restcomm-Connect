@@ -41,7 +41,10 @@ import com.google.gson.JsonObject;
 import java.util.Arrays;
 import java.util.HashMap;
 import java.util.Map;
+import org.junit.experimental.categories.Category;
 import org.restcomm.connect.commons.Version;
+import org.restcomm.connect.commons.annotations.ParallelClassTests;
+import org.restcomm.connect.commons.annotations.WithInMinsTests;
 import org.restcomm.connect.testsuite.NetworkPortAssigner;
 import org.restcomm.connect.testsuite.WebArchiveUtil;
 
@@ -50,6 +53,7 @@ import org.restcomm.connect.testsuite.WebArchiveUtil;
  * @author gvagenas@gmail.com (George Vagenas)
  */
 @RunWith(Arquillian.class)
+@Category(value={WithInMinsTests.class, ParallelClassTests.class})
 public final class SmsSessionTest {
     private static final String version = Version.getVersion();
 
@@ -57,9 +61,9 @@ public final class SmsSessionTest {
     private Deployer deployer;
     @ArquillianResource
     URL deploymentUrl;
-    
+
     private static int mediaPort = NetworkPortAssigner.retrieveNextPortByFile();
-    
+
     private static int mockPort = NetworkPortAssigner.retrieveNextPortByFile();
     @Rule
     public WireMockRule wireMockRule = new WireMockRule(mockPort);
@@ -75,13 +79,13 @@ public final class SmsSessionTest {
     private SipPhone alicePhone;
     private static String alicePort = String.valueOf(NetworkPortAssigner.retrieveNextPortByFile());
     private String aliceContact = "sip:alice@127.0.0.1:" + alicePort;
-    
+
     private String adminAccountSid = "ACae6e420f425248d6a26948c17a9e2acf";
     private String adminAuthToken = "77f8c12cc7b8f8423e5c38b035249166";
-    
+
     private static int restcommPort = 5080;
     private static int restcommHTTPPort = 8080;
-    private static String restcommContact = "127.0.0.1:" + restcommPort;    
+    private static String restcommContact = "127.0.0.1:" + restcommPort;
 
     public SmsSessionTest() {
         super();
@@ -92,21 +96,21 @@ public final class SmsSessionTest {
         tool = new SipStackTool("SmsSessionTest");
         tool2 = new SipStackTool("SmsSessionTest2");
     }
-    public static void reconfigurePorts() { 
+    public static void reconfigurePorts() {
         if (System.getProperty("arquillian_sip_port") != null) {
             restcommPort = Integer.valueOf(System.getProperty("arquillian_sip_port"));
             restcommContact = "127.0.0.1:" + restcommPort;
         }
         if (System.getProperty("arquillian_http_port") != null) {
             restcommHTTPPort = Integer.valueOf(System.getProperty("arquillian_http_port"));
-        }        
+        }
     }
 
     @Before
     public void before() throws Exception {
         receiver = tool.initializeSipStack(SipStack.PROTOCOL_UDP, "127.0.0.1", phonePort, restcommContact);
         phone = receiver.createSipPhone("127.0.0.1", SipStack.PROTOCOL_UDP, restcommPort, phoneContact);
-        
+
         alice = tool2.initializeSipStack(SipStack.PROTOCOL_UDP, "127.0.0.1", alicePort, restcommContact);
         alicePhone = alice.createSipPhone("127.0.0.1", SipStack.PROTOCOL_UDP, restcommPort, aliceContact);
     }
@@ -119,7 +123,7 @@ public final class SmsSessionTest {
         if (receiver != null) {
             receiver.dispose();
         }
-        
+
         if (alicePhone != null) {
             alicePhone.dispose();
         }
@@ -165,7 +169,7 @@ public final class SmsSessionTest {
         assertTrue(messages.size() > 0);
         assertTrue(messages.get(0).equals("Hello World!"));
     }
-    
+
     @Test
     public void testSendSmsRedirectReceiveSms3() throws ParseException {
         // Send restcomm an sms.
@@ -184,7 +188,7 @@ public final class SmsSessionTest {
         assertTrue(messages.size() > 0);
         assertTrue(messages.get(0).equals("Hello World!"));
     }
-    
+
     @Test
     public void testAliceEchoTest() throws ParseException {
 
@@ -193,18 +197,18 @@ public final class SmsSessionTest {
 
         Credential credential = new Credential("127.0.0.1", "alice", "1234");
         alicePhone.addUpdateCredential(credential);
-        
+
         // Prepare Alice to receive call
         final SipCall aliceCall = alicePhone.createSipCall();
         aliceCall.listenForMessage();
-        
+
 //        // Send restcomm an sms.
         final String proxy = phone.getStackAddress() + ":" + restcommPort + ";lr/udp";
         final String to = "sip:2002@" + restcommContact;
         final String body = "Hello, waiting your response!";
         final SipCall call = phone.createSipCall();
         call.initiateOutgoingMessage(to, proxy, body);
-        
+
         // Wait for a response sms.
         alicePhone.setLoopback(true);
         aliceCall.listenForMessage();
@@ -214,7 +218,7 @@ public final class SmsSessionTest {
         assertTrue(messageBody.equals("Hello World!"));
         aliceCall.initiateOutgoingMessage(phoneContact, null, "Its great to hear from you!");
         assertTrue(aliceCall.waitForAuthorisation(5000));
-        
+
         call.listenForMessage();
         assertTrue(call.waitForMessage(6 * 1000));
         call.sendMessageResponse(202, "Accepted", -1);
@@ -222,7 +226,7 @@ public final class SmsSessionTest {
         assertTrue(messages.size() > 0);
         assertTrue(messages.get(0).equals("Its great to hear from you!"));
     }
-    
+
     private String smsRcml = "<Response><Sms to=\"alice\" from=\"restcomm\">Hello World!</Sms></Response>";
     @Test
     public void testSmsWithCustomHeaders() throws ParseException {
@@ -233,17 +237,17 @@ public final class SmsSessionTest {
                     .withStatus(200)
                     .withHeader("Content-Type", "text/xml")
                     .withBody(smsRcml)));
-        
+
         SipURI uri = alice.getAddressFactory().createSipURI(null, restcommContact);
         assertTrue(alicePhone.register(uri, "alice", "1234", aliceContact, 3600, 3600));
 
         Credential credential = new Credential("127.0.0.1", "alice", "1234");
         alicePhone.addUpdateCredential(credential);
-        
+
         // Prepare Alice to receive call
         final SipCall aliceCall = alicePhone.createSipCall();
         aliceCall.listenForMessage();
-        
+
 //        // Send restcomm an sms.
         final String proxy = phone.getStackAddress() + ":" + restcommPort + ";lr/udp";
         final String to = "sip:2003@" + restcommContact;
@@ -254,7 +258,7 @@ public final class SmsSessionTest {
         additionalHeaders.add(phone.getParent().getHeaderFactory().createHeader("X-MyCustom-Header2", "Value2"));
         call.initiateOutgoingMessage(phoneContact, to, proxy, additionalHeaders, null, body);
 //        call.initiateOutgoingMessage(to, proxy, body);
-        
+
         // Wait for a response sms.
         alicePhone.setLoopback(true);
         aliceCall.listenForMessage();
@@ -264,7 +268,7 @@ public final class SmsSessionTest {
         assertTrue(messageBody.equals("Hello World!"));
         aliceCall.initiateOutgoingMessage(phoneContact, null, "Its great to hear from you!");
         assertTrue(aliceCall.waitForAuthorisation(5000));
-        
+
         call.listenForMessage();
         assertTrue(call.waitForMessage(6 * 1000));
         call.sendMessageResponse(202, "Accepted", -1);
@@ -272,7 +276,7 @@ public final class SmsSessionTest {
         assertTrue(messages.size() > 0);
         assertTrue(messages.get(0).equals("Its great to hear from you!"));
     }
-    
+
     @Test
     public void sendMessageUsingValidContentType() throws ParseException {
         final String proxy = phone.getStackAddress() + ":" + restcommPort + ";lr/udp";
@@ -355,7 +359,7 @@ public final class SmsSessionTest {
     @Deployment(name = "SmsSessionTest", managed = true, testable = false)
     public static WebArchive createWebArchive() {
         reconfigurePorts();
-        
+
         Map<String, String> webInfResources = new HashMap();
         webInfResources.put("restcomm_SmsTest.xml", "conf/restcomm.xml");
         webInfResources.put("restcomm.script_SmsTest", "data/hsql/restcomm.script");
@@ -363,10 +367,10 @@ public final class SmsSessionTest {
         webInfResources.put("akka_application.conf", "classes/application.conf");
 
         Map<String, String> replacements = new HashMap();
-        //replace mediaport 2727 
+        //replace mediaport 2727
         replacements.put("2727", String.valueOf(mediaPort));
         replacements.put("8080", String.valueOf(restcommHTTPPort));
-        replacements.put("8090", String.valueOf(mockPort));        
+        replacements.put("8090", String.valueOf(mockPort));
         replacements.put("5080", String.valueOf(restcommPort));
         replacements.put("5091", String.valueOf(phonePort));
         replacements.put("5092", String.valueOf(alicePort));
@@ -380,5 +384,5 @@ public final class SmsSessionTest {
         return WebArchiveUtil.createWebArchiveNoGw(webInfResources,
                 resources,
                 replacements);
-    }    
+    }
 }

@@ -40,7 +40,7 @@ import org.restcomm.connect.commons.Version;
 
 import java.net.URL;
 import org.junit.experimental.categories.Category;
-import org.restcomm.connect.testsuite.UnstableTests;
+import org.restcomm.connect.commons.annotations.UnstableTests;
 
 /**
  * @author <a href="mailto:abdulazizali@acm.org">abdulazizali77</a>

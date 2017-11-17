@@ -30,11 +30,15 @@ import java.text.ParseException;
 import static org.cafesip.sipunit.SipAssert.assertLastOperationSuccess;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
+import org.junit.experimental.categories.Category;
+import org.restcomm.connect.commons.annotations.SequentialClassTests;
+import org.restcomm.connect.commons.annotations.WithInMinsTests;
 
 /**
  * Created by gvagenas on 26/06/2017.
  */
 @RunWith(Arquillian.class)
+@Category(value={WithInMinsTests.class, SequentialClassTests.class})
 public class RestcommActingAsProxyAnswerDelayTest {
 
     private final static Logger logger = Logger.getLogger(RestcommActingAsProxyAnswerDelayTest.class.getName());
