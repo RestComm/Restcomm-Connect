@@ -25,6 +25,7 @@ import com.google.gson.FieldNamingPolicy;
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
 import com.thoughtworks.xstream.XStream;
+
 import org.apache.commons.configuration.Configuration;
 import org.restcomm.connect.commons.annotations.concurrency.NotThreadSafe;
 import org.restcomm.connect.commons.dao.Sid;
@@ -40,6 +41,7 @@ import org.restcomm.connect.http.converter.ApplicationConverter;
 import org.restcomm.connect.http.converter.ApplicationListConverter;
 import org.restcomm.connect.http.converter.ApplicationNumberSummaryConverter;
 import org.restcomm.connect.http.converter.RestCommResponseConverter;
+import org.restcomm.connect.http.filters.ApplicationFilter;
 
 import javax.annotation.PostConstruct;
 import javax.servlet.ServletContext;
@@ -155,13 +157,19 @@ public class ApplicationsEndpoint extends SecuredEndpoint {
         Account account;
         account = accountsDao.getAccount(accountSid);
         secure(account, "RestComm:Read:Applications", SecuredType.SECURED_APP);
+
         // shall we also return number information with the application ?
         boolean includeNumbers = false;
         String tmp = uriInfo.getQueryParameters().getFirst("includeNumbers");
         if (tmp != null && tmp.equalsIgnoreCase("true"))
             includeNumbers = true;
 
-        final List<Application> applications = dao.getApplicationsWithNumbers(account.getSid());
+        //
+        ApplicationFilter friendlyNameFilter = new ApplicationFilter.FriendlyNameFilter(uriInfo.getQueryParameters().getFirst("FriendlyName"),
+                                                                                        ApplicationFilter.FriendlyNameFilter.EQUALS);
+
+        List<Application> applications = friendlyNameFilter.filter(dao.getApplicationsWithNumbers(account.getSid()));
+
         if (APPLICATION_XML_TYPE == responseType) {
             final RestCommResponse response = new RestCommResponse(new ApplicationList(applications));
             return ok(xstream.toXML(response), APPLICATION_XML).build();
