@@ -75,6 +75,7 @@ import com.google.i18n.phonenumbers.PhoneNumberUtil;
 import com.google.i18n.phonenumbers.PhoneNumberUtil.PhoneNumberFormat;
 import com.google.i18n.phonenumbers.Phonenumber.PhoneNumber;
 import com.thoughtworks.xstream.XStream;
+import org.restcomm.connect.dao.entities.SearchFilterMode;
 
 /**
  * @author quintana.thomas@gmail.com (Thomas Quintana)
@@ -305,20 +306,23 @@ public abstract class IncomingPhoneNumbersEndpoint extends SecuredEndpoint {
             int limit = Integer.parseInt(pageSize);
             int pageAsInt = Integer.parseInt(page);
             int offset = (page == "0") ? 0 : (((pageAsInt - 1) * limit) + limit);
-            IncomingPhoneNumberFilter incomingPhoneNumberFilter = new IncomingPhoneNumberFilter(accountSid, friendlyNameFilter,
-                    phoneNumberFilter);
-            final int total = dao.getTotalIncomingPhoneNumbers(incomingPhoneNumberFilter);
+            IncomingPhoneNumberFilter.Builder filterBuilder = IncomingPhoneNumberFilter.Builder.builder();
+            filterBuilder.byAccountSid(accountSid);
+            filterBuilder.byFriendlyName(friendlyNameFilter);
+            filterBuilder.byPhoneNumber(phoneNumberFilter);
+            filterBuilder.usingMode(SearchFilterMode.WILDCARD_MATCH);
+            final int total = dao.getTotalIncomingPhoneNumbers(filterBuilder.build());
 
             if (pageAsInt > (total / limit)) {
                 return status(javax.ws.rs.core.Response.Status.BAD_REQUEST).build();
             }
 
-            IncomingPhoneNumberFilter.Builder filterBuilder = IncomingPhoneNumberFilter.Builder.builder();
             filterBuilder.byAccountSid(accountSid);
             filterBuilder.byFriendlyName(friendlyNameFilter);
             filterBuilder.byPhoneNumber(phoneNumberFilter);
             filterBuilder.sortedBy(sortBy, reverse);
             filterBuilder.limited(limit, offset);
+            filterBuilder.usingMode(SearchFilterMode.WILDCARD_MATCH);
 
             final List<IncomingPhoneNumber> incomingPhoneNumbers = dao.getIncomingPhoneNumbersByFilter(filterBuilder.build());
 

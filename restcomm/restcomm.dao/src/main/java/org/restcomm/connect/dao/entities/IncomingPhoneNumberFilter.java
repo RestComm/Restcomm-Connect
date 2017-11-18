@@ -147,7 +147,7 @@ public class IncomingPhoneNumberFilter {
 
         /**
          * Prepare fields with SQL wildcards
-         * 
+         *
          * @param value
          * @return
          */
