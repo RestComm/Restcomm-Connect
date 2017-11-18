@@ -23,19 +23,5 @@ public abstract class ApplicationFilter extends CollectionFilter<Application> {
                 return true;
             return (this.comparator.compare(this.friendlyName, application.getFriendlyName()) == 0);
         }
-
-        public static Comparator<String> EQUALS = new Comparator<String>() {
-            @Override
-            public int compare ( String o1, String o2 ) {
-                return o1.compareTo(o2);
-            }
-        };
-
-        public static Comparator<String> EQUALS_IGNORE_CASE = new Comparator<String>() {
-            @Override
-            public int compare ( String o1, String o2 ) {
-                return o1.compareToIgnoreCase(o2);
-            }
-        };
     }
 }

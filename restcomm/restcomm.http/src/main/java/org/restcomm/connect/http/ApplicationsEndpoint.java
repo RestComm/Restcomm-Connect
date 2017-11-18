@@ -42,6 +42,7 @@ import org.restcomm.connect.http.converter.ApplicationListConverter;
 import org.restcomm.connect.http.converter.ApplicationNumberSummaryConverter;
 import org.restcomm.connect.http.converter.RestCommResponseConverter;
 import org.restcomm.connect.http.filters.ApplicationFilter;
+import org.restcomm.connect.http.filters.FilterComparator;
 
 import javax.annotation.PostConstruct;
 import javax.servlet.ServletContext;
@@ -164,9 +165,9 @@ public class ApplicationsEndpoint extends SecuredEndpoint {
         if (tmp != null && tmp.equalsIgnoreCase("true"))
             includeNumbers = true;
 
-        //
+        // filter application friendly name
         ApplicationFilter friendlyNameFilter = new ApplicationFilter.FriendlyNameFilter(uriInfo.getQueryParameters().getFirst("FriendlyName"),
-                                                                                        ApplicationFilter.FriendlyNameFilter.EQUALS);
+                                                                                        FilterComparator.STRING_EQUALS);
 
         List<Application> applications = friendlyNameFilter.filter(dao.getApplicationsWithNumbers(account.getSid()));
 
