@@ -31,7 +31,7 @@
             <tbody>
             <tr class="number-row" ng-repeat="pn in filtered = (numbersList | filter:query| orderBy:predicate:reverse)" ng-click="$root.goTo('/numbers/incoming/' + pn.sid)">
                 <td class="numbers-list-number">
-                    <div>{{ pn.phone_number  }}</a></div>
+                    <div>{{ pn.phone_number  }}</div>
                     <div class="visible-sm visible-xs">{{ pn.friendly_name  }}</div>
                 </td>
                 <td class="numbers-list-edit-icon hidden-sm hidden-xs">
