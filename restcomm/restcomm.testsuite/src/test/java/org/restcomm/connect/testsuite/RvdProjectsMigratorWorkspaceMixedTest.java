@@ -52,6 +52,7 @@ import java.util.Arrays;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import org.junit.experimental.categories.Category;
 import org.restcomm.connect.commons.Version;
 import static org.restcomm.connect.testsuite.RvdProjectsMigratorWorkspaceMigratedTest.reconfigurePorts;
 
@@ -147,6 +148,7 @@ public class RvdProjectsMigratorWorkspaceMixedTest {
     }
 
     @Test
+    @Category(UnstableTests.class)
     public void checkIncomingPhoneNumbers() {
         // Check those who should be migrated
         JsonArray incomingPhoneNumbersListJson = RestcommRvdProjectsMigratorTool.getInstance().getEntitiesList(
@@ -189,6 +191,7 @@ public class RvdProjectsMigratorWorkspaceMixedTest {
     }
 
     @Test
+    @Category(UnstableTests.class)    
     public void checkClients() {
         // Check those who should be migrated
         JsonArray clientsListJson = RestcommRvdProjectsMigratorTool.getInstance().getEntitiesList(deploymentUrl.toString(),

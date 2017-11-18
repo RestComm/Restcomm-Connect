@@ -66,7 +66,9 @@ import org.restcomm.connect.testsuite.tools.MonitoringServiceTool;
 import com.github.tomakehurst.wiremock.junit.WireMockRule;
 import com.google.gson.JsonObject;
 import java.util.Arrays;
+import org.junit.experimental.categories.Category;
 import org.restcomm.connect.testsuite.NetworkPortAssigner;
+import org.restcomm.connect.testsuite.UnstableTests;
 import org.restcomm.connect.testsuite.WebArchiveUtil;
 
 /**
@@ -98,7 +100,7 @@ public class ImsClientsDialTest {
     private static int mockPort = NetworkPortAssigner.retrieveNextPortByFile();
     @Rule
     public WireMockRule wireMockRule = new WireMockRule(mockPort);
-    
+
     private static SipStackTool tool1;
     private static SipStackTool tool2;
     private static SipStackTool tool3;
@@ -140,10 +142,10 @@ public class ImsClientsDialTest {
 
     private String adminAccountSid = "AC27f2dd02ab51ba5d5a9ff7fc5537a09a";
     private String adminAuthToken = "77f8c12cc7b8f8423e5c38b035249166";
-    
+
     private static int restcommPort = 5080;
     private static int restcommHTTPPort = 8080;
-    private static String restcommContact = "127.0.0.1:" + restcommPort;    
+    private static String restcommContact = "127.0.0.1:" + restcommPort;
 
     @BeforeClass
     public static void beforeClass() throws Exception {
@@ -154,8 +156,8 @@ public class ImsClientsDialTest {
 
         Class.forName("org.hsqldb.jdbc.JDBCDriver");
     }
-    
-    public static void reconfigurePorts() { 
+
+    public static void reconfigurePorts() {
         if (System.getProperty("arquillian_sip_port") != null) {
             restcommPort = Integer.valueOf(System.getProperty("arquillian_sip_port"));
             restcommContact = "127.0.0.1:" + restcommPort;
@@ -164,7 +166,7 @@ public class ImsClientsDialTest {
             restcommHTTPPort = Integer.valueOf(System.getProperty("arquillian_http_port"));
         }
     }
-    
+
 
     @Before
     public void before() throws Exception {
@@ -595,6 +597,7 @@ public class ImsClientsDialTest {
     }
 
     @Test
+    @Category(UnstableTests.class)
     public void testWebRTCClientOutgoingOtherDomain() throws ParseException, InterruptedException, SQLException {
 
         logger.info("testWebRTCClientOutgoingAdisconnect");
@@ -793,6 +796,7 @@ public class ImsClientsDialTest {
     }
 
     @Test
+    @Category(UnstableTests.class)
     public void testWebRTCClientIncomingADisconnect() throws InterruptedException, ParseException {
         logger.info("testWebRTCClientIncomingADisconnect");
 
@@ -840,6 +844,7 @@ public class ImsClientsDialTest {
     }
 
     @Test
+    @Category(UnstableTests.class)
     public void testWebRTCClientIncomingBusy() throws InterruptedException, ParseException {
         logger.info("testWebRTCClientIncomingBusy");
 
@@ -870,6 +875,7 @@ public class ImsClientsDialTest {
     }
 
     @Test
+    @Category(UnstableTests.class)
     public void testWebRTCClientIncomingAHold() throws SipException, InterruptedException, ParseException, InvalidArgumentException {
         logger.info("testWebRTCClientIncomingAHold");
 
@@ -946,6 +952,7 @@ public class ImsClientsDialTest {
     }
 
     @Test
+    @Category(UnstableTests.class)
     public void testWebRTCClientIncomingBHold() throws SipException, InvalidArgumentException, InterruptedException, ParseException {
         logger.info("testWebRTCClientIncomingBHold");
 
@@ -1024,6 +1031,7 @@ public class ImsClientsDialTest {
     }
 
     @Test
+    @Category(UnstableTests.class)
     public void testWebRTCClientIncomingRequestTimeout() throws InterruptedException, ParseException {
         logger.info("testWebRTCClientIncomingRequestTimeout");
 
@@ -1069,7 +1077,9 @@ public class ImsClientsDialTest {
         unregisterAugust();
     }
 
-    @Test //Non regression test for issue https://github.com/RestComm/Restcomm-Connect/issues/1042 - Support WebRTC clients to dial out through MediaServer
+    @Test
+    @Category(UnstableTests.class)
+    //Non regression test for issue https://github.com/RestComm/Restcomm-Connect/issues/1042 - Support WebRTC clients to dial out through MediaServer
     public void testWebRTCClientOutgoingBusy() throws ParseException, InterruptedException {
 
         logger.info("testWebRTCClientOutgoingBusy");
@@ -1097,7 +1107,9 @@ public class ImsClientsDialTest {
         unregisterAugust();
     }
 
-    @Test //Non regression test for issue https://github.com/RestComm/Restcomm-Connect/issues/1042 - Support WebRTC clients to dial out through MediaServer
+    @Test
+    @Category(UnstableTests.class)
+    //Non regression test for issue https://github.com/RestComm/Restcomm-Connect/issues/1042 - Support WebRTC clients to dial out through MediaServer
     public void testUnregisteredWebRTCClientOutgoing() throws ParseException, InterruptedException {
         logger.info("testUnregisteredWebRTCClientOutgoing");
 
@@ -1136,6 +1148,7 @@ public class ImsClientsDialTest {
     }
 
     @Test
+    @Category(UnstableTests.class)
     public void testUnregisteredWebRTCClientIncoming() throws InterruptedException, ParseException {
         logger.info("testUnregisteredWebRTCClientIncoming");
 
@@ -1157,7 +1170,9 @@ public class ImsClientsDialTest {
         assertEquals(0, filteredCallsByStatusObject.get("calls").getAsJsonArray().size());
     }
 
-    @Test //Non regression test for issue https://github.com/RestComm/Restcomm-Connect/issues/1042 - Support WebRTC clients to dial out through MediaServer
+    @Test
+    @Category(UnstableTests.class)
+    //Non regression test for issue https://github.com/RestComm/Restcomm-Connect/issues/1042 - Support WebRTC clients to dial out through MediaServer
     public void testWebRTCClientOutgoingRequestTimeout() throws ParseException, InterruptedException {
 
         logger.info("testWebRTCClientOutgoingRequestTimeout");
@@ -1529,7 +1544,7 @@ public class ImsClientsDialTest {
     public static WebArchive createWebArchiveNoGw() {
         logger.info("Packaging Test App");
         reconfigurePorts();
-        
+
         Map<String, String> webInfResources = new HashMap();
         webInfResources.put("restcomm-ims.xml", "conf/restcomm.xml");
         webInfResources.put("restcomm.script_imsDialTest", "data/hsql/restcomm.script");
@@ -1537,7 +1552,7 @@ public class ImsClientsDialTest {
         webInfResources.put("akka_application.conf", "classes/application.conf");
 
         Map<String, String> replacements = new HashMap();
-        //replace mediaport 2727 
+        //replace mediaport 2727
         replacements.put("2727", String.valueOf(mediaPort));
         replacements.put("8080", String.valueOf(restcommHTTPPort));
         replacements.put("8090", String.valueOf(mockPort));
@@ -1547,7 +1562,7 @@ public class ImsClientsDialTest {
         replacements.put("5095", String.valueOf(bobPort));
         replacements.put("5060", String.valueOf(imsPort));
         replacements.put("9999", String.valueOf(imsPort));
-        
+
 
         List<String> resources = new ArrayList(Arrays.asList(
                 "dial-conference-entry.xml",
@@ -1559,5 +1574,5 @@ public class ImsClientsDialTest {
         return WebArchiveUtil.createWebArchiveNoGw(
                 webInfResources, resources,
                 replacements);
-    }    
+    }
 }

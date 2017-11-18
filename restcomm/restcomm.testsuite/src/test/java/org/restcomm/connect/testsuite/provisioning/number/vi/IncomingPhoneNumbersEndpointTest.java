@@ -56,8 +56,10 @@ import com.sun.jersey.api.client.ClientResponse;
 import com.sun.jersey.api.client.WebResource;
 import com.sun.jersey.api.client.filter.HTTPBasicAuthFilter;
 import com.sun.jersey.core.util.MultivaluedMapImpl;
+import org.junit.experimental.categories.Category;
 import org.restcomm.connect.commons.Version;
 import org.restcomm.connect.commons.dao.Sid;
+import org.restcomm.connect.testsuite.UnstableTests;
 
 /**
  * @author <a href="mailto:jean.deruelle@telestax.com">Jean Deruelle</a>
@@ -1245,6 +1247,7 @@ public class IncomingPhoneNumbersEndpointTest {
      * https://github.com/RestComm/Restcomm-Connect/issues/2106
      */
     @Test
+    @Category(UnstableTests.class)
     public void testCreateNonPureSipPhoneNumbersForOrganizations() {
         stubFor(post(urlEqualTo("/test"))
                 .withRequestBody(containing("queryDID"))

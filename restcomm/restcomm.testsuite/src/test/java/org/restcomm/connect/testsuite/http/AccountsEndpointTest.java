@@ -39,6 +39,8 @@ import com.sun.jersey.api.client.ClientResponse;
 import com.sun.jersey.api.client.UniformInterfaceException;
 import com.sun.jersey.api.client.WebResource;
 import com.sun.jersey.core.util.MultivaluedMapImpl;
+import org.junit.experimental.categories.Category;
+import org.restcomm.connect.testsuite.UnstableTests;
 
 /**
  * @author <a href="mailto:gvagenas@gmail.com">gvagenas</a>
@@ -98,15 +100,15 @@ public class AccountsEndpointTest extends EndpointTest {
     private String nonSubAccountSid = "AC44444444444444444444444444444444";
 
     private String commonAuthToken = "77f8c12cc7b8f8423e5c38b035249166";
-    
+
     private String organizationSid1 = "ORafbe225ad37541eba518a74248f0ac4c";
     private String organizationSid2 = "ORafbe225ad37541eba518a74248f0ac4d";
     private String organizationSid3 = "ORafbe225ad37541eba518a74248f0ac4e";
-    
+
     private String organization1DomainName = "127.0.0.1";
     private String organization2DomainName = "org1.restcomm.com";
     private String organization3DomainName = "org2.restcomm.com";
-    
+
 
     static SipStackTool tool1;
 
@@ -181,6 +183,7 @@ public class AccountsEndpointTest extends EndpointTest {
     }
 
     @Test
+    @Category(UnstableTests.class)
     public void testCreateAccountWithJapaneseChars() {
         String friendlyName = "NTTアドバンステクノロジ";
         JsonObject createAccountResponse = RestcommAccountsTool.getInstance().createAccount(deploymentUrl.toString(),
@@ -589,7 +592,7 @@ public class AccountsEndpointTest extends EndpointTest {
     	ClientResponse clientResponse = RestcommAccountsTool.getInstance().createAccountResponse(deploymentUrl.toString(),
                 childUsername, childAuthToken, createdUsernanme, createdPassword, null, organizationSid2);
     	assertEquals(403, clientResponse.getStatus());
-    
+
     }
 
     @Test
@@ -603,7 +606,7 @@ public class AccountsEndpointTest extends EndpointTest {
     	clientResponse = RestcommAccountsTool.getInstance().createAccountResponse(deploymentUrl.toString(),
                 adminUsername, adminAuthToken, createdUsernanme3, createdPassword, null, organizationSid2);
     	assertEquals(200, clientResponse.getStatus());
-    
+
     }
 
     @Test
@@ -621,6 +624,7 @@ public class AccountsEndpointTest extends EndpointTest {
     }
 
     @Test
+    @Category(UnstableTests.class)
     public void testGetAccountsOfASpecificOrganization() {
     	//getAccounts without any parameters
         ClientResponse response = RestcommAccountsTool.getInstance().getAccountsResponse(deploymentUrl.toString(), adminUsername, adminAuthToken);

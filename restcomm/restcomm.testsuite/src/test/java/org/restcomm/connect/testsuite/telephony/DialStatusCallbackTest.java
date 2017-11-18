@@ -71,7 +71,9 @@ import static org.cafesip.sipunit.SipAssert.assertLastOperationSuccess;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertTrue;
+import org.junit.experimental.categories.Category;
 import org.restcomm.connect.testsuite.NetworkPortAssigner;
+import org.restcomm.connect.testsuite.UnstableTests;
 import org.restcomm.connect.testsuite.WebArchiveUtil;
 
 /**
@@ -100,7 +102,7 @@ public class DialStatusCallbackTest {
     URL deploymentUrl;
 
     private static int mediaPort = NetworkPortAssigner.retrieveNextPortByFile();
-    
+
     private static int mockPort = NetworkPortAssigner.retrieveNextPortByFile();
     @Rule
     public WireMockRule wireMockRule = new WireMockRule(mockPort);
@@ -112,36 +114,36 @@ public class DialStatusCallbackTest {
     // Bob is a simple SIP Client. Will not register with Restcomm
     private SipStack bobSipStack;
     private SipPhone bobPhone;
-    private static String bobPort = String.valueOf(NetworkPortAssigner.retrieveNextPortByFile()); 
+    private static String bobPort = String.valueOf(NetworkPortAssigner.retrieveNextPortByFile());
     private String bobContact = "sip:bob@127.0.0.1:" + bobPort;
 
     // Alice is a Restcomm Client with VoiceURL. This Restcomm Client can register with Restcomm and whatever will dial the RCML
     // of the VoiceURL will be executed.
     private SipStack aliceSipStack;
     private SipPhone alicePhone;
-    private static String alicePort = String.valueOf(NetworkPortAssigner.retrieveNextPortByFile());    
+    private static String alicePort = String.valueOf(NetworkPortAssigner.retrieveNextPortByFile());
     private String aliceContact = "sip:alice@127.0.0.1:" + alicePort;
 
     // Henrique is a simple SIP Client. Will not register with Restcomm
     private SipStack henriqueSipStack;
     private SipPhone henriquePhone;
-    private static String henriquePort = String.valueOf(NetworkPortAssigner.retrieveNextPortByFile());     
+    private static String henriquePort = String.valueOf(NetworkPortAssigner.retrieveNextPortByFile());
     private String henriqueContact = "sip:henrique@127.0.0.1:" + henriquePort;
 
     // George is a simple SIP Client. Will not register with Restcomm
     private SipStack georgeSipStack;
     private SipPhone georgePhone;
-    private static String georgePort = String.valueOf(NetworkPortAssigner.retrieveNextPortByFile());     
+    private static String georgePort = String.valueOf(NetworkPortAssigner.retrieveNextPortByFile());
     private String georgeContact = "sip:+131313@127.0.0.1:" + georgePort;
 
     private String dialRestcomm = "sip:1111@" + restcommContact; // Application: dial-client-entry_wActionUrl.xml
 
     private String adminAccountSid = "ACae6e420f425248d6a26948c17a9e2acf";
     private String adminAuthToken = "77f8c12cc7b8f8423e5c38b035249166";
-    
+
     private static int restcommPort = 5080;
-    private static int restcommHTTPPort = 8080;        
-    private static String restcommContact = "127.0.0.1:" + restcommPort;      
+    private static int restcommHTTPPort = 8080;
+    private static String restcommContact = "127.0.0.1:" + restcommPort;
 
     @BeforeClass
     public static void beforeClass() throws Exception {
@@ -150,15 +152,15 @@ public class DialStatusCallbackTest {
         tool3 = new SipStackTool("DialActionTest3");
         tool4 = new SipStackTool("DialActionTest4");
     }
-    
-    public static void reconfigurePorts() { 
+
+    public static void reconfigurePorts() {
         if (System.getProperty("arquillian_sip_port") != null) {
             restcommPort = Integer.valueOf(System.getProperty("arquillian_sip_port"));
-            restcommContact = "127.0.0.1:" + restcommPort; 
-        } 
+            restcommContact = "127.0.0.1:" + restcommPort;
+        }
         if (System.getProperty("arquillian_http_port") != null) {
             restcommHTTPPort = Integer.valueOf(System.getProperty("arquillian_http_port"));
-        }         
+        }
     }
 
     @Before
@@ -408,6 +410,7 @@ public class DialStatusCallbackTest {
 
     private String dialStatusCallbackGet = "<Response><Dial><Client statusCallback=\"http://127.0.0.1:" + mockPort +"/status\" statusCallbackMethod=\"GET\">alice</Client></Dial></Response>";
     @Test
+    @Category(UnstableTests.class)
     public void testDialStatusCallbackBobDisconnects() throws ParseException, InterruptedException {
 
         stubFor(get(urlPathEqualTo("/1111"))
@@ -874,6 +877,7 @@ public class DialStatusCallbackTest {
 
     private String dialFork = "<Response><Dial><Client statusCallback=\"http://127.0.0.1:" + mockPort + "/status\" statusCallbackMethod=\"get\">alice</Client><Sip statusCallback=\"http://127.0.0.1:" + mockPort + "/status\" statusCallbackMethod=\"get\">sip:henrique@127.0.0.1:" + henriquePort + "</Sip><Number statusCallback=\"http://127.0.0.1:" + mockPort + "/status\" statusCallbackMethod=\"get\">+131313</Number></Dial></Response>";
     @Test
+    @Category(UnstableTests.class)
     public synchronized void testDialForkNoAnswerButHenriqueStatusCallbackOnAll() throws InterruptedException, ParseException, MalformedURLException {
         stubFor(get(urlPathEqualTo("/1111"))
                 .willReturn(aResponse()
@@ -1170,6 +1174,7 @@ public class DialStatusCallbackTest {
 
     private String dialForkWithTimeoutStatusCallbackWithPost = "<Response><Dial timeout=\"60\"><Client statusCallback=\"http://127.0.0.1:" + mockPort + "/status\">alice</Client><Sip statusCallback=\"http://127.0.0.1:" + mockPort + "/status\">sip:henrique@127.0.0.1:" + henriquePort + "</Sip><Number statusCallback=\"http://127.0.0.1:" + mockPort + "/status\">+131313</Number></Dial></Response>";
     @Test
+    @Category(UnstableTests.class)
     public synchronized void testDialForkNoAnswerButHenriqueStatusCallbackOnAllPostWithTimeout() throws InterruptedException, ParseException, MalformedURLException {
         stubFor(get(urlPathEqualTo("/1111"))
                 .willReturn(aResponse()
@@ -1323,6 +1328,7 @@ public class DialStatusCallbackTest {
     private String rcmlToReturn = "<Response><Dial timeout=\"50\"><Client statusCallback=\"http://127.0.0.1:" + mockPort + "/status\" statusCallbackMethod=\"get\">alice</Client>   </Dial></Response>";
     //Non regression test for https://telestax.atlassian.net/browse/RESTCOMM-585
     @Test //TODO Fails when the whole test class runs but Passes when run individually
+    @Category(UnstableTests.class)
     public synchronized void testDialForkNoAnswerExecuteRCML_ReturnedFromActionURLWithStatusCallbacks_BobDisconnects() throws InterruptedException, ParseException, MalformedURLException {
 
         stubFor(get(urlPathEqualTo("/1111"))
@@ -1466,6 +1472,7 @@ public class DialStatusCallbackTest {
 
     //Non regression test for https://telestax.atlassian.net/browse/RESTCOMM-585
     @Test //TODO Fails when the whole test class runs but Passes when run individually
+    @Category(UnstableTests.class)
     public synchronized void testDialForkNoAnswerExecuteRCML_ReturnedFromActionURLWithStatusCallbacks_AliceDisconnects() throws InterruptedException, ParseException, MalformedURLException {
 
         stubFor(get(urlPathEqualTo("/1111"))
@@ -1635,19 +1642,19 @@ public class DialStatusCallbackTest {
         reconfigurePorts();
 
         Map<String,String> replacements = new HashMap();
-        //replace mediaport 2727 
-        replacements.put("2727", String.valueOf(mediaPort));        
+        //replace mediaport 2727
+        replacements.put("2727", String.valueOf(mediaPort));
         replacements.put("8080", String.valueOf(restcommHTTPPort));
         replacements.put("8090", String.valueOf(mockPort));
         replacements.put("5080", String.valueOf(restcommPort));
-        replacements.put("5070", String.valueOf(georgePort));        
+        replacements.put("5070", String.valueOf(georgePort));
         replacements.put("5090", String.valueOf(bobPort));
         replacements.put("5091", String.valueOf(alicePort));
         replacements.put("5092", String.valueOf(henriquePort));
-        
+
         List<String> resources = new ArrayList();
-        return WebArchiveUtil.createWebArchiveNoGw("restcomm.xml", 
+        return WebArchiveUtil.createWebArchiveNoGw("restcomm.xml",
                 "restcomm.script_dialStatusCallbackTest",resources, replacements);
-    }      
+    }
 
 }
