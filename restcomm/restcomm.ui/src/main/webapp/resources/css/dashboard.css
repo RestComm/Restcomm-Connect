@@ -616,6 +616,9 @@ form[role=login] input:-webkit-autofill:focus{
     padding: 20px 20px;
     font-weight: normal;
     text-align: center;
+}
+
+.accounts-tabs-mobile i {
     font-size: 1.5em;
 }
 
@@ -1559,6 +1562,66 @@ form[role=login] input:-webkit-autofill:focus{
 .numbers-list .numbers-list-delete-icon {
     width: 10%;
     vertical-align: middle;
+}
+
+/* -- Provider Numbers ------------------------------------------------------ */
+
+.provider-numbers-list {
+
+}
+
+.provider-numbers-list .provider-numbers-list-number {
+    width: 35%;
+    vertical-align: middle;
+}
+
+.provider-numbers-list .provider-numbers-list-features {
+    width: 15%;
+    vertical-align: middle;
+}
+
+.provider-numbers-list .provider-numbers-list-cost {
+    width: 15%;
+    vertical-align: middle;
+}
+
+.provider-numbers-list .provider-numbers-list-action {
+    width: 15%;
+    vertical-align: middle;
+}
+
+a.f16 {
+    width: 400px;
+}
+
+span.flag {
+    padding-left: 20px;
+}
+
+div.input-group.f16 > .input-group-btn > .dropdown-toggle {
+    width: 100px;
+}
+
+@media(max-width:768px) {
+    .provider-numbers-list .provider-numbers-list-number {
+        width: 40%;
+        vertical-align: middle;
+    }
+
+    .provider-numbers-list .provider-numbers-list-features {
+        width: 10%;
+        vertical-align: middle;
+    }
+
+    .provider-numbers-list .provider-numbers-list-cost {
+        width: 25%;
+        vertical-align: middle;
+    }
+
+    .provider-numbers-list .provider-numbers-list-action {
+        width: 25%;
+        vertical-align: middle;
+    }
 }
 
 .buttons-per-page button {
