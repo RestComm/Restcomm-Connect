@@ -1068,7 +1068,7 @@ public class IncomingPhoneNumbersEndpointTest {
         formData.add("FriendlyName", "My Company Line");
         formData.add("VoiceMethod", "GET");
         ClientResponse clientResponse = webResource.type(MediaType.APPLICATION_FORM_URLENCODED_TYPE).accept("application/json").post(ClientResponse.class, formData);
-        assertTrue(clientResponse.getStatus() == 200);
+        assertEquals(200, clientResponse.getStatus());
         String response = clientResponse.getEntity(String.class);
         logger.info(response);
         assertTrue(!response.trim().equalsIgnoreCase("[]"));

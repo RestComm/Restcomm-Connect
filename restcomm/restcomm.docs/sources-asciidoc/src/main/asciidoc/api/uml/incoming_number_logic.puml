@@ -1,0 +1,24 @@
+@startuml
+start
+
+
+:Retrieve Number from DB (In IncomingOrganization);
+
+if (Number Matched?) then (yes)
+  :Trigger linked Application;
+else (no)
+  if (IncomingOrganization != null?) then (yes)
+    :Retrieve Regexes In IncomingOrganization;
+    :Sort Regexes by Length;
+    repeat
+      if (Number Matched?) then (yes)
+        :Trigger linked Application;
+      endif
+    repeat while (more regexes || !matched?)
+  else (no)
+    :No application found;
+  endif
+endif
+
+stop
+@enduml
