@@ -51,6 +51,10 @@ import org.restcomm.connect.dao.entities.Account;
 import org.restcomm.connect.dao.entities.Application;
 import org.restcomm.connect.dao.entities.IncomingPhoneNumber;
 import org.restcomm.connect.dao.entities.MostOptimalNumberResponse;
+import org.restcomm.connect.extension.api.ExtensionType;
+import org.restcomm.connect.extension.api.RestcommExtensionException;
+import org.restcomm.connect.extension.api.RestcommExtensionGeneric;
+import org.restcomm.connect.extension.controller.ExtensionController;
 import org.restcomm.connect.http.client.rcmlserver.resolver.RcmlserverResolver;
 import org.restcomm.connect.interpreter.StartInterpreter;
 import org.restcomm.connect.telephony.api.CallManagerResponse;
@@ -86,6 +90,9 @@ public class UssdCallManager extends RestcommUntypedActor {
     private final String ussdGatewayUsername;
     private final String ussdGatewayPassword;
 
+    //List of extensions for CallManager
+    List<RestcommExtensionGeneric> extensions;
+
     // configurable switch whether to use the To field in a SIP header to determine the callee address
     // alternatively the Request URI can be used
     private boolean useTo;
@@ -111,6 +118,10 @@ public class UssdCallManager extends RestcommUntypedActor {
         this.ussdGatewayUri = ussdGatewayConfig.getString("ussd-gateway-uri");
         this.ussdGatewayUsername = ussdGatewayConfig.getString("ussd-gateway-user");
         this.ussdGatewayPassword = ussdGatewayConfig.getString("ussd-gateway-password");
+        extensions = ExtensionController.getInstance().getExtensions(ExtensionType.CallManager);
+        if (logger.isInfoEnabled()) {
+            logger.info("UssdCallManager extensions: " + (extensions != null ? extensions.size() : "0"));
+        }
     }
 
     private ActorRef ussdCall() {
@@ -161,8 +172,18 @@ public class UssdCallManager extends RestcommUntypedActor {
             response(message);
         } else if (CreateCall.class.equals(klass)) {
             try {
+                ExtensionController ec = ExtensionController.getInstance();
                 this.createCallRequest = (CreateCall) message;
-                sender.tell(new CallManagerResponse<ActorRef>(outbound(message)), self);
+                ec.executePreOutboundAction(this.createCallRequest, extensions);
+                if(this.createCallRequest.isAllowed()){
+                    sender.tell(new CallManagerResponse<ActorRef>(outbound(message)), self);
+                }else{
+                    //Extensions didn't allowed this call
+                    final String errMsg = "Not Allowed to make this outbound call";
+                    logger.warning(errMsg);
+                    sender.tell(new CallManagerResponse<ActorRef>(new RestcommExtensionException(errMsg), this.createCallRequest), self());
+                }
+
             } catch (final Exception exception) {
                 sender.tell(new CallManagerResponse<ActorRef>(exception), self);
             }
