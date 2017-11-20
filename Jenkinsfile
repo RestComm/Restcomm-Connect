@@ -1,4 +1,4 @@
-node {
+node("cxs-ups-testsuites_large") {
    // Mark the code checkout 'stage'....
    stage 'Checkout'
 
