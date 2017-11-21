@@ -848,8 +848,6 @@ public class DialRecordingTest {
 		String callSid = bobCall.getLastReceivedResponse().getMessage().getHeader("X-RestComm-CallSid").toString().split(":")[1].trim();
 		bobCall.sendInviteOkAck();
 
-		Thread.sleep(50);
-
 		bobCall.disconnect();
 
 //		assertTrue(bobCall.waitOutgoingCallResponse(10000));
@@ -877,9 +875,7 @@ public class DialRecordingTest {
 		//Check recording
 		JsonArray recording = RestcommCallsTool.getInstance().getCallRecordings(deploymentUrl.toString(),adminAccountSid,adminAuthToken,callSid);
 		assertNotNull(recording);
-		assertEquals(1, recording.size());
-		double duration = recording.get(0).getAsJsonObject().get("duration").getAsDouble();
-		assertEquals(0.0, duration,0.5);
+		assertEquals(0, recording.size());
 
 		logger.info("\n\n &&&&&& About to check liveCalls &&&&&& \n");
 
