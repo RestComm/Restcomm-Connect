@@ -19,7 +19,6 @@
  */
 package org.restcomm.connect.commons.annotations;
 
-
-public interface FeatureAltTests {
+public interface NewTests {
 
 }

@@ -20,6 +20,6 @@
 package org.restcomm.connect.commons.annotations;
 
 
-public @interface ParallelMethodTests {
+public interface ParallelMethodTests {
 
 }

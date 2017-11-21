@@ -19,9 +19,6 @@
  */
 package org.restcomm.connect.commons.annotations;
 
-import java.lang.annotation.Inherited;
-
-@Inherited
-public @interface WithInSecsTests {
+public interface WithInSecsTests {
 
 }
