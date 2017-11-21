@@ -35,15 +35,15 @@ import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
 import static org.junit.Assert.assertNotNull;
 import org.junit.experimental.categories.Category;
+import org.restcomm.connect.commons.annotations.FeatureAltTests;
 import org.restcomm.connect.commons.annotations.SequentialClassTests;
-import org.restcomm.connect.commons.annotations.WithInMinsTests;
 
 /**
  * Tests for the Dial forking
  * Created by gvagenas on 12/19/15.
  */
 @RunWith(Arquillian.class)
-@Category(value={WithInMinsTests.class, SequentialClassTests.class})
+@Category(value={FeatureAltTests.class, SequentialClassTests.class})
 public class DialForkAnswerDelayCancelTest {
 
     private final static Logger logger = Logger.getLogger(CallLifecycleTest.class.getName());

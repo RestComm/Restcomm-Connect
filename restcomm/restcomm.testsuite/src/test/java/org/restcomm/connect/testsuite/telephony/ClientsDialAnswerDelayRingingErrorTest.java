@@ -37,8 +37,8 @@ import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertTrue;
 import org.junit.experimental.categories.Category;
+import org.restcomm.connect.commons.annotations.FeatureAltTests;
 import org.restcomm.connect.commons.annotations.SequentialClassTests;
-import org.restcomm.connect.commons.annotations.WithInMinsTests;
 
 /**
  * Test for clients with or without VoiceURL (Bitbucket issue 115). Clients without VoiceURL can dial anything.
@@ -46,7 +46,7 @@ import org.restcomm.connect.commons.annotations.WithInMinsTests;
  * @author <a href="mailto:gvagenas@gmail.com">gvagenas</a>
  */
 @RunWith(Arquillian.class)
-@Category(value={WithInMinsTests.class, SequentialClassTests.class})
+@Category(value={SequentialClassTests.class, FeatureAltTests.class})
 public class ClientsDialAnswerDelayRingingErrorTest {
 
     private static final String version = Version.getVersion();

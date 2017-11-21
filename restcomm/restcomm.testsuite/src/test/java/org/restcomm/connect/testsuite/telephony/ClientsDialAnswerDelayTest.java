@@ -44,8 +44,8 @@ import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertTrue;
 import org.junit.experimental.categories.Category;
+import org.restcomm.connect.commons.annotations.FeatureAltTests;
 import org.restcomm.connect.commons.annotations.ParallelClassTests;
-import org.restcomm.connect.commons.annotations.WithInMinsTests;
 import org.restcomm.connect.testsuite.NetworkPortAssigner;
 import org.restcomm.connect.testsuite.WebArchiveUtil;
 
@@ -55,7 +55,7 @@ import org.restcomm.connect.testsuite.WebArchiveUtil;
  * @author <a href="mailto:gvagenas@gmail.com">gvagenas</a>
  */
 @RunWith(Arquillian.class)
-@Category(value={WithInMinsTests.class, ParallelClassTests.class})
+@Category(value={FeatureAltTests.class, ParallelClassTests.class})
 public class ClientsDialAnswerDelayTest {
 
     private static final String version = Version.getVersion();

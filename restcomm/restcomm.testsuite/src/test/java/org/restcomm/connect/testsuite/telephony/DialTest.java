@@ -65,6 +65,7 @@ import com.google.gson.JsonObject;
 
 import gov.nist.javax.sip.message.MessageExt;
 import org.junit.experimental.categories.Category;
+import org.restcomm.connect.commons.annotations.FeatureCoreTests;
 import org.restcomm.connect.commons.annotations.SequentialClassTests;
 import org.restcomm.connect.commons.annotations.WithInMinsTests;
 
@@ -76,7 +77,7 @@ import org.restcomm.connect.commons.annotations.WithInMinsTests;
  */
 @Ignore //Moved all tests to DialTest1, DialTest2, DialTest2
 @RunWith(Arquillian.class)
-@Category(value={WithInMinsTests.class, SequentialClassTests.class})
+@Category(value={FeatureCoreTests.class, SequentialClassTests.class})
 public class DialTest {
     private final static Logger logger = Logger.getLogger(DialTest.class.getName());
 

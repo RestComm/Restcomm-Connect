@@ -39,14 +39,14 @@ import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertTrue;
 import static org.junit.Assert.assertEquals;
 import org.junit.experimental.categories.Category;
+import org.restcomm.connect.commons.annotations.FeatureCoreTests;
 import org.restcomm.connect.commons.annotations.SequentialClassTests;
-import org.restcomm.connect.commons.annotations.WithInMinsTests;
 
 /**
  * Created by gvagenas on 5/19/16.
  */
 @RunWith(Arquillian.class)
-@Category(value={WithInMinsTests.class, SequentialClassTests.class})
+@Category(value={FeatureCoreTests.class, SequentialClassTests.class})
 public class DialConferenceTest {
     private final static Logger logger = Logger.getLogger(DialConferenceTest.class.getName());
 

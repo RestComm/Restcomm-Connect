@@ -46,8 +46,8 @@ import org.junit.Test;
 import org.junit.experimental.categories.Category;
 import org.junit.runner.RunWith;
 import org.restcomm.connect.commons.Version;
+import org.restcomm.connect.commons.annotations.FeatureCoreTests;
 import org.restcomm.connect.commons.annotations.SequentialClassTests;
-import org.restcomm.connect.commons.annotations.WithInMinsTests;
 //import org.restcomm.connect.telephony.Version;
 
 /**
@@ -55,7 +55,7 @@ import org.restcomm.connect.commons.annotations.WithInMinsTests;
  */
 @Ignore
 @RunWith(Arquillian.class)
-@Category(value={WithInMinsTests.class, SequentialClassTests.class})
+@Category(value={FeatureCoreTests.class, SequentialClassTests.class})
 public final class CallTest {
     private static final String version = Version.getVersion();
     private static final byte[] bytes = new byte[] { 118, 61, 48, 13, 10, 111, 61, 117, 115, 101, 114, 49, 32, 53, 51, 54, 53,
