@@ -2304,7 +2304,8 @@ public final class Call extends RestcommUntypedActor {
         } else if (is(stopping)) {
             fsm.transition(message, completed);
         } else {
-            fsm.transition(message, stopping);
+            if (!is(leaving))
+                fsm.transition(message, stopping);
         }
     }
 
