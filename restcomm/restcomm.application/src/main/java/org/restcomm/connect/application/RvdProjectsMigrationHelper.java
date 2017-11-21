@@ -67,6 +67,7 @@ import java.util.Comparator;
 import java.util.List;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
+import org.restcomm.connect.dao.entities.IncomingPhoneNumberFilter;
 
 /**
  * This class was designed to be used with exclusivity by {@link RvdProjectsMigrator}, once that
@@ -318,7 +319,8 @@ public class RvdProjectsMigrationHelper {
         try {
 
             if (dids == null) {
-                dids = didsDao.getAllIncomingPhoneNumbers();
+                IncomingPhoneNumberFilter.Builder filterBuilder = IncomingPhoneNumberFilter.Builder.builder();
+                dids = didsDao.getIncomingPhoneNumbersByFilter(filterBuilder.build());
             }
         } catch (Exception e) {
             throw new RvdProjectsMigrationException(

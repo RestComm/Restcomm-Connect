@@ -88,7 +88,6 @@ import org.restcomm.connect.dao.entities.Application;
 import org.restcomm.connect.dao.entities.CallDetailRecord;
 import org.restcomm.connect.dao.entities.Client;
 import org.restcomm.connect.dao.entities.IncomingPhoneNumber;
-import org.restcomm.connect.dao.entities.MostOptimalNumberResponse;
 import org.restcomm.connect.dao.entities.Notification;
 import org.restcomm.connect.dao.entities.Organization;
 import org.restcomm.connect.dao.entities.Registration;
@@ -138,6 +137,8 @@ import akka.event.Logging;
 import akka.event.LoggingAdapter;
 import akka.util.Timeout;
 import gov.nist.javax.sip.header.UserAgent;
+import org.restcomm.connect.interpreter.NumberSelectorService;
+import org.restcomm.connect.interpreter.SIPOrganizationUtil;
 import scala.concurrent.Await;
 import scala.concurrent.Future;
 import scala.concurrent.duration.Duration;
@@ -168,6 +169,7 @@ public final class CallManager extends RestcommUntypedActor {
     private final SipFactory sipFactory;
     private final DaoManager storage;
     private final ActorRef monitoring;
+    private final NumberSelectorService numberSelector;
 
     // configurable switch whether to use the To field in a SIP header to determine the callee address
     // alternatively the Request URI can be used
@@ -258,6 +260,7 @@ public final class CallManager extends RestcommUntypedActor {
         this.sms = sms;
         this.sipFactory = factory;
         this.storage = storage;
+        numberSelector = (NumberSelectorService) context.getAttribute(NumberSelectorService.class.getName());
         final Configuration runtime = configuration.subset("runtime-settings");
         final Configuration outboundProxyConfig = runtime.subset("outbound-proxy");
         SipURI outboundIntf = outboundInterface("udp");
@@ -1071,8 +1074,9 @@ public final class CallManager extends RestcommUntypedActor {
         }
 
         String phone = cdr.getTo();
-        MostOptimalNumberResponse mostOptimalNumber = OrganizationUtil.getMostOptimalIncomingPhoneNumber(storage, request, phone, storage.getAccountsDao().getAccount(cdr.getAccountSid()).getOrganizationSid());
-        IncomingPhoneNumber number = mostOptimalNumber.number();
+        Sid sourceOrganizationSid = storage.getAccountsDao().getAccount(cdr.getAccountSid()).getOrganizationSid();
+        Sid destOrg = SIPOrganizationUtil.searchOrganizationBySIPRequest(storage.getOrganizationsDao(), request);
+        IncomingPhoneNumber number = numberSelector.searchNumber(phone, sourceOrganizationSid, destOrg);
 
         if (number == null || (number.getReferUrl() == null && number.getReferApplicationSid() == null)) {
             if (logger.isInfoEnabled()) {
@@ -1201,13 +1205,11 @@ public final class CallManager extends RestcommUntypedActor {
     private boolean redirectToHostedVoiceApp(final ActorRef self, final SipServletRequest request, final AccountsDao accounts,
                                              final ApplicationsDao applications, String phone, Sid fromClientAccountSid, Sid sourceOrganizationSid) {
         boolean isFoundHostedApp = false;
-        boolean failCall = false;
         IncomingPhoneNumber number = null;
         try {
-            MostOptimalNumberResponse mostOptimalNumber = OrganizationUtil.getMostOptimalIncomingPhoneNumber(storage, request, phone, sourceOrganizationSid);
-            number = mostOptimalNumber.number();
-            failCall = mostOptimalNumber.isRelevant();
-            if(failCall){
+            Sid destOrg = SIPOrganizationUtil.searchOrganizationBySIPRequest(storage.getOrganizationsDao(), request);
+            number = numberSelector.searchNumber(phone, sourceOrganizationSid, destOrg);
+            if(number == null){
                 //number was found but organization was not proper.
                 final SipServletResponse response = request.createResponse(SC_NOT_FOUND);
                 response.send();

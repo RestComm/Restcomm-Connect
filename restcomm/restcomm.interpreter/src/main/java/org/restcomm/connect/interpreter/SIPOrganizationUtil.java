@@ -17,47 +17,39 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>
  *
  */
-package org.restcomm.connect.dao.common;
+package org.restcomm.connect.interpreter;
 
-
+import javax.servlet.sip.SipServletRequest;
 import javax.servlet.sip.SipURI;
-
 import org.apache.log4j.Logger;
 import org.restcomm.connect.commons.dao.Sid;
-import org.restcomm.connect.dao.DaoManager;
 import org.restcomm.connect.dao.entities.Organization;
+import org.restcomm.connect.dao.OrganizationsDao;
 
+public class SIPOrganizationUtil {
 
-/**
- * @author maria.farooq@telestax.com (Maria Farooq)
- */
-public class OrganizationUtil {
+    private static Logger logger = Logger.getLogger(SIPOrganizationUtil.class);
 
-    private static Logger logger = Logger.getLogger(OrganizationUtil.class);
-
-    /**
-     * getOrganizationSidBySipURIHost
-     *
-     * @param sipURI
-     * @return Sid of Organization
-     */
-    public static Sid getOrganizationSidBySipURIHost(DaoManager storage, final SipURI sipURI) {
+    public static Sid getOrganizationSidBySipURIHost(OrganizationsDao orgDao, final SipURI sipURI) {
         if (logger.isDebugEnabled()) {
             logger.debug(String.format("getOrganizationSidBySipURIHost sipURI = %s", sipURI));
         }
         final String organizationDomainName = sipURI.getHost();
-        Organization organization = storage.getOrganizationsDao().getOrganizationByDomainName(organizationDomainName);
+        Organization organization = orgDao.getOrganizationByDomainName(organizationDomainName);
+        if (logger.isDebugEnabled()) {
+            logger.debug(String.format("Org found = %s", organization));
+        }
         return organization == null ? null : organization.getSid();
     }
 
-    /**
-     * getOrganizationSidByAccountSid
-     *
-     * @param accountSid
-     * @return Sid of Organization
-     */
-    public static Sid getOrganizationSidByAccountSid(DaoManager storage, final Sid accountSid) {
-        return storage.getAccountsDao().getAccount(accountSid).getOrganizationSid();
+    public static Sid searchOrganizationBySIPRequest(OrganizationsDao orgDao, SipServletRequest request) {
+        //first try with requetURI
+        Sid destinationOrganizationSid = getOrganizationSidBySipURIHost(orgDao,
+                (SipURI) request.getRequestURI());
+        if (destinationOrganizationSid == null) {
+            // try to get destinationOrganizationSid from toUri
+            destinationOrganizationSid = getOrganizationSidBySipURIHost(orgDao, (SipURI) request.getTo().getURI());
+        }
+        return destinationOrganizationSid;
     }
-
 }
