@@ -52,6 +52,7 @@ import akka.actor.UntypedActor;
 import akka.actor.UntypedActorFactory;
 import org.apache.http.impl.client.CloseableHttpClient;
 import org.restcomm.connect.commons.common.http.CustomHttpClientBuilder;
+import org.restcomm.connect.interpreter.NumberSelectorService;
 import scala.concurrent.ExecutionContext;
 
 /**
@@ -352,6 +353,9 @@ public final class Bootstrapper extends SipServlet implements SipServletListener
             // Initialize identityContext
             IdentityContext identityContext = new IdentityContext(xml);
             context.setAttribute(IdentityContext.class.getName(), identityContext);
+
+            //init NumberSelectorService
+            context.setAttribute(NumberSelectorService.class.getName(), new NumberSelectorService(storage.getIncomingPhoneNumbersDao()));
 
             // Create the media gateway.
 
