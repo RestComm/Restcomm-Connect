@@ -10,7 +10,7 @@
     VALUES (#{sid}, #{date_created}, #{date_updated}, #{friendly_name}, #{account_sid}, #{api_version}, #{voice_caller_id_lookup},
     #{uri}, #{rcml_url}, #{kind});
   </insert>
-  
+
   <select id="getApplication" parameterType="string" resultType="hashmap">
     SELECT * FROM restcomm_applications WHERE sid=#{sid};
   </select>
@@ -18,7 +18,7 @@
   <select id="getApplicationByFriendlyName" parameterType="string" resultType="hashmap">
     SELECT * FROM restcomm_applications WHERE BINARY friendly_name=#{friendly_name};
   </select>
-  
+
   <select id="getApplications" parameterType="string" resultType="hashmap">
     SELECT * FROM restcomm_applications WHERE account_sid=#{account_sid} or account_sid is null;
   </select>
@@ -44,18 +44,50 @@
     WHERE (app.account_sid=#{account_sid} or app.account_sid is null)
     ORDER BY app.date_created, app.sid;
   </select>
-  
+
+  <select id="getApplicationsUsingFilters" parameterType="org.restcomm.connect.dao.entities.ApplicationFilter" resultType="hashmap">
+    SELECT * FROM restcomm_applications WHERE (account_sid=#{accountSid} or account_sid is null)
+    <if test="friendlyName != null">
+        AND friendly_name=#{friendlyName}
+    </if>
+  </select>
+
+  <select id="getApplicationsAndNumbersUsingFilters" parameterType="org.restcomm.connect.dao.entities.ApplicationFilter" resultType="hashmap">
+    SELECT
+    app.*,
+    num.sid num_sid,
+    num.friendly_name num_friendly_name,
+    num.phone_number num_phone_number,
+    num.voice_application_sid num_voice_application_sid,
+    num.sms_application_sid num_sms_application_sid,
+    num.ussd_application_sid num_ussd_application_sid,
+    num.refer_application_sid num_refer_application_sid
+    FROM restcomm_applications app
+    LEFT OUTER JOIN (
+      SELECT * from restcomm_incoming_phone_numbers nums WHERE nums.account_sid=#{accountSid}
+    ) num
+    ON num.voice_application_sid = app.sid
+    OR num.sms_application_sid = app.sid
+    OR num.ussd_application_sid = app.sid
+    OR num.refer_application_sid = app.sid
+    WHERE (app.account_sid=#{accountSid} or app.account_sid is null)
+    <if test="friendlyName != null">
+        AND app.friendly_name=#{friendlyName}
+    </if>
+    ORDER BY app.date_created, app.sid;
+  </select>
+
   <delete id="removeApplication" parameterType="string">
     DELETE FROM restcomm_applications WHERE sid=#{sid};
   </delete>
-  
+
   <delete id="removeApplications" parameterType="string">
     DELETE FROM restcomm_applications WHERE account_sid=#{account_sid};
   </delete>
-  
+
   <update id="updateApplication" parameterType="map">
-    UPDATE restcomm_applications SET friendly_name=#{friendly_name}, date_updated=#{date_updated}, 
-    voice_caller_id_lookup=#{voice_caller_id_lookup}, rcml_url=#{rcml_url}, kind=#{kind} 
+    UPDATE restcomm_applications SET friendly_name=#{friendly_name}, date_updated=#{date_updated},
+    voice_caller_id_lookup=#{voice_caller_id_lookup}, rcml_url=#{rcml_url}, kind=#{kind}
     WHERE sid=#{sid};
   </update>
 </mapper>

@@ -25,6 +25,7 @@ import com.google.gson.FieldNamingPolicy;
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
 import com.thoughtworks.xstream.XStream;
+
 import org.apache.commons.configuration.Configuration;
 import org.restcomm.connect.commons.annotations.concurrency.NotThreadSafe;
 import org.restcomm.connect.commons.dao.Sid;
@@ -33,6 +34,7 @@ import org.restcomm.connect.dao.ApplicationsDao;
 import org.restcomm.connect.dao.DaoManager;
 import org.restcomm.connect.dao.entities.Account;
 import org.restcomm.connect.dao.entities.Application;
+import org.restcomm.connect.dao.entities.ApplicationFilter;
 import org.restcomm.connect.dao.entities.ApplicationList;
 import org.restcomm.connect.dao.entities.ApplicationNumberSummary;
 import org.restcomm.connect.dao.entities.RestCommResponse;
@@ -155,13 +157,18 @@ public class ApplicationsEndpoint extends SecuredEndpoint {
         Account account;
         account = accountsDao.getAccount(accountSid);
         secure(account, "RestComm:Read:Applications", SecuredType.SECURED_APP);
+
         // shall we also return number information with the application ?
         boolean includeNumbers = false;
         String tmp = uriInfo.getQueryParameters().getFirst("includeNumbers");
         if (tmp != null && tmp.equalsIgnoreCase("true"))
             includeNumbers = true;
 
-        final List<Application> applications = dao.getApplicationsWithNumbers(account.getSid());
+        String friendlyName = uriInfo.getQueryParameters().getFirst("FriendlyName");
+
+        ApplicationFilter filter = new ApplicationFilter(account.getSid().toString(), friendlyName);
+
+        final List<Application> applications = dao.getApplicationsWithNumbers(filter);
         if (APPLICATION_XML_TYPE == responseType) {
             final RestCommResponse response = new RestCommResponse(new ApplicationList(applications));
             return ok(xstream.toXML(response), APPLICATION_XML).build();

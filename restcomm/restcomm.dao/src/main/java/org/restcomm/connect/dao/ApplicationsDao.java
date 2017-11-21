@@ -23,25 +23,30 @@ import java.util.List;
 
 import org.restcomm.connect.commons.dao.Sid;
 import org.restcomm.connect.dao.entities.Application;
+import org.restcomm.connect.dao.entities.ApplicationFilter;
 
 /**
  * @author quintana.thomas@gmail.com (Thomas Quintana)
  */
 public interface ApplicationsDao {
-    void addApplication(Application application);
+    void addApplication ( Application application );
 
-    Application getApplication(Sid sid);
+    Application getApplication ( Sid sid );
 
-    Application getApplication(String friendlyName);
+    Application getApplication ( String friendlyName );
 
-    List<Application> getApplications(Sid accountSid);
+    List<Application> getApplications ( Sid accountSid );
+
+    List<Application> getApplications ( ApplicationFilter filter );
 
     // this may optionally return related numbers as part of an Application
-    List<Application> getApplicationsWithNumbers(Sid accountSid);
+    List<Application> getApplicationsWithNumbers ( Sid accountSid );
 
-    void removeApplication(Sid sid);
+    List<Application> getApplicationsWithNumbers ( ApplicationFilter filter );
 
-    void removeApplications(Sid accountSid);
+    void removeApplication ( Sid sid );
 
-    void updateApplication(Application application);
+    void removeApplications ( Sid accountSid );
+
+    void updateApplication ( Application application );
 }
