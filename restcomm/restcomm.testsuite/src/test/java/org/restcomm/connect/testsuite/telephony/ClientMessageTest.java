@@ -49,8 +49,8 @@ import org.junit.Test;
 import org.junit.experimental.categories.Category;
 import org.junit.runner.RunWith;
 import org.restcomm.connect.commons.Version;
+import org.restcomm.connect.commons.annotations.FeatureCoreTests;
 import org.restcomm.connect.commons.annotations.SequentialClassTests;
-import org.restcomm.connect.commons.annotations.WithInMinsTests;
 import org.restcomm.connect.testsuite.http.CreateClientsTool;
 
 /**
@@ -59,7 +59,7 @@ import org.restcomm.connect.testsuite.http.CreateClientsTool;
  * @author <a href="mailto:gvagenas@gmail.com">gvagenas</a>
  */
 @RunWith(Arquillian.class)
-@Category(value={WithInMinsTests.class, SequentialClassTests.class})
+@Category(value={FeatureCoreTests.class, SequentialClassTests.class})
 public class ClientMessageTest {
 
     private static final String version = Version.getVersion();
