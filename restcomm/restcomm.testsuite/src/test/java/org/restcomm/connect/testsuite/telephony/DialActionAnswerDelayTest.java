@@ -72,6 +72,7 @@ import org.restcomm.connect.commons.annotations.FeatureAltTests;
 import org.restcomm.connect.commons.annotations.ParallelClassTests;
 import org.restcomm.connect.testsuite.NetworkPortAssigner;
 import org.restcomm.connect.commons.annotations.UnstableTests;
+import org.restcomm.connect.commons.annotations.WithInMinsTests;
 import org.restcomm.connect.testsuite.WebArchiveUtil;
 
 /**
@@ -320,6 +321,7 @@ public class DialActionAnswerDelayTest {
     }
 
     @Test
+    @Category(WithInMinsTests.class)
     public void testDialActionAliceAnswers() throws ParseException, InterruptedException {
 
         stubFor(post(urlPathMatching("/DialAction.*"))
@@ -694,6 +696,7 @@ public class DialActionAnswerDelayTest {
     }
 
     @Test
+    @Category(WithInMinsTests.class)
     public void testSipInviteCustomHeaders() throws ParseException, InterruptedException {
 
         stubFor(post(urlPathMatching("/DialAction.*"))
@@ -786,6 +789,7 @@ public class DialActionAnswerDelayTest {
     }
 
     @Test //TODO: PASSES when run individually. to check
+    @Category(WithInMinsTests.class)
     public void testDialCallDurationAliceAnswers() throws ParseException, InterruptedException {
 
         stubFor(post(urlPathMatching("/DialAction.*"))
