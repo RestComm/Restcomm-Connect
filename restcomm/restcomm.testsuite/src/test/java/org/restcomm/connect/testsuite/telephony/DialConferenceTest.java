@@ -220,6 +220,8 @@ public class DialConferenceTest {
         georgeCall.sendInviteOkAck();
         assertTrue(!(georgeCall.getLastReceivedResponse().getStatusCode() >= 400));
 
+        Thread.sleep(1000);
+
         assertEquals(1, getConferencesSize());
         assertEquals(2, getParticipantsSize(confRoom1));
         int liveCalls = MonitoringServiceTool.getInstance().getStatistics(deploymentUrl.toString(), adminAccountSid, adminAuthToken);
