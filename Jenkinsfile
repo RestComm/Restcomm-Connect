@@ -14,7 +14,7 @@ node("cxs-ups-testsuites_large") {
 
    stage 'CITestsuite'
    sh "mvn -f restcomm/restcomm.testsuite/pom.xml  clean install -Pparallel-testing -DforkCount=16 -DskipUTs=false  -Dmaven.test.failure.ignore=true -Dmaven.test.redirectTestOutputToFile=true -Dfailsafe.rerunFailingTestsCount=0"
-   junit '**/target/surefire-reports/*.xml'
-   junit '**/target/failsafe-reports/*.xml'
+   junit testResults: '**/target/surefire-reports/*.xml', testDataPublishers: [[$class: 'StabilityTestDataPublisher']]
+   junit testResults: '**/target/failsafe-reports/*.xml', testDataPublishers: [[$class: 'StabilityTestDataPublisher']]
 }
 
