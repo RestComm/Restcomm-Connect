@@ -39,6 +39,7 @@ import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertTrue;
 import static org.junit.Assert.assertEquals;
 import org.junit.experimental.categories.Category;
+import org.restcomm.connect.commons.annotations.FeatureAltTests;
 import org.restcomm.connect.commons.annotations.FeatureCoreTests;
 import org.restcomm.connect.commons.annotations.SequentialClassTests;
 
@@ -179,6 +180,7 @@ public class DialConferenceTest {
     private final String confRoom1 = "confRoom1";
     private String dialConfernceRcmlWithTimeLimit = "<Response><Dial timeLimit=\"50\"><Conference>"+confRoom1+"</Conference></Dial></Response>";
     @Test //This is expected to fail because of https://github.com/RestComm/Restcomm-Connect/issues/1081
+    @Category(FeatureAltTests.class)
     public synchronized void testDialConferenceClientsWaitForDisconnect() throws InterruptedException {
         stubFor(get(urlPathEqualTo("/1111"))
                 .willReturn(aResponse()
@@ -268,6 +270,7 @@ public class DialConferenceTest {
     private final String confRoom2 = "confRoom2";
     private String dialConfernceRcml = "<Response><Dial><Conference>"+confRoom2+"</Conference></Dial></Response>";
     @Test
+    @Category(FeatureCoreTests.class)
     public synchronized void testDialConferenceClientsDisconnect() throws InterruptedException {
         stubFor(get(urlPathEqualTo("/1111"))
                 .willReturn(aResponse()
@@ -434,6 +437,7 @@ public class DialConferenceTest {
     private String dialConfernceRcmlWithWaitUrl = "<Response><Dial><Conference startConferenceOnEnter=\"false\" waitUrl=\"http://127.0.0.1:8090/waitUrl\" waitMethod=\"GET\">"+confRoom3+"</Conference></Dial></Response>";
     private String waitUrlRcml = "<Response><Say>Wait while somebody joins the conference</Say><Play>/restcomm/audio/demo-prompt.wav</Play></Response>";
     @Test @Ignore //TTS is not working on the testsuite
+    @Category(FeatureAltTests.class)
     public synchronized void testDialConferenceClientsDisconnectWithWaitUrl() throws InterruptedException {
         stubFor(get(urlPathEqualTo("/1111"))
                 .willReturn(aResponse()

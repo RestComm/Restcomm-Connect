@@ -777,6 +777,7 @@ public class DialForkAnswerDelayTest {
     }
 
     @Test
+    @Category(WithInMinsTests.class)
     public synchronized void testDialForkNoAnswerAndNoResponseFromAlice() throws InterruptedException, ParseException, MalformedURLException {
 
         stubFor(get(urlPathEqualTo("/1111"))

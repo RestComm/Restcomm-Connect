@@ -70,6 +70,7 @@ import java.util.Map;
 import org.junit.experimental.categories.Category;
 import org.restcomm.connect.commons.annotations.FeatureCoreTests;
 import org.restcomm.connect.commons.annotations.ParallelClassTests;
+import org.restcomm.connect.commons.annotations.WithInMinsTests;
 import org.restcomm.connect.testsuite.NetworkPortAssigner;
 import org.restcomm.connect.testsuite.WebArchiveUtil;
 import org.restcomm.connect.testsuite.tools.MonitoringServiceTool;
@@ -350,6 +351,7 @@ public class DialActionTest {
     }
 
     @Test
+    @Category(WithInMinsTests.class)
     public void testDialActionAliceAnswers() throws ParseException, InterruptedException {
 
         stubFor(post(urlPathMatching("/DialAction.*"))
@@ -857,6 +859,7 @@ public class DialActionTest {
      * @throws InterruptedException
      */
     @Test
+    @Category(WithInMinsTests.class)
     public void testSipInviteDiversionHeader() throws ParseException, InterruptedException {
 
         stubFor(post(urlPathMatching("/DialAction.*"))
@@ -951,6 +954,7 @@ public class DialActionTest {
     }
 
     @Test
+    @Category(WithInMinsTests.class)
     public void testSipInviteCustomHeaders() throws ParseException, InterruptedException {
 
         stubFor(post(urlPathMatching("/DialAction.*"))
@@ -1051,6 +1055,7 @@ public class DialActionTest {
     }
 
     @Test //TODO: PASSES when run individually. to check
+    @Category(WithInMinsTests.class)
     public void testDialCallDurationAliceAnswers() throws ParseException, InterruptedException {
 
         stubFor(post(urlPathMatching("/DialAction.*"))
