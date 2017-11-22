@@ -21,6 +21,8 @@ import org.junit.Rule;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.restcomm.connect.commons.Version;
+import org.restcomm.connect.commons.annotations.FeatureAltTests;
+import org.restcomm.connect.commons.annotations.FeatureExpTests;
 import org.restcomm.connect.testsuite.http.RestcommCallsTool;
 
 import javax.sip.address.SipURI;
@@ -51,7 +53,7 @@ import org.restcomm.connect.testsuite.WebArchiveUtil;
  * @author jean.deruelle@telestax.com
  */
 @RunWith(Arquillian.class)
-@Category(value={WithInMinsTests.class, ParallelClassTests.class})
+@Category(ParallelClassTests.class)
 public class TestDialVerbPartOne {
     private final static Logger logger = Logger.getLogger(TestDialVerbPartOne.class.getName());
 
@@ -302,6 +304,7 @@ public class TestDialVerbPartOne {
 
     private String dialConfernceRcmlWithTimeLimitSmsAfterConf = "<Response><Dial timeLimit=\"50\"><Conference>test</Conference></Dial><Sms>Conference time limit reached</Sms></Response>";
     @Test
+    @Category(FeatureAltTests.class)
     public synchronized void testDialConferenceOnlyOneClientWithTimeLimitSmsAfterConf() throws InterruptedException {
         stubFor(get(urlPathEqualTo("/1111"))
                 .willReturn(aResponse()
@@ -339,6 +342,7 @@ public class TestDialVerbPartOne {
 
     private String dialConfernceRcmlWithoutTimeLimit = "<Response><Dial><Conference>test</Conference></Dial></Response>";
     @Test
+    @Category(FeatureAltTests.class)
     public synchronized void testDialConferenceOnlyOneClientWithoutTimeLimit() throws InterruptedException {
         stubFor(get(urlPathEqualTo("/1111"))
                 .willReturn(aResponse()
@@ -438,6 +442,7 @@ public class TestDialVerbPartOne {
 
     private String dialConfernceRcmlWithPlay = "<Response><Play>/restcomm/audio/demo-prompt.wav</Play><Dial timeLimit=\"50\"><Conference>test</Conference></Dial></Response>";
     @Test
+    @Category(FeatureAltTests.class)
     public synchronized void testDialConferenceWithPlay() throws InterruptedException {
         stubFor(get(urlPathEqualTo("/1111"))
                 .willReturn(aResponse()
@@ -502,6 +507,7 @@ public class TestDialVerbPartOne {
     }
 
     @Test
+    @Category(FeatureAltTests.class)
     public synchronized void testDialConferenceWithPlayInDialogInviteHold() throws InterruptedException {
         stubFor(get(urlPathEqualTo("/1111"))
                 .willReturn(aResponse()
@@ -571,6 +577,7 @@ public class TestDialVerbPartOne {
     }
 
     @Test
+    @Category(FeatureAltTests.class)
     public synchronized void testDialConferenceWithContactHeaderPortNull() throws InterruptedException {
         stubFor(get(urlPathEqualTo("/1111"))
                 .willReturn(aResponse()
@@ -638,6 +645,7 @@ public class TestDialVerbPartOne {
     @Test
     // Non regression test for
     // https://bitbucket.org/telestax/telscale-restcomm/issue/113/when-restcomm-cannot-find-an-app-url-it
+    @Category(FeatureExpTests.class)
     public synchronized void testDialApplicationInvalidURL() throws InterruptedException, ParseException {
 
         // Phone2 register as alice
@@ -800,6 +808,7 @@ public class TestDialVerbPartOne {
     }
 
     @Test
+    @Category(FeatureAltTests.class)
     public synchronized void testDialUriBobHangupCheckCDRs() throws InterruptedException, ParseException {
         stubFor(get(urlPathEqualTo("/1111"))
                 .willReturn(aResponse()
@@ -924,6 +933,7 @@ public class TestDialVerbPartOne {
     }
 
     @Test
+    @Category(FeatureExpTests.class)
     public synchronized void testDialClientAliceNoSDP() throws InterruptedException, ParseException {
         stubFor(get(urlPathEqualTo("/1111"))
                 .willReturn(aResponse()
@@ -950,6 +960,7 @@ public class TestDialVerbPartOne {
     }
 
     @Test
+    @Category(FeatureExpTests.class)
     public synchronized void testDialClientAliceNullSDP() throws InterruptedException, ParseException {
         stubFor(get(urlPathEqualTo("/1111"))
                 .willReturn(aResponse()
@@ -976,6 +987,7 @@ public class TestDialVerbPartOne {
 
     final String screeningResponse = "<Response></Response>";
     @Test
+    @Category(FeatureAltTests.class)
     public synchronized void testDialClientAliceWithScreeningAbsoluteURL() throws InterruptedException, ParseException {
 
         stubFor(get(urlPathEqualTo("/screening"))
@@ -1037,6 +1049,7 @@ public class TestDialVerbPartOne {
 
     private String screeningRcml = "<Response><Say>Hi bob. Someone wants to talk to you</Say></Response>";
     @Test
+    @Category(FeatureAltTests.class)
     public synchronized void testDialClientAliceWithScreeningRelativeURL() throws InterruptedException, ParseException {
 
         stubFor(get(urlPathEqualTo("/1111"))

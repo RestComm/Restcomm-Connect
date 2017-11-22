@@ -44,7 +44,7 @@ import org.restcomm.connect.commons.annotations.SequentialClassTests;
  * Created by gvagenas on 12/19/15.
  */
 @RunWith(Arquillian.class)
-@Category(value={FeatureAltTests.class, ParallelClassTests.class})
+@Category(value={FeatureAltTests.class, SequentialClassTests.class})
 public class DialForkAnswerDelayCancelTest {
 
     private final static Logger logger = Logger.getLogger(CallLifecycleTest.class.getName());
