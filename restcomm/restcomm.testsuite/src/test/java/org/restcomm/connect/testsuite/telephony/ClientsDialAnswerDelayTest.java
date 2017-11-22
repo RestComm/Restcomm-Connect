@@ -1,6 +1,28 @@
 package org.restcomm.connect.testsuite.telephony;
 
-import com.github.tomakehurst.wiremock.junit.WireMockRule;
+import static com.github.tomakehurst.wiremock.client.WireMock.aResponse;
+import static com.github.tomakehurst.wiremock.client.WireMock.get;
+import static com.github.tomakehurst.wiremock.client.WireMock.post;
+import static com.github.tomakehurst.wiremock.client.WireMock.stubFor;
+import static com.github.tomakehurst.wiremock.client.WireMock.urlPathEqualTo;
+import static org.cafesip.sipunit.SipAssert.assertLastOperationSuccess;
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertNotNull;
+import static org.junit.Assert.assertTrue;
+
+import java.net.URL;
+import java.text.ParseException;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+
+import javax.sip.Dialog;
+import javax.sip.address.SipURI;
+import javax.sip.header.UserAgentHeader;
+import javax.sip.message.Response;
+
 import org.cafesip.sipunit.Credential;
 import org.cafesip.sipunit.SipCall;
 import org.cafesip.sipunit.SipPhone;
@@ -18,36 +40,16 @@ import org.junit.Before;
 import org.junit.BeforeClass;
 import org.junit.Rule;
 import org.junit.Test;
+import org.junit.experimental.categories.Category;
 import org.junit.runner.RunWith;
 import org.restcomm.connect.commons.Version;
-import org.restcomm.connect.testsuite.http.CreateClientsTool;
-
-import javax.sip.Dialog;
-import javax.sip.address.SipURI;
-import javax.sip.header.UserAgentHeader;
-import javax.sip.message.Response;
-import java.net.URL;
-import java.text.ParseException;
-import java.util.ArrayList;
-import java.util.List;
-
-import static com.github.tomakehurst.wiremock.client.WireMock.aResponse;
-import static com.github.tomakehurst.wiremock.client.WireMock.get;
-import static com.github.tomakehurst.wiremock.client.WireMock.post;
-import static com.github.tomakehurst.wiremock.client.WireMock.stubFor;
-import static com.github.tomakehurst.wiremock.client.WireMock.urlPathEqualTo;
-import java.util.Arrays;
-import java.util.HashMap;
-import java.util.Map;
-import static org.cafesip.sipunit.SipAssert.assertLastOperationSuccess;
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertNotNull;
-import static org.junit.Assert.assertTrue;
-import org.junit.experimental.categories.Category;
-import org.restcomm.connect.commons.annotations.FeatureAltTests;
+import org.restcomm.connect.commons.annotations.FeatureExpTests;
 import org.restcomm.connect.commons.annotations.ParallelClassTests;
 import org.restcomm.connect.testsuite.NetworkPortAssigner;
 import org.restcomm.connect.testsuite.WebArchiveUtil;
+import org.restcomm.connect.testsuite.http.CreateClientsTool;
+
+import com.github.tomakehurst.wiremock.junit.WireMockRule;
 
 /**
  * Test for clients with or without VoiceURL (Bitbucket issue 115). Clients without VoiceURL can dial anything.
@@ -55,7 +57,7 @@ import org.restcomm.connect.testsuite.WebArchiveUtil;
  * @author <a href="mailto:gvagenas@gmail.com">gvagenas</a>
  */
 @RunWith(Arquillian.class)
-@Category(value={FeatureAltTests.class, ParallelClassTests.class})
+@Category(value={ParallelClassTests.class})
 public class ClientsDialAnswerDelayTest {
 
     private static final String version = Version.getVersion();
@@ -435,6 +437,7 @@ public class ClientsDialAnswerDelayTest {
     }
 
     @Test //Non regression test for issue https://github.com/RestComm/Restcomm-Connect/issues/1042 - Support WebRTC clients to dial out through MediaServer
+    @Category(FeatureExpTests.class)
     public void testClientDialOutPstnSimulateWebRTCClientBusy() throws ParseException, InterruptedException {
 
         assertNotNull(mariaRestcommClientSid);
@@ -491,6 +494,7 @@ public class ClientsDialAnswerDelayTest {
     }
 
     @Test //Non regression test for issue https://github.com/RestComm/Restcomm-Connect/issues/1042 - Support WebRTC clients to dial out through MediaServer
+    @Category(FeatureExpTests.class)
     public void testClientDialOutPstnSimulateWebRTCClientNoAnswer() throws ParseException, InterruptedException {
 
         assertNotNull(mariaRestcommClientSid);
@@ -546,6 +550,7 @@ public class ClientsDialAnswerDelayTest {
     }
 
     @Test //Non regression test for issue https://github.com/RestComm/Restcomm-Connect/issues/1042 - Support WebRTC clients to dial out through MediaServer
+    @Category(FeatureExpTests.class)
     public void testClientDialOutPstnSimulateWebRTCClientServiceUnavailable() throws ParseException, InterruptedException {
 
         assertNotNull(mariaRestcommClientSid);
@@ -602,6 +607,7 @@ public class ClientsDialAnswerDelayTest {
     }
 
     @Test //Non regression test for issue https://github.com/RestComm/Restcomm-Connect/issues/1042 - Support WebRTC clients to dial out through MediaServer
+    @Category(FeatureExpTests.class)
     public void testClientDialOutPstnSimulateWebRTCClientCancelBefore200() throws ParseException, InterruptedException {
 
         assertNotNull(mariaRestcommClientSid);
