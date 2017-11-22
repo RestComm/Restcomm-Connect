@@ -53,7 +53,7 @@ import org.restcomm.connect.commons.annotations.WithInMinsTests;
  * @author <a href="mailto:hoan.h.luu@telestax.com">Hoan HL</a>
  */
 @RunWith(Arquillian.class)
-@Category(value={WithInMinsTests.class, SequentialClassTests.class})
+@Category(SequentialClassTests.class)
 public class TestGatherVerb {
     private final static Logger logger = Logger.getLogger(TestDialVerbPartTwo.class.getName());
 

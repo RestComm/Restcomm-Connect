@@ -68,7 +68,7 @@ import org.restcomm.connect.commons.annotations.UnstableTests;
  * @author <a href="mailto:gvagenas@gmail.com">gvagenas</a>
  */
 @RunWith(Arquillian.class)
-@Category(value={FeatureAltTests.class, ParallelClassTests.class})
+@Category(value={FeatureAltTests.class, SequentialClassTests.class})
 public class NoAuthRegisterClientTest {
 
     private static final String version = Version.getVersion();

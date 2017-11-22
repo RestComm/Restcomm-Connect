@@ -50,6 +50,7 @@ import org.mobicents.arquillian.mediaserver.api.MgcpEventListener;
 import org.mobicents.arquillian.mediaserver.api.annotations.Mediaserver;
 import org.mobicents.commtesting.MgcpUnit;
 import org.restcomm.connect.commons.Version;
+import org.restcomm.connect.commons.annotations.FeatureAltTests;
 import org.restcomm.connect.commons.annotations.SequentialClassTests;
 import org.restcomm.connect.commons.annotations.WithInSecsTests;
 
@@ -59,7 +60,7 @@ import org.restcomm.connect.commons.annotations.WithInSecsTests;
  */
 @Ignore //The mss-arquillian mms extension needs update
 @RunWith(Arquillian.class)
-@Category(value={WithInSecsTests.class, SequentialClassTests.class})
+@Category(value={FeatureAltTests.class, SequentialClassTests.class})
 public class PlayTest {
 
     private final static Logger logger = Logger.getLogger(PlayTest.class.getName());

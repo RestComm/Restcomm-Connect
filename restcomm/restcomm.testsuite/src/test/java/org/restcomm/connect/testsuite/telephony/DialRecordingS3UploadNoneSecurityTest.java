@@ -58,7 +58,7 @@ import org.restcomm.connect.commons.annotations.WithInMinsTests;
  * Created by gvagenas on 08/01/2017.
  */
 @RunWith(Arquillian.class)
-@Category(value={FeatureAltTests.class, ParallelClassTests.class})
+@Category(value={FeatureAltTests.class, SequentialClassTests.class})
 public class DialRecordingS3UploadNoneSecurityTest {
 
 	private final static Logger logger = Logger.getLogger(DialRecordingS3UploadNoneSecurityTest.class.getName());
