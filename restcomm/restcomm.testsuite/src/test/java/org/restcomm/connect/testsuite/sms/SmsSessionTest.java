@@ -12,7 +12,10 @@ import static org.junit.Assert.assertTrue;
 import java.net.URL;
 import java.text.ParseException;
 import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 import javax.sip.address.SipURI;
 import javax.sip.header.Header;
@@ -32,24 +35,20 @@ import org.junit.Before;
 import org.junit.BeforeClass;
 import org.junit.Rule;
 import org.junit.Test;
+import org.junit.experimental.categories.Category;
 import org.junit.runner.RunWith;
 //import org.restcomm.connect.sms.Version;
-
-import com.github.tomakehurst.wiremock.junit.WireMockRule;
-import com.google.gson.JsonArray;
-import com.google.gson.JsonObject;
-import java.util.Arrays;
-import java.util.HashMap;
-import java.util.Map;
-import org.junit.experimental.categories.Category;
 import org.restcomm.connect.commons.Version;
 import org.restcomm.connect.commons.annotations.FeatureAltTests;
-import org.restcomm.connect.commons.annotations.FeatureCoreTests;
 import org.restcomm.connect.commons.annotations.FeatureExpTests;
 import org.restcomm.connect.commons.annotations.ParallelClassTests;
 import org.restcomm.connect.commons.annotations.WithInSecsTests;
 import org.restcomm.connect.testsuite.NetworkPortAssigner;
 import org.restcomm.connect.testsuite.WebArchiveUtil;
+
+import com.github.tomakehurst.wiremock.junit.WireMockRule;
+import com.google.gson.JsonArray;
+import com.google.gson.JsonObject;
 
 /**
  * @author quintana.thomas@gmail.com (Thomas Quintana)
@@ -136,7 +135,6 @@ public final class SmsSessionTest {
     }
 
     @Test
-    @Category(value={FeatureCoreTests.class})
     public void testSendSmsRedirectReceiveSms() throws ParseException {
         // Send restcomm an sms.
         final String proxy = phone.getStackAddress() + ":" + restcommPort + ";lr/udp";
@@ -196,7 +194,6 @@ public final class SmsSessionTest {
     }
 
     @Test
-    @Category(value={FeatureCoreTests.class})
     public void testAliceEchoTest() throws ParseException {
 
         SipURI uri = alice.getAddressFactory().createSipURI(null, restcommContact);

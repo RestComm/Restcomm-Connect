@@ -46,7 +46,6 @@ import org.junit.Test;
 import org.junit.experimental.categories.Category;
 import org.junit.runner.RunWith;
 import org.restcomm.connect.commons.Version;
-import org.restcomm.connect.commons.annotations.FeatureCoreTests;
 import org.restcomm.connect.commons.annotations.FeatureExpTests;
 import org.restcomm.connect.commons.annotations.ParallelClassTests;
 import org.restcomm.connect.commons.annotations.WithInSecsTests;
@@ -152,7 +151,6 @@ public class SmsOutTest {
     }
 
     @Test
-    @Category(value={FeatureCoreTests.class})
     public void testSendSmsToValidNumber() throws ParseException, InterruptedException {
         SipCall outboundDestCall = outboundDestPhone.createSipCall();
         outboundDestCall.listenForMessage();
