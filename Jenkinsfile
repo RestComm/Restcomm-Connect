@@ -20,6 +20,7 @@ node("cxs-ups-testsuites") {
             "SequentialTests" : {
                 node('cxs-ups-testsuites'){
                    unstash 'mavenArtifacts'
+                   checkout scm
                    sh "mvn -f restcomm/restcomm.testsuite/pom.xml  clean install -DskipUTs=false  -Dmaven.test.failure.ignore=true -Dmaven.test.redirectTestOutputToFile=true -Dfailsafe.rerunFailingTestsCount=0 -DexcludedGroups='org.restcomm.connect.commons.annotations.ParallelClassTests or org.restcomm.connect.commons.annotations.UnstableTests or org.restcomm.connect.commons.annotations.BrokenTests'"
                    junit testResults: '**/target/surefire-reports/*.xml', testDataPublishers: [[$class: 'StabilityTestDataPublisher']]
 
@@ -28,6 +29,7 @@ node("cxs-ups-testsuites") {
             "ParallelTests" : {
                 node('cxs-ups-testsuites_large'){
                    unstash 'mavenArtifacts'
+                   checkout scm
                    sh "mvn -f restcomm/restcomm.testsuite/pom.xml  clean install -DforkCount=16 -Dmaven.test.failure.ignore=true -Dmaven.test.redirectTestOutputToFile=true -Dfailsafe.rerunFailingTestsCount=0 -Dgroups='org.restcomm.connect.commons.annotations.ParallelClassTests' -DexcludedGroups='org.restcomm.connect.commons.annotations.UnstableTests or org.restcomm.connect.commons.annotations.BrokenTests'"
                    junit testResults: '**/target/surefire-reports/*.xml', testDataPublishers: [[$class: 'StabilityTestDataPublisher']]
                 }
