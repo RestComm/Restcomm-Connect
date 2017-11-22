@@ -28,6 +28,8 @@ import org.junit.Rule;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.restcomm.connect.commons.Version;
+import org.restcomm.connect.commons.annotations.FeatureAltTests;
+import org.restcomm.connect.commons.annotations.FeatureExpTests;
 import org.restcomm.connect.testsuite.http.RestcommCallsTool;
 import org.restcomm.connect.testsuite.tools.MonitoringServiceTool;
 
@@ -62,7 +64,7 @@ import org.restcomm.connect.testsuite.WebArchiveUtil;
  * Created by gvagenas on 08/01/2017.
  */
 @RunWith(Arquillian.class)
-@Category(value={FeatureCoreTests.class, ParallelClassTests.class})
+@Category(ParallelClassTests.class)
 public class DialRecordingTest {
 
     private final static Logger logger = Logger.getLogger(DialRecordingTest.class.getName());
@@ -274,6 +276,7 @@ public class DialRecordingTest {
     }
 
 	@Test
+    @Category(FeatureExpTests.class)
 	public synchronized void testDialClientAliceGetRecordindNoFile() throws InterruptedException, ParseException {
 		stubFor(get(urlPathEqualTo("/1111"))
 				.willReturn(aResponse()
@@ -448,6 +451,7 @@ public class DialRecordingTest {
 	}
 
 	@Test //@Ignore //Currently using the MockMediaGateway its not possible to test this use case
+    @Category(FeatureExpTests.class)
 	public synchronized void testDialClientAlice_AliceDisconnects_NoRecording() throws InterruptedException, ParseException {
 		stubFor(get(urlPathEqualTo("/1111"))
 				.willReturn(aResponse()
@@ -597,6 +601,7 @@ public class DialRecordingTest {
     }
 
 	@Test //@Ignore //Currently using the MockMediaGateway its not possible to test this use case
+    @Category(FeatureExpTests.class)
 	public synchronized void testRecordVerb_Disconnect_NoRecordFile() throws InterruptedException, ParseException {
 		stubFor(get(urlPathEqualTo("/1111"))
 				.willReturn(aResponse()
@@ -819,8 +824,9 @@ public class DialRecordingTest {
         assertEquals(0, liveCallsArraySize);
     }
 
-        final String recordCallWithTimeLimit = "<Response><Record timeLimit=\"10\" action=\"http://127.0.0.1:" + mockPort +"/record-action\"/></Response>";
+    final String recordCallWithTimeLimit = "<Response><Record timeLimit=\"10\" action=\"http://127.0.0.1:" + mockPort +"/record-action\"/></Response>";
 	@Test
+    @Category(FeatureExpTests.class)
 	public synchronized void testRecordWithErrorOnRecordAction() throws InterruptedException, ParseException {
 		stubFor(get(urlPathEqualTo("/1111"))
 				.willReturn(aResponse()
@@ -900,6 +906,7 @@ public class DialRecordingTest {
 }
 
     @Test
+    @Category(FeatureAltTests.class)
     public void testGetRecordingWithOldS3Url() {
         String callSid = "CA2d3f6354e75e46b3ac76f534129ff511";
         JsonArray recording = RestcommCallsTool.getInstance().getCallRecordings(deploymentUrl.toString(), adminAccountSid, adminAuthToken, callSid);
@@ -908,7 +915,7 @@ public class DialRecordingTest {
         double duration = recording.get(0).getAsJsonObject().get("duration").getAsDouble();
         assertTrue(duration == 3.0);
         //Since for this test the S3Accesstoll is not enabled, the file_uri will still point to the old S3 URL.
-        //Check test org.restcomm.connect.testsuite.telephony.DialRecordingS3UploadTest_NoneSecurity.testGetRecordingWithOldS3Url()
+        //Check test org.restcomm.connect.testsuite.telephony.DialRecordingS3UploadNoneSecurityTest.testGetRecordingWithOldS3Url()
         assertTrue(recording.get(0).getAsJsonObject().get("file_uri").getAsString().startsWith("https://s3.amazonaws.com"));
     }
 
