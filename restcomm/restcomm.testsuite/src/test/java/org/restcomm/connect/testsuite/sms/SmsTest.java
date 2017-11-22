@@ -55,8 +55,11 @@ import org.junit.Test;
 import org.junit.experimental.categories.Category;
 import org.junit.runner.RunWith;
 import org.restcomm.connect.commons.Version;
+import org.restcomm.connect.commons.annotations.FeatureAltTests;
+import org.restcomm.connect.commons.annotations.FeatureCoreTests;
 import org.restcomm.connect.commons.annotations.ParallelClassTests;
 import org.restcomm.connect.commons.annotations.WithInMinsTests;
+import org.restcomm.connect.commons.annotations.WithInSecsTests;
 import org.restcomm.connect.testsuite.NetworkPortAssigner;
 import org.restcomm.connect.testsuite.WebArchiveUtil;
 
@@ -65,7 +68,7 @@ import org.restcomm.connect.testsuite.WebArchiveUtil;
  *
  */
 @RunWith(Arquillian.class)
-@Category(value={WithInMinsTests.class, ParallelClassTests.class})
+@Category(value={WithInSecsTests.class, ParallelClassTests.class})
 public class SmsTest {
 
     private final static Logger logger = Logger.getLogger(SmsTest.class);
@@ -265,6 +268,7 @@ public class SmsTest {
     }
 
     @Test
+    @Category(value={FeatureCoreTests.class})
     public void testAliceActsAsSMSGatewayAndReceivesSMS() throws ParseException {
         // Phone2 register as alice
         SipURI uri = aliceSipStack.getAddressFactory().createSipURI(null, restcommContact);
@@ -308,6 +312,7 @@ public class SmsTest {
     }
 
     @Test
+    @Category(value={FeatureCoreTests.class})
     public void TestIncomingSmsSendToClientAlice() throws ParseException, InterruptedException {
         SipURI uri = aliceSipStack.getAddressFactory().createSipURI(null, restcommContact);
         assertTrue(alicePhone.register(uri, "alice", "1234", aliceContact, 3600, 3600));
@@ -333,6 +338,7 @@ public class SmsTest {
     }
 
     @Test
+    @Category(value={FeatureCoreTests.class})
     public void TestIncomingSmsSendToClientAliceOfOrganization2() throws ParseException, InterruptedException {
         SipURI uri = aliceSipStackOrg2.getAddressFactory().createSipURI(null, restcommContact);
         assertTrue(alicePhoneOrg2.register(uri, "alice", "1234", "sip:alice@127.0.0.1:" + alicePort2, 3600, 3600));
@@ -358,6 +364,7 @@ public class SmsTest {
     }
 
     @Test
+    @Category(value={FeatureAltTests.class})
     public void TestIncomingSmsSendToClientAliceGreekHugeMessage() throws ParseException, InterruptedException {
         SipURI uri = aliceSipStack.getAddressFactory().createSipURI(null, restcommContact);
         assertTrue(alicePhone.register(uri, "alice", "1234", aliceContact, 3600, 3600));
@@ -383,6 +390,7 @@ public class SmsTest {
     }
 
     @Test
+    @Category(value={FeatureAltTests.class})
     public void TestIncomingSmsSendToClientAliceGreek() throws ParseException, InterruptedException {
         SipURI uri = aliceSipStack.getAddressFactory().createSipURI(null, restcommContact);
         assertTrue(alicePhone.register(uri, "alice", "1234", aliceContact, 3600, 3600));
@@ -408,6 +416,7 @@ public class SmsTest {
     }
 
     @Test
+    @Category(value={FeatureCoreTests.class})
     public void TestIncomingSmsSendToNumber1313() throws ParseException, InterruptedException {
         SipURI uri = aliceSipStack.getAddressFactory().createSipURI(null, restcommContact);
         assertTrue(alicePhone.register(uri, "alice", "1234", "sip:1313@127.0.0.1:" + alicePort, 3600, 3600));
@@ -433,6 +442,7 @@ public class SmsTest {
     }
 
     @Test
+    @Category(value={FeatureAltTests.class})
     public void TestIncomingSmsSendToNumber1313WithCustomHeaders() throws ParseException, InterruptedException {
         String myFirstHeaderName = "X-Custom-Header-1";
         String myFirstHeaderValue = "X Custom Header Value 1";
@@ -481,6 +491,7 @@ public class SmsTest {
     }
 
     @Test
+    @Category(value={FeatureCoreTests.class})
     public void testP2PSendSMS_GeorgeClient_ToFotiniClient() throws ParseException {
         SipURI uri = aliceSipStack.getAddressFactory().createSipURI(null, restcommContact);
         //Register George phone
@@ -516,6 +527,7 @@ public class SmsTest {
     }
 
     @Test
+    @Category(value={FeatureCoreTests.class})
     public void testP2PSendSMS_GeorgeClient_ToFotiniClientOrg2() throws ParseException {
         SipURI uri = georgeSipStackOrg2.getAddressFactory().createSipURI(null, restcommContact);
         //Register George phone
@@ -551,6 +563,7 @@ public class SmsTest {
     }
 
     @Test
+    @Category(value={FeatureAltTests.class})
     public void testP2PSendSMS_GeorgeClient_ToFotiniClient_EmptyContent() throws ParseException {
         SipURI uri = georgeSipStack.getAddressFactory().createSipURI(null, restcommContact);
         //Register George phone
