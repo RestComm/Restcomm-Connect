@@ -1,10 +1,11 @@
 node("cxs-ups-testsuites") {
    // Mark the code checkout 'stage'....
-   stage 'Checkout'
-  checkout scm
+   stage ('Checkout') {
+    checkout scm
+   }
 
    // Mark the code build 'stage'....
-   stage 'Build' {
+   stage ("Build") {
      // Run the maven build
      sh "mvn -f restcomm/pom.xml  clean install -pl '!restcomm.testsuite' -Dmaven.test.failure.ignore=true -Dmaven.test.redirectTestOutputToFile=true"
      //keep this build for later use
