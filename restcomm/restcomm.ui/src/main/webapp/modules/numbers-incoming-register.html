@@ -1,10 +1,10 @@
-<div class="row accounts-tabs-mobile visible-xs">
+<div class="row accounts-tabs-mobile visible-sm visible-xs">
     <div class="col-xs-5" ng-class="{'active': isProvider}" ng-click="setProvider(true)"><a href="">Provider</a></div>
     <div class="col-xs-5 col-xs-offset-2" ng-class="{'active': !isProvider}" ng-click="setProvider(false)"><a href="">SIP</a></div>
 </div>
 
 <div class="row">
-    <div class="col-md-2 accounts-tabs hidden-xs">
+    <div class="col-md-2 accounts-tabs hidden-sm hidden-xs">
         <div ng-class="{'active': isProvider}" ng-click="setProvider(true)"><a href="">Provider Number</a></div>
         <div ng-class="{'active': !isProvider}" ng-click="setProvider(false)"><a href="">SIP Number</a></div>
     </div>

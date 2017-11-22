@@ -15,40 +15,43 @@
 
 <div class="row">
     <div class="col-md-12">
-        <div ng-hide="(clientsList | filter:query).length > 0" class="jumbotron no-records-alert">
-            <h2><i class="fa fa-exclamation-circle"></i> No Restcomm clients <span ng-show="clientsList.length === 0">registered</span><span ng-show="clientsList.length > 0">matching query</span>. <small>Register one now!</small></h2>
+
+        <div ng-hide="!clientsList || (clientsList | filter:query).length > 0" class="jumbotron rc-no-items">
+            <h1><i class="fa fa-globe"></i> </h1>
+            <h2>No Restcomm clients</h2>
+            <h5>Register one now!</h5>
         </div>
 
-        <table ng-show="(clientsList | filter:query).length > 0" class="table table-hover rc-list clients-list" style="table-layout: fixed;" ng-cloak>
-            <thead style="color: #4a4a4b;">
+        <table ng-show="(clientsList | filter:query).length > 0" class="table table-hover rc-list clients-list" ng-cloak>
+            <thead>
             <th class="clients-list-username">Username</th>
-            <th class="clients-list-edit-icon hidden-sm hidden-xs" style="width: 30px;">&nbsp;</th>
-            <th class="clients-list-friendly-name hidden-sm hidden-xs">Friendly Name</th>
+            <th class="clients-list-edit-icon hidden-xs">&nbsp;</th>
+            <th class="clients-list-friendly-name hidden-xs">Friendly Name</th>
             <th class="clients-list-applications" >Applications</th>
-            <th class="clients-list-delete-icon">&nbsp;</th>
+            <th class="clients-list-delete-icon visible-xs">&nbsp;</th>
             </thead>
-            <tbody style="color: #6d6e70;">
-            <tr class="number-row" ng-repeat="sc in filtered = (clientsList | filter:query)" ng-click="$root.goTo('/numbers/clients/' + sc.sid)">
+            <tbody>
+            <tr class="number-row" ng-repeat="sc in filtered = (clientsList | filter:query)">
                 <td class="clients-list-username">
                     <div><a href="#/numbers/clients/{{sc.sid}}">{{ sc.login  }}</a></div>
-                    <div class="visible-sm visible-xs">{{ sc.friendly_name  }}</div>
+                    <div class="visible-xs">{{ sc.friendly_name  }}</div>
                 </td>
-                <td class="clients-list-edit-icon hidden-sm hidden-xs">
+                <td class="clients-list-edit-icon hidden-xs">
                     <h5><i class="fa fa-pencil clickable" ng-click="editingFriendlyName = sc.login; $event.stopPropagation();"></i></h5>
                 </td>
-                <td class="clients-list-friendly-name hidden-sm hidden-xs">
+                <td class="clients-list-friendly-name hidden-xs">
                     <div class="" ng-hide="editingFriendlyName === sc.login">{{ sc.friendly_name  }} </div>
                     <div class="" ng-show="editingFriendlyName === sc.login">
-                        <input type="text" class="form-control" style="font-size: inherit; margin-left: -10px; padding-left: 10px;" onkeyup="if(event.keyCode === 13) {this.blur()}" ng-model="sc.friendly_name" ng-blur="editingFriendlyName = undefined; setFriendlyName(sc)" autofocus />
+                        <input type="text" class="form-control" onkeyup="if(event.keyCode === 13) {this.blur()}" ng-model="sc.friendly_name" ng-blur="editingFriendlyName = undefined; setFriendlyName(sc)" autofocus />
                     </div>
                 </td>
                 <td class="clients-list-applications">
                     <div class="fit-to-size" ng-show="{{ sc.voice_url.length > 0 || sc.voice_application_sid.length > 0 }}"><i class="fa fa-microphone available-feature"></i>&nbsp;&nbsp;{{ sc.voice_url  }} {{ sc.voice_application_sid }} </div>
                     <div class="opacity30 fit-to-size" ng-hide="{{ sc.voice_url.length > 0 || sc.voice_application_sid.length > 0 }}"><i class="fa fa-microphone-slash unavailable-feature"></i>&nbsp;&nbsp;http://www.restcomm.org/demo/voice/ </div>
                 </td>
-                <td class="clients-list-delete-icon text-right">
+                <td class="clients-list-delete-icon text-right visible-xs">
                     <!--<div class="btn-delete-div"><button class="btn btn-link" ng-click="confirmClientDelete(sc)"><img src="resources/img/v2/delete-number.png"></button></div>-->
-                    <div class="btn-delete-div visible-xs visible-sm"><i class="fa fa-chevron-right"></i></div>
+                    <div class="btn-delete-div"><i class="fa fa-chevron-right"></i></div>
                 </td>
             </tr>
             </tbody>

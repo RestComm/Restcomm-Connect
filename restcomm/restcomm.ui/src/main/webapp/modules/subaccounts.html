@@ -1,10 +1,10 @@
-<div class="row accounts-tabs-mobile visible-xs">
+<div class="row accounts-tabs-mobile visible-sm visible-xs">
     <div class="col-xs-5"><a href="#/profile/{{sid}}"><i class="fa fa-user"></i></a></div>
     <div class="col-xs-5 col-xs-offset-2 active"><a href="#/subaccounts"><i class="fa fa-users"></i></a></div>
 </div>
 
 <div class="row">
-    <div class="col-md-2 accounts-tabs hidden-xs">
+    <div class="col-md-2 accounts-tabs hidden-sm hidden-xs">
         <div class=""><a href="#/profile/{{sid}}">Main Account</a></div>
         <div class="active"><a href="#/subaccounts">Sub Accounts</a></div>
     </div>
@@ -47,7 +47,7 @@
                 <td class="sub-accounts-list-account-sid">
                     <div class="fit-to-size">{{ subAccount.sid }}</div>
                 </td>
-                <td class="sub-accounts-list-role hidden-xs hidden-sm">
+                <td class="sub-accounts-list-role hidden-xs">
                     <div class="fit-to-size">{{ subAccount.role || "Administrator" }}</div>
                 </td>
                 <td class="sub-accounts-list-status">

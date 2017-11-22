@@ -12,35 +12,31 @@
         </div>
     </div>
 
-<!--    <div class="row">&nbsp;</div>-->
+    <div class="row">&nbsp;</div>
 
     <div class="row">
         <div class="col-md-12">
-            <!--
-            <div ng-hide="(appsList | filter:query).length > 0" class="jumbotron">
-                <h2><i class="fa fa-exclamation-circle"></i> No applications found</h2>
-            </div>
-            -->
 
-            <div ng-hide="(appsList | filter:query).length > 0" class="jumbotron rc-no-items">
+            <div ng-hide="!appsList || (appsList | filter:query).length > 0" class="jumbotron rc-no-items">
                 <h1><i class="fa fa-cogs"></i> </h1>
                 <h2>No applications found</h2>
-                <h5 ng-show="!appsList || appsList.length==0">Let's build something!</h5>
+                <h5>Let's build something!</h5>
             </div>
 
-            <table ng-show="(appsList | filter:query).length > 0" class="table table-hover apps-list rc-list" style="table-layout: fixed;" ng-cloak>
-                <thead style="color: #4a4a4b;">
+            <table ng-show="(appsList | filter:query).length > 0" class="table table-hover apps-list rc-list" ng-cloak>
+                <thead>
                 <th class="apps-list-name">Name</th>
                 <th class="apps-list-type">Type</th>
-                <th class="apps-list-number hidden-xs" >Number</th>
+                <th class="apps-list-number hidden-xs">Numbers</th>
+                <th class="apps-list-action visible-xs">&nbsp</th>
                 </thead>
-                <tbody style="color: #6d6e70;">
+                <tbody>
                 <tr class="number-row" ng-repeat="app in filtered = (appsList | filter:query)">
                     <td class="apps-list-name">
                         <div><a class="rc-link" href="#/applications/{{app.sid}}">{{ app.friendly_name }}</a></div>
                         <div class="visible-xs">
-                            <span ng-show="app.numbers[0].phone_number">{{ app.numbers[0].phone_number }}<span ng-show="app.numbers[1]"> and more</span></span><!-- <a ng-hide="app.numbers[0].phone_number" href="#/numbers/incoming">assign</a> -->
-                            <span ng-show="!app.numbers[0].phone_number"><a href="#/numbers/incoming">assign</a></span>
+                            <span ng-show="app.numbers[0].phone_number">{{ app.numbers[0].phone_number }}<span ng-show="app.numbers[1]"> and {{ app.numbers.length - 1 }} more</span></span><!-- <a ng-hide="app.numbers[0].phone_number" href="#/numbers/incoming">assign</a> -->
+                            <span ng-show="!app.numbers[0].phone_number"><a href="#/numbers/incoming">None. Click to assign</a></span>
                         </div>
                     </td>
                     <td class="apps-list-type">
@@ -51,16 +47,25 @@
                             {{ app.rcml_url | appProvider }}
                         </div>
                     </td>
-                    <td class="apps-list-number hidden-xs" >
-                        <span ng-show="app.numbers[0].phone_number">{{ app.numbers[0].phone_number }}<span ng-show="app.numbers[1]"> and more</span></span><!-- <a ng-hide="app.numbers[0].phone_number" href="#/numbers/incoming">assign</a> -->
-                        <span ng-show="!app.numbers[0].phone_number" uib-tooltip="This application is not assigned to any numbers" tooltip-append-to-body="true" tooltip-popup-delay="1000"><a href="#/numbers/incoming">assign</a></span>
+                    <td class="apps-list-number hidden-xs">
+                        <span ng-show="app.numbers[0].phone_number">{{ app.numbers[0].phone_number }}<span ng-show="app.numbers[1]"> and {{ app.numbers.length - 1 }} more</span></span><!-- <a ng-hide="app.numbers[0].phone_number" href="#/numbers/incoming">assign</a> -->
+                        <span ng-show="!app.numbers[0].phone_number" uib-tooltip="This application is not assigned to any numbers" tooltip-append-to-body="true" tooltip-popup-delay="1000"><a href="#/numbers/incoming">None. Click to assign</a></span>
+                    </td>
+                    <td class="apps-list-action text-right visible-xs">
+                        <div class="btn-delete-div"><i class="fa fa-chevron-right"></i></div>
                     </td>
                 </tr>
                 </tbody>
+                <tfoot>
+                <td colspan="3">
+                    <div class="row">
+                        <div class="col-md-4">
+                            <small class="rc-list-summary">1 to {{ (appsList | filter:query).length }} of {{ (appsList | filter:query).length }} Application{{ (appsList | filter:query).length === 1 ? "" : "s" }}</small>
+                        </div>
+                    </div>
+                </td>
+                </tfoot>
             </table>
         </div>
-    </div>
-    <div class="row">
-        <div class="col-md-3 apps-list-navigation" ng-hide="!appsList || appsList.length==0">Showing {{(appsList | filter:query).length}} from {{appsList.length}} Applications</div>
     </div>
 </div>
