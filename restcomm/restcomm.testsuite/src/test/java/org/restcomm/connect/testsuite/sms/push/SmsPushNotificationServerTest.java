@@ -57,14 +57,15 @@ import static com.github.tomakehurst.wiremock.client.WireMock.*;
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertTrue;
 import org.junit.experimental.categories.Category;
+import org.restcomm.connect.commons.annotations.FeatureCoreTests;
 import org.restcomm.connect.commons.annotations.ParallelClassTests;
-import org.restcomm.connect.commons.annotations.WithInMinsTests;
+import org.restcomm.connect.commons.annotations.WithInSecsTests;
 
 /**
  * @author oleg.agafonov@telestax.com (Oleg Agafonov)
  */
 @RunWith(Arquillian.class)
-@Category(value={WithInMinsTests.class, ParallelClassTests.class})
+@Category(value={WithInSecsTests.class, ParallelClassTests.class})
 public class SmsPushNotificationServerTest {
 
     private final static Logger logger = Logger.getLogger(SmsPushNotificationServerTest.class.getName());
@@ -149,6 +150,7 @@ public class SmsPushNotificationServerTest {
     }
 
     @Test
+    @Category(value={FeatureCoreTests.class})
     public void testB2BUAMessage() throws ParseException, InterruptedException, IOException {
         stubFor(post(urlPathEqualTo("/api/notifications"))
                 .withHeader("Content-Type", matching("application/json;.*"))
@@ -193,6 +195,7 @@ public class SmsPushNotificationServerTest {
     }
 
     @Test
+    @Category(value={FeatureCoreTests.class})
     public void testSmsEndpointMessage() throws ParseException {
 
         stubFor(post(urlPathEqualTo("/api/notifications"))

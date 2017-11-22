@@ -53,10 +53,12 @@ import java.util.List;
 import java.util.Map;
 import org.junit.experimental.categories.Category;
 import org.restcomm.connect.commons.Version;
+import org.restcomm.connect.commons.annotations.FeatureAltTests;
+import org.restcomm.connect.commons.annotations.FeatureCoreTests;
 import org.restcomm.connect.commons.annotations.ParallelClassTests;
-import org.restcomm.connect.commons.annotations.WithInMinsTests;
 import org.restcomm.connect.testsuite.NetworkPortAssigner;
 import org.restcomm.connect.commons.annotations.UnstableTests;
+import org.restcomm.connect.commons.annotations.WithInSecsTests;
 import org.restcomm.connect.testsuite.WebArchiveUtil;
 
 /**
@@ -64,7 +66,7 @@ import org.restcomm.connect.testsuite.WebArchiveUtil;
  *
  */
 @RunWith(Arquillian.class)
-@Category(value={WithInMinsTests.class, ParallelClassTests.class})
+@Category(value={WithInSecsTests.class, ParallelClassTests.class})
 public class SmsEndpointTest {
     private static Logger logger = Logger.getLogger(SmsEndpointTest.class);
     private static final String version = Version.getVersion();
@@ -154,6 +156,7 @@ public class SmsEndpointTest {
     }
 
     @Test
+    @Category(value={FeatureCoreTests.class})
     public void sendSmsTest() {
         SipCall bobCall = bobPhone.createSipCall();
         bobCall.listenForMessage();
@@ -175,6 +178,7 @@ public class SmsEndpointTest {
     }
 
     @Test
+    @Category(value={FeatureAltTests.class})
     public void sendSmsTestToClientAlice() throws ParseException {
 
         SipURI uri = aliceSipStack.getAddressFactory().createSipURI(null, restcommContact);
@@ -207,7 +211,7 @@ public class SmsEndpointTest {
      * @throws ParseException
      */
     @Test
-    @Category(UnstableTests.class)
+    @Category(value={FeatureAltTests.class, UnstableTests.class})
     public void sendSmsTestToClientExistingInDifferentOrganizations() throws ParseException {
     	// Prepare alice org2 phone to receive call
         SipURI uri = aliceSipStackOrg2.getAddressFactory().createSipURI(null, restcommContact);
@@ -240,6 +244,7 @@ public class SmsEndpointTest {
     }
 
     @Test
+    @Category(value={FeatureCoreTests.class})
     public void sendSmsTestToAlice() throws ParseException {
 
         SipURI uri = aliceSipStack.getAddressFactory().createSipURI(null, restcommContact);
@@ -266,6 +271,7 @@ public class SmsEndpointTest {
     }
 
     @Test
+    @Category(value={FeatureAltTests.class})
     public void sendSmsTestGSMEncoding() {
         SipCall bobCall = bobPhone.createSipCall();
         bobCall.listenForMessage();
@@ -287,6 +293,7 @@ public class SmsEndpointTest {
     }
 
     @Test
+    @Category(value={FeatureAltTests.class})
     public void sendSmsTestUCS2Encoding() {
         SipCall bobCall = bobPhone.createSipCall();
         bobCall.listenForMessage();
@@ -310,6 +317,7 @@ public class SmsEndpointTest {
     }
 
     @Test
+    @Category(value={FeatureAltTests.class})
     public void sendSmsTestWithCustomHeaders() {
         String myFirstHeaderName = "X-Custom-Header-1";
         String myFirstHeaderValue = "X Custom Header Value 1";

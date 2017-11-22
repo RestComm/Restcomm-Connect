@@ -46,8 +46,10 @@ import org.junit.Test;
 import org.junit.experimental.categories.Category;
 import org.junit.runner.RunWith;
 import org.restcomm.connect.commons.Version;
+import org.restcomm.connect.commons.annotations.FeatureCoreTests;
+import org.restcomm.connect.commons.annotations.FeatureExpTests;
 import org.restcomm.connect.commons.annotations.ParallelClassTests;
-import org.restcomm.connect.commons.annotations.WithInMinsTests;
+import org.restcomm.connect.commons.annotations.WithInSecsTests;
 import org.restcomm.connect.testsuite.NetworkPortAssigner;
 import org.restcomm.connect.testsuite.WebArchiveUtil;
 
@@ -56,7 +58,7 @@ import org.restcomm.connect.testsuite.WebArchiveUtil;
  *
  */
 @RunWith(Arquillian.class)
-@Category(value={WithInMinsTests.class, ParallelClassTests.class})
+@Category(value={WithInSecsTests.class, ParallelClassTests.class})
 public class SmsOutTest {
 
     private final static Logger logger = Logger.getLogger(SmsOutTest.class);
@@ -123,6 +125,7 @@ public class SmsOutTest {
     }
 
     @Test
+    @Category(value={FeatureExpTests.class})
     public void testSendSmsToInvalidNumber() throws ParseException, InterruptedException {
         SipCall outboundDestCall = outboundDestPhone.createSipCall();
         outboundDestCall.listenForMessage();
@@ -149,6 +152,7 @@ public class SmsOutTest {
     }
 
     @Test
+    @Category(value={FeatureCoreTests.class})
     public void testSendSmsToValidNumber() throws ParseException, InterruptedException {
         SipCall outboundDestCall = outboundDestPhone.createSipCall();
         outboundDestCall.listenForMessage();
