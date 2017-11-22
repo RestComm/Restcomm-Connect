@@ -20,9 +20,30 @@
 
 package org.restcomm.connect.testsuite.telephony;
 
-import com.github.tomakehurst.wiremock.junit.WireMockRule;
-import com.github.tomakehurst.wiremock.verification.LoggedRequest;
-import com.google.gson.JsonObject;
+import static com.github.tomakehurst.wiremock.client.WireMock.aResponse;
+import static com.github.tomakehurst.wiremock.client.WireMock.findAll;
+import static com.github.tomakehurst.wiremock.client.WireMock.get;
+import static com.github.tomakehurst.wiremock.client.WireMock.getRequestedFor;
+import static com.github.tomakehurst.wiremock.client.WireMock.stubFor;
+import static com.github.tomakehurst.wiremock.client.WireMock.urlPathEqualTo;
+import static com.github.tomakehurst.wiremock.client.WireMock.urlPathMatching;
+import static org.cafesip.sipunit.SipAssert.assertLastOperationSuccess;
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertNotNull;
+import static org.junit.Assert.assertTrue;
+
+import java.net.MalformedURLException;
+import java.net.URL;
+import java.text.ParseException;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+
+import javax.sip.address.SipURI;
+import javax.sip.message.Response;
+
 import org.apache.log4j.Logger;
 import org.cafesip.sipunit.Credential;
 import org.cafesip.sipunit.SipCall;
@@ -40,38 +61,21 @@ import org.junit.Before;
 import org.junit.BeforeClass;
 import org.junit.Rule;
 import org.junit.Test;
+import org.junit.experimental.categories.Category;
 import org.junit.runner.RunWith;
 import org.restcomm.connect.commons.Version;
+import org.restcomm.connect.commons.annotations.FeatureAltTests;
+import org.restcomm.connect.commons.annotations.FeatureExpTests;
+import org.restcomm.connect.commons.annotations.ParallelClassTests;
+import org.restcomm.connect.commons.annotations.UnstableTests;
+import org.restcomm.connect.testsuite.NetworkPortAssigner;
+import org.restcomm.connect.testsuite.WebArchiveUtil;
 import org.restcomm.connect.testsuite.http.RestcommCallsTool;
 import org.restcomm.connect.testsuite.tools.MonitoringServiceTool;
 
-import javax.sip.address.SipURI;
-import javax.sip.message.Response;
-import java.net.MalformedURLException;
-import java.net.URL;
-import java.text.ParseException;
-import java.util.Arrays;
-import java.util.List;
-
-import static com.github.tomakehurst.wiremock.client.WireMock.aResponse;
-import static com.github.tomakehurst.wiremock.client.WireMock.findAll;
-import static com.github.tomakehurst.wiremock.client.WireMock.get;
-import static com.github.tomakehurst.wiremock.client.WireMock.getRequestedFor;
-import static com.github.tomakehurst.wiremock.client.WireMock.stubFor;
-import static com.github.tomakehurst.wiremock.client.WireMock.urlPathEqualTo;
-import static com.github.tomakehurst.wiremock.client.WireMock.urlPathMatching;
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.Map;
-import static org.cafesip.sipunit.SipAssert.assertLastOperationSuccess;
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertNotNull;
-import static org.junit.Assert.assertTrue;
-import org.junit.experimental.categories.Category;
-import org.restcomm.connect.commons.annotations.FeatureAltTests;
-import org.restcomm.connect.commons.annotations.ParallelClassTests;
-import org.restcomm.connect.testsuite.NetworkPortAssigner;
-import org.restcomm.connect.testsuite.WebArchiveUtil;
+import com.github.tomakehurst.wiremock.junit.WireMockRule;
+import com.github.tomakehurst.wiremock.verification.LoggedRequest;
+import com.google.gson.JsonObject;
 
 /**
  * Test for Dial Action attribute. Reference: https://www.twilio.com/docs/api/twiml/dial#attributes-action The 'action'
@@ -81,7 +85,7 @@ import org.restcomm.connect.testsuite.WebArchiveUtil;
  *
  */
 @RunWith(Arquillian.class)
-@Category(value={ParallelClassTests.class, FeatureAltTests.class})
+@Category(value={ParallelClassTests.class})
 public class CallLifecycleAnswerDelayTest {
 
     private final static Logger logger = Logger.getLogger(CallLifecycleAnswerDelayTest.class.getName());
@@ -212,6 +216,7 @@ public class CallLifecycleAnswerDelayTest {
     }
 
     @Test
+    @Category({FeatureExpTests.class, UnstableTests.class})
     public void testDialCancelBeforeDialingClientAliceAfterRinging() throws ParseException, InterruptedException, MalformedURLException {
 
         stubFor(get(urlPathEqualTo("/1111"))
@@ -282,6 +287,7 @@ public class CallLifecycleAnswerDelayTest {
 
     private String dialAliceRcml = "<Response><Dial><Client>alice</Client></Dial></Response>";
     @Test
+    @Category(FeatureAltTests.class)
     public void testDialClientAlice() throws ParseException, InterruptedException, MalformedURLException {
 
         stubFor(get(urlPathEqualTo("/1111"))
@@ -380,6 +386,7 @@ public class CallLifecycleAnswerDelayTest {
     private String dialNumberRcml = "<Response><Dial><Number>+131313</Number></Dial></Response>";
 
     @Test
+    @Category(FeatureAltTests.class)
     public void testDialNumberPstn() throws ParseException, InterruptedException, MalformedURLException {
 
         stubFor(get(urlPathEqualTo("/1111"))
@@ -451,6 +458,7 @@ public class CallLifecycleAnswerDelayTest {
     }
 
     @Test
+    @Category(FeatureExpTests.class)
     public void testDialNumberPstnRegisteredClientTimesOutCallDisconnects() throws ParseException, InterruptedException, MalformedURLException {
 
         stubFor(get(urlPathEqualTo("/1111"))
@@ -527,6 +535,7 @@ public class CallLifecycleAnswerDelayTest {
     }
 
     @Test
+    @Category(FeatureExpTests.class)
     public void testDialNumberPstnForbidden() throws ParseException, InterruptedException, MalformedURLException {
 
         stubFor(get(urlPathEqualTo("/1111"))
@@ -606,6 +615,7 @@ public class CallLifecycleAnswerDelayTest {
     }
 
     @Test
+    @Category(FeatureExpTests.class)
     public void testDialNumberPstnBobDisconnects() throws ParseException, InterruptedException, MalformedURLException {
 
         stubFor(get(urlPathEqualTo("/1111"))
@@ -689,6 +699,7 @@ public class CallLifecycleAnswerDelayTest {
 
 
     @Test
+    @Category(FeatureExpTests.class)
     public void testDialNumberPstn_404NotHere() throws ParseException, InterruptedException, MalformedURLException {
 
         stubFor(get(urlPathEqualTo("/1111"))
@@ -772,6 +783,7 @@ public class CallLifecycleAnswerDelayTest {
     private String dialNumberRcmlWithTimeout = "<Response><Dial timeout=\"10\"><Number>+131313</Number></Dial></Response>";
 
     @Test
+    @Category(FeatureExpTests.class)
     public void testDialNumberPstnNoAnswer() throws ParseException, InterruptedException, MalformedURLException {
 
         stubFor(get(urlPathEqualTo("/1111"))
@@ -841,6 +853,7 @@ public class CallLifecycleAnswerDelayTest {
     }
 
     @Test
+    @Category(FeatureExpTests.class)
     public void testDialNumberPstn_500ServerInternalError() throws ParseException, InterruptedException, MalformedURLException {
 
         stubFor(get(urlPathEqualTo("/1111"))
@@ -902,6 +915,7 @@ public class CallLifecycleAnswerDelayTest {
     }
 
     @Test
+    @Category(FeatureExpTests.class)
     public void testDialNumberPstn_BusyHere() throws ParseException, InterruptedException, MalformedURLException {
 
         stubFor(get(urlPathEqualTo("/1111"))
@@ -965,6 +979,7 @@ public class CallLifecycleAnswerDelayTest {
     private String dialAliceRcmlInvalidRCML = "%%<Response><Dial><Client>alice</Client></Dial></Response>";
 
     @Test
+    @Category(FeatureExpTests.class)
     public void testDialClientAlice_InvalidRCML() throws ParseException, InterruptedException, MalformedURLException {
 
         stubFor(get(urlPathEqualTo("/1111"))
