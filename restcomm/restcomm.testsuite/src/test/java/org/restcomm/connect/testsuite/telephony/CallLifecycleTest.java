@@ -38,7 +38,9 @@ import java.net.URL;
 import java.text.ParseException;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 import javax.sip.address.SipURI;
 import javax.sip.header.Header;
@@ -62,25 +64,21 @@ import org.junit.Before;
 import org.junit.BeforeClass;
 import org.junit.Rule;
 import org.junit.Test;
+import org.junit.experimental.categories.Category;
 import org.junit.runner.RunWith;
 import org.restcomm.connect.commons.Version;
-import org.restcomm.connect.monitoringservice.MonitoringMetrics;
+import org.restcomm.connect.commons.annotations.FeatureAltTests;
+import org.restcomm.connect.commons.annotations.FeatureCoreTests;
+import org.restcomm.connect.commons.annotations.ParallelClassTests;
+import org.restcomm.connect.commons.annotations.UnstableTests;
+import org.restcomm.connect.testsuite.NetworkPortAssigner;
+import org.restcomm.connect.testsuite.WebArchiveUtil;
 import org.restcomm.connect.testsuite.http.RestcommCallsTool;
 import org.restcomm.connect.testsuite.tools.MonitoringServiceTool;
 
 import com.github.tomakehurst.wiremock.junit.WireMockRule;
 import com.github.tomakehurst.wiremock.verification.LoggedRequest;
 import com.google.gson.JsonObject;
-import java.util.HashMap;
-import java.util.Map;
-import org.junit.experimental.categories.Category;
-import org.restcomm.connect.commons.annotations.FeatureCoreTests;
-import org.restcomm.connect.commons.annotations.ParallelClassTests;
-import org.restcomm.connect.commons.annotations.WithInMinsTests;
-import org.restcomm.connect.testsuite.NetworkPortAssigner;
-import org.restcomm.connect.commons.annotations.UnstableTests;
-import org.restcomm.connect.commons.annotations.WithInSecsTests;
-import org.restcomm.connect.testsuite.WebArchiveUtil;
 
 /**
  * Test for Dial Action attribute. Reference: https://www.twilio.com/docs/api/twiml/dial#attributes-action The 'action'
@@ -90,7 +88,7 @@ import org.restcomm.connect.testsuite.WebArchiveUtil;
  *
  */
 @RunWith(Arquillian.class)
-@Category(value={ParallelClassTests.class,FeatureCoreTests.class})
+@Category(value={ParallelClassTests.class})
 public class CallLifecycleTest {
 
     private final static Logger logger = Logger.getLogger(CallLifecycleTest.class.getName());
@@ -247,7 +245,7 @@ public class CallLifecycleTest {
     }
 
     @Test
-    @Category(UnstableTests.class)
+    @Category(FeatureAltTests.class)
     public void testDialCancelBeforeDialingClientAliceAfterTrying() throws ParseException, InterruptedException, MalformedURLException {
 
         stubFor(get(urlPathEqualTo("/1111"))
@@ -307,6 +305,7 @@ public class CallLifecycleTest {
     }
 
     @Test
+    @Category(FeatureAltTests.class)
     public void testDialCancelBeforeDialingClientAliceAfterRinging() throws ParseException, InterruptedException, MalformedURLException {
 
         stubFor(get(urlPathEqualTo("/1111"))
@@ -385,6 +384,7 @@ public class CallLifecycleTest {
 
     private String dialAliceRcml = "<Response><Dial><Client>alice</Client></Dial></Response>";
     @Test
+    @Category(FeatureCoreTests.class)
     public void testDialClientAlice() throws ParseException, InterruptedException, MalformedURLException {
 
         stubFor(get(urlPathEqualTo("/1111"))
@@ -488,6 +488,7 @@ public class CallLifecycleTest {
     }
 
     @Test
+    @Category(FeatureCoreTests.class)//its core bcz of cloud
     public void testDialClientAliceBehindLB() throws ParseException, InterruptedException, MalformedURLException {
 
         stubFor(get(urlPathEqualTo("/1111"))
@@ -596,6 +597,7 @@ public class CallLifecycleTest {
     }
 
     @Test
+    @Category(FeatureCoreTests.class)
     public void testDialClient_CheckVIParameters() throws ParseException, InterruptedException, MalformedURLException {
 
         stubFor(get(urlPathEqualTo("/1111"))
@@ -670,6 +672,7 @@ public class CallLifecycleTest {
 
     private String dialAliceRcmlWithTimeLimit = "<Response><Dial timeLimit=\"10\"><Client>alice</Client></Dial></Response>";
     @Test
+    @Category({UnstableTests.class, FeatureAltTests.class})
     public void testDialClientAliceWithTimeLimit() throws ParseException, InterruptedException, MalformedURLException {
 
         stubFor(get(urlPathEqualTo("/1111"))
@@ -845,6 +848,7 @@ public class CallLifecycleTest {
 
     private String dialInvalidClientRcmlAndThenAlice = "<Response><Dial><Client>invalidClient</Client></Dial><Dial><Client>alice</Client></Dial></Response>";
     @Test
+    @Category(UnstableTests.class)
     public void testDialInvalidClientAndThenAlice() throws ParseException, InterruptedException, MalformedURLException {
 
         stubFor(get(urlPathEqualTo("/1111"))
@@ -1048,6 +1052,7 @@ public class CallLifecycleTest {
 
     private String dialNumberRcml = "<Response><Dial><Number>+131313</Number></Dial></Response>";
     @Test
+    @Category(FeatureCoreTests.class)
     public void testDialNumberPstn() throws ParseException, InterruptedException, MalformedURLException {
 
         stubFor(get(urlPathEqualTo("/1111"))
@@ -1371,6 +1376,7 @@ public class CallLifecycleTest {
     }
 
     @Test
+    @Category(FeatureAltTests.class)
     public void testDialNumberPstnBobDisconnects() throws ParseException, InterruptedException, MalformedURLException {
 
         stubFor(get(urlPathEqualTo("/1111"))
@@ -1855,6 +1861,7 @@ public class CallLifecycleTest {
      * @throws MalformedURLException
      */
     @Test
+    @Category(FeatureAltTests.class)
     public void testSubAccountClientDialsParentAccountNumber() throws ParseException, InterruptedException, MalformedURLException {
 
         stubFor(get(urlPathEqualTo("/1111"))
