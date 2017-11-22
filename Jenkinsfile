@@ -7,9 +7,9 @@ node("cxs-ups-testsuites") {
    // Mark the code build 'stage'....
    stage ("Build") {
      // Run the maven build
-     sh "mvn -f restcomm/pom.xml  clean install -pl '!restcomm.testsuite' -Dmaven.test.failure.ignore=true -Dmaven.test.redirectTestOutputToFile=true"
+     sh "mvn -f restcomm/pom.xml  -T 1.5C clean install -pl '!restcomm.testsuite' -Dmaven.test.failure.ignore=true -Dmaven.test.redirectTestOutputToFile=true"
      //keep this build for later use
-     stash includes: '$env.HOME/.m2/repository/org/restcomm/**', name: 'mavenArtifacts'
+     stash  allowEmpty: true, includes: '$HOME/.m2/repository/org/restcomm/**', name: 'mavenArtifacts'
      junit '**/target/surefire-reports/*.xml'
      //prevent to report this test results two times
      sh "mvn -f restcomm/pom.xml  clean"
