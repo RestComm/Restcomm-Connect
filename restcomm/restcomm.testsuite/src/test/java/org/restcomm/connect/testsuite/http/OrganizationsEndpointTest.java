@@ -14,8 +14,10 @@ import org.jboss.shrinkwrap.api.spec.WebArchive;
 import org.jboss.shrinkwrap.resolver.api.maven.archive.ShrinkWrapMaven;
 import org.junit.BeforeClass;
 import org.junit.Test;
+import org.junit.experimental.categories.Category;
 import org.junit.runner.RunWith;
 import org.restcomm.connect.commons.Version;
+import org.restcomm.connect.commons.annotations.FeatureExpTests;
 
 import com.google.gson.JsonArray;
 import com.google.gson.JsonObject;
@@ -109,6 +111,7 @@ public class OrganizationsEndpointTest extends EndpointTest {
      * this test will try to Read single organization and read list
      */
     @Test
+    @Category(FeatureExpTests.class)
     public void getOrganizationFromDeveloperAccount(){
     	ClientResponse clientResponse = RestcommOrganizationsTool.getInstance().getOrganizationResponse(deploymentUrl.toString(), devAccountSid, devAuthToken, org1);
     	assertTrue(clientResponse!=null);
