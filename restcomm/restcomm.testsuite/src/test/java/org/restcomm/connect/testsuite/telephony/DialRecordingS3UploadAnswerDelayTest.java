@@ -21,8 +21,11 @@ import org.junit.Before;
 import org.junit.BeforeClass;
 import org.junit.Rule;
 import org.junit.Test;
+import org.junit.experimental.categories.Category;
 import org.junit.runner.RunWith;
 import org.restcomm.connect.commons.Version;
+import org.restcomm.connect.commons.annotations.FeatureAltTests;
+import org.restcomm.connect.commons.annotations.ParallelClassTests;
 import org.restcomm.connect.testsuite.http.RestcommCallsTool;
 
 import javax.sip.address.SipURI;
@@ -44,15 +47,12 @@ import static org.cafesip.sipunit.SipAssert.assertLastOperationSuccess;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertTrue;
-import org.junit.experimental.categories.Category;
-import org.restcomm.connect.commons.annotations.FeatureAltTests;
-import org.restcomm.connect.commons.annotations.SequentialClassTests;
 
 /**
  * Created by gvagenas on 08/01/2017.
  */
 @RunWith(Arquillian.class)
-@Category(value={FeatureAltTests.class, SequentialClassTests.class})
+@Category(value={FeatureAltTests.class, ParallelClassTests.class})
 public class DialRecordingS3UploadAnswerDelayTest {
 
 	private final static Logger logger = Logger.getLogger(DialRecordingS3UploadAnswerDelayTest.class.getName());
@@ -324,7 +324,7 @@ public class DialRecordingS3UploadAnswerDelayTest {
 	}
 
 
-	@Deployment(name = "DialRecordingS3UploadTest_Secure", managed = true, testable = false)
+	@Deployment(name = "DialRecordingS3UploadSecureTest", managed = true, testable = false)
 	public static WebArchive createWebArchiveNoGw() {
 		logger.info("Packaging Test App");
 		WebArchive archive = ShrinkWrap.create(WebArchive.class, "restcomm.war");
