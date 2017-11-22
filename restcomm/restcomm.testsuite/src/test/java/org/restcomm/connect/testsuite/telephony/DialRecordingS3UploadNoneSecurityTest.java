@@ -3,7 +3,6 @@ package org.restcomm.connect.testsuite.telephony;
 import com.github.tomakehurst.wiremock.junit.WireMockRule;
 import com.github.tomakehurst.wiremock.verification.LoggedRequest;
 import com.google.gson.JsonArray;
-import com.google.gson.JsonObject;
 import org.apache.log4j.Logger;
 import org.cafesip.sipunit.SipCall;
 import org.cafesip.sipunit.SipPhone;
@@ -17,6 +16,8 @@ import org.jboss.shrinkwrap.api.ShrinkWrap;
 import org.jboss.shrinkwrap.api.spec.WebArchive;
 import org.jboss.shrinkwrap.resolver.api.maven.archive.ShrinkWrapMaven;
 import org.joda.time.DateTime;
+import org.joda.time.format.DateTimeFormat;
+import org.joda.time.format.DateTimeFormatter;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.BeforeClass;
@@ -24,8 +25,9 @@ import org.junit.Rule;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.restcomm.connect.commons.Version;
+import org.restcomm.connect.commons.annotations.FeatureAltTests;
+import org.restcomm.connect.commons.annotations.ParallelClassTests;
 import org.restcomm.connect.testsuite.http.RestcommCallsTool;
-import org.restcomm.connect.testsuite.tools.MonitoringServiceTool;
 
 import javax.sip.address.SipURI;
 import javax.sip.message.Response;
@@ -38,7 +40,6 @@ import java.util.List;
 import static com.github.tomakehurst.wiremock.client.WireMock.aResponse;
 import static com.github.tomakehurst.wiremock.client.WireMock.findAll;
 import static com.github.tomakehurst.wiremock.client.WireMock.get;
-import static com.github.tomakehurst.wiremock.client.WireMock.post;
 import static com.github.tomakehurst.wiremock.client.WireMock.put;
 import static com.github.tomakehurst.wiremock.client.WireMock.putRequestedFor;
 import static com.github.tomakehurst.wiremock.client.WireMock.stubFor;
@@ -48,16 +49,19 @@ import static com.github.tomakehurst.wiremock.client.WireMock.verify;
 import static org.cafesip.sipunit.SipAssert.assertLastOperationSuccess;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
-import static org.junit.Assert.assertNull;
 import static org.junit.Assert.assertTrue;
+import org.junit.experimental.categories.Category;
+import org.restcomm.connect.commons.annotations.SequentialClassTests;
+import org.restcomm.connect.commons.annotations.WithInMinsTests;
 
 /**
  * Created by gvagenas on 08/01/2017.
  */
 @RunWith(Arquillian.class)
-public class DialRecordingS3UploadTest_Secure {
+@Category(value={FeatureAltTests.class, ParallelClassTests.class})
+public class DialRecordingS3UploadNoneSecurityTest {
 
-	private final static Logger logger = Logger.getLogger(DialRecordingS3UploadTest_Secure.class.getName());
+	private final static Logger logger = Logger.getLogger(DialRecordingS3UploadNoneSecurityTest.class.getName());
 
 	private static final String version = Version.getVersion();
 	private static final byte[] bytes = new byte[] { 118, 61, 48, 13, 10, 111, 61, 117, 115, 101, 114, 49, 32, 53, 51, 54, 53,
@@ -215,7 +219,6 @@ public class DialRecordingS3UploadTest_Secure {
 		assertEquals(Response.OK, bobCall.getLastReceivedResponse().getStatusCode());
 
 		bobCall.sendInviteOkAck();
-		DateTime start = DateTime.now();
 		assertTrue(!(bobCall.getLastReceivedResponse().getStatusCode() >= 400));
 		String callSid = bobCall.getLastReceivedResponse().getMessage().getHeader("X-RestComm-CallSid").toString().split(":")[1].trim();
 
@@ -226,36 +229,36 @@ public class DialRecordingS3UploadTest_Secure {
 				null));
 		assertTrue(aliceCall.waitForAck(50 * 1000));
 
-		Thread.sleep(3000);
+		Thread.sleep(3500);
 
 		// hangup.
 		aliceCall.listenForDisconnect();
 		bobCall.disconnect();
-		DateTime end = DateTime.now();
 
 		assertTrue(aliceCall.waitForDisconnect(30 * 1000));
 		assertTrue(aliceCall.respondToDisconnect());
 
-		Thread.sleep(7000);
+		Thread.sleep(1000);
 		//Check recording
 		JsonArray recording = RestcommCallsTool.getInstance().getCallRecordings(deploymentUrl.toString(),adminAccountSid,adminAuthToken,callSid);
 		assertNotNull(recording);
 		assertEquals(1, recording.size());
-		double recordedDuration = (end.getMillis() - start.getMillis())/1000;
 		double duration = recording.get(0).getAsJsonObject().get("duration").getAsDouble();
-		assertEquals(recordedDuration, duration,1.0);
+		assertEquals(3.0 , duration, 0.5);
+		assertTrue(recording.get(0).getAsJsonObject().get("file_uri").getAsString().contains("/restcomm/2012-04-24/Accounts/ACae6e420f425248d6a26948c17a9e2acf/Recordings/"));
 
-		assertTrue(recording.get(0).getAsJsonObject().get("file_uri").getAsString().contains("http://127.0.0.1:8080/restcomm/2012-04-24/Accounts/ACae6e420f425248d6a26948c17a9e2acf/Recordings/"));
-
-		//Since we are in secure mode the s3_uri shouldn't be here
-		assertNull(recording.get(0).getAsJsonObject().get("s3_uri"));
+		assertTrue(recording.get(0).getAsJsonObject().get("s3_uri").getAsString().startsWith("http://127.0.0.1:8090/s3"));
 
 		URL url = new URL(recording.get(0).getAsJsonObject().get("file_uri").getAsString());
 		HttpURLConnection connection = (HttpURLConnection)url.openConnection();
 		connection.setRequestMethod("GET");
 		connection.connect();
 
+		Thread.sleep(1000);
+
 		assertEquals(200, connection.getResponseCode());
+
+		Thread.sleep(6000);
 
 		//Verify S3 Upload
 		List<LoggedRequest> requests = findAll(putRequestedFor(urlMatching("/s3/.*")));
@@ -334,11 +337,11 @@ public class DialRecordingS3UploadTest_Secure {
 		assertNotNull(recording);
 		assertEquals(1, recording.size());
 		double duration = recording.get(0).getAsJsonObject().get("duration").getAsDouble();
-		assertEquals(3.0,duration, 0.5);
-		assertTrue(recording.get(0).getAsJsonObject().get("file_uri").getAsString().contains("restcomm/2012-04-24/Accounts/ACae6e420f425248d6a26948c17a9e2acf/Recordings/"));
+		assertEquals(3.0,duration,0.5);
+		assertTrue(recording.get(0).getAsJsonObject().get("file_uri").getAsString().contains("/restcomm/2012-04-24/Accounts/ACae6e420f425248d6a26948c17a9e2acf/Recordings/"));
 
-		//Since we are in secure mode the s3_uri shouldn't be here
-		assertNull(recording.get(0).getAsJsonObject().get("s3_uri"));
+
+		assertTrue(recording.get(0).getAsJsonObject().get("s3_uri").getAsString().startsWith("http://127.0.0.1:8090/s3"));
 
 		//Verify S3 Upload
 		List<LoggedRequest> requests = findAll(putRequestedFor(urlMatching("/s3/.*")));
@@ -346,260 +349,36 @@ public class DialRecordingS3UploadTest_Secure {
 		verify(1, putRequestedFor(urlMatching("/s3/.*")));
 	}
 
-	final String recordCall = "<Response><Record timeout=\"15\" maxLength=\"60\"/></Response>";
 	@Test
-	public synchronized void testRecordCall() throws InterruptedException, ParseException {
-		stubFor(get(urlPathEqualTo("/1111"))
-				.willReturn(aResponse()
-						.withStatus(200)
-						.withHeader("Content-Type", "text/xml")
-						.withBody(recordCall)));
-
-		stubFor(put(urlPathEqualTo("/s3"))
-				.willReturn(aResponse()
-								.withStatus(200)
-								.withHeader("x-amz-id-2","LriYPLdmOdAiIfgSm/F1YsViT1LW94/xUQxMsF7xiEb1a0wiIOIxl+zbwZ163pt7")
-								.withHeader("x-amz-request-id","0A49CE4060975EAC")
-								.withHeader("Date", DateTime.now().toString())
-								.withHeader("x-amz-expiration", "expiry-date="+DateTime.now().plusDays(3).toString()+"\", rule-id=\"1\"")
-//							.withHeader("ETag", "1b2cf535f27731c974343645a3985328")
-								.withHeader("Server", "AmazonS3")
-				));
-
-		// Phone2 register as alice
-		SipURI uri = aliceSipStack.getAddressFactory().createSipURI(null, "127.0.0.1:5080");
-		assertTrue(alicePhone.register(uri, "alice", "1234", aliceContact, 3600, 3600));
-
-		// Prepare second phone to receive call
-		SipCall aliceCall = alicePhone.createSipCall();
-		aliceCall.listenForIncomingCall();
-
-		// Create outgoing call with first phone
-		final SipCall bobCall = bobPhone.createSipCall();
-		bobCall.initiateOutgoingCall(bobContact, dialRestcomm, null, body, "application", "sdp", null, null);
-		assertLastOperationSuccess(bobCall);
-		assertTrue(bobCall.waitOutgoingCallResponse(5 * 1000));
-		final int response = bobCall.getLastReceivedResponse().getStatusCode();
-		assertTrue(response == Response.TRYING || response == Response.RINGING);
-
-		if (response == Response.TRYING) {
-			assertTrue(bobCall.waitOutgoingCallResponse(5 * 1000));
-			assertEquals(Response.RINGING, bobCall.getLastReceivedResponse().getStatusCode());
-		}
-
-		assertTrue(bobCall.waitOutgoingCallResponse(5 * 1000));
-		assertEquals(Response.OK, bobCall.getLastReceivedResponse().getStatusCode());
-
-		bobCall.sendInviteOkAck();
-		assertTrue(!(bobCall.getLastReceivedResponse().getStatusCode() >= 400));
-		String callSid = bobCall.getLastReceivedResponse().getMessage().getHeader("X-RestComm-CallSid").toString().split(":")[1].trim();
-
-		JsonObject metrics = MonitoringServiceTool.getInstance().getMetrics(deploymentUrl.toString(),adminAccountSid, adminAuthToken);
-		assertNotNull(metrics);
-		int liveCalls = metrics.getAsJsonObject("Metrics").get("LiveCalls").getAsInt();
-		logger.info("LiveCalls: "+liveCalls);
-		int liveCallsArraySize = metrics.getAsJsonArray("LiveCallDetails").size();
-		logger.info("LiveCallsArraySize: "+liveCallsArraySize);
-		assertEquals(1,liveCalls);
-		assertEquals(1, liveCallsArraySize);
-
-		Thread.sleep(3000);
-
-		bobCall.disconnect();
-
-		Thread.sleep(7000);
-
-		//Check recording
+	public void testGetRecordingWithOldS3Url() {
+		String callSid = "CA2d3f6354e75e46b3ac76f534129ff511";
+		DateTimeFormatter formatter = DateTimeFormat.forPattern("yyyy-MM-dd HH:mm:ss.SSSSSS");
+		DateTime lastDateUpdate = formatter.parseDateTime("2017-04-05 12:57:35.583000");
 		JsonArray recording = RestcommCallsTool.getInstance().getCallRecordings(deploymentUrl.toString(),adminAccountSid,adminAuthToken,callSid);
 		assertNotNull(recording);
 		assertEquals(1, recording.size());
 		double duration = recording.get(0).getAsJsonObject().get("duration").getAsDouble();
-		assertEquals(3.0, duration,1);
-		assertTrue(recording.get(0).getAsJsonObject().get("file_uri").getAsString().contains("restcomm/2012-04-24/Accounts/ACae6e420f425248d6a26948c17a9e2acf/Recordings/"));
+		assertTrue(duration==3.0);
+		assertTrue(!recording.get(0).getAsJsonObject().get("file_uri").getAsString().startsWith("https://s3.amazonaws.com"));
 
-		//Since we are in secure mode the s3_uri shouldn't be here
-		assertNull(recording.get(0).getAsJsonObject().get("s3_uri"));
+		//Wed, 5 Apr 2017 13:33:03 +0300
+		formatter = DateTimeFormat.forPattern("EEE, d MMM yyyy HH:mm:ss Z");
 
-		//Verify S3 Upload
-		List<LoggedRequest> requests = findAll(putRequestedFor(urlMatching("/s3/.*")));
-		assertEquals(1, requests.size());
-		verify(1, putRequestedFor(urlMatching("/s3/.*")));
+		DateTime dateUpdated = formatter.parseDateTime(recording.get(0).getAsJsonObject().get("date_updated").getAsString());
+		assertTrue(dateUpdated.isAfter(lastDateUpdate));
+		String expectedS3Uri = "http://127.0.0.1:8090/s3/restcomm-as-a-service/logs/RE7a2345a37a2a4f18a2a715e8f352c4ed.wav";
+		assertEquals(expectedS3Uri, recording.get(0).getAsJsonObject().get("s3_uri").getAsString());
 
-		metrics = MonitoringServiceTool.getInstance().getMetrics(deploymentUrl.toString(),adminAccountSid, adminAuthToken);
-		assertNotNull(metrics);
-		liveCalls = metrics.getAsJsonObject("Metrics").get("LiveCalls").getAsInt();
-		logger.info("LiveCalls: "+liveCalls);
-		liveCallsArraySize = metrics.getAsJsonArray("LiveCallDetails").size();
-		logger.info("LiveCallsArraySize: "+liveCallsArraySize);
-		assertEquals(0,liveCalls);
-		assertEquals(0, liveCallsArraySize);
-	}
-
-	final String recordCallWithAction = "<Response><Record timeout=\"15\" maxLength=\"60\" action=\"http://127.0.0.1:8090/record-action\"/></Response>";
-	final String hangupRcml = "<Response><Hangup/></Response>";
-	@Test
-	public synchronized void testRecordCallWithAction() throws InterruptedException, ParseException {
-		stubFor(get(urlPathEqualTo("/1111"))
-				.willReturn(aResponse()
-						.withStatus(200)
-						.withHeader("Content-Type", "text/xml")
-						.withBody(recordCallWithAction)));
-
-		stubFor(post(urlPathEqualTo("/record-action"))
-				.willReturn(aResponse()
-						.withStatus(200)
-						.withHeader("Content-Type", "text/xml")
-						.withBody(hangupRcml)));
-
-		// Create outgoing call with first phone
-		final SipCall bobCall = bobPhone.createSipCall();
-		bobCall.initiateOutgoingCall(bobContact, dialRestcomm, null, body, "application", "sdp", null, null);
-		assertLastOperationSuccess(bobCall);
-		assertTrue(bobCall.waitOutgoingCallResponse(5 * 1000));
-		final int response = bobCall.getLastReceivedResponse().getStatusCode();
-		assertTrue(response == Response.TRYING || response == Response.RINGING);
-
-		if (response == Response.TRYING) {
-			assertTrue(bobCall.waitOutgoingCallResponse(5 * 1000));
-			assertEquals(Response.RINGING, bobCall.getLastReceivedResponse().getStatusCode());
-		}
-
-		assertTrue(bobCall.waitOutgoingCallResponse(5 * 1000));
-		assertEquals(Response.OK, bobCall.getLastReceivedResponse().getStatusCode());
-
-		bobCall.sendInviteOkAck();
-		assertTrue(!(bobCall.getLastReceivedResponse().getStatusCode() >= 400));
-		String callSid = bobCall.getLastReceivedResponse().getMessage().getHeader("X-RestComm-CallSid").toString().split(":")[1].trim();
-
-		JsonObject metrics = MonitoringServiceTool.getInstance().getMetrics(deploymentUrl.toString(),adminAccountSid, adminAuthToken);
-		assertNotNull(metrics);
-		int liveCalls = metrics.getAsJsonObject("Metrics").get("LiveCalls").getAsInt();
-		logger.info("LiveCalls: "+liveCalls);
-		int liveCallsArraySize = metrics.getAsJsonArray("LiveCallDetails").size();
-		logger.info("LiveCallsArraySize: "+liveCallsArraySize);
-		assertEquals(1,liveCalls);
-		assertEquals(1, liveCallsArraySize);
-
-		Thread.sleep(3000);
-
-		bobCall.disconnect();
-
-		Thread.sleep(7000);
-
-		//Check recording
-		JsonArray recording = RestcommCallsTool.getInstance().getCallRecordings(deploymentUrl.toString(),adminAccountSid,adminAuthToken,callSid);
+		//Second time we access the recording THERE MUST BE NO update since we fixed S3_URI and FILE_URI in the previous call
+		recording = RestcommCallsTool.getInstance().getCallRecordings(deploymentUrl.toString(),adminAccountSid,adminAuthToken,callSid);
 		assertNotNull(recording);
-		assertEquals(1, recording.size());
-		double duration = recording.get(0).getAsJsonObject().get("duration").getAsDouble();
-		assertEquals(3.0, duration,1);
-		assertTrue(recording.get(0).getAsJsonObject().get("file_uri").getAsString().contains("restcomm/2012-04-24/Accounts/ACae6e420f425248d6a26948c17a9e2acf/Recordings/"));
 
-		//Since we are in secure mode the s3_uri shouldn't be here
-		assertNull(recording.get(0).getAsJsonObject().get("s3_uri"));
-
-		//Verify S3 Upload
-		List<LoggedRequest> requests = findAll(putRequestedFor(urlMatching("/s3/.*")));
-		assertEquals(1, requests.size());
-		verify(1, putRequestedFor(urlMatching("/s3/.*")));
-
-		metrics = MonitoringServiceTool.getInstance().getMetrics(deploymentUrl.toString(),adminAccountSid, adminAuthToken);
-		assertNotNull(metrics);
-		liveCalls = metrics.getAsJsonObject("Metrics").get("LiveCalls").getAsInt();
-		logger.info("LiveCalls: "+liveCalls);
-		liveCallsArraySize = metrics.getAsJsonArray("LiveCallDetails").size();
-		logger.info("LiveCallsArraySize: "+liveCallsArraySize);
-		assertEquals(0,liveCalls);
-		assertEquals(0, liveCallsArraySize);
+		DateTime dateUpdated2 = formatter.parseDateTime(recording.get(0).getAsJsonObject().get("date_updated").getAsString());
+		assertTrue(!dateUpdated2.isAfter(dateUpdated));
+		assertEquals(expectedS3Uri, recording.get(0).getAsJsonObject().get("s3_uri").getAsString());
 	}
 
-	@Test
-	public synchronized void testRecordCallWithActionWithMaxRecordingReached() throws InterruptedException, ParseException {
-		stubFor(get(urlPathEqualTo("/1111"))
-				.willReturn(aResponse()
-						.withStatus(200)
-						.withHeader("Content-Type", "text/xml")
-						.withBody(recordCallWithAction)));
-
-		stubFor(post(urlPathEqualTo("/record-action"))
-				.willReturn(aResponse()
-						.withStatus(200)
-						.withHeader("Content-Type", "text/xml")
-						.withBody(hangupRcml)));
-
-		stubFor(put(urlPathEqualTo("/s3"))
-				.willReturn(aResponse()
-								.withStatus(200)
-								.withHeader("x-amz-id-2","LriYPLdmOdAiIfgSm/F1YsViT1LW94/xUQxMsF7xiEb1a0wiIOIxl+zbwZ163pt7")
-								.withHeader("x-amz-request-id","0A49CE4060975EAC")
-								.withHeader("Date", DateTime.now().toString())
-								.withHeader("x-amz-expiration", "expiry-date="+DateTime.now().plusDays(3).toString()+"\", rule-id=\"1\"")
-//							.withHeader("ETag", "1b2cf535f27731c974343645a3985328")
-								.withHeader("Server", "AmazonS3")
-				));
-
-		// Create outgoing call with first phone
-		final SipCall bobCall = bobPhone.createSipCall();
-		bobCall.initiateOutgoingCall(bobContact, dialRestcomm, null, body, "application", "sdp", null, null);
-		assertLastOperationSuccess(bobCall);
-		assertTrue(bobCall.waitOutgoingCallResponse(5 * 1000));
-		final int response = bobCall.getLastReceivedResponse().getStatusCode();
-		assertTrue(response == Response.TRYING || response == Response.RINGING);
-
-		if (response == Response.TRYING) {
-			assertTrue(bobCall.waitOutgoingCallResponse(5 * 1000));
-			assertEquals(Response.RINGING, bobCall.getLastReceivedResponse().getStatusCode());
-		}
-
-		assertTrue(bobCall.waitOutgoingCallResponse(5 * 1000));
-		assertEquals(Response.OK, bobCall.getLastReceivedResponse().getStatusCode());
-
-		bobCall.sendInviteOkAck();
-		assertTrue(!(bobCall.getLastReceivedResponse().getStatusCode() >= 400));
-		String callSid = bobCall.getLastReceivedResponse().getMessage().getHeader("X-RestComm-CallSid").toString().split(":")[1].trim();
-
-		JsonObject metrics = MonitoringServiceTool.getInstance().getMetrics(deploymentUrl.toString(),adminAccountSid, adminAuthToken);
-		assertNotNull(metrics);
-		int liveCalls = metrics.getAsJsonObject("Metrics").get("LiveCalls").getAsInt();
-		logger.info("LiveCalls: "+liveCalls);
-		int liveCallsArraySize = metrics.getAsJsonArray("LiveCallDetails").size();
-		logger.info("LiveCallsArraySize: "+liveCallsArraySize);
-		assertEquals(1,liveCalls);
-		assertEquals(1, liveCallsArraySize);
-
-		bobCall.listenForDisconnect();
-		assertTrue(bobCall.waitForDisconnect(70000));
-		assertTrue(bobCall.respondToDisconnect());
-
-		Thread.sleep(7000);
-
-		//Check recording
-		JsonArray recording = RestcommCallsTool.getInstance().getCallRecordings(deploymentUrl.toString(),adminAccountSid,adminAuthToken,callSid);
-		assertNotNull(recording);
-		assertEquals(1, recording.size());
-		double duration = recording.get(0).getAsJsonObject().get("duration").getAsDouble();
-		assertEquals(6.0, duration,0.5);
-
-		assertTrue(recording.get(0).getAsJsonObject().get("file_uri").getAsString().contains("restcomm/2012-04-24/Accounts/ACae6e420f425248d6a26948c17a9e2acf/Recordings/"));
-
-		//Since we are in secure mode the s3_uri shouldn't be here
-		assertNull(recording.get(0).getAsJsonObject().get("s3_uri"));
-
-		//Verify S3 Upload
-		List<LoggedRequest> requests = findAll(putRequestedFor(urlMatching("/s3/.*")));
-		assertEquals(1, requests.size());
-		verify(1, putRequestedFor(urlMatching("/s3/.*")));
-
-		metrics = MonitoringServiceTool.getInstance().getMetrics(deploymentUrl.toString(),adminAccountSid, adminAuthToken);
-		assertNotNull(metrics);
-		liveCalls = metrics.getAsJsonObject("Metrics").get("LiveCalls").getAsInt();
-		logger.info("LiveCalls: "+liveCalls);
-		liveCallsArraySize = metrics.getAsJsonArray("LiveCallDetails").size();
-		logger.info("LiveCallsArraySize: "+liveCallsArraySize);
-		assertEquals(0,liveCalls);
-		assertEquals(0, liveCallsArraySize);
-	}
-
-	@Deployment(name = "DialRecordingS3UploadTest_Secure", managed = true, testable = false)
+	@Deployment(name = "DialRecordingS3UploadSecureTest", managed = true, testable = false)
 	public static WebArchive createWebArchiveNoGw() {
 		logger.info("Packaging Test App");
 		WebArchive archive = ShrinkWrap.create(WebArchive.class, "restcomm.war");
@@ -612,8 +391,8 @@ public class DialRecordingS3UploadTest_Secure {
 		archive.delete("/WEB-INF/data/hsql/restcomm.script");
 		archive.delete("/WEB-INF/classes/application.conf");
 		archive.addAsWebInfResource("sip.xml");
-		archive.addAsWebInfResource("restcomm_recording_s3_upload_secure.xml", "conf/restcomm.xml");
-		archive.addAsWebInfResource("restcomm.script_dialTest_new", "data/hsql/restcomm.script");
+		archive.addAsWebInfResource("restcomm_recording_s3_upload_none_security.xml", "conf/restcomm.xml");
+		archive.addAsWebInfResource("restcomm.script_DialRecording", "data/hsql/restcomm.script");
 		archive.addAsWebInfResource("akka_application.conf", "classes/application.conf");
 		logger.info("Packaged Test App");
 		return archive;
