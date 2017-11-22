@@ -20,9 +20,27 @@
 
 package org.restcomm.connect.testsuite.sms.push;
 
-import com.github.tomakehurst.wiremock.http.RequestListener;
-import com.github.tomakehurst.wiremock.junit.WireMockRule;
-import com.google.gson.JsonObject;
+import static com.github.tomakehurst.wiremock.client.WireMock.aResponse;
+import static com.github.tomakehurst.wiremock.client.WireMock.matching;
+import static com.github.tomakehurst.wiremock.client.WireMock.post;
+import static com.github.tomakehurst.wiremock.client.WireMock.postRequestedFor;
+import static com.github.tomakehurst.wiremock.client.WireMock.stubFor;
+import static com.github.tomakehurst.wiremock.client.WireMock.urlEqualTo;
+import static com.github.tomakehurst.wiremock.client.WireMock.urlPathEqualTo;
+import static com.github.tomakehurst.wiremock.client.WireMock.verify;
+import static org.junit.Assert.assertNotNull;
+import static org.junit.Assert.assertTrue;
+
+import java.io.IOException;
+import java.net.URL;
+import java.text.ParseException;
+import java.util.HashMap;
+import java.util.Map;
+
+import javax.sip.address.SipURI;
+import javax.sip.message.Request;
+import javax.sip.message.Response;
+
 import org.apache.log4j.Logger;
 import org.cafesip.sipunit.Credential;
 import org.cafesip.sipunit.SipCall;
@@ -38,28 +56,18 @@ import org.junit.Before;
 import org.junit.BeforeClass;
 import org.junit.Rule;
 import org.junit.Test;
+import org.junit.experimental.categories.Category;
 import org.junit.runner.RunWith;
+import org.restcomm.connect.commons.annotations.ParallelClassTests;
+import org.restcomm.connect.commons.annotations.WithInSecsTests;
 import org.restcomm.connect.testsuite.NetworkPortAssigner;
 import org.restcomm.connect.testsuite.WebArchiveUtil;
 import org.restcomm.connect.testsuite.http.CreateClientsTool;
 import org.restcomm.connect.testsuite.sms.SmsEndpointTool;
 
-import javax.sip.address.SipURI;
-import javax.sip.message.Request;
-import javax.sip.message.Response;
-import java.io.IOException;
-import java.net.URL;
-import java.text.ParseException;
-import java.util.HashMap;
-import java.util.Map;
-
-import static com.github.tomakehurst.wiremock.client.WireMock.*;
-import static org.junit.Assert.assertNotNull;
-import static org.junit.Assert.assertTrue;
-import org.junit.experimental.categories.Category;
-import org.restcomm.connect.commons.annotations.FeatureCoreTests;
-import org.restcomm.connect.commons.annotations.ParallelClassTests;
-import org.restcomm.connect.commons.annotations.WithInSecsTests;
+import com.github.tomakehurst.wiremock.http.RequestListener;
+import com.github.tomakehurst.wiremock.junit.WireMockRule;
+import com.google.gson.JsonObject;
 
 /**
  * @author oleg.agafonov@telestax.com (Oleg Agafonov)
@@ -150,7 +158,6 @@ public class SmsPushNotificationServerTest {
     }
 
     @Test
-    @Category(value={FeatureCoreTests.class})
     public void testB2BUAMessage() throws ParseException, InterruptedException, IOException {
         stubFor(post(urlPathEqualTo("/api/notifications"))
                 .withHeader("Content-Type", matching("application/json;.*"))
@@ -195,7 +202,6 @@ public class SmsPushNotificationServerTest {
     }
 
     @Test
-    @Category(value={FeatureCoreTests.class})
     public void testSmsEndpointMessage() throws ParseException {
 
         stubFor(post(urlPathEqualTo("/api/notifications"))

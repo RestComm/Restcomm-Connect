@@ -21,11 +21,14 @@ package org.restcomm.connect.testsuite.sms;
 
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertTrue;
-import gov.nist.javax.sip.header.SIPHeader;
 
 import java.net.URL;
 import java.text.ParseException;
+import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
 
 import javax.sip.address.SipURI;
 import javax.sip.message.Request;
@@ -44,22 +47,19 @@ import org.junit.After;
 import org.junit.Before;
 import org.junit.BeforeClass;
 import org.junit.Test;
-import org.junit.runner.RunWith;
-
-import com.google.gson.JsonObject;
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.List;
-import java.util.Map;
 import org.junit.experimental.categories.Category;
+import org.junit.runner.RunWith;
 import org.restcomm.connect.commons.Version;
 import org.restcomm.connect.commons.annotations.FeatureAltTests;
-import org.restcomm.connect.commons.annotations.FeatureCoreTests;
 import org.restcomm.connect.commons.annotations.ParallelClassTests;
-import org.restcomm.connect.testsuite.NetworkPortAssigner;
 import org.restcomm.connect.commons.annotations.UnstableTests;
 import org.restcomm.connect.commons.annotations.WithInSecsTests;
+import org.restcomm.connect.testsuite.NetworkPortAssigner;
 import org.restcomm.connect.testsuite.WebArchiveUtil;
+
+import com.google.gson.JsonObject;
+
+import gov.nist.javax.sip.header.SIPHeader;
 
 /**
  * @author <a href="mailto:gvagenas@gmail.com">gvagenas</a>
@@ -156,7 +156,6 @@ public class SmsEndpointTest {
     }
 
     @Test
-    @Category(value={FeatureCoreTests.class})
     public void sendSmsTest() {
         SipCall bobCall = bobPhone.createSipCall();
         bobCall.listenForMessage();
@@ -244,7 +243,6 @@ public class SmsEndpointTest {
     }
 
     @Test
-    @Category(value={FeatureCoreTests.class})
     public void sendSmsTestToAlice() throws ParseException {
 
         SipURI uri = aliceSipStack.getAddressFactory().createSipURI(null, restcommContact);
