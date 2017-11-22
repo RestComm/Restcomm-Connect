@@ -1,8 +1,7 @@
 node("cxs-ups-testsuites") {
    // Mark the code checkout 'stage'....
-   stage 'Checkout' {
-    checkout scm
-   }
+   stage 'Checkout'
+  checkout scm
 
    // Mark the code build 'stage'....
    stage 'Build' {
