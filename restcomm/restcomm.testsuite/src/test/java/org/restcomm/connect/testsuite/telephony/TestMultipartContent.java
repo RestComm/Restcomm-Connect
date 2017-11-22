@@ -59,7 +59,7 @@ import org.restcomm.connect.commons.annotations.WithInMinsTests;
  *
  */
 @RunWith(Arquillian.class)
-@Category(value={WithInMinsTests.class, SequentialClassTests.class})
+@Category(SequentialClassTests.class)
 public class TestMultipartContent {
 
     private static Logger logger = Logger.getLogger(TestMultipartContent.class);

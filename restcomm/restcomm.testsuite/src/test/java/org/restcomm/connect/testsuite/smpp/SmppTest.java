@@ -35,6 +35,12 @@ import java.io.IOException;
 import java.text.ParseException;
 
 import static com.github.tomakehurst.wiremock.client.WireMock.*;
+import org.junit.experimental.categories.Category;
+import org.restcomm.connect.commons.annotations.FeatureAltTests;
+import org.restcomm.connect.commons.annotations.FeatureCoreTests;
+import org.restcomm.connect.commons.annotations.FeatureExpTests;
+import org.restcomm.connect.commons.annotations.SequentialClassTests;
+import org.restcomm.connect.commons.annotations.WithInSecsTests;
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertTrue;
 
@@ -43,9 +49,10 @@ import static org.junit.Assert.assertTrue;
  * @author gvagenas@gmail.com (George Vagenas)
  */
 @RunWith(Arquillian.class)
-public class SmppTests {
+@Category(value={SequentialClassTests.class, WithInSecsTests.class})
+public class SmppTest {
 
-	private final static Logger logger = Logger.getLogger(SmppTests.class);
+	private final static Logger logger = Logger.getLogger(SmppTest.class);
 	private static final String version = Version.getVersion();
 
     private static String to = "7777";
@@ -174,6 +181,7 @@ public class SmppTests {
 
     private String smsEchoRcml = "<Response><Sms to=\""+from+"\" from=\""+to+"\">"+msgBodyResp+"</Sms></Response>";
 	@Test
+        @Category(value={FeatureCoreTests.class})
 	public void testSendMessageToRestcomm () throws SmppInvalidArgumentException, IOException, InterruptedException {
 
         stubFor(get(urlPathEqualTo("/smsApp"))
@@ -196,6 +204,7 @@ public class SmppTests {
 
     private String smsEchoRcmlUCS2 = "<Response><Sms to=\""+from+"\" from=\""+to+"\">"+msgBodyRespUCS2+"</Sms></Response>";
 	@Test
+        @Category(value={FeatureAltTests.class})
 	public void testSendMessageToRestcommUCS2 () throws SmppInvalidArgumentException, IOException, InterruptedException {
 
         stubFor(get(urlPathEqualTo("/smsApp"))
@@ -219,6 +228,7 @@ public class SmppTests {
 	}
 
 	@Test
+        @Category(value={FeatureAltTests.class})
 	public void testClientSentToOtherClient () throws ParseException {
 
 		SipURI uri = aliceSipStack.getAddressFactory().createSipURI(null, "127.0.0.1:5080");
@@ -244,6 +254,7 @@ public class SmppTests {
 	}
 
 	@Test
+        @Category(value={FeatureCoreTests.class})
 	public void testClientSentOutUsingSMPP () throws ParseException, InterruptedException {
 
 		SipURI uri = aliceSipStack.getAddressFactory().createSipURI(null, "127.0.0.1:5080");
@@ -269,6 +280,7 @@ public class SmppTests {
 	}
 
 	@Test
+        @Category(value={FeatureExpTests.class})
 	public void testClientSentToOtherClientDifferentOrganization () throws ParseException {
 
 		SipURI uri = mariaSipStack.getAddressFactory().createSipURI(null, "127.0.0.1:5080");
@@ -295,6 +307,7 @@ public class SmppTests {
 	}
 
 	@Test
+        @Category(value={FeatureCoreTests.class})
 	public void testClientSentToOtherClientSameOrganization () throws ParseException {
 
 		SipURI uri = mariaSipStack.getAddressFactory().createSipURI(null, "127.0.0.1:5080");

@@ -17,6 +17,7 @@ import org.jboss.shrinkwrap.api.spec.WebArchive;
 import org.junit.*;
 import org.junit.runner.RunWith;
 import org.restcomm.connect.commons.Version;
+import org.restcomm.connect.commons.annotations.FeatureAltTests;
 import org.restcomm.connect.testsuite.http.RestcommCallsTool;
 import org.restcomm.connect.testsuite.tools.MonitoringServiceTool;
 
@@ -48,7 +49,7 @@ import org.restcomm.connect.testsuite.WebArchiveUtil;
  * Created by gvagenas on 12/19/15.
  */
 @RunWith(Arquillian.class)
-@Category(value={WithInMinsTests.class, ParallelClassTests.class})
+@Category(value={FeatureAltTests.class, ParallelClassTests.class})
 public class DialForkAnswerDelayTest {
 
     private final static Logger logger = Logger.getLogger(CallLifecycleTest.class.getName());
