@@ -35,6 +35,7 @@ import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertTrue;
 import org.junit.experimental.categories.Category;
+import org.restcomm.connect.commons.annotations.FeatureAltTests;
 import org.restcomm.connect.commons.annotations.SequentialClassTests;
 import org.restcomm.connect.commons.annotations.WithInMinsTests;
 
@@ -218,6 +219,7 @@ public class SequentialDialingTest {
 	private String action1 = "<Response><Dial action=\"http://127.0.0.1:8090/action2\" timeout=\"3\"><Uri>" + carolContact + "</Uri></Dial></Response>";
 	private String action2 = "<Response><Dial timeout=\"3\"><Uri>" + daveContact + "</Uri></Dial></Response>";
 	@Test
+	@Category(FeatureAltTests.class)
 	public void testSequentialDialingWithDialAction() throws ParseException, InterruptedException {
 		stubFor(get(urlPathEqualTo("/1111"))
 				.willReturn(aResponse()
