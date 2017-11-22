@@ -726,7 +726,7 @@ public class DialActionOrganizationTest {
         Dialog mariaDialog = null;
 
         if (responseMaria == Response.TRYING) {
-            assertTrue(mariaCall.waitOutgoingCallResponse(5 * 2000));
+            assertTrue(mariaCall.waitOutgoingCallResponse(5 * 4000));
             assertEquals(Response.RINGING, mariaCall.getLastReceivedResponse().getStatusCode());
             mariaDialog = mariaCall.getDialog();
         }
