@@ -43,6 +43,7 @@ import org.restcomm.connect.commons.annotations.SequentialClassTests;
 import org.restcomm.connect.commons.annotations.WithInSecsTests;
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertTrue;
+import org.restcomm.connect.commons.annotations.BrokenTests;
 
 /**
  * @author quintana.thomas@gmail.com (Thomas Quintana)
@@ -204,7 +205,7 @@ public class SmppTest {
 
     private String smsEchoRcmlUCS2 = "<Response><Sms to=\""+from+"\" from=\""+to+"\">"+msgBodyRespUCS2+"</Sms></Response>";
 	@Test
-        @Category(value={FeatureAltTests.class})
+        @Category(value={FeatureAltTests.class, BrokenTests.class})
 	public void testSendMessageToRestcommUCS2 () throws SmppInvalidArgumentException, IOException, InterruptedException {
 
         stubFor(get(urlPathEqualTo("/smsApp"))
