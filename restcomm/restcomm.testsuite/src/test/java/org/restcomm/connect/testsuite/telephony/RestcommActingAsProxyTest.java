@@ -20,6 +20,7 @@ import org.junit.Rule;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.restcomm.connect.commons.Version;
+import org.restcomm.connect.commons.annotations.FeatureAltTests;
 import org.restcomm.connect.testsuite.tools.MonitoringServiceTool;
 
 import javax.sip.message.Response;
@@ -38,7 +39,7 @@ import org.restcomm.connect.commons.annotations.WithInMinsTests;
  * Created by gvagenas on 26/06/2017.
  */
 @RunWith(Arquillian.class)
-@Category(value={WithInMinsTests.class, SequentialClassTests.class})
+@Category({FeatureAltTests.class, SequentialClassTests.class})
 public class RestcommActingAsProxyTest {
 
     private final static Logger logger = Logger.getLogger(RestcommActingAsProxyTest.class.getName());
