@@ -19,6 +19,16 @@
  */
 package org.restcomm.connect.commons.annotations;
 
+/**
+ * Test fails and success with same  code in consecutive testsuite runs.
+ * When a test is detected to be unstable in Ci environment,
+ * it should be run locally and marked as broken if fails consistently.
+ * Unstable tests are tech debt and they need to be
+ * investigated after proper Product Backlog prioritization.
+ * @author Jaime
+ * @author mariafarooq
+ *
+ */
 public interface UnstableTests {
 
 }

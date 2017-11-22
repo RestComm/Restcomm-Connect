@@ -21,6 +21,13 @@ package org.restcomm.connect.commons.annotations;
 
 import java.lang.annotation.Inherited;
 
+/**
+ * Test fails consistently.
+ * Test should be investigated and fixed as unplanned in current Sprint,
+ * to allow potential Releases to be deployed.
+ * @author Jaime
+ * @author mariafarooq
+ */
 @Inherited
 public @interface BrokenTests {
 
