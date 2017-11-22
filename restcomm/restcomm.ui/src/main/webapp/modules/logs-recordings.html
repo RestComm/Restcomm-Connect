@@ -1,4 +1,4 @@
-<div class="row accounts-tabs-mobile visible-xs">
+<div class="row accounts-tabs-mobile visible-sm visible-xs">
     <div class="col-xs-2 col-xs-offset-1"><a href="#/logs/calls"><i class="fa fa-phone"></i></a></div>
     <div class="col-xs-2"><a href="#/logs/messages"><i class="fa fa-comments-o"></i></a></div>
     <div class="col-xs-2 active"><a href="#/logs/recordings"><i class="fa fa-dot-circle-o"></i> </a></div>
@@ -8,7 +8,7 @@
 
 <div class="row text-center">
     <div class="col-xs-8 col-xs-offset-2">
-        <h3 class="no-top-margin visible-xs">Recordings</h3>
+        <h3 class="no-top-margin visible-sm visible-xs">Recordings</h3>
     </div>
     <div class="col-xs-2" ng-show="showSearchToggle">
         <button class="btn btn-link logs-search-toggle pull-right" ng-click="showSearch = !showSearch">
@@ -18,7 +18,7 @@
 </div>
 
 <div class="row">
-    <div class="col-md-2 accounts-tabs hidden-xs">
+    <div class="col-md-2 accounts-tabs hidden-sm hidden-xs">
         <div><a href="#/logs/calls">Calls</a></div>
         <div><a href="#/logs/messages">Messages</a></div>
         <div class="active"><a href="#/logs/recordings">Recordings</a></div>
@@ -28,19 +28,19 @@
     <div class="col-md-10">
         <form ng-show="!showSearchToggle || showSearch">
             <div class="row">
-                <div class="clearfix visible-xs">&nbsp;</div>
+                <div class="clearfix visible-sm visible-xs">&nbsp;</div>
                 <div class="col-md-1 col-xs-6 logs-search-field">
                     <input type="text" class="form-control" placeholder="From" ng-model="search.from" disabled />
                 </div>
                 <div class="col-md-1 col-xs-6 logs-search-field">
                     <input type="text" class="form-control" placeholder="To" ng-model="search.to" disabled />
                 </div>
-                <div class="clearfix visible-xs">&nbsp;</div>
+                <div class="clearfix visible-sm visible-xs">&nbsp;</div>
                 <div class="col-md-5 col-xs-12 logs-search-field">
                     <input type="date" class="form-control logs-search-date" placeholder="Start Date" ng-model="search.start_time" />
                     <input type="date" class="form-control logs-search-date" placeholder="End Date" ng-model="search.end_time" />
                 </div>
-                <div class="clearfix visible-xs">&nbsp;</div>
+                <div class="clearfix visible-sm visible-xs">&nbsp;</div>
                 <div class="col-md-4 col-xs-10 logs-search-field">
                     <input type="text" class="form-control" placeholder="Call SID" ng-model="search.call_sid" />
                 </div>

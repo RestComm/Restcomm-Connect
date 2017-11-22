@@ -797,23 +797,19 @@ form[role=login] input:-webkit-autofill:focus{
 
 .sub-accounts-list .sub-accounts-list-name {
     width: 30%;
-    vertical-align: middle;
     line-height: 35px;
 }
 
 .sub-accounts-list .sub-accounts-list-account-sid {
     width: 35%;
-    vertical-align: middle;
 }
 
 .sub-accounts-list .sub-accounts-list-role {
     width: 20%;
-    vertical-align: middle;
 }
 
 .sub-accounts-list .sub-accounts-list-status {
     width: 15%;
-    vertical-align: middle;
 }
 
 @media(max-width:768px) {
@@ -831,16 +827,11 @@ form[role=login] input:-webkit-autofill:focus{
 
     .sub-accounts-list .sub-accounts-list-status {
         width: 20%;
-        vertical-align: middle;
     }
     .sub-accounts-list .sub-accounts-list-action {
         width: 25px;
-        vertical-align: middle;
     }
 }
-
-
-
 
 @media(max-width:768px) {
     .clients-list {
@@ -938,6 +929,10 @@ form[role=login] input:-webkit-autofill:focus{
     height: 2.5em;
 }
 
+.rc-list > tbody > tr > td {
+    vertical-align: middle;
+}
+
 .rc-list thead {
     color: #4a4a4b;
     font-size: 1.1em;
@@ -995,13 +990,11 @@ form[role=login] input:-webkit-autofill:focus{
 
 .clients-list .clients-list-username {
     width: 20%;
-    vertical-align: middle;
 }
 
 .clients-list .clients-list-edit-icon {
     width: 30px;
     opacity: 0;
-    vertical-align: middle;
 }
 
 .number-row:hover .clients-list-edit-icon {
@@ -1010,17 +1003,20 @@ form[role=login] input:-webkit-autofill:focus{
 
 .clients-list .clients-list-friendly-name {
     width: 25%;
-    vertical-align: middle;
+}
+
+.clients-list .clients-list-friendly-name input {
+    font-size: inherit;
+    margin-left: -10px;
+    padding-left: 10px;
 }
 
 .clients-list .clients-list-applications {
     width: 40%;
-    vertical-align: middle;
 }
 
 .clients-list .clients-list-delete-icon {
     width: 10%;
-    vertical-align: middle;
 }
 
 
@@ -1380,42 +1376,37 @@ form[role=login] input:-webkit-autofill:focus{
 /* -- Applications -----------------------------------------------------*/
 
 .apps-list {
-    font-size: 1.5em;
-    border-bottom: 1px solid #ddd;
-    margin-top: 20px;
 }
 
-.apps .apps-list-navigation {
-    color: #abacad;
-    margin-bottom: 20px;
-}
-
-.apps-list td.apps-list-name {
-    vertical-align: middle;
-}
-
-.apps-list td.apps-list-kind {
-    vertical-align: middle;
-}
-.apps-list th.apps-list-kind {
-    width: 10%;
+.apps-list .apps-list-name {
+    width: 50%;
 }
 
 .apps-list .apps-list-type {
-    vertical-align: middle;
-}
-.apps-list th.apps-list-type {
-    width: 23%;
+    width: 20%;
 }
 
 .apps-list .apps-list-number {
-    width: 20%;
-    vertical-align: middle;
+    width: 30%;
 }
 
 .apps-list div.app-feature {
     width: 26px;
     display: inline-block;
+}
+
+.apps-list .apps-list-action {
+    width: 26px;
+}
+
+@media(max-width:768px) {
+    .apps-list .apps-list-name {
+        width: 55%;
+    }
+
+    .apps-list .apps-list-type {
+        width: 45%;
+    }
 }
 
 .app-details .app-details-content {
@@ -1517,18 +1508,15 @@ form[role=login] input:-webkit-autofill:focus{
 }
 
 .numbers-list .number-row {
-    height: 77px;
 }
 
 .numbers-list .numbers-list-number {
     width: 20%;
-    vertical-align: middle;
 }
 
 .numbers-list .numbers-list-edit-icon {
     width: 30px;
     opacity: 0;
-    vertical-align: middle;
 }
 
 .number-row:hover .numbers-list-edit-icon {
@@ -1537,12 +1525,11 @@ form[role=login] input:-webkit-autofill:focus{
 
 .numbers-list .numbers-list-friendly-name {
     width: 80%;
-    vertical-align: middle;
 }
 
 .numbers-list .numbers-list-features {
     width: 20%;
-    vertical-align: middle;
+    white-space: nowrap;
 }
 
 .numbers-list .numbers-list-features div {
@@ -1555,13 +1542,14 @@ form[role=login] input:-webkit-autofill:focus{
     font-size: 1.1em;
 }
 
+/*
 .numbers-list-features div:nth-child(2n) {
     margin-right: calc(100% - 85px);
 }
+*/
 
 .numbers-list .numbers-list-delete-icon {
     width: 10%;
-    vertical-align: middle;
 }
 
 /* -- Provider Numbers ------------------------------------------------------ */
@@ -1572,22 +1560,18 @@ form[role=login] input:-webkit-autofill:focus{
 
 .provider-numbers-list .provider-numbers-list-number {
     width: 35%;
-    vertical-align: middle;
 }
 
 .provider-numbers-list .provider-numbers-list-features {
     width: 15%;
-    vertical-align: middle;
 }
 
 .provider-numbers-list .provider-numbers-list-cost {
     width: 15%;
-    vertical-align: middle;
 }
 
 .provider-numbers-list .provider-numbers-list-action {
     width: 15%;
-    vertical-align: middle;
 }
 
 a.f16 {
@@ -1605,22 +1589,18 @@ div.input-group.f16 > .input-group-btn > .dropdown-toggle {
 @media(max-width:768px) {
     .provider-numbers-list .provider-numbers-list-number {
         width: 40%;
-        vertical-align: middle;
     }
 
     .provider-numbers-list .provider-numbers-list-features {
         width: 10%;
-        vertical-align: middle;
     }
 
     .provider-numbers-list .provider-numbers-list-cost {
         width: 25%;
-        vertical-align: middle;
     }
 
     .provider-numbers-list .provider-numbers-list-action {
         width: 25%;
-        vertical-align: middle;
     }
 }
 
@@ -1660,6 +1640,10 @@ div.input-group.f16 > .input-group-btn > .dropdown-toggle {
     .numbers-list .numbers-list-number > div+div {
         font-size: 0.8em;
         color: #bbbbbb;
+    }
+
+    .numbers-list .numbers-list-features {
+        white-space: normal;
     }
 
     .numbers-list .numbers-list-features div {
