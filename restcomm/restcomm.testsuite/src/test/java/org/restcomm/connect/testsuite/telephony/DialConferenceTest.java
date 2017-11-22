@@ -271,7 +271,6 @@ public class DialConferenceTest {
     private final String confRoom2 = "confRoom2";
     private String dialConfernceRcml = "<Response><Dial><Conference>"+confRoom2+"</Conference></Dial></Response>";
     @Test
-    @Category(FeatureCoreTests.class)
     public synchronized void testDialConferenceClientsDisconnect() throws InterruptedException {
         stubFor(get(urlPathEqualTo("/1111"))
                 .willReturn(aResponse()

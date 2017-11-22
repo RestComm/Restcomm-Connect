@@ -751,12 +751,14 @@ public class DialActionOrganizationTest {
 
         Thread.sleep(5000);
 
-        //Check CDR
-        JsonObject cdrs = RestcommCallsTool.getInstance().getCalls(deploymentUrl.toString(), adminAccountSidOrg2, adminAuthToken);
-        assertNotNull(cdrs);
-        JsonArray cdrsArray = cdrs.get("calls").getAsJsonArray();
-        logger.info("cdrsArray.size(): "+cdrsArray.size());
-        assertTrue(cdrsArray.size() == 1);
+        //Check live calls
+        int liveCalls = MonitoringServiceTool.getInstance().getStatistics(deploymentUrl.toString(), superAdminAccountSid, adminAuthToken);
+        int liveCallsArraySize = MonitoringServiceTool.getInstance().getLiveCallsArraySize(deploymentUrl.toString(), superAdminAccountSid, adminAuthToken);
+        logger.info("&&&&& LiveCalls: "+liveCalls);
+        logger.info("&&&&& LiveCallsArraySize: "+liveCallsArraySize);
+        assertEquals(0, liveCalls);
+        assertEquals(0,liveCallsArraySize);
+        
 
     }
 
