@@ -19,6 +19,7 @@ import org.jboss.shrinkwrap.resolver.api.maven.archive.ShrinkWrapMaven;
 import org.junit.*;
 import org.junit.runner.RunWith;
 import org.restcomm.connect.commons.Version;
+import org.restcomm.connect.commons.annotations.ParallelClassTests;
 import org.restcomm.connect.testsuite.http.RestcommCallsTool;
 
 import javax.sip.address.SipURI;
@@ -43,7 +44,7 @@ import org.restcomm.connect.commons.annotations.SequentialClassTests;
  * Created by gvagenas on 12/19/15.
  */
 @RunWith(Arquillian.class)
-@Category(value={FeatureAltTests.class, SequentialClassTests.class})
+@Category(value={FeatureAltTests.class, ParallelClassTests.class})
 public class DialForkAnswerDelayCancelTest {
 
     private final static Logger logger = Logger.getLogger(CallLifecycleTest.class.getName());
