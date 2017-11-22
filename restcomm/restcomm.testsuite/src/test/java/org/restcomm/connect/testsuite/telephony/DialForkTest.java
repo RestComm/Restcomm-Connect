@@ -46,6 +46,8 @@ import org.junit.Test;
 import org.junit.experimental.categories.Category;
 import org.junit.runner.RunWith;
 import org.restcomm.connect.commons.Version;
+import org.restcomm.connect.commons.annotations.FeatureAltTests;
+import org.restcomm.connect.commons.annotations.FeatureExpTests;
 import org.restcomm.connect.commons.annotations.ParallelClassTests;
 import org.restcomm.connect.commons.annotations.UnstableTests;
 import org.restcomm.connect.commons.annotations.WithInMinsTests;
@@ -63,7 +65,7 @@ import com.google.gson.JsonObject;
  * Created by gvagenas on 12/19/15.
  */
 @RunWith(Arquillian.class)
-@Category(value={FeatureCoreTests.class, ParallelClassTests.class})
+@Category(ParallelClassTests.class)
 public class DialForkTest {
 
     private final static Logger logger = Logger.getLogger(CallLifecycleTest.class.getName());
@@ -484,6 +486,7 @@ public class DialForkTest {
 
     // Non regression test for https://github.com/RestComm/Restcomm-Connect/issues/1972
     @Test
+    @Category(FeatureAltTests.class)
     public synchronized void testDialForkToNotRegisteredClientDialSipFirst() throws InterruptedException, ParseException, MalformedURLException {
         stubFor(get(urlPathEqualTo("/1111"))
                 .willReturn(aResponse()
@@ -583,6 +586,7 @@ public class DialForkTest {
     //Non regression test for https://github.com/RestComm/Restcomm-Connect/issues/1972
     //When Dial Client is first its working fine
     @Test
+    @Category(FeatureAltTests.class)
     public synchronized void testDialForkToNotRegisteredClientDialClientFirst() throws InterruptedException, ParseException, MalformedURLException {
         stubFor(get(urlPathEqualTo("/1111"))
                 .willReturn(aResponse()
@@ -1173,7 +1177,8 @@ public class DialForkTest {
             "m=audio 6000 RTP/AVP 0\n" +
             "a=rtpmap:0 PCMU/8000\n";
 
-    @Test @Ignore //Passes only when run individually. Doesn't pass when run with the rest of the tests
+    @Test //Passes only when run individually. Doesn't pass when run with the rest of the tests
+    @Category(UnstableTests.class)
     public synchronized void testDialForkWithReInviteBeforeDialForkStarts_CancelCall() throws InterruptedException, ParseException, MalformedURLException {
 
         stubFor(get(urlPathEqualTo("/1111"))
@@ -1313,7 +1318,8 @@ public class DialForkTest {
     }
 
     private String dialClientAlice = "<Response><Dial timeout=\"2\"><Client>alice</Client></Dial></Response>";
-    @Test @Ignore //Passes only when run individually. Doesn't pass when run with the rest of the tests
+    @Test //Passes only when run individually. Doesn't pass when run with the rest of the tests
+    @Category(UnstableTests.class)
     public synchronized void testDialForkWithReInviteAfterDialStarts_CancelCall() throws InterruptedException, ParseException, MalformedURLException {
 
         stubFor(get(urlPathEqualTo("/1111"))
@@ -1425,6 +1431,7 @@ public class DialForkTest {
     }
 
     @Test
+    @Category(FeatureAltTests.class)
     public synchronized void testDialForkNoAnswerWith183FromAlice() throws InterruptedException, ParseException, MalformedURLException {
 
         stubFor(get(urlPathEqualTo("/1111"))
@@ -1550,7 +1557,7 @@ public class DialForkTest {
     }
 
     @Test
-    @Category(WithInMinsTests.class)
+    @Category(FeatureExpTests.class)
     public synchronized void testDialForkNoAnswerAndNoResponseFromAlice() throws InterruptedException, ParseException, MalformedURLException {
 
         stubFor(get(urlPathEqualTo("/1111"))
@@ -1678,6 +1685,7 @@ public class DialForkTest {
 
 
     @Test
+    @Category(FeatureExpTests.class)
     public synchronized void testDialForkNoAnswerWith183() throws InterruptedException, ParseException, MalformedURLException {
 
         stubFor(get(urlPathEqualTo("/1111"))
@@ -2185,6 +2193,7 @@ public class DialForkTest {
 
 
     @Test
+    @Category(FeatureAltTests.class)
     public void testDialClientAliceWithPlay() throws ParseException, InterruptedException, MalformedURLException {
         stubFor(get(urlPathEqualTo("/1111"))
                 .willReturn(aResponse()
@@ -2268,6 +2277,7 @@ public class DialForkTest {
 
 
     @Test //Test that Restcomm cleans up calls when an error from MMS happens
+    @Category(FeatureExpTests.class)
     public void testDialClientAliceWithInvalidPlayFile() throws ParseException, InterruptedException, MalformedURLException {
         stubFor(get(urlPathEqualTo("/1111"))
                 .willReturn(aResponse()
@@ -2340,6 +2350,7 @@ public class DialForkTest {
 
 
     @Test
+    @Category(FeatureAltTests.class)
     public synchronized void testDialSequentialFirstCallTimeouts() throws InterruptedException, ParseException, MalformedURLException {
         stubFor(get(urlPathEqualTo("/1111"))
                 .willReturn(aResponse()
@@ -2437,6 +2448,7 @@ public class DialForkTest {
     }
 
     @Test
+    @Category({FeatureExpTests.class, UnstableTests.class})
     public synchronized void testDialForkWithServerErrorReponse() throws InterruptedException, ParseException, MalformedURLException {
         stubFor(get(urlPathEqualTo("/1111"))
                 .willReturn(aResponse()
