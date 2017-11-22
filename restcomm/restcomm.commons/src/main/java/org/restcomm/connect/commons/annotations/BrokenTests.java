@@ -19,8 +19,6 @@
  */
 package org.restcomm.connect.commons.annotations;
 
-public interface BrokenTests {
-
 /**
  * Test fails consistently.
  * Test should be investigated and fixed as unplanned in current Sprint,
@@ -28,7 +26,6 @@ public interface BrokenTests {
  * @author Jaime
  * @author mariafarooq
  */
-@Inherited
 public interface BrokenTests {
 
 }
