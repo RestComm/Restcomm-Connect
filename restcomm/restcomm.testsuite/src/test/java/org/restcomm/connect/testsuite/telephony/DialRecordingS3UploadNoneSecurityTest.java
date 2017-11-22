@@ -1,8 +1,28 @@
 package org.restcomm.connect.testsuite.telephony;
 
-import com.github.tomakehurst.wiremock.junit.WireMockRule;
-import com.github.tomakehurst.wiremock.verification.LoggedRequest;
-import com.google.gson.JsonArray;
+import static com.github.tomakehurst.wiremock.client.WireMock.aResponse;
+import static com.github.tomakehurst.wiremock.client.WireMock.findAll;
+import static com.github.tomakehurst.wiremock.client.WireMock.get;
+import static com.github.tomakehurst.wiremock.client.WireMock.put;
+import static com.github.tomakehurst.wiremock.client.WireMock.putRequestedFor;
+import static com.github.tomakehurst.wiremock.client.WireMock.stubFor;
+import static com.github.tomakehurst.wiremock.client.WireMock.urlMatching;
+import static com.github.tomakehurst.wiremock.client.WireMock.urlPathEqualTo;
+import static com.github.tomakehurst.wiremock.client.WireMock.verify;
+import static org.cafesip.sipunit.SipAssert.assertLastOperationSuccess;
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertNotNull;
+import static org.junit.Assert.assertTrue;
+
+import java.io.IOException;
+import java.net.HttpURLConnection;
+import java.net.URL;
+import java.text.ParseException;
+import java.util.List;
+
+import javax.sip.address.SipURI;
+import javax.sip.message.Response;
+
 import org.apache.log4j.Logger;
 import org.cafesip.sipunit.SipCall;
 import org.cafesip.sipunit.SipPhone;
@@ -23,36 +43,16 @@ import org.junit.Before;
 import org.junit.BeforeClass;
 import org.junit.Rule;
 import org.junit.Test;
+import org.junit.experimental.categories.Category;
 import org.junit.runner.RunWith;
 import org.restcomm.connect.commons.Version;
 import org.restcomm.connect.commons.annotations.FeatureAltTests;
-import org.restcomm.connect.commons.annotations.ParallelClassTests;
+import org.restcomm.connect.commons.annotations.SequentialClassTests;
 import org.restcomm.connect.testsuite.http.RestcommCallsTool;
 
-import javax.sip.address.SipURI;
-import javax.sip.message.Response;
-import java.io.IOException;
-import java.net.HttpURLConnection;
-import java.net.URL;
-import java.text.ParseException;
-import java.util.List;
-
-import static com.github.tomakehurst.wiremock.client.WireMock.aResponse;
-import static com.github.tomakehurst.wiremock.client.WireMock.findAll;
-import static com.github.tomakehurst.wiremock.client.WireMock.get;
-import static com.github.tomakehurst.wiremock.client.WireMock.put;
-import static com.github.tomakehurst.wiremock.client.WireMock.putRequestedFor;
-import static com.github.tomakehurst.wiremock.client.WireMock.stubFor;
-import static com.github.tomakehurst.wiremock.client.WireMock.urlMatching;
-import static com.github.tomakehurst.wiremock.client.WireMock.urlPathEqualTo;
-import static com.github.tomakehurst.wiremock.client.WireMock.verify;
-import static org.cafesip.sipunit.SipAssert.assertLastOperationSuccess;
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertNotNull;
-import static org.junit.Assert.assertTrue;
-import org.junit.experimental.categories.Category;
-import org.restcomm.connect.commons.annotations.SequentialClassTests;
-import org.restcomm.connect.commons.annotations.WithInMinsTests;
+import com.github.tomakehurst.wiremock.junit.WireMockRule;
+import com.github.tomakehurst.wiremock.verification.LoggedRequest;
+import com.google.gson.JsonArray;
 
 /**
  * Created by gvagenas on 08/01/2017.
