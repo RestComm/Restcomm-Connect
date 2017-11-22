@@ -52,7 +52,7 @@ RestComm is licensed under dual license policy. The default license is the Free 
 
 Continuous Integration and Delivery
 ========
-[![RestComm Continuous Job](http://www.cloudbees.com/sites/default/files/Button-Built-on-CB-1.png)](https://mobicents.ci.cloudbees.com/job/RestComm/)
+[![RestComm Continuous Job]](https://cxs.restcomm.com/view/Restcomm/job/UPS_RestComm/)
 
 Acknowledgements
 ========
