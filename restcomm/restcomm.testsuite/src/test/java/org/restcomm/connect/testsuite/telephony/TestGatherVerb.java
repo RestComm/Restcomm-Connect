@@ -43,6 +43,7 @@ import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertTrue;
 import org.junit.experimental.categories.Category;
+import org.restcomm.connect.commons.annotations.FeatureAltTests;
 import org.restcomm.connect.commons.annotations.SequentialClassTests;
 import org.restcomm.connect.commons.annotations.WithInMinsTests;
 
@@ -207,6 +208,7 @@ public class TestGatherVerb {
     }
 
     @Test //Test case for github issue 2415
+    @Category(FeatureAltTests.class)
     public synchronized void testDtmfWithSipInfoWith3Number() throws InterruptedException, ParseException {
         stubFor(get(urlPathEqualTo("/1111"))
                 .willReturn(aResponse()

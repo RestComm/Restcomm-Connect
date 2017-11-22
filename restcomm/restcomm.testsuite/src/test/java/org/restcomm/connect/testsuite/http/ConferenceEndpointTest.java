@@ -34,11 +34,13 @@ import org.jboss.shrinkwrap.api.ShrinkWrap;
 import org.jboss.shrinkwrap.api.spec.WebArchive;
 import org.jboss.shrinkwrap.resolver.api.maven.archive.ShrinkWrapMaven;
 import org.junit.Test;
+import org.junit.experimental.categories.Category;
 import org.junit.runner.RunWith;
 
 import com.google.gson.JsonArray;
 import com.google.gson.JsonObject;
 import org.restcomm.connect.commons.Version;
+import org.restcomm.connect.commons.annotations.FeatureAltTests;
 
 /**
  * @author Maria
@@ -91,6 +93,7 @@ public class ConferenceEndpointTest {
     }
 
     @Test
+    @Category(FeatureAltTests.class)
     public void getConferencesFilteredByStatus() {
         Map<String, String> filters = new HashMap<String, String>();
         filters.put("Status", "COMPLETED");
@@ -111,6 +114,7 @@ public class ConferenceEndpointTest {
     }
 
     @Test
+    @Category(FeatureAltTests.class)
     public void getConferencesFilteredByFriendlyName() {
         Map<String, String> filters = new HashMap<String, String>();
         filters.put("FriendlyName", "1111");
@@ -131,6 +135,7 @@ public class ConferenceEndpointTest {
     }
 
     @Test
+    @Category(FeatureAltTests.class)
     public void getConferencesFilteredUsingMultipleFilters() {
         Map<String, String> filters = new HashMap<String, String>();
         filters.put("FriendlyName", "1111");
