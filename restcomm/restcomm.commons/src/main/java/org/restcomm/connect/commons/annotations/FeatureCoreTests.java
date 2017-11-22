@@ -19,6 +19,13 @@
  */
 package org.restcomm.connect.commons.annotations;
 
+/**
+ * Result positive: A Core Flow is a step or a sequence of
+ * steps that achieves the use case’s goal following the main success scenario.
+ * @author Jaime
+ * @author mariafarooq
+ *
+ */
 public interface FeatureCoreTests {
 
 }

@@ -20,6 +20,15 @@
 package org.restcomm.connect.commons.annotations;
 
 
+/**
+ * Result positive: An Alternate Flow is a step or a sequence of
+ * steps that achieves the use case’s goal following different
+ * steps than described in the main success scenario.
+ * But the goal is achieved finally.
+ * @author Jaime
+ * @author mariafarooq
+ *
+ */
 public interface FeatureAltTests {
 
 }
