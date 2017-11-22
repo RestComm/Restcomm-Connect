@@ -19,6 +19,12 @@
  */
 package org.restcomm.connect.commons.annotations;
 
+/**
+ * Result negative: An Exception is anything that leads to NOT achieving the use case’s goal.
+ * @author Jaime
+ * @author mariafarooq
+ *
+ */
 public interface FeatureExpTests {
 
 }
