@@ -111,9 +111,9 @@ import org.restcomm.connect.commons.annotations.WithInMinsTests;
  */
 @RunWith(Arquillian.class)
 @Category(value={WithInMinsTests.class, SequentialClassTests.class})
-public class DialActionTestOrganization {
+public class DialActionOrganizationTest {
 
-    private final static Logger logger = Logger.getLogger(DialActionTestOrganization.class.getName());
+    private final static Logger logger = Logger.getLogger(DialActionOrganizationTest.class.getName());
     private static final String TRANSPORT = "udp";
 
     private static final String version = Version.getVersion();
