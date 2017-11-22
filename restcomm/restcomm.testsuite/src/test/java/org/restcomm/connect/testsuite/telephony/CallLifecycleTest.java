@@ -68,7 +68,6 @@ import org.junit.experimental.categories.Category;
 import org.junit.runner.RunWith;
 import org.restcomm.connect.commons.Version;
 import org.restcomm.connect.commons.annotations.FeatureAltTests;
-import org.restcomm.connect.commons.annotations.FeatureCoreTests;
 import org.restcomm.connect.commons.annotations.FeatureExpTests;
 import org.restcomm.connect.commons.annotations.ParallelClassTests;
 import org.restcomm.connect.commons.annotations.UnstableTests;
@@ -385,7 +384,6 @@ public class CallLifecycleTest {
 
     private String dialAliceRcml = "<Response><Dial><Client>alice</Client></Dial></Response>";
     @Test
-    @Category(FeatureCoreTests.class)
     public void testDialClientAlice() throws ParseException, InterruptedException, MalformedURLException {
 
         stubFor(get(urlPathEqualTo("/1111"))
@@ -489,7 +487,6 @@ public class CallLifecycleTest {
     }
 
     @Test
-    @Category(FeatureCoreTests.class)//its core bcz of cloud
     public void testDialClientAliceBehindLB() throws ParseException, InterruptedException, MalformedURLException {
 
         stubFor(get(urlPathEqualTo("/1111"))
@@ -598,7 +595,6 @@ public class CallLifecycleTest {
     }
 
     @Test
-    @Category(FeatureCoreTests.class)
     public void testDialClient_CheckVIParameters() throws ParseException, InterruptedException, MalformedURLException {
 
         stubFor(get(urlPathEqualTo("/1111"))
@@ -1055,7 +1051,6 @@ public class CallLifecycleTest {
 
     private String dialNumberRcml = "<Response><Dial><Number>+131313</Number></Dial></Response>";
     @Test
-    @Category(FeatureCoreTests.class)
     public void testDialNumberPstn() throws ParseException, InterruptedException, MalformedURLException {
 
         stubFor(get(urlPathEqualTo("/1111"))
