@@ -46,8 +46,9 @@ import org.junit.Test;
 import org.junit.experimental.categories.Category;
 import org.junit.runner.RunWith;
 import org.restcomm.connect.commons.Version;
+import org.restcomm.connect.commons.annotations.FeatureAltTests;
+import org.restcomm.connect.commons.annotations.FeatureExpTests;
 import org.restcomm.connect.commons.annotations.ParallelClassTests;
-import org.restcomm.connect.commons.annotations.UnstableTests;
 import org.restcomm.connect.testsuite.NetworkPortAssigner;
 import org.restcomm.connect.testsuite.WebArchiveUtil;
 import org.restcomm.connect.testsuite.http.CreateClientsTool;
@@ -407,7 +408,6 @@ public class ClientsDialTest {
     }
 
     @Test
-    @Category(UnstableTests.class)
     public void testClientsCallEachOther() throws ParseException, InterruptedException {
 
         assertNotNull(mariaRestcommClientSid);
@@ -487,6 +487,7 @@ public class ClientsDialTest {
     }
 
     @Test
+    @Category(FeatureAltTests.class)
     public void testClientsCallEachOtherWithFriendlyNameSetKouKouRouKou() throws ParseException, InterruptedException {
 
         assertNotNull(mariaRestcommClientSid);
@@ -681,6 +682,7 @@ public class ClientsDialTest {
     }
 
     @Test //Non regression test for issue https://github.com/RestComm/Restcomm-Connect/issues/1042 - Support WebRTC clients to dial out through MediaServer
+    @Category(FeatureExpTests.class)
     public void testClientDialOutPstnSimulateWebRTCClient() throws ParseException, InterruptedException {
 
         assertNotNull(mariaRestcommClientSid);
@@ -748,6 +750,7 @@ public class ClientsDialTest {
     }
 
     @Test //Non regression test for issue https://github.com/RestComm/Restcomm-Connect/issues/1379 - Webrtc calls from non WS clients aren't routed to PSTN #1379
+    @Category(FeatureAltTests.class)
     public void testClientDialOutPstnWebRTCClientwithSDP() throws ParseException, InterruptedException {
 
         assertNotNull(mariaRestcommClientSid);
@@ -808,6 +811,7 @@ public class ClientsDialTest {
     }
 
     @Test
+    @Category(FeatureExpTests.class)
     public void testClientDialToInvalidNumber() throws ParseException, InterruptedException, InvalidArgumentException, SipException {
         String invalidNumber = "+123456789";
         SipPhone outboundProxy = georgeSipStack.createSipPhone("127.0.0.1", SipStack.PROTOCOL_UDP, 5080, "sip:"+invalidNumber+"@127.0.0.1:" + georgePort);
@@ -852,6 +856,7 @@ public class ClientsDialTest {
     }
 
     @Test
+    @Category(FeatureExpTests.class)
     public void testClientDialOutPstnCancelBefore200() throws ParseException, InterruptedException {
 
         assertNotNull(mariaRestcommClientSid);
@@ -960,7 +965,6 @@ public class ClientsDialTest {
     }
 
     @Test
-    @Category(UnstableTests.class)
     public synchronized void testDialClientAliceWithExtraParamsAtContactHeader() throws InterruptedException, ParseException {
         stubFor(get(urlPathEqualTo("/1111"))
                 .willReturn(aResponse()
@@ -1117,7 +1121,6 @@ public class ClientsDialTest {
 
     private String dialAliceDimitriRcml= "<Response><Dial timeLimit=\"10\" timeout=\"10\"><Client>alice</Client><Sip>"+dimitriContact+"</Sip></Dial></Response>";
     @Test
-    @Category(UnstableTests.class)
     public synchronized void testDialForkClient_AliceMultipleRegistrations_George() throws InterruptedException, ParseException {
         stubFor(get(urlPathEqualTo("/1111"))
                 .willReturn(aResponse()
@@ -1207,7 +1210,6 @@ public class ClientsDialTest {
     }
 
     @Test
-    @Category(UnstableTests.class)
     public synchronized void testDialForkClientWebRTCBob_And_AliceWithMultipleRegistrations() throws InterruptedException, ParseException {
         stubFor(get(urlPathEqualTo("/1111"))
                 .willReturn(aResponse()
