@@ -66,6 +66,7 @@ import org.junit.Test;
 import org.junit.experimental.categories.Category;
 import org.junit.runner.RunWith;
 import org.restcomm.connect.commons.Version;
+import org.restcomm.connect.commons.annotations.FeatureAltTests;
 import org.restcomm.connect.commons.annotations.ParallelClassTests;
 import org.restcomm.connect.commons.annotations.UnstableTests;
 import org.restcomm.connect.testsuite.NetworkPortAssigner;
@@ -314,6 +315,7 @@ public class DialStatusCallbackTest {
     private String dialStatusCallbackGetMethod = "<Response><Dial><Client statusCallback=\"http://127.0.0.1:" + mockPort + "/status\" " +
             "statusCallbackMethod=\"get\">alice</Client></Dial></Response>";
     @Test
+    @Category(FeatureAltTests.class)
     public void testDialStatusCallbackMethodGET() throws ParseException, InterruptedException {
 
         stubFor(get(urlPathEqualTo("/1111"))
@@ -412,7 +414,7 @@ public class DialStatusCallbackTest {
 
     private String dialStatusCallbackGet = "<Response><Dial><Client statusCallback=\"http://127.0.0.1:" + mockPort +"/status\" statusCallbackMethod=\"GET\">alice</Client></Dial></Response>";
     @Test
-    @Category(UnstableTests.class)
+    @Category({UnstableTests.class, FeatureAltTests.class})
     public void testDialStatusCallbackBobDisconnects() throws ParseException, InterruptedException {
 
         stubFor(get(urlPathEqualTo("/1111"))
@@ -516,6 +518,7 @@ public class DialStatusCallbackTest {
     private String dialStatusCallbackOnlyInitiatedAndAnswer = "<Response><Dial><Client statusCallback=\"http://127.0.0.1:"+ mockPort + "/status\" " +
             "statusCallbackEvent=\"initiated,  answered\">alice</Client></Dial></Response>";
     @Test
+    @Category(FeatureAltTests.class)
     public void testDialStatusCallbackOnlyInitiatedAnswerEvent() throws ParseException, InterruptedException {
 
         stubFor(get(urlPathEqualTo("/1111"))
@@ -606,6 +609,7 @@ public class DialStatusCallbackTest {
     private String dialStatusCallbackOnlyRingingCompleted = "<Response><Dial><Client statusCallback=\"http://127.0.0.1:" + mockPort + "/status\" " +
             "statusCallbackEvent=\"ringing,completed\">alice</Client></Dial></Response>";
     @Test
+    @Category({UnstableTests.class, FeatureAltTests.class})
     public void testDialStatusCallbackOnlyRingingCompleted() throws ParseException, InterruptedException {
 
         stubFor(get(urlPathEqualTo("/1111"))
@@ -879,7 +883,7 @@ public class DialStatusCallbackTest {
 
     private String dialFork = "<Response><Dial><Client statusCallback=\"http://127.0.0.1:" + mockPort + "/status\" statusCallbackMethod=\"get\">alice</Client><Sip statusCallback=\"http://127.0.0.1:" + mockPort + "/status\" statusCallbackMethod=\"get\">sip:henrique@127.0.0.1:" + henriquePort + "</Sip><Number statusCallback=\"http://127.0.0.1:" + mockPort + "/status\" statusCallbackMethod=\"get\">+131313</Number></Dial></Response>";
     @Test
-    @Category(UnstableTests.class)
+    @Category({UnstableTests.class, FeatureAltTests.class})
     public synchronized void testDialForkNoAnswerButHenriqueStatusCallbackOnAll() throws InterruptedException, ParseException, MalformedURLException {
         stubFor(get(urlPathEqualTo("/1111"))
                 .willReturn(aResponse()
@@ -1028,6 +1032,7 @@ public class DialStatusCallbackTest {
 
     private String dialForkStatusCallbackWithPost = "<Response><Dial><Client statusCallback=\"http://127.0.0.1:" + mockPort + "/status\">alice</Client><Sip statusCallback=\"http://127.0.0.1:" + mockPort + "/status\">sip:henrique@127.0.0.1:" + henriquePort + "</Sip><Number statusCallback=\"http://127.0.0.1:" + mockPort + "/status\">+131313</Number></Dial></Response>";
     @Test
+    @Category(FeatureAltTests.class)
     public synchronized void testDialForkNoAnswerButHenriqueStatusCallbackOnAllPost() throws InterruptedException, ParseException, MalformedURLException {
         stubFor(get(urlPathEqualTo("/1111"))
                 .willReturn(aResponse()
@@ -1176,7 +1181,7 @@ public class DialStatusCallbackTest {
 
     private String dialForkWithTimeoutStatusCallbackWithPost = "<Response><Dial timeout=\"60\"><Client statusCallback=\"http://127.0.0.1:" + mockPort + "/status\">alice</Client><Sip statusCallback=\"http://127.0.0.1:" + mockPort + "/status\">sip:henrique@127.0.0.1:" + henriquePort + "</Sip><Number statusCallback=\"http://127.0.0.1:" + mockPort + "/status\">+131313</Number></Dial></Response>";
     @Test
-    @Category(UnstableTests.class)
+    @Category({UnstableTests.class, FeatureAltTests.class})
     public synchronized void testDialForkNoAnswerButHenriqueStatusCallbackOnAllPostWithTimeout() throws InterruptedException, ParseException, MalformedURLException {
         stubFor(get(urlPathEqualTo("/1111"))
                 .willReturn(aResponse()
@@ -1330,7 +1335,7 @@ public class DialStatusCallbackTest {
     private String rcmlToReturn = "<Response><Dial timeout=\"50\"><Client statusCallback=\"http://127.0.0.1:" + mockPort + "/status\" statusCallbackMethod=\"get\">alice</Client>   </Dial></Response>";
     //Non regression test for https://telestax.atlassian.net/browse/RESTCOMM-585
     @Test //TODO Fails when the whole test class runs but Passes when run individually
-    @Category(UnstableTests.class)
+    @Category({UnstableTests.class, FeatureAltTests.class})
     public synchronized void testDialForkNoAnswerExecuteRCML_ReturnedFromActionURLWithStatusCallbacks_BobDisconnects() throws InterruptedException, ParseException, MalformedURLException {
 
         stubFor(get(urlPathEqualTo("/1111"))
@@ -1474,7 +1479,7 @@ public class DialStatusCallbackTest {
 
     //Non regression test for https://telestax.atlassian.net/browse/RESTCOMM-585
     @Test //TODO Fails when the whole test class runs but Passes when run individually
-    @Category(UnstableTests.class)
+    @Category({UnstableTests.class, FeatureAltTests.class})
     public synchronized void testDialForkNoAnswerExecuteRCML_ReturnedFromActionURLWithStatusCallbacks_AliceDisconnects() throws InterruptedException, ParseException, MalformedURLException {
 
         stubFor(get(urlPathEqualTo("/1111"))
