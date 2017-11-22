@@ -131,7 +131,7 @@
 		<netty.version>3.9.6.Final</netty.version>
 		<logback.version>1.1.3</logback.version>
 		<maven-artifact.version>3.1.0</maven-artifact.version>
-		<smpp-extensions.version>7.1.0-77</smpp-extensions.version>
+		<smpp-extensions.version>7.1.0-79</smpp-extensions.version>
 		<mockito-core.version>2.8.9</mockito-core.version>
 
 	</properties>
