@@ -18,6 +18,7 @@ import org.junit.Rule;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.restcomm.connect.commons.Version;
+import org.restcomm.connect.commons.annotations.FeatureAltTests;
 import org.restcomm.connect.testsuite.telephony.security.DigestServerAuthenticationMethod;
 
 import javax.sip.address.SipURI;
@@ -55,7 +56,7 @@ import org.restcomm.connect.testsuite.WebArchiveUtil;
  * @author jean.deruelle@telestax.com
  */
 @RunWith(Arquillian.class)
-@Category(value={WithInMinsTests.class, ParallelClassTests.class})
+@Category(ParallelClassTests.class)
 public class TestDialVerbPartThree {
     private final static Logger logger = Logger.getLogger(TestDialVerbPartThree.class.getName());
 
@@ -168,6 +169,7 @@ public class TestDialVerbPartThree {
 
 //Non regression test for https://github.com/Mobicents/RestComm/issues/612
     @Test
+    @Category({UnstableTests.class, FeatureAltTests.class})
     public synchronized void testRecord_ExecuteRCML_ReturnedFromActionURL() throws InterruptedException, ParseException {
 
         stubFor(get(urlPathEqualTo("/1111"))
@@ -229,6 +231,7 @@ public class TestDialVerbPartThree {
 
     //Non regression test for https://github.com/Mobicents/RestComm/issues/612
     @Test
+    @Category({UnstableTests.class, FeatureAltTests.class})
     public synchronized void testRecord_ExecuteRCML_ReturnedFromActionURLWithNullFinishOnKey() throws InterruptedException, ParseException {
 
         stubFor(get(urlPathEqualTo("/1111"))
@@ -291,6 +294,7 @@ public class TestDialVerbPartThree {
     private String playRcml = "<Play>/restcomm/audio/demo-prompt.wav</Play>";
     //Non regression test for https://telestax.atlassian.net/browse/RESTCOMM-585
     @Test
+    @Category(FeatureAltTests.class)
     public synchronized void testDialWithCustomHeaders() throws InterruptedException, ParseException {
         //Received request: GET /rcml?CallSid=CA154c8c93d7eb439989a6ea42915b6c1b&AccountSid=ACae6e420f425248d6a26948c17a9e2acf&From=bob&To=%2B17778&
         //CallStatus=ringing&ApiVersion=2012-04-24&Direction=inbound&CallerName&ForwardedFrom&SipHeader_X-MyCustom-Header1=Value1&SipHeader_X-MyCustom-Header2=Value2 HTTP/1.1
@@ -488,6 +492,7 @@ public class TestDialVerbPartThree {
     @Test
 // Non regression test for https://bitbucket.org/telestax/telscale-restcomm/issue/132/implement-twilio-sip-out
 // with URL screening
+    @Category(FeatureAltTests.class)
     public synchronized void testDialSipTagScreening() throws InterruptedException, ParseException {
         stubFor(get(urlPathEqualTo("/1111"))
                 .willReturn(aResponse()
@@ -562,6 +567,7 @@ public class TestDialVerbPartThree {
     @Test
 // Non regression test for https://bitbucket.org/telestax/telscale-restcomm/issue/132/implement-twilio-sip-out
 // with Dial Action screening
+    @Category(FeatureAltTests.class)
     public synchronized void testDialSipDialTagScreening() throws InterruptedException, ParseException {
         stubFor(get(urlPathEqualTo("/1111"))
                 .willReturn(aResponse()
@@ -637,6 +643,7 @@ public class TestDialVerbPartThree {
     @Test
 // Non regression test for https://bitbucket.org/telestax/telscale-restcomm/issue/132/implement-twilio-sip-out
 // with Dial Action screening
+    @Category(FeatureAltTests.class)
     public synchronized void testDialSipDialTagScreening180Decline() throws InterruptedException, ParseException {
         stubFor(get(urlPathEqualTo("/1111"))
                 .willReturn(aResponse()
@@ -714,6 +721,7 @@ public class TestDialVerbPartThree {
 
     private String dialClientRcml = "<Response><Dial timeLimit=\"10\" timeout=\"10\"><Client>alice</Client></Dial></Response>";
     @Test //For github issue #600, At the DB the IncomingPhoneNumber is '1111' and we dial '+1111', Restcomm should find this number even with the '+'
+    @Category(FeatureAltTests.class)
     public synchronized void testDialClientAliceWithPlusSign() throws InterruptedException, ParseException {
         stubFor(get(urlPathEqualTo("/1111"))
                 .willReturn(aResponse()
@@ -766,6 +774,7 @@ public class TestDialVerbPartThree {
     }
 
     @Test //For github issue #600, At the DB the IncomingPhoneNumber is '+2222' and we dial '2222', Restcomm should find this number even without the '+'
+    @Category(FeatureAltTests.class)
     public synchronized void testDialClientAliceWithoutPlusSign() throws InterruptedException, ParseException {
         stubFor(get(urlPathEqualTo("/1111"))
                 .willReturn(aResponse()

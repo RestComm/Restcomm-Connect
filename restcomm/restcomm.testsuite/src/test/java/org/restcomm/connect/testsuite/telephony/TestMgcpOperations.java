@@ -40,7 +40,7 @@ import org.restcomm.connect.commons.annotations.WithInMinsTests;
  * Created by gvagenas on 6/15/16.
  */
 @RunWith(Arquillian.class)
-@Category(value={WithInMinsTests.class, SequentialClassTests.class})
+@Category(SequentialClassTests.class)
 public class TestMgcpOperations {
 
     private final static Logger logger = Logger.getLogger(TestDialVerbPartOne.class.getName());
