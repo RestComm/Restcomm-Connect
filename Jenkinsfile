@@ -31,7 +31,7 @@ node("cxs-ups-testsuites") {
                 node('cxs-ups-testsuites_large'){
                    unstash 'mavenArtifacts'
                    checkout scm
-                   sh 'mvn -f restcomm/pom.xml  -T 1.5C clean install -pl \\!restcomm.testsuite -DskipTests"
+                   sh 'mvn -f restcomm/pom.xml  -T 1.5C clean install -pl \\!restcomm.testsuite -DskipTests'
                    sh 'mvn -f restcomm/restcomm.testsuite/pom.xml  clean install -DforkCount=16 -Dmaven.test.failure.ignore=true -Dmaven.test.redirectTestOutputToFile=true -Dfailsafe.rerunFailingTestsCount=0 -Dgroups="org.restcomm.connect.commons.annotations.ParallelClassTests" -DexcludedGroups="org.restcomm.connect.commons.annotations.UnstableTests or org.restcomm.connect.commons.annotations.BrokenTests"'
                    junit testResults: '**/target/surefire-reports/*.xml', testDataPublishers: [[$class: 'StabilityTestDataPublisher']]
                 }
