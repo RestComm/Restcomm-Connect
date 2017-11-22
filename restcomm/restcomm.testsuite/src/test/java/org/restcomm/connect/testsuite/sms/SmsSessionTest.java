@@ -43,8 +43,11 @@ import java.util.HashMap;
 import java.util.Map;
 import org.junit.experimental.categories.Category;
 import org.restcomm.connect.commons.Version;
+import org.restcomm.connect.commons.annotations.FeatureAltTests;
+import org.restcomm.connect.commons.annotations.FeatureCoreTests;
+import org.restcomm.connect.commons.annotations.FeatureExpTests;
 import org.restcomm.connect.commons.annotations.ParallelClassTests;
-import org.restcomm.connect.commons.annotations.WithInMinsTests;
+import org.restcomm.connect.commons.annotations.WithInSecsTests;
 import org.restcomm.connect.testsuite.NetworkPortAssigner;
 import org.restcomm.connect.testsuite.WebArchiveUtil;
 
@@ -53,7 +56,7 @@ import org.restcomm.connect.testsuite.WebArchiveUtil;
  * @author gvagenas@gmail.com (George Vagenas)
  */
 @RunWith(Arquillian.class)
-@Category(value={WithInMinsTests.class, ParallelClassTests.class})
+@Category(value={WithInSecsTests.class, ParallelClassTests.class})
 public final class SmsSessionTest {
     private static final String version = Version.getVersion();
 
@@ -133,6 +136,7 @@ public final class SmsSessionTest {
     }
 
     @Test
+    @Category(value={FeatureCoreTests.class})
     public void testSendSmsRedirectReceiveSms() throws ParseException {
         // Send restcomm an sms.
         final String proxy = phone.getStackAddress() + ":" + restcommPort + ";lr/udp";
@@ -152,6 +156,7 @@ public final class SmsSessionTest {
     }
 
     @Test
+    @Category(value={FeatureAltTests.class})
     public void testSendSmsRedirectReceiveSms2() throws ParseException {
         // Send restcomm an sms.
         final String proxy = phone.getStackAddress() + ":" + restcommPort + ";lr/udp";
@@ -171,6 +176,7 @@ public final class SmsSessionTest {
     }
 
     @Test
+    @Category(value={FeatureAltTests.class})
     public void testSendSmsRedirectReceiveSms3() throws ParseException {
         // Send restcomm an sms.
         final String proxy = phone.getStackAddress() + ":" + restcommPort + ";lr/udp";
@@ -190,6 +196,7 @@ public final class SmsSessionTest {
     }
 
     @Test
+    @Category(value={FeatureCoreTests.class})
     public void testAliceEchoTest() throws ParseException {
 
         SipURI uri = alice.getAddressFactory().createSipURI(null, restcommContact);
@@ -229,6 +236,7 @@ public final class SmsSessionTest {
 
     private String smsRcml = "<Response><Sms to=\"alice\" from=\"restcomm\">Hello World!</Sms></Response>";
     @Test
+    @Category(value={FeatureAltTests.class})
     public void testSmsWithCustomHeaders() throws ParseException {
         stubFor(get(urlPathEqualTo("/rcml"))
                 .withQueryParam("SipHeader_X-MyCustom-Header1", containing("Value1"))
@@ -278,6 +286,7 @@ public final class SmsSessionTest {
     }
 
     @Test
+    @Category(value={FeatureExpTests.class})
     public void sendMessageUsingValidContentType() throws ParseException {
         final String proxy = phone.getStackAddress() + ":" + restcommPort + ";lr/udp";
         final String to = "sip:+12223334450@" + restcommContact;
@@ -303,6 +312,7 @@ public final class SmsSessionTest {
     }
 
     @Test
+    @Category(value={FeatureExpTests.class})
     public void sendMessageUsingInvalidContentType() throws ParseException {
         final String proxy = phone.getStackAddress() + ":" + restcommPort + ";lr/udp";
         final String to = "sip:+12223334450@" + restcommContact;
@@ -330,6 +340,7 @@ public final class SmsSessionTest {
     }
 
     @Test
+    @Category(value={FeatureExpTests.class})
     public void sendMessageUsingInvalidContentType2() throws ParseException {
         final String proxy = phone.getStackAddress() + ":" + restcommPort + ";lr/udp";
         final String to = "sip:+12223334450@" + restcommContact;
