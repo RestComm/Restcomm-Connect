@@ -52,8 +52,10 @@ import org.junit.BeforeClass;
 import org.junit.Ignore;
 import org.junit.Rule;
 import org.junit.Test;
+import org.junit.experimental.categories.Category;
 import org.junit.runner.RunWith;
 import org.restcomm.connect.commons.Version;
+import org.restcomm.connect.commons.annotations.SequentialClassTests;
 import org.restcomm.connect.testsuite.http.RestcommCallsTool;
 //import org.restcomm.connect.telephony.Version;
 import org.restcomm.connect.testsuite.telephony.security.DigestServerAuthenticationMethod;
@@ -64,10 +66,6 @@ import com.google.gson.JsonArray;
 import com.google.gson.JsonObject;
 
 import gov.nist.javax.sip.message.MessageExt;
-import org.junit.experimental.categories.Category;
-import org.restcomm.connect.commons.annotations.FeatureCoreTests;
-import org.restcomm.connect.commons.annotations.SequentialClassTests;
-import org.restcomm.connect.commons.annotations.WithInMinsTests;
 
 /**
  * Test for Dial verb. Will test Dial Conference, Dial URI, Dial Client, Dial Number and Dial Fork
@@ -77,7 +75,7 @@ import org.restcomm.connect.commons.annotations.WithInMinsTests;
  */
 @Ignore //Moved all tests to DialTest1, DialTest2, DialTest2
 @RunWith(Arquillian.class)
-@Category(value={FeatureCoreTests.class, SequentialClassTests.class})
+@Category(value={SequentialClassTests.class})
 public class DialTest {
     private final static Logger logger = Logger.getLogger(DialTest.class.getName());
 

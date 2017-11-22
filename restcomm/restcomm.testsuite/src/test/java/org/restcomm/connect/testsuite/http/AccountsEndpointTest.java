@@ -40,6 +40,8 @@ import com.sun.jersey.api.client.UniformInterfaceException;
 import com.sun.jersey.api.client.WebResource;
 import com.sun.jersey.core.util.MultivaluedMapImpl;
 import org.junit.experimental.categories.Category;
+import org.restcomm.connect.commons.annotations.FeatureAltTests;
+import org.restcomm.connect.commons.annotations.FeatureExpTests;
 import org.restcomm.connect.commons.annotations.UnstableTests;
 
 /**
@@ -146,6 +148,7 @@ public class AccountsEndpointTest extends EndpointTest {
     }
 
     @Test
+    @Category(FeatureExpTests.class)
     public void testGetAccountAccess(){
         // check non-existent user receives a 401
         ClientResponse response = RestcommAccountsTool.getInstance().getAccountResponse(deploymentUrl.toString(), "nonexisting@company.com", "badpassword", adminAccountSid);
@@ -156,6 +159,7 @@ public class AccountsEndpointTest extends EndpointTest {
     }
 
     @Test
+    @Category(FeatureExpTests.class)
     public void testGetAccountByFriendlyName() {
         // Try to get Account using admin friendly name and user email address
         int code = 0;
@@ -241,6 +245,7 @@ public class AccountsEndpointTest extends EndpointTest {
     }
 
     @Test
+    @Category(FeatureAltTests.class)
     public void testUpdateAccountStatusAllCapital() {
         JsonObject updateAccountResponse = RestcommAccountsTool.getInstance().updateAccount(deploymentUrl.toString(),
                 adminUsername, adminAuthToken, updatedAccountSid, "updated2", "Restcomm2", null, "Developer", "ACTIVE" );
@@ -309,7 +314,9 @@ public class AccountsEndpointTest extends EndpointTest {
     }
 
     // special account-update policy when updating roles
-    @Test public void testUpdateAccountRoleAccessControl() {
+    @Test
+    @Category(FeatureExpTests.class)
+    public void testUpdateAccountRoleAccessControl() {
         // non-admins should not be able to change their role
         ClientResponse response = RestcommAccountsTool.getInstance().updateAccountResponse(deploymentUrl.toString(),
                 updatedRoleUsername, updateRoleAuthToken, updatedRoleAccountSid, null, null, null, "Administrator", null );
@@ -325,7 +332,9 @@ public class AccountsEndpointTest extends EndpointTest {
 
     }
 
-    @Test public void testCreateAccountAccess(){
+    @Test
+    @Category(FeatureExpTests.class)
+    public void testCreateAccountAccess(){
         // 'unprivilaged should not be able to create accounts and receive a 403
         ClientResponse response = RestcommAccountsTool.getInstance().createAccountResponse(deploymentUrl.toString(),
                 unprivilegedUsername, unprivilegedAuthToken, "notcreated@company.com", "not-created-password");
@@ -333,6 +342,7 @@ public class AccountsEndpointTest extends EndpointTest {
     }
 
     @Test
+    @Category(FeatureExpTests.class)
     public void testCreateAdministratorAccountFails() {
         JsonObject createAccountResponse = RestcommAccountsTool.getInstance().createAccount(deploymentUrl.toString(),
                 adminUsername, adminAuthToken, "administrator@company.com", "RestComm12");
@@ -340,6 +350,7 @@ public class AccountsEndpointTest extends EndpointTest {
     }
 
     @Test
+    @Category(FeatureExpTests.class)
     public void testCreateAccountTwiceFails() {
         ClientResponse createResponse1 = RestcommAccountsTool.getInstance().createAccountResponse(deploymentUrl.toString(), adminUsername, adminAuthToken,
                 "twice@company.com", "RestComm12");
@@ -393,6 +404,7 @@ public class AccountsEndpointTest extends EndpointTest {
     }
 
     @Test
+    @Category(FeatureExpTests.class)
     public void testCreateAccountFourthLevelFails() {
         ClientResponse response = RestcommAccountsTool.getInstance().createAccountResponse(deploymentUrl.toString(), "grandchild@company.com", commonAuthToken, "fourthlevelAccount@company.com", "RestComm12");
         assertEquals(400, response.getStatus());
@@ -541,6 +553,7 @@ public class AccountsEndpointTest extends EndpointTest {
     }
 
     @Test
+    @Category(FeatureExpTests.class)
     public void testGetAccountsAccess() {
         ClientResponse response = RestcommAccountsTool.getInstance().getAccountsResponse(deploymentUrl.toString(), guestUsername, guestAuthToken);
         assertEquals("Guest account should get get a 403 when retrieving accounts", 403, response.getStatus());
@@ -587,6 +600,7 @@ public class AccountsEndpointTest extends EndpointTest {
     }
 
     @Test
+    @Category(FeatureExpTests.class)
     public void createAccountInSpecificOrganizationPermissionTest() {
     	// child should not be able to create account in specified org that it does not belong to
     	ClientResponse clientResponse = RestcommAccountsTool.getInstance().createAccountResponse(deploymentUrl.toString(),
@@ -610,6 +624,7 @@ public class AccountsEndpointTest extends EndpointTest {
     }
 
     @Test
+    @Category(FeatureExpTests.class)
     public void createAccountInSpecificOrganizationInvalidRequestTest() {
 
     	//super admin tries to create account with invalid organization Sid
@@ -624,7 +639,7 @@ public class AccountsEndpointTest extends EndpointTest {
     }
 
     @Test
-    @Category(UnstableTests.class)
+    @Category({UnstableTests.class, FeatureAltTests.class})
     public void testGetAccountsOfASpecificOrganization() {
     	//getAccounts without any parameters
         ClientResponse response = RestcommAccountsTool.getInstance().getAccountsResponse(deploymentUrl.toString(), adminUsername, adminAuthToken);
