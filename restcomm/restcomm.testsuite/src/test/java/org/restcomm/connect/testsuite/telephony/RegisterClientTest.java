@@ -59,8 +59,7 @@ import org.restcomm.connect.testsuite.http.RestcommCallsTool;
 import com.google.gson.JsonArray;
 import com.google.gson.JsonObject;
 import org.junit.experimental.categories.Category;
-import org.restcomm.connect.commons.annotations.SequentialClassTests;
-import org.restcomm.connect.commons.annotations.WithInMinsTests;
+import org.restcomm.connect.commons.annotations.UnstableTests;
 import org.restcomm.connect.testsuite.tools.MonitoringServiceTool;
 
 /**
@@ -167,6 +166,7 @@ public class RegisterClientTest {
     }
 
     @Test
+    @Category(value={UnstableTests.class})
     public void testRegisterClients() throws ParseException, InterruptedException {
 
         assertNotNull(mariaRestcommClientSid);
@@ -186,6 +186,7 @@ public class RegisterClientTest {
     }
 
     @Test
+    @Category(value={UnstableTests.class})
     public void testRegisterClientAndRemoveItAfterNoResponseToOptions() throws ParseException, InterruptedException, SipException, InvalidArgumentException, IOException {
         assertNotNull(georgeRestcommClientSid);
         SipURI uri = georgeSipStack.getAddressFactory().createSipURI(null, "127.0.0.1:5080");
@@ -210,6 +211,7 @@ public class RegisterClientTest {
 
 
     @Test
+    @Category(value={UnstableTests.class})
     public void testGeorgeCallMaria() throws ParseException, InterruptedException {
 
         assertNotNull(mariaRestcommClientSid);
