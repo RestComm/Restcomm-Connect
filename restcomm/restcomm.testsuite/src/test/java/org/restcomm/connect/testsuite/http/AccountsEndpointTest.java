@@ -367,6 +367,7 @@ public class AccountsEndpointTest extends EndpointTest {
      * @throws Exception
      */
     @Test
+    @Category(UnstableTests.class)
     public void testCreateAccountCheckClientExisted() throws Exception {
         try {
             String thinhContact = "sip:lyhungthinh@127.0.0.1:5090";
@@ -412,6 +413,7 @@ public class AccountsEndpointTest extends EndpointTest {
     }
 
     @Test
+    @Category(UnstableTests.class)
     public void testUpdateAccountCheckClient() throws Exception {
         try {
             String thinhContact = "sip:lyhungthinh2@127.0.0.1:5090";
@@ -453,6 +455,7 @@ public class AccountsEndpointTest extends EndpointTest {
     }
 
     @Test
+    @Category(UnstableTests.class)
     public void testCloseAccountCheckClient() throws Exception {
         try {
             String thinhContact = "sip:lyhungthinh3@127.0.0.1:5090";

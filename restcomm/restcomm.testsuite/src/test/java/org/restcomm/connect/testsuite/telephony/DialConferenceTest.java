@@ -36,6 +36,7 @@ import org.junit.runner.RunWith;
 import org.restcomm.connect.commons.Version;
 import org.restcomm.connect.commons.annotations.FeatureAltTests;
 import org.restcomm.connect.commons.annotations.SequentialClassTests;
+import org.restcomm.connect.commons.annotations.UnstableTests;
 import org.restcomm.connect.testsuite.http.RestcommConferenceParticipantsTool;
 import org.restcomm.connect.testsuite.http.RestcommConferenceTool;
 import org.restcomm.connect.testsuite.tools.MonitoringServiceTool;
@@ -181,7 +182,7 @@ public class DialConferenceTest {
     private final String confRoom1 = "confRoom1";
     private String dialConfernceRcmlWithTimeLimit = "<Response><Dial timeLimit=\"50\"><Conference>"+confRoom1+"</Conference></Dial></Response>";
     @Test //This is expected to fail because of https://github.com/RestComm/Restcomm-Connect/issues/1081
-    @Category(FeatureAltTests.class)
+    @Category({FeatureAltTests.class, UnstableTests.class})
     public synchronized void testDialConferenceClientsWaitForDisconnect() throws InterruptedException {
         stubFor(get(urlPathEqualTo("/1111"))
                 .willReturn(aResponse()

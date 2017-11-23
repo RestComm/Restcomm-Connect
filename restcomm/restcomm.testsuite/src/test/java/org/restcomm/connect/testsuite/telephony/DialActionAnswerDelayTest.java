@@ -270,6 +270,7 @@ public class DialActionAnswerDelayTest {
     }
 
     @Test //No regression test for https://github.com/Mobicents/RestComm/issues/505
+    @Category(UnstableTests.class)
     public void testDialActionInvalidCallCheckCallStatusCompleted() throws ParseException, InterruptedException {
 
         stubFor(post(urlPathMatching("/DialAction.*"))

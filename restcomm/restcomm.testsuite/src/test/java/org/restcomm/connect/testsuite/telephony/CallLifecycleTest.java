@@ -245,7 +245,7 @@ public class CallLifecycleTest {
     }
 
     @Test
-    @Category(FeatureExpTests.class)
+    @Category({FeatureExpTests.class, UnstableTests.class})
     public void testDialCancelBeforeDialingClientAliceAfterTrying() throws ParseException, InterruptedException, MalformedURLException {
 
         stubFor(get(urlPathEqualTo("/1111"))
@@ -305,7 +305,7 @@ public class CallLifecycleTest {
     }
 
     @Test
-    @Category(FeatureExpTests.class)
+    @Category({FeatureExpTests.class, UnstableTests.class})
     public void testDialCancelBeforeDialingClientAliceAfterRinging() throws ParseException, InterruptedException, MalformedURLException {
 
         stubFor(get(urlPathEqualTo("/1111"))
