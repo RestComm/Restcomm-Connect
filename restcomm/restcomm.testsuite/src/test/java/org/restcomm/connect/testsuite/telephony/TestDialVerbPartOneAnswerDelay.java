@@ -36,6 +36,9 @@ import static org.cafesip.sipunit.SipAssert.assertLastOperationSuccess;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertTrue;
+import org.junit.experimental.categories.Category;
+import org.restcomm.connect.commons.annotations.FeatureAltTests;
+import org.restcomm.connect.commons.annotations.ParallelClassTests;
 import org.restcomm.connect.testsuite.NetworkPortAssigner;
 import org.restcomm.connect.testsuite.WebArchiveUtil;
 
@@ -46,6 +49,7 @@ import org.restcomm.connect.testsuite.WebArchiveUtil;
  * @author jean.deruelle@telestax.com
  */
 @RunWith(Arquillian.class)
+@Category(value={FeatureAltTests.class, ParallelClassTests.class})
 public class TestDialVerbPartOneAnswerDelay {
     private final static Logger logger = Logger.getLogger(TestDialVerbPartOneAnswerDelay.class.getName());
 
@@ -85,14 +89,14 @@ public class TestDialVerbPartOneAnswerDelay {
     private String adminAuthToken = "77f8c12cc7b8f8423e5c38b035249166";
 
     private static int mediaPort = NetworkPortAssigner.retrieveNextPortByFile();
-    
+
     private static int mockPort = NetworkPortAssigner.retrieveNextPortByFile();
     @Rule
     public WireMockRule wireMockRule = new WireMockRule(mockPort);
     private String dialClientRcmlWithScreeningRelative = "<Response><Dial timeLimit=\"10\" timeout=\"10\"><Client url=\"http://127.0.0.1:" + mockPort + "/screening\" method=\"GET\">alice</Client></Dial></Response>";
     private String dialClientRcmlWithScreening = "<Response><Dial timeLimit=\"10\" timeout=\"10\"><Client url=\"http://127.0.0.1:" + mockPort + "/screening\" method=\"GET\">alice</Client></Dial></Response>";
 
-    
+
     private static SipStackTool tool1;
     private static SipStackTool tool2;
     private static SipStackTool tool3;
@@ -109,25 +113,25 @@ public class TestDialVerbPartOneAnswerDelay {
     private SipStack aliceSipStack;
     private SipPhone alicePhone;
     private static String alicePort = String.valueOf(NetworkPortAssigner.retrieveNextPortByFile());
-    private String aliceContact = "sip:alice@127.0.0.1:" + alicePort;        
+    private String aliceContact = "sip:alice@127.0.0.1:" + alicePort;
 
     // George is a simple SIP Client. Will not register with Restcomm
     private SipStack georgeSipStack;
     private SipPhone georgePhone;
     private static String georgePort = String.valueOf(NetworkPortAssigner.retrieveNextPortByFile());
-    private String georgeContact = "sip:+131313@127.0.0.1:" + georgePort;      
+    private String georgeContact = "sip:+131313@127.0.0.1:" + georgePort;
 
     // Fotini is a simple SIP Client. Will not register with Restcomm
     private SipStack fotiniSipStack;
     private SipPhone fotiniPhone;
     private static String fotiniPort = String.valueOf(NetworkPortAssigner.retrieveNextPortByFile());
-    private String fotiniContact = "sip:fotini@127.0.0.1:" + fotiniPort; 
+    private String fotiniContact = "sip:fotini@127.0.0.1:" + fotiniPort;
 
     private static int restcommPort = 5080;
-    private static int restcommHTTPPort = 8080;    
-    private static String restcommContact = "127.0.0.1:" + restcommPort;       
+    private static int restcommHTTPPort = 8080;
+    private static String restcommContact = "127.0.0.1:" + restcommPort;
     private static String dialRestcomm = "sip:1111@" + restcommContact;
-    private static String notFoundDialNumber = "sip:+12223334457@" + restcommContact;    
+    private static String notFoundDialNumber = "sip:+12223334457@" + restcommContact;
 
 
     @BeforeClass
@@ -137,18 +141,18 @@ public class TestDialVerbPartOneAnswerDelay {
         tool3 = new SipStackTool("DialTest1Tool3");
         tool4 = new SipStackTool("DialTest1Tool4");
     }
-    
-    public static void reconfigurePorts() { 
+
+    public static void reconfigurePorts() {
         if (System.getProperty("arquillian_sip_port") != null) {
             restcommPort = Integer.valueOf(System.getProperty("arquillian_sip_port"));
-            restcommContact = "127.0.0.1:" + restcommPort; 
+            restcommContact = "127.0.0.1:" + restcommPort;
             dialRestcomm = "sip:1111@" + restcommContact;
-            notFoundDialNumber = "sip:+12223334457@" + restcommContact;            
-        } 
+            notFoundDialNumber = "sip:+12223334457@" + restcommContact;
+        }
         if (System.getProperty("arquillian_http_port") != null) {
-            restcommHTTPPort = Integer.valueOf(System.getProperty("arquillian_http_port"));       
-        }       
-    }    
+            restcommHTTPPort = Integer.valueOf(System.getProperty("arquillian_http_port"));
+        }
+    }
 
     @Before
     public void before() throws Exception {
@@ -198,7 +202,7 @@ public class TestDialVerbPartOneAnswerDelay {
         wireMockRule.resetRequests();
         Thread.sleep(2000);
     }
-    
+
     private String dialUriRcml = "<Response><Dial timeLimit=\"100000\" timeout=\"1000000\"><Uri>sip:alice@127.0.0.1:" + alicePort + "</Uri></Dial><Hangup/></Response>";
     @Test
     public synchronized void testDialUriAliceHangup() throws InterruptedException, ParseException {
@@ -461,24 +465,24 @@ public class TestDialVerbPartOneAnswerDelay {
         assertTrue(aliceCall.waitForDisconnect(30 * 1000));
         assertTrue(aliceCall.respondToDisconnect());
     }
-    
+
     @Deployment(name = "TestDialVerbPartOneAnswerDelay", managed = true, testable = false)
     public static WebArchive createWebArchiveNoGw() {
         logger.info("Packaging Test App");
         reconfigurePorts();
 
         Map<String,String> replacements = new HashMap();
-        //replace mediaport 2727 
-        replacements.put("2727", String.valueOf(mediaPort));         
+        //replace mediaport 2727
+        replacements.put("2727", String.valueOf(mediaPort));
         replacements.put("8080", String.valueOf(restcommHTTPPort));
         replacements.put("8090", String.valueOf(mockPort));
         replacements.put("5080", String.valueOf(restcommPort));
-        replacements.put("5070", String.valueOf(georgePort));        
+        replacements.put("5070", String.valueOf(georgePort));
         replacements.put("5090", String.valueOf(bobPort));
         replacements.put("5091", String.valueOf(alicePort));
-      
-        return WebArchiveUtil.createWebArchiveNoGw("restcomm-delay.xml", 
+
+        return WebArchiveUtil.createWebArchiveNoGw("restcomm-delay.xml",
                 "restcomm.script_dialTest_new", replacements);
-    }    
+    }
 
 }

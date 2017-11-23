@@ -16,11 +16,13 @@ import org.jboss.shrinkwrap.api.ShrinkWrap;
 import org.jboss.shrinkwrap.api.spec.WebArchive;
 import org.jboss.shrinkwrap.resolver.api.maven.archive.ShrinkWrapMaven;
 import org.junit.Test;
+import org.junit.experimental.categories.Category;
 import org.junit.runner.RunWith;
 
 import com.google.gson.JsonArray;
 import com.google.gson.JsonObject;
 import org.restcomm.connect.commons.Version;
+import org.restcomm.connect.commons.annotations.FeatureAltTests;
 
 /**
  * @author <a href="mailto:gvagenas@gmail.com">gvagenas</a>
@@ -78,6 +80,7 @@ public class CallsEndpointTest {
     }
 
     @Test
+    @Category(FeatureAltTests.class)
     public void getCallsListUsingPageSize() {
         JsonObject firstPage = (JsonObject) RestcommCallsTool.getInstance().getCalls(deploymentUrl.toString(), adminAccountSid,
                 adminAuthToken, null, 100, true);
@@ -107,6 +110,7 @@ public class CallsEndpointTest {
     }
 
     @Test
+    @Category(FeatureAltTests.class)
     public void getCallsListFilteredByStatus() {
         Map<String, String> filters = new HashMap<String, String>();
         filters.put("Status", "in-progress");
@@ -127,6 +131,7 @@ public class CallsEndpointTest {
     }
 
     @Test
+    @Category(FeatureAltTests.class)
     public void getCallsListFilteredBySender() {
         Map<String, String> filters = new HashMap<String, String>();
         filters.put("From", "3021097%");
@@ -145,6 +150,7 @@ public class CallsEndpointTest {
     }
 
     @Test
+    @Category(FeatureAltTests.class)
     public void getCallsListFilteredByRecipient() {
         Map<String, String> filters = new HashMap<String, String>();
         filters.put("To", "1512600%");
@@ -160,6 +166,7 @@ public class CallsEndpointTest {
     }
 
     @Test
+    @Category(FeatureAltTests.class)
     public void getCallsListFilteredByStartTime() {
         Map<String, String> filters = new HashMap<String, String>();
         filters.put("StartTime", "2013-08-23 14:30:07.820000000");
@@ -175,6 +182,7 @@ public class CallsEndpointTest {
     }
 
     @Test
+    @Category(FeatureAltTests.class)
     public void getCallsListFilteredByParentCallSid() {
         Map<String, String> filters = new HashMap<String, String>();
         filters.put("ParentCallSid", "CA01a09068a1f348269b6670ef599a6e57");
@@ -186,6 +194,7 @@ public class CallsEndpointTest {
     }
 
     @Test
+    @Category(FeatureAltTests.class)
     public void getCallsListFilteredUsingMultipleFilters() {
         Map<String, String> filters = new HashMap<String, String>();
         filters.put("StartTime", "2013-08-23 14:30:07.820000000");
@@ -205,6 +214,7 @@ public class CallsEndpointTest {
     }
 
     @Test
+    @Category(FeatureAltTests.class)
     public void getCallsListIncludingSubAccounts() {
         Map<String, String> filters = new HashMap<String, String>();
         filters.put("SubAccounts", "true");

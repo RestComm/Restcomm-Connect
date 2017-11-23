@@ -37,8 +37,11 @@ import org.jboss.shrinkwrap.api.spec.WebArchive;
 import org.jboss.shrinkwrap.resolver.api.maven.archive.ShrinkWrapMaven;
 import org.junit.Rule;
 import org.junit.Test;
+import org.junit.experimental.categories.Category;
 import org.junit.runner.RunWith;
 import org.restcomm.connect.commons.Version;
+import org.restcomm.connect.commons.annotations.FeatureAltTests;
+import org.restcomm.connect.commons.annotations.FeatureExpTests;
 
 import java.net.URL;
 
@@ -101,6 +104,7 @@ public class BandwidthAvailablePhoneNumbersEndpointTest {
     }
 
     @Test
+    @Category(FeatureExpTests.class)
     public void testSearchAreaCode205() {
         stubFor(get(urlMatching("/v1.0/accounts/12345/availableNumbers.*"))
                 .willReturn(aResponse()
@@ -155,6 +159,7 @@ public class BandwidthAvailablePhoneNumbersEndpointTest {
 
 
     @Test
+    @Category(FeatureAltTests.class)
     public void testReturnEmptyResultsSearch() {
         stubFor(get(urlMatching("/v1.0/accounts/12345/availableNumbers.*"))
                 .willReturn(aResponse()
@@ -180,6 +185,7 @@ public class BandwidthAvailablePhoneNumbersEndpointTest {
 
 
     @Test
+    @Category(FeatureExpTests.class)
     public void testMalformedSearchResultXml() {
         stubFor(get(urlMatching("/v1.0/accounts/12345/availableNumbers.*"))
                 .willReturn(aResponse()
@@ -234,6 +240,7 @@ public class BandwidthAvailablePhoneNumbersEndpointTest {
     }
 
     @Test
+    @Category(FeatureExpTests.class)
     public void testSearchForTollFreeNumbersInvalidPattern() {
         stubFor(get(urlMatching("/v1.0/accounts/12345/availableNumbers.*"))
                 .willReturn(aResponse()

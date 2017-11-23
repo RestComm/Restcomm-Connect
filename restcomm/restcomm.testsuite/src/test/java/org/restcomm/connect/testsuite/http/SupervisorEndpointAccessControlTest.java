@@ -28,7 +28,10 @@ import org.jboss.shrinkwrap.api.spec.WebArchive;
 import org.jboss.shrinkwrap.resolver.api.maven.archive.ShrinkWrapMaven;
 import org.junit.Assert;
 import org.junit.Test;
+import org.junit.experimental.categories.Category;
 import org.junit.runner.RunWith;
+import org.restcomm.connect.commons.annotations.FeatureAltTests;
+import org.restcomm.connect.commons.annotations.FeatureExpTests;
 import org.restcomm.connect.testsuite.tools.MonitoringServiceTool;
 
 import com.google.gson.JsonObject;
@@ -74,6 +77,7 @@ public class SupervisorEndpointAccessControlTest extends EndpointTest {
      *  Super Admins (but not ancestors) SHOULD be able to access supervisor metrics
      */
     @Test
+    @Category(FeatureAltTests.class)
     public void testSuperAdmin2PermissionTest() {
         JsonObject metrics = MonitoringServiceTool.getInstance().getMetrics(deploymentUrl.toString(), superAdmin2AccountSid, superAdmin2AuthToken);
         Assert.assertNotNull(metrics);
@@ -83,6 +87,7 @@ public class SupervisorEndpointAccessControlTest extends EndpointTest {
      *  Admin should NOT be able to access supervisor metrics
      */
     @Test
+    @Category(FeatureExpTests.class)
     public void testAdminPermissionTest() {
     	Client jerseyClient = Client.create();
         jerseyClient.addFilter(new HTTPBasicAuthFilter(adminAccountSid, adminAccountAuthToken));
@@ -96,6 +101,7 @@ public class SupervisorEndpointAccessControlTest extends EndpointTest {
      *  Developer should NOT be able to access supervisor metrics
      */
     @Test
+    @Category(FeatureExpTests.class)
     public void testDeveloperPermissionTest() {
     	Client jerseyClient = Client.create();
         jerseyClient.addFilter(new HTTPBasicAuthFilter(developerSid, developerAuthToken));

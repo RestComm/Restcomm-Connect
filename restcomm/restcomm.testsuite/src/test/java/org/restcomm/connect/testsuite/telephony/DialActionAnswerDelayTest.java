@@ -68,8 +68,11 @@ import com.google.gson.JsonObject;
 import java.util.HashMap;
 import java.util.Map;
 import org.junit.experimental.categories.Category;
+import org.restcomm.connect.commons.annotations.FeatureAltTests;
+import org.restcomm.connect.commons.annotations.ParallelClassTests;
 import org.restcomm.connect.testsuite.NetworkPortAssigner;
-import org.restcomm.connect.testsuite.UnstableTests;
+import org.restcomm.connect.commons.annotations.UnstableTests;
+import org.restcomm.connect.commons.annotations.WithInMinsTests;
 import org.restcomm.connect.testsuite.WebArchiveUtil;
 
 /**
@@ -80,6 +83,7 @@ import org.restcomm.connect.testsuite.WebArchiveUtil;
  *
  */
 @RunWith(Arquillian.class)
+@Category(value={FeatureAltTests.class, ParallelClassTests.class})
 public class DialActionAnswerDelayTest {
 
     private final static Logger logger = Logger.getLogger(DialActionAnswerDelayTest.class.getName());
@@ -98,11 +102,11 @@ public class DialActionAnswerDelayTest {
     URL deploymentUrl;
 
     private static int mediaPort = NetworkPortAssigner.retrieveNextPortByFile();
-    
+
     private static int mockPort = NetworkPortAssigner.retrieveNextPortByFile();
     @Rule
     public WireMockRule wireMockRule = new WireMockRule(mockPort);
-    
+
     private static SipStackTool tool1;
     private static SipStackTool tool2;
     private static SipStackTool tool3;
@@ -111,35 +115,35 @@ public class DialActionAnswerDelayTest {
     // Bob is a simple SIP Client. Will not register with Restcomm
     private SipStack bobSipStack;
     private SipPhone bobPhone;
-    private static String bobPort = String.valueOf(NetworkPortAssigner.retrieveNextPortByFile()); 
+    private static String bobPort = String.valueOf(NetworkPortAssigner.retrieveNextPortByFile());
     private String bobContact = "sip:bob@127.0.0.1:" + bobPort;
-    
+
     // Alice is a Restcomm Client with VoiceURL. This Restcomm Client can register with Restcomm and whatever will dial the RCML
     // of the VoiceURL will be executed.
     private SipStack aliceSipStack;
     private SipPhone alicePhone;
-    private static String alicePort = String.valueOf(NetworkPortAssigner.retrieveNextPortByFile());    
+    private static String alicePort = String.valueOf(NetworkPortAssigner.retrieveNextPortByFile());
     private String aliceContact = "sip:alice@127.0.0.1:" + alicePort;
 
     // Henrique is a simple SIP Client. Will not register with Restcomm
     private SipStack henriqueSipStack;
     private SipPhone henriquePhone;
-    private static String henriquePort = String.valueOf(NetworkPortAssigner.retrieveNextPortByFile());     
+    private static String henriquePort = String.valueOf(NetworkPortAssigner.retrieveNextPortByFile());
     private String henriqueContact = "sip:henrique@127.0.0.1:" + henriquePort;
 
     // George is a simple SIP Client. Will not register with Restcomm
     private SipStack georgeSipStack;
     private SipPhone georgePhone;
-    private static String georgePort = String.valueOf(NetworkPortAssigner.retrieveNextPortByFile());     
+    private static String georgePort = String.valueOf(NetworkPortAssigner.retrieveNextPortByFile());
     private String georgeContact = "sip:+131313@127.0.0.1:" + georgePort;
 
 
     private String adminAccountSid = "ACae6e420f425248d6a26948c17a9e2acf";
     private String adminAuthToken = "77f8c12cc7b8f8423e5c38b035249166";
-    
+
     private static int restcommPort = 5080;
-    private static int restcommHTTPPort = 8080;        
-    private static String restcommContact = "127.0.0.1:" + restcommPort;      
+    private static int restcommHTTPPort = 8080;
+    private static String restcommContact = "127.0.0.1:" + restcommPort;
     private static String dialClientWithActionUrl = "sip:+12223334455@" + restcommContact; // Application: dial-client-entry_wActionUrl.xml
 
     @BeforeClass
@@ -149,16 +153,16 @@ public class DialActionAnswerDelayTest {
         tool3 = new SipStackTool("DialActionAnswerDelayTest3");
         tool4 = new SipStackTool("DialActionAnswerDelayTest4");
     }
-    
+
     public static void reconfigurePorts() {
         if (System.getProperty("arquillian_sip_port") != null) {
             restcommPort = Integer.valueOf(System.getProperty("arquillian_sip_port"));
             restcommContact = "127.0.0.1:" + restcommPort;
             dialClientWithActionUrl = "sip:+12223334455@" + restcommContact;
-        } 
+        }
         if (System.getProperty("arquillian_http_port") != null) {
             restcommHTTPPort = Integer.valueOf(System.getProperty("arquillian_http_port"));
-        }         
+        }
     }
 
     @Before
@@ -266,6 +270,7 @@ public class DialActionAnswerDelayTest {
     }
 
     @Test //No regression test for https://github.com/Mobicents/RestComm/issues/505
+    @Category(UnstableTests.class)
     public void testDialActionInvalidCallCheckCallStatusCompleted() throws ParseException, InterruptedException {
 
         stubFor(post(urlPathMatching("/DialAction.*"))
@@ -317,6 +322,7 @@ public class DialActionAnswerDelayTest {
     }
 
     @Test
+    @Category(WithInMinsTests.class)
     public void testDialActionAliceAnswers() throws ParseException, InterruptedException {
 
         stubFor(post(urlPathMatching("/DialAction.*"))
@@ -691,6 +697,7 @@ public class DialActionAnswerDelayTest {
     }
 
     @Test
+    @Category(WithInMinsTests.class)
     public void testSipInviteCustomHeaders() throws ParseException, InterruptedException {
 
         stubFor(post(urlPathMatching("/DialAction.*"))
@@ -783,6 +790,7 @@ public class DialActionAnswerDelayTest {
     }
 
     @Test //TODO: PASSES when run individually. to check
+    @Category(WithInMinsTests.class)
     public void testDialCallDurationAliceAnswers() throws ParseException, InterruptedException {
 
         stubFor(post(urlPathMatching("/DialAction.*"))
@@ -966,20 +974,20 @@ public class DialActionAnswerDelayTest {
     public static WebArchive createWebArchiveNoGw() {
         logger.info("Packaging Test App");
         reconfigurePorts();
-        
+
         Map<String,String> replacements = new HashMap();
-        //replace mediaport 2727 
-        replacements.put("2727", String.valueOf(mediaPort));        
+        //replace mediaport 2727
+        replacements.put("2727", String.valueOf(mediaPort));
         replacements.put("8080", String.valueOf(restcommHTTPPort));
         replacements.put("8090", String.valueOf(mockPort));
         replacements.put("5080", String.valueOf(restcommPort));
-        replacements.put("5070", String.valueOf(georgePort));        
+        replacements.put("5070", String.valueOf(georgePort));
         replacements.put("5090", String.valueOf(bobPort));
         replacements.put("5091", String.valueOf(alicePort));
-        replacements.put("5092", String.valueOf(henriquePort));       
+        replacements.put("5092", String.valueOf(henriquePort));
         List<String> resources = new ArrayList(Arrays.asList("dial-client-entry_wActionUrl.xml"));
-        return WebArchiveUtil.createWebArchiveNoGw("restcomm-delay.xml", 
+        return WebArchiveUtil.createWebArchiveNoGw("restcomm-delay.xml",
                 "restcomm.script_dialActionTest",resources, replacements);
-    }    
+    }
 
 }

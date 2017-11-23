@@ -435,8 +435,7 @@
                 <artifactId>maven-surefire-plugin</artifactId>
                 <version>2.19.1</version>
                 <configuration>
-                    <argLine>-Xms1024m -Xmx2048m -XX:MaxPermSize=1024m</argLine>
-                    <forkCount>1</forkCount>
+                    <argLine>-Xms256m -Xmx2048m -XX:MaxPermSize=1024m</argLine>
                     <reuseForks>false</reuseForks>
                 </configuration>
             </plugin>
@@ -452,33 +451,6 @@
                         <artifactId>maven-failsafe-plugin</artifactId>
                         <version>2.18.1</version>
                         <configuration>
-                            <includes>
-                                <include>**/CallLifecycleAnswerDelayTest.java</include>
-                                <include>**/CallLifecycleTest.java</include>
-                                <include>**/CallRegexSingleTest.java</include>
-                                <include>**/CallRegexTest.java</include>
-                                <include>**/ClientsDialAnswerDelayTest.java</include>
-                                <include>**/ClientsDialTest.java</include>
-                                <include>**/DialActionAnswerDelayTest.java</include>
-                                <include>**/DialActionTest.java</include>
-                                <include>**/DialForkAnswerDealyTest.java</include>
-                                <include>**/DialForkTest.java</include>
-                                <include>**/DialRecordingAnswerDelayTest.java</include>
-                                <include>**/DialRecordingTest.java</include>
-                                <include>**/DialStatusCallbackTest.java</include>
-                                <include>**/ImsClientsDialAnswerDelayTest.java</include>
-                                <include>**/ImsClientsDialTest.java</include>
-                                <include>**/TestDialVerbPartOneAnswerDelay.java</include>
-                                <include>**/TestDialVerbPartOne.java</include>
-                                <include>**/TestDialVerbPartTwoAnswerDelay.java</include>
-                                <include>**/TestDialVerbPartTwo.java</include>
-                                <include>**/TestDialVerbPartThreeAnswerDelay.java</include>
-                                <include>**/TestDialVerbPartThree.java</include>
-
-                                <include>**/UserAgentManagerTest.java</include>
-                                <include>**/sms/*Test.java</include>
-                                <include>**/connect/testsuite/*Test.java</include>
-                            </includes>
                             <redirectTestOutputToFile>true</redirectTestOutputToFile>
                             <!-- let rerun attempts bedefined form env
                             <rerunFailingTestsCount>2</rerunFailingTestsCount>
@@ -502,7 +474,6 @@
                                 <arquillian_http_port>${surefire.forkNumber}509</arquillian_http_port>
                                 <arquillian_sip_port>${surefire.forkNumber}508</arquillian_sip_port>
                             </systemPropertyVariables>
-                            <excludedGroups>org.restcomm.connect.testsuite.UnstableTests</excludedGroups>
                         </configuration>
                         <executions>
                             <execution>
@@ -521,38 +492,21 @@
                         <version>2.19.1</version>
                         <configuration>
                             <argLine>-Xms256m -Xmx2048m -XX:MaxPermSize=1024m</argLine>
-                            <!-- let surefire run sequentially by setting 1-->
-                            <forkCount>1</forkCount>
                             <reuseForks>false</reuseForks>
                             <skipTests>${skipUTs}</skipTests>
-                            <excludes>
-                                <exclude>**/CallLifecycleAnswerDelayTest.java</exclude>
-                                <exclude>**/CallLifecycleTest.java</exclude>
-                                <exclude>**/CallRegexSingleTest.java</exclude>
-                                <exclude>**/CallRegexTest.java</exclude>
-                                <exclude>**/ClientsDialAnswerDelayTest.java</exclude>
-                                <exclude>**/ClientsDialTest.java</exclude>
-                                <exclude>**/DialActionAnswerDelayTest.java</exclude>
-                                <exclude>**/DialActionTest.java</exclude>
-                                <exclude>**/DialForkAnswerDealyTest.java</exclude>
-                                <exclude>**/DialForkTest.java</exclude>
-                                <exclude>**/DialRecordingAnswerDelayTest.java</exclude>
-                                <exclude>**/DialRecordingTest.java</exclude>
-                                <exclude>**/DialStatusCallbackTest.java</exclude>
-                                <exclude>**/ImsClientsDialAnswerDelayTest.java</exclude>
-                                <exclude>**/ImsClientsDialTest.java</exclude>
-                                <exclude>**/TestDialVerbPartOneAnswerDelay.java</exclude>
-                                <exclude>**/TestDialVerbPartOne.java</exclude>
-                                <exclude>**/TestDialVerbPartTwoAnswerDelay.java</exclude>
-                                <exclude>**/TestDialVerbPartTwo.java</exclude>
-                                <exclude>**/TestDialVerbPartThreeAnswerDelay.java</exclude>
-                                <exclude>**/TestDialVerbPartThree.java</exclude>
-
-                                <exclude>**/UserAgentManagerTest.java</exclude>
-                                <exclude>**/sms/*Test.java</exclude>
-                                <exclude>**/connect/testsuite/*Test.java</exclude>
-                            </excludes>
-                            <excludedGroups>org.restcomm.connect.testsuite.UnstableTests</excludedGroups>
+                            <parallel>classes</parallel>
+                            <threadCountClasses>5</threadCountClasses>
+                            <!-- start with low memory to increase forks -->
+                            <argLine>-Xms256m -Xmx2048m -XX:MaxPermSize=512m</argLine>
+                            <systemPropertyVariables>
+                                <!--use different arquillian configuration to tweak maps
+                                depending on forked JVM-->
+                                <arquillian.launch>mss-tomcat-embedded-7-forked</arquillian.launch>
+                                <!-- this will ensure sip and http ports are diff for
+                                every forked JVM/test class-->
+                                <arquillian_http_port>${surefire.forkNumber}509</arquillian_http_port>
+                                <arquillian_sip_port>${surefire.forkNumber}508</arquillian_sip_port>
+                            </systemPropertyVariables>                            
                         </configuration>
                     </plugin>
                 </plugins>

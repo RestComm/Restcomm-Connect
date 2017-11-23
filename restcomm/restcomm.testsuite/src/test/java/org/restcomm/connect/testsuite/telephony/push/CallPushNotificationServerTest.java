@@ -56,7 +56,7 @@ import static org.cafesip.sipunit.SipAssert.assertLastOperationSuccess;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
 import org.junit.experimental.categories.Category;
-import org.restcomm.connect.testsuite.UnstableTests;
+import org.restcomm.connect.commons.annotations.UnstableTests;
 
 /**
  * @author oleg.agafonov@telestax.com (Oleg Agafonov)

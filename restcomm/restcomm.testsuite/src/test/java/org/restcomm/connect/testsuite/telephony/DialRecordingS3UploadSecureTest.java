@@ -55,9 +55,9 @@ import static org.junit.Assert.assertTrue;
  * Created by gvagenas on 08/01/2017.
  */
 @RunWith(Arquillian.class)
-public class DialRecordingS3UploadTest_Secure {
+public class DialRecordingS3UploadSecureTest {
 
-	private final static Logger logger = Logger.getLogger(DialRecordingS3UploadTest_Secure.class.getName());
+	private final static Logger logger = Logger.getLogger(DialRecordingS3UploadSecureTest.class.getName());
 
 	private static final String version = Version.getVersion();
 	private static final byte[] bytes = new byte[] { 118, 61, 48, 13, 10, 111, 61, 117, 115, 101, 114, 49, 32, 53, 51, 54, 53,
@@ -165,7 +165,6 @@ public class DialRecordingS3UploadTest_Secure {
 	}
 
 	private String dialClientRcml = "<Response><Dial timeLimit=\"10\" timeout=\"10\" record=\"true\"><Client>alice</Client></Dial></Response>";
-
 	@Test
 	public synchronized void testDialClientAlice_BobDisconnects() throws InterruptedException, ParseException, IOException {
 		stubFor(get(urlPathEqualTo("/1111"))
@@ -599,7 +598,7 @@ public class DialRecordingS3UploadTest_Secure {
 		assertEquals(0, liveCallsArraySize);
 	}
 
-	@Deployment(name = "DialRecordingS3UploadTest_Secure", managed = true, testable = false)
+	@Deployment(name = "DialRecordingS3UploadSecureTest", managed = true, testable = false)
 	public static WebArchive createWebArchiveNoGw() {
 		logger.info("Packaging Test App");
 		WebArchive archive = ShrinkWrap.create(WebArchive.class, "restcomm.war");

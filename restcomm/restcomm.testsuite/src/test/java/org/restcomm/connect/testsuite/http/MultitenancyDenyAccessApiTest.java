@@ -28,7 +28,6 @@ import java.net.URL;
 import java.util.HashMap;
 import java.util.Map;
 
-import junit.framework.Assert;
 import org.apache.log4j.Logger;
 import org.jboss.arquillian.container.test.api.Deployer;
 import org.jboss.arquillian.container.test.api.Deployment;
@@ -38,9 +37,12 @@ import org.jboss.shrinkwrap.api.ShrinkWrap;
 import org.jboss.shrinkwrap.api.spec.WebArchive;
 import org.jboss.shrinkwrap.resolver.api.maven.archive.ShrinkWrapMaven;
 import org.junit.Test;
+import org.junit.experimental.categories.Category;
 import org.junit.runner.RunWith;
-
 import org.restcomm.connect.commons.Version;
+import org.restcomm.connect.commons.annotations.FeatureExpTests;
+
+import junit.framework.Assert;
 import wiremock.org.apache.http.client.ClientProtocolException;
 
 /**
@@ -50,6 +52,7 @@ import wiremock.org.apache.http.client.ClientProtocolException;
  * @author guilherme.jansen@telestax.com
  */
 @RunWith(Arquillian.class)
+@Category(FeatureExpTests.class)
 public class MultitenancyDenyAccessApiTest {
 
     private final static Logger logger = Logger.getLogger(MultitenancyDenyAccessApiTest.class);

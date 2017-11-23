@@ -43,6 +43,7 @@ import org.jboss.shrinkwrap.api.spec.WebArchive;
 import org.jboss.shrinkwrap.resolver.api.maven.archive.ShrinkWrapMaven;
 import org.junit.Rule;
 import org.junit.Test;
+import org.junit.experimental.categories.Category;
 import org.junit.runner.RunWith;
 
 import com.github.tomakehurst.wiremock.junit.WireMockRule;
@@ -55,6 +56,7 @@ import com.sun.jersey.api.client.WebResource;
 import com.sun.jersey.api.client.filter.HTTPBasicAuthFilter;
 import com.sun.jersey.core.util.MultivaluedMapImpl;
 import org.restcomm.connect.commons.Version;
+import org.restcomm.connect.commons.annotations.FeatureExpTests;
 
 /**
  * @author <a href="mailto:jean.deruelle@telestax.com">Jean Deruelle</a>
@@ -207,6 +209,7 @@ public class NexmoIncomingPhoneNumbersEndpointTest {
      * If Twilio cannot find a phone number to match your request, you will receive an HTTP 400 with Twilio error code 21452.
      */
     @Test
+    @Category(FeatureExpTests.class)
     public void testPurchasePhoneNumberNoPhoneNumberFound() {
         stubFor(post(urlMatching("/nexmo/number/buy/.*/.*/US/14156902868"))
                 .willReturn(aResponse()

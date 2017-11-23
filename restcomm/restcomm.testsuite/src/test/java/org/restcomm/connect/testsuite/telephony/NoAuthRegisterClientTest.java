@@ -49,13 +49,17 @@ import org.junit.BeforeClass;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.restcomm.connect.commons.Version;
+import org.restcomm.connect.commons.annotations.FeatureAltTests;
+import org.restcomm.connect.commons.annotations.ParallelClassTests;
 import org.restcomm.connect.testsuite.http.CreateClientsTool;
 import org.restcomm.connect.testsuite.http.RestcommCallsTool;
 
 import com.google.gson.JsonArray;
 import com.google.gson.JsonObject;
 import org.junit.experimental.categories.Category;
-import org.restcomm.connect.testsuite.UnstableTests;
+import org.restcomm.connect.commons.annotations.SequentialClassTests;
+import org.restcomm.connect.commons.annotations.WithInMinsTests;
+import org.restcomm.connect.commons.annotations.UnstableTests;
 
 /**
  * Client registration Test.
@@ -64,6 +68,7 @@ import org.restcomm.connect.testsuite.UnstableTests;
  * @author <a href="mailto:gvagenas@gmail.com">gvagenas</a>
  */
 @RunWith(Arquillian.class)
+@Category(value={FeatureAltTests.class, SequentialClassTests.class})
 public class NoAuthRegisterClientTest {
 
     private static final String version = Version.getVersion();

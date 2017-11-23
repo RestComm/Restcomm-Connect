@@ -19,42 +19,6 @@
  */
 package org.restcomm.connect.testsuite.telephony;
 
-import com.github.tomakehurst.wiremock.junit.WireMockRule;
-import com.github.tomakehurst.wiremock.verification.LoggedRequest;
-import com.google.gson.JsonObject;
-import org.apache.log4j.Logger;
-import org.cafesip.sipunit.SipCall;
-import org.cafesip.sipunit.SipPhone;
-import org.cafesip.sipunit.SipRequest;
-import org.cafesip.sipunit.SipStack;
-import org.jboss.arquillian.container.mss.extension.SipStackTool;
-import org.jboss.arquillian.container.test.api.Deployer;
-import org.jboss.arquillian.container.test.api.Deployment;
-import org.jboss.arquillian.junit.Arquillian;
-import org.jboss.arquillian.test.api.ArquillianResource;
-import org.jboss.shrinkwrap.api.ShrinkWrap;
-import org.jboss.shrinkwrap.api.spec.WebArchive;
-import org.jboss.shrinkwrap.resolver.api.maven.archive.ShrinkWrapMaven;
-import org.junit.After;
-import org.junit.AfterClass;
-import org.junit.Before;
-import org.junit.BeforeClass;
-import org.junit.Rule;
-import org.junit.Test;
-import org.junit.runner.RunWith;
-import org.restcomm.connect.commons.Version;
-import org.restcomm.connect.testsuite.http.RestcommCallsTool;
-import org.restcomm.connect.testsuite.tools.MonitoringServiceTool;
-
-import javax.sip.DialogState;
-import javax.sip.address.SipURI;
-import javax.sip.message.Response;
-import java.net.MalformedURLException;
-import java.net.URL;
-import java.text.ParseException;
-import java.util.Arrays;
-import java.util.List;
-
 import static com.github.tomakehurst.wiremock.client.WireMock.aResponse;
 import static com.github.tomakehurst.wiremock.client.WireMock.findAll;
 import static com.github.tomakehurst.wiremock.client.WireMock.get;
@@ -62,15 +26,51 @@ import static com.github.tomakehurst.wiremock.client.WireMock.getRequestedFor;
 import static com.github.tomakehurst.wiremock.client.WireMock.stubFor;
 import static com.github.tomakehurst.wiremock.client.WireMock.urlPathEqualTo;
 import static com.github.tomakehurst.wiremock.client.WireMock.urlPathMatching;
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.Map;
 import static org.cafesip.sipunit.SipAssert.assertLastOperationSuccess;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertTrue;
+
+import java.net.MalformedURLException;
+import java.net.URL;
+import java.text.ParseException;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+
+import javax.sip.address.SipURI;
+import javax.sip.message.Response;
+
+import org.apache.log4j.Logger;
+import org.cafesip.sipunit.SipCall;
+import org.cafesip.sipunit.SipPhone;
+import org.cafesip.sipunit.SipStack;
+import org.jboss.arquillian.container.mss.extension.SipStackTool;
+import org.jboss.arquillian.container.test.api.Deployer;
+import org.jboss.arquillian.container.test.api.Deployment;
+import org.jboss.arquillian.junit.Arquillian;
+import org.jboss.arquillian.test.api.ArquillianResource;
+import org.jboss.shrinkwrap.api.spec.WebArchive;
+import org.junit.After;
+import org.junit.AfterClass;
+import org.junit.Before;
+import org.junit.BeforeClass;
+import org.junit.Rule;
+import org.junit.Test;
+import org.junit.experimental.categories.Category;
+import org.junit.runner.RunWith;
+import org.restcomm.connect.commons.Version;
+import org.restcomm.connect.commons.annotations.ParallelClassTests;
 import org.restcomm.connect.testsuite.NetworkPortAssigner;
 import org.restcomm.connect.testsuite.WebArchiveUtil;
+import org.restcomm.connect.testsuite.http.RestcommCallsTool;
+import org.restcomm.connect.testsuite.tools.MonitoringServiceTool;
+
+import com.github.tomakehurst.wiremock.junit.WireMockRule;
+import com.github.tomakehurst.wiremock.verification.LoggedRequest;
+import com.google.gson.JsonObject;
 
 /**
  * Test for Regex for IncomingPhoneNumbers
@@ -79,6 +79,7 @@ import org.restcomm.connect.testsuite.WebArchiveUtil;
  *
  */
 @RunWith(Arquillian.class)
+@Category(value={ParallelClassTests.class})
 public class CallRegexSingleTest {
 
     private final static Logger logger = Logger.getLogger(CallRegexSingleTest.class.getName());
@@ -97,11 +98,11 @@ public class CallRegexSingleTest {
     URL deploymentUrl;
 
     private static int mediaPort = NetworkPortAssigner.retrieveNextPortByFile();
-    
+
     private static int mockPort = NetworkPortAssigner.retrieveNextPortByFile();
     @Rule
     public WireMockRule wireMockRule = new WireMockRule(mockPort);
-    
+
     private static SipStackTool tool1;
     private static SipStackTool tool2;
     private static SipStackTool tool3;
@@ -111,14 +112,14 @@ public class CallRegexSingleTest {
     // Bob is a simple SIP Client. Will not register with Restcomm
     private SipStack bobSipStack;
     private SipPhone bobPhone;
-    private static String bobPort = String.valueOf(NetworkPortAssigner.retrieveNextPortByFile()); 
+    private static String bobPort = String.valueOf(NetworkPortAssigner.retrieveNextPortByFile());
     private String bobContact = "sip:bob@127.0.0.1:" + bobPort;
 
     // Alice is a Restcomm Client with VoiceURL. This Restcomm Client can register with Restcomm and whatever will dial the RCML
     // of the VoiceURL will be executed.
     private SipStack aliceSipStack;
     private SipPhone alicePhone;
-    private static String alicePort = String.valueOf(NetworkPortAssigner.retrieveNextPortByFile());    
+    private static String alicePort = String.valueOf(NetworkPortAssigner.retrieveNextPortByFile());
     private String aliceContact = "sip:alice@127.0.0.1:" + alicePort;
 
     // Henrique is a simple SIP Client. Will not register with Restcomm
@@ -144,10 +145,10 @@ public class CallRegexSingleTest {
 
     private String subAccountSid = "ACae6e420f425248d6a26948c17a9e2acg";
     private String subAuthToken = "77f8c12cc7b8f8423e5c38b035249166";
-    
+
     private static int restcommPort = 5080;
-    private static int restcommHTTPPort = 8080;        
-    private static String restcommContact = "127.0.0.1:" + restcommPort;     
+    private static int restcommHTTPPort = 8080;
+    private static String restcommContact = "127.0.0.1:" + restcommPort;
 
     @BeforeClass
     public static void beforeClass() throws Exception {
@@ -157,15 +158,15 @@ public class CallRegexSingleTest {
         tool4 = new SipStackTool("DialActionTest4");
         tool5 = new SipStackTool("DialActionTest5");
     }
-    
-    public static void reconfigurePorts() { 
+
+    public static void reconfigurePorts() {
         if (System.getProperty("arquillian_sip_port") != null) {
             restcommPort = Integer.valueOf(System.getProperty("arquillian_sip_port"));
-            restcommContact = "127.0.0.1:" + restcommPort; 
-        } 
+            restcommContact = "127.0.0.1:" + restcommPort;
+        }
         if (System.getProperty("arquillian_http_port") != null) {
             restcommHTTPPort = Integer.valueOf(System.getProperty("arquillian_http_port"));
-        }        
+        }
     }
 
     @Before
@@ -242,7 +243,7 @@ public class CallRegexSingleTest {
      */
     @Test
     public void testDial7777RegexOfDifferentOrganization() throws ParseException, InterruptedException, MalformedURLException {
-        //matches regex expression "7777|8888" but belongs to domain 127.0.0.1 
+        //matches regex expression "7777|8888" but belongs to domain 127.0.0.1
     	// hence anyone from org1.restcomm.com should not be allowed to reach this regex
     	// https://github.com/RestComm/Restcomm-Connect/issues/2293
         stubFor(get(urlPathEqualTo("/regex"))
@@ -266,7 +267,7 @@ public class CallRegexSingleTest {
             logger.info("Last response: " + bobCallOrg1.getLastReceivedResponse().getStatusCode());
         }
     }
-    
+
     @Test
     public void testDialClientAlice7777() throws ParseException, InterruptedException, MalformedURLException {
         //matches regex expression "7777|8888"
@@ -463,19 +464,19 @@ public class CallRegexSingleTest {
         reconfigurePorts();
 
         Map<String,String> replacements = new HashMap();
-        //replace mediaport 2727 
-        replacements.put("2727", String.valueOf(mediaPort));        
+        //replace mediaport 2727
+        replacements.put("2727", String.valueOf(mediaPort));
         replacements.put("8080", String.valueOf(restcommHTTPPort));
         replacements.put("8090", String.valueOf(mockPort));
         replacements.put("5080", String.valueOf(restcommPort));
-        replacements.put("5070", String.valueOf(alicePort2));        
+        replacements.put("5070", String.valueOf(alicePort2));
         replacements.put("5090", String.valueOf(bobPort));
         replacements.put("5091", String.valueOf(alicePort));
         replacements.put("5092", String.valueOf(bobPort2));
-        replacements.put("5093", String.valueOf(subaccountPort));         
+        replacements.put("5093", String.valueOf(subaccountPort));
         List<String> resources = new ArrayList(Arrays.asList("dial-client-entry_wActionUrl.xml"));
-        return WebArchiveUtil.createWebArchiveNoGw("restcomm_callRegex.xml", 
+        return WebArchiveUtil.createWebArchiveNoGw("restcomm_callRegex.xml",
                 "restcomm.script_callRegexTest2",resources, replacements);
-    }     
+    }
 
 }

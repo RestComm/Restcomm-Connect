@@ -54,11 +54,15 @@ import java.util.Map;
 import org.junit.BeforeClass;
 import org.junit.experimental.categories.Category;
 import org.restcomm.connect.commons.Version;
+import org.restcomm.connect.commons.annotations.ParallelClassTests;
+import org.restcomm.connect.commons.annotations.UnstableTests;
+import org.restcomm.connect.commons.annotations.WithInMinsTests;
 
 /**
  * @author guilherme.jansen@telestax.com
  */
 @RunWith(Arquillian.class)
+@Category(value={WithInMinsTests.class, ParallelClassTests.class})
 public class RvdProjectsMigratorWorkspaceMigratedTest {
 
     private final static Logger logger = Logger.getLogger(RvdProjectsMigratorWorkspaceMigratedTest.class);
