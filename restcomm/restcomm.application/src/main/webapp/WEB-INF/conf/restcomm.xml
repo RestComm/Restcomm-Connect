@@ -337,6 +337,7 @@
 			<!-- aws-route53 specific config for dns provisioning
 			restcomm-a-record-value: is address to which DNS Server will route traffic
 				In a cluster, it can be public ip of loadbalancer or alias/domainName of a DNS entity (ELB etc)
+			restcomm-srv-record-value: restcomm server destination for srv record (e.g. sip.restcomm.com)
 			region: the region to be used by the client. This will be used to determine both the 
 				service endpoint (eg: https://sns.us-west-1.amazonaws.com) and signing region (eg: us-west-1) for requests.
 			ttl: time to live in seconds
@@ -351,6 +352,7 @@
 			-->
 			<aws-route53>
 				<restcomm-a-record-value></restcomm-a-record-value>
+        		<restcomm-srv-record-value></restcomm-srv-record-value>
 				<access-key></access-key>
 				<secret-key></secret-key>
 				<region></region>
