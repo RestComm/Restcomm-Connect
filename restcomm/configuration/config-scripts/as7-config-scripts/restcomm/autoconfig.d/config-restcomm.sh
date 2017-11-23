@@ -808,11 +808,10 @@ configDnsProvisioningManager() {
             -i "/restcomm/runtime-settings/dns-provisioning" -t attr -n class -v "$DNS_PROVISIONING_CLASS" \
             $FILE
 	xmlstarlet ed --inplace -s "/restcomm/runtime-settings/dns-provisioning" -t attr -n "enabled" -v "$DNS_PROVISIONING_ENABLED" $FILE
-    xmlstarlet ed --inplace -s "/restcomm/runtime-settings/dns-provisioning" -t elem -n "restcomm-address" -v "$DNS_PROVISIONING_RESTCOMM_ADDRESS" $FILE
-    xmlstarlet ed --inplace -s "/restcomm/runtime-settings/dns-provisioning" -t elem -n "rr-type" -v "$DNS_PROVISIONING_RR_TYPE" $FILE
 
 	xmlstarlet ed --inplace -d "/restcomm/runtime-settings/dns-provisioning/aws-route53" \
             -s "/restcomm/runtime-settings/dns-provisioning" -t elem  -n aws-route53 $FILE
+    xmlstarlet ed --inplace -s "/restcomm/runtime-settings/dns-provisioning/aws-route53" -t elem -n "restcomm-a-record-value" -v "$DNS_PROVISIONING_AWS_ROUTE53_A_VALUE" $FILE
     xmlstarlet ed --inplace -s "/restcomm/runtime-settings/dns-provisioning/aws-route53" -t elem -n "access-key" -v "$DNS_PROVISIONING_AWS_ROUTE53_ACCESS_KEY" $FILE
     xmlstarlet ed --inplace -s "/restcomm/runtime-settings/dns-provisioning/aws-route53" -t elem -n "secret-key" -v "$DNS_PROVISIONING_AWS_ROUTE53_SECRET_KEY" $FILE
     xmlstarlet ed --inplace -s "/restcomm/runtime-settings/dns-provisioning/aws-route53" -t elem -n "region" -v "$DNS_PROVISIONING_AWS_ROUTE53_REGION" $FILE
