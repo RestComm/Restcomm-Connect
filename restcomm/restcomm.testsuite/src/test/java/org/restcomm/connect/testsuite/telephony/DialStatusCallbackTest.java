@@ -20,42 +20,6 @@
 
 package org.restcomm.connect.testsuite.telephony;
 
-import com.github.tomakehurst.wiremock.junit.WireMockRule;
-import com.github.tomakehurst.wiremock.verification.LoggedRequest;
-import com.google.gson.JsonObject;
-import org.apache.log4j.Logger;
-import org.cafesip.sipunit.SipCall;
-import org.cafesip.sipunit.SipPhone;
-import org.cafesip.sipunit.SipStack;
-import org.cafesip.sipunit.SipTransaction;
-import org.jboss.arquillian.container.mss.extension.SipStackTool;
-import org.jboss.arquillian.container.test.api.Deployer;
-import org.jboss.arquillian.container.test.api.Deployment;
-import org.jboss.arquillian.junit.Arquillian;
-import org.jboss.arquillian.test.api.ArquillianResource;
-import org.jboss.shrinkwrap.api.ShrinkWrap;
-import org.jboss.shrinkwrap.api.spec.WebArchive;
-import org.jboss.shrinkwrap.resolver.api.maven.archive.ShrinkWrapMaven;
-import org.junit.After;
-import org.junit.Before;
-import org.junit.BeforeClass;
-import org.junit.Rule;
-import org.junit.Test;
-import org.junit.runner.RunWith;
-import org.restcomm.connect.commons.Version;
-import org.restcomm.connect.testsuite.http.RestcommCallsTool;
-import org.restcomm.connect.testsuite.tools.MonitoringServiceTool;
-
-import javax.sip.address.SipURI;
-import javax.sip.message.Response;
-import java.net.MalformedURLException;
-import java.net.URL;
-import java.text.ParseException;
-import java.util.Arrays;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
-
 import static com.github.tomakehurst.wiremock.client.WireMock.aResponse;
 import static com.github.tomakehurst.wiremock.client.WireMock.findAll;
 import static com.github.tomakehurst.wiremock.client.WireMock.get;
@@ -66,15 +30,53 @@ import static com.github.tomakehurst.wiremock.client.WireMock.stubFor;
 import static com.github.tomakehurst.wiremock.client.WireMock.urlEqualTo;
 import static com.github.tomakehurst.wiremock.client.WireMock.urlPathEqualTo;
 import static com.github.tomakehurst.wiremock.client.WireMock.urlPathMatching;
-import java.util.ArrayList;
 import static org.cafesip.sipunit.SipAssert.assertLastOperationSuccess;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertTrue;
+
+import java.net.MalformedURLException;
+import java.net.URL;
+import java.text.ParseException;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+
+import javax.sip.address.SipURI;
+import javax.sip.message.Response;
+
+import org.apache.log4j.Logger;
+import org.cafesip.sipunit.SipCall;
+import org.cafesip.sipunit.SipPhone;
+import org.cafesip.sipunit.SipStack;
+import org.cafesip.sipunit.SipTransaction;
+import org.jboss.arquillian.container.mss.extension.SipStackTool;
+import org.jboss.arquillian.container.test.api.Deployer;
+import org.jboss.arquillian.container.test.api.Deployment;
+import org.jboss.arquillian.junit.Arquillian;
+import org.jboss.arquillian.test.api.ArquillianResource;
+import org.jboss.shrinkwrap.api.spec.WebArchive;
+import org.junit.After;
+import org.junit.Before;
+import org.junit.BeforeClass;
+import org.junit.Rule;
+import org.junit.Test;
 import org.junit.experimental.categories.Category;
+import org.junit.runner.RunWith;
+import org.restcomm.connect.commons.Version;
+import org.restcomm.connect.commons.annotations.FeatureAltTests;
+import org.restcomm.connect.commons.annotations.ParallelClassTests;
+import org.restcomm.connect.commons.annotations.UnstableTests;
 import org.restcomm.connect.testsuite.NetworkPortAssigner;
-import org.restcomm.connect.testsuite.UnstableTests;
 import org.restcomm.connect.testsuite.WebArchiveUtil;
+import org.restcomm.connect.testsuite.http.RestcommCallsTool;
+import org.restcomm.connect.testsuite.tools.MonitoringServiceTool;
+
+import com.github.tomakehurst.wiremock.junit.WireMockRule;
+import com.github.tomakehurst.wiremock.verification.LoggedRequest;
+import com.google.gson.JsonObject;
 
 /**
  * Test for Dial status callback attribute. Reference: The 'statuscallback'
@@ -84,6 +86,7 @@ import org.restcomm.connect.testsuite.WebArchiveUtil;
  *
  */
 @RunWith(Arquillian.class)
+@Category(value={ParallelClassTests.class})
 public class DialStatusCallbackTest {
 
     private final static Logger logger = Logger.getLogger(DialStatusCallbackTest.class.getName());
@@ -312,6 +315,7 @@ public class DialStatusCallbackTest {
     private String dialStatusCallbackGetMethod = "<Response><Dial><Client statusCallback=\"http://127.0.0.1:" + mockPort + "/status\" " +
             "statusCallbackMethod=\"get\">alice</Client></Dial></Response>";
     @Test
+    @Category(FeatureAltTests.class)
     public void testDialStatusCallbackMethodGET() throws ParseException, InterruptedException {
 
         stubFor(get(urlPathEqualTo("/1111"))
@@ -410,7 +414,7 @@ public class DialStatusCallbackTest {
 
     private String dialStatusCallbackGet = "<Response><Dial><Client statusCallback=\"http://127.0.0.1:" + mockPort +"/status\" statusCallbackMethod=\"GET\">alice</Client></Dial></Response>";
     @Test
-    @Category(UnstableTests.class)
+    @Category({UnstableTests.class, FeatureAltTests.class})
     public void testDialStatusCallbackBobDisconnects() throws ParseException, InterruptedException {
 
         stubFor(get(urlPathEqualTo("/1111"))
@@ -514,6 +518,7 @@ public class DialStatusCallbackTest {
     private String dialStatusCallbackOnlyInitiatedAndAnswer = "<Response><Dial><Client statusCallback=\"http://127.0.0.1:"+ mockPort + "/status\" " +
             "statusCallbackEvent=\"initiated,  answered\">alice</Client></Dial></Response>";
     @Test
+    @Category(FeatureAltTests.class)
     public void testDialStatusCallbackOnlyInitiatedAnswerEvent() throws ParseException, InterruptedException {
 
         stubFor(get(urlPathEqualTo("/1111"))
@@ -604,6 +609,7 @@ public class DialStatusCallbackTest {
     private String dialStatusCallbackOnlyRingingCompleted = "<Response><Dial><Client statusCallback=\"http://127.0.0.1:" + mockPort + "/status\" " +
             "statusCallbackEvent=\"ringing,completed\">alice</Client></Dial></Response>";
     @Test
+    @Category({UnstableTests.class, FeatureAltTests.class})
     public void testDialStatusCallbackOnlyRingingCompleted() throws ParseException, InterruptedException {
 
         stubFor(get(urlPathEqualTo("/1111"))
@@ -877,7 +883,7 @@ public class DialStatusCallbackTest {
 
     private String dialFork = "<Response><Dial><Client statusCallback=\"http://127.0.0.1:" + mockPort + "/status\" statusCallbackMethod=\"get\">alice</Client><Sip statusCallback=\"http://127.0.0.1:" + mockPort + "/status\" statusCallbackMethod=\"get\">sip:henrique@127.0.0.1:" + henriquePort + "</Sip><Number statusCallback=\"http://127.0.0.1:" + mockPort + "/status\" statusCallbackMethod=\"get\">+131313</Number></Dial></Response>";
     @Test
-    @Category(UnstableTests.class)
+    @Category({UnstableTests.class, FeatureAltTests.class})
     public synchronized void testDialForkNoAnswerButHenriqueStatusCallbackOnAll() throws InterruptedException, ParseException, MalformedURLException {
         stubFor(get(urlPathEqualTo("/1111"))
                 .willReturn(aResponse()
@@ -1026,6 +1032,7 @@ public class DialStatusCallbackTest {
 
     private String dialForkStatusCallbackWithPost = "<Response><Dial><Client statusCallback=\"http://127.0.0.1:" + mockPort + "/status\">alice</Client><Sip statusCallback=\"http://127.0.0.1:" + mockPort + "/status\">sip:henrique@127.0.0.1:" + henriquePort + "</Sip><Number statusCallback=\"http://127.0.0.1:" + mockPort + "/status\">+131313</Number></Dial></Response>";
     @Test
+    @Category(FeatureAltTests.class)
     public synchronized void testDialForkNoAnswerButHenriqueStatusCallbackOnAllPost() throws InterruptedException, ParseException, MalformedURLException {
         stubFor(get(urlPathEqualTo("/1111"))
                 .willReturn(aResponse()
@@ -1174,7 +1181,7 @@ public class DialStatusCallbackTest {
 
     private String dialForkWithTimeoutStatusCallbackWithPost = "<Response><Dial timeout=\"60\"><Client statusCallback=\"http://127.0.0.1:" + mockPort + "/status\">alice</Client><Sip statusCallback=\"http://127.0.0.1:" + mockPort + "/status\">sip:henrique@127.0.0.1:" + henriquePort + "</Sip><Number statusCallback=\"http://127.0.0.1:" + mockPort + "/status\">+131313</Number></Dial></Response>";
     @Test
-    @Category(UnstableTests.class)
+    @Category({UnstableTests.class, FeatureAltTests.class})
     public synchronized void testDialForkNoAnswerButHenriqueStatusCallbackOnAllPostWithTimeout() throws InterruptedException, ParseException, MalformedURLException {
         stubFor(get(urlPathEqualTo("/1111"))
                 .willReturn(aResponse()
@@ -1328,7 +1335,7 @@ public class DialStatusCallbackTest {
     private String rcmlToReturn = "<Response><Dial timeout=\"50\"><Client statusCallback=\"http://127.0.0.1:" + mockPort + "/status\" statusCallbackMethod=\"get\">alice</Client>   </Dial></Response>";
     //Non regression test for https://telestax.atlassian.net/browse/RESTCOMM-585
     @Test //TODO Fails when the whole test class runs but Passes when run individually
-    @Category(UnstableTests.class)
+    @Category({UnstableTests.class, FeatureAltTests.class})
     public synchronized void testDialForkNoAnswerExecuteRCML_ReturnedFromActionURLWithStatusCallbacks_BobDisconnects() throws InterruptedException, ParseException, MalformedURLException {
 
         stubFor(get(urlPathEqualTo("/1111"))
@@ -1472,7 +1479,7 @@ public class DialStatusCallbackTest {
 
     //Non regression test for https://telestax.atlassian.net/browse/RESTCOMM-585
     @Test //TODO Fails when the whole test class runs but Passes when run individually
-    @Category(UnstableTests.class)
+    @Category({UnstableTests.class, FeatureAltTests.class})
     public synchronized void testDialForkNoAnswerExecuteRCML_ReturnedFromActionURLWithStatusCallbacks_AliceDisconnects() throws InterruptedException, ParseException, MalformedURLException {
 
         stubFor(get(urlPathEqualTo("/1111"))

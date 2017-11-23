@@ -1,8 +1,20 @@
 package org.restcomm.connect.testsuite.http;
 
-import com.github.tomakehurst.wiremock.junit.WireMockRule;
-import com.google.gson.JsonArray;
-import com.google.gson.JsonObject;
+import static com.github.tomakehurst.wiremock.client.WireMock.aResponse;
+import static com.github.tomakehurst.wiremock.client.WireMock.get;
+import static com.github.tomakehurst.wiremock.client.WireMock.post;
+import static com.github.tomakehurst.wiremock.client.WireMock.stubFor;
+import static com.github.tomakehurst.wiremock.client.WireMock.urlPathEqualTo;
+import static org.cafesip.sipunit.SipAssert.assertLastOperationSuccess;
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertNotNull;
+import static org.junit.Assert.assertTrue;
+
+import java.net.URL;
+
+import javax.sip.address.SipURI;
+import javax.sip.message.Response;
+
 import org.apache.log4j.Logger;
 import org.cafesip.sipunit.Credential;
 import org.cafesip.sipunit.SipCall;
@@ -19,32 +31,23 @@ import org.jboss.shrinkwrap.resolver.api.maven.archive.ShrinkWrapMaven;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.BeforeClass;
-import org.junit.Ignore;
 import org.junit.Rule;
 import org.junit.Test;
+import org.junit.experimental.categories.Category;
 import org.junit.runner.RunWith;
 import org.restcomm.connect.commons.Version;
-import org.restcomm.connect.commons.dao.Sid;
-import org.restcomm.connect.testsuite.tools.MonitoringServiceTool;
+import org.restcomm.connect.commons.annotations.FeatureAltTests;
+import org.restcomm.connect.commons.annotations.UnstableTests;
 
-import javax.sip.address.SipURI;
-import javax.sip.message.Response;
-import java.net.URL;
-
-import static com.github.tomakehurst.wiremock.client.WireMock.aResponse;
-import static com.github.tomakehurst.wiremock.client.WireMock.get;
-import static com.github.tomakehurst.wiremock.client.WireMock.post;
-import static com.github.tomakehurst.wiremock.client.WireMock.stubFor;
-import static com.github.tomakehurst.wiremock.client.WireMock.urlPathEqualTo;
-import static org.cafesip.sipunit.SipAssert.assertLastOperationSuccess;
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertNotNull;
-import static org.junit.Assert.assertTrue;
+import com.github.tomakehurst.wiremock.junit.WireMockRule;
+import com.google.gson.JsonArray;
+import com.google.gson.JsonObject;
 
 /**
  * @author <a href="mailto:gvagenas@gmail.com">gvagenas</a>
  */
 @RunWith(Arquillian.class)
+@Category({FeatureAltTests.class, UnstableTests.class})
 public class LiveCallModificationAnswerDelayTest {
 
     private final static Logger logger = Logger.getLogger(CreateCallsTest.class.getName());
@@ -364,7 +367,7 @@ public class LiveCallModificationAnswerDelayTest {
             "\t  <Conference muted=\"true\" startConferenceOnEnter=\"false\" beep=\"false\">Conf1234</Conference>\n" +
             "\t</Dial>\n" +
             "</Response>";
-    @Test
+    @Test @Category(UnstableTests.class)
     // Redirect a call to a different URL using the Live Call Modification API. Non-regression test for issue:
     // https://bitbucket.org/telestax/telscale-restcomm/issue/139
     // TODO: This test is expected to fail because of issue https://bitbucket.org/telestax/telscale-restcomm/issue/192
@@ -478,7 +481,7 @@ public class LiveCallModificationAnswerDelayTest {
             "\t\t<Conference startConferenceOnEnter=\"false\" waitUrl=\"/restcomm/music/rock/nickleus_-_original_guitar_song_200907251723.wav\">HoldConf1234</Conference>\n" +
             "\t</Dial>\n" +
             "</Response>";
-    @Test
+    @Test @Category(UnstableTests.class)
     public void holdCall() throws Exception {
         stubFor(get(urlPathEqualTo("/1111"))
                 .willReturn(aResponse()

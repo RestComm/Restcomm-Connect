@@ -54,6 +54,9 @@ import java.util.logging.Logger;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertTrue;
+import org.junit.experimental.categories.Category;
+import org.restcomm.connect.commons.annotations.ParallelClassTests;
+import org.restcomm.connect.commons.annotations.WithInMinsTests;
 import org.restcomm.connect.testsuite.NetworkPortAssigner;
 import org.restcomm.connect.testsuite.WebArchiveUtil;
 //import org.restcomm.connect.telephony.Version;
@@ -64,6 +67,7 @@ import org.restcomm.connect.testsuite.WebArchiveUtil;
  */
 
 @RunWith(Arquillian.class)
+@Category(value={WithInMinsTests.class, ParallelClassTests.class})
 public final class UserAgentManagerTest {
     private static Logger logger = Logger.getLogger(UserAgentManagerTest.class.getName());
     private static final String version = Version.getVersion();
@@ -75,55 +79,55 @@ public final class UserAgentManagerTest {
 
     private String adminAccountSid = "ACae6e420f425248d6a26948c17a9e2acf";
     private String adminAuthToken = "77f8c12cc7b8f8423e5c38b035249166";
-    
-    private static int mediaPort = NetworkPortAssigner.retrieveNextPortByFile();    
+
+    private static int mediaPort = NetworkPortAssigner.retrieveNextPortByFile();
 
     private static SipStackTool tool1;
     private SipStack sipStack;
     private SipPhone phone;
     private static String alicePort = String.valueOf(NetworkPortAssigner.retrieveNextPortByFile());
-    private String aliceContact = "sip:alice@127.0.0.1:" + alicePort + ";transport=udp";       
+    private String aliceContact = "sip:alice@127.0.0.1:" + alicePort + ";transport=udp";
 
     private static SipStackTool tool2;
     private SipStack sipStack2;
     private SipPhone phone2;
     private static String bobPort = String.valueOf(NetworkPortAssigner.retrieveNextPortByFile());
-    private String bobContact = "sip:bob@127.0.0.1:" + bobPort;    
+    private String bobContact = "sip:bob@127.0.0.1:" + bobPort;
 
     private static SipStackTool tool3;
     private SipStack sipStack3;
     private SipPhone phone3;
     private static String alicePort3 = String.valueOf(NetworkPortAssigner.retrieveNextPortByFile());
-    private String aliceContact3 = "sip:alice@127.0.0.1:" + alicePort3 + ";transport=udp;rc-id=7616";     
+    private String aliceContact3 = "sip:alice@127.0.0.1:" + alicePort3 + ";transport=udp;rc-id=7616";
 
     private static SipStackTool tool4;
     private SipStack sipStack4;
     private SipPhone phone4;
     private static String alicePort4 = String.valueOf(NetworkPortAssigner.retrieveNextPortByFile());
-    private String aliceContact4 = "sip:alice@127.0.0.1:" + alicePort4;     
-    
+    private String aliceContact4 = "sip:alice@127.0.0.1:" + alicePort4;
+
 
     private static SipStackTool tool5;
     private SipStack sipStack5;
     private SipPhone phone5;
     private static String mariaPort5 = String.valueOf(NetworkPortAssigner.retrieveNextPortByFile());
-    private String mariaContact5 = "sip:maria.test%40telestax.com@127.0.0.1:" + mariaPort5;      
+    private String mariaContact5 = "sip:maria.test%40telestax.com@127.0.0.1:" + mariaPort5;
 
     private static SipStackTool tool6;
     private SipStack sipStack6;
     private SipPhone phone6;
     private static String alicePort6 = String.valueOf(NetworkPortAssigner.retrieveNextPortByFile());
-    private String aliceContact6 = "sip:alice@testdomain2.restcomm.com:" + alicePort6;     
+    private String aliceContact6 = "sip:alice@testdomain2.restcomm.com:" + alicePort6;
 
     private static SipStackTool tool7;
     private SipStack sipStack7;
     private SipPhone phone7;
     private static String alicePort7 = String.valueOf(NetworkPortAssigner.retrieveNextPortByFile());
     private String aliceContact7 = "sip:alice@127.0.0.1:" + alicePort7;
-    
+
     private static int restcommPort = 5080;
-    private static int restcommHTTPPort = 8080;    
-    private static String restcommContact = "127.0.0.1:" + restcommPort;          
+    private static int restcommHTTPPort = 8080;
+    private static String restcommContact = "127.0.0.1:" + restcommPort;
 
     public UserAgentManagerTest() {
         super();
@@ -139,15 +143,15 @@ public final class UserAgentManagerTest {
         tool6 = new SipStackTool("UserAgentTest6");
         tool7 = new SipStackTool("UserAgentTest7");
     }
-     
-    public static void reconfigurePorts() { 
+
+    public static void reconfigurePorts() {
         if (System.getProperty("arquillian_sip_port") != null) {
             restcommPort = Integer.valueOf(System.getProperty("arquillian_sip_port"));
-            restcommContact = "127.0.0.1:" + restcommPort;          
-        } 
+            restcommContact = "127.0.0.1:" + restcommPort;
+        }
         if (System.getProperty("arquillian_http_port") != null) {
-            restcommHTTPPort = Integer.valueOf(System.getProperty("arquillian_http_port"));       
-        }        
+            restcommHTTPPort = Integer.valueOf(System.getProperty("arquillian_http_port"));
+        }
     }
 
     @Before
@@ -540,7 +544,7 @@ public final class UserAgentManagerTest {
      */
     @Test
     public void registerMultipleUsersWithSameLoginUnderDifferentOrganizations() throws ParseException, InterruptedException, InvalidArgumentException {
-       
+
         //register alice of organization (testdomain2.restcomm.com)
         SipURI uri = sipStack6.getAddressFactory().createSipURI(null, restcommContact);
         Credential c = new Credential("testdomain2.restcomm.com","alice", "1234");
@@ -579,22 +583,22 @@ public final class UserAgentManagerTest {
         reconfigurePorts();
 
         Map<String,String> replacements = new HashMap();
-        //replace mediaport 2727 
-        replacements.put("2727", String.valueOf(mediaPort));         
+        //replace mediaport 2727
+        replacements.put("2727", String.valueOf(mediaPort));
         replacements.put("8080", String.valueOf(restcommHTTPPort));
         replacements.put("5080", String.valueOf(restcommPort));
-        replacements.put("5070", String.valueOf(alicePort)); 
-        replacements.put("5071", String.valueOf(alicePort3)); 
-        replacements.put("5072", String.valueOf(alicePort4)); 
-        replacements.put("5073", String.valueOf(mariaPort5)); 
-        replacements.put("5074", String.valueOf(alicePort6)); 
-        replacements.put("5075", String.valueOf(alicePort7)); 
-        
+        replacements.put("5070", String.valueOf(alicePort));
+        replacements.put("5071", String.valueOf(alicePort3));
+        replacements.put("5072", String.valueOf(alicePort4));
+        replacements.put("5073", String.valueOf(mariaPort5));
+        replacements.put("5074", String.valueOf(alicePort6));
+        replacements.put("5075", String.valueOf(alicePort7));
+
         replacements.put("5090", String.valueOf(bobPort));
 
-      
-        return WebArchiveUtil.createWebArchiveNoGw("restcomm_UserAgentManagerTest.xml", 
-                "restcomm.script_UserAgentTest", 
+
+        return WebArchiveUtil.createWebArchiveNoGw("restcomm_UserAgentManagerTest.xml",
+                "restcomm.script_UserAgentTest",
                 replacements);
-    }    
+    }
 }

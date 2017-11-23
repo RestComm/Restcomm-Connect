@@ -59,7 +59,9 @@ import com.sun.jersey.core.util.MultivaluedMapImpl;
 import org.junit.experimental.categories.Category;
 import org.restcomm.connect.commons.Version;
 import org.restcomm.connect.commons.dao.Sid;
-import org.restcomm.connect.testsuite.UnstableTests;
+import org.restcomm.connect.commons.annotations.BrokenTests;
+import org.restcomm.connect.commons.annotations.FeatureExpTests;
+import org.restcomm.connect.commons.annotations.UnstableTests;
 
 /**
  * @author <a href="mailto:jean.deruelle@telestax.com">Jean Deruelle</a>
@@ -95,6 +97,7 @@ public class IncomingPhoneNumbersEndpointTest {
      * try deleting a number that does not exist
      */
     @Test
+    @Category(FeatureExpTests.class)
     public void testDeletePhoneNumberNotFound() {
         stubFor(post(urlEqualTo("/test"))
                 .withRequestBody(containing("queryDID"))
@@ -139,6 +142,7 @@ public class IncomingPhoneNumbersEndpointTest {
      * try updating a number that does not exist
      */
     @Test
+    @Category(FeatureExpTests.class)
     public void testUpdatePhoneNumberNotFound() {
         stubFor(post(urlEqualTo("/test"))
                 .withRequestBody(containing("queryDID"))
@@ -185,6 +189,7 @@ public class IncomingPhoneNumbersEndpointTest {
     }
 
     @Test
+    @Category(BrokenTests.class)
     public void getIncomingPhoneNumbersList() {
         JsonObject firstPage = RestcommIncomingPhoneNumberTool.getInstance().getIncomingPhoneNumbers(deploymentUrl.toString(), adminAccountSid,
                 adminAuthToken);
@@ -215,6 +220,7 @@ public class IncomingPhoneNumbersEndpointTest {
     }
 
     @Test
+    @Category(BrokenTests.class)
     public void getIncomingPhoneNumbersListUsingPageSize() {
         JsonObject firstPage = (JsonObject) RestcommIncomingPhoneNumberTool.getInstance().getIncomingPhoneNumbers(deploymentUrl.toString(), adminAccountSid,
                 adminAuthToken, null, 100, true);
@@ -324,6 +330,7 @@ public class IncomingPhoneNumbersEndpointTest {
      * If Twilio cannot find a phone number to match your request, you will receive an HTTP 400 with Twilio error code 21452.
      */
     @Test
+    @Category(FeatureExpTests.class)
     public void testPurchasePhoneNumberNoPhoneNumberFound() {
         stubFor(post(urlEqualTo("/test"))
                 .withRequestBody(containing("queryDID"))
@@ -417,6 +424,7 @@ public class IncomingPhoneNumbersEndpointTest {
      * If Twilio cannot find a phone number to match your request, you will receive an HTTP 400 with Twilio error code 21452.
      */
     @Test
+    @Category(FeatureExpTests.class)
     public void testPurchaseLocalPhoneNumberNoPhoneNumberFound() {
         stubFor(post(urlEqualTo("/test"))
                 .withRequestBody(containing("queryDID"))
@@ -510,6 +518,7 @@ public class IncomingPhoneNumbersEndpointTest {
      * If Twilio cannot find a phone number to match your request, you will receive an HTTP 400 with Twilio error code 21452.
      */
     @Test
+    @Category(FeatureExpTests.class)
     public void testPurchaseTollFreePhoneNumberNoPhoneNumberFound() {
         stubFor(post(urlEqualTo("/test"))
                 .withRequestBody(containing("queryDID"))
@@ -603,6 +612,7 @@ public class IncomingPhoneNumbersEndpointTest {
      * If Twilio cannot find a phone number to match your request, you will receive an HTTP 400 with Twilio error code 21452.
      */
     @Test
+    @Category(FeatureExpTests.class)
     public void testPurchaseMobilePhoneNumberNoPhoneNumberFound() {
         stubFor(post(urlEqualTo("/test"))
                 .withRequestBody(containing("queryDID"))

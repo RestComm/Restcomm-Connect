@@ -8,7 +8,6 @@ import static org.cafesip.sipunit.SipAssert.assertLastOperationSuccess;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertTrue;
-import static org.junit.Assert.fail;
 
 import java.net.URL;
 
@@ -28,11 +27,12 @@ import org.jboss.shrinkwrap.resolver.api.maven.archive.ShrinkWrapMaven;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.BeforeClass;
-import org.junit.Ignore;
 import org.junit.Rule;
 import org.junit.Test;
+import org.junit.experimental.categories.Category;
 import org.junit.runner.RunWith;
 import org.restcomm.connect.commons.Version;
+import org.restcomm.connect.commons.annotations.FeatureAltTests;
 
 import com.github.tomakehurst.wiremock.junit.WireMockRule;
 import com.google.gson.JsonArray;
@@ -131,6 +131,7 @@ public class LiveCallModificationMuteUnMuteTest {
      * @throws Exception
      */
     @Test
+    @Category(FeatureAltTests.class)
     public void muteUnmuteInProgressConferenceParticipant() throws Exception {
     	stubFor(get(urlPathEqualTo("/1111"))
                 .willReturn(aResponse()

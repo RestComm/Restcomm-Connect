@@ -40,7 +40,8 @@ import org.restcomm.connect.commons.Version;
 
 import java.net.URL;
 import org.junit.experimental.categories.Category;
-import org.restcomm.connect.testsuite.UnstableTests;
+import org.restcomm.connect.commons.annotations.BrokenTests;
+import org.restcomm.connect.commons.annotations.UnstableTests;
 
 /**
  * @author <a href="mailto:abdulazizali@acm.org">abdulazizali77</a>
@@ -82,7 +83,7 @@ public class UsageRecordsTest {
     }
 
     @Test
-    @Category(UnstableTests.class)
+    @Category(BrokenTests.class)
     public void getUsageRecordsDaily() {
         JsonElement response = RestcommUsageRecordsTool.getInstance().getUsageRecordsDaily(deploymentUrl.toString(),
                 adminAccountSid, adminAuthToken, "", true);
@@ -121,7 +122,7 @@ public class UsageRecordsTest {
     }
 
     @Test
-    @Category(UnstableTests.class)
+    @Category(BrokenTests.class)
     public void getUsageRecordsMonthly() {
         JsonElement response = RestcommUsageRecordsTool.getInstance().getUsageRecordsMonthly(deploymentUrl.toString(),
                 adminAccountSid, adminAuthToken, "", true);
@@ -157,7 +158,7 @@ public class UsageRecordsTest {
     }
 
     @Test
-    @Category(UnstableTests.class)
+    @Category(BrokenTests.class)
     public void getUsageRecordsYearly() {
         JsonElement response = RestcommUsageRecordsTool.getInstance().getUsageRecordsYearly(deploymentUrl.toString(),
                 adminAccountSid, adminAuthToken, "", true);
@@ -193,7 +194,7 @@ public class UsageRecordsTest {
     }
 
     @Test
-    @Category(UnstableTests.class)
+    @Category(BrokenTests.class)
     public void getUsageRecordsAlltime() {
         JsonElement response = RestcommUsageRecordsTool.getInstance().getUsageRecordsAllTime(deploymentUrl.toString(),
                 adminAccountSid, adminAuthToken, "", true);

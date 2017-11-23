@@ -20,22 +20,25 @@
 
 package org.restcomm.connect.testsuite.http;
 
-import com.sun.jersey.api.client.Client;
-import com.sun.jersey.api.client.ClientResponse;
-import com.sun.jersey.api.client.WebResource;
-import com.sun.jersey.core.util.MultivaluedMapImpl;
+import javax.ws.rs.core.MediaType;
+import javax.ws.rs.core.MultivaluedMap;
+
 import org.apache.log4j.Logger;
 import org.jboss.arquillian.container.test.api.Deployment;
 import org.jboss.arquillian.junit.Arquillian;
 import org.jboss.shrinkwrap.api.ShrinkWrap;
 import org.jboss.shrinkwrap.api.spec.WebArchive;
 import org.jboss.shrinkwrap.resolver.api.maven.archive.ShrinkWrapMaven;
-import org.junit.Test;
 import org.junit.Assert;
+import org.junit.Test;
+import org.junit.experimental.categories.Category;
 import org.junit.runner.RunWith;
+import org.restcomm.connect.commons.annotations.FeatureExpTests;
 
-import javax.ws.rs.core.MediaType;
-import javax.ws.rs.core.MultivaluedMap;
+import com.sun.jersey.api.client.Client;
+import com.sun.jersey.api.client.ClientResponse;
+import com.sun.jersey.api.client.WebResource;
+import com.sun.jersey.core.util.MultivaluedMapImpl;
 
 /**
  * Selective testing (relies on accounts endpoint only) that involves accounts, roles and permissions.
@@ -63,6 +66,7 @@ public class RoleSensitiveTest extends EndpointTest {
     static String guestAuthToken = "77f8c12cc7b8f8423e5c38b035249166";
 
     @Test
+    @Category(FeatureExpTests.class)
     public void testSinglePermissionAccess() {
         // user can read his account
         Client jersey = getClient(userUsername, userAuthToken);
@@ -78,6 +82,7 @@ public class RoleSensitiveTest extends EndpointTest {
     }
 
     @Test
+    @Category(FeatureExpTests.class)
     public void testSiblingAccountPermissionAccess() {
         // user cannot read sibling account although he has Accounts:Read permission
         Client jersey = getClient(userUsername, userAuthToken);
@@ -102,6 +107,7 @@ public class RoleSensitiveTest extends EndpointTest {
     }
 
     @Test
+    @Category(FeatureExpTests.class)
     public void testNoPermissions() {
         // guest cannot read his account
         Client jersey = getClient(guestUsername, guestAuthToken);

@@ -51,7 +51,7 @@ import com.google.gson.JsonArray;
 import com.google.gson.JsonObject;
 import com.sun.jersey.core.util.MultivaluedMapImpl;
 import org.junit.experimental.categories.Category;
-import org.restcomm.connect.testsuite.UnstableTests;
+import org.restcomm.connect.commons.annotations.UnstableTests;
 
 /**
  * @author guilherme.jansen@telestax.com
