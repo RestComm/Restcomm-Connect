@@ -23,6 +23,7 @@ Following configuration are specific to amazon route 53.
 DNS_PROVISIONING_ENABLED="TRUE"
 DNS_PROVISIONING_CLASS="org.restcomm.connect.telscale.dns.route53.Route53DnsProvisioningManager"
 DNS_PROVISIONING_AWS_ROUTE53_A_VALUE=""
+DNS_PROVISIONING_AWS_ROUTE53_SRV_VALUE=""
 DNS_PROVISIONING_AWS_ROUTE53_ACCESS_KEY=""
 DNS_PROVISIONING_AWS_ROUTE53_SECRET_KEY=""
 DNS_PROVISIONING_AWS_ROUTE53_REGION=""
@@ -34,6 +35,7 @@ DNS_PROVISIONING_AWS_ROUTE53_ALIAS_HOSTED_ZONE_ID=""
 ----
 
 **DNS_PROVISIONING_AWS_ROUTE53_A_VALUE**: is address to which DNS Server will route traffic In a cluster, it can be public ip of loadbalancer or alias/domainName of a DNS entity (AWS ELB etc).
+**DNS_PROVISIONING_AWS_ROUTE53_SRV_VALUE**: SRV destination server value (e.g sip.restcomm.com)
 **DNS_PROVISIONING_AWS_ROUTE53_ACCESS_KEY**: aws access key to call their APIs.
 **DNS_PROVISIONING_AWS_ROUTE53_SECRET_KEY**: aws secret key to call their APIs.
 **DNS_PROVISIONING_AWS_ROUTE53_REGION**: The region to be used by the client. This will be used to determine both the ervice endpoint (eg: https://sns.us-west-1.amazonaws.com) and signing region (eg: us-west-1) for requests.
