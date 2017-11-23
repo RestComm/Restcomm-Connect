@@ -4,7 +4,7 @@ var rcMod = angular.module('rcApp');
 
 // Numbers : RestComm Clients : List ------------------------------------------------
 
-rcMod.controller('ClientsCtrl', function($scope, $resource, $uibModal, $dialog, SessionService, RCommClients, RCommApps, Notifications) {
+rcMod.controller('ClientsCtrl', function($scope, $resource, $uibModal, $dialog, SessionService, RCommClients, Notifications) {
 
   $scope.sid = SessionService.get("sid");
 
@@ -56,7 +56,7 @@ rcMod.controller('ClientsCtrl', function($scope, $resource, $uibModal, $dialog, 
 
 // Numbers : RestComm Clients : Details (also used for Modal) -----------------------
 
-rcMod.controller('ClientDetailsCtrl', function ($scope, $stateParams, $location, $dialog, $uibModalInstance, SessionService, RCommClients, RCommApps, Notifications, localApps, Applications) {
+rcMod.controller('ClientDetailsCtrl', function ($scope, $stateParams, $location, $dialog, $uibModalInstance, SessionService, RCommClients, Notifications, localApps, Applications) {
 
   $scope.localApps = Applications.filterByKind(localApps,'voice');
 
@@ -75,9 +75,6 @@ rcMod.controller('ClientDetailsCtrl', function ($scope, $stateParams, $location,
       $uibModalInstance.dismiss('cancel');
     };
   }
-
-  // query for available apps
-  //$scope.availableApps = RCommApps.query();
 
   var createSIPClientParams = function(client) {
     var params = {};

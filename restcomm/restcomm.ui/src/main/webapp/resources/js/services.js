@@ -670,11 +670,6 @@ rcServices.factory('RCommLogsTranscriptions', function($resource) {
   );
 });
 
-// TODO remove obsolete project service for RAS
-rcServices.factory('RCommApps', function($resource) {
-	  return $resource('/restcomm-rvd/services/projects');
-});
-
 rcServices.factory('RCommApplications', function($resource) {
     return $resource('/restcomm/2012-04-24/Accounts/:accountSid/Applications/:applicationSid.json', {
         accountSid: '@accountSid',

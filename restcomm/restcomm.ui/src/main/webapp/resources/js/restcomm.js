@@ -149,7 +149,7 @@ rcMod.config(['$stateProvider','$urlRouterProvider', function($stateProvider, $u
         $uibModalInstance : function() {return undefined;},
         allCountries : function() {return undefined;},
         providerCountries : function() {return undefined;},
-        localApps: function (rappService, authorize) { return rappService.refreshLocalApps();}
+        localApps: function (RCommApplications, AuthService, authorize) { return RCommApplications.query({accountSid:AuthService.getAccountSid()}).$promise;}
     }
   });
   $stateProvider.state('restcomm.applications',{
@@ -188,7 +188,7 @@ rcMod.config(['$stateProvider','$urlRouterProvider', function($stateProvider, $u
     controller: 'ClientDetailsCtrl',
     resolve: {
         $uibModalInstance : function() {return undefined;},
-        localApps: function (rappService,authorize) { return rappService.refreshLocalApps();}
+        localApps: function (RCommApplications, AuthService, authorize) { return RCommApplications.query({accountSid:AuthService.getAccountSid()}).$promise;}
     }
   });
   $stateProvider.state('restcomm.numbers-outgoing',{
