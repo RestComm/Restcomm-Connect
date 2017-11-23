@@ -594,7 +594,7 @@ public class CreateCallsTest {
         but there will be no answer within the timeout interval (10sec) and Restcomm should cancel the call to alice and disconnect 'george' call
     */
     @Test
-    @Category({FeatureExpTests.class})
+    @Category({FeatureExpTests.class, UnstableTests.class})
     public void createCallNumberTestNoAnswerOnRcml() throws InterruptedException, ParseException {
 
         stubFor(post(urlPathEqualTo("/1111"))
