@@ -458,7 +458,7 @@ public class CallLifecycleAnswerDelayTest {
     }
 
     @Test
-    @Category(FeatureExpTests.class)
+    @Category({FeatureExpTests.class, UnstableTests.class})
     public void testDialNumberPstnRegisteredClientTimesOutCallDisconnects() throws ParseException, InterruptedException, MalformedURLException {
 
         stubFor(get(urlPathEqualTo("/1111"))

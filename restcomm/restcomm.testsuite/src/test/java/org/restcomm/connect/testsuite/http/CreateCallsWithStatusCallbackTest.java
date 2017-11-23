@@ -24,6 +24,7 @@ import org.junit.experimental.categories.Category;
 import org.junit.runner.RunWith;
 import org.restcomm.connect.commons.Version;
 import org.restcomm.connect.commons.annotations.FeatureAltTests;
+import org.restcomm.connect.commons.annotations.UnstableTests;
 import org.restcomm.connect.testsuite.tools.MonitoringServiceTool;
 
 import javax.sip.message.Response;
@@ -229,6 +230,7 @@ public class CreateCallsWithStatusCallbackTest {
 
     private String dialNumberWithStatusCallback = "<Response><Dial><Number statusCallback=\"http://127.0.0.1:8090/statusOfDialNumber\" statusCallbackMethod=\"GET\">+131313</Number></Dial></Response>";
     @Test
+    @Category(UnstableTests.class)
     public void createCallNumberWithStatusCallbackInBothTheRequestAndRCML() throws InterruptedException {
 
         stubFor(post(urlPathEqualTo("/1111"))

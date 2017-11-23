@@ -47,7 +47,7 @@ import com.google.gson.JsonObject;
  * @author <a href="mailto:gvagenas@gmail.com">gvagenas</a>
  */
 @RunWith(Arquillian.class)
-@Category(FeatureAltTests.class)
+@Category({FeatureAltTests.class, UnstableTests.class})
 public class LiveCallModificationAnswerDelayTest {
 
     private final static Logger logger = Logger.getLogger(CreateCallsTest.class.getName());

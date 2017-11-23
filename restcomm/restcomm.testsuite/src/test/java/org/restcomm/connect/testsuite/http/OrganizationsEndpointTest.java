@@ -18,6 +18,7 @@ import org.junit.experimental.categories.Category;
 import org.junit.runner.RunWith;
 import org.restcomm.connect.commons.Version;
 import org.restcomm.connect.commons.annotations.FeatureExpTests;
+import org.restcomm.connect.commons.annotations.UnstableTests;
 
 import com.google.gson.JsonArray;
 import com.google.gson.JsonObject;
@@ -62,6 +63,7 @@ public class OrganizationsEndpointTest extends EndpointTest {
      * this test will try to Read single organization and read list
      */
     @Test
+    @Category(UnstableTests.class)
     public void getOrganizationFromSuperAdminAccount(){
     	JsonObject organizationJsonObject = RestcommOrganizationsTool.getInstance().getOrganization(deploymentUrl.toString(), superAdminAccountSid, superAdminAuthToken, org1);
     	assertTrue(organizationJsonObject!=null);

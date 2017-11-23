@@ -64,6 +64,7 @@ import org.junit.experimental.categories.Category;
 import org.junit.runner.RunWith;
 import org.restcomm.connect.commons.Version;
 import org.restcomm.connect.commons.annotations.ParallelClassTests;
+import org.restcomm.connect.commons.annotations.UnstableTests;
 import org.restcomm.connect.commons.annotations.WithInMinsTests;
 import org.restcomm.connect.testsuite.NetworkPortAssigner;
 import org.restcomm.connect.testsuite.WebArchiveUtil;
@@ -215,6 +216,7 @@ public class DialActionTest {
     }
 
     @Test
+    @Category(UnstableTests.class)
     public void testDialActionInvalidCall() throws ParseException, InterruptedException {
 
         stubFor(post(urlPathMatching("/DialAction.*"))
@@ -281,6 +283,7 @@ public class DialActionTest {
     }
 
     @Test //No regression test for https://github.com/Mobicents/RestComm/issues/505
+    @Category(UnstableTests.class)
     public void testDialActionInvalidCallCheckCallStatusCompleted() throws ParseException, InterruptedException {
 
         stubFor(post(urlPathMatching("/DialAction.*"))
