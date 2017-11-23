@@ -62,6 +62,7 @@ import com.google.gson.JsonObject;
 import java.util.Arrays;
 import org.junit.experimental.categories.Category;
 import org.restcomm.connect.commons.annotations.FeatureAltTests;
+import org.restcomm.connect.commons.annotations.FeatureExpTests;
 import org.restcomm.connect.commons.annotations.ParallelClassTests;
 import org.restcomm.connect.testsuite.NetworkPortAssigner;
 import org.restcomm.connect.commons.annotations.UnstableTests;
@@ -417,6 +418,7 @@ public class ImsClientsDialAnswerDelayTest {
     }
 
     @Test
+    @Category({UnstableTests.class})
     public void testWebRTCClientOutgoingBHold() throws SipException, ParseException, InterruptedException, InvalidArgumentException {
 
         logger.info("testWebRTCClientOutgoingBHold");
