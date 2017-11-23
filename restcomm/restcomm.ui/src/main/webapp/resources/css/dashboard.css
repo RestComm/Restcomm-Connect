@@ -1729,6 +1729,13 @@ div.input-group.f16 > .input-group-btn > .dropdown-toggle {
     color: #6d6e70;
 }
 
+/* A small piece of text like a label that has symbolic value like RVD, External, None etc.  */
+.rc-note {
+    color: #6d6e70;
+    font-weight: 300;
+    font-size: 19px;
+}
+
 /* experimental link underline feature */
 
 .rc-link:hover {

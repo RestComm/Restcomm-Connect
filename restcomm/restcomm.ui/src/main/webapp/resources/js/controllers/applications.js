@@ -13,6 +13,18 @@ angular.module('rcApp.controllers').controller('ApplicationDetailsCtrl', functio
         $location.path("/applications");
     });
     // TODO also retrieve IncomingNumbers list for specific application
+    // for now, we will extract the numbers from Application listing by filtering on the client side until proper
+    // REST method support is provided
+    // we populate $scope.app with 'numbers' property of filtered application element
+    var allApps = RCommApplications.query({accountSid: accountSid, includeNumbers: true}, function() {
+        if (Array.isArray(allApps) )
+            for (var i=0; i < allApps.length; i++) {
+                if (applicationSid == allApps[i].sid) {
+                    $scope.app.numbers = allApps[i].numbers
+                }
+            }
+    });
+
 
     $scope.confirmApplicationDelete = function(app) {
         confirmApplicationDelete(app, $dialog, $scope, Notifications, RCommApplications, RvdProjects, $location)

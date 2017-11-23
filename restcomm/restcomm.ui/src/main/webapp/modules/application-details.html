@@ -36,9 +36,12 @@
 
                 <div class="row app-numbers-section">
                     <div class="col-md-12">
-                        <h3 class="details-section-title">Numbers <span class="hidden-xs">that are  using this application<span></h3>
-                        <p>
-                            <span class="details-field-title">(n/a)</span>
+                        <h3 class="details-section-title">Numbers <span class="hidden-xs">using this application<span></h3>
+                        <p ng-show="app.numbers.length > 0">
+                            <span ng-repeat="appNumber in app.numbers" class="details-field-title"><a class="rc-link" href="#/numbers/incoming/{{appNumber.sid}}">{{appNumber.phone_number}}</a> </span>
+                        </p>
+                        <p ng-hide="app.numbers.length > 0">
+                            <span class="rc-note">None</span>
                         </p>
 
                     </div>
