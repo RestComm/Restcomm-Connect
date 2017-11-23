@@ -1,7 +1,7 @@
 <div class="col-md-2 col-sm-2 col-xs-12">
     <select ng-change="onTargetChanged(targetVar)" ng-model="targetVar" class="rc-selection-picker">
-        <option value="URL">URL</option>
-        <option value="Application">RVD Application</option>
+        <option value="URL">RCML URL</option>
+        <option value="Application">Application</option>
     </select>
 </div>
 <div class="clearfix visible-xs">&nbsp;</div>
@@ -20,7 +20,7 @@
     <select ng-change="setApp()" class="rc-selection-picker" ng-model="appNameVar">
         <option value="">No application selected</option>
         <option value="create_new_project">Create new project</option>
-        <option ng-repeat="app in apps | orderBy:'projectName'" value={{app.sid}}>{{ app.projectName }}</option>
+        <option ng-repeat="app in apps | orderBy:'projectName'" value={{app.sid}}>{{ app.friendly_name }}</option>
     </select>
 </div>
 

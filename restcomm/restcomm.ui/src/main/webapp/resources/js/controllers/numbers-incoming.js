@@ -108,7 +108,7 @@ rcMod.controller('NumbersCtrl', function ($scope, $resource, $uibModal, $dialog,
 
 // Numbers : Incoming : Details (also used for Modal) --------------------------
 
-rcMod.controller('NumberDetailsCtrl', function ($scope, $stateParams, $location, $dialog, $uibModalInstance, SessionService, RCommNumbers, RCommApps, RCommAvailableNumbers, Notifications, allCountries, providerCountries, localApps, $rootScope, AuthService, Applications) {
+rcMod.controller('NumberDetailsCtrl', function ($scope, $stateParams, $location, $dialog, $uibModalInstance, SessionService, RCommNumbers, RCommAvailableNumbers, Notifications, allCountries, providerCountries, localApps, $rootScope, AuthService, Applications) {
 
   // are we editing details...
   //if($scope.phoneSid === $stateParams.phoneSid) {
@@ -148,7 +148,6 @@ rcMod.controller('NumberDetailsCtrl', function ($scope, $stateParams, $location,
     RCommNumbers.update({accountSid: $scope.sid, phoneSid: $scope.phoneSid}, $.param(params),
       function() { // success
         Notifications.success('Number "' + number.phone_number + '" updated successfully!');
-        $rootScope.$broadcast("incoming-number-updated", {phoneSid:$scope.phoneSid, params: params});
         $location.path( "/numbers/incoming" );
       },
       function() { // error
@@ -188,7 +187,7 @@ rcMod.controller('NumberDetailsCtrl', function ($scope, $stateParams, $location,
   }
 });
 
-rcMod.controller('NumberRegisterCtrl', function ($scope, $stateParams, $location, $http, $dialog, SessionService, RCommNumbers, RCommApps, RCommAvailableNumbers, Notifications, allCountries, providerCountries) {
+rcMod.controller('NumberRegisterCtrl', function ($scope, $stateParams, $location, $http, $dialog, SessionService, RCommNumbers, RCommAvailableNumbers, Notifications, allCountries, providerCountries) {
 
   $scope.sid = SessionService.get("sid");
 
