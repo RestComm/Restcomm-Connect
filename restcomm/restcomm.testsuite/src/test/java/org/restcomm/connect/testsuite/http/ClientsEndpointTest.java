@@ -11,14 +11,6 @@ import javax.sip.address.SipURI;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.MultivaluedMap;
 
-import com.sun.jersey.api.client.Client;
-import com.sun.jersey.api.client.ClientResponse;
-import com.sun.jersey.api.client.WebResource;
-import com.sun.jersey.api.client.filter.HTTPBasicAuthFilter;
-import com.sun.jersey.core.util.MultivaluedMapImpl;
-import junit.framework.Assert;
-import org.apache.commons.io.IOUtils;
-import org.apache.http.HttpResponse;
 import org.apache.http.client.ClientProtocolException;
 import org.cafesip.sipunit.SipPhone;
 import org.cafesip.sipunit.SipStack;
@@ -33,10 +25,21 @@ import org.jboss.shrinkwrap.resolver.api.maven.archive.ShrinkWrapMaven;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.BeforeClass;
-import org.junit.Ignore;
 import org.junit.Test;
+import org.junit.experimental.categories.Category;
 import org.junit.runner.RunWith;
 import org.restcomm.connect.commons.Version;
+import org.restcomm.connect.commons.annotations.FeatureAltTests;
+import org.restcomm.connect.commons.annotations.FeatureExpTests;
+import org.restcomm.connect.commons.annotations.UnstableTests;
+
+import com.sun.jersey.api.client.Client;
+import com.sun.jersey.api.client.ClientResponse;
+import com.sun.jersey.api.client.WebResource;
+import com.sun.jersey.api.client.filter.HTTPBasicAuthFilter;
+import com.sun.jersey.core.util.MultivaluedMapImpl;
+
+import junit.framework.Assert;
 
 /**
  *
@@ -115,7 +118,7 @@ public class ClientsEndpointTest {
         assertTrue(bobPhone.unregister(bobContact, 0));
     }
 
-    @Test
+    @Test@Category(FeatureAltTests.class)
     public void createClientTestNoVoiceUrl() throws ClientProtocolException, IOException, ParseException, InterruptedException {
 
         SipURI reqUri = bobSipStack.getAddressFactory().createSipURI(null, "127.0.0.1:5080");
@@ -149,7 +152,7 @@ public class ClientsEndpointTest {
         Assert.assertEquals("Removing a non-existing client did not return 404", 404, response.getStatus());
     }
 
-    @Test
+    @Test@Category(FeatureExpTests.class)
     public void createClientWithWeakPasswordShouldFail() throws IOException {
         Client jersey = getClient(developerUsername, developeerAuthToken);
         WebResource resource = jersey.resource( getResourceUrl("/2012-04-24/Accounts/" + developerAccountSid + "/Clients.json" ) );
@@ -161,7 +164,7 @@ public class ClientsEndpointTest {
         Assert.assertTrue("Response should contain 'weak' term", response.getEntity(String.class).toLowerCase().contains("weak"));
     }
 
-    @Test
+    @Test@Category(FeatureExpTests.class)
     public void updateClientWithWeakPasswordShouldFail() {
         String updateClientSid = "CL00000000000000000000000000000001";
         Client jersey = getClient(developerUsername, developeerAuthToken);
@@ -181,7 +184,7 @@ public class ClientsEndpointTest {
      * @throws ParseException
      * @throws InterruptedException
      */
-    @Test
+    @Test@Category(FeatureExpTests.class)
     public void createClientTestWithInvalidCharacters() throws ClientProtocolException, IOException, ParseException, InterruptedException {
     	Client jersey = getClient(developerUsername, developeerAuthToken);
         WebResource resource = jersey.resource( getResourceUrl("/2012-04-24/Accounts/" + developerAccountSid + "/Clients.json" ) );
@@ -234,7 +237,7 @@ public class ClientsEndpointTest {
     	
     }
 
-    @Test
+    @Test@Category({FeatureAltTests.class, UnstableTests.class})
     public void createClientTestWithIsPushEnabled() throws IOException, ParseException, InterruptedException {
         Client jersey = getClient(developerUsername, developeerAuthToken);
         WebResource resource = jersey.resource( getResourceUrl("/2012-04-24/Accounts/" + developerAccountSid + "/Clients.json" ) );
@@ -247,7 +250,7 @@ public class ClientsEndpointTest {
         Assert.assertTrue("Response should contain 'push_client_identity'", response.getEntity(String.class).contains("push_client_identity"));
     }
 
-    @Test
+    @Test@Category(FeatureAltTests.class)
     public void updateClientTestWithIsPushEnabled() throws IOException, ParseException, InterruptedException {
         String sid = CreateClientsTool.getInstance().createClient(deploymentUrl.toString(), developerAccountSid, developeerAuthToken, "agafox", "RestComm1234", null);
         // add push_client_identity

@@ -20,8 +20,11 @@ import org.junit.Before;
 import org.junit.BeforeClass;
 import org.junit.Rule;
 import org.junit.Test;
+import org.junit.experimental.categories.Category;
 import org.junit.runner.RunWith;
 import org.restcomm.connect.commons.Version;
+import org.restcomm.connect.commons.annotations.FeatureAltTests;
+import org.restcomm.connect.commons.annotations.UnstableTests;
 import org.restcomm.connect.testsuite.tools.MonitoringServiceTool;
 
 import javax.sip.message.Response;
@@ -44,6 +47,7 @@ import static org.junit.Assert.assertTrue;
  * @author <a href="mailto:gvagenas@gmail.com">gvagenas</a>
  */
 @RunWith(Arquillian.class)
+@Category(FeatureAltTests.class)
 public class CreateCallsWithStatusCallbackTest {
 
     private final static Logger logger = Logger.getLogger(CreateCallsWithStatusCallbackTest.class.getName());
@@ -226,6 +230,7 @@ public class CreateCallsWithStatusCallbackTest {
 
     private String dialNumberWithStatusCallback = "<Response><Dial><Number statusCallback=\"http://127.0.0.1:8090/statusOfDialNumber\" statusCallbackMethod=\"GET\">+131313</Number></Dial></Response>";
     @Test
+    @Category(UnstableTests.class)
     public void createCallNumberWithStatusCallbackInBothTheRequestAndRCML() throws InterruptedException {
 
         stubFor(post(urlPathEqualTo("/1111"))

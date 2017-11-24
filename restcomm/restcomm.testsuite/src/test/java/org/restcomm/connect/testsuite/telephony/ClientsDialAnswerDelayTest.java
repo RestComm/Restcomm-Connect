@@ -1,6 +1,28 @@
 package org.restcomm.connect.testsuite.telephony;
 
-import com.github.tomakehurst.wiremock.junit.WireMockRule;
+import static com.github.tomakehurst.wiremock.client.WireMock.aResponse;
+import static com.github.tomakehurst.wiremock.client.WireMock.get;
+import static com.github.tomakehurst.wiremock.client.WireMock.post;
+import static com.github.tomakehurst.wiremock.client.WireMock.stubFor;
+import static com.github.tomakehurst.wiremock.client.WireMock.urlPathEqualTo;
+import static org.cafesip.sipunit.SipAssert.assertLastOperationSuccess;
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertNotNull;
+import static org.junit.Assert.assertTrue;
+
+import java.net.URL;
+import java.text.ParseException;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+
+import javax.sip.Dialog;
+import javax.sip.address.SipURI;
+import javax.sip.header.UserAgentHeader;
+import javax.sip.message.Response;
+
 import org.cafesip.sipunit.Credential;
 import org.cafesip.sipunit.SipCall;
 import org.cafesip.sipunit.SipPhone;
@@ -18,40 +40,24 @@ import org.junit.Before;
 import org.junit.BeforeClass;
 import org.junit.Rule;
 import org.junit.Test;
+import org.junit.experimental.categories.Category;
 import org.junit.runner.RunWith;
 import org.restcomm.connect.commons.Version;
-import org.restcomm.connect.testsuite.http.CreateClientsTool;
-
-import javax.sip.Dialog;
-import javax.sip.address.SipURI;
-import javax.sip.header.UserAgentHeader;
-import javax.sip.message.Response;
-import java.net.URL;
-import java.text.ParseException;
-import java.util.ArrayList;
-import java.util.List;
-
-import static com.github.tomakehurst.wiremock.client.WireMock.aResponse;
-import static com.github.tomakehurst.wiremock.client.WireMock.get;
-import static com.github.tomakehurst.wiremock.client.WireMock.post;
-import static com.github.tomakehurst.wiremock.client.WireMock.stubFor;
-import static com.github.tomakehurst.wiremock.client.WireMock.urlPathEqualTo;
-import java.util.Arrays;
-import java.util.HashMap;
-import java.util.Map;
-import static org.cafesip.sipunit.SipAssert.assertLastOperationSuccess;
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertNotNull;
-import static org.junit.Assert.assertTrue;
+import org.restcomm.connect.commons.annotations.FeatureExpTests;
+import org.restcomm.connect.commons.annotations.ParallelClassTests;
 import org.restcomm.connect.testsuite.NetworkPortAssigner;
 import org.restcomm.connect.testsuite.WebArchiveUtil;
+import org.restcomm.connect.testsuite.http.CreateClientsTool;
+
+import com.github.tomakehurst.wiremock.junit.WireMockRule;
 
 /**
  * Test for clients with or without VoiceURL (Bitbucket issue 115). Clients without VoiceURL can dial anything.
- * 
+ *
  * @author <a href="mailto:gvagenas@gmail.com">gvagenas</a>
  */
 @RunWith(Arquillian.class)
+@Category(value={ParallelClassTests.class})
 public class ClientsDialAnswerDelayTest {
 
     private static final String version = Version.getVersion();
@@ -168,11 +174,11 @@ public class ClientsDialAnswerDelayTest {
     URL deploymentUrl;
 
     private static int mediaPort = NetworkPortAssigner.retrieveNextPortByFile();
-    
+
     private static int mockPort = NetworkPortAssigner.retrieveNextPortByFile();
     @Rule
     public WireMockRule wireMockRule = new WireMockRule(mockPort);
-    
+
     private static SipStackTool tool1;
     private static SipStackTool tool2;
     private static SipStackTool tool3;
@@ -186,12 +192,12 @@ public class ClientsDialAnswerDelayTest {
     private String pstnNumber = "+151261006100";
 
     private String clientPassword = "qwerty1234RT";
-    
+
     // Maria is a Restcomm Client **without** VoiceURL. This Restcomm Client can dial anything.
     private SipStack mariaSipStack;
     private SipPhone mariaPhone;
     private static String mariaPort = String.valueOf(NetworkPortAssigner.retrieveNextPortByFile());
-    private String mariaContact = "sip:maria@127.0.0.1:" + mariaPort;    
+    private String mariaContact = "sip:maria@127.0.0.1:" + mariaPort;
     private String mariaRestcommClientSid;
 
     // Dimitris is a Restcomm Client **without** VoiceURL. This Restcomm Client can dial anything.
@@ -205,24 +211,24 @@ public class ClientsDialAnswerDelayTest {
     // of the VoiceURL will be executed.
     private SipStack aliceSipStack;
     private SipPhone alicePhone;
-    private static String alicePort = String.valueOf(NetworkPortAssigner.retrieveNextPortByFile());    
+    private static String alicePort = String.valueOf(NetworkPortAssigner.retrieveNextPortByFile());
     private String aliceContact = "sip:alice@127.0.0.1:" + alicePort;
-    
+
 
     private SipStack aliceSipStack2;
     private SipPhone alicePhone2;
-    private static String alicePort2 = String.valueOf(NetworkPortAssigner.retrieveNextPortByFile());     
+    private static String alicePort2 = String.valueOf(NetworkPortAssigner.retrieveNextPortByFile());
     private String aliceContact2 = "sip:alice@127.0.0.1:" + alicePort2;
 
     // George is a simple SIP Client. Will not register with Restcomm
     private SipStack georgeSipStack;
     private SipPhone georgePhone;
-    private static String georgePort = String.valueOf(NetworkPortAssigner.retrieveNextPortByFile());    
+    private static String georgePort = String.valueOf(NetworkPortAssigner.retrieveNextPortByFile());
     private String georgeContact = "sip:"+pstnNumber+"@127.0.0.1:" + georgePort;
 
     private SipStack clientWithAppSipStack;
     private SipPhone clientWithAppPhone;
-    private static String clientWithAppPort = String.valueOf(NetworkPortAssigner.retrieveNextPortByFile()); 
+    private static String clientWithAppPort = String.valueOf(NetworkPortAssigner.retrieveNextPortByFile());
     private String clientWithAppContact = "sip:clientWithApp@127.0.0.1:" + clientWithAppPort;
     private String clientWithAppClientSid;
 
@@ -245,10 +251,10 @@ public class ClientsDialAnswerDelayTest {
 
     private String adminAccountSid = "ACae6e420f425248d6a26948c17a9e2acf";
     private String adminAuthToken = "77f8c12cc7b8f8423e5c38b035249166";
-    
+
     private static int restcommPort = 5080;
-    private static int restcommHTTPPort = 8080;    
-    private static String restcommContact = "127.0.0.1:" + restcommPort;     
+    private static int restcommHTTPPort = 8080;
+    private static String restcommContact = "127.0.0.1:" + restcommPort;
 
     @BeforeClass
     public static void beforeClass() throws Exception {
@@ -262,15 +268,15 @@ public class ClientsDialAnswerDelayTest {
         tool8 = new SipStackTool("ClientsDialAnswerDelayTest8");
         tool9 = new SipStackTool("ClientsDialAnswerDelayTest9");
     }
-    
-    public static void reconfigurePorts() {     
+
+    public static void reconfigurePorts() {
         if (System.getProperty("arquillian_sip_port") != null) {
             restcommPort = Integer.valueOf(System.getProperty("arquillian_sip_port"));
-            restcommContact = "127.0.0.1:" + restcommPort;          
-        } 
+            restcommContact = "127.0.0.1:" + restcommPort;
+        }
         if (System.getProperty("arquillian_http_port") != null) {
-            restcommHTTPPort = Integer.valueOf(System.getProperty("arquillian_http_port"));       
-        }         
+            restcommHTTPPort = Integer.valueOf(System.getProperty("arquillian_http_port"));
+        }
     }
 
     @Before
@@ -361,7 +367,7 @@ public class ClientsDialAnswerDelayTest {
         wireMockRule.resetRequests();
         Thread.sleep(3000);
     }
-    
+
     @Test //Non regression test for issue https://github.com/RestComm/Restcomm-Connect/issues/1042 - Support WebRTC clients to dial out through MediaServer
     public void testClientDialOutPstnSimulateWebRTCClient() throws ParseException, InterruptedException {
 
@@ -418,7 +424,7 @@ public class ClientsDialAnswerDelayTest {
         assertTrue(mariaCall.waitOutgoingCallResponse(5 * 1000));
         assertEquals(Response.OK, mariaCall.getLastReceivedResponse().getStatusCode());
         assertTrue(mariaCall.sendInviteOkAck());
-        
+
         //        For a reason the ACK will never reach Restcomm. This is only when working with the sipUnit
         //        assertTrue(georgeCall.waitForAck(5 * 1000));
 
@@ -429,8 +435,9 @@ public class ClientsDialAnswerDelayTest {
         //        assertTrue(georgeCall.waitForDisconnect(5 * 1000));
         //        assertTrue(georgeCall.respondToDisconnect());
     }
-    
+
     @Test //Non regression test for issue https://github.com/RestComm/Restcomm-Connect/issues/1042 - Support WebRTC clients to dial out through MediaServer
+    @Category(FeatureExpTests.class)
     public void testClientDialOutPstnSimulateWebRTCClientBusy() throws ParseException, InterruptedException {
 
         assertNotNull(mariaRestcommClientSid);
@@ -485,8 +492,9 @@ public class ClientsDialAnswerDelayTest {
         assertTrue(mariaCall.waitOutgoingCallResponse(5 * 1000));
         assertEquals(Response.BUSY_HERE, mariaCall.getLastReceivedResponse().getStatusCode());
     }
-    
+
     @Test //Non regression test for issue https://github.com/RestComm/Restcomm-Connect/issues/1042 - Support WebRTC clients to dial out through MediaServer
+    @Category(FeatureExpTests.class)
     public void testClientDialOutPstnSimulateWebRTCClientNoAnswer() throws ParseException, InterruptedException {
 
         assertNotNull(mariaRestcommClientSid);
@@ -540,8 +548,9 @@ public class ClientsDialAnswerDelayTest {
         assertTrue(mariaCall.waitOutgoingCallResponse(120 * 1000));
         assertEquals(Response.REQUEST_TIMEOUT, mariaCall.getLastReceivedResponse().getStatusCode());
     }
-    
+
     @Test //Non regression test for issue https://github.com/RestComm/Restcomm-Connect/issues/1042 - Support WebRTC clients to dial out through MediaServer
+    @Category(FeatureExpTests.class)
     public void testClientDialOutPstnSimulateWebRTCClientServiceUnavailable() throws ParseException, InterruptedException {
 
         assertNotNull(mariaRestcommClientSid);
@@ -596,8 +605,9 @@ public class ClientsDialAnswerDelayTest {
         assertTrue(mariaCall.waitOutgoingCallResponse(5 * 1000));
         assertEquals(Response.SERVICE_UNAVAILABLE, mariaCall.getLastReceivedResponse().getStatusCode());
     }
-    
+
     @Test //Non regression test for issue https://github.com/RestComm/Restcomm-Connect/issues/1042 - Support WebRTC clients to dial out through MediaServer
+    @Category(FeatureExpTests.class)
     public void testClientDialOutPstnSimulateWebRTCClientCancelBefore200() throws ParseException, InterruptedException {
 
         assertNotNull(mariaRestcommClientSid);
@@ -646,7 +656,7 @@ public class ClientsDialAnswerDelayTest {
         assertTrue(georgeCall.sendIncomingCallResponse(Response.RINGING, "RINGING-George", 3600));
 
         georgeCall.listenForCancel();
-        
+
         SipTransaction mariaCancelTransaction = mariaCall.sendCancel();
         assertTrue(mariaCancelTransaction != null);
 
@@ -654,7 +664,7 @@ public class ClientsDialAnswerDelayTest {
         assertTrue(georgeCancelTransaction != null);
         georgeCall.respondToCancel(georgeCancelTransaction, 200, "OK-George", 3600);
     }
-    
+
     private String dialClientRcml = "<Response><Dial timeLimit=\"10\" timeout=\"10\"><Client>alice</Client></Dial></Response>";
     @Test
     public synchronized void testDialClientAlice() throws InterruptedException, ParseException {
@@ -707,7 +717,7 @@ public class ClientsDialAnswerDelayTest {
         assertTrue(aliceCall.waitForDisconnect(30 * 1000));
         assertTrue(aliceCall.respondToDisconnect());
     }
-    
+
     public synchronized void testDialClientForkWithWebRTCAliceFromAnotherInstance() throws InterruptedException, ParseException {
         stubFor(get(urlPathEqualTo("/1111"))
                 .willReturn(aResponse()
@@ -758,7 +768,7 @@ public class ClientsDialAnswerDelayTest {
         assertTrue(aliceCall.waitForDisconnect(30 * 1000));
         assertTrue(aliceCall.respondToDisconnect());
     }
-    
+
     private String dialAliceDimitriRcml= "<Response><Dial timeLimit=\"10\" timeout=\"10\"><Client>alice</Client><Sip>"+dimitriContact+"</Sip></Dial></Response>";
     @Test
     public synchronized void testDialForkClient_AliceMultipleRegistrations_George() throws InterruptedException, ParseException {
@@ -838,7 +848,7 @@ public class ClientsDialAnswerDelayTest {
 
         Thread.sleep(500);
     }
-    
+
     private String dialWebRTCClientForkRcml = "<Response><Dial timeLimit=\"10\" timeout=\"10\"><Client>bob</Client><Client>alice</Client></Dial></Response>";
     @Test
     public synchronized void testDialForkClientWebRTCBob_And_AliceWithMultipleRegistrations() throws InterruptedException, ParseException {
@@ -949,7 +959,7 @@ public class ClientsDialAnswerDelayTest {
         assertTrue(aliceCall2.waitForIncomingCall(30 * 1000));
         assertTrue(aliceCall2.sendIncomingCallResponse(Response.RINGING, "Ringing-Alice2", 3600));
         assertTrue(aliceCall2.sendIncomingCallResponse(Response.BUSY_HERE, "Busy-Alice2", 3600));
-        
+
         Thread.sleep(200);
 
         assertTrue(aliceCall.sendIncomingCallResponse(Response.SERVICE_UNAVAILABLE, "ServiceUnavailable-Alice", 3600));
@@ -959,7 +969,7 @@ public class ClientsDialAnswerDelayTest {
 
         Thread.sleep(500);
     }
-    
+
     private String clientWithAppHostedAppRcml = "<Response><Dial timeLimit=\"10\" timeout=\"10\"><Number>+151261006100</Number></Dial></Response>";
     @Test
     public synchronized void testClientWithHostedApplication() throws InterruptedException, ParseException {
@@ -1020,12 +1030,12 @@ public class ClientsDialAnswerDelayTest {
         reconfigurePorts();
 
         Map<String,String> replacements = new HashMap();
-        //replace mediaport 2727 
-        replacements.put("2727", String.valueOf(mediaPort)); 
+        //replace mediaport 2727
+        replacements.put("2727", String.valueOf(mediaPort));
         replacements.put("8080", String.valueOf(restcommHTTPPort));
         replacements.put("8090", String.valueOf(mockPort));
         replacements.put("5080", String.valueOf(restcommPort));
-        replacements.put("5070", String.valueOf(georgePort));        
+        replacements.put("5070", String.valueOf(georgePort));
         replacements.put("5090", String.valueOf(bobPort));
         replacements.put("5091", String.valueOf(alicePort));
         replacements.put("5092", String.valueOf(mariaPort));
@@ -1035,7 +1045,7 @@ public class ClientsDialAnswerDelayTest {
         replacements.put("5096", String.valueOf(fotiniPort));
         replacements.put("5097", String.valueOf(bobPort));
         replacements.put("5098", String.valueOf(leftyPort));
-        
+
         List<String> resources = new ArrayList(
                 Arrays.asList(
                 "dial-conference-entry.xml",
@@ -1044,10 +1054,10 @@ public class ClientsDialAnswerDelayTest {
                 "dial-client-entry.xml",
                 "dial-number-entry.xml"));
         return WebArchiveUtil.createWebArchiveNoGw(
-                "restcomm-delay.xml", 
+                "restcomm-delay.xml",
                 "restcomm.script_dialTest",
                 resources,
                 replacements);
-    }    
+    }
 
 }

@@ -43,19 +43,24 @@ import org.junit.Before;
 import org.junit.BeforeClass;
 import org.junit.Ignore;
 import org.junit.Test;
+import org.junit.experimental.categories.Category;
 import org.junit.runner.RunWith;
 import org.mobicents.arquillian.mediaserver.api.EmbeddedMediaserver;
 import org.mobicents.arquillian.mediaserver.api.MgcpEventListener;
 import org.mobicents.arquillian.mediaserver.api.annotations.Mediaserver;
 import org.mobicents.commtesting.MgcpUnit;
 import org.restcomm.connect.commons.Version;
+import org.restcomm.connect.commons.annotations.FeatureAltTests;
+import org.restcomm.connect.commons.annotations.SequentialClassTests;
+import org.restcomm.connect.commons.annotations.WithInSecsTests;
 
 /**
  * @author Amit Bhayani
- * 
+ *
  */
 @Ignore //The mss-arquillian mms extension needs update
 @RunWith(Arquillian.class)
+@Category(value={FeatureAltTests.class, SequentialClassTests.class})
 public class PlayTest {
 
     private final static Logger logger = Logger.getLogger(PlayTest.class.getName());
@@ -86,7 +91,7 @@ public class PlayTest {
     private String dialPlay = "sip:+12223334444@127.0.0.1:5080";
 
     /**
-     * 
+     *
      */
     public PlayTest() {
         // TODO Auto-generated constructor stub
@@ -130,7 +135,7 @@ public class PlayTest {
 
         final SipCall bobCall = bobPhone.createSipCall();
         bobCall.initiateOutgoingCall(bobContact, dialPlay, null, body, "application", "sdp", null, null);
-        
+
         assertLastOperationSuccess(bobCall);
         assertTrue(bobCall.waitOutgoingCallResponse(5 * 1000));
         int responseBob = bobCall.getLastReceivedResponse().getStatusCode();
@@ -145,7 +150,7 @@ public class PlayTest {
         assertEquals(Response.OK, bobCall.getLastReceivedResponse().getStatusCode());
         bobCall.sendInviteOkAck();
         assertTrue(!(bobCall.getLastReceivedResponse().getStatusCode() >= 400));
-        
+
         // Start a new thread for bob to wait disconnect
         new Thread(new Runnable() {
             @Override
@@ -153,7 +158,7 @@ public class PlayTest {
                 assertTrue(bobCall.waitForDisconnect(30 * 1000));
             }
         }).start();
-        
+
         try {
             Thread.sleep(10 * 1000);
         } catch (final InterruptedException exception) {

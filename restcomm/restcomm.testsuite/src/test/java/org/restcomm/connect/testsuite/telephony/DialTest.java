@@ -52,8 +52,10 @@ import org.junit.BeforeClass;
 import org.junit.Ignore;
 import org.junit.Rule;
 import org.junit.Test;
+import org.junit.experimental.categories.Category;
 import org.junit.runner.RunWith;
 import org.restcomm.connect.commons.Version;
+import org.restcomm.connect.commons.annotations.SequentialClassTests;
 import org.restcomm.connect.testsuite.http.RestcommCallsTool;
 //import org.restcomm.connect.telephony.Version;
 import org.restcomm.connect.testsuite.telephony.security.DigestServerAuthenticationMethod;
@@ -67,12 +69,13 @@ import gov.nist.javax.sip.message.MessageExt;
 
 /**
  * Test for Dial verb. Will test Dial Conference, Dial URI, Dial Client, Dial Number and Dial Fork
- * 
+ *
  * @author <a href="mailto:gvagenas@gmail.com">gvagenas</a>
  * @author jean.deruelle@telestax.com
  */
 @Ignore //Moved all tests to DialTest1, DialTest2, DialTest2
 @RunWith(Arquillian.class)
+@Category(value={SequentialClassTests.class})
 public class DialTest {
     private final static Logger logger = Logger.getLogger(DialTest.class.getName());
 
@@ -1235,7 +1238,7 @@ public class DialTest {
     @Test @Ignore
     public synchronized void testDialNumberGeorge() throws InterruptedException, ParseException {
         deployer.deploy("DialTest");
-        
+
         // Prepare George phone to receive call
         georgePhone.setLoopback(true);
         SipCall georgeCall = georgePhone.createSipCall();
@@ -1291,10 +1294,10 @@ public class DialTest {
 
 //        SipURI uri = bobSipStack.getAddressFactory().createSipURI(null, "127.0.0.1:5080");
 //        assertTrue(bobPhone.register(uri, "bob", "1234", bobContact, 3600, 3600));
-//        
+//
 //        Credential c = new Credential("127.0.0.1", "bob", "1234");
 //        bobPhone.addUpdateCredential(c);
-        
+
         // Prepare George phone to receive call
         georgePhone.setLoopback(true);
         SipCall georgeCall = georgePhone.createSipCall();
@@ -1332,7 +1335,7 @@ public class DialTest {
     @Test @Ignore
     public synchronized void testDialNumberGeorge_404_OnBye() throws InterruptedException, ParseException {
         deployer.deploy("DialTest");
-        
+
         // Prepare George phone to receive call
         georgePhone.setLoopback(true);
         SipCall georgeCall = georgePhone.createSipCall();
@@ -1371,7 +1374,7 @@ public class DialTest {
         georgeCall.waitForDisconnect(5000);
         georgeCall.respondToDisconnect(404, "Not Here");
         georgeCall.disposeNoBye();
-        
+
         Thread.sleep(1000);
     }
 
@@ -1945,7 +1948,7 @@ public synchronized void testDialForkNoAnswerMoveToTheNextVerbAndCallFotini() th
     assertTrue(georgeCall.sendIncomingCallResponse(180, "Ringing-George", 600));
     assertTrue(aliceCall.waitForIncomingCall(30 * 1000));
     assertTrue(aliceCall.sendIncomingCallResponse(100, "Trying-Alice", 600));
-    assertTrue(aliceCall.sendIncomingCallResponse(180, "Ringing-Alice", 600));        
+    assertTrue(aliceCall.sendIncomingCallResponse(180, "Ringing-Alice", 600));
     assertTrue(henriqueCall.waitForIncomingCall(30 * 1000));
     assertTrue(henriqueCall.sendIncomingCallResponse(100, "Trying-Henrique", 600));
     assertTrue(henriqueCall.sendIncomingCallResponse(Response.RINGING, "Ringing-Henrique-1", 3600));
@@ -1990,7 +1993,7 @@ public synchronized void testDialForkNoAnswerMoveToTheNextVerbAndCallFotini() th
     } catch (final InterruptedException exception) {
         exception.printStackTrace();
     }
-} 
+}
 
 //    @Rule
 //    public WireMockRule wireMockRule = new WireMockRule(8090); // No-args constructor defaults to port 8080
@@ -2052,7 +2055,7 @@ public synchronized void testDialForkNoAnswerExecuteRCML_ReturnedFromActionURL()
     assertTrue(georgeCall.sendIncomingCallResponse(180, "Ringing-George", 600));
     assertTrue(aliceCall.waitForIncomingCall(30 * 1000));
     assertTrue(aliceCall.sendIncomingCallResponse(100, "Trying-Alice", 600));
-    assertTrue(aliceCall.sendIncomingCallResponse(180, "Ringing-Alice", 600));        
+    assertTrue(aliceCall.sendIncomingCallResponse(180, "Ringing-Alice", 600));
     assertTrue(henriqueCall.waitForIncomingCall(30 * 1000));
     assertTrue(henriqueCall.sendIncomingCallResponse(100, "Trying-Henrique", 600));
     assertTrue(henriqueCall.sendIncomingCallResponse(Response.RINGING, "Ringing-Henrique-1", 3600));
