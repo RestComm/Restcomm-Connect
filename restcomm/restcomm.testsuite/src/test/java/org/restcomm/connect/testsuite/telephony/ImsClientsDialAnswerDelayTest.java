@@ -61,8 +61,11 @@ import com.github.tomakehurst.wiremock.junit.WireMockRule;
 import com.google.gson.JsonObject;
 import java.util.Arrays;
 import org.junit.experimental.categories.Category;
+import org.restcomm.connect.commons.annotations.FeatureAltTests;
+import org.restcomm.connect.commons.annotations.FeatureExpTests;
+import org.restcomm.connect.commons.annotations.ParallelClassTests;
 import org.restcomm.connect.testsuite.NetworkPortAssigner;
-import org.restcomm.connect.testsuite.UnstableTests;
+import org.restcomm.connect.commons.annotations.UnstableTests;
 import org.restcomm.connect.testsuite.WebArchiveUtil;
 
 /**
@@ -72,6 +75,7 @@ import org.restcomm.connect.testsuite.WebArchiveUtil;
  * @author <a href="mailto:gvagenas@gmail.com">gvagenas</a>
  */
 @RunWith(Arquillian.class)
+@Category(value={FeatureAltTests.class, ParallelClassTests.class})
 public class ImsClientsDialAnswerDelayTest {
 
     private static final String version = Version.getVersion();
@@ -140,7 +144,7 @@ public class ImsClientsDialAnswerDelayTest {
         Class.forName("org.hsqldb.jdbc.JDBCDriver");
     }
 
-    public static void reconfigurePorts() { 
+    public static void reconfigurePorts() {
         if (System.getProperty("arquillian_sip_port") != null) {
             restcommPort = Integer.valueOf(System.getProperty("arquillian_sip_port"));
             restcommContact = "127.0.0.1:" + restcommPort;
@@ -414,6 +418,7 @@ public class ImsClientsDialAnswerDelayTest {
     }
 
     @Test
+    @Category({UnstableTests.class})
     public void testWebRTCClientOutgoingBHold() throws SipException, ParseException, InterruptedException, InvalidArgumentException {
 
         logger.info("testWebRTCClientOutgoingBHold");
@@ -553,7 +558,7 @@ public class ImsClientsDialAnswerDelayTest {
     }
 
     @Test
-    @Category(UnstableTests.class)    
+    @Category(UnstableTests.class)
     public void testWebRTCClientIncomingBusy() throws InterruptedException, ParseException {
         logger.info("testWebRTCClientIncomingBusy");
 
@@ -1141,7 +1146,7 @@ public class ImsClientsDialAnswerDelayTest {
     public static WebArchive createWebArchiveNoGw() {
         logger.info("Packaging Test App");
         reconfigurePorts();
-        
+
         Map<String, String> webInfResources = new HashMap();
         webInfResources.put("restcomm-ims-delay.xml", "conf/restcomm.xml");
         webInfResources.put("restcomm.script_imsDialTest", "data/hsql/restcomm.script");
@@ -1149,7 +1154,7 @@ public class ImsClientsDialAnswerDelayTest {
         webInfResources.put("akka_application.conf", "classes/application.conf");
 
         Map<String, String> replacements = new HashMap();
-        //replace mediaport 2727 
+        //replace mediaport 2727
         replacements.put("2727", String.valueOf(mediaPort));
         replacements.put("8080", String.valueOf(restcommHTTPPort));
         replacements.put("8090", String.valueOf(mockPort));
@@ -1158,7 +1163,7 @@ public class ImsClientsDialAnswerDelayTest {
         replacements.put("5094", String.valueOf(juliusPort));
         replacements.put("5060", String.valueOf(imsPort));
         replacements.put("9999", String.valueOf(imsPort));
-        
+
 
         List<String> resources = new ArrayList(Arrays.asList(
                 "dial-conference-entry.xml",

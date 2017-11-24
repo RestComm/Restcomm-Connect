@@ -56,7 +56,9 @@ import com.sun.jersey.api.client.filter.HTTPBasicAuthFilter;
 import com.sun.jersey.core.util.MultivaluedMapImpl;
 import org.junit.experimental.categories.Category;
 import org.restcomm.connect.commons.Version;
-import org.restcomm.connect.testsuite.UnstableTests;
+import org.restcomm.connect.commons.annotations.BrokenTests;
+import org.restcomm.connect.commons.annotations.FeatureExpTests;
+import org.restcomm.connect.commons.annotations.UnstableTests;
 
 /**
  * @author <a href="mailto:jean.deruelle@telestax.com">Jean Deruelle</a>
@@ -123,7 +125,7 @@ public class VoxboneIncomingPhoneNumbersEndpointTest {
      *
      */
     @Test
-    @Category(UnstableTests.class)
+    @Category(BrokenTests.class)
     public void testPurchaseAndDeletePhoneNumberSuccess() {
         stubFor(put(urlEqualTo("/test/configuration/voiceuri"))
                 .willReturn(aResponse()
@@ -248,6 +250,7 @@ public class VoxboneIncomingPhoneNumbersEndpointTest {
      * If Twilio cannot find a phone number to match your request, you will receive an HTTP 400 with Twilio error code 21452.
      */
     @Test
+    @Category(FeatureExpTests.class)
     public void testPurchasePhoneNumberNoPhoneNumberFound() {
         stubFor(put(urlEqualTo("/test/configuration/voiceuri"))
                 .willReturn(aResponse()

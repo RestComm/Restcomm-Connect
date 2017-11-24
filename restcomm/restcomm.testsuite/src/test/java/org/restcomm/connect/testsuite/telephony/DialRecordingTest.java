@@ -21,15 +21,19 @@ import org.jboss.arquillian.container.test.api.Deployment;
 import org.jboss.arquillian.junit.Arquillian;
 import org.jboss.arquillian.test.api.ArquillianResource;
 import org.jboss.shrinkwrap.api.spec.WebArchive;
-import org.joda.time.DateTime;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.BeforeClass;
-import org.junit.Ignore;
 import org.junit.Rule;
 import org.junit.Test;
+import org.junit.experimental.categories.Category;
 import org.junit.runner.RunWith;
 import org.restcomm.connect.commons.Version;
+import org.restcomm.connect.commons.annotations.FeatureAltTests;
+import org.restcomm.connect.commons.annotations.FeatureExpTests;
+import org.restcomm.connect.commons.annotations.UnstableTests;
+import org.restcomm.connect.testsuite.NetworkPortAssigner;
+import org.restcomm.connect.testsuite.WebArchiveUtil;
 import org.restcomm.connect.testsuite.http.RestcommCallsTool;
 import org.restcomm.connect.testsuite.tools.MonitoringServiceTool;
 
@@ -38,29 +42,27 @@ import javax.sip.message.Response;
 import java.io.IOException;
 import java.net.URL;
 import java.text.ParseException;
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
 
 import static com.github.tomakehurst.wiremock.client.WireMock.aResponse;
 import static com.github.tomakehurst.wiremock.client.WireMock.get;
 import static com.github.tomakehurst.wiremock.client.WireMock.post;
 import static com.github.tomakehurst.wiremock.client.WireMock.stubFor;
 import static com.github.tomakehurst.wiremock.client.WireMock.urlPathEqualTo;
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
 import static org.cafesip.sipunit.SipAssert.assertLastOperationSuccess;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertTrue;
-import org.junit.experimental.categories.Category;
-import org.restcomm.connect.testsuite.NetworkPortAssigner;
-import org.restcomm.connect.testsuite.UnstableTests;
-import org.restcomm.connect.testsuite.WebArchiveUtil;
+import org.restcomm.connect.commons.annotations.ParallelClassTests;
 
 /**
  * Created by gvagenas on 08/01/2017.
  */
 @RunWith(Arquillian.class)
+@Category(ParallelClassTests.class)
 public class DialRecordingTest {
 
     private final static Logger logger = Logger.getLogger(DialRecordingTest.class.getName());
@@ -272,6 +274,7 @@ public class DialRecordingTest {
     }
 
 	@Test
+    @Category(FeatureExpTests.class)
 	public synchronized void testDialClientAliceGetRecordindNoFile() throws InterruptedException, ParseException {
 		stubFor(get(urlPathEqualTo("/1111"))
 				.willReturn(aResponse()
@@ -446,6 +449,7 @@ public class DialRecordingTest {
 	}
 
 	@Test //@Ignore //Currently using the MockMediaGateway its not possible to test this use case
+    @Category(FeatureExpTests.class)
 	public synchronized void testDialClientAlice_AliceDisconnects_NoRecording() throws InterruptedException, ParseException {
 		stubFor(get(urlPathEqualTo("/1111"))
 				.willReturn(aResponse()
@@ -595,6 +599,7 @@ public class DialRecordingTest {
     }
 
 	@Test //@Ignore //Currently using the MockMediaGateway its not possible to test this use case
+    @Category(FeatureExpTests.class)
 	public synchronized void testRecordVerb_Disconnect_NoRecordFile() throws InterruptedException, ParseException {
 		stubFor(get(urlPathEqualTo("/1111"))
 				.willReturn(aResponse()
@@ -817,8 +822,9 @@ public class DialRecordingTest {
         assertEquals(0, liveCallsArraySize);
     }
 
-        final String recordCallWithTimeLimit = "<Response><Record timeLimit=\"10\" action=\"http://127.0.0.1:" + mockPort +"/record-action\"/></Response>";
+    final String recordCallWithTimeLimit = "<Response><Record timeLimit=\"10\" action=\"http://127.0.0.1:" + mockPort +"/record-action\"/></Response>";
 	@Test
+    @Category(FeatureExpTests.class)
 	public synchronized void testRecordWithErrorOnRecordAction() throws InterruptedException, ParseException {
 		stubFor(get(urlPathEqualTo("/1111"))
 				.willReturn(aResponse()
@@ -898,6 +904,7 @@ public class DialRecordingTest {
 }
 
     @Test
+    @Category(FeatureAltTests.class)
     public void testGetRecordingWithOldS3Url() {
         String callSid = "CA2d3f6354e75e46b3ac76f534129ff511";
         JsonArray recording = RestcommCallsTool.getInstance().getCallRecordings(deploymentUrl.toString(), adminAccountSid, adminAuthToken, callSid);
@@ -906,7 +913,7 @@ public class DialRecordingTest {
         double duration = recording.get(0).getAsJsonObject().get("duration").getAsDouble();
         assertTrue(duration == 3.0);
         //Since for this test the S3Accesstoll is not enabled, the file_uri will still point to the old S3 URL.
-        //Check test org.restcomm.connect.testsuite.telephony.DialRecordingS3UploadTest_NoneSecurity.testGetRecordingWithOldS3Url()
+        //Check test org.restcomm.connect.testsuite.telephony.DialRecordingS3UploadNoneSecurityTest.testGetRecordingWithOldS3Url()
         assertTrue(recording.get(0).getAsJsonObject().get("file_uri").getAsString().startsWith("https://s3.amazonaws.com"));
     }
 

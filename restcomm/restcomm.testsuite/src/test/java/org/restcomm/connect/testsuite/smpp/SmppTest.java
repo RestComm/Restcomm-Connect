@@ -1,9 +1,19 @@
 package org.restcomm.connect.testsuite.smpp;
 
-import com.cloudhopper.commons.charset.CharsetUtil;
-import com.cloudhopper.smpp.type.SmppChannelException;
-import com.cloudhopper.smpp.type.SmppInvalidArgumentException;
-import com.github.tomakehurst.wiremock.junit.WireMockRule;
+import static com.github.tomakehurst.wiremock.client.WireMock.aResponse;
+import static com.github.tomakehurst.wiremock.client.WireMock.get;
+import static com.github.tomakehurst.wiremock.client.WireMock.stubFor;
+import static com.github.tomakehurst.wiremock.client.WireMock.urlPathEqualTo;
+import static org.junit.Assert.assertNotNull;
+import static org.junit.Assert.assertTrue;
+
+import java.io.IOException;
+import java.text.ParseException;
+
+import javax.sip.address.SipURI;
+import javax.sip.message.Request;
+import javax.sip.message.Response;
+
 import org.apache.log4j.Logger;
 import org.cafesip.sipunit.Credential;
 import org.cafesip.sipunit.SipCall;
@@ -23,29 +33,30 @@ import org.junit.Before;
 import org.junit.BeforeClass;
 import org.junit.Rule;
 import org.junit.Test;
+import org.junit.experimental.categories.Category;
 import org.junit.runner.RunWith;
 import org.restcomm.connect.commons.Version;
+import org.restcomm.connect.commons.annotations.BrokenTests;
+import org.restcomm.connect.commons.annotations.FeatureAltTests;
+import org.restcomm.connect.commons.annotations.FeatureExpTests;
+import org.restcomm.connect.commons.annotations.SequentialClassTests;
+import org.restcomm.connect.commons.annotations.WithInSecsTests;
 import org.restcomm.connect.sms.smpp.SmppInboundMessageEntity;
 
-import javax.sip.address.SipURI;
-import javax.sip.message.Request;
-import javax.sip.message.Response;
-
-import java.io.IOException;
-import java.text.ParseException;
-
-import static com.github.tomakehurst.wiremock.client.WireMock.*;
-import static org.junit.Assert.assertNotNull;
-import static org.junit.Assert.assertTrue;
+import com.cloudhopper.commons.charset.CharsetUtil;
+import com.cloudhopper.smpp.type.SmppChannelException;
+import com.cloudhopper.smpp.type.SmppInvalidArgumentException;
+import com.github.tomakehurst.wiremock.junit.WireMockRule;
 
 /**
  * @author quintana.thomas@gmail.com (Thomas Quintana)
  * @author gvagenas@gmail.com (George Vagenas)
  */
 @RunWith(Arquillian.class)
-public class SmppTests {
+@Category(value={SequentialClassTests.class, WithInSecsTests.class})
+public class SmppTest {
 
-	private final static Logger logger = Logger.getLogger(SmppTests.class);
+	private final static Logger logger = Logger.getLogger(SmppTest.class);
 	private static final String version = Version.getVersion();
 
     private static String to = "7777";
@@ -196,6 +207,7 @@ public class SmppTests {
 
     private String smsEchoRcmlUCS2 = "<Response><Sms to=\""+from+"\" from=\""+to+"\">"+msgBodyRespUCS2+"</Sms></Response>";
 	@Test
+    @Category(value={FeatureAltTests.class, BrokenTests.class})
 	public void testSendMessageToRestcommUCS2 () throws SmppInvalidArgumentException, IOException, InterruptedException {
 
         stubFor(get(urlPathEqualTo("/smsApp"))
@@ -219,6 +231,7 @@ public class SmppTests {
 	}
 
 	@Test
+        @Category(value={FeatureAltTests.class})
 	public void testClientSentToOtherClient () throws ParseException {
 
 		SipURI uri = aliceSipStack.getAddressFactory().createSipURI(null, "127.0.0.1:5080");
@@ -269,6 +282,7 @@ public class SmppTests {
 	}
 
 	@Test
+        @Category(value={FeatureExpTests.class})
 	public void testClientSentToOtherClientDifferentOrganization () throws ParseException {
 
 		SipURI uri = mariaSipStack.getAddressFactory().createSipURI(null, "127.0.0.1:5080");
