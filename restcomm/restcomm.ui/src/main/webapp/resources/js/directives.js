@@ -112,9 +112,6 @@ rcDirectives.directive('rcEndpointUrl', function() {
     controller: function ($scope) {
         $scope.appNameVar = "";
         $scope.setApp = function() {
-            if ($scope.appNameVar === 'create_new_project') {
-                window.open('/restcomm-rvd/');
-            } else
             // if this is an application SID, populate the sidVar
             if ($scope.appNameVar && $scope.appNameVar.substr(0,2) == "AP") {
                 $scope.sidVar = $scope.appNameVar;

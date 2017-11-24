@@ -55,7 +55,6 @@ angular.module('rcApp.controllers').controller('ApplicationDetailsCtrl', functio
 });
 
 angular.module('rcApp.controllers').controller('ApplicationCreationWizardCtrl', function ($scope, $rootScope, $location, Notifications) {
-    console.log("IN ApplicaitonCreationWizardCtrl");
 
     $scope.onFileDropped = function(files) {
         // filename should end in .zip
@@ -132,8 +131,7 @@ angular.module('rcApp.controllers').controller('ApplicationExternalCreationCtrl'
     }
 
     $scope.createExternalApplication = function(app) {
-        console.log('creating external app');
-        RCommApplications.save({accountSid: accountSid}, $httpParamSerializer({RcmlUrl: app.rcml_url, FriendlyName: app.name, Kind: app.kind}), function () {
+        RCommApplications.save({accountSid: accountSid}, $httpParamSerializer({RcmlUrl: app.url, FriendlyName: app.name, Kind: app.kind}), function () {
             Notifications.success("Application '" + app.name + " ' created");
             $location.path( "/applications" );
         });
