@@ -1,6 +1,6 @@
 'use strict';
 
-angular.module('rcApp').controller('EventsCtrl', function ($rootScope, rappService, $state, Notifications) {
+angular.module('rcApp').controller('EventsCtrl', function ($rootScope, rappService, $state, Notifications, urlStateTracker, $location) {
 
 	$rootScope.$on('$stateChangeStart', function(event, toState, toParams, fromState, fromParams, options){
 	    //console.log("switching states: " + fromState.name + " -> " + toState.name);
@@ -15,6 +15,7 @@ angular.module('rcApp').controller('EventsCtrl', function ($rootScope, rappServi
 	    else
 	    if (error == 'RESTCOMM_AUTH_FAILED' || error == 'RESTCOMM_NOT_AUTHENTICATED') {
 	        //Notifications.error('Unauthorized access');
+	        urlStateTracker.remember($location);
 	        $state.go("public.login");
 	    } else
 	    if (error == "KEYCLOAK_INSTANCE_NOT_REGISTERED") {

@@ -80,35 +80,6 @@ rcServices.factory('AuthService',function(RCommAccounts,$http, $location, Sessio
     //
     //  - resolved: returns a valid Restcomm account for the logged user
     function checkAccess() {
-        //var role; // undefined - it should be provided as a function parameter
-        if (IdentityConfig.securedByKeycloak()) {
-            if (!KeycloakAuth.loggedIn) {
-                throw "KEYCLOAK_NOT_LOGGED_IN"; // this normally won't be thrown as keycloak adapter is supposed to detect it and redirect automatically
-            }
-            var username = getUsername();  // since we're logged in, there MUST be a username available
-            var promisedAccount = $q.defer();
-            if (!account) {
-                $http({method:'GET', url:'restcomm/2012-04-24/Accounts.json/' + encodeURIComponent(username), headers: {Authorization: 'Bearer ' + KeycloakAuth.authz.token}})
-                .success(function (data,status) {
-                    // TODO we need to handle UNINITIALIZED accounts
-                    promisedAccount.resolve(data);
-                })
-                .error(function (data,status) {
-                    promisedAccount.reject('KEYCLCOAK_NO_LINKED_ACCOUNT'); // TODO is this the proper error code ? Maybe we should judge by the HTTP status code.
-                });
-            } else {
-                promisedAccount.resolve(account);
-            }
-
-            // when the account becomes available, make sure the username/email_address match
-            return promisedAccount.promise.then(function (fetchedAccount) {
-                if (username.toLowerCase() == fetchedAccount.email_address.toLowerCase()) {
-                    setActiveAccount(fetchedAccount);
-                }
-            });
-            // if chained promisedAccount is rejected the returned promise is rejected too since to error callback was defined
-
-        } else
         if (IdentityConfig.securedByRestcomm()) {
             if (!!getAccountSid()) { // get account sid from js application (not from session storage) - if F5 is pressed this is lost
                 if (!isUninitialized())
@@ -881,6 +852,30 @@ rcServices.factory('FileRetriever', function (Blob, FileSaver, $http) {
 	return {
 	    download: download
 	}
+});
+
+// Temporarily stores current url (part that follows #) so that user can later be navigated back to it after login. It is used when a user gets an authentication error while accessing some part of the UI.
+rcServices.factory('urlStateTracker', function () {
+    var oldUrl;
+    var urlStateTracker = {};
+
+    // stores the current url (which it takes from angular $location service. Note. $location is NOT INJECTED below)
+    urlStateTracker.remember = function ($location) {
+        //console.log("remembering state " + $location.url() );
+        oldUrl = $location.url();
+    }
+
+    urlStateTracker.recall = function () {
+        if (!!oldUrl) {
+            var ret = oldUrl;
+            oldUrl = "";
+            return ret;
+        }
+        else
+            return "";
+    }
+
+    return urlStateTracker;
 });
 
 /*

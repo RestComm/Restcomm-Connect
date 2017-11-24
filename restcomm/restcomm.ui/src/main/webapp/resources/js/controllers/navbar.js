@@ -126,7 +126,7 @@ rcMod.controller('SubAccountsCtrl', function($scope, $resource, $stateParams, $u
   };
 
   $scope.$on("account-created", function () {
-    console.log("Received account-created notification");
+    //console.log("Received account-created notification");
     $scope.subAccountsList = RCommAccounts.query();
   });
 
