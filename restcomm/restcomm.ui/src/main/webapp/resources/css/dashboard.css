@@ -938,6 +938,13 @@ form[role=login] input:-webkit-autofill:focus{
     font-size: 1.1em;
 }
 
+.rc-list .rc-list-sort-icon {
+    position: absolute;
+    font-size: 0.5em;
+    margin-top: 1em;
+    margin-left: 4px;
+}
+
 .rc-list .rc-list-inplace-edit {
     font-size: inherit;
     margin-left: -10px;

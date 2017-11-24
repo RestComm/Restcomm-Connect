@@ -72,7 +72,8 @@ rcMod.controller('NumbersCtrl', function ($scope, $resource, $uibModal, $dialog,
   };
 
   $scope.getNumbersList = function(page) {
-   var params = createSearchParams();
+    $scope.currentPage = (page || 0) + 1;
+    var params = createSearchParams();
     RCommNumbers.get($.extend({accountSid: $scope.sid, Page: page, PageSize: $scope.entryLimit}, params), function(data) {
       $scope.numbersList = data.incomingPhoneNumbers;
       $scope.totalNumbers = data.total;
@@ -92,15 +93,6 @@ rcMod.controller('NumbersCtrl', function ($scope, $resource, $uibModal, $dialog,
 
     return params;
   };
- 
- $scope.sortBy = function(field) {
-     if ($scope.predicate !== field) {
-       $scope.predicate = field;
-       $scope.reverse = false;
-     } else {
-       $scope.reverse = !$scope.reverse;
-     }
- };
  
   $scope.getNumbersList(0);
 

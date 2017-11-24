@@ -49,7 +49,11 @@ rcMod.controller('ClientsCtrl', function($scope, $resource, $uibModal, $dialog, 
 
   $scope.confirmClientDelete = function(client) {
     confirmClientDelete(client, $dialog, $scope, Notifications, RCommClients);
-  }
+  };
+
+  // only client-side sorting..
+  $scope.predicate = 'login';
+  $scope.reverse = false;
 
   $scope.clientsList = RCommClients.query({accountSid:$scope.sid});
 });

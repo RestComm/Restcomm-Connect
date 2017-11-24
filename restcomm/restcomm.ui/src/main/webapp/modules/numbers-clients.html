@@ -24,14 +24,14 @@
 
         <table ng-show="(clientsList | filter:query).length > 0" class="table table-hover rc-list clients-list" ng-cloak>
             <thead>
-            <th class="clients-list-username">Username</th>
+            <th class="clients-list-username" rc-list-sort by="predicate" order="'login'" reverse="reverse">Username</th>
             <th class="clients-list-edit-icon hidden-xs">&nbsp;</th>
-            <th class="clients-list-friendly-name hidden-xs">Friendly Name</th>
+            <th class="clients-list-friendly-name hidden-xs" rc-list-sort by="predicate" order="'friendly_name'" reverse="reverse">Friendly Name</th>
             <th class="clients-list-applications" >Applications</th>
             <th class="clients-list-delete-icon visible-xs">&nbsp;</th>
             </thead>
             <tbody>
-            <tr class="number-row" ng-repeat="sc in filtered = (clientsList | filter:query)">
+            <tr class="number-row" ng-repeat="sc in filtered = (clientsList | filter:query | orderBy:predicate:reverse)">
                 <td class="clients-list-username">
                     <div><a href="#/numbers/clients/{{sc.sid}}">{{ sc.login  }}</a></div>
                     <div class="visible-xs">{{ sc.friendly_name  }}</div>

@@ -64,6 +64,39 @@ rcDirectives.directive('rcListFilter', function() {
   };
 });
 
+rcDirectives.directive('rcListSort', function ($timeout) {
+  return {
+    restrict: 'A',
+    transclude: true,
+    template :
+    '<span class="clickable" ng-click="sortColumn()"><ng-transclude></ng-transclude>' +
+    '  <i class="rc-list-sort-icon fa {{ reverse ? \'fa-chevron-down\' : \'fa-chevron-up\' }}" ng-show="showSort()"></i></span>',
+    scope: {
+      order: '=',
+      by: '=',
+      reverse : '=',
+      update : '&'
+    },
+    link: function(scope, element, attrs) {
+      scope.sortColumn = function () {
+        if( scope.order === scope.by ) {
+          scope.reverse = !!!scope.reverse
+        } else {
+          scope.by = scope.order ;
+          scope.reverse = false;
+        }
+        $timeout(function () {
+          scope.update && scope.update();
+        }, 0);
+      };
+
+      scope.showSort = function () {
+        return attrs.order === ('\'' + scope.by + '\'');
+      };
+    }
+  };
+});
+
 rcDirectives.directive('rcEndpointUrl', function() {
   return {
     restrict: 'E',

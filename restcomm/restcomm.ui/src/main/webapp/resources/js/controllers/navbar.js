@@ -58,7 +58,7 @@ rcMod.controller('UserMenuCtrl', function($scope, $http, $resource, $rootScope, 
 
 rcMod.controller('SubAccountsCtrl', function($scope, $resource, $stateParams, $uibModal, RCommAccounts,Notifications) {
 
-  $scope.predicate = 'name';
+  $scope.predicate = 'friendly_name';
   $scope.reverse = false;
   $scope.search = {};
   $scope.currentPage = 1;

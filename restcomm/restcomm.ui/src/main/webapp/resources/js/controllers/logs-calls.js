@@ -15,7 +15,7 @@ rcMod.controller('LogsCallsCtrl', function($scope, $resource, $timeout, $uibModa
   $scope.search = {
     //local_only: true,
     sub_accounts: false
-  }
+  };
 
   // pagination support ----------------------------------------------------------------------------------------------
 
@@ -37,6 +37,7 @@ rcMod.controller('LogsCallsCtrl', function($scope, $resource, $timeout, $uibModa
   };
 
   $scope.getCallsList = function(page) {
+    $scope.currentPage = (page || 0) + 1;
     var params = $scope.search ? createSearchParams($scope.search) : {LocalOnly: true};
     RCommLogsCalls.search($.extend({accountSid: $scope.sid, Page: page, PageSize: $scope.entryLimit}, params), function(data) {
       $scope.callsLogsList = data.calls;
@@ -44,19 +45,11 @@ rcMod.controller('LogsCallsCtrl', function($scope, $resource, $timeout, $uibModa
       $scope.noOfPages = data.num_pages;
       $scope.start = parseInt(data.start) + 1;
       $scope.end = parseInt(data.end);
-      if ($scope.end != $scope.totalCalls) {
+      if ($scope.end !== $scope.totalCalls) {
         ++$scope.end;
       }
     });
   };
-
-  $scope.filter = function() {
-    $timeout(function() { //wait for 'filtered' to be changed
-      /* change pagination with $scope.filtered */
-      $scope.noOfPages = Math.ceil($scope.filtered.length / $scope.entryLimit);
-    }, 10);
-  };
-
 
   var createSearchParams = function(search) {
     var params = {};
@@ -86,7 +79,7 @@ rcMod.controller('LogsCallsCtrl', function($scope, $resource, $timeout, $uibModa
     params["Reverse"] = $scope.reverse;
 
     return params;
-  }
+  };
 
   // Modal : Call Details
   $scope.showCallDetailsModal = function (call) {
@@ -101,44 +94,6 @@ rcMod.controller('LogsCallsCtrl', function($scope, $resource, $timeout, $uibModa
       }
     });
   };
-
-//Activate click event for date buttons.
- $scope.openDate = function(elemDate) {
-   if (elemDate === "startDate") {
-        angular.element('#startpicker').trigger('click');
-   }else{
-        angular.element('#endpicker').trigger('click');
-   }
-};
-
-
-$scope.sort = function(item) {
-        if ($scope.predicate == 'date_created') {
-            return new Date(item.date_created);
-        }
-       if ($scope.predicate == 'cost') {
-          if (item[$scope.predicate])
-            return parseFloat(item[$scope.predicate]);
-          else
-           return  item[$scope.predicate] = parseFloat('0.00');
-        }
-        if ($scope.predicate == 'duration') {
-         if (item[$scope.predicate])
-           return parseFloat(item[$scope.predicate]);
-          else
-           return  item[$scope.predicate] = parseFloat('0');
-        }
-    };
-
-$scope.sortBy = function(field) {
-        if ($scope.predicate != field) {
-            $scope.predicate = field;
-            $scope.reverse = false;
-        } else {
-            $scope.reverse = !$scope.reverse;
-        }
-    };
-
 
   // initialize with a query
   $scope.getCallsList(0);

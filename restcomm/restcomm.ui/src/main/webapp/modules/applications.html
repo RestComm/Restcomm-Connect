@@ -25,13 +25,13 @@
 
             <table ng-show="(appsList | filter:query).length > 0" class="table table-hover apps-list rc-list" ng-cloak>
                 <thead>
-                <th class="apps-list-name">Name</th>
-                <th class="apps-list-type">Type</th>
-                <th class="apps-list-number hidden-xs">Numbers</th>
+                <th class="apps-list-name" rc-list-sort by="predicate" order="'friendly_name'" reverse="reverse">Name</th>
+                <th class="apps-list-type" rc-list-sort by="predicate" order="'kind'" reverse="reverse">Type</th>
+                <th class="apps-list-number hidden-xs" rc-list-sort by="predicate" order="'numbers'" reverse="reverse">Numbers</th>
                 <th class="apps-list-action visible-xs">&nbsp</th>
                 </thead>
                 <tbody>
-                <tr class="number-row" ng-repeat="app in filtered = (appsList | filter:query)">
+                <tr class="number-row" ng-repeat="app in filtered = (appsList | filter:query | orderBy:predicate:reverse )">
                     <td class="apps-list-name">
                         <div><a class="rc-link" href="#/applications/{{app.sid}}">{{ app.friendly_name }}</a></div>
                         <div class="visible-xs">
