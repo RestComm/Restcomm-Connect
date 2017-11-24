@@ -1,5 +1,10 @@
 angular.module('rcApp.controllers').controller('ApplicationsCtrl', function ($scope, RCommApplications, SessionService) {
     var accountSid = SessionService.get("sid");
+
+    // only client-side sorting..
+    $scope.predicate = 'friendly_name';
+    $scope.reverse = false;
+
     $scope.appsList = RCommApplications.query({accountSid: accountSid, includeNumbers: true});
 });
 

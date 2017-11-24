@@ -24,15 +24,15 @@
 
         <table ng-show="(numbersList | filter:query).length > 0" class="table table-hover rc-list numbers-list" ng-cloak>
             <thead>
-            <th class="numbers-list-number">Number</th>
+            <th class="numbers-list-number" rc-list-sort by="predicate" order="'phone_number'" reverse="reverse" update="getNumbersList()">Number</th>
             <th class="numbers-list-edit-icon hidden-xs">&nbsp;</th>
-            <th class="numbers-list-friendly-name hidden-xs">Name</th>
+            <th class="numbers-list-friendly-name hidden-xs" rc-list-sort by="predicate" reverse="reverse" order="'friendly_name'" update="getNumbersList()">Name</th>
             <th class="numbers-list-features" >Features</th>
             <th class="numbers-list-delete-icon">&nbsp;</th>
             </thead>
 
             <tbody>
-            <tr class="number-row" ng-repeat="pn in filtered = (numbersList | filter:query| orderBy:predicate:reverse)">
+            <tr class="number-row" ng-repeat="pn in filtered = (numbersList | filter:query)">
                 <td class="numbers-list-number">
                     <div><a href="#/numbers/incoming/{{ pn.sid}}">{{ pn.phone_number }}</a></div>
                     <div class="visible-xs">{{ pn.friendly_name  }}</div>
