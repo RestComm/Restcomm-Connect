@@ -17,7 +17,7 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>
  *
  */
-	
+
 package org.restcomm.connect.testsuite.telephony;
 
 import static org.cafesip.sipunit.SipAssert.assertLastOperationSuccess;
@@ -45,68 +45,72 @@ import org.junit.After;
 import org.junit.Before;
 import org.junit.BeforeClass;
 import org.junit.Test;
+import org.junit.experimental.categories.Category;
 import org.junit.runner.RunWith;
 import org.restcomm.connect.commons.Version;
+import org.restcomm.connect.commons.annotations.SequentialClassTests;
+import org.restcomm.connect.commons.annotations.WithInMinsTests;
 
 /**
  * Test for Multipart Content type. UFone Issue 31380.
  * RESTCOMM-330 https://telestax.atlassian.net/browse/RESTCOMM-330
- * 
+ *
  * @author <a href="mailto:gvagenas@gmail.com">gvagenas</a>
- * 
+ *
  */
 @RunWith(Arquillian.class)
+@Category(SequentialClassTests.class)
 public class TestMultipartContent {
 
     private static Logger logger = Logger.getLogger(TestMultipartContent.class);
     private static final String version = Version.getVersion();
-    
+
     private static final String multipartBody = "--uniqueBoundary \n"
-            + "Content-Type: application/sdp \n" 
+            + "Content-Type: application/sdp \n"
             + "Content-Disposition: session;handling=required \n"
             + "\n"
-            + "v=0\n" 
-            + "o=CiscoSystemsSIP-GW-UserAgent 7968 329 IN IP4 172.16.30.13\n" 
-            + "s=SIP Call\n" 
-            + "c=IN IP4 172.16.30.13\n" 
-            + "t=0 0\n" 
-            + "m=audio 30086 RTP/AVP 0 18 101\n" 
-            + "c=IN IP4 172.16.30.13\n" 
-            + "a=rtpmap:0 PCMU/8000\n" 
-            + "a=rtpmap:18 G729/8000\n" 
-            + "a=fmtp:18 annexb=no\n" 
-            + "a=rtpmap:101 telephone-event/8000\n" 
+            + "v=0\n"
+            + "o=CiscoSystemsSIP-GW-UserAgent 7968 329 IN IP4 172.16.30.13\n"
+            + "s=SIP Call\n"
+            + "c=IN IP4 172.16.30.13\n"
+            + "t=0 0\n"
+            + "m=audio 30086 RTP/AVP 0 18 101\n"
+            + "c=IN IP4 172.16.30.13\n"
+            + "a=rtpmap:0 PCMU/8000\n"
+            + "a=rtpmap:18 G729/8000\n"
+            + "a=fmtp:18 annexb=no\n"
+            + "a=rtpmap:101 telephone-event/8000\n"
             + "a=fmtp:101 0-16\n"
             + "\n"
-            +"--uniqueBoundary\n" 
-            +"Content-Type: application/x-q931\n" 
-            +"Content-Disposition: signal;handling=optional\n" 
+            +"--uniqueBoundary\n"
+            +"Content-Type: application/x-q931\n"
+            +"Content-Disposition: signal;handling=optional\n"
             +"Content-Length: 39\n"
             +"\n"
             +"�L�������l!�3335500057p�1330\n"
             +"\n"
-            +"--uniqueBoundary\n" 
-            +"Content-Type: application/gtd\n" 
+            +"--uniqueBoundary\n"
+            +"Content-Type: application/gtd\n"
             +"Content-Disposition: signal;handling=optional\n"
             +"\n"
-            +"IAM,\n" 
-            +"PRN,isdn*,,NET5*,\n" 
-            +"USI,rate,c,s,c,1\n" 
-            +"USI,lay1,alaw\n" 
-            +"TMR,00\n" 
-            +"CPN,02,,1,1330\n" 
-            +"CGN,04,,1,y,4,3335500057\n" 
+            +"IAM,\n"
+            +"PRN,isdn*,,NET5*,\n"
+            +"USI,rate,c,s,c,1\n"
+            +"USI,lay1,alaw\n"
+            +"TMR,00\n"
+            +"CPN,02,,1,1330\n"
+            +"CGN,04,,1,y,4,3335500057\n"
             +"CPC,09 \n"
             +"FCI,,,,,,,y, \n"
             +"GCI,f2ea4c5e9fd211e3ae4b5057a8ed5300\n"
             +"\n"
             +"--uniqueBoundary-- \n";
-    
+
     @ArquillianResource
     private Deployer deployer;
     @ArquillianResource
     URL deploymentUrl;
-    
+
 
     private static SipStackTool tool1;
     private static SipStackTool tool2;
@@ -136,7 +140,7 @@ public class TestMultipartContent {
 
     private String dialClientWithActionUrl = "sip:+12223334455@127.0.0.1:5080";
     private String dialConf = "sip:+12223334451@127.0.0.1:5080";
-    
+
     private String adminAccountSid = "ACae6e420f425248d6a26948c17a9e2acf";
     private String adminAuthToken = "77f8c12cc7b8f8423e5c38b035249166";
 
@@ -284,5 +288,5 @@ public class TestMultipartContent {
         return archive;
     }
 
-    
+
 }

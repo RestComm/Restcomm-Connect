@@ -51,7 +51,6 @@ import javax.sip.Dialog;
 import javax.sip.ListeningPoint;
 import javax.sip.address.Hop;
 import javax.sip.address.SipURI;
-import javax.sip.message.Request;
 import javax.sip.message.Response;
 
 import org.apache.log4j.Logger;
@@ -97,9 +96,12 @@ import com.google.gson.JsonArray;
 import com.google.gson.JsonObject;
 
 import gov.nist.javax.sip.stack.HopImpl;
+import org.junit.experimental.categories.Category;
 
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
+import org.restcomm.connect.commons.annotations.SequentialClassTests;
+import org.restcomm.connect.commons.annotations.WithInMinsTests;
 
 /**
  * Test for Dial Action attribute for organization
@@ -108,9 +110,10 @@ import static org.mockito.Mockito.when;
  *
  */
 @RunWith(Arquillian.class)
-public class DialActionTestOrganization {
+@Category(value={WithInMinsTests.class, SequentialClassTests.class})
+public class DialActionOrganizationTest {
 
-    private final static Logger logger = Logger.getLogger(DialActionTestOrganization.class.getName());
+    private final static Logger logger = Logger.getLogger(DialActionOrganizationTest.class.getName());
     private static final String TRANSPORT = "udp";
 
     private static final String version = Version.getVersion();
@@ -187,7 +190,7 @@ public class DialActionTestOrganization {
     private String numberWithDefaultDomain = "sip:+12223334467@127.0.0.1:5080"; // Application: dial-client-entry_wActionUrl.xml
     private String dialClientWithActionUrlOrg2 = "sip:+12223334455@org2.restcomm.com"; // Application: dial-client-entry_wActionUrl.xml
     private String dialClientWithActionUrlOrg3 = "sip:+12223334455@org3.restcomm.com"; // Application: dial-client-entry_wActionUrl.xml of organization: org3.restcomm.com
-    
+
     private String dialRestcommOrg2 = "sip:1111@org2.restcomm.com";
     private String dialRestcommOrg3 = "sip:1111@org3.restcomm.com";
     private final String confRoom2 = "confRoom2";
@@ -195,7 +198,7 @@ public class DialActionTestOrganization {
     private String dialConfernceRcml = "<Response><Dial><Conference>"+confRoom2+"</Conference></Dial></Response>";
     private String dialNumberRcml = "<Response><Dial><Number>+131313</Number></Dial></Response>";
     private String dialSipRcmlOrg2 = "<Response><Dial timeLimit=\"10\" timeout=\"10\"><Sip>sip:1111@org2.restcomm.com</Sip></Dial></Response>";
-    
+
     private String superAdminAccountSid = "ACae6e420f425248d6a26948c17a9e2acf";
     private String adminAccountSidOrg2 = "ACae6e420f425248d6a26948c17a9e2acg";
     private String adminAccountSidOrg3 = "ACae6e420f425248d6a26948c17a9e2ach";
@@ -203,7 +206,7 @@ public class DialActionTestOrganization {
 
     private static final String HOST_ORG2 = "org2.restcomm.com";
     private static final String HOST_ORG3 = "org3.restcomm.com";
-    
+
     @BeforeClass
     public static void beforeClass() throws Exception {
         tool1 = new SipStackTool("DialActionTest1");
@@ -241,9 +244,9 @@ public class DialActionTestOrganization {
 
         pstnSipStack = tool8.initializeSipStack(SipStack.PROTOCOL_UDP, "127.0.0.1", "5070", "127.0.0.1:5080");
         pstnPhone = pstnSipStack.createSipPhone("127.0.0.1", SipStack.PROTOCOL_UDP, 5080, pstnContact);
-        
+
     }
-    
+
     private void mockDNSLookup(String host, String transport) throws TextParseException {
         DNSLookupPerformer dnsLookupPerformer = mock(DefaultDNSLookupPerformer.class);
         //mocking the DNS Lookups to match our test cases
@@ -263,7 +266,7 @@ public class DialActionTestOrganization {
         when(dnsLookupPerformer.locateHopsForNonNumericAddressWithPort("localhost", 5081, transport)).thenReturn(null);
 
         List<NAPTRRecord> mockedNAPTRRecords = new LinkedList<NAPTRRecord>();
-        // mocking the name because localhost is not absolute and localhost. cannot be resolved 
+        // mocking the name because localhost is not absolute and localhost. cannot be resolved
         Name name = mock(Name.class);
         when(name.isAbsolute()).thenReturn(true);
         when(name.toString()).thenReturn("localhost");
@@ -285,7 +288,7 @@ public class DialActionTestOrganization {
 //		mockedSRVTLSRecords.add(new SRVRecord(new Name("_sips._" + ListeningPoint.TLS.toLowerCase() + "." + host + "."), DClass.IN, 1000L, 1, 0, 5081, name));
         when(dnsLookupPerformer.performSRVLookup("_sips._" + ListeningPoint.TLS.toLowerCase() + "." + host)).thenReturn(mockedSRVTLSRecords);
     }
-   
+
     @Ignore
     @Test
     public void testDialSipNumberSameAndDifferentOrganization() throws ParseException, InterruptedException, DeploymentException, TextParseException{
@@ -298,9 +301,9 @@ public class DialActionTestOrganization {
     	 * test case:
     	 * bob@org3 will dial a sip number X@org2
     	 * X is mapped on an RCML that dials sip like <Dial><Sip>sip:Y@org2.restcomm.com</Sip></Dial>
-    	 * 
+    	 *
     	 */
-    	
+
     	//Reload Context
     	//containerManagercontainerManager.reloadContext();
 
@@ -434,18 +437,18 @@ public class DialActionTestOrganization {
 
     /**
      * testDialNumberExistingInMultipleOrganization:
-     * 
+     *
      * given we have 5 clients:
      * 1. alice @ org2.
      * 2. alice @ org3.
      * 3. bob @ org2.
      * 4. bob @ org3.
      * 5. alice @ defaultOrg.
-     * 
+     *
      * we have 2 number:
      * +12223334467@org2.restcomm.com is provider number and mapped on dial action to call alice@org2.
      * +12223334467@org3.restcomm.com is pure sip number and mapped on dial action to call alice@org3.
-     * 
+     *
      * test case 1: bob@org2 created INVITE - sip:+12223334467@org3.restcomm.com -> call should NOT go to alice@org3 (bcz 12223334467@org3.restcomm.com is pure sip) - instead call should FAIL
      * test case 2: bob@org2 created INVITE - sip:+12223334467@default.restcomm.com -> call should NOT go to alice@org2 (bcz number does not exist in default.restcomm.com) - so call should FAIL
      * test case 3: bob@org3 created INVITE - sip:+12223334467@org2.restcomm.com(a conference in org2) -> able to join conference (bcz 12223334467@org2.restcomm.com is provider number)
@@ -478,7 +481,7 @@ public class DialActionTestOrganization {
         bobCallOrg2.initiateOutgoingCall(bobContactOrg2, pureSipNumberOrg3, null, body, "application", "sdp", null, null);
         assertLastOperationSuccess(bobCallOrg2);
         assertTrue(bobCallOrg2.waitForAuthorisation(3000));
-        
+
         assertTrue(bobCallOrg2.waitOutgoingCallResponse(5 * 1000));
         final int response = bobCallOrg2.getLastReceivedResponse().getStatusCode();
         logger.info("bobCallOrg2 response: "+response);
@@ -487,18 +490,18 @@ public class DialActionTestOrganization {
 
     /**
      * testDialNumberExistingInMultipleOrganization:
-     * 
+     *
      * given we have 5 clients:
      * 1. alice @ org2.
      * 2. alice @ org3.
      * 3. bob @ org2.
      * 4. bob @ org3.
      * 5. alice @ defaultOrg.
-     * 
+     *
      * we have 2 number:
      * +12223334467@org2.restcomm.com is provider number and mapped on dial action to call alice@org2.
      * +12223334467@org3.restcomm.com is pure sip number and mapped on dial action to call alice@org3.
-     * 
+     *
      * test case 1: bob@org2 created INVITE - sip:+12223334467@org3.restcomm.com -> call should NOT go to alice@org3 (bcz 12223334467@org3.restcomm.com is pure sip) - instead call should FAIL
      * test case 2: bob@org2 created INVITE - sip:+12223334467@default.restcomm.com -> call should FAIL (bcz defaulOrg does not have that number)
      * test case 3: bob@org3 created INVITE - sip:+12223334467@org2.restcomm.com(a conference in org2) -> able to join conference (bcz 12223334467@org2.restcomm.com is provider number)
@@ -539,18 +542,18 @@ public class DialActionTestOrganization {
 
     /**
      * testDialNumberExistingInMultipleOrganization:
-     * 
+     *
      * given we have 5 clients:
      * 1. alice @ org2.
      * 2. alice @ org3.
      * 3. bob @ org2.
      * 4. bob @ org3.
      * 5. alice @ defaultOrg.
-     * 
+     *
      * we have 2 number:
      * +12223334467@org2.restcomm.com is provider number and mapped on dial action to call alice@org2.
      * +12223334467@org3.restcomm.com is pure sip number and mapped on dial action to call alice@org3.
-     * 
+     *
      * test case 1: bob@org2 created INVITE - sip:+12223334467@org3.restcomm.com -> call should NOT go to alice@org3 (bcz 12223334467@org3.restcomm.com is pure sip) - instead call should FAIL
      * test case 2: bob@org2 created INVITE - sip:+12223334467@default.restcomm.com -> call should FAIL (bcz defaulOrg does not have that number)
      * test case 3: bob@org3 created INVITE - sip:+12223334467@org2.restcomm.com(a conference in org2) -> able to join conference (bcz 12223334467@org2.restcomm.com is provider number)
@@ -570,7 +573,7 @@ public class DialActionTestOrganization {
     	 */
 
     	//bob@org3 joins conference via sip:+12223334467@org2.restcomm.com
-    	
+
     	SipURI uri = bobSipStackOrg3.getAddressFactory().createSipURI(null, "127.0.0.1:5080");
         assertTrue(bobPhoneOrg3.register(uri, "bob", clientPassword, "sip:bob@127.0.0.1:5092", 3600, 3600));
         Credential c = new Credential("org2.restcomm.com", "bob", clientPassword);
@@ -596,7 +599,7 @@ public class DialActionTestOrganization {
         assertTrue(!(bobCallOrg3.getLastReceivedResponse().getStatusCode() >= 400));
 
     	//bob@org2 joins conference via sip:+12223334467@org2.restcomm.com
-    	
+
         uri = bobSipStackOrg2.getAddressFactory().createSipURI(null, "127.0.0.1:5080");
         assertTrue(bobPhoneOrg2.register(uri, "bob", clientPassword, "sip:bob@127.0.0.1:5090", 3600, 3600));
         c = new Credential("org2.restcomm.com", "bob", clientPassword);
@@ -677,14 +680,14 @@ public class DialActionTestOrganization {
     /**
      * testClientsCallEachOtherSameOrganization
      * given clients:
-     * 
+     *
      * maria belongs to org: org2.restcomm.com
      * shoaib belong to org: org2.restcomm.com
-     * 
+     *
      * test case: maria calls shoaib.
-     * 
+     *
      * result: call goes through
-     * 
+     *
      * @throws ParseException
      * @throws InterruptedException
      */
@@ -723,7 +726,7 @@ public class DialActionTestOrganization {
         Dialog mariaDialog = null;
 
         if (responseMaria == Response.TRYING) {
-            assertTrue(mariaCall.waitOutgoingCallResponse(5 * 2000));
+            assertTrue(mariaCall.waitOutgoingCallResponse(5 * 4000));
             assertEquals(Response.RINGING, mariaCall.getLastReceivedResponse().getStatusCode());
             mariaDialog = mariaCall.getDialog();
         }
@@ -748,26 +751,28 @@ public class DialActionTestOrganization {
 
         Thread.sleep(5000);
 
-        //Check CDR
-        JsonObject cdrs = RestcommCallsTool.getInstance().getCalls(deploymentUrl.toString(), adminAccountSidOrg2, adminAuthToken);
-        assertNotNull(cdrs);
-        JsonArray cdrsArray = cdrs.get("calls").getAsJsonArray();
-        logger.info("cdrsArray.size(): "+cdrsArray.size());
-        assertTrue(cdrsArray.size() == 1);
+        //Check live calls
+        int liveCalls = MonitoringServiceTool.getInstance().getStatistics(deploymentUrl.toString(), superAdminAccountSid, adminAuthToken);
+        int liveCallsArraySize = MonitoringServiceTool.getInstance().getLiveCallsArraySize(deploymentUrl.toString(), superAdminAccountSid, adminAuthToken);
+        logger.info("&&&&& LiveCalls: "+liveCalls);
+        logger.info("&&&&& LiveCallsArraySize: "+liveCallsArraySize);
+        assertEquals(0, liveCalls);
+        assertEquals(0,liveCallsArraySize);
+        
 
     }
 
     /**
      * testClientsCallEachOtherDifferentOrganization
      * given clients:
-     * 
+     *
      * maria belongs to org: org2.restcomm.com
      * alice belong to org: org3.restcomm.com
-     * 
+     *
      * test case: maria calls alice.
-     * 
+     *
      * result: call do not go through
-     * 
+     *
      * @throws ParseException
      * @throws InterruptedException
      */
@@ -799,17 +804,17 @@ public class DialActionTestOrganization {
 
     /**
      * testDialActionAliceAnswers:
-     * given: 
+     * given:
      * clients:
      * bob@org2, alice@org2.
-     * 
+     *
      * given numbers:
      * 12223334455@org2
      * 12223334455@org3
-     * 
+     *
      * test case: bob@org2 INVITE 12223334455@org2
      * result: call goes to alice@org2.
-     * 
+     *
      * @throws ParseException
      * @throws InterruptedException
      * @throws UnknownHostException
@@ -825,7 +830,7 @@ public class DialActionTestOrganization {
    	    assertTrue(bobPhoneOrg2.register(uri, "bob", clientPassword, "sip:bob@127.0.0.1:5090", 3600, 3600));
    	    Credential c = new Credential("org2.restcomm.com", "bob", clientPassword);
    	    bobPhoneOrg2.addUpdateCredential(c);
-       
+
    	    //register as alice@org2
         uri = aliceSipStackOrg2.getAddressFactory().createSipURI(null, "127.0.0.1:5080");
         assertTrue(alicePhoneOrg2.register(uri, "alice", "1234", "sip:alice@127.0.0.1:5091", 3600, 3600));
@@ -902,20 +907,20 @@ public class DialActionTestOrganization {
 
     /**
      * testDialActionHangupWithLCM:
-     * given: 
+     * given:
      * clients:
      * bob@org2, alice@org2.
-     * 
+     *
      * given numbers:
      * 12223334455@org2
      * 12223334455@org3
-     * 
+     *
      * test case1: bob@org2 INVITE 12223334455@org2
      * result: call goes to alice@org2.
-     * 
+     *
      * test case2: hangup using  LCM
      * result: call completes
-     * 
+     *
      * @throws ParseException
      * @throws InterruptedException
      * @throws UnknownHostException

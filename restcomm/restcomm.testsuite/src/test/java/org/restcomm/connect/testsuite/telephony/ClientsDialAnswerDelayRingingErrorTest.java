@@ -1,14 +1,25 @@
 package org.restcomm.connect.testsuite.telephony;
 
-import com.github.tomakehurst.wiremock.junit.WireMockRule;
-import com.google.gson.JsonArray;
-import com.google.gson.JsonObject;
+import static org.cafesip.sipunit.SipAssert.assertLastOperationSuccess;
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertNotNull;
+import static org.junit.Assert.assertTrue;
+
+import java.net.URL;
+import java.text.ParseException;
+import java.util.ArrayList;
+import java.util.List;
+
+import javax.sip.Dialog;
+import javax.sip.address.SipURI;
+import javax.sip.header.UserAgentHeader;
+import javax.sip.message.Response;
+
 import org.cafesip.sipunit.Credential;
 import org.cafesip.sipunit.SipCall;
 import org.cafesip.sipunit.SipPhone;
 import org.cafesip.sipunit.SipRequest;
 import org.cafesip.sipunit.SipStack;
-import org.cafesip.sipunit.SipTransaction;
 import org.jboss.arquillian.container.mss.extension.SipStackTool;
 import org.jboss.arquillian.container.test.api.Deployer;
 import org.jboss.arquillian.container.test.api.Deployment;
@@ -20,42 +31,23 @@ import org.jboss.shrinkwrap.resolver.api.maven.archive.ShrinkWrapMaven;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.BeforeClass;
-import org.junit.Ignore;
 import org.junit.Rule;
 import org.junit.Test;
+import org.junit.experimental.categories.Category;
 import org.junit.runner.RunWith;
 import org.restcomm.connect.commons.Version;
+import org.restcomm.connect.commons.annotations.SequentialClassTests;
 import org.restcomm.connect.testsuite.http.CreateClientsTool;
-import org.restcomm.connect.testsuite.http.RestcommCallsTool;
-import org.restcomm.connect.testsuite.tools.MonitoringServiceTool;
 
-import javax.sip.Dialog;
-import javax.sip.InvalidArgumentException;
-import javax.sip.SipException;
-import javax.sip.address.SipURI;
-import javax.sip.header.UserAgentHeader;
-import javax.sip.message.Response;
-import java.net.URL;
-import java.text.ParseException;
-import java.util.ArrayList;
-import java.util.List;
-
-import static com.github.tomakehurst.wiremock.client.WireMock.aResponse;
-import static com.github.tomakehurst.wiremock.client.WireMock.get;
-import static com.github.tomakehurst.wiremock.client.WireMock.post;
-import static com.github.tomakehurst.wiremock.client.WireMock.stubFor;
-import static com.github.tomakehurst.wiremock.client.WireMock.urlPathEqualTo;
-import static org.cafesip.sipunit.SipAssert.assertLastOperationSuccess;
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertNotNull;
-import static org.junit.Assert.assertTrue;
+import com.github.tomakehurst.wiremock.junit.WireMockRule;
 
 /**
  * Test for clients with or without VoiceURL (Bitbucket issue 115). Clients without VoiceURL can dial anything.
- * 
+ *
  * @author <a href="mailto:gvagenas@gmail.com">gvagenas</a>
  */
 @RunWith(Arquillian.class)
+@Category(value={SequentialClassTests.class})
 public class ClientsDialAnswerDelayRingingErrorTest {
 
     private static final String version = Version.getVersion();
@@ -187,7 +179,7 @@ public class ClientsDialAnswerDelayRingingErrorTest {
     private String pstnNumber = "+151261006100";
 
     private String clientPassword = "qwerty1234RT";
-    
+
     // Maria is a Restcomm Client **without** VoiceURL. This Restcomm Client can dial anything.
     private SipStack mariaSipStack;
     private SipPhone mariaPhone;
@@ -338,7 +330,7 @@ public class ClientsDialAnswerDelayRingingErrorTest {
         wireMockRule.resetRequests();
         Thread.sleep(3000);
     }
-    
+
     @Test //Non regression test for issue https://github.com/RestComm/Restcomm-Connect/issues/1042 - Support WebRTC clients to dial out through MediaServer
     public void testClientDialOutPstnSimulateWebRTCClient() throws ParseException, InterruptedException {
 
@@ -395,7 +387,7 @@ public class ClientsDialAnswerDelayRingingErrorTest {
         assertTrue(mariaCall.waitOutgoingCallResponse(5 * 1000));
         assertEquals(Response.OK, mariaCall.getLastReceivedResponse().getStatusCode());
         assertTrue(mariaCall.sendInviteOkAck());
-        
+
         //        For a reason the ACK will never reach Restcomm. This is only when working with the sipUnit
         //        assertTrue(georgeCall.waitForAck(5 * 1000));
 

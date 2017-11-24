@@ -50,10 +50,12 @@ import org.junit.After;
 import org.junit.Before;
 import org.junit.BeforeClass;
 import org.junit.Test;
+import org.junit.experimental.categories.Category;
 import org.junit.runner.RunWith;
 
 import com.google.gson.JsonObject;
 import org.restcomm.connect.commons.Version;
+import org.restcomm.connect.commons.annotations.FeatureAltTests;
 
 /**
  * @author <a href="mailto:gvagenas@gmail.com">gvagenas</a>
@@ -168,6 +170,7 @@ public class UssdPushTest {
     }
     
     @Test
+    @Category(FeatureAltTests.class)
     public void createUssdPushTestNotifyOnlyFromIsRestcomm() throws InterruptedException, SipException, ParseException {
 
         SipCall bobCall = bobPhone.createSipCall();

@@ -1,6 +1,5 @@
 package org.restcomm.connect.testsuite.telephony;
 
-import akka.actor.ActorRef;
 import com.github.tomakehurst.wiremock.junit.WireMockRule;
 import com.google.gson.JsonObject;
 import org.apache.log4j.Logger;
@@ -28,17 +27,20 @@ import org.restcomm.connect.testsuite.tools.MonitoringServiceTool;
 import javax.sip.message.Response;
 import java.net.URL;
 import java.text.ParseException;
-import java.util.Map;
 
 import static org.cafesip.sipunit.SipAssert.assertLastOperationSuccess;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertTrue;
+import org.junit.experimental.categories.Category;
+import org.restcomm.connect.commons.annotations.SequentialClassTests;
+import org.restcomm.connect.commons.annotations.WithInMinsTests;
 
 /**
  * Created by gvagenas on 6/15/16.
  */
 @RunWith(Arquillian.class)
+@Category(SequentialClassTests.class)
 public class TestMgcpOperations {
 
     private final static Logger logger = Logger.getLogger(TestDialVerbPartOne.class.getName());

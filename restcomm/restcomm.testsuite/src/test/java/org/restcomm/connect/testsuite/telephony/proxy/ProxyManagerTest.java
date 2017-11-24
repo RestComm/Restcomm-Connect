@@ -4,47 +4,41 @@ import gov.nist.javax.sip.header.Authorization;
 import java.sql.SQLException;
 import java.text.ParseException;
 import java.util.*;
-import java.util.concurrent.ExecutorService;
-import java.util.concurrent.Executors;
 import javax.sip.InvalidArgumentException;
-import static org.junit.Assert.assertNotNull;
-import static org.junit.Assert.assertTrue;
 
 import javax.sip.RequestEvent;
 import javax.sip.address.SipURI;
 import javax.sip.header.ContactHeader;
 import javax.sip.header.WWWAuthenticateHeader;
-import javax.sip.message.MessageFactory;
-import javax.sip.message.Request;
 import javax.sip.message.Response;
 
 import org.cafesip.sipunit.SipPhone;
 import org.cafesip.sipunit.SipStack;
-import org.cafesip.sipunit.SipTransaction;
 import org.jboss.arquillian.container.mss.extension.SipStackTool;
 import org.jboss.arquillian.container.test.api.Deployer;
 import org.jboss.arquillian.container.test.api.Deployment;
 import org.jboss.arquillian.junit.Arquillian;
 import org.jboss.arquillian.test.api.ArquillianResource;
-import org.jboss.shrinkwrap.api.ShrinkWrap;
 import org.jboss.shrinkwrap.api.spec.WebArchive;
-import org.jboss.shrinkwrap.resolver.api.maven.archive.ShrinkWrapMaven;
 import org.junit.After;
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertTrue;
 import static org.junit.Assert.fail;
 import org.junit.Before;
 import org.junit.BeforeClass;
-import org.junit.Ignore;
 import org.junit.Test;
+import org.junit.experimental.categories.Category;
 import org.junit.runner.RunWith;
 import org.restcomm.connect.commons.Version;
+import org.restcomm.connect.commons.annotations.ParallelClassTests;
+import org.restcomm.connect.commons.annotations.WithInMinsTests;
 import org.restcomm.connect.testsuite.NetworkPortAssigner;
 import org.restcomm.connect.testsuite.WebArchiveUtil;
 import org.restcomm.connect.testsuite.http.RestcommCallsTool;
 //import org.restcomm.connect.telephony.Version;
 
 @RunWith(Arquillian.class)
+@Category(value={WithInMinsTests.class, ParallelClassTests.class})
 public final class ProxyManagerTest {
     private static final String version = Version.getVersion();
 

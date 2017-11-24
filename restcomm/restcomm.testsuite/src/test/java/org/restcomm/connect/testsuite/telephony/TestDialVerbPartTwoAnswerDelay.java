@@ -47,8 +47,10 @@ import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertTrue;
 import org.junit.experimental.categories.Category;
+import org.restcomm.connect.commons.annotations.FeatureAltTests;
+import org.restcomm.connect.commons.annotations.ParallelClassTests;
 import org.restcomm.connect.testsuite.NetworkPortAssigner;
-import org.restcomm.connect.testsuite.UnstableTests;
+import org.restcomm.connect.commons.annotations.UnstableTests;
 import org.restcomm.connect.testsuite.WebArchiveUtil;
 
 /**
@@ -58,6 +60,7 @@ import org.restcomm.connect.testsuite.WebArchiveUtil;
  * @author jean.deruelle@telestax.com
  */
 @RunWith(Arquillian.class)
+@Category(value={FeatureAltTests.class, ParallelClassTests.class})
 public class TestDialVerbPartTwoAnswerDelay {
     private final static Logger logger = Logger.getLogger(TestDialVerbPartTwoAnswerDelay.class.getName());
 
@@ -183,6 +186,7 @@ public class TestDialVerbPartTwoAnswerDelay {
     private String dialClientRcml = "<Response><Dial timeLimit=\"10\" timeout=\"10\"><Client>alice</Client></Dial></Response>";
     //Test for issue RESTCOMM-617
     @Test
+    @Category(UnstableTests.class)
     public synchronized void testDialClientAliceToBigDID() throws InterruptedException, ParseException {
         stubFor(get(urlPathEqualTo("/1111"))
                 .willReturn(aResponse()
@@ -487,6 +491,7 @@ public class TestDialVerbPartTwoAnswerDelay {
     }
 
     @Test
+    @Category(UnstableTests.class)
     public synchronized void testDialNumberGeorge() throws InterruptedException, ParseException {
         stubFor(get(urlPathEqualTo("/1111"))
                 .willReturn(aResponse()
@@ -540,6 +545,7 @@ public class TestDialVerbPartTwoAnswerDelay {
 
   //Non-regression test for https://github.com/Mobicents/RestComm/issues/505
     @Test
+    @Category(UnstableTests.class)
     public synchronized void testDialNumberGeorge_403Forbidden() throws InterruptedException, ParseException {
         stubFor(get(urlPathEqualTo("/1111"))
                 .willReturn(aResponse()
@@ -581,6 +587,7 @@ public class TestDialVerbPartTwoAnswerDelay {
 
     //Non-regression test for https://github.com/Mobicents/RestComm/issues/505
     @Test
+    @Category(UnstableTests.class)
     public synchronized void testDialNumberGeorge_404_OnBye() throws InterruptedException, ParseException {
         stubFor(get(urlPathEqualTo("/1111"))
                 .willReturn(aResponse()
@@ -631,6 +638,7 @@ public class TestDialVerbPartTwoAnswerDelay {
     //Test for Issue 210: https://telestax.atlassian.net/browse/RESTCOMM-210
 //Bob callerId should pass to the call created by Dial Number
     @Test
+    @Category(UnstableTests.class)
     public synchronized void testDialNumberGeorgePassInitialCallerId() throws InterruptedException, ParseException {
         stubFor(get(urlPathEqualTo("/1111"))
                 .willReturn(aResponse()

@@ -1,8 +1,28 @@
 package org.restcomm.connect.testsuite.telephony;
 
-import com.github.tomakehurst.wiremock.junit.WireMockRule;
-import com.github.tomakehurst.wiremock.verification.LoggedRequest;
-import com.google.gson.JsonArray;
+import static com.github.tomakehurst.wiremock.client.WireMock.aResponse;
+import static com.github.tomakehurst.wiremock.client.WireMock.findAll;
+import static com.github.tomakehurst.wiremock.client.WireMock.get;
+import static com.github.tomakehurst.wiremock.client.WireMock.put;
+import static com.github.tomakehurst.wiremock.client.WireMock.putRequestedFor;
+import static com.github.tomakehurst.wiremock.client.WireMock.stubFor;
+import static com.github.tomakehurst.wiremock.client.WireMock.urlMatching;
+import static com.github.tomakehurst.wiremock.client.WireMock.urlPathEqualTo;
+import static com.github.tomakehurst.wiremock.client.WireMock.verify;
+import static org.cafesip.sipunit.SipAssert.assertLastOperationSuccess;
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertNotNull;
+import static org.junit.Assert.assertTrue;
+
+import java.io.IOException;
+import java.net.HttpURLConnection;
+import java.net.URL;
+import java.text.ParseException;
+import java.util.List;
+
+import javax.sip.address.SipURI;
+import javax.sip.message.Response;
+
 import org.apache.log4j.Logger;
 import org.cafesip.sipunit.SipCall;
 import org.cafesip.sipunit.SipPhone;
@@ -23,40 +43,25 @@ import org.junit.Before;
 import org.junit.BeforeClass;
 import org.junit.Rule;
 import org.junit.Test;
+import org.junit.experimental.categories.Category;
 import org.junit.runner.RunWith;
 import org.restcomm.connect.commons.Version;
+import org.restcomm.connect.commons.annotations.FeatureAltTests;
+import org.restcomm.connect.commons.annotations.SequentialClassTests;
 import org.restcomm.connect.testsuite.http.RestcommCallsTool;
 
-import javax.sip.address.SipURI;
-import javax.sip.message.Response;
-import java.io.IOException;
-import java.net.HttpURLConnection;
-import java.net.URL;
-import java.text.ParseException;
-import java.util.List;
-
-import static com.github.tomakehurst.wiremock.client.WireMock.aResponse;
-import static com.github.tomakehurst.wiremock.client.WireMock.findAll;
-import static com.github.tomakehurst.wiremock.client.WireMock.get;
-import static com.github.tomakehurst.wiremock.client.WireMock.put;
-import static com.github.tomakehurst.wiremock.client.WireMock.putRequestedFor;
-import static com.github.tomakehurst.wiremock.client.WireMock.stubFor;
-import static com.github.tomakehurst.wiremock.client.WireMock.urlMatching;
-import static com.github.tomakehurst.wiremock.client.WireMock.urlPathEqualTo;
-import static com.github.tomakehurst.wiremock.client.WireMock.verify;
-import static org.cafesip.sipunit.SipAssert.assertLastOperationSuccess;
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertNotNull;
-import static org.junit.Assert.assertNull;
-import static org.junit.Assert.assertTrue;
+import com.github.tomakehurst.wiremock.junit.WireMockRule;
+import com.github.tomakehurst.wiremock.verification.LoggedRequest;
+import com.google.gson.JsonArray;
 
 /**
  * Created by gvagenas on 08/01/2017.
  */
 @RunWith(Arquillian.class)
-public class DialRecordingS3UploadTest_NoneSecurity {
+@Category(value={FeatureAltTests.class, SequentialClassTests.class})
+public class DialRecordingS3UploadNoneSecurityTest {
 
-	private final static Logger logger = Logger.getLogger(DialRecordingS3UploadTest_NoneSecurity.class.getName());
+	private final static Logger logger = Logger.getLogger(DialRecordingS3UploadNoneSecurityTest.class.getName());
 
 	private static final String version = Version.getVersion();
 	private static final byte[] bytes = new byte[] { 118, 61, 48, 13, 10, 111, 61, 117, 115, 101, 114, 49, 32, 53, 51, 54, 53,
@@ -373,7 +378,7 @@ public class DialRecordingS3UploadTest_NoneSecurity {
 		assertEquals(expectedS3Uri, recording.get(0).getAsJsonObject().get("s3_uri").getAsString());
 	}
 
-	@Deployment(name = "DialRecordingS3UploadTest_Secure", managed = true, testable = false)
+	@Deployment(name = "DialRecordingS3UploadSecureTest", managed = true, testable = false)
 	public static WebArchive createWebArchiveNoGw() {
 		logger.info("Packaging Test App");
 		WebArchive archive = ShrinkWrap.create(WebArchive.class, "restcomm.war");
