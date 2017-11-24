@@ -20,33 +20,33 @@
 
 package org.restcomm.connect.identity;
 
-import java.util.regex.Pattern;
+import javax.mail.internet.AddressException;
+import javax.mail.internet.InternetAddress;
+
+import org.apache.log4j.Logger;
 
 /**
  * @author ddh.huy@gmail.com (Huy Dang)
  */
 public class EmailValidator {
-    private static final String VALID_EMAIL_ADDRESS_REGEX = "^[_A-Za-z0-9-\\+]+(\\.[_A-Za-z0-9-]+)*@"
-                                                          + "[A-Za-z0-9-]+(\\.[A-Za-z0-9]+)*(\\.[A-Za-z]{2,})$";
+    private static Logger logger = Logger.getLogger(EmailValidator.class);
 
     /**
-     * Verify an email address has valid format or not, use the default regex
+     * Verify an email address has valid format or not
      *
      * @param email: the email address need to be verified
      * @return true if email format is valid, false if email format is invalid
      */
     public static boolean isValidEmailFormat ( String email ) {
-        return isValidEmailFormat(email, VALID_EMAIL_ADDRESS_REGEX);
-    }
-
-    /**
-     * Verify an email address has valid format or not, use the customized user input regex
-     *
-     * @param email: the email address need to be verified
-     * @return true if email format is valid, false if email format is invalid
-     */
-    public static boolean isValidEmailFormat ( String email, String regex ) {
-        Pattern pattern = Pattern.compile(regex);
-        return pattern.matcher(email).matches();
+        boolean isValid = false;
+        try {
+            InternetAddress emailAddress = new InternetAddress(email);
+            emailAddress.validate();
+            isValid = true;
+        } catch (AddressException ex) {
+            isValid = false;
+            logger.error("Email " + email + " is invalid");
+        }
+        return isValid;
     }
 }
