@@ -182,6 +182,7 @@ public class RvdProjectsMigratorWorkspaceOriginalTest {
     }
 
     @Test
+    @Category({UnstableTests.class})
     public void checkEmail() throws IOException, MessagingException, InterruptedException {
         mailServer.waitForIncomingEmail(60000, 1);
         MimeMessage[] messages = mailServer.getReceivedMessages();

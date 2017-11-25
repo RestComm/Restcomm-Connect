@@ -274,7 +274,7 @@ public class DialRecordingTest {
     }
 
 	@Test
-    @Category(FeatureExpTests.class)
+    @Category({FeatureExpTests.class,UnstableTests.class})
 	public synchronized void testDialClientAliceGetRecordindNoFile() throws InterruptedException, ParseException {
 		stubFor(get(urlPathEqualTo("/1111"))
 				.willReturn(aResponse()

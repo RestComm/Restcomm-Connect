@@ -50,6 +50,7 @@ import org.restcomm.connect.testsuite.WebArchiveUtil;
 import org.restcomm.connect.testsuite.http.CreateClientsTool;
 
 import com.github.tomakehurst.wiremock.junit.WireMockRule;
+import org.restcomm.connect.commons.annotations.UnstableTests;
 
 /**
  * Test for clients with or without VoiceURL (Bitbucket issue 115). Clients without VoiceURL can dial anything.
@@ -494,7 +495,8 @@ public class ClientsDialAnswerDelayTest {
     }
 
     @Test //Non regression test for issue https://github.com/RestComm/Restcomm-Connect/issues/1042 - Support WebRTC clients to dial out through MediaServer
-    @Category(FeatureExpTests.class)
+    @Category({FeatureExpTests.class,UnstableTests.class})
+
     public void testClientDialOutPstnSimulateWebRTCClientNoAnswer() throws ParseException, InterruptedException {
 
         assertNotNull(mariaRestcommClientSid);
