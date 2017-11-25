@@ -199,7 +199,7 @@ rcMod.controller('ProfileCtrl', function($scope, $resource, $stateParams, Sessio
   });
 
   $scope.setAccountStatus = function (status) {
-    if ($scope.urlAccount.sid !== $scope.sid) {
+    if ($scope.urlAccount.sid !== $scope.sid && $scope.urlAccount.status !== 'closed') {
       $scope.urlAccount.status = status;
       $scope.profileForm.$setDirty(); // set it manually since there is no model to bind to
     }

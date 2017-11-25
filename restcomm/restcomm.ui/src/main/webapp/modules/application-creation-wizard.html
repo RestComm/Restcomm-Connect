@@ -1,6 +1,6 @@
 <div class="apps-wizard">
     <div class="row">
-        <button class="rc-btn discrete-btn" ng-click="$root.goTo('/applications')">
+        <button class="rc-btn btn-default" ng-click="$root.goTo('/applications')">
             <span><i class="fa fa-chevron-left"></i></span>
         </button>
     </div>
@@ -33,7 +33,7 @@
         <div class="col-sm-4 pick-area">
             <div class="hidden-xs spacer60"></div>
             <div ngf-drop="onFileDropped($files)" ngf-multiple="false">
-                <div><a href="" ngf-select="onFileDropped($files)"> <img src="resources/img/v2/app-wizard-zip-app.png"/></a></div>
+                <div><a href="" ngf-select="onFileDropped($files)" ngf-pattern="'application/zip'" ngf-accept="'application/zip'"> <img src="resources/img/v2/app-wizard-zip-app.png"/></a></div>
                 <h4>Import a Visual Designer Application</h4>
             </div>
             <div class="hidden-xs spacer60"></div>

@@ -60,15 +60,15 @@
                     <span class="hidden-xs">Close</span>
                     <span class="visible-xs"><i class="fa fa-times"></i></span>
                 </button>
-                <button ng-if="!droppedFiles && !isExternalApp" class="rc-btn save-btn" ng-click="createRvdApplication(appOptions)">
+                <button ng-if="!droppedFiles && !isExternalApp" class="rc-btn btn-primary save-btn" ng-click="createRvdApplication(appOptions)">
                     <span class="hidden-xs">Next</span>
                     <span class="visible-xs"><i class="fa fa-chevron-right"></i></span>
                 </button>
-                <button ng-if="!droppedFiles && isExternalApp" class="rc-btn save-btn" ng-click="createExternalApplication(appOptions)">
+                <button ng-if="!droppedFiles && isExternalApp" class="rc-btn btn-primary save-btn" ng-click="createExternalApplication(appOptions)">
                     <span class="hidden-xs">Next</span>
                     <span class="visible-xs"><i class="fa fa-chevron-right"></i></span>
                 </button>
-                <button ng-if="droppedFiles" class="rc-btn save-btn" ng-click="importProjectFromFile(droppedFiles, appOptions.name)">
+                <button ng-if="droppedFiles" class="rc-btn btn-primary save-btn" ng-click="importProjectFromFile(droppedFiles, appOptions.name)">
                     <span class="hidden-xs">Import</span>
                     <span class="visible-xs"><i class="fa fa-chevron-right"></i></span>
                 </button>

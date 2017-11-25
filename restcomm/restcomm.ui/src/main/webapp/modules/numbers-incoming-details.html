@@ -122,7 +122,7 @@
 
             <div class="row">
                 <div class="col-md-4 col-xs-2">
-                    <button class="rc-btn delete-btn" ng-click="confirmNumberDelete(numberDetails)">
+                    <button class="rc-btn btn-danger" ng-click="confirmNumberDelete(numberDetails)">
                         <span class="hidden-xs">Delete Number</span>
                         <span class="visible-xs"><i class="fa fa-trash-o"></i></span>
                     </button>
@@ -133,7 +133,7 @@
                             <span class="hidden-xs">Close</span>
                             <span class="visible-xs"><i class="fa fa-times"></i></span>
                         </button>
-                        <button class="rc-btn save-btn" ng-disabled="editingPass && pwdStrength < 50" ng-click="updateIncomingNumber(numberDetails)">
+                        <button class="rc-btn btn-primary save-btn" ng-disabled="editingPass && pwdStrength < 50" ng-click="updateIncomingNumber(numberDetails)">
                             <span class="hidden-xs">Save Changes</span>
                             <span class="visible-xs"><i class="fa fa-check"></i></span>
                         </button>

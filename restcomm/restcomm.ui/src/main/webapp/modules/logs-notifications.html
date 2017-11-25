@@ -45,7 +45,7 @@
                     <input type="text" class="form-control" placeholder="Notification Text" ng-model="search.message_text" />
                 </div>
                 <div class="col-md-1 col-xs-2 logs-search-field">
-                    <button class="logs-search-button" type="submit" ng-click="getNotificationsLogsList()"><i class="fa fa-search"></i> </button>
+                    <button class="logs-search-button rc-btn btn-primary" type="submit" ng-click="getNotificationsLogsList()"><i class="fa fa-search"></i> </button>
                 </div>
             </div>
 
@@ -118,9 +118,9 @@
                             <div class="col-md-4">
                                 <form class="form-inline text-center">
                                     <div class="btn-group buttons-per-page">
-                                        <button type="button" class="btn btn-default btn-sm" ng-class="{'active':entryLimit === 10}" ng-click="setEntryLimit(10)">10</button>
-                                        <button type="button" class="btn btn-default btn-sm" ng-class="{'active':entryLimit === 25}" ng-click="setEntryLimit(25)">25</button>
-                                        <button type="button" class="btn btn-default btn-sm" ng-class="{'active':entryLimit === 50}" ng-click="setEntryLimit(50)">50</button>
+                                        <button type="button" class="btn btn-sm" ng-class="{'active':entryLimit === 10}" ng-click="setEntryLimit(10)">10</button>
+                                        <button type="button" class="btn btn-sm" ng-class="{'active':entryLimit === 25}" ng-click="setEntryLimit(25)">25</button>
+                                        <button type="button" class="btn btn-sm" ng-class="{'active':entryLimit === 50}" ng-click="setEntryLimit(50)">50</button>
                                     </div>
                                 </form>
                             </div>

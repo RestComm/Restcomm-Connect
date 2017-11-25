@@ -15,7 +15,7 @@
                 <div class="account-info">
                     <div class="account-name">{{ urlAccount.friendly_name }}</div>
                     <div class="account-type">{{ urlAccount.sid === sid ? 'Main Account' : 'Sub Account' }}</div>
-                    <div class="account-status account-status-{{ urlAccount.status | lowercase }}" ng-class="{'clickable': urlAccount.sid !== sid }" ng-click="setAccountStatus(urlAccount.status === 'active' ? 'suspended' : 'active')">{{ urlAccount.status | uppercase }}</div>
+                    <div class="account-status account-status-{{ urlAccount.status | lowercase }}" ng-class="{'clickable': (urlAccount.sid !== sid && urlAccount.status !== 'closed') }" ng-click="setAccountStatus(urlAccount.status === 'active' ? 'suspended' : 'active')">{{ urlAccount.status | uppercase }}</div>
                 </div>
             </div>
         </div>
@@ -75,11 +75,11 @@
             </div>
             <div class="col-md-8 col-xs-10">
                 <span class="pull-right">
-                    <button class="rc-btn close-btn" ng-click="resetChanges()" ng-show="profileForm.$dirty">
+                    <button class="rc-btn btn-default close-btn" ng-click="resetChanges()" ng-show="profileForm.$dirty">
                         <span class="hidden-xs">Reset Changes</span>
                         <span class="visible-xs"><i class="fa fa-times"></i></span>
                     </button>
-                    <button class="rc-btn save-btn" ng-click="updateProfile()" ng-show="profileForm.$dirty" ng-disabled="(newPassword && pwdStrength < 50) || passwordsDiffer">
+                    <button class="rc-btn btn-primary save-btn" ng-click="updateProfile()" ng-show="profileForm.$dirty" ng-disabled="(newPassword && pwdStrength < 50) || passwordsDiffer">
                         <span class="hidden-xs">Save Changes</span>
                         <span class="visible-xs"><i class="fa fa-check"></i></span>
                     </button>

@@ -117,7 +117,7 @@ a:visited {
 }
 
 .rc-btn {
-    background: #9f9f9f;
+    background-color: #d1d1d1;
     color: #ffffff;
     font-weight: 300;
     font-size: 20px;
@@ -131,44 +131,58 @@ a:visited {
     -webkit-user-select: none;
 }
 
+.rc-btn:active, .rc-btn:focus, .rc-btn:hover {
+    background-color: #c8c7c7;
+}
+
 .rc-btn:disabled {
     opacity: 0.2;
+}
+
+.btn-default, .btn-default:disabled {
+    background-color: #ffffff;
+    color: #9e9f9f;
+}
+
+.btn-default:active, .btn-default:focus, .btn-default:hover,
+.btn-default.disabled, .btn-default[disabled], fieldset[disabled] .btn-default, .btn-default.disabled:hover,
+.btn-default[disabled]:hover, fieldset[disabled] .btn-default:hover, .btn-default.disabled:focus,
+.btn-default[disabled]:focus, fieldset[disabled] .btn-default:focus, .btn-default.disabled:active,
+.btn-default[disabled]:active, fieldset[disabled] .btn-default:active, .btn-default.disabled.active,
+.btn-default[disabled].active, fieldset[disabled] .btn-default.active {
+    background-color: #d0d0d0;
+    color: #ffffff;
+}
+
+.btn-primary {
+    background: #44a5ab;
+    color: #ffffff;
+}
+
+.btn-primary:active, .btn-primary:focus, .btn-primary:hover,
+.btn-primary.disabled, .btn-primary[disabled], fieldset[disabled] .btn-primary, .btn-primary.disabled:hover, 
+.btn-primary[disabled]:hover, fieldset[disabled] .btn-primary:hover, .btn-primary.disabled:focus, 
+.btn-primary[disabled]:focus, fieldset[disabled] .btn-primary:focus, .btn-primary.disabled:active, 
+.btn-primary[disabled]:active, fieldset[disabled] .btn-primary:active, .btn-primary.disabled.active, 
+.btn-primary[disabled].active, fieldset[disabled] .btn-primary.active {
+    background: #3b8f96;
 }
 
 .btn-danger {
     background-color: #F44336;
 }
 
-.btn-danger:hover {
+.btn-danger:active, .btn-danger:focus, .btn-danger:hover,
+.btn-danger.disabled, .btn-danger[disabled], fieldset[disabled] .btn-danger, .btn-danger.disabled:hover,
+.btn-danger[disabled]:hover, fieldset[disabled] .btn-danger:hover, .btn-danger.disabled:focus,
+.btn-danger[disabled]:focus, fieldset[disabled] .btn-danger:focus, .btn-danger.disabled:active,
+.btn-danger[disabled]:active, fieldset[disabled] .btn-danger:active, .btn-danger.disabled.active,
+.btn-danger[disabled].active, fieldset[disabled] .btn-danger.active {
     background-color: #d34039;
-}
-
-.rc-btn.close-btn {
-    background-color: #d1d1d1;
-    color: #7f7e7e;
-}
-.rc-btn.close-btn:hover {
-    background-color: #c8c7c7;
-}
-
-.rc-btn.save-btn {
-    background-color: #44a4ab;
-}
-.rc-btn.save-btn:hover {
-    background-color: #3b8f96;
 }
 
 .rc-btn.close-btn + .rc-btn.save-btn {
     margin-left: 50px;
-}
-
-.rc-btn.discrete-btn {
-    background-color: white;
-    color: #9e9f9f;
-}
-.rc-btn.discrete-btn:hover {
-    background-color: #d0d0d0;
-    color: white;
 }
 
 .rc-btn.rc-btn-sm {
@@ -371,16 +385,30 @@ form[role=login] input:-webkit-autofill:focus{
     padding-top: 10px;
 }
 
+.logo-inside {
+    margin-top: 5px;
+    padding-left: 5%;
+}
+
+.logo-inside img {
+    height: 48px;
+}
+
 @media(max-width:768px) {
     .logo-container-inside{
         position: sticky;
         top: 0;
     }
-}
 
-.logo-inside {
-    margin-top: 15px;
-    padding-left: 5%;
+    .logo-inside {
+        margin-top: 5px;
+        padding-left: 5%;
+    }
+
+    .logo-inside img {
+        height: 40px;
+    }
+
 }
 
 .user-menu {
@@ -963,6 +991,10 @@ form[role=login] input:-webkit-autofill:focus{
         width: calc(100% + 18px);
         max-width: none;
     }
+}
+
+.rc-list a:hover {
+    text-decoration: underline;
 }
 
 .rc-list .rc-list-date.visible-xs > a > div {
@@ -1712,7 +1744,7 @@ div.input-group.f16 > .input-group-btn > .dropdown-toggle {
 .rc-selection-picker {
     background-color: #ffffff;
     border: 2px solid #e4e3e3;
-    border-radius: 20px;
+    border-radius: 5px;
     height: 42px;
     font-size: 17px;
     font-weight: 400;
@@ -1742,13 +1774,6 @@ div.input-group.f16 > .input-group-btn > .dropdown-toggle {
     font-weight: 300;
     font-size: 19px;
 }
-
-/* experimental link underline feature */
-
-.rc-link:hover {
-    text-decoration: underline;
-}
-
 
 .rc-textbox.rc-textbox-advanced {
     border: 2px solid #ffdacb;
@@ -1820,6 +1845,7 @@ input[type="date"]::-webkit-calendar-picker-indicator {
 .pagination > li > a:focus, .pagination > li > span:focus {
     background-color: transparent;
     color: #000;
+    text-decoration: none;
 }
 
 /* Current page/link */
@@ -1830,6 +1856,7 @@ input[type="date"]::-webkit-calendar-picker-indicator {
     border: none;
     border-bottom: 2px solid #44a5ab;
     color: #6d6e70;
+    text-decoration: none;
 }
 
 /* Disabled page/link */

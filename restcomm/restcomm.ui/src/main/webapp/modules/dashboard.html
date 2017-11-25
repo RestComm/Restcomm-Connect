@@ -1,4 +1,24 @@
 <div class="row">
+    <div class="col-md-12 col-xs-12">
+        <h3 class="analytics-title">24 Hour Overview</h3>
+    </div>
+</div>
+<div class="row">
+    <div class="col-md-3 col-md-offset-2 col-xs-4">
+        <h3 class="analytics-title">{{ nCalls }}<small>calls</small></h3>
+    </div>
+    <div class="col-md-3 col-xs-4">
+        <h3 class="analytics-title">{{ (dCalls / 60) | number:0 }}<small>minutes</small></h3>
+    </div>
+    <div class="col-md-3 col-xs-4">
+        <h3 class="analytics-title">{{ nMessages }}<small>messages</small></h3>
+    </div>
+</div>
+
+<hr>
+
+</div>
+<div class="row">
     <div class="col-md-6 col-xs-12">
         <h3 class="analytics-title">Voice Analytics<small> (30 days)</small></h3>
         <nvd3 data="callsData" options="callsOptions" api="callsAPI"></nvd3>
