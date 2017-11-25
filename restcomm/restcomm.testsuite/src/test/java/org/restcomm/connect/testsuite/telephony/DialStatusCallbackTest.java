@@ -1032,7 +1032,7 @@ public class DialStatusCallbackTest {
 
     private String dialForkStatusCallbackWithPost = "<Response><Dial><Client statusCallback=\"http://127.0.0.1:" + mockPort + "/status\">alice</Client><Sip statusCallback=\"http://127.0.0.1:" + mockPort + "/status\">sip:henrique@127.0.0.1:" + henriquePort + "</Sip><Number statusCallback=\"http://127.0.0.1:" + mockPort + "/status\">+131313</Number></Dial></Response>";
     @Test
-    @Category(FeatureAltTests.class)
+    @Category({FeatureAltTests.class,UnstableTests.class})
     public synchronized void testDialForkNoAnswerButHenriqueStatusCallbackOnAllPost() throws InterruptedException, ParseException, MalformedURLException {
         stubFor(get(urlPathEqualTo("/1111"))
                 .willReturn(aResponse()
