@@ -40,6 +40,9 @@ rcMod.controller('LogsCallsCtrl', function($scope, $resource, $timeout, $uibModa
     $scope.currentPage = (page || 0) + 1;
     var params = $scope.search ? createSearchParams($scope.search) : {LocalOnly: true};
     RCommLogsCalls.search($.extend({accountSid: $scope.sid, Page: page, PageSize: $scope.entryLimit}, params), function(data) {
+      for(var call in data.calls) {
+        data.calls[call].date_created = new Date(data.calls[call].date_created);
+      }
       $scope.callsLogsList = data.calls;
       $scope.totalCalls = data.total;
       $scope.noOfPages = data.num_pages;

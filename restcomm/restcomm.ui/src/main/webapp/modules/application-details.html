@@ -13,7 +13,7 @@
         </div>
         <div ng-if="provider=='rvd'" class="col-md-2 col-xs-12">
             <div class="app-details-export pull-right" title="Export as .zip">
-                <button  class="rc-btn save-btn" ng-click="downloadRvdApp(app)">
+                <button  class="rc-btn btn-primary save-btn" ng-click="downloadRvdApp(app)">
                     <span><i class="fa fa-download"></i></span>
                 </button>
             </div>
@@ -50,7 +50,7 @@
 
             <div class="row bottom-row">
                 <div class="col-md-4 col-xs-2">
-                    <button class="rc-btn delete-btn" ng-click="confirmApplicationDelete(app)">
+                    <button class="rc-btn btn-danger" ng-click="confirmApplicationDelete(app)">
                         <span class="hidden-xs">Delete Application</span>
                         <span class="visible-xs"><i class="fa fa-trash-o"></i></span>
                     </button>
@@ -61,11 +61,11 @@
                                     <span class="hidden-xs">Close</span>
                                     <span class="visible-xs"><i class="fa fa-times"></i></span>
                                 </button>
-                                <button ng-if="provider=='rvd'" class="rc-btn save-btn" ng-click="editInDesigner(app)">
+                                <button ng-if="provider=='rvd'" class="rc-btn btn-primary save-btn" ng-click="editInDesigner(app)">
                                     <span class="hidden-xs">Design</span>
                                     <span class="visible-xs"><i class="fa fa-pencil"></i></span>
                                 </button>
-                                <button ng-if="provider=='external'" class="rc-btn save-btn" ng-click="saveExternalApp(app)">
+                                <button ng-if="provider=='external'" class="rc-btn btn-primary save-btn" ng-click="saveExternalApp(app)">
                                     <span class="hidden-xs">Save</span>
                                     <span class="visible-xs"><i class="fa fa-check"></i></span>
                                 </button>

@@ -2,7 +2,7 @@
 
 var rcMod = angular.module('rcApp');
 
-rcMod.controller('DashboardCtrl', function ($scope, $resource, $rootScope, RCommStatistics) {
+rcMod.controller('DashboardCtrl', function ($scope, $resource, $rootScope, RCommStatistics, RCommLogsCalls, RCommLogsMessages) {
 
   $scope.ctrl = {
     slides: [
@@ -10,6 +10,19 @@ rcMod.controller('DashboardCtrl', function ($scope, $resource, $rootScope, RComm
     '<img src="https://secure.meetupstatic.com/photos/event/a/c/d/8/600_456464248.jpeg" align="left" width="120" hspace="10"> <h3>WEBINAR</h3><h5>Moving from Voice to Text increases Call Center Closure Rates by over 200%</h5><p class="pull-right">Learn more</p>',
     ]
   };
+
+  var tfhParams = {'StartTime': new Date(Date.now() - 24*3600*1000).toISOString(), 'EndTime': new Date().toISOString() };
+  RCommLogsCalls.search($.extend({accountSid: $scope.sid, PageSize: 99999999}, tfhParams), function(data) {
+    $scope.nCalls = data.total;
+    $scope.dCalls = 0;
+    for(var call in data.calls) {
+      $scope.dCalls += (data.calls[call].duration || 0);
+    }
+  });
+
+  RCommLogsMessages.search($.extend({accountSid: $scope.sid, PageSize: 99999999}, tfhParams), function(data) {
+    $scope.nMessages = data.total;
+  });
 
   var startDate = new Date(new Date().setDate(new Date().getDate() - 30));
   var startDateJSON = startDate.toJSON().slice(0,10);
@@ -36,32 +49,29 @@ rcMod.controller('DashboardCtrl', function ($scope, $resource, $rootScope, RComm
     var lastDate = new Date(startDate);
     lastDate.setUTCHours(0,0,0,0);
     angular.forEach(data, function(value, key) {
-      // fill with missing dates
+      // fill with missing dates from last value to current
       while (lastDate < new Date(value.start_date)) {
-        console.log(lastDate, new Date(value.start_date));
-        $scope.callsData[0].values.push([lastDate.getTime(), parseInt(Math.random()*30)]);
-        $scope.callsData[1].values.push([lastDate.getTime(), parseInt(Math.random()*100)]);
+        $scope.callsData[0].values.push([lastDate.getTime(), 0]);
+        $scope.callsData[1].values.push([lastDate.getTime(), 0]);
         lastDate.setDate(lastDate.getDate() + 1);
       }
       lastDate.setDate(lastDate.getDate() + 1);
 
-      //console.log(value.start_date, value.count, value.usage);
       $scope.callsData[0].values.push([new Date(value.start_date).getTime(), value.count || 0]);
       $scope.callsData[1].values.push([new Date(value.start_date).getTime(), value.usage || 0]);
       maxDuration = Math.max(maxDuration, value.usage);
       maxCalls = Math.max(maxCalls, value.count);
     });
 
+    // fill with missing dates from last value to date range
     while (lastDate <= endDate) {
-      $scope.callsData[0].values.push([lastDate.getTime(), parseInt(Math.random()*30)]);
-      $scope.callsData[1].values.push([lastDate.getTime(), parseInt(Math.random()*100)]);
+      $scope.callsData[0].values.push([lastDate.getTime(), 0]);
+      $scope.callsData[1].values.push([lastDate.getTime(), 0]);
       lastDate.setDate(lastDate.getDate() + 1);
     }
 
-    console.log('callsData', $scope.callsData);
-
-    $scope.callsOptions.chart.bars.yDomain = [0, Math.max(parseInt(maxCalls * 1.1), 100)];;
-    $scope.callsOptions.chart.lines.yDomain = [0, Math.max(parseInt(maxDuration * 1.1), 100)];;
+    $scope.callsOptions.chart.bars.yDomain = [0, Math.max(parseInt(maxCalls * 1.1), 100)];
+    $scope.callsOptions.chart.lines.yDomain = [0, Math.max(parseInt(maxDuration * 1.1), 100)];
     $scope.callsAPI.updateWithOptions($scope.callsOptions);
   });
 
@@ -77,9 +87,9 @@ rcMod.controller('DashboardCtrl', function ($scope, $resource, $rootScope, RComm
 
     var smsLastDate = new Date(startDate);
     angular.forEach(data, function(value,key){
-      // fill with missing dates
+      // fill with missing dates from last value to current
       while (smsLastDate < new Date(value.start_date)) {
-        $scope.smsData[0].values.push([smsLastDate.getTime(), parseInt(Math.random()*100)]);
+        $scope.smsData[0].values.push([smsLastDate.getTime(), 0]);
         smsLastDate.setDate(smsLastDate.getDate() + 1);
       }
       smsLastDate.setDate(smsLastDate.getDate() + 1);
@@ -89,8 +99,9 @@ rcMod.controller('DashboardCtrl', function ($scope, $resource, $rootScope, RComm
       maxSMS = Math.max(maxSMS, value.count);
     });
 
+    // fill with missing dates from last value to date range
     while (smsLastDate <= endDate) {
-      $scope.smsData[0].values.push([smsLastDate.getTime(), parseInt(Math.random()*100)]);
+      $scope.smsData[0].values.push([smsLastDate.getTime(), 0]);
       smsLastDate.setDate(smsLastDate.getDate() + 1);
     }
 

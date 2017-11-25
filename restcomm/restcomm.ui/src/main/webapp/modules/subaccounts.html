@@ -17,8 +17,8 @@
                 </form>
             </div>
             <div  class="col-md-4 col-md-offset-4 col-xs-6">
-                <button class="rc-btn pull-right hidden-xs" ng-click="showRegisterAccountModal()"><b>+</b> New Account</button>
-                <button class="rc-btn rc-btn-sm pull-right visible-xs" ng-click="showRegisterAccountModal()"><b>+</b> New Account</button>
+                <button class="rc-btn btn-primary pull-right hidden-xs" ng-click="showRegisterAccountModal()"><b>+</b> New Account</button>
+                <button class="rc-btn btn-primary rc-btn-sm pull-right visible-xs" ng-click="showRegisterAccountModal()"><b>+</b> New Account</button>
             </div>
         </div>
         <hr>
@@ -67,9 +67,9 @@
                     <div class="col-md-4">
                         <form class="form-inline text-center">
                             <div class="btn-group buttons-per-page">
-                                <button type="button" class="btn btn-default btn-sm" ng-class="{'active':entryLimit === 10}" ng-click="setEntryLimit(10)">10</button>
-                                <button type="button" class="btn btn-default btn-sm" ng-class="{'active':entryLimit === 25}" ng-click="setEntryLimit(25)">25</button>
-                                <button type="button" class="btn btn-default btn-sm" ng-class="{'active':entryLimit === 50}" ng-click="setEntryLimit(50)">50</button>
+                                <button type="button" class="btn btn-sm" ng-class="{'active':entryLimit === 10}" ng-click="setEntryLimit(10)">10</button>
+                                <button type="button" class="btn btn-sm" ng-class="{'active':entryLimit === 25}" ng-click="setEntryLimit(25)">25</button>
+                                <button type="button" class="btn btn-sm" ng-class="{'active':entryLimit === 50}" ng-click="setEntryLimit(50)">50</button>
                             </div>
                         </form>
                     </div>

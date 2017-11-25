@@ -23,7 +23,7 @@
                 </div>
                 <div class="col-md-2 col-xs-12 text-right">
                     <div>&nbsp;</div>
-                    <button class="rc-btn" ng-click="registerIncomingNumber(newSIPNumber, true)"><b>+</b> Register</button>
+                    <button class="rc-btn btn-primary" ng-disabled="!newSIPNumber.phone_number" ng-click="registerIncomingNumber(newSIPNumber, true)"><b>+</b> Register</button>
                 </div>
             </form>
         </div>
@@ -112,7 +112,7 @@
                 </div>
                 <div class="col-md-1 col-xs-12">
                     <div>&nbsp;</div>
-                    <button class="logs-search-button" type="submit" ng-click="findNumbers(1)" ng-disabled="!newNumber.countryCode"><i class="fa fa-search"></i></button>
+                    <button class="logs-search-button rc-btn btn-primary" type="submit" ng-click="findNumbers(1)" ng-disabled="!newNumber.countryCode"><i class="fa fa-search"></i></button>
                 </div>
             </form>
         </div>
