@@ -40,7 +40,6 @@ import org.restcomm.connect.commons.configuration.RestcommConfiguration;
 import org.restcomm.connect.commons.dao.Sid;
 import org.restcomm.connect.commons.fsm.State;
 import org.restcomm.connect.commons.patterns.Observe;
-import org.restcomm.connect.commons.telephony.CreateCallType;
 import org.restcomm.connect.dao.CallDetailRecordsDao;
 import org.restcomm.connect.dao.DaoManager;
 import org.restcomm.connect.http.client.DownloaderResponse;
@@ -142,12 +141,13 @@ public class StopMediaGroupTest {
         builder.setUrl(requestUri);
         builder.setMethod("GET");
         builder.setAsImsUa(false);
+        final VoiceInterpreterParams params = builder.build();
         final Props props = new Props(new UntypedActorFactory() {
             private static final long serialVersionUID = 1L;
 
             @Override
             public Actor create() throws Exception {
-                return new VoiceInterpreter(builder.build()){
+                return new VoiceInterpreter(params.getConfiguration(), params.getAccount(), params.getPhone(), params.getVersion(), params.getUrl(), params.getMethod(), params.getFallbackUrl(), params.getFallbackMethod(), params.getStatusCallback(), params.getStatusCallbackMethod(), params.getReferTarget(), params.getTransferor(), params.getTransferee(), params.getEmailAddress(), params.getCallManager(), params.getBridgeManager(), params.getBridgeManager(), params.getSmsService(), params.getStorage(), params.getMonitoring(), params.getRcml(), params.isAsImsUa(), params.getImsUaLogin(), params.getImsUaPassword()){
 
                     @Override
                     protected ActorRef downloader() {
@@ -230,7 +230,7 @@ public class StopMediaGroupTest {
                 interpreter.tell(new CallResponse(new CallInfo(
                         new Sid("ACae6e420f425248d6a26948c17a9e2acf"),
                         CallStateChanged.State.IN_PROGRESS,
-                        CreateCallType.SIP,
+                        CreateCall.Type.SIP,
                         "inbound",
                         new DateTime(),
                         null,
@@ -284,7 +284,7 @@ public class StopMediaGroupTest {
                 interpreter.tell(new CallResponse(new CallInfo(
                         new Sid("ACae6e420f425248d6a26948c17a9e2acf"),
                         CallStateChanged.State.IN_PROGRESS,
-                        CreateCallType.SIP,
+                        CreateCall.Type.SIP,
                         "inbound",
                         new DateTime(),
                         null,
@@ -338,7 +338,7 @@ public class StopMediaGroupTest {
                 interpreter.tell(new CallResponse(new CallInfo(
                         new Sid("ACae6e420f425248d6a26948c17a9e2acf"),
                         CallStateChanged.State.IN_PROGRESS,
-                        CreateCallType.SIP,
+                        CreateCall.Type.SIP,
                         "inbound",
                         new DateTime(),
                         null,
