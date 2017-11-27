@@ -68,6 +68,7 @@ public final class AccountConverter extends AbstractConverter implements JsonSer
         writeAuthToken(account, writer);
         writeUri(account.getUri(), writer);
         writeSubResourceUris(account, writer);
+        writePermissions(account, writer);
         writer.endNode();
     }
 
@@ -85,6 +86,7 @@ public final class AccountConverter extends AbstractConverter implements JsonSer
         writeAuthToken(account, object);
         writeUri(account, object);
         writeSubResourceUris(account, object);
+        writePermissions(account, object, context);
         return object;
     }
 
@@ -244,6 +246,16 @@ public final class AccountConverter extends AbstractConverter implements JsonSer
 
     private void writeTranscriptions(final Account account, final JsonObject object) {
         object.addProperty("transcriptions", prefix(account) + "/Transcriptions.json");
+    }
+
+    private void writePermissions(final Account account, final HierarchicalStreamWriter writer) {
+        writer.startNode("Permissions");
+        writer.setValue(prefix(account) + "/Permissions");
+        writer.endNode();
+    }
+
+    private void writePermissions(final Account account, JsonObject object, final JsonSerializationContext context) {
+        object.addProperty("permissions", prefix(account) + "/Permissions.json");
     }
 
     private void writeEmailAddress(final Account account, final HierarchicalStreamWriter writer) {

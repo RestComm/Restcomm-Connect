@@ -32,6 +32,7 @@ import javax.servlet.ServletContext;
 import javax.servlet.sip.ServletParseException;
 import javax.servlet.sip.SipApplicationSession;
 import javax.servlet.sip.SipFactory;
+import javax.servlet.sip.SipServletMessage;
 import javax.servlet.sip.SipServletRequest;
 import javax.servlet.sip.SipServletResponse;
 import javax.servlet.sip.SipURI;
@@ -44,11 +45,13 @@ import org.restcomm.connect.commons.faulttolerance.RestcommUntypedActor;
 import org.restcomm.connect.commons.util.UriUtils;
 import org.restcomm.connect.dao.AccountsDao;
 import org.restcomm.connect.dao.ApplicationsDao;
+import org.restcomm.connect.dao.ClientsDao;
 import org.restcomm.connect.dao.DaoManager;
 import org.restcomm.connect.dao.IncomingPhoneNumbersDao;
 import org.restcomm.connect.dao.common.OrganizationUtil;
 import org.restcomm.connect.dao.entities.Account;
 import org.restcomm.connect.dao.entities.Application;
+import org.restcomm.connect.dao.entities.Client;
 import org.restcomm.connect.dao.entities.IncomingPhoneNumber;
 import org.restcomm.connect.dao.entities.MostOptimalNumberResponse;
 import org.restcomm.connect.http.client.rcmlserver.resolver.RcmlserverResolver;
@@ -60,6 +63,8 @@ import org.restcomm.connect.telephony.api.InitializeOutbound;
 import org.restcomm.connect.telephony.api.util.CallControlHelper;
 import org.restcomm.connect.ussd.interpreter.UssdInterpreter;
 import org.restcomm.connect.ussd.interpreter.UssdInterpreterParams;
+//import org.restcomm.connect.identity.UserIdentityContext;
+import org.restcomm.connect.identity.permissions.PermissionsUtil;
 
 import akka.actor.ActorRef;
 import akka.actor.Props;
@@ -91,6 +96,7 @@ public class UssdCallManager extends RestcommUntypedActor {
     private boolean useTo;
 
     private final LoggingAdapter logger = Logging.getLogger(getContext().system(), this);
+    private PermissionsUtil permissionsUtil;
 
     /**
      * @param configuration
@@ -111,6 +117,8 @@ public class UssdCallManager extends RestcommUntypedActor {
         this.ussdGatewayUri = ussdGatewayConfig.getString("ussd-gateway-uri");
         this.ussdGatewayUsername = ussdGatewayConfig.getString("ussd-gateway-user");
         this.ussdGatewayPassword = ussdGatewayConfig.getString("ussd-gateway-password");
+        //permissionsUtil = PermissionsUtil.getInstance(this.context);
+        permissionsUtil = PermissionsUtil.getInstance();
     }
 
     private ActorRef ussdCall() {
@@ -142,6 +150,35 @@ public class UssdCallManager extends RestcommUntypedActor {
         final Class<?> klass = message.getClass();
         final ActorRef self = self();
         final ActorRef sender = sender();
+        boolean needAuthorization = true;
+        //FIXME: really kludgy and ugly
+        Account effectiveAccount = null;
+        AccountsDao accountsDao = storage.getAccountsDao();
+        if (CreateCall.class.equals(klass)) {
+            this.createCallRequest = (CreateCall) message;
+            effectiveAccount = accountsDao.getAccount(this.createCallRequest.accountId());
+        }else if (message instanceof SipServletRequest){
+            effectiveAccount = accountsDao.getAccount(getAccountIdFromSipRequest((SipServletRequest) message));
+        } else if (message instanceof ExecuteCallScript) {
+            effectiveAccount = accountsDao.getAccount(((ExecuteCallScript )message).account());
+        } else if (ExecuteCallScript.class.equals(klass)) {
+            effectiveAccount = accountsDao.getAccount(((ExecuteCallScript )message).account());
+        } else if (message instanceof SipServletResponse){
+            //getAccountIdFromSipRequest((SipServletResponse) message);
+            needAuthorization = false;
+        }
+
+
+//        UserIdentityContext uic = new UserIdentityContext(effectiveAccount, accountsDao);
+//        permissionsUtil.setUserIdentityContext(uic);
+        if(needAuthorization){
+            try {
+                permissionsUtil.checkPermission("Restcomm:*:Ussd", effectiveAccount.getSid());
+            } catch (Exception e) {
+                logger.debug("No permission for USSD feature "+e);
+                return;
+            }
+        }
         if (message instanceof SipServletRequest) {
             final SipServletRequest request = (SipServletRequest) message;
             final String method = request.getMethod();
@@ -172,12 +209,48 @@ public class UssdCallManager extends RestcommUntypedActor {
 
     }
 
+    private Sid getAccountIdFromSipRequest(SipServletMessage request) {
+        final ClientsDao clients = storage.getClientsDao();
+        //FIXME: a null check is faster?
+        Sid accountSid = null ; //Sid.generate(Type.INVALID);
+
+        //TODO: implement get from Proxy-Authorization
+        final SipURI fromUri = (SipURI) request.getFrom().getURI();
+        Sid sourceOrganizationSid = OrganizationUtil.getOrganizationSidBySipURIHost(storage, fromUri);
+        if(logger.isDebugEnabled()) {
+            logger.debug("sourceOrganizationSid: " + sourceOrganizationSid);
+        }
+        if(sourceOrganizationSid == null){
+            logger.error("Null Organization: fromUri: "+fromUri);
+        }
+
+        //get from From
+        final String fromUser = fromUri.getUser();
+        final Client client = clients.getClient(fromUser,sourceOrganizationSid);
+        if (client != null) {
+            accountSid = client.getAccountSid();
+        }
+
+        //TODO: if not available from From, should we actually get the accountSid from the To??
+        if(accountSid == null && (request instanceof SipServletRequest)){
+            final String toUser = CallControlHelper.getUserSipId((SipServletRequest)request, useTo);
+            MostOptimalNumberResponse mostOptimalNumber = OrganizationUtil.getMostOptimalIncomingPhoneNumber(storage, (SipServletRequest)request, toUser, sourceOrganizationSid);
+            IncomingPhoneNumber number = mostOptimalNumber.number();
+            if(number!=null){
+                accountSid = number.getAccountSid();
+            }
+        }
+
+        return accountSid;
+    }
+
     private void invite(final Object message) throws Exception {
         final ActorRef self = self();
         final SipServletRequest request = (SipServletRequest) message;
         // Make sure we handle re-invites properly.
         if (!request.isInitial()) {
             final SipServletResponse okay = request.createResponse(SC_OK);
+            //FIXME: should check request session first?
             okay.send();
             return;
         }

@@ -47,23 +47,29 @@ import org.joda.time.DateTime;
 import org.restcomm.connect.commons.configuration.RestcommConfiguration;
 import org.restcomm.connect.commons.configuration.sets.RcmlserverConfigurationSet;
 import org.restcomm.connect.commons.dao.Sid;
+import org.restcomm.connect.commons.exceptions.AuthorizationException;
+import org.restcomm.connect.commons.exceptions.InsufficientPermission;
 import org.restcomm.connect.dao.ClientsDao;
 import org.restcomm.connect.dao.DaoManager;
 import org.restcomm.connect.dao.IncomingPhoneNumbersDao;
+import org.restcomm.connect.dao.PermissionsDao;
 import org.restcomm.connect.dao.entities.Account;
 import org.restcomm.connect.dao.entities.AccountList;
+import org.restcomm.connect.dao.entities.AccountPermission;
 import org.restcomm.connect.dao.entities.Client;
 import org.restcomm.connect.dao.entities.IncomingPhoneNumber;
 import org.restcomm.connect.dao.entities.Organization;
+import org.restcomm.connect.dao.entities.Permission;
+import org.restcomm.connect.dao.entities.PermissionList;
 import org.restcomm.connect.dao.entities.RestCommResponse;
 import org.restcomm.connect.http.client.rcmlserver.RcmlserverApi;
 import org.restcomm.connect.http.client.rcmlserver.RcmlserverNotifications;
 import org.restcomm.connect.http.converter.AccountConverter;
 import org.restcomm.connect.http.converter.AccountListConverter;
+import org.restcomm.connect.http.converter.AccountPermissionsConverter;
+import org.restcomm.connect.http.converter.PermissionsConverter;
 import org.restcomm.connect.http.converter.RestCommResponseConverter;
 import org.restcomm.connect.http.exceptions.AccountAlreadyClosed;
-import org.restcomm.connect.http.exceptions.AuthorizationException;
-import org.restcomm.connect.http.exceptions.InsufficientPermission;
 import org.restcomm.connect.http.exceptions.PasswordTooWeak;
 import org.restcomm.connect.http.exceptions.RcmlserverNotifyError;
 import org.restcomm.connect.identity.passwords.PasswordValidator;
@@ -86,6 +92,7 @@ public class AccountsEndpoint extends SecuredEndpoint {
     protected Gson gson;
     protected XStream xstream;
     protected ClientsDao clientDao;
+    protected PermissionsDao permissionsDao;
 
     public AccountsEndpoint() {
         super();
@@ -102,9 +109,14 @@ public class AccountsEndpoint extends SecuredEndpoint {
         runtimeConfiguration = rootConfiguration.subset("runtime-settings");
         super.init(runtimeConfiguration);
         clientDao = ((DaoManager) context.getAttribute(DaoManager.class.getName())).getClientsDao();
+        permissionsDao = ((DaoManager) context.getAttribute(DaoManager.class.getName())).getPermissionsDao();
         final AccountConverter converter = new AccountConverter(runtimeConfiguration);
+        final PermissionsConverter permConv = new PermissionsConverter(runtimeConfiguration);
+        final AccountPermissionsConverter accPermConv = new AccountPermissionsConverter(runtimeConfiguration);
         final GsonBuilder builder = new GsonBuilder();
         builder.registerTypeAdapter(Account.class, converter);
+        builder.registerTypeAdapter(Permission.class, permConv);
+        builder.registerTypeAdapter(AccountPermission.class, accPermConv);
         builder.setPrettyPrinting();
         gson = builder.create();
         xstream = new XStream();
@@ -429,6 +441,37 @@ public class AccountsEndpoint extends SecuredEndpoint {
         }
     }
 
+    /*
+     * add or update Account Permissions
+     * */
+    private void processPermissionsData(Account account, MultivaluedMap<String, String> data) {
+        String permissionSidString = data.getFirst("PermissionSid");
+
+        if(data.containsKey("PermissionSid") && !permissionSidString.isEmpty()){
+            //check if accounts permissions exists first
+            //if ap exists, just update value
+            //if not create new ap from perm,check if permission exists first
+            AccountPermission ap = (AccountPermission)accountsDao.getAccountPermission(account.getSid(), new Sid(permissionSidString));
+            Permission perm = permissionsDao.getPermission(new Sid(permissionSidString));
+            if(ap != null){
+                String permissionValue = data.getFirst("PermissionValue");
+
+                ap.setValue((permissionValue==null || permissionValue.isEmpty()) ? true: Boolean.valueOf(permissionValue));
+                accountsDao.updateAccountPermissions(account.getSid(), ap);
+            }else if(ap==null && perm!=null){
+                String permissionValue = data.getFirst("PermissionValue");
+                ap = new AccountPermission(perm.getSid(), perm.getName());
+                ap.setValue((permissionValue==null || permissionValue.isEmpty()) ? true: Boolean.valueOf(permissionValue));
+                accountsDao.addAccountPermission(account.getSid(), ap);
+            }else{
+                //permission doesnt exist
+                if(logger.isDebugEnabled()){
+                    logger.debug("AccountPermission doesnt exist");
+                }
+            }
+        }
+    }
+
     private Client createClientFrom(final Sid accountSid, final MultivaluedMap<String, String> data) {
         final Client.Builder builder = Client.builder();
         final Sid sid = Sid.generate(Sid.Type.CLIENT);
@@ -584,6 +627,7 @@ public class AccountsEndpoint extends SecuredEndpoint {
                     }
                 }
                 accountsDao.updateAccount(modifiedAccount);
+                processPermissionsData(account, data);
             }
 
             if (APPLICATION_JSON_TYPE == responseType) {
@@ -655,6 +699,37 @@ public class AccountsEndpoint extends SecuredEndpoint {
         }
         // close parent account too
         closeSingleAccount(parentAccount,rcmlserverApi);
+    }
+
+    protected Response getAccountPermissions(String accountSid, MediaType responseType) {
+        final List<Permission> permissions = new ArrayList<Permission>();
+        permissions.addAll(accountsDao.getAccountPermissions(new Sid(accountSid)));
+        if (APPLICATION_XML_TYPE == responseType) {
+            final RestCommResponse response = new RestCommResponse(new PermissionList(permissions));
+            return ok(xstream.toXML(response), APPLICATION_XML).build();
+        } else if (APPLICATION_JSON_TYPE == responseType) {
+            return ok(gson.toJson(permissions), APPLICATION_JSON).build();
+        } else {
+            return null;
+        }
+    }
+
+    protected Response deleteAccountPermission(String accountSid, String permissionSid, MediaType responseType) {
+        Permission permission = accountsDao.getAccountPermission(new Sid(accountSid), new Sid(permissionSid));
+        if (permission != null) {
+            //FIXME: if delete failed?
+            accountsDao.deleteAccountPermission(new Sid(accountSid), new Sid(permissionSid));
+            if (APPLICATION_XML_TYPE == responseType) {
+                final RestCommResponse response = new RestCommResponse(permission);
+                return ok(xstream.toXML(response), APPLICATION_XML).build();
+            } else if (APPLICATION_JSON_TYPE == responseType) {
+                return ok(gson.toJson(permission), APPLICATION_JSON).build();
+            } else {
+                return null;
+            }
+        } else {
+            return status(Response.Status.NOT_FOUND).build();
+        }
     }
 
     private void validate(final MultivaluedMap<String, String> data) throws NullPointerException {

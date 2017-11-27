@@ -17,11 +17,7 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>
  *
  */
+package org.restcomm.connect.commons.exceptions;
 
-package org.restcomm.connect.http.exceptions;
-
-/**
- * @author orestis.tsakiridis@telestax.com (Orestis Tsakiridis)
- */
-public class InsufficientPermission extends AuthorizationException {
+public class AuthorizationException extends RestcommRuntimeException {
 }

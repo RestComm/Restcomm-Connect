@@ -44,4 +44,46 @@
       #{item}
     </foreach>
   </select>
+
+  <select id="getAccountPermissions" parameterType="map" resultType="hashmap">
+    SELECT "restcomm_permissions"."sid", "restcomm_permissions"."name", "restcomm_accounts_permissions"."value"
+    FROM "restcomm_accounts_permissions" 
+    LEFT JOIN "restcomm_permissions" 
+    ON "restcomm_accounts_permissions"."permission_sid" = "restcomm_permissions"."sid"
+    WHERE "restcomm_accounts_permissions"."account_sid"=#{account_sid};
+  </select>
+  <select id="getAccountPermission" parameterType="map" resultType="hashmap">
+    SELECT "restcomm_permissions"."sid", "restcomm_permissions"."name", "restcomm_accounts_permissions"."value"
+    FROM "restcomm_accounts_permissions" 
+    LEFT JOIN "restcomm_permissions" 
+    ON "restcomm_accounts_permissions"."permission_sid" = "restcomm_permissions"."sid"
+    WHERE "restcomm_accounts_permissions"."account_sid"=#{account_sid}
+    AND "permission_sid"=#{permission_sid};
+  </select>
+
+  <insert id="addAccountPermission" parameterType="map">
+    INSERT INTO "restcomm_accounts_permissions" ("account_sid", "permission_sid", "value")
+    VALUES (#{account_sid}, #{permission_sid}, #{value});
+  </insert>
+  <update id="updateAccountPermission" parameterType="map">
+    UPDATE "restcomm_accounts_permissions"
+    SET "value"=#{value}
+    WHERE "account_sid"=#{account_sid} AND "permission_sid"=#{permission_sid};
+  </update>
+
+  <delete id="deleteAccountPermission" parameterType="map">
+    DELETE FROM "restcomm_accounts_permissions"
+    WHERE "account_sid"=#{account_sid} AND "permission_sid"=#{permission_sid};
+  </delete>
+
+  <delete id="deleteAccountPermissionByName" parameterType="map">
+    DELETE FROM "restcomm_accounts_permissions"
+    WHERE "account_sid"=#{account_sid} AND
+    "permission_sid"=(SELECT "sid" FROM "restcomm_permissions" WHERE "name"=#{permission_name});
+  </delete>
+
+  <delete id="clearAccountPermissions" parameterType="string">
+    DELETE FROM "restcomm_accounts_permissions"
+    WHERE "account_sid"=#{account_sid};
+  </delete>
 </mapper>

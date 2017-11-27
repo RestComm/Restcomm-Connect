@@ -1597,33 +1597,34 @@ public class CallRegexTest {
                         .withBody(ussdRcml)));
 
 
-        final SipCall bobCall = bobPhone.createSipCall();
-        bobCall.initiateOutgoingCall(bobContact, "sip:*777#@" + restcommContact, null, ussdClientRequestBody, "application", "vnd.3gpp.ussd+xml", null, null);
-        assertLastOperationSuccess(bobCall);
+        final SipCall aliceCall = alicePhone.createSipCall();
+        aliceCall.initiateOutgoingCall(aliceContact, "sip:*777#@" + restcommContact, null, ussdClientRequestBody, "application", "vnd.3gpp.ussd+xml", null, null);
+        assertLastOperationSuccess(aliceCall);
+        //aliceCall.waitForAuthorisation(30 * 1000);
 
-        assertTrue(bobCall.waitOutgoingCallResponse(5 * 1000));
-        int responseBob = bobCall.getLastReceivedResponse().getStatusCode();
+        assertTrue(aliceCall.waitOutgoingCallResponse(5 * 1000));
+        int responseBob = aliceCall.getLastReceivedResponse().getStatusCode();
         if (responseBob == Response.TRYING) {
-            assertTrue(bobCall.waitOutgoingCallResponse(5 * 1000));
-            assertTrue(bobCall.getLastReceivedResponse().getStatusCode() == Response.RINGING);
+            assertTrue(aliceCall.waitOutgoingCallResponse(5 * 1000));
+            assertTrue(aliceCall.getLastReceivedResponse().getStatusCode() == Response.RINGING);
         } else {
-            assertTrue(bobCall.getLastReceivedResponse().getStatusCode() == Response.RINGING);
+            assertTrue(aliceCall.getLastReceivedResponse().getStatusCode() == Response.RINGING);
         }
 
-        assertTrue(bobCall.waitOutgoingCallResponse(5 * 1000));
-        assertEquals(Response.OK, bobCall.getLastReceivedResponse().getStatusCode());
-        assertTrue(bobCall.sendInviteOkAck());
+        assertTrue(aliceCall.waitOutgoingCallResponse(5 * 1000));
+        assertEquals(Response.OK, aliceCall.getLastReceivedResponse().getStatusCode());
+        assertTrue(aliceCall.sendInviteOkAck());
 
-        assertTrue(bobCall.getDialog().getState().getValue()== DialogState._CONFIRMED);
+        assertTrue(aliceCall.getDialog().getState().getValue()== DialogState._CONFIRMED);
 
-        assertTrue(bobCall.listenForDisconnect());
+        assertTrue(aliceCall.listenForDisconnect());
 
-        assertTrue(bobCall.waitForDisconnect(30 * 1000));
-        bobCall.respondToDisconnect();
-        SipRequest bye = bobCall.getLastReceivedRequest();
+        assertTrue(aliceCall.waitForDisconnect(30 * 1000));
+        aliceCall.respondToDisconnect();
+        SipRequest bye = aliceCall.getLastReceivedRequest();
         String receivedUssdPayload = new String(bye.getRawContent());
         assertTrue(receivedUssdPayload.equalsIgnoreCase(ussdRestcommResponse.trim()));
-        bobCall.dispose();
+        aliceCall.dispose();
 
     }
 

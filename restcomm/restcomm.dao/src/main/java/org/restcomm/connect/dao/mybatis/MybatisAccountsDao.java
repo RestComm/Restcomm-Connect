@@ -43,7 +43,10 @@ import org.joda.time.DateTime;
 import org.restcomm.connect.commons.annotations.concurrency.ThreadSafe;
 import org.restcomm.connect.commons.dao.Sid;
 import org.restcomm.connect.dao.AccountsDao;
+import org.restcomm.connect.dao.DaoUtils;
 import org.restcomm.connect.dao.entities.Account;
+import org.restcomm.connect.dao.entities.AccountPermission;
+import org.restcomm.connect.dao.entities.Permission;
 import org.restcomm.connect.dao.exceptions.AccountHierarchyDepthCrossed;
 
 /**
@@ -287,4 +290,132 @@ public final class MybatisAccountsDao implements AccountsDao {
         map.put("organization_sid", writeSid(account.getOrganizationSid()));
         return map;
     }
+
+    private Permission toAccountPermissions(final Map<String, Object> map) {
+        final Sid sid = readSid(map.get("sid"));
+        final String name = readString(map.get("name"));
+        final Boolean value = DaoUtils.readBoolean(map.get("value"));
+        AccountPermission permission = new AccountPermission(sid, name, value);
+
+        return permission;
+    }
+
+    private Map<String, Object> toMap(Sid accountSid, final Permission permission) {
+        final Map<String, Object> map = new HashMap<String, Object>();
+        map.put("permission_sid", writeSid(permission.getSid()));
+        map.put("account_sid", writeSid(accountSid));
+        map.put("value", ((AccountPermission)permission).getValue());//autobox?
+        return map;
+    }
+
+    @Override
+    public List<Permission> getAccountPermissions(Sid account_sid) {
+        final SqlSession session = sessions.openSession();
+
+        try {
+            final List<Map<String, Object>> results = session.selectList(namespace + "getAccountPermissions", account_sid.toString());
+            final List<Permission> permissions = new ArrayList<Permission>();
+
+            if (results != null && !results.isEmpty()) {
+                for (final Map<String, Object> result : results) {
+                    permissions.add(toAccountPermissions(result));
+                }
+            }
+            return permissions;
+        } finally {
+            session.close();
+        }
+    }
+
+    @Override
+    public Permission getAccountPermission(Sid accountSid, Sid permissionSid) {
+        final SqlSession session = sessions.openSession();
+
+        try {
+            Permission permission = null;
+            Map<String, Object> params = new HashMap<String, Object>();
+            params.put("account_sid", accountSid.toString());
+            params.put("permission_sid", permissionSid.toString());
+            final Map<String, Object> result = session.selectOne(namespace + "getAccountPermission", params);
+            if (result != null) {
+                permission = toAccountPermissions(result);
+            }
+
+            return permission;
+        } finally {
+            session.close();
+        }
+    }
+
+    @Override
+    public void addAccountPermissions(Sid account_sid1, List<Permission> permissions) {
+        for(Permission p : permissions){
+            addAccountPermission(account_sid1, p);
+        }
+    }
+
+    @Override
+    public void addAccountPermission(Sid account_sid1, Permission permission) {
+        final SqlSession session = sessions.openSession();
+        try {
+            session.insert(namespace + "addAccountPermission", toMap(account_sid1, permission));
+            session.commit();
+        } finally {
+            session.close();
+        }
+    }
+
+    @Override
+    public void updateAccountPermissions(Sid account_sid1, Permission permission) {
+        final SqlSession session = sessions.openSession();
+        try {
+            session.update(namespace + "updateAccountPermission", toMap(account_sid1, permission));
+            session.commit();
+        } finally {
+            session.close();
+        }
+    }
+
+    @Override
+    public void clearAccountPermissions(Sid account_sid1) {
+        final SqlSession session = sessions.openSession();
+        final Map<String, String> map = new HashMap<String, String>();
+        map.put("account_sid", account_sid1.toString());
+
+        try {
+            session.delete(namespace + "clearAccountPermissions", map);
+            session.commit();
+        } finally {
+            session.close();
+        }
+    }
+
+    @Override
+    public void deleteAccountPermission(Sid account_sid1, Sid permission_sid1) {
+        final SqlSession session = sessions.openSession();
+        final Map<String, String> map = new HashMap<String, String>();
+        map.put("account_sid", account_sid1.toString());
+        map.put("permission_sid", permission_sid1.toString());
+        try {
+            session.delete(namespace + "deleteAccountPermission", map);
+            session.commit();
+        } finally {
+            session.close();
+        }
+    }
+
+    @Override
+    public void deleteAccountPermissionByName(Sid account_sid1, String permission_name) {
+        final SqlSession session = sessions.openSession();
+        final Map<String, String> map = new HashMap<String, String>();
+        map.put("account_sid", account_sid1.toString());
+        map.put("permission_name", permission_name.toString());
+        try {
+            session.delete(namespace + "deleteAccountPermissionByName", map);
+            session.commit();
+        } finally {
+            session.close();
+        }
+    }
+
 }
