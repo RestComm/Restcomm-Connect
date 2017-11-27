@@ -129,6 +129,7 @@ public class NumberSelectorService {
 
         //if not organizations are provided, restrict search to non SIP numbers
         if (sourceOrganizationSid == null || destinationOrganizationSid == null) {
+            logger.debug("Organizations are null, restrict PureSIP numbers.");
             filterBuilder.byPureSIP(Boolean.FALSE);
         }
 

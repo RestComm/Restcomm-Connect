@@ -1208,9 +1208,8 @@ public final class CallManager extends RestcommUntypedActor {
         IncomingPhoneNumber number = null;
         try {
             Sid destOrg = SIPOrganizationUtil.searchOrganizationBySIPRequest(storage.getOrganizationsDao(), request);
-            number = numberSelector.searchNumber(phone, sourceOrganizationSid, destOrg);
-            if(number == null){
-                //number was found but organization was not proper.
+            if(destOrg == null) {
+                //organization was not proper.
                 final SipServletResponse response = request.createResponse(SC_NOT_FOUND);
                 response.send();
                 String sourceDomainName = storage.getOrganizationsDao().getOrganization(sourceOrganizationSid).getDomainName();
@@ -1219,7 +1218,8 @@ public final class CallManager extends RestcommUntypedActor {
                 logger.warning(errMsg+" Requiested URI was: "+ request.getRequestURI());
                 sendNotification(fromClientAccountSid, errMsg, 11005, "error", true);
                 return true;
-            }else{
+            } else {
+                number = numberSelector.searchNumber(phone, sourceOrganizationSid, destOrg);
                 if (number != null) {
                     final VoiceInterpreterParams.Builder builder = new VoiceInterpreterParams.Builder();
                     builder.setConfiguration(configuration);
