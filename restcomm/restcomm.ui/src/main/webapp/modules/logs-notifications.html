@@ -90,11 +90,11 @@
                             <div class="text-center" uib-tooltip="{{ notification.log == 0 ? 'ERROR' : 'WARNING' }}"><i ng-class="notification.log == 0 ? 'fa fa-times' : 'fa fa-warning'"></i></div>
                         </td>
                         <td class="logs-notifications-list-code hidden-xs">
-                            <div class="text-center"><a href="{{ notification.more_info }}" target="_blank">{{ notification.error_code }}</a></div>
+                            <div class="text-center">{{ notification.error_code }}</div>
                         </td>
                         <td class="logs-notifications-list-type visible-xs">
                             <div class="text-center" uib-tooltip="{{ notification.log == 0 ? 'ERROR' : 'WARNING' }}"><i ng-class="notification.log == 0 ? 'fa fa-times' : 'fa fa-warning'"></i></div>
-                            <div class="text-center"><a href="{{ notification.more_info }}" target="_blank">{{ notification.error_code }}</a></div>
+                            <div class="text-center">{{ notification.error_code }}</div>
                         </td>
 
                         <td class="logs-notifications-list-call-sid hidden-xs">

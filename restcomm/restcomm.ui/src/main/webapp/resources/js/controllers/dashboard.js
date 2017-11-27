@@ -34,7 +34,7 @@ rcMod.controller('DashboardCtrl', function ($scope, $resource, $rootScope, RComm
         key : 'Calls' ,
         bar: true,
         color: '#44A5AB',
-        values : [],
+        values : []
       },
       {
         key : 'Minutes' ,

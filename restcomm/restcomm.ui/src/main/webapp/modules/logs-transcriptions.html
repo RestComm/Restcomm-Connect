@@ -88,7 +88,7 @@
 
                         <td class="logs-transcriptions-list-status hidden-xs"><div class="text-center">{{ transcription.status ? transcription.status : '?' }}</div></td>
                         <td class="logs-transcriptions-list-duration hidden-xs"><div class="text-center">{{ transcription.duration ? transcription.duration : '?' }}s</div></td>
-                        <td class="logs-transcriptions-list-recording-sid hidden-xs"><div class="text-center fit-to-size"><a href="/restcomm/2012-04-24/Accounts/{{ transcription.account_sid }}/Transcriptions/{{ transcription.sid }}">{{ transcription.recording_sid }}</a></div></td>
+                        <td class="logs-transcriptions-list-recording-sid hidden-xs"><div class="text-center fit-to-size"><a href="/restcomm/2012-04-24/Accounts/{{ transcription.account_sid }}/Transcriptions/{{ transcription.sid }}" target="_blank">{{ transcription.recording_sid }}</a></div></td>
                         <td class="logs-transcriptions-list-text hidden-xs"><div class="text-center fit-to-size" title="{{ transcription.transcription_text }}">{{ transcription.transcription_text.length > 35 ? (transcription.transcription_text | limitTo:32) + '...' : transcription.transcription_text }}</div></td>
 
                         <td class="logs-transcriptions-list-status visible-xs">
@@ -96,7 +96,7 @@
                             <div class="text-center">{{ transcription.duration ? transcription.duration : '?' }}s</div>
                         </td>
                         <td class="logs-transcriptions-list-recording-sid visible-xs">
-                            <div class="text-center fit-to-size"><a href="/restcomm/2012-04-24/Accounts/{{ transcription.account_sid }}/Transcriptions/{{ transcription.sid }}">{{ transcription.recording_sid }}</a></div>
+                            <div class="text-center fit-to-size"><a href="/restcomm/2012-04-24/Accounts/{{ transcription.account_sid }}/Transcriptions/{{ transcription.sid }}" target="_blank">{{ transcription.recording_sid }}</a></div>
                             <div class="text-center fit-to-size" title="{{ transcription.transcription_text }}">{{ transcription.transcription_text.length > 35 ? (transcription.transcription_text | limitTo:32) + '...' : transcription.transcription_text }}</div>
                         </td>
                     </tr>
