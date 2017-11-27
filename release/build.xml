@@ -191,7 +191,7 @@
     <delete failonerror="false" file="${release.as7.dir}/standalone/configuration/dars/mobicents-dar.properties"/>
     <delete failonerror="false" file="${release.as7.dir}/standalone/deployments/media-jsr309-servlet.war"/>
     <delete failonerror="false" file="${release.as7.dir}/standalone/deployments/click2call.war"/>
-    <move file="${release.as7.dir}/standalone/deployments/websockets-sip-servlet.war" tofile="${release.as7.dir}/standalone/deployments/webrtc.war"/>
+    <!--<move file="${release.as7.dir}/standalone/deployments/websockets-sip-servlet.war" tofile="${release.as7.dir}/standalone/deployments/webrtc.war"/>-->
     <copy failonerror="true" file="${configuration.directory}/mobicents-dar.properties" tofile="${release.as7.dir}/standalone/configuration/dars/mobicents-dar.properties"/>
     <copy failonerror="true" file="${configuration.directory}/mss-sip-stack.properties" overwrite="true" tofile="${release.as7.dir}/standalone/configuration/mss-sip-stack.properties"/>
     <!--Use exploded WAR-->
