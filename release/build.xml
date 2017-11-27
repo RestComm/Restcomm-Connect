@@ -22,7 +22,7 @@
 
   <!-- mobicents SIP Servlets 7.x on JBoss AS7-->
   <property name="restcomm-sipservlets.as7.download.distro.file" value="restcomm-sip-servlets-3.2.0-89-jboss-as-7.2.0.Final.zip"/>
-  <property name="restcomm-sipservlets.as7.download.url" value="https://app.box.com/s/bz0fnva3yiv5m93qnzn0xnn5j2zme8og"/>
+  <property name="restcomm-sipservlets.as7.download.url" value="https://app.box.com/shared/static/bz0fnva3yiv5m93qnzn0xnn5j2zme8og.zip"/>
   <property name="restcomm-sipservlets.as7.distro.zip.path" value="${checkout.dir}/${restcomm-sipservlets.as7.download.distro.file}"/>
 
   <property name="restcomm-media.download.distro.file" value="restcomm-media-server.zip"/>
