@@ -56,7 +56,6 @@ import org.restcomm.connect.dao.common.OrganizationUtil;
 import org.restcomm.connect.dao.entities.Application;
 import org.restcomm.connect.dao.entities.Client;
 import org.restcomm.connect.dao.entities.IncomingPhoneNumber;
-import org.restcomm.connect.dao.entities.MostOptimalNumberResponse;
 import org.restcomm.connect.dao.entities.Notification;
 import org.restcomm.connect.dao.entities.SmsMessage;
 import org.restcomm.connect.dao.entities.SmsMessage.Direction;
@@ -89,6 +88,8 @@ import akka.actor.UntypedActorContext;
 import akka.actor.UntypedActorFactory;
 import akka.event.Logging;
 import akka.event.LoggingAdapter;
+import org.restcomm.connect.interpreter.NumberSelectorService;
+import org.restcomm.connect.interpreter.SIPOrganizationUtil;
 import scala.concurrent.duration.Duration;
 
 /**
@@ -124,6 +125,8 @@ public final class SmsService extends RestcommUntypedActor {
     //List of extensions for SmsService
     List<RestcommExtensionGeneric> extensions;
 
+    private final NumberSelectorService numberSelector;
+
     public SmsService(final Configuration configuration, final SipFactory factory,
             final DaoManager storage, final ServletContext servletContext) {
         super();
@@ -136,6 +139,7 @@ public final class SmsService extends RestcommUntypedActor {
         this.storage = storage;
         this.servletContext = servletContext;
         monitoringService = (ActorRef) servletContext.getAttribute(MonitoringService.class.getName());
+        numberSelector = (NumberSelectorService) servletContext.getAttribute(NumberSelectorService.class.getName());
         this.pushNotificationServerHelper = new PushNotificationServerHelper(system, configuration);
         // final Configuration runtime = configuration.subset("runtime-settings");
         // TODO this.useTo = runtime.getBoolean("use-to");
@@ -319,8 +323,8 @@ public final class SmsService extends RestcommUntypedActor {
         // Handle the SMS message.
         final SipURI uri = (SipURI) request.getRequestURI();
         final String to = uri.getUser();
-        MostOptimalNumberResponse mostOptimalNumber = OrganizationUtil.getMostOptimalIncomingPhoneNumber(storage, request, to, sourceOrganizationSid);
-        IncomingPhoneNumber number = mostOptimalNumber.number();
+        Sid destOrg = SIPOrganizationUtil.searchOrganizationBySIPRequest(storage.getOrganizationsDao(), request);
+        IncomingPhoneNumber number = numberSelector.searchNumber(to, sourceOrganizationSid, destOrg);
         try {
             if (number != null) {
                 URI appUri = number.getSmsUrl();

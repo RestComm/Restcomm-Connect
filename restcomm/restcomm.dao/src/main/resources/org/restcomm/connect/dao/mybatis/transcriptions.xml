@@ -1,0 +1,110 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<!--
+  @author thomas.quintana@telestax.com (Thomas Quintana)
+-->
+<mapper namespace="org.mobicents.servlet.sip.restcomm.dao.TranscriptionsDao">
+  <insert id="addTranscription" parameterType="map">
+    INSERT INTO "restcomm_transcriptions" ("sid", "date_created", "date_updated", "account_sid", "status", "recording_sid", "duration", "transcription_text", "price", "uri")
+    VALUES (#{sid}, #{date_created}, #{date_updated}, #{account_sid}, #{status}, #{recording_sid}, #{duration}, #{transcription_text}, #{price}, #{uri});
+  </insert>
+  
+  <select id="getTranscription" parameterType="string" resultType="hashmap">
+    SELECT * FROM "restcomm_transcriptions" WHERE "sid"=#{sid};
+  </select>
+  
+  <select id="getTranscriptionByRecording" parameterType="string" resultType="hashmap">
+    SELECT * FROM "restcomm_transcriptions" WHERE "recording_sid"=#{recording_sid};
+  </select>
+  
+  <select id="getTranscriptions" parameterType="string" resultType="hashmap">
+    SELECT * FROM "restcomm_transcriptions" WHERE "account_sid"=#{account_sid};
+  </select>
+  
+  <delete id="removeTranscription" parameterType="string">
+    DELETE FROM "restcomm_transcriptions" WHERE "sid"=#{sid};
+  </delete>
+  
+  <delete id="removeTranscriptions" parameterType="string">
+    DELETE FROM "restcomm_transcriptions" WHERE "account_sid"=#{account_sid};
+  </delete>
+  
+  <update id="updateTranscription" parameterType="map">
+    UPDATE "restcomm_transcriptions" SET "status"=#{status}
+    	<if test="transcription_text != null">
+			, "transcription_text"=#{transcription_text} 
+		</if>
+      WHERE "sid"=#{sid};
+  </update>
+  
+  <select id="getTotalTranscriptionByUsingFilters" parameterType="org.restcomm.connect.dao.entities.TranscriptionFilter" resultType="int">
+            SELECT COUNT(*) FROM "restcomm_transcriptions" WHERE
+
+            <!-- are we counting cdrs from a single account or from an account set -->
+            <if test="accountSidSet == null">
+                    "account_sid"=#{accountSid}
+            </if>
+            <if test="accountSidSet != null">
+                    <if test="!accountSidSet.isEmpty()">
+                            "account_sid" IN
+                            <foreach item="item" index="index" collection="accountSidSet" open="(" separator="," close=")">
+                                    #{item}
+                            </foreach>
+                    </if>
+                    <if test="accountSidSet.isEmpty()">
+                            "account_sid"=''
+                    </if>
+            </if>
+
+            <if test="instanceid != null">
+                    AND "instanceid" like #{instanceid}
+            </if>
+            <if test="transcriptionText != null">
+                    AND "transcription_text" like '%'|| #{transcriptionText} ||'%'
+            </if>
+            <!-- select * from "restcomm_sms_messages" where "start_time" >= '2013-08-23' order by "start_time" ; -->
+            <if test="startTime != null">
+                AND "date_created" &gt;= #{startTime}
+            </if>
+            <if test="endTime != null">
+                    AND "date_created" &lt;= DATE_ADD(#{endTime},INTERVAL 1 DAY)
+            </if>
+
+    </select>
+	
+    <select id="getTranscriptionsByUsingFilters" parameterType="org.restcomm.connect.dao.entities.TranscriptionFilter" resultType="hashmap">
+            SELECT * FROM "restcomm_transcriptions" AS "restcomm_transcriptions" WHERE
+
+            <!-- are we retrieving cdrs from a single account or from an account set -->
+            <if test="accountSidSet == null">
+                    "account_sid"=#{accountSid}
+            </if>
+            <if test="accountSidSet != null">
+                    <if test="!accountSidSet.isEmpty()">
+                            "account_sid" IN
+                            <foreach item="item" index="index" collection="accountSidSet" open="(" separator="," close=")">
+                                    #{item}
+                            </foreach>
+                    </if>
+                    <if test="accountSidSet.isEmpty()">
+                            "account_sid"=''
+                    </if>
+            </if>
+
+            <if test="instanceid != null">
+                    AND "instanceid" like #{instanceid}
+            </if>
+            <if test="transcriptionText != null">
+                    AND "transcription_text" like '%'|| #{transcriptionText} ||'%'
+            </if>
+            <!-- select * from "restcomm_sms_messages" where "start_time" >= '2013-08-23' order by "start_time" ; -->
+            <if test="startTime != null">
+                AND "date_created" &gt;= #{startTime}
+            </if>
+            <if test="endTime != null">
+                    AND "date_created" &lt;= DATE_ADD(#{endTime},INTERVAL 1 DAY)
+            </if>
+            order by "date_created"
+            LIMIT #{limit} OFFSET #{offset}
+    </select>
+</mapper>
