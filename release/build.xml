@@ -108,8 +108,8 @@
   <target name="get-restcomm-sipservlets-as7" unless="got.restcomm-sipservlets-as7">
     <echo>Downloading Restcomm SipServlets JBoss AS7 version: ${restcomm-sipservlets-as7.version}</echo>
     <exec executable="wget" failonerror="true">
-      <arg value="-O ${restcomm-sipservlets.as7.download.distro.file}"/>
       <arg value="${restcomm-sipservlets.as7.download.url}"/>
+      <arg value="-O ${restcomm-sipservlets.as7.download.distro.file}"/>
     </exec>
     <move file="${base.dir}/${restcomm-sipservlets.as7.download.distro.file}" todir="${checkout.dir}"/>
   </target>
