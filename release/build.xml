@@ -25,6 +25,7 @@
   <!--<property name="restcomm-sipservlets.as7.download.distro.file" value="restcomm-sip-servlets-${restcomm-sipservlets.as7.distro.version}.zip"/>-->
 
   <!-- restcomm-sip-servlets-3.2.0-89-jboss-as-7.2.0.Final.zip box.com link -->
+  <property name="restcomm-sipservlets.as7.download.distro.file" value="restcomm-sip-servlets-3.2.0-89-jboss-as-7.2.0.Final.zip"/>
   <property name="restcomm-sipservlets.as7.download.url" value="https://app.box.com/s/bz0fnva3yiv5m93qnzn0xnn5j2zme8og"/>
   <property name="restcomm-sipservlets.as7.distro.zip.path" value="${checkout.dir}/${restcomm-sipservlets.as7.download.distro.file}"/>
 
@@ -117,6 +118,7 @@
   <target name="get-restcomm-sipservlets-as7" unless="got.restcomm-sipservlets-as7">
     <echo>Downloading Restcomm SipServlets JBoss AS7 version: ${restcomm-sipservlets-as7.version}</echo>
     <exec executable="wget" failonerror="true">
+      <arg value="-O ${restcomm-sipservlets.as7.download.distro.file}"/>
       <arg value="${restcomm-sipservlets.as7.download.url}"/>
     </exec>
     <move file="${base.dir}/${restcomm-sipservlets.as7.download.distro.file}" todir="${checkout.dir}"/>
