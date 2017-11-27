@@ -62,6 +62,20 @@ rcMod.controller('LogsRecordingsCtrl', function($scope, $resource, $timeout, $ui
     });
   };
 
+  // Modal : Call Details
+  $scope.showCallDetailsModal = function (call) {
+    $uibModal.open({
+      controller: 'LogsCallsDetailsCtrl',
+      scope: $scope,
+      templateUrl: 'modules/modals/modal-logs-calls.html',
+      resolve: {
+        callSid: function() {
+          return call;
+        }
+      }
+    });
+  };
+
   $scope.getRecordingsLogsList = function(page) {
     var params = $scope.search ? createSearchParams($scope.search) : {LocalOnly: true};
     RCommLogsRecordings.search($.extend({accountSid: $scope.sid, Page: page, PageSize: $scope.entryLimit}, params), function(data) {

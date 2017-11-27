@@ -86,7 +86,7 @@
                         </td>
 
                         <td class="logs-recordings-list-duration hidden-xs"><div class="text-center">{{ recording.duration ? (recording.duration + "s") : '. . .' }}</div></td>
-                        <td class="logs-recordings-list-call-sid hidden-xs"><div class="text-center"><a href="#/logs/calls/{{ recording.call_sid }}">{{ recording.call_sid }}</a></div></td>
+                        <td class="logs-recordings-list-call-sid hidden-xs"><div class="text-center"><a href="" ng-click="showCallDetailsModal(recording.call_sid)">{{ recording.call_sid }}</a></div></td>
                         <td class="logs-recordings-list-download hidden-xs"><div class="text-center"><a href="{{ recording.file_uri }}" target="_blank" uib-tooltip="Download"><i class="fa fa-download"></i></a></div></td>
 
                         <td class="logs-recordings-list-duration visible-xs">
