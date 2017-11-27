@@ -111,6 +111,9 @@
       <arg value="-O ${restcomm-sipservlets.as7.download.distro.file}"/>
       <arg value="${restcomm-sipservlets.as7.download.url}"/>
     </exec>
+    <exec executable="ls ${base.dir}">
+      <arg value="-la"/>
+    </exec>
     <move file="${base.dir}/${restcomm-sipservlets.as7.download.distro.file}" todir="${checkout.dir}"/>
   </target>
 
