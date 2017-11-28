@@ -1,54 +1,73 @@
+<!-- title for the sign-in page -->
 <div class="logo-container" ng-if="!!!loggedAccount">
-    <img src="resources/img/v2/restcomm-console.png" class="restcomm-dashboard">
-    <button class="sign-up-btn" type="submit" ng-show="false">Sign up</button>
+    <img src="resources/img/v2/restcomm-console.svg" id="console-logo">
 </div>
 
+<!-- title for the signed in page -->
 <div class="logo-container-inside container-fluid" ng-if="!!loggedAccount" ng-controller="UserMenuCtrl">
-    <div class="row">
-        <div class="col-md-6 restcomm-dashboard-inside">
-            <img src="resources/img/v2/restcomm-console-inside.png">
+    <div class="row ">
+        <div class="col-md-6 col-sm-6 logo-inside">
+            <a ng-href="#/dashboard"><img src="resources/img/v2/restcomm-console-inside.svg"></a>
         </div>
-        <div class="col-md-6">
-            <ul class="nav navbar-nav pull-right">
+        <div class="col-md-6 col-sm-6 user-menu">
+            <ul class="pull-right">
                 <li class="dropdown">
                     <a href="#" class="dropdown-toggle" data-toggle="dropdown"> {{ friendlyName }} <b class="caret"></b></a>
                     <ul id="dropdown-list" class="dropdown-menu user-dropdown-menu pull-right">
-                        <li><a href="#/profile/{{sid}}"><img src="resources/img/v2/icons-dropdown/drop-down-icon-settings.png"> Account Settings</a></li>
-                        <li class="divider"></li>
-                        <li><a href="#/subaccounts"><img src="resources/img/v2/icons-dropdown/drop-down-icon-sub-accounts.png"> Sub Accounts</a></li>
-                        <li class="disabled"><a href="#"></a> </li>
-                        <li class="disabled"><a href="#"></a> </li>
-                        <li class=""><a href="#" onclick="return false;" ng-click="showRegisterAccountModal();"><img src="resources/img/v2/icons-dropdown/drop-down-icon-create-account.png"> Create New Account</a> </li>
-                        <li class="divider"></li>
-                        <li><a href="#/login" ng-click="logout()"><img src="resources/img/v2/icons-dropdown/drop-down-icon-sign-out.png"> Sign Out</a></li>
+                        <li><a href="#/profile/{{sid}}"><i class="fa fa-user"></i> Account </a></li>
+                        <!-- <li class="divider"></li> -->
+                        <!-- <li><a href="#/subaccounts"><img src="resources/img/v2/icons-dropdown/drop-down-icon-sub-accounts.png"> Sub Accounts</a></li> -->
+                        <!-- <li class="disabled"><a href="#"></a> </li> -->
+                        <!-- <li class="disabled"><a href="#"></a> </li> -->
+                        <!-- <li class=""><a href="#" onclick="return false;" ng-click="showRegisterAccountModal();"><img src="resources/img/v2/icons-dropdown/drop-down-icon-create-account.png"> Create New Account</a> </li>
+                        <li class="divider"></li> -->
+                        <li><a href="#/dashboard"><i class="fa fa-bar-chart-o"></i> Analytics</a></li>
+                        <li><a href="#/login" ng-click="logout()"><i class="fa fa-sign-out"></i> Sign Out</a></li>
                     </ul>
                 </li>
             </ul>
         </div>
     </div>
-    <div class="row">
-        <div class="col-md-9 col-md-offset-3 dashboard-menu">
-            <span>
-                <a ng-href="#/dashboard"><img src="resources/img/v2/icons-navbar/d-r-icon-home.png"> Home</a>
+
+    <div class="row primary-tabs">
+        <div class="col-md-8 col-md-offset-2 col-xs-12 primary-tabs-container">
+            <span ng-class="{'active': location.indexOf('/applications') === 0}">
+                <a ng-href="#/applications">Applications</a>
             </span>
-            <span>
-                <a ng-href="#/numbers"><img src="resources/img/v2/icons-navbar/d-r-icon-numbers.png"> Numbers</a>
+            <!--
+            <span ng-class="{'active': location.indexOf('/dashboard') === 0}">
+                <a ng-href="#/dashboard">Dashboard</a>
             </span>
-            <span>
-                <a ng-href="#/numbers/clients"><img src="resources/img/v2/icons-navbar/d-r-icon-clients.png"> Clients</a>
+            -->
+            <span ng-class="{'active': (location.indexOf('/numbers/incoming') === 0 || location.indexOf('/numbers/register-incoming') === 0)}">
+                <a ng-href="#/numbers/incoming">Numbers</a>
             </span>
-            <span>
-                <a href="/olympus" target="_blank"><img src="resources/img/v2/icons-navbar/d-r-icon-olympus.png"> Olympus</a>
+            <span ng-class="{'active': location.indexOf('/numbers/clients') === 0}">
+                <a ng-href="#/numbers/clients">Clients</a>
             </span>
-            <span>
-                <a id="rvd-link" href="/restcomm-rvd/" target="_blank"><img src="resources/img/v2/icons-navbar/d-r-icon-v-d.png"> Visual Designer</a>
-            </span>
-            <span>
-                <a ng-href="#/logs"><img src="resources/img/v2/icons-navbar/d-r-icon-logs.png"> Logs</a>
-            </span>
-            <span>
-                <a ng-href="#/ras"><img src="resources/img/v2/icons-navbar/d-r-icon-apps.png"> Apps</a>
+            <span ng-class="{'active': location.indexOf('/logs') === 0}">
+                <a ng-href="#/logs">Logs</a>
             </span>
         </div>
+        <span class="primary-tabs-mobile">
+            <a ng-click="$root.mobileMenu = !$root.mobileMenu">
+                <i class="fa fa-bars" style="font-size: 2em; margin: 5px 15px;"></i>
+            </a>
+            <span style="float: right; margin-right: 10px; margin-top: 9px;">{{ friendlyName }}</span>
+        </span>
     </div>
+
+    <div class="mobile-menu" ng-show="$root.mobileMenu">
+        <ul class="nav">
+            <li><a ng-href="#/applications" ng-click="$root.mobileMenu = false">Applications</a></li>
+            <!--<li><a ng-href="#/dashboard" ng-click="$root.mobileMenu = false">Dashboard</a></li>-->
+            <li><a ng-href="#/numbers/incoming" ng-click="$root.mobileMenu = false">Numbers</a></li>
+            <li><a ng-href="#/numbers/clients" ng-click="$root.mobileMenu = false">Clients</a></li>
+            <li><a ng-href="#/logs" ng-click="$root.mobileMenu = false">Logs</a></li>
+            <li class="text-right"><a ng-href="#/profile/{{sid}}" ng-click="$root.mobileMenu = false">Account</a></li>
+            <li class="text-right"><a ng-href="#/dashboard" ng-click="$root.mobileMenu = false">Analytics</a></li>
+            <li class="text-right"><a ng-href="#/login" ng-click="$root.mobileMenu = false; logout();">Sign Out</a></li>
+        </ul>
+    </div>
+
 </div>

@@ -58,9 +58,6 @@ body {
     margin-bottom: 20px;
 }
 
-.no-records-alert {
-    margin-top: 100px;
-}
 
 hr.small {
     margin: 10px 0;
@@ -108,6 +105,10 @@ input.ng-dirty.ng-invalid {
     width: 20%;
 }
 
+.width-25pc {
+    width: 25%;
+}
+
 .width-30pc {
     width: 30%;
 }
@@ -136,6 +137,11 @@ input.ng-dirty.ng-invalid {
 .hover-underline:hover {
 	text-decoration: underline;
 }
+
+.bottom-row.row {
+    margin-bottom: 30px;
+}
+
 
 /* Index.html classes ------------------------------------------------------- */
 
@@ -251,22 +257,6 @@ ul#rightMenu > li i {
 
 .rappmanager .app-title-wrap:not(:first-child) {
 	margin-top: 10px;
-}
-
-.drop-area {
-	background: none repeat scroll 0% 0% rgb(248, 248, 248);
-	border: 3px dashed rgb(221, 221, 221);
-	text-align: center;
-}
-
-.drop-area .drop-prompt {
-	padding: 7px;
-	opacity: 0.6;
-}
-
-.drop-area.dropping {
-	background-color:beige;
-	cursor:copy;
 }
 
 .rappmanager .category-tag {

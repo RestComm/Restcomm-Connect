@@ -9,11 +9,13 @@ var rcMod = angular.module('rcApp', [
   'angular-md5',
   'ui.bootstrap.modal.dialog',
 //  'loadingOnAJAX',
-  'angularFileUpload',
+  'ngFileUpload',
   'ngPasswordStrength',
   'nvd3',
   'ngSanitize',
-  'ui.router'
+  'ui.router',
+  'ui.carousel',
+  'ngFileSaver'
 ]);
 
 // For all states that that have resolve sections that rely on a determined authorization status (AuthService.checkAccess()) and are children of 'restcomm' state, the 'authorize' value should be injected in the dependent 'resolve' values. See state 'restcomm.incoming-phone / localApps'.
@@ -92,8 +94,16 @@ rcMod.config(['$stateProvider','$urlRouterProvider', function($stateProvider, $u
         },
         identity: function (IdentityConfig) {
             return IdentityConfig.getIdentity();
+        },
+        dashboardConfig: function (PublicConfig) {
+
         }
     }
+  });
+  $stateProvider.state('restcomm.home',{
+    url:'/home',
+    templateUrl:'modules/home.html',
+    controller: 'DashboardCtrl'
   });
   $stateProvider.state('restcomm.dashboard',{
     url:'/dashboard',
@@ -139,8 +149,33 @@ rcMod.config(['$stateProvider','$urlRouterProvider', function($stateProvider, $u
         $uibModalInstance : function() {return undefined;},
         allCountries : function() {return undefined;},
         providerCountries : function() {return undefined;},
-        localApps: function (rappService, authorize) { return rappService.refreshLocalApps();}
+        localApps: function (RCommApplications, AuthService, authorize) { return RCommApplications.query({accountSid:AuthService.getAccountSid()}).$promise;}
     }
+  });
+  $stateProvider.state('restcomm.applications',{
+    url:'/applications',
+    templateUrl: 'modules/applications.html',
+    controller: 'ApplicationsCtrl'
+  });
+  $stateProvider.state('restcomm.application-creation-wizard',{
+      url:'/applications/creation-wizard',
+      templateUrl: 'modules/application-creation-wizard.html',
+      controller: 'ApplicationCreationWizardCtrl'
+  });
+  $stateProvider.state('restcomm.application-creation',{
+      url:'/applications/new',
+      templateUrl: 'modules/application-creation.html',
+      controller: 'ApplicationCreationCtrl'
+  });
+  $stateProvider.state('restcomm.application-external-creation',{
+      url:'/applications/new-external',
+      templateUrl: 'modules/application-creation.html',
+      controller: 'ApplicationExternalCreationCtrl'
+  });
+  $stateProvider.state('restcomm.application-details',{
+      url:'/applications/:applicationSid',
+      templateUrl: 'modules/application-details.html',
+      controller: 'ApplicationDetailsCtrl'
   });
   $stateProvider.state('restcomm.clients',{
     url:'/numbers/clients',
@@ -153,7 +188,7 @@ rcMod.config(['$stateProvider','$urlRouterProvider', function($stateProvider, $u
     controller: 'ClientDetailsCtrl',
     resolve: {
         $uibModalInstance : function() {return undefined;},
-        localApps: function (rappService,authorize) { return rappService.refreshLocalApps();}
+        localApps: function (RCommApplications, AuthService, authorize) { return RCommApplications.query({accountSid:AuthService.getAccountSid()}).$promise;}
     }
   });
   $stateProvider.state('restcomm.numbers-outgoing',{

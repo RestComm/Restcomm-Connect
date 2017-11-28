@@ -8,6 +8,9 @@ rcMod.controller('LogsTranscriptionsCtrl', function ($scope, $resource, $timeout
 
   $scope.sid = SessionService.get("sid");
 
+  // search toggle only on mobile view
+  $scope.showSearchToggle = window.outerWidth <= 768;
+
   // default search values
   $scope.search = {
     local_only: true,
@@ -19,7 +22,7 @@ rcMod.controller('LogsTranscriptionsCtrl', function ($scope, $resource, $timeout
   $scope.currentPage = 1; //current page
   $scope.maxSize = 5; //pagination max size
   $scope.entryLimit = 10; //max rows for data table
-  $scope.reverse = false;
+  $scope.reverse = true;
   $scope.predicate = "date_created";
 
   $scope.setEntryLimit = function(limit) {
@@ -63,8 +66,13 @@ rcMod.controller('LogsTranscriptionsCtrl', function ($scope, $resource, $timeout
     var params = $scope.search ? createSearchParams($scope.search) : {LocalOnly: true};
     RCommLogsTranscriptions.search($.extend({accountSid: $scope.sid, Page: page, PageSize: $scope.entryLimit}, params), function(data) {
       $scope.transcriptionsLogsList = data.transcriptions;
-      $scope.totalTranscription = data.total;
+      $scope.totalTranscriptions = data.total;
       $scope.noOfPages = data.num_pages;
+      $scope.start = parseInt(data.start) + 1;
+      $scope.end = parseInt(data.end);
+      if ($scope.end != $scope.totalTranscriptions) {
+        ++$scope.end;
+      }
     });
   }
 
