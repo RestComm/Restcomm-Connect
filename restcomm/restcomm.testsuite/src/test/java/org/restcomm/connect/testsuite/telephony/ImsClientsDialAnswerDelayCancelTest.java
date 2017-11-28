@@ -58,7 +58,9 @@ import org.restcomm.connect.testsuite.telephony.security.DigestServerAuthenticat
 import com.github.tomakehurst.wiremock.junit.WireMockRule;
 import com.google.gson.JsonObject;
 import org.junit.experimental.categories.Category;
-import org.restcomm.connect.testsuite.UnstableTests;
+import org.restcomm.connect.commons.annotations.FeatureAltTests;
+import org.restcomm.connect.commons.annotations.SequentialClassTests;
+import org.restcomm.connect.commons.annotations.UnstableTests;
 
 /**
  * Test for clients with or without VoiceURL (Bitbucket issue 115). Clients without VoiceURL can dial anything.
@@ -66,6 +68,7 @@ import org.restcomm.connect.testsuite.UnstableTests;
  * @author <a href="mailto:gvagenas@gmail.com">gvagenas</a>
  */
 @RunWith(Arquillian.class)
+@Category(value={FeatureAltTests.class, SequentialClassTests.class})
 public class ImsClientsDialAnswerDelayCancelTest {
 
     private static final String version = Version.getVersion();

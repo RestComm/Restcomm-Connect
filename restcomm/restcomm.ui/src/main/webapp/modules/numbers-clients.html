@@ -1,91 +1,57 @@
-<!--<rc-numbers-pills></rc-numbers-pills>-->
-
-<!--<rc-page-title icon="phone" title="NUMBERS" sub-title="SIP CLIENTS"></rc-page-title>-->
-
 <div class="row">
-    <div class="col-md-12">
-        <div id="search-register">
-            <div id="search">
-                <form method="get" action="/search">
-                    <img id="search-icon" src="resources/img/v2/search-icon.png">
-                    <input name="q" type="text" size="40" placeholder="Search..." ng-model="query.login">
-                </form>
-            </div>
-            <div>
-                <a href="" ng-click="showRegisterSIPClientModal()" class="btn-register pull-right"><b>+</b> Register Restcomm Client</a>
-            </div>
-        </div>
-
-        <div ng-hide="(clientsList | filter:query).length > 0" class="jumbotron no-records-alert">
-            <h2><i class="fa fa-exclamation-circle"></i> No Restcomm clients <span ng-show="clientsList.length == 0">registered</span><span ng-show="clientsList.length > 0">matching query</span>. <small>Register one now!</small></h2>
-        </div>
-
-        <table ng-show="(clientsList | filter:query).length > 0" class="table table-hover" ng-cloak>
-            <thead style="font-size: 18px;">
-            <th class="width-20pc">Username</th>
-            <th>&nbsp;</th>
-            <th class="width-20pc">Name</th>
-            <th class="width-40pc" >Features</th>
-            <th class="width-10pc">&nbsp;</th>
-            </thead>
-            <tbody>
-            <tr class="number-row" ng-repeat="sc in filtered = (clientsList | filter:query)">
-                <td><h4 class=""><a href="#/numbers/clients/{{sc.sid}}">{{ sc.login  }}</a></h4></td>
-                <td class="edit-number"><h5><i class="fa fa-pencil clickable" ng-click="editingFriendlyName = sc.login"></i></h5></td>
-                <td><h4 class="" ng-hide="editingFriendlyName == sc.login">{{ sc.friendly_name  }} </h4>
-                    <h4 class="" ng-show="editingFriendlyName == sc.login"><input type="text" class="input-small" onkeyup="if(event.keyCode == 13) {this.blur()}" ng-model="sc.friendly_name" ng-blur="editingFriendlyName = undefined; setFriendlyName(sc)" autofocus /></h4>
-                </td>
-                <td>
-                    <span ng-show="{{ sc.voice_url.length > 0 || sc.voice_application_sid.length > 0 }}"><i class="fa fa-microphone available-feature"></i> <small> {{ sc.voice_url  }} {{ sc.voice_application_sid }}</small></span>
-                    <span class="opacity30" ng-hide="{{ sc.voice_url.length > 0 || sc.voice_application_sid.length > 0 }}"><i class="fa fa-microphone-slash unavailable-feature"></i> <small> http://www.restcomm.org/demo/voice/</small></span>
-                    <br>
-                    <span ng-show="{{ sc.sms_url.length > 0  }}"><i class="fa fa-comment available-feature"></i> <small> {{ sc.sms_url  }}</small></span>
-                    <span class="opacity30" ng-hide="{{ sc.sms_url.length > 0  }}"><i class="fa fa-comment-o unavailable-feature"></i> <small> http://www.restcomm.org/demo/sms/</small></span>
-                </td>
-                <td class="text-right">
-                    <div class="btn-delete-div"><button class="btn btn-link" ng-click="confirmClientDelete(sc)"><img src="resources/img/v2/delete-number.png"></button></div>
-                </td>
-            </tr>
-            </tbody>
-        </table>
+    <div class="col-md-4 col-xs-6">
+        <form class="search-form">
+            <img class="search-icon" src="resources/img/v2/search-icon.png">
+            <input name="q" type="text" size="40" placeholder="Search..." ng-model="query.login">
+        </form>
+    </div>
+    <div  class="col-md-4 col-md-offset-4 col-xs-6">
+        <button class="rc-btn btn-primary pull-right hidden-xs" ng-click="showRegisterSIPClientModal()"><b>+</b> New Client</button>
+        <button class="rc-btn btn-primary rc-btn-sm pull-right visible-xs" ng-click="showRegisterSIPClientModal()"><b>+</b> New Client</button>
     </div>
 </div>
 
-<div class="row" ng-show="false">
+<div class="row">&nbsp;</div>
+
+<div class="row">
     <div class="col-md-12">
-        <div class="pull-left">
-            <button class="btn btn-primary" ng-click="showRegisterSIPClientModal()"><i class="fa fa-plus"></i> Register Restcomm Client</button>
+
+        <div ng-hide="!clientsList || (clientsList | filter:query).length > 0" class="jumbotron rc-no-items">
+            <h1><i class="fa fa-globe"></i> </h1>
+            <h2>No Restcomm clients</h2>
+            <h5>Register one now!</h5>
         </div>
 
-        <div ng-show="clientsList.length > 0"><rc-list-filter filter="query.login"></rc-list-filter></div>
-
-        <div ng-hide="(clientsList | filter:query).length > 0" class="jumbotron no-records-alert">
-            <h2><i class="fa fa-exclamation-circle"></i> No Restcomm clients <span ng-show="clientsList.length == 0">registered</span><span ng-show="clientsList.length > 0">matching query</span>. <small>Register one now!</small></h2>
-        </div>
-
-        <table ng-show="(clientsList | filter:query).length > 0" class="table table-striped table-hover" ng-cloak>
+        <table ng-show="(clientsList | filter:query).length > 0" class="table table-hover rc-list clients-list" ng-cloak>
             <thead>
-                <th class="width-20pc">USERNAME</th>
-                <th class="width-20pc" colspan="2">NAME</th>
-                <th>FEATURES</th>
-                <th class="width-10pc">&nbsp;</th>
+            <th class="clients-list-username" rc-list-sort by="predicate" order="'login'" reverse="reverse">Username</th>
+            <th class="clients-list-edit-icon hidden-xs">&nbsp;</th>
+            <th class="clients-list-friendly-name hidden-xs" rc-list-sort by="predicate" order="'friendly_name'" reverse="reverse">Friendly Name</th>
+            <th class="clients-list-applications" >Applications</th>
+            <th class="clients-list-delete-icon visible-xs">&nbsp;</th>
             </thead>
             <tbody>
-            <tr ng-repeat="sc in filtered = (clientsList | filter:query)">
-                <td><h4 class="text-center"><a href="#/numbers/clients/{{sc.sid}}">{{ sc.login  }}</a></h4></td>
-                <td><h5 class="text-center" ng-hide="editingFriendlyName == sc.login">{{ sc.friendly_name  }} </h5>
-                    <h5 class="text-center" ng-show="editingFriendlyName == sc.login"><input type="text" class="input-small" onkeyup="if(event.keyCode == 13) {this.blur()}" ng-model="sc.friendly_name" ng-blur="editingFriendlyName = undefined; setFriendlyName(sc)" autofocus /></h5>
+            <tr class="number-row" ng-repeat="sc in filtered = (clientsList | filter:query | orderBy:predicate:reverse)">
+                <td class="clients-list-username">
+                    <div><a href="#/numbers/clients/{{sc.sid}}">{{ sc.login  }}</a></div>
+                    <div class="visible-xs">{{ sc.friendly_name  }}</div>
                 </td>
-                <td><h5><i class="fa fa-pencil clickable" ng-click="editingFriendlyName = sc.login"></i></h5></td>
-                <td>
-                    <span ng-show="{{ sc.voice_url.length > 0 || sc.voice_application_sid.length > 0 }}"><i class="fa fa-microphone available-feature"></i> <small> {{ sc.voice_url  }} {{ sc.voice_application_sid }}</small></span>
-                    <span class="opacity30" ng-hide="{{ sc.voice_url.length > 0 || sc.voice_application_sid.length > 0 }}"><i class="fa fa-microphone-slash unavailable-feature"></i> <small> http://www.restcomm.org/demo/voice/</small></span>
-                    <br>
-                    <span ng-show="{{ sc.sms_url.length > 0  }}"><i class="fa fa-comment available-feature"></i> <small> {{ sc.sms_url  }}</small></span>
-                    <span class="opacity30" ng-hide="{{ sc.sms_url.length > 0  }}"><i class="fa fa-comment-o unavailable-feature"></i> <small> http://www.restcomm.org/demo/sms/</small></span>
+                <td class="clients-list-edit-icon hidden-xs">
+                    <h5><i class="fa fa-pencil clickable" ng-click="editingFriendlyName = sc.login; $event.stopPropagation();"></i></h5>
                 </td>
-                <td class="text-right">
-                    <div class="btn-delete-div"><button class="btn btn-danger" ng-click="confirmClientDelete(sc)">Delete</button></div>
+                <td class="clients-list-friendly-name hidden-xs">
+                    <div class="" ng-hide="editingFriendlyName === sc.login">{{ sc.friendly_name  }} </div>
+                    <div class="" ng-show="editingFriendlyName === sc.login">
+                        <input type="text" class="form-control" onkeyup="if(event.keyCode === 13) {this.blur()}" ng-model="sc.friendly_name" ng-blur="editingFriendlyName = undefined; setFriendlyName(sc)" autofocus />
+                    </div>
+                </td>
+                <td class="clients-list-applications">
+                    <div class="fit-to-size" ng-show="{{ sc.voice_url.length > 0 || sc.voice_application_sid.length > 0 }}"><i class="fa fa-microphone available-feature"></i>&nbsp;&nbsp;{{ sc.voice_url  }} {{ sc.voice_application_sid }} </div>
+                    <div class="opacity30 fit-to-size" ng-hide="{{ sc.voice_url.length > 0 || sc.voice_application_sid.length > 0 }}"><i class="fa fa-microphone-slash unavailable-feature"></i>&nbsp;&nbsp;http://www.restcomm.org/demo/voice/ </div>
+                </td>
+                <td class="clients-list-delete-icon text-right visible-xs">
+                    <!--<div class="btn-delete-div"><button class="btn btn-link" ng-click="confirmClientDelete(sc)"><img src="resources/img/v2/delete-number.png"></button></div>-->
+                    <div class="btn-delete-div"><i class="fa fa-chevron-right"></i></div>
                 </td>
             </tr>
             </tbody>

@@ -631,11 +631,16 @@ public class MockMediaGateway extends RestcommUntypedActor {
             long recordingDuration = (int) ((endTime.getMillis() - startTime.getMillis()) / 1000);
             try {
                 int duration = (int) recordingDuration;
-                String msg = String.format("Will write to recording file %s for duration of %d", recordingFile, duration);
-                logger.info(msg);
-                URI waveFileUri = ClassLoader.getSystemResource("FiveMinutes.wav").toURI();
-                File waveFile = new File(waveFileUri);
-                writeRecording(waveFile, recordingFile, duration);
+                if (duration > 0) {
+                    String msg = String.format("Will write to recording file %s for duration of %d", recordingFile, duration);
+                    logger.info(msg);
+                    URI waveFileUri = ClassLoader.getSystemResource("FiveMinutes.wav").toURI();
+                    File waveFile = new File(waveFileUri);
+                    writeRecording(waveFile, recordingFile, duration);
+                } else {
+                    String msg = String.format("Will not write recording file %s because duration is %d", recordingFile, duration);
+                    logger.info(msg);
+                }
             } catch (Exception e) {
                 String msg = String.format("Exception while trying to create Recording file %s, exception %s", recordingFile, e);
                 logger.error(msg);

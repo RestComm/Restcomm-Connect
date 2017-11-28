@@ -2,7 +2,7 @@
 
 var rcMod = angular.module('rcApp');
 
-rcMod.controller('LoginCtrl', function ($scope, $rootScope, $location, $timeout, $dialog, AuthService, Notifications, $state, PublicConfig) {
+rcMod.controller('LoginCtrl', function ($scope, $rootScope, $location, $timeout, $dialog, AuthService, Notifications, $state, PublicConfig, urlStateTracker) {
 
   $scope.alerts = [];
   $scope.credentials = {
@@ -20,8 +20,10 @@ rcMod.controller('LoginCtrl', function ($scope, $rootScope, $location, $timeout,
         if (loginStatus == 'UNINITIALIZED' ){
             $state.go('public.uninitialized');
         }
-        else
-            $location.path('/dashboard');
+        else {
+            var oldUrl = urlStateTracker.recall();
+            $location.url(oldUrl ? oldUrl : "/dashboard");
+        }
     }, function (errorStatus) {
         // ERROR
         if (errorStatus == 'SUSPENDED')
@@ -56,13 +58,14 @@ rcMod.controller('LoginCtrl', function ($scope, $rootScope, $location, $timeout,
 });
 
 // assumes user has been authenticated but his account is not initialized
-rcMod.controller('UninitializedCtrl', function ($scope,AuthService,$state) {
+rcMod.controller('UninitializedCtrl', function ($scope,AuthService,$state, urlStateTracker, $location) {
     var uninitializedAccount = AuthService.getAccount();
 	$scope.userName = uninitializedAccount.email_address;
     // For password reset
     $scope.update = function() {
         AuthService.updatePassword($scope.newPassword).then(function () {
-        $state.go('restcomm.dashboard');
+            var oldUrl = urlStateTracker.recall();
+            $location.url(oldUrl ? oldUrl : "/dashboard");
         }, function (error) {
             alert("Failed to update password. Please try again.");
             $state.go('public.login');

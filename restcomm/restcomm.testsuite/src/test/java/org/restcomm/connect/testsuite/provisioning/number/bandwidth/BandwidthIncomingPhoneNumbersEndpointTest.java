@@ -50,6 +50,8 @@ import java.net.URL;
 import static com.github.tomakehurst.wiremock.client.WireMock.*;
 import static junit.framework.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
+import org.junit.experimental.categories.Category;
+import org.restcomm.connect.commons.annotations.UnstableTests;
 
 /**
  * Created by sbarstow on 10/14/14.
@@ -76,6 +78,7 @@ public class BandwidthIncomingPhoneNumbersEndpointTest {
     private static JsonObject jsonRespone;
 
     @Test
+    @Category(value={UnstableTests.class})
     public void testBuyNumber() {
         String ordersUrl = "/v1.0/accounts/12345/orders.*";
         stubFor(post(urlMatching(ordersUrl))
@@ -113,6 +116,7 @@ public class BandwidthIncomingPhoneNumbersEndpointTest {
     }
 
     @Test
+    @Category(value={UnstableTests.class})
     public void testCancelNumber() {
         String ordersUrl = "/v1.0/accounts/12345/orders.*";
         stubFor(post(urlMatching(ordersUrl))

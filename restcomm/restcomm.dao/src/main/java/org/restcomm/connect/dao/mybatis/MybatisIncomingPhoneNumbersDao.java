@@ -24,8 +24,6 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.regex.Matcher;
-import java.util.regex.Pattern;
 
 import org.apache.ibatis.session.SqlSession;
 import org.apache.ibatis.session.SqlSessionFactory;
@@ -37,6 +35,7 @@ import org.restcomm.connect.dao.entities.IncomingPhoneNumberFilter;
 import org.restcomm.connect.commons.dao.Sid;
 import org.restcomm.connect.commons.annotations.concurrency.ThreadSafe;
 import org.restcomm.connect.dao.entities.IncomingPhoneNumber;
+import org.restcomm.connect.dao.entities.SearchFilterMode;
 
 /**
  * @author quintana.thomas@gmail.com (Thomas Quintana)
@@ -48,6 +47,9 @@ public final class MybatisIncomingPhoneNumbersDao implements IncomingPhoneNumber
     private static final String namespace = "org.mobicents.servlet.sip.restcomm.dao.IncomingPhoneNumbersDao.";
     private final SqlSessionFactory sessions;
     private final Logger logger = Logger.getLogger(MybatisIncomingPhoneNumbersDao.class.getName());
+    private static final String ORG_SID = "organization_sid";
+    private static final String PHONE_NUM = "phone_number";
+
 
     public MybatisIncomingPhoneNumbersDao(final SqlSessionFactory sessions) {
         super();
@@ -67,94 +69,18 @@ public final class MybatisIncomingPhoneNumbersDao implements IncomingPhoneNumber
 
     @Override
     public IncomingPhoneNumber getIncomingPhoneNumber(final Sid sid) {
-        final List<IncomingPhoneNumber> incomingPhoneNumbers = getIncomingPhoneNumber("getIncomingPhoneNumber", sid.toString());
-        return (incomingPhoneNumbers == null || incomingPhoneNumbers.isEmpty()) ? null : incomingPhoneNumbers.get(0);
-    }
-
-    @Override
-    public List<IncomingPhoneNumber> getIncomingPhoneNumber(final String phoneNumber) {
-        return getIncomingPhoneNumber("getIncomingPhoneNumberByValue", phoneNumber);
-    }
-
-    private List<IncomingPhoneNumber> getIncomingPhoneNumber(final String selector, Object parameter) {
         final SqlSession session = sessions.openSession();
-        String inboundPhoneNumber = null;
-        final List<IncomingPhoneNumber> incomingPhoneNumbers = new ArrayList<IncomingPhoneNumber>();
         try {
-            final List<Map<String, Object>> resultList = session.selectList(namespace + selector, parameter);
-            if (resultList != null && !resultList.isEmpty()) {
-                for (final Map<String, Object> result : resultList) {
-                    incomingPhoneNumbers.add(toIncomingPhoneNumber(result));
-                }
+            final Map<String, Object> result = session.selectOne(namespace + "getIncomingPhoneNumber", sid.toString());
+            if (result != null) {
+                return toIncomingPhoneNumber(result);
+            } else {
+                return null;
             }
-            //check if there is a Regex match only if parameter is a String aka phone Number
-            List<IncomingPhoneNumber> listPhones = getIncomingPhoneNumbersRegex();
-            if (listPhones != null && listPhones.size() > 0) {
-                inboundPhoneNumber = ((String)parameter).replace("+1", "");
-                if (inboundPhoneNumber.matches("[\\d,*,#,+]+")) {
-                    IncomingPhoneNumber incomingPhoneNumber = checkIncomingPhoneNumberRegexMatch(selector, inboundPhoneNumber, listPhones);
-                    if(incomingPhoneNumber != null)
-                        incomingPhoneNumbers.add(checkIncomingPhoneNumberRegexMatch(selector, inboundPhoneNumber, listPhones));
-                }
-            }
-        }finally {
+        } finally {
             session.close();
         }
-        return incomingPhoneNumbers;
     }
-
-   public IncomingPhoneNumber checkIncomingPhoneNumberRegexMatch ( String selector, String inboundPhoneNumber, List<IncomingPhoneNumber>  listPhones){
-               final SqlSession session = sessions.openSession();
-               String phoneRegexPattern = null;
-               try {
-                   if (logger.isInfoEnabled()) {
-                       final String msg = String.format("Found %d Regex IncomingPhone numbers. Will try to match a REGEX for incoming phone number for phoneNumber : %s", listPhones.size(), inboundPhoneNumber);
-                       logger.info(msg);
-                   }
-                   for (IncomingPhoneNumber listPhone : listPhones){
-                       if (listPhone.getPhoneNumber().startsWith("+")){
-                            phoneRegexPattern = listPhone.getPhoneNumber().replace("+", "/+");
-                        }else if (listPhone.getPhoneNumber().startsWith("*")){
-                            phoneRegexPattern = listPhone.getPhoneNumber().replace("*", "/*");
-                        }else{
-                            phoneRegexPattern = listPhone.getPhoneNumber();
-                        }
-                        Pattern p = Pattern.compile(phoneRegexPattern);
-                        Matcher m = p.matcher(inboundPhoneNumber);
-                        if (m.find()) {
-                            final Map<String, Object> resultRestcommRegexHostedNumber = session.selectOne(namespace + selector, phoneRegexPattern);
-                            if (resultRestcommRegexHostedNumber != null) {
-                                if (logger.isInfoEnabled()) {
-                                    String msg = String.format("Pattern \"%s\" matched the phone number \"%s\"",phoneRegexPattern, inboundPhoneNumber);
-                                    logger.info(msg);
-                                }
-                                return toIncomingPhoneNumber(resultRestcommRegexHostedNumber);
-                            } else{
-                                if (logger.isInfoEnabled()) {
-                                    String msg = String.format("Regex \"%s\" cannot be matched for phone number \"%s\"", phoneRegexPattern, inboundPhoneNumber);
-                                    logger.info(msg);
-                                }
-                            }
-                        } else {
-                            if (logger.isInfoEnabled()) {
-                                String msg = String.format("Regex \"%s\" cannot be matched for phone number \"%s\"", phoneRegexPattern, inboundPhoneNumber);
-                                logger.info(msg);
-                            }
-                        }
-                    }
-                        logger.info("No matching phone number found, make sure your Restcomm Regex phone number is correctly defined");
-               } catch (Exception e) {
-                   if (logger.isDebugEnabled()) {
-                       String msg = String.format("Exception while trying to match for a REGEX for incoming phone number %s, exception: %s", inboundPhoneNumber, e);
-                       logger.debug(msg);
-                   }
-               }
-               finally {
-            session.close();
-        }
-       return null;
-
-   }
 
     @Override
     public List<IncomingPhoneNumber> getIncomingPhoneNumbers(final Sid accountSid) {
@@ -175,11 +101,11 @@ public final class MybatisIncomingPhoneNumbersDao implements IncomingPhoneNumber
     }
 
     @Override
-    public List<IncomingPhoneNumber> getAllIncomingPhoneNumbers() {
+    public List<IncomingPhoneNumber> getIncomingPhoneNumbersRegex(IncomingPhoneNumberFilter incomingPhoneNumberFilter) {
         final SqlSession session = sessions.openSession();
         try {
-            final List<Map<String, Object>> results = session.selectList(namespace + "getAllIncomingPhoneNumbers");
-            final List<IncomingPhoneNumber> incomingPhoneNumbers = new ArrayList<IncomingPhoneNumber>();
+            final List<Map<String, Object>> results = session.selectList(namespace + "getIncomingPhoneNumbersRegex", incomingPhoneNumberFilter);
+            final List<IncomingPhoneNumber> incomingPhoneNumbers = new ArrayList<IncomingPhoneNumber>(results.size());
             if (results != null && !results.isEmpty()) {
                 for (final Map<String, Object> result : results) {
                     incomingPhoneNumbers.add(toIncomingPhoneNumber(result));
@@ -191,30 +117,21 @@ public final class MybatisIncomingPhoneNumbersDao implements IncomingPhoneNumber
         }
     }
 
-    @Override
-    public List<IncomingPhoneNumber> getIncomingPhoneNumbersRegex() {
-        final SqlSession session = sessions.openSession();
-        try {
-            final List<Map<String, Object>> results = session.selectList(namespace + "getIncomingPhoneNumbersRegex");
-            final List<IncomingPhoneNumber> incomingPhoneNumbers = new ArrayList<IncomingPhoneNumber>();
-            if (results != null && !results.isEmpty()) {
-                for (final Map<String, Object> result : results) {
-                    incomingPhoneNumbers.add(toIncomingPhoneNumber(result));
-                }
-            }
-            return incomingPhoneNumbers;
-        } finally {
-            session.close();
-        }
-    }
+
 
     @Override
     public List<IncomingPhoneNumber> getIncomingPhoneNumbersByFilter(IncomingPhoneNumberFilter filter) {
         final SqlSession session = sessions.openSession();
         try {
-            final List<Map<String, Object>> results = session.selectList(namespace + "getIncomingPhoneNumbersByFriendlyName",
+
+            String query = "getIncomingPhoneNumbersByFriendlyName";
+            if (filter.getFilterMode().equals(SearchFilterMode.WILDCARD_MATCH)) {
+                query = "searchNumbersWithWildcardMode";
+            }
+
+            final List<Map<String, Object>> results = session.selectList(namespace + query,
                     filter);
-            final List<IncomingPhoneNumber> incomingPhoneNumbers = new ArrayList<IncomingPhoneNumber>();
+            final List<IncomingPhoneNumber> incomingPhoneNumbers = new ArrayList<IncomingPhoneNumber>(results.size());
             if (results != null && !results.isEmpty()) {
                 for (final Map<String, Object> result : results) {
                     incomingPhoneNumbers.add(toIncomingPhoneNumber(result));
@@ -272,7 +189,7 @@ public final class MybatisIncomingPhoneNumbersDao implements IncomingPhoneNumber
         final DateTime dateUpdated = DaoUtils.readDateTime(map.get("date_updated"));
         final String friendlyName = DaoUtils.readString(map.get("friendly_name"));
         final Sid accountSid = DaoUtils.readSid(map.get("account_sid"));
-        final String phoneNumber = DaoUtils.readString(map.get("phone_number"));
+        final String phoneNumber = DaoUtils.readString(map.get(PHONE_NUM));
         final String apiVersion = DaoUtils.readString(map.get("api_version"));
         final Boolean hasVoiceCallerIdLookup = DaoUtils.readBoolean(map.get("voice_caller_id_lookup"));
         final URI voiceUrl = DaoUtils.readUri(map.get("voice_url"));
@@ -296,7 +213,7 @@ public final class MybatisIncomingPhoneNumbersDao implements IncomingPhoneNumber
         final URI referUrl = DaoUtils.readUri(map.get("refer_url"));
         final String referMethod = DaoUtils.readString(map.get("refer_method"));
         final Sid referApplicationSid = DaoUtils.readSid(map.get("refer_application_sid"));
-        final Sid organizationSid = DaoUtils.readSid(map.get("organization_sid"));
+        final Sid organizationSid = DaoUtils.readSid(map.get(ORG_SID));
 
 
         final Boolean voiceCapable = DaoUtils.readBoolean(map.get("voice_capable"));
@@ -326,7 +243,7 @@ public final class MybatisIncomingPhoneNumbersDao implements IncomingPhoneNumber
         map.put("date_updated", DaoUtils.writeDateTime(incomingPhoneNumber.getDateUpdated()));
         map.put("friendly_name", incomingPhoneNumber.getFriendlyName());
         map.put("account_sid", DaoUtils.writeSid(incomingPhoneNumber.getAccountSid()));
-        map.put("phone_number", incomingPhoneNumber.getPhoneNumber());
+        map.put(PHONE_NUM, incomingPhoneNumber.getPhoneNumber());
         map.put("api_version", incomingPhoneNumber.getApiVersion());
         map.put("voice_caller_id_lookup", incomingPhoneNumber.hasVoiceCallerIdLookup());
         map.put("voice_url", DaoUtils.writeUri(incomingPhoneNumber.getVoiceUrl()));
@@ -356,7 +273,7 @@ public final class MybatisIncomingPhoneNumbersDao implements IncomingPhoneNumber
         map.put("fax_capable", incomingPhoneNumber.isFaxCapable());
         map.put("pure_sip", incomingPhoneNumber.isPureSip());
         map.put("cost", incomingPhoneNumber.getCost());
-        map.put("organization_sid", DaoUtils.writeSid(incomingPhoneNumber.getOrganizationSid()));
+        map.put(ORG_SID, DaoUtils.writeSid(incomingPhoneNumber.getOrganizationSid()));
         return map;
     }
 
