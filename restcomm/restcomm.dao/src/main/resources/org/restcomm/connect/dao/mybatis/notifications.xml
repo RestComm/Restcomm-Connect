@@ -1,0 +1,129 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<!--
+  @author thomas.quintana@telestax.com (Thomas Quintana)
+-->
+<mapper namespace="org.mobicents.servlet.sip.restcomm.dao.NotificationsDao">
+  <insert id="addNotification" parameterType="map">
+    INSERT INTO "restcomm_notifications" ("sid", "date_created", "date_updated", "account_sid", "call_sid", "api_version", "log", "error_code", "more_info", "message_text",
+    "message_date", "request_url", "request_method", "request_variables", "response_headers", "response_body", "uri") VALUES (#{sid}, #{date_created}, #{date_updated},
+    #{account_sid}, #{call_sid}, #{api_version}, #{log}, #{error_code}, #{more_info}, #{message_text}, #{message_date}, #{request_url}, #{request_method},
+    #{request_variables}, #{response_headers}, #{response_body}, #{uri});
+  </insert>
+  
+  <select id="getNotification" parameterType="string" resultType="hashmap">
+    SELECT * FROM "restcomm_notifications" WHERE "sid"=#{sid};
+  </select>
+  
+  <select id="getNotifications" parameterType="string" resultType="hashmap">
+    SELECT * FROM "restcomm_notifications" WHERE "account_sid"=#{account_sid};
+  </select>
+  
+  <select id="getNotificationsByCall" parameterType="string" resultType="hashmap">
+    SELECT * FROM "restcomm_notifications" WHERE "call_sid"=#{call_sid};
+  </select>
+  
+  <select id="getNotificationsByLogLevel" parameterType="int" resultType="hashmap">
+    SELECT * FROM "restcomm_notifications" WHERE "log"=#{log};
+  </select>
+  
+  <select id="getNotificationsByMessageDate" parameterType="date" resultType="hashmap">
+    SELECT * FROM "restcomm_notifications" WHERE "message_date" &gt;= #{start_date} AND "message_date" &lt;= #{end_date};
+  </select>
+  
+  <delete id="removeNotification" parameterType="string">
+    DELETE FROM "restcomm_notifications" WHERE "sid"=#{sid};
+  </delete>
+  
+  <delete id="removeNotifications" parameterType="string">
+    DELETE FROM "restcomm_notifications" WHERE "account_sid"=#{account_sid};
+  </delete>
+  
+  <delete id="removeNotificationsByCall" parameterType="string">
+    DELETE FROM "restcomm_notifications" WHERE "call_sid"=#{call_sid};
+  </delete>
+  
+  <select id="getTotalNotificationByUsingFilters" parameterType="org.restcomm.connect.dao.entities.NotificationFilter" resultType="int">
+            SELECT COUNT(*) FROM "restcomm_notifications" WHERE
+
+            <!-- are we counting cdrs from a single account or from an account set -->
+            <if test="accountSidSet == null">
+                    "account_sid"=#{accountSid}
+            </if>
+            <if test="accountSidSet != null">
+                    <if test="!accountSidSet.isEmpty()">
+                            "account_sid" IN
+                            <foreach item="item" index="index" collection="accountSidSet" open="(" separator="," close=")">
+                                    #{item}
+                            </foreach>
+                    </if>
+                    <if test="accountSidSet.isEmpty()">
+                            "account_sid"=''
+                    </if>
+            </if>
+
+            <if test="instanceid != null">
+                    AND "instanceid" like #{instanceid}
+            </if>
+            <if test="errorCode != null">
+                    AND "error_code" like #{errorCode}
+            </if>
+            <if test="requestUrl != null">
+                    AND "request_url" like #{requestUrl}
+            </if>
+            <if test="messageText != null">
+                    AND "message_text" like '%'|| #{messageText} ||'%'
+            </if>
+            <!-- select * from "restcomm_sms_messages" where "start_time" >= '2013-08-23' order by "start_time" ; -->
+            <if test="startTime != null">
+                AND "date_created" &gt;= #{startTime}
+            </if>
+            <if test="endTime != null">
+                    AND "date_created" &lt;= DATE_ADD(#{endTime},INTERVAL 1 DAY)
+            </if>
+
+    </select>
+	
+    <select id="getNotificationsByUsingFilters" parameterType="org.restcomm.connect.dao.entities.NotificationFilter" resultType="hashmap">
+            SELECT * FROM "restcomm_notifications" AS "restcomm_notifications" WHERE
+
+            <!-- are we counting cdrs from a single account or from an account set -->
+            <if test="accountSidSet == null">
+                    "account_sid"=#{accountSid}
+            </if>
+            <if test="accountSidSet != null">
+                    <if test="!accountSidSet.isEmpty()">
+                            "account_sid" IN
+                            <foreach item="item" index="index" collection="accountSidSet" open="(" separator="," close=")">
+                                    #{item}
+                            </foreach>
+                    </if>
+                    <if test="accountSidSet.isEmpty()">
+                            "account_sid"=''
+                    </if>
+            </if>
+
+            <if test="instanceid != null">
+                    AND "instanceid" like #{instanceid}
+            </if>
+            <if test="errorCode != null">
+                    AND "error_code" like #{errorCode}
+            </if>
+            <if test="requestUrl != null">
+                    AND "request_url" like #{requestUrl}
+            </if>
+            <if test="messageText != null">
+                    AND "message_text" like '%'|| #{messageText} ||'%'
+            </if>
+            <!-- select * from "restcomm_sms_messages" where "start_time" >= '2013-08-23' order by "start_time" ; -->
+            <if test="startTime != null">
+                AND "date_created" &gt;= #{startTime}
+            </if>
+            <if test="endTime != null">
+                    AND "date_created" &lt;= DATE_ADD(#{endTime},INTERVAL 1 DAY)
+            </if>
+            order by "date_created"
+            LIMIT #{limit} OFFSET #{offset}
+    </select>
+    
+</mapper>

@@ -140,7 +140,9 @@ public class SmppTest {
 
 	@AfterClass
 	public static void cleanup() {
+            if (mockSmppServer!= null) {
 		mockSmppServer.stop();
+            }
 	}
 
 	@After
