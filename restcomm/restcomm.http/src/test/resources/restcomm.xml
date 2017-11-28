@@ -264,7 +264,7 @@
         <!-- Control peer certificate verification for https connections. Two modes are supported:
             'allowall' : Disables peer certificate verification. Use it when testing.
             'strict' : Fails requests if peer certificate is not trusted. Use it in production. -->
-        <ssl-mode>strict</ssl-mode>
+        <ssl-mode>allowall</ssl-mode>
         <!-- Control whether relative URL should be resolved using hostname instead of IP Address.
         If for any reason hostname resolution fails, IP Address will be used -->
         <use-hostname-to-resolve-relative-url>true</use-hostname-to-resolve-relative-url>
@@ -274,9 +274,6 @@
         <max-conn-total>200</max-conn-total>
         <max-conn-per-route>2</max-conn-per-route>
         <connection-time-to-live>30000</connection-time-to-live>
-        <routes-host>127.0.0.1,www.restcomm.org</routes-host>
-        <routes-port>8099,80</routes-port>
-        <routes-conn>5,10</routes-conn>
     </http-client>
 
     <!-- The SMS aggregator is responsible for the handling of SMS messages

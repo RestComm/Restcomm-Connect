@@ -24,7 +24,6 @@ import org.restcomm.connect.commons.annotations.concurrency.Immutable;
 /**
  * @author <a href="mailto:jean.deruelle@telestax.com">Jean Deruelle</a>
  */
-
 @Immutable
 public class IncomingPhoneNumberFilter {
 
@@ -35,40 +34,35 @@ public class IncomingPhoneNumberFilter {
     private final String sortDirection;
     private final Integer limit;
     private final Integer offset;
+    private final String orgSid;
+    private final Boolean pureSIP;
+    private SearchFilterMode filterMode;
 
-    public IncomingPhoneNumberFilter(String accountSid, String friendlyName, String phoneNumber, String sortBy,
-            String sortDirection, Integer limit, Integer offset) {
+    private IncomingPhoneNumberFilter(String accountSid, String friendlyName, String phoneNumber, String sortBy,
+            String sortDirection, Integer limit, Integer offset, String orgSid, Boolean pureSIP, SearchFilterMode filterMode) {
         this.accountSid = accountSid;
         this.friendlyName = friendlyName;
-        // The LIKE keyword uses '%' to match any (including 0) number of characters, and '_' to match exactly one character
-        // Add here the '%' keyword so +15126002188 will be the same as 15126002188 and 6002188
-        if (phoneNumber != null) {
-            phoneNumber = "%" + phoneNumber + "%";
-            phoneNumber = phoneNumber.replaceAll("\\*", "_");
-        }
-
         this.phoneNumber = phoneNumber;
         this.sortBy = sortBy;
         this.sortDirection = sortDirection;
         this.limit = limit;
         this.offset = offset;
+        this.orgSid = orgSid;
+        this.pureSIP = pureSIP;
+        this.filterMode = filterMode;
     }
 
     public IncomingPhoneNumberFilter(String accountSid, String friendlyName, String phoneNumber) {
-        super();
         this.accountSid = accountSid;
         this.friendlyName = friendlyName;
-        // The LIKE keyword uses '%' to match any (including 0) number of characters, and '_' to match exactly one character
-        // Add here the '%' keyword so +15126002188 will be the same as 15126002188 and 6002188
-        if (phoneNumber != null) {
-            phoneNumber = "%" + phoneNumber + "%";
-            phoneNumber = phoneNumber.replaceAll("\\*", "_");
-        }
         this.phoneNumber = phoneNumber;
         this.sortBy = null;
         this.sortDirection = null;
         this.offset = null;
         this.limit = null;
+        this.orgSid = null;
+        this.pureSIP = null;
+        this.filterMode = SearchFilterMode.PERFECT_MATCH;
     }
 
     public String getAccountSid() {
@@ -115,6 +109,117 @@ public class IncomingPhoneNumberFilter {
      */
     public Integer getOffset() {
         return offset;
+    }
+
+    public String getOrgSid() {
+        return orgSid;
+    }
+
+    public Boolean getPureSIP() {
+        return pureSIP;
+    }
+
+    public SearchFilterMode getFilterMode() {
+        return filterMode;
+    }
+
+    @Override
+    public String toString() {
+        return "IncomingPhoneNumberFilter{" + "accountSid=" + accountSid + ", friendlyName=" + friendlyName + ", phoneNumber=" + phoneNumber + ", sortBy=" + sortBy + ", sortDirection=" + sortDirection + ", limit=" + limit + ", offset=" + offset + ", orgSid=" + orgSid + ", pureSIP=" + pureSIP + '}';
+    }
+
+    public static final class Builder {
+
+        private String accountSid = null;
+        private String friendlyName = null;
+        private String phoneNumber = null;
+        private String sortBy = null;
+        private String sortDirection = null;
+        private Integer limit = null;
+        private Integer offset = null;
+        private String orgSid = null;
+        private Boolean pureSIP = null;
+        private SearchFilterMode filterMode = SearchFilterMode.PERFECT_MATCH;
+
+        public static IncomingPhoneNumberFilter.Builder builder() {
+            return new IncomingPhoneNumberFilter.Builder();
+        }
+
+        /**
+         * Prepare fields with SQL wildcards
+         *
+         * @param value
+         * @return
+         */
+        private String convertIntoSQLWildcard(String value) {
+            String wildcarded = value;
+            // The LIKE keyword uses '%' to match any (including 0) number of characters, and '_' to match exactly one character
+            // Add here the '%' keyword so +15126002188 will be the same as 15126002188 and 6002188
+            if (wildcarded != null) {
+                wildcarded = "%" + wildcarded + "%";
+            }
+            return wildcarded;
+        }
+
+        public IncomingPhoneNumberFilter build() {
+            if (filterMode.equals(SearchFilterMode.WILDCARD_MATCH)) {
+                phoneNumber = convertIntoSQLWildcard(phoneNumber);
+                friendlyName = convertIntoSQLWildcard(friendlyName);
+            }
+
+            return new IncomingPhoneNumberFilter(accountSid,
+                    friendlyName,
+                    phoneNumber,
+                    sortBy,
+                    sortDirection,
+                    limit,
+                    offset,
+                    orgSid,
+                    pureSIP,
+                    filterMode);
+        }
+
+        public Builder byAccountSid(String accountSid) {
+            this.accountSid = accountSid;
+            return this;
+        }
+
+        public Builder byPureSIP(Boolean pureSIP) {
+            this.pureSIP = pureSIP;
+            return this;
+        }
+
+        public Builder byFriendlyName(String friendlyName) {
+            this.friendlyName = friendlyName;
+            return this;
+        }
+
+        public Builder byPhoneNumber(String phoneNumber) {
+            this.phoneNumber = phoneNumber;
+            return this;
+        }
+
+        public Builder sortedBy(String sortBy, String sortDirection) {
+            this.sortBy = sortBy;
+            this.sortDirection = sortDirection;
+            return this;
+        }
+
+        public Builder usingMode(SearchFilterMode mode) {
+            this.filterMode = mode;
+            return this;
+        }
+
+        public Builder limited(Integer limit, Integer offset) {
+            this.limit = limit;
+            this.offset = offset;
+            return this;
+        }
+
+        public Builder byOrgSid(String orgSid) {
+            this.orgSid = orgSid;
+            return this;
+        }
     }
 
 }
