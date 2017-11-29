@@ -1,4 +1,7 @@
-This is a quick user guide for Restcomm - Docker. You will learn how to install and start using Restcomm in a docker container.
+= Quick Start Guide: RestComm on Docker
+:toc:
+
+This is a quick user guide for running Restcomm on Docker. You will learn how to install and start using Restcomm in a docker container.
 
 [[prerequisites]]
 Prerequisites
@@ -31,7 +34,6 @@ Install and Run Restcomm Docker
 * Get your "ETHERNET_IP" by running ifconfig. Use 127.0.0.1 as "ETHERNET_IP" if you are running container on Docker for Mac.
 * Fill out the RCBCONF_STATIC_ADDRESS variable as shown below.
 * Start Restcomm as shown below:
-* This will start Restcomm in secure mode (https)
 
 [source,lang:default,decode:true]
 ----
@@ -113,6 +115,10 @@ docker exec -it RESTCOMM_Container_ID bash
 ----
 
 '''''
+
+[[troubleshooting]]
+Troubleshooting
++++++++++++++++
 
 *Excessive demand on memory when exposing a big range of ports.*
 
