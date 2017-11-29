@@ -19,28 +19,10 @@
  */
 package org.restcomm.connect.http;
 
-import static javax.ws.rs.core.MediaType.APPLICATION_JSON;
-import static javax.ws.rs.core.MediaType.APPLICATION_JSON_TYPE;
-import static javax.ws.rs.core.MediaType.APPLICATION_XML;
-import static javax.ws.rs.core.MediaType.APPLICATION_XML_TYPE;
-import static javax.ws.rs.core.Response.ok;
-import static javax.ws.rs.core.Response.status;
-import static javax.ws.rs.core.Response.Status.BAD_REQUEST;
-import static javax.ws.rs.core.Response.Status.CONFLICT;
-import static javax.ws.rs.core.Response.Status.NOT_FOUND;
-
-import java.net.URI;
-import java.util.ArrayList;
-import java.util.List;
-
-import javax.annotation.PostConstruct;
-import javax.servlet.ServletContext;
-import javax.servlet.http.HttpServletRequest;
-import javax.ws.rs.core.MediaType;
-import javax.ws.rs.core.MultivaluedMap;
-import javax.ws.rs.core.Response;
-import javax.ws.rs.core.UriInfo;
-
+import com.google.gson.Gson;
+import com.google.gson.GsonBuilder;
+import com.sun.jersey.core.util.MultivaluedMapImpl;
+import com.thoughtworks.xstream.XStream;
 import org.apache.commons.configuration.Configuration;
 import org.apache.shiro.crypto.hash.Md5Hash;
 import org.joda.time.DateTime;
@@ -71,10 +53,27 @@ import org.restcomm.connect.identity.passwords.PasswordValidatorFactory;
 import org.restcomm.connect.provisioning.number.api.PhoneNumberProvisioningManager;
 import org.restcomm.connect.provisioning.number.api.PhoneNumberProvisioningManagerProvider;
 
-import com.google.gson.Gson;
-import com.google.gson.GsonBuilder;
-import com.sun.jersey.core.util.MultivaluedMapImpl;
-import com.thoughtworks.xstream.XStream;
+import javax.annotation.PostConstruct;
+import javax.servlet.ServletContext;
+import javax.servlet.http.HttpServletRequest;
+import javax.ws.rs.core.MediaType;
+import javax.ws.rs.core.MultivaluedMap;
+import javax.ws.rs.core.Response;
+import javax.ws.rs.core.UriInfo;
+import java.net.URI;
+import java.util.ArrayList;
+import java.util.List;
+
+import static javax.ws.rs.core.MediaType.APPLICATION_JSON;
+import static javax.ws.rs.core.MediaType.APPLICATION_JSON_TYPE;
+import static javax.ws.rs.core.MediaType.APPLICATION_XML;
+import static javax.ws.rs.core.MediaType.APPLICATION_XML_TYPE;
+import static javax.ws.rs.core.Response.Status.BAD_REQUEST;
+import static javax.ws.rs.core.Response.Status.CONFLICT;
+import static javax.ws.rs.core.Response.Status.NOT_FOUND;
+import static javax.ws.rs.core.Response.Status.PRECONDITION_FAILED;
+import static javax.ws.rs.core.Response.ok;
+import static javax.ws.rs.core.Response.status;
 
 /**
  * @author quintana.thomas@gmail.com (Thomas Quintana)
@@ -86,6 +85,7 @@ public class AccountsEndpoint extends SecuredEndpoint {
     protected Gson gson;
     protected XStream xstream;
     protected ClientsDao clientDao;
+    protected IncomingPhoneNumbersDao incomingPhoneNumbersDao;
 
     public AccountsEndpoint() {
         super();
@@ -102,6 +102,7 @@ public class AccountsEndpoint extends SecuredEndpoint {
         runtimeConfiguration = rootConfiguration.subset("runtime-settings");
         super.init(runtimeConfiguration);
         clientDao = ((DaoManager) context.getAttribute(DaoManager.class.getName())).getClientsDao();
+        incomingPhoneNumbersDao = ((DaoManager) context.getAttribute(DaoManager.class.getName())).getIncomingPhoneNumbersDao();
         final AccountConverter converter = new AccountConverter(runtimeConfiguration);
         final GsonBuilder builder = new GsonBuilder();
         builder.registerTypeAdapter(Account.class, converter);
@@ -523,22 +524,7 @@ public class AccountsEndpoint extends SecuredEndpoint {
         // First check if the account has the required permissions in general, this way we can fail fast and avoid expensive DAO
         // operations
         checkPermission("RestComm:Modify:Accounts");
-        Sid sid = null;
-        Account account = null;
-        try {
-            sid = new Sid(identifier);
-            account = accountsDao.getAccount(sid);
-        } catch (Exception e) {
-            if (logger.isDebugEnabled()) {
-                logger.debug("At update account, exception trying to get SID. Seems we have email as identifier"); // TODO check when this exception is thrown
-            }
-        }
-        if (account == null) {
-            if (logger.isDebugEnabled()) {
-                logger.debug("At update account, trying to get account using email as identifier");
-            }
-            account = accountsDao.getAccount(identifier);
-        }
+        Account account = getOperatingAccount(identifier);
 
         if (account == null) {
             return status(NOT_FOUND).build();
@@ -596,6 +582,109 @@ public class AccountsEndpoint extends SecuredEndpoint {
             }
         }
     }
+
+    private Account getOperatingAccount (String identifier) {
+        Sid sid = null;
+        Account account = null;
+        try {
+            sid = new Sid(identifier);
+            account = accountsDao.getAccount(sid);
+        } catch (Exception e) {
+            if (logger.isDebugEnabled()) {
+                logger.debug("Exception trying to get account using SID. Seems we have email as identifier");
+            }
+        }
+        if (account == null) {
+            account = accountsDao.getAccount(identifier);
+        }
+        return account;
+    }
+
+    private Organization getOrganization(final MultivaluedMap<String, String> data) {
+        Organization organization = null;
+        Sid organizationSid = null;
+        String organizationId = null;
+
+        if (data.containsKey("Organization")) {
+            organizationId = data.getFirst("Organization");
+        } else {
+            return null;
+        }
+
+        //Attempt to get Organization by domain name
+        organization = organizationsDao.getOrganizationByDomainName(organizationId);
+
+        if (organization != null) {
+            return organization;
+        } else {
+            //Attempt to match organizationId to organizationSid
+            try {
+                organizationSid = new Sid(organizationId);
+                organization = organizationsDao.getOrganization(organizationSid);
+                return organization;
+            } catch (IllegalArgumentException e) {
+                if (logger.isDebugEnabled()) {
+                    logger.debug("Exception while tried to match organizationId to organizationSid");
+                }
+            }
+        }
+        return organization;
+    }
+
+    protected Response migrateAccountOrganization(final String identifier, final MultivaluedMap<String, String> data,
+                                              final MediaType responseType) {
+
+        //Validation 1 - Only SuperAdmin is allowed to migrate organization for an Account
+        if (!isSuperAdmin()) {
+            throw new InsufficientPermission();
+        }
+
+        Organization organization = getOrganization(data);
+        //Validation 2 - Check if data contains Organization (either SID or domain name)
+        if (organization == null) {
+            return status(PRECONDITION_FAILED).entity("Missing Organization SID or Domain Name").build();
+        }
+
+        Account operatingAccount = getOperatingAccount(identifier);
+
+        //Validation 3 - Operating Account shouldn't be null;
+        if (operatingAccount == null) {
+            return status(NOT_FOUND).build();
+        }
+
+        //Validation 4 - Only direct child of super admin account can be migrated to a new organization
+        if (!isDirectChildOfAccount(userIdentityContext.getEffectiveAccount(), operatingAccount)) {
+            return status(BAD_REQUEST).build();
+        }
+
+        //Validation 5 - Check if Account already in the requested Organization
+        if (operatingAccount.getOrganizationSid().equals(organization.getSid())) {
+            return status(BAD_REQUEST).entity("Account already in the requested Organization").build();
+        }
+
+        //Update Account for the new Organization
+        Account modifiedAccount = operatingAccount.setOrganizationSid(organization.getSid());
+
+        //Update Child accounts and their numbers
+        List<Account> childAccounts = accountsDao.getChildAccounts(operatingAccount.getSid());
+        for (Account child : childAccounts) {
+            if (!child.getOrganizationSid().equals(organization.getSid())) {
+                accountsDao.updateAccount(child.setOrganizationSid(organization.getSid()));
+            }
+        }
+
+        accountsDao.updateAccount(modifiedAccount);
+
+        if (APPLICATION_JSON_TYPE == responseType) {
+            return ok(gson.toJson(modifiedAccount), APPLICATION_JSON).build();
+        } else if (APPLICATION_XML_TYPE == responseType) {
+            final RestCommResponse response = new RestCommResponse(modifiedAccount);
+            return ok(xstream.toXML(response), APPLICATION_XML).build();
+        } else {
+            return null;
+        }
+    }
+
 
     /**
      * Removes all resources belonging to an account and sets its status to CLOSED. If rcmlServerApi is not null it will

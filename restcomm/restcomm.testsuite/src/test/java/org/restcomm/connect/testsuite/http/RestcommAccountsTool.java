@@ -104,6 +104,27 @@ public class RestcommAccountsTool {
 		return response;
 	}
 
+	public JsonObject migrateAccount (String deploymentUrl, String adminUsername, String adminAuthToken,
+	                                  String accountSid, String newOrganizationSid) {
+		JsonParser parser = new JsonParser();
+		JsonObject jsonResponse = null;
+
+		Client jerseyClient = Client.create();
+		jerseyClient.addFilter(new HTTPBasicAuthFilter(adminUsername, adminAuthToken));
+
+		String url = getAccountsUrl(deploymentUrl, false) + "/migrate/" + accountSid;
+
+		WebResource webResource = jerseyClient.resource(url);
+
+		// FriendlyName, status, password and auth_token are currently updated in AccountsEndpoint. Role remains to be added
+		MultivaluedMap<String, String> params = new MultivaluedMapImpl();
+		if (newOrganizationSid != null)
+			params.add("Organization", newOrganizationSid);
+
+		ClientResponse response = webResource.accept(MediaType.APPLICATION_JSON).post(ClientResponse.class, params);
+		return parser.parse(response.getEntity(String.class)).getAsJsonObject();
+	}
+
 	public JsonObject createAccount (String deploymentUrl, String adminUsername, String adminAuthToken, String emailAddress,
 									 String password) {
 		return createAccount(deploymentUrl,adminUsername, adminAuthToken, emailAddress, password, null);
@@ -201,7 +222,7 @@ public class RestcommAccountsTool {
 	 */
 	public ClientResponse getAccountsWithFilterClientResponse (String deploymentUrl, String username, String authtoken, String organizationSid, String domainName) {
 		WebResource webResource = prepareAccountListWebResource(deploymentUrl, username, authtoken);
-		
+
 		ClientResponse  response = webResource.queryParams(prepareAccountListFilter(organizationSid, domainName))
 				.accept(MediaType.APPLICATION_JSON, MediaType.APPLICATION_XML)
                 .get(ClientResponse.class);
@@ -218,7 +239,7 @@ public class RestcommAccountsTool {
 	 */
 	public JsonArray getAccountsWithFilterResponse (String deploymentUrl, String username, String authtoken, String organizationSid, String domainName) {
 		WebResource webResource = prepareAccountListWebResource(deploymentUrl, username, authtoken);
-		
+
 		String  response = webResource.queryParams(prepareAccountListFilter(organizationSid, domainName))
 				.accept(MediaType.APPLICATION_JSON, MediaType.APPLICATION_XML)
                 .get(String.class);
@@ -250,7 +271,7 @@ public class RestcommAccountsTool {
 			params.add("OrganizationSid", organizationSid);
 		if(domainName != null && !(domainName.trim().isEmpty()))
 			params.add("DomainName", domainName);
-		
+
 		return params;
 	}
 }
