@@ -31,7 +31,7 @@ rcMod.controller('ClientsCtrl', function($scope, $resource, $uibModal, $dialog, 
       controller: 'ClientDetailsCtrl',
       scope: $scope,
       templateUrl: 'modules/modals/modal-register-sip-client.html',
-      resolve: { localApps: function (rappService) { return rappService.refreshLocalApps();} }
+      resolve: { localApps: {} }
     });
 
     registerSIPClientModal.result.then(
