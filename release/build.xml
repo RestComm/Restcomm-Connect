@@ -111,7 +111,9 @@
     <echo>Downloading Restcomm SipServlets JBoss AS7 version: ${restcomm-sipservlets-as7.version}</echo>
     <exec executable="wget" failonerror="true">
       <arg value="${restcomm-sipservlets.as7.download.url}"/>
+      <arg value="--output-document=restcomm-sipservlets-as7.zip"/>
     </exec>
+    <move file="${base.dir}/restcomm-sipservlets-as7.zip" tofile="${base.dir}/${restcomm-sipservlets.as7.download.distro.file}"/>
     <move file="${base.dir}/${restcomm-sipservlets.as7.download.distro.file}" todir="${checkout.dir}"/>
   </target>
 
