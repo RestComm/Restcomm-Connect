@@ -133,7 +133,7 @@ docker run  --net  host -i -d --name=restcomm-myInstance -v /var/log/restcomm/:/
 
 *Important Notice for RestComm networking*
 
-When using a SIP client that is not running on the same local machine as the RestComm docker container, call-setup through SIP/SDP/RTP will fail as the docker container runs on a different network segment. You must set the STATIC_ADDRESS environment variable to address this issue as shown below:
+When using a SIP client that is not running on the same local machine as the RestComm docker container, call-setup through SIP/SDP/RTP will fail as the docker container runs on a different network segment. You must set the `RCBCONF_STATIC_ADDRESS` environment variable to address this issue as shown below:
 
 [source,lang:default,decode:true]
 ----
