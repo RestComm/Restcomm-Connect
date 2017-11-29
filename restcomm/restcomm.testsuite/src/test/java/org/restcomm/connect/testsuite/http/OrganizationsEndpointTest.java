@@ -49,11 +49,11 @@ public class OrganizationsEndpointTest extends EndpointTest {
 
     //developer account
     private String devAccountSid = "AC574d775522c96f9aacacc5ca60c8c74f";
-    private String devAuthToken = "77f8c12cc7b8f8423e5c38b035249166"; 
+    private String devAuthToken = "77f8c12cc7b8f8423e5c38b035249166";
 
     private final String org1 = "ORafbe225ad37541eba518a74248f0ac4c";
     private final String org2 = "ORafbe225ad37541eba518a74248f0ac4d";
-    
+
     @BeforeClass
     public static void beforeClass() {
     }
@@ -68,12 +68,12 @@ public class OrganizationsEndpointTest extends EndpointTest {
     	JsonObject organizationJsonObject = RestcommOrganizationsTool.getInstance().getOrganization(deploymentUrl.toString(), superAdminAccountSid, superAdminAuthToken, org1);
     	assertTrue(organizationJsonObject!=null);
     	logger.info("organization: "+organizationJsonObject);
-    	
+
     	// only superadmin can read an org that does not affiliate with its account
     	organizationJsonObject = null;
     	organizationJsonObject = RestcommOrganizationsTool.getInstance().getOrganization(deploymentUrl.toString(), superAdminAccountSid, superAdminAuthToken, org2);
     	assertTrue(organizationJsonObject!=null);
-    	
+
     	//only superadmin can read the whole list of organizations
     	JsonArray jsonArray = null;
     	jsonArray = RestcommOrganizationsTool.getInstance().getOrganizationList(deploymentUrl.toString(), superAdminAccountSid, superAdminAuthToken, null);
@@ -92,21 +92,21 @@ public class OrganizationsEndpointTest extends EndpointTest {
     	assertTrue(clientResponse!=null);
     	logger.info("organization: "+clientResponse);
     	assertTrue(clientResponse.getStatus() == 200);
-    	
+
     	// only superadmin can read an org that does not affiliate with its account
     	clientResponse = null;
     	clientResponse = RestcommOrganizationsTool.getInstance().getOrganizationResponse(deploymentUrl.toString(), adminAccountSid, adminAuthToken, org2);
     	assertTrue(clientResponse!=null);
     	logger.info("organization: "+clientResponse);
     	assertTrue(clientResponse.getStatus() == 403);
-    	
+
     	//only superadmin can read the whole list of organizations
     	clientResponse = null;
     	clientResponse = RestcommOrganizationsTool.getInstance().getOrganizationsResponse(deploymentUrl.toString(), adminAccountSid, adminAuthToken);
     	logger.info("organization list: "+clientResponse);
     	assertTrue(clientResponse!=null);
     	assertTrue(clientResponse.getStatus() == 403);
-    
+
     }
     /**
      * Developers can not read organization
@@ -119,27 +119,28 @@ public class OrganizationsEndpointTest extends EndpointTest {
     	assertTrue(clientResponse!=null);
     	logger.info("organization: "+clientResponse);
     	assertTrue(clientResponse.getStatus() == 403);
-    	
+
     	// only superadmin can read an org that does not affiliate with its account
     	clientResponse = null;
     	clientResponse = RestcommOrganizationsTool.getInstance().getOrganizationResponse(deploymentUrl.toString(), devAccountSid, devAuthToken, org2);
     	assertTrue(clientResponse!=null);
     	logger.info("organization: "+clientResponse);
     	assertTrue(clientResponse.getStatus() == 403);
-    	
+
     	//only superadmin can read the whole list of organizations
     	clientResponse = null;
     	clientResponse = RestcommOrganizationsTool.getInstance().getOrganizationsResponse(deploymentUrl.toString(), devAccountSid, devAuthToken);
     	logger.info("organization list: "+clientResponse);
     	assertTrue(clientResponse!=null);
     	assertTrue(clientResponse.getStatus() == 403);
-    
+
     }
 
     /**
      * getOrganizationListByStatus
      */
     @Test
+    @Category({UnstableTests.class})
     public void getOrganizationListByStatus(){
     	JsonArray jsonArray = null;
     	jsonArray = RestcommOrganizationsTool.getInstance().getOrganizationList(deploymentUrl.toString(), superAdminAccountSid, superAdminAuthToken, "active");
@@ -178,7 +179,7 @@ public class OrganizationsEndpointTest extends EndpointTest {
     	logger.info("clientResponse: "+clientResponse);
     	assertTrue(clientResponse.getStatus() == 403);
     }
-    
+
     @Deployment(name = "OrganizationsEndpointTest", managed = true, testable = false)
     public static WebArchive createWebArchiveNoGw() {
         logger.info("Packaging Test App");

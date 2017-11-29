@@ -62,7 +62,6 @@ import com.google.gson.JsonObject;
 import java.util.Arrays;
 import org.junit.experimental.categories.Category;
 import org.restcomm.connect.commons.annotations.FeatureAltTests;
-import org.restcomm.connect.commons.annotations.FeatureExpTests;
 import org.restcomm.connect.commons.annotations.ParallelClassTests;
 import org.restcomm.connect.testsuite.NetworkPortAssigner;
 import org.restcomm.connect.commons.annotations.UnstableTests;
@@ -816,6 +815,7 @@ public class ImsClientsDialAnswerDelayTest {
     }
 
     @Test //Non regression test for issue https://github.com/RestComm/Restcomm-Connect/issues/1042 - Support WebRTC clients to dial out through MediaServer
+    @Category({UnstableTests.class})
     public void testWebRTCClientOutgoingBusy() throws ParseException, InterruptedException {
 
         logger.info("testWebRTCClientOutgoingBusy");
@@ -845,6 +845,7 @@ public class ImsClientsDialAnswerDelayTest {
     }
 
     @Test //Non regression test for issue https://github.com/RestComm/Restcomm-Connect/issues/1042 - Support WebRTC clients to dial out through MediaServer
+    @Category({UnstableTests.class})
     public void testWebRTCClientOutgoingFail() throws ParseException, InterruptedException {
 
         logger.info("testWebRTCClientOutgoingFail");
@@ -873,6 +874,7 @@ public class ImsClientsDialAnswerDelayTest {
     }
 
     @Test //Non regression test for issue https://github.com/RestComm/Restcomm-Connect/issues/1042 - Support WebRTC clients to dial out through MediaServer
+    @Category({UnstableTests.class})
     public void testUnregisteredWebRTCClientOutgoing() throws ParseException, InterruptedException {
         logger.info("testUnregisteredWebRTCClientOutgoing");
 
@@ -911,6 +913,7 @@ public class ImsClientsDialAnswerDelayTest {
     }
 
     @Test
+    @Category({UnstableTests.class})
     public void testUnregisteredWebRTCClientIncoming() throws InterruptedException, ParseException {
         logger.info("testUnregisteredWebRTCClientIncoming");
 
@@ -933,6 +936,7 @@ public class ImsClientsDialAnswerDelayTest {
     }
 
     @Test //Non regression test for issue https://github.com/RestComm/Restcomm-Connect/issues/1042 - Support WebRTC clients to dial out through MediaServer
+    @Category({UnstableTests.class})
     public void testWebRTCClientOutgoingRequestTimeout() throws ParseException, InterruptedException {
 
         logger.info("testWebRTCClientOutgoingRequestTimeout");

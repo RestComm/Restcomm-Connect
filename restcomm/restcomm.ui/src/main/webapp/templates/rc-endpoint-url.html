@@ -1,21 +1,25 @@
-<div class="col-md-2 custom-width-select in-box-separator">
-    <select ng-change="onTargetChanged(targetVar)" ng-model="targetVar" class="selectpicker-custom">
-        <option value="URL">URL</option>
-        <option value="Application">RVD Application</option>
+<div class="col-md-2 col-sm-2 col-xs-12">
+    <select ng-change="onTargetChanged(targetVar)" ng-model="targetVar" class="rc-selection-picker">
+        <option value="URL">RCML URL</option>
+        <option value="Application">Application</option>
     </select>
 </div>
-<div class="col-md-7 custom-width-url-app in-box-separator" ng-show="targetVar === 'URL'">
-    <input class="textbox-url" type="text" placeholder="http://restcomm-demo.appspot.com/app/voice/welcome.xml" ng-model="urlVar" ng-show="targetVar === 'URL'">
-    <select ng-model="methodVar" class="selectpicker-post-get">
+<div class="clearfix visible-xs">&nbsp;</div>
+<div class="col-md-6 col-sm-6 col-xs-12" ng-show="targetVar === 'URL'">
+    <input class="rc-textbox" type="text" placeholder="http://restcomm-demo.appspot.com/app/voice/welcome.xml" ng-model="urlVar" ng-show="targetVar === 'URL'">
+</div>
+<div class="clearfix visible-xs" ng-show="targetVar === 'URL'">&nbsp;</div>
+<div class="col-md-2 col-sm-2 col-xs-12" ng-show="targetVar === 'URL'">
+    <select ng-model="methodVar" class="rc-selection-picker">
         <option value="POST">POST</option>
         <option value="GET">GET</option>
     </select>
 </div>
-<div class="col-md-7 custom-width-url-app in-box-separator" ng-show="targetVar === 'Application'">
-    <select ng-change="setApp()" class="app-selection-picker" ng-model="appNameVar">
+<div class="clearfix visible-xs" ng-show="targetVar === 'URL'">&nbsp;</div>
+<div class="col-md-8 col-sm-8 col-xs-12" ng-show="targetVar === 'Application'">
+    <select ng-change="setApp()" class="rc-selection-picker" ng-model="appNameVar">
         <option value="">No application selected</option>
-        <option value="create_new_project">Create new project</option>
-        <option ng-repeat="app in apps | orderBy:'projectName'" value={{app.sid}}>{{ app.projectName }}</option>
+        <option ng-repeat="app in apps | orderBy:'projectName'" value={{app.sid}}>{{ app.friendly_name }}</option>
     </select>
 </div>
 
