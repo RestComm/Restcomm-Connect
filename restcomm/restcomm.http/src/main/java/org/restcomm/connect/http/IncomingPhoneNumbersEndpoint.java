@@ -736,7 +736,7 @@ public abstract class IncomingPhoneNumbersEndpoint extends SecuredEndpoint {
                 //update number at provider's end
                 if(!updateNumberAtPhoneNumberProvisioningManager(incomingPhoneNumber, destinationOrganization)){
                     //if number could not be updated at provider's end, log the error and keep moving to next number.
-                    logger.error(String.format("could not update numner %s at number provider %s ", incomingPhoneNumber.getPhoneNumber(), phoneNumberProvisioningManager));
+                    logger.error(String.format("could not update number %s at number provider %s ", incomingPhoneNumber.getPhoneNumber(), phoneNumberProvisioningManager));
                 }
             }
         }
