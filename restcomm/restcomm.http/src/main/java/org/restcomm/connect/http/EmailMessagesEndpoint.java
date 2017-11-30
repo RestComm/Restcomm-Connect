@@ -26,6 +26,7 @@ import org.restcomm.connect.email.api.EmailResponse;
 import org.restcomm.connect.email.api.Mail;
 import org.restcomm.connect.http.converter.EmailMessageConverter;
 import org.restcomm.connect.http.converter.RestCommResponseConverter;
+import org.restcomm.connect.identity.EmailValidator;
 
 import javax.annotation.PostConstruct;
 import javax.servlet.ServletContext;
@@ -182,10 +183,7 @@ public class EmailMessagesEndpoint extends SecuredEndpoint {
 
 
     public String validateEmail(String email) throws InvalidEmailException {
-        String ePattern = "^[a-zA-Z0-9.!#$%&'*+/=?^_`{|}~-]+@((\\[[0-9]{1,3}\\.[0-9]{1,3}\\.[0-9]{1,3}\\.[0-9]{1,3}\\])|(([a-zA-Z\\-0-9]+\\.)+[a-zA-Z]{2,}))$";
-        java.util.regex.Pattern p = java.util.regex.Pattern.compile(ePattern);
-        java.util.regex.Matcher m = p.matcher(email);
-        if (!m.matches()) {
+        if (!EmailValidator.isValidEmailFormat(email)) {
             String err = "Not a Valid Email Address";
             throw new InvalidEmailException(err);
         }
@@ -193,21 +191,16 @@ public class EmailMessagesEndpoint extends SecuredEndpoint {
     }
 
     public String validateEmails(String emails) throws InvalidEmailException {
-        String ePattern = "^[a-zA-Z0-9.!#$%&'*+/=?^_`{|}~-]+@((\\[[0-9]{1,3}\\.[0-9]{1,3}\\.[0-9]{1,3}\\.[0-9]{1,3}\\])|(([a-zA-Z\\-0-9]+\\.)+[a-zA-Z]{2,}))$";
-        java.util.regex.Pattern p = java.util.regex.Pattern.compile(ePattern);
-
         if (emails.indexOf(',') > 0) {
             String[] emailsArray = emails.split(",");
             for (int i = 0; i < emailsArray.length; i++) {
-                java.util.regex.Matcher m = p.matcher(emailsArray[i]);
-                if (!m.matches()) {
+                if (!EmailValidator.isValidEmailFormat(emailsArray[i])) {
                     String err = "Not a Valid Email Address:" + emailsArray[i];
                     throw new InvalidEmailException(err);
                 }
             }
-        }else{
-            java.util.regex.Matcher m = p.matcher(emails);
-            if (!m.matches()) {
+        } else {
+            if (!EmailValidator.isValidEmailFormat(emails)) {
                 String err = "Not a Valid Email Address";
                 throw new InvalidEmailException(err);
             }
