@@ -55,4 +55,8 @@ public interface MainConfigurationSet {
     String getApiVersion();
 
     int getRecordingMaxDelay ();
+
+    long getConferenceTimeout();
+
+    void setConferenceTimeout(long conferenceTimeout);
 }
