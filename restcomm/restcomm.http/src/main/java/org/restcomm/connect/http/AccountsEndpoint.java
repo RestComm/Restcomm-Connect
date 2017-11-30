@@ -664,16 +664,25 @@ public class AccountsEndpoint extends SecuredEndpoint {
 
         //Update Account for the new Organization
         Account modifiedAccount = operatingAccount.setOrganizationSid(organization.getSid());
+        accountsDao.updateAccount(modifiedAccount);
+
+        if (logger.isDebugEnabled()) {
+            String msg = String.format("Parent Account %s migrated to Organization %s", modifiedAccount.getSid(), organization.getSid());
+            logger.debug(msg);
+        }
 
         //Update Child accounts and their numbers
         List<Account> childAccounts = accountsDao.getChildAccounts(operatingAccount.getSid());
         for (Account child : childAccounts) {
             if (!child.getOrganizationSid().equals(organization.getSid())) {
-                accountsDao.updateAccount(child.setOrganizationSid(organization.getSid()));
+                Account modifiedChildAccount = child.setOrganizationSid(organization.getSid());
+                accountsDao.updateAccount(modifiedChildAccount);
+                if (logger.isDebugEnabled()) {
+                    String msg = String.format("Child Account %s from Parent Account %s, migrated to Organization %s", modifiedChildAccount.getSid(), modifiedAccount.getSid(), organization.getSid());
+                    logger.debug(msg);
+                }
             }
         }
-
-        accountsDao.updateAccount(modifiedAccount);
 
         if (APPLICATION_JSON_TYPE == responseType) {
             return ok(gson.toJson(modifiedAccount), APPLICATION_JSON).build();

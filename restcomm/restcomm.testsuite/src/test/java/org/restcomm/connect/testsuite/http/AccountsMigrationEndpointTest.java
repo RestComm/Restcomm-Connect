@@ -16,6 +16,8 @@ import java.net.URL;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
+import static org.junit.Assert.assertNull;
+import static org.junit.Assert.assertTrue;
 
 @RunWith(Arquillian.class)
 public class AccountsMigrationEndpointTest {
@@ -31,19 +33,94 @@ public class AccountsMigrationEndpointTest {
     private String adminAuthToken = "77f8c12cc7b8f8423e5c38b035249166";
     private String adminPassword = "RestComm";
 
-    private String childUsername = "child@company.com";
-    private String childSid = "AC574d775522c96f9aacacc5ca60c8c74f";
-    private String childAuthToken ="77f8c12cc7b8f8423e5c38b035249166";
+    private String parentUsername = "child@company.com";
+    private String parentSid = "AC574d775522c96f9aacacc5ca60c8c74f";
+    private String parentAuthToken ="77f8c12cc7b8f8423e5c38b035249166";
 
     @Test
-    public void testMigrateSingleAccount() {
-        String accountSid = "AC574d775522c96f9aacacc5ca60c8c74f";
+    public void testMigrateParentAndChildAccount() {
+        String childSid1 = "AC55555555555555555555555555555555";
+
+        String originalOrganizationSid = "ORafbe225ad37541eba518a74248f0ac4c";
         String newOrganizationSid = "ORafbe225ad37541eba518a74248f0ac4d";
-        JsonObject migratedAccount = RestcommAccountsTool.getInstance().migrateAccount(deploymentUrl.toString(), adminUsername,
-                adminAuthToken, accountSid, newOrganizationSid);
-        assertNotNull(migratedAccount);
-        String org = migratedAccount.getAsJsonObject().get("organization").getAsString();
-        assertEquals(newOrganizationSid, org);
+
+        JsonObject currentParentAccout = RestcommAccountsTool.getInstance().getAccount(deploymentUrl.toString(), adminUsername, adminAuthToken, parentSid);
+        assertNotNull(currentParentAccout);
+        String currentOrg = currentParentAccout.get("organization").getAsString();
+        assertEquals(originalOrganizationSid, currentOrg);
+
+        JsonObject currentChildAccout = RestcommAccountsTool.getInstance().getAccount(deploymentUrl.toString(), adminUsername, adminAuthToken, childSid1);
+        assertNotNull(currentChildAccout);
+        String currentChildOrg = currentChildAccout.get("organization").getAsString();
+        assertEquals(originalOrganizationSid, currentChildOrg);
+
+        //Migrate Parent Account and child accounts
+        RestcommAccountsTool.getInstance().migrateAccount(deploymentUrl.toString(), adminUsername,
+                adminAuthToken, parentSid, newOrganizationSid);
+
+        JsonObject migratedParentAccount = RestcommAccountsTool.getInstance().getAccount(deploymentUrl.toString(), adminUsername, adminAuthToken, parentSid);
+        assertNotNull(migratedParentAccount);
+        String parentNewOrg = migratedParentAccount.getAsJsonObject().get("organization").getAsString();
+        assertEquals(newOrganizationSid, parentNewOrg);
+        assertTrue(!currentOrg.equalsIgnoreCase(parentNewOrg));
+
+        JsonObject childAccount1 = RestcommAccountsTool.getInstance().getAccount(deploymentUrl.toString(), adminUsername, adminAuthToken, childSid1);
+        assertNotNull(childAccount1);
+        String childNewOrg = childAccount1.get("organization").getAsString();
+        assertEquals(newOrganizationSid, childNewOrg);
+    }
+
+
+    @Test
+    public void testAttemptToMigrateAchildAccountShouldFail() {
+        String childSid1 = "AC55555555555555555555555555555555";
+
+        String originalOrganizationSid = "ORafbe225ad37541eba518a74248f0ac4c";
+        String newOrganizationSid = "ORafbe225ad37541eba518a74248f0ac4d";
+
+        JsonObject currentChildAccout = RestcommAccountsTool.getInstance().getAccount(deploymentUrl.toString(), adminUsername, adminAuthToken, childSid1);
+        assertNotNull(currentChildAccout);
+        String currentChildOrg = currentChildAccout.get("organization").getAsString();
+        assertEquals(originalOrganizationSid, currentChildOrg);
+
+        //Migrate Parent Account and child accounts
+        JsonObject response = RestcommAccountsTool.getInstance().migrateAccount(deploymentUrl.toString(), adminUsername,
+                adminAuthToken, childSid1, newOrganizationSid);
+
+        assertNull(response);
+
+        JsonObject childAccount1 = RestcommAccountsTool.getInstance().getAccount(deploymentUrl.toString(), adminUsername, adminAuthToken, childSid1);
+        assertNotNull(childAccount1);
+        String childNewOrg = childAccount1.get("organization").getAsString();
+        assertEquals(originalOrganizationSid, childNewOrg);
+    }
+
+    @Test
+    public void testAttemptToMigrateAccountByNonSuperAdminShouldFail() {
+        String childSid1 = "AC55555555555555555555555555555555";
+
+        String originalOrganizationSid = "ORafbe225ad37541eba518a74248f0ac4c";
+        String newOrganizationSid = "ORafbe225ad37541eba518a74248f0ac4d";
+
+        JsonObject currentParentAccout = RestcommAccountsTool.getInstance().getAccount(deploymentUrl.toString(), adminUsername, adminAuthToken, parentSid);
+        assertNotNull(currentParentAccout);
+        String currentOrg = currentParentAccout.get("organization").getAsString();
+        assertEquals(originalOrganizationSid, currentOrg);
+
+        JsonObject currentChildAccout = RestcommAccountsTool.getInstance().getAccount(deploymentUrl.toString(), adminUsername, adminAuthToken, childSid1);
+        assertNotNull(currentChildAccout);
+        String currentChildOrg = currentChildAccout.get("organization").getAsString();
+        assertEquals(originalOrganizationSid, currentChildOrg);
+
+        //Migrate Parent Account and child accounts
+        JsonObject response = RestcommAccountsTool.getInstance().migrateAccount(deploymentUrl.toString(), parentUsername,
+                parentAuthToken, parentSid, newOrganizationSid);
+
+        assertNull(response);
+
+        assertEquals(originalOrganizationSid, RestcommAccountsTool.getInstance().
+                getAccount(deploymentUrl.toString(), adminUsername, adminAuthToken, parentSid).get("organization").getAsString());
+
     }
 
     @Deployment(name = "AccountsMigrationEndpointTest", managed = true, testable = false)
