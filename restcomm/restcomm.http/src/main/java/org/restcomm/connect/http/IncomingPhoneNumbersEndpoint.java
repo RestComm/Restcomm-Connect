@@ -665,7 +665,7 @@ public abstract class IncomingPhoneNumbersEndpoint extends SecuredEndpoint {
             Account targetAccount = accountsDao.getAccount(targetAccountSid);
             // this is to avoid if mistakenly provided super admin account as targetAccountSid
             // if this check is not in place and someone mistakenly provided super admin
-            // then all accounts and sub account in platform will be impacted 
+            // then all accounts and sub account in platform will be impacted
             if(targetAccount.getParentSid() == null){
                 return status(BAD_REQUEST).entity("Super Admin account numbers can not be migrated. Please provide a valid account sid").build();
             }else{
@@ -694,7 +694,7 @@ public abstract class IncomingPhoneNumbersEndpoint extends SecuredEndpoint {
 
     /**
      * @param targetAccount
-     * @param destinationOrganization 
+     * @param destinationOrganization
      */
     private void migrateNumbersFromAccountTree(Account targetAccount, Organization destinationOrganization) {
         List<String> subAccountsToClose = accountsDao.getSubAccountSidsRecursive(targetAccount.getSid());
@@ -715,12 +715,12 @@ public abstract class IncomingPhoneNumbersEndpoint extends SecuredEndpoint {
         }
         // migrate parent account numbers too
         migrateSingleAccountNumbers(targetAccount, destinationOrganization);
-        
+
     }
 
     /**
      * @param account
-     * @param destinationOrganization 
+     * @param destinationOrganization
      */
     private void migrateSingleAccountNumbers(Account account, Organization destinationOrganization) {
         List<IncomingPhoneNumber> incomingPhoneNumbers = dao.getIncomingPhoneNumbers(account.getSid());
@@ -732,7 +732,7 @@ public abstract class IncomingPhoneNumbersEndpoint extends SecuredEndpoint {
                 dao.updateIncomingPhoneNumber(incomingPhoneNumber);
                 //update number at provider's end
                 if(!updateNumberAtPhoneNumberProvisioningManager(incomingPhoneNumber, destinationOrganization)){
-                    //if number could not be updated at provider's end, log the error and keep moving to next number. 
+                    //if number could not be updated at provider's end, log the error and keep moving to next number.
                     logger.error(String.format("could not update numner %s at number provider %s ", incomingPhoneNumber.getPhoneNumber(), phoneNumberProvisioningManager));
                 }
             }
