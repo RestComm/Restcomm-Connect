@@ -60,6 +60,7 @@ import org.junit.experimental.categories.Category;
 import org.restcomm.connect.commons.Version;
 import org.restcomm.connect.commons.dao.Sid;
 import org.restcomm.connect.commons.annotations.BrokenTests;
+import org.restcomm.connect.commons.annotations.FeatureAltTests;
 import org.restcomm.connect.commons.annotations.FeatureExpTests;
 import org.restcomm.connect.commons.annotations.UnstableTests;
 
@@ -83,6 +84,7 @@ public class IncomingPhoneNumbersEndpointTest {
     private String adminAccountSid = "ACae6e420f425248d6a26948c17a9e2acf";
     private String adminAuthToken = "77f8c12cc7b8f8423e5c38b035249166";
     private String baseURL = "2012-04-24/Accounts/" + adminAccountSid + "/";
+    private String migrateURL = "2012-04-24/Accounts/ACae6e420f425248d6a26948c17a9e2acg/";
     private String adminOrg2Username = "administrator@org2.restcomm.com";
     private String adminOrg2AccountSid = "ACae6e420f425248d6a26948c17a9e2acg";
     private String adminOrg2AuthToken = "77f8c12cc7b8f8423e5c38b035249166";
@@ -784,6 +786,77 @@ public class IncomingPhoneNumbersEndpointTest {
         assertTrue(IncomingPhoneNumbersEndpointTestUtils.match(jsonResponse.toString(),IncomingPhoneNumbersEndpointTestUtils.jSonResultUpdateSuccessPurchaseNumber));
     }
 
+    @Test
+    @Category(FeatureAltTests.class)
+    public void testMigratePhoneNumberSuccess() {
+        stubFor(post(urlEqualTo("/test"))
+                .withRequestBody(containing("queryDID"))
+                .withRequestBody(containing("123350001"))
+                .willReturn(aResponse()
+                    .withStatus(200)
+                    .withHeader("Content-Type", "text/xml")
+                    .withBody(IncomingPhoneNumbersEndpointTestUtils.queryDIDSuccessResponse)));
+
+        stubFor(post(urlEqualTo("/test"))
+                .withRequestBody(containing("assignDID"))
+                .withRequestBody(containing("123350001"))
+                .willReturn(aResponse()
+                    .withStatus(200)
+                    .withHeader("Content-Type", "text/xml")
+                    .withBody(IncomingPhoneNumbersEndpointTestUtils.purchaseNumberSuccessResponse)));
+
+        stubFor(post(urlEqualTo("/test"))
+                .withRequestBody(containing("releaseDID"))
+                .withRequestBody(containing("123350001"))
+                .willReturn(aResponse()
+                    .withStatus(200)
+                    .withHeader("Content-Type", "text/xml")
+                    .withBody(IncomingPhoneNumbersEndpointTestUtils.deleteNumberSuccessResponse)));
+        // Get Account using admin email address and user email address
+        Client jerseyClient = Client.create();
+        jerseyClient.addFilter(new HTTPBasicAuthFilter(adminUsername, adminAuthToken));
+
+        String provisioningURL = deploymentUrl + migrateURL + "IncomingPhoneNumbers/migrate";
+        WebResource webResource = jerseyClient.resource(provisioningURL);
+        MultivaluedMap<String, String> formData = new MultivaluedMapImpl();
+        formData = new MultivaluedMapImpl();
+        formData.add("OrganizationSid", "ORafbe225ad37541eba518a74248f0ac4c");
+        ClientResponse clientResponse = webResource.type(MediaType.APPLICATION_FORM_URLENCODED_TYPE).accept("application/json").post(ClientResponse.class, formData);
+        logger.info(clientResponse);
+        assertEquals(200, clientResponse.getStatus());
+    }
+
+    @Test
+    @Category(FeatureExpTests.class)
+    public void testMigratePhoneNumberPermission() {
+        Client jerseyClient = Client.create();
+        jerseyClient.addFilter(new HTTPBasicAuthFilter(adminOrg2AccountSid, adminAuthToken));
+
+        String provisioningURL = deploymentUrl + migrateURL + "IncomingPhoneNumbers/migrate";
+        WebResource webResource = jerseyClient.resource(provisioningURL);
+        MultivaluedMap<String, String> formData = new MultivaluedMapImpl();
+        formData = new MultivaluedMapImpl();
+        formData.add("OrganizationSid", "ORafbe225ad37541eba518a74248f0ac4c");
+        ClientResponse clientResponse = webResource.type(MediaType.APPLICATION_FORM_URLENCODED_TYPE).accept("application/json").post(ClientResponse.class, formData);
+        logger.info(clientResponse);
+        assertEquals(401, clientResponse.getStatus());
+    }
+
+    @Test
+    @Category(FeatureExpTests.class)
+    public void testMigratePhoneNumberSuperAdminMigration() {
+        Client jerseyClient = Client.create();
+        jerseyClient.addFilter(new HTTPBasicAuthFilter(adminOrg2AccountSid, adminAuthToken));
+
+        String provisioningURL = deploymentUrl + baseURL + "IncomingPhoneNumbers/migrate";
+        WebResource webResource = jerseyClient.resource(provisioningURL);
+        MultivaluedMap<String, String> formData = new MultivaluedMapImpl();
+        formData = new MultivaluedMapImpl();
+        formData.add("OrganizationSid", "ORafbe225ad37541eba518a74248f0ac4c");
+        ClientResponse clientResponse = webResource.type(MediaType.APPLICATION_FORM_URLENCODED_TYPE).accept("application/json").post(ClientResponse.class, formData);
+        logger.info(clientResponse);
+        assertEquals(400, clientResponse.getStatus());
+    }
     /*
      * https://www.twilio.com/docs/api/rest/incoming-phone-numbers#list-get-example-1
      */
