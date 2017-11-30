@@ -145,6 +145,7 @@
     <echo>Downloading Restcomm Olympus version: ${olympus.version}</echo>
     <exec executable="wget" failonerror="true">
       <arg value="${restcomm-olympus.download.url}"/>
+      <arg value="--output-document=olympus.war"/>
     </exec>
     <move file="${base.dir}/olympus.war" todir="${configuration.directory}"/>
   </target>
