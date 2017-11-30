@@ -20,6 +20,8 @@
 package org.restcomm.connect.telephony.api;
 
 import org.restcomm.connect.commons.annotations.concurrency.Immutable;
+import org.restcomm.connect.commons.dao.Sid;
+import org.restcomm.connect.dao.entities.CallDetailRecord;
 
 /**
  * @author quintana.thomas@gmail.com (Thomas Quintana)
@@ -28,9 +30,17 @@ import org.restcomm.connect.commons.annotations.concurrency.Immutable;
 public final class Hangup {
     private String message;
     private Integer sipResponse;
+    private Sid requestingAccountSid;
+    private CallDetailRecord callDetailRecord;
 
     public Hangup() {
         super();
+    }
+
+    public Hangup(final String message, final Sid requestingAccountSid, final CallDetailRecord callDetailRecord) {
+        this.message = message;
+        this.requestingAccountSid = requestingAccountSid;
+        this.callDetailRecord = callDetailRecord;
     }
 
     public Hangup(final String message, final Integer sipResponse) {
@@ -54,8 +64,23 @@ public final class Hangup {
         return sipResponse;
     }
 
+    /**
+     * @return accountSid for account initiating this hangup request.
+     */
+    public Sid getRequestingAccountSid() {
+        return requestingAccountSid;
+    }
+
+    /**
+     * @return cdr for the call to be terminated
+     */
+    public CallDetailRecord getCallDetailRecord() {
+        return callDetailRecord;
+    }
+
     @Override
     public String toString() {
-        return "Hangup [message=" + message + ", sipResponse=" + sipResponse + "]";
+        return "Hangup [message=" + message + ", sipResponse=" + sipResponse + ", requestingAccountSid="
+                + requestingAccountSid + ", callDetailRecord=" + callDetailRecord + "]";
     }
 }
