@@ -1,0 +1,43 @@
+#!/bin/bash
+export JAVA_HOME=/opt/java/jdk1.7.0_80
+export PATH=$JAVA_HOME/bin:$PATH
+
+export RC_HOME=$(cd $(dirname "${BASH_SOURCE[0]}") && pwd)
+export RC_RELEASE=$RC_HOME/release/target-as7
+export RC_CONFIGURATION=$RC_HOME/configurations
+export RC_DEPENDENCIES=$RC_HOME/dependencies
+
+export MAVEN_OPTS="-Xms1024m -Xmx2048m -XX:MaxPermSize=1024m"
+
+build_restcomm()
+{
+    export MAJOR_VERSION_NUMBER=7.6
+    export BUILD_NUMBER=0
+    ant release -f $RC_HOME/release/build.xml -Drestcomm.release.version=$MAJOR_VERSION_NUMBER.$BUILD_NUMBER -Drestcomm.branch.name=restcomm-release-$MAJOR_VERSION_NUMBER.$BUILD_NUMBER -Dcheckout.restcomm.dir=$RC_HOME -Dworkspace.restcomm.dir=$RC_HOME/restcomm -Dcheckout.dir=$RC_DEPENDENCIES
+}
+
+start_restcomm()
+{
+    mkdir -p $RC_DEPENDENCIES
+    cp -rf $RC_DEPENDENCIES/* $RC_RELEASE/
+    $RC_RELEASE/bin/restcomm/start-restcomm.sh
+}
+
+stop_restcomm()
+{
+    $RC_RELEASE/bin/restcomm/stop-restcomm.sh
+}
+
+case "$@" in
+    "build")
+        build_restcomm
+        ;;
+    "start")
+        start_restcomm
+        ;;
+    "stop")
+        stop_restcomm
+        ;;
+    *)
+        ;;
+esac
