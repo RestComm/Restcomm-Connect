@@ -537,7 +537,7 @@ public class DialActionOrganizationTest {
         assertTrue(bobCallOrg2.waitOutgoingCallResponse(5 * 1000));
         final int response = bobCallOrg2.getLastReceivedResponse().getStatusCode();
         logger.info("bobCallOrg2 response: "+response);
-        assertTrue(response == Response.NOT_FOUND);
+        assertEquals(Response.NOT_FOUND, response);
     }
 
     /**
