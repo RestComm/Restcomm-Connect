@@ -122,7 +122,11 @@ public class RestcommAccountsTool {
 			params.add("Organization", newOrganizationSid);
 
 		ClientResponse response = webResource.accept(MediaType.APPLICATION_JSON).post(ClientResponse.class, params);
-		return parser.parse(response.getEntity(String.class)).getAsJsonObject();
+		if (response.getStatus() == 200) {
+			jsonResponse = parser.parse(response.getEntity(String.class)).getAsJsonObject();
+		}
+
+		return jsonResponse;
 	}
 
 	public JsonObject createAccount (String deploymentUrl, String adminUsername, String adminAuthToken, String emailAddress,
