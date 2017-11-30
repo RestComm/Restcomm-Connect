@@ -209,4 +209,18 @@ public final class IncomingPhoneNumbersXmlEndpoint extends IncomingPhoneNumbersE
             final MultivaluedMap<String, String> data) {
         return putIncomingPhoneNumber(accountSid, data, PhoneNumberType.Mobile, APPLICATION_JSON_TYPE);
     }
+
+    @Path("/migrate")
+    @POST
+    public Response migrateIncomingPhoneNumbersAsXml(@PathParam("accountSid") final String accountSid,
+            final MultivaluedMap<String, String> data) {
+        return migrateIncomingPhoneNumbers(accountSid, data, APPLICATION_XML_TYPE);
+    }
+
+	@Path("/migrate.json")
+    @POST
+    public Response migrateIncomingPhoneNumbersAsJson(@PathParam("accountSid") final String accountSid,
+            final MultivaluedMap<String, String> data) {
+        return migrateIncomingPhoneNumbers(accountSid, data, APPLICATION_JSON_TYPE);
+    }
 }
