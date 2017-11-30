@@ -28,8 +28,8 @@ import static javax.ws.rs.core.Response.ok;
 import static javax.ws.rs.core.Response.status;
 import static javax.ws.rs.core.Response.Status.BAD_REQUEST;
 import static javax.ws.rs.core.Response.Status.FORBIDDEN;
-import static javax.ws.rs.core.Response.Status.NOT_FOUND;
 import static javax.ws.rs.core.Response.Status.INTERNAL_SERVER_ERROR;
+import static javax.ws.rs.core.Response.Status.NOT_FOUND;
 
 import java.net.URI;
 import java.util.ArrayList;
@@ -55,7 +55,9 @@ import org.restcomm.connect.dao.entities.Account;
 import org.restcomm.connect.dao.entities.IncomingPhoneNumber;
 import org.restcomm.connect.dao.entities.IncomingPhoneNumberFilter;
 import org.restcomm.connect.dao.entities.IncomingPhoneNumberList;
+import org.restcomm.connect.dao.entities.Organization;
 import org.restcomm.connect.dao.entities.RestCommResponse;
+import org.restcomm.connect.dao.entities.SearchFilterMode;
 import org.restcomm.connect.extension.api.ApiRequest;
 import org.restcomm.connect.http.converter.AvailableCountriesConverter;
 import org.restcomm.connect.http.converter.AvailableCountriesList;
@@ -75,7 +77,6 @@ import com.google.i18n.phonenumbers.PhoneNumberUtil;
 import com.google.i18n.phonenumbers.PhoneNumberUtil.PhoneNumberFormat;
 import com.google.i18n.phonenumbers.Phonenumber.PhoneNumber;
 import com.thoughtworks.xstream.XStream;
-import org.restcomm.connect.dao.entities.SearchFilterMode;
 
 /**
  * @author quintana.thomas@gmail.com (Thomas Quintana)
@@ -653,5 +654,40 @@ public abstract class IncomingPhoneNumbersEndpoint extends SecuredEndpoint {
                 incomingPhoneNumber.isMmsCapable(),
                 incomingPhoneNumber.isFaxCapable(),
                 false);
+    }
+
+    protected Response migrateIncomingPhoneNumbers(String targetAccountSid, MultivaluedMap<String, String> data, MediaType responseType) {
+        Account effectiveAccount = userIdentityContext.getEffectiveAccount();
+        secure(effectiveAccount, "RestComm:Modify:IncomingPhoneNumbers");
+        allowOnlySuperAdmin();
+        try{
+        	Account targetAccount = accountsDao.getAccount(targetAccountSid);
+        	// this is to avoid if mistakenly provided super admin account as targetAccountSid
+        	// if this check is not in place and someone mistakenly provided super admin
+        	// then all accounts and sub account in platform will be impacted 
+        	if(targetAccount.getParentSid() == null){
+        		return status(BAD_REQUEST).entity("Super Admin account numbers can not be migrated. Please provide a valid account sid").build();
+        	}else{
+                String organizationSidStr = data.getFirst("OrganizationSid");
+                if(organizationSidStr == null){
+                	return status(BAD_REQUEST).entity("OrganizationSid cannot be null").build();
+                }
+                Sid organizationSid = null;
+                try{
+                    organizationSid = new Sid(organizationSidStr);
+                }catch(IllegalArgumentException iae){
+                	return status(BAD_REQUEST).entity("OrganizationSid is not valid").build();
+                }
+                Organization organization = organizationsDao.getOrganization(organizationSid);
+                if(organization == null){
+                	return status(NOT_FOUND).entity("Destination organization not found").build();
+                }
+                
+        	}
+            
+        }catch(Exception e){
+            logger.error("Exception while performing migrateIncomingPhoneNumbers: ", e);
+            return status(INTERNAL_SERVER_ERROR).build();
+        }
     }
 }
