@@ -666,6 +666,9 @@ public abstract class IncomingPhoneNumbersEndpoint extends SecuredEndpoint {
             // this is to avoid if mistakenly provided super admin account as targetAccountSid
             // if this check is not in place and someone mistakenly provided super admin
             // then all accounts and sub account in platform will be impacted
+            if(targetAccount == null){
+                return status(NOT_FOUND).entity("Account not found").build();
+            }
             if(targetAccount.getParentSid() == null){
                 return status(BAD_REQUEST).entity("Super Admin account numbers can not be migrated. Please provide a valid account sid").build();
             }else{
