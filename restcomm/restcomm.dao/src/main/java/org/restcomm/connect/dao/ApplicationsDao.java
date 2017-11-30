@@ -23,6 +23,7 @@ import java.util.List;
 
 import org.restcomm.connect.commons.dao.Sid;
 import org.restcomm.connect.dao.entities.Application;
+import org.restcomm.connect.dao.entities.ApplicationFilter;
 
 /**
  * @author quintana.thomas@gmail.com (Thomas Quintana)
@@ -35,9 +36,11 @@ public interface ApplicationsDao {
     Application getApplication(String friendlyName);
 
     List<Application> getApplications(Sid accountSid);
+    List<Application> getApplications(ApplicationFilter applicationFilter);
 
     // this may optionally return related numbers as part of an Application
     List<Application> getApplicationsWithNumbers(Sid accountSid);
+    List<Application> getApplicationsWithNumbers(ApplicationFilter applicationFilter);
 
     void removeApplication(Sid sid);
 

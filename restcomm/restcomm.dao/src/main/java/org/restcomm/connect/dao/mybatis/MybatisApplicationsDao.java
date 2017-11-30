@@ -25,6 +25,7 @@ import org.joda.time.DateTime;
 import org.restcomm.connect.commons.annotations.concurrency.ThreadSafe;
 import org.restcomm.connect.dao.ApplicationsDao;
 import org.restcomm.connect.dao.entities.Application;
+import org.restcomm.connect.dao.entities.ApplicationFilter;
 import org.restcomm.connect.commons.dao.Sid;
 import org.restcomm.connect.dao.entities.ApplicationNumberSummary;
 
@@ -125,10 +126,59 @@ public final class MybatisApplicationsDao implements ApplicationsDao {
     }
 
     @Override
+    public List<Application> getApplicationsWithNumbers ( ApplicationFilter applicationFilter ) {
+        final SqlSession session = sessions.openSession();
+        try {
+            final List<Map<String, Object>> results = session.selectList(namespace + "getApplicationsAndNumbersUsingFilters", applicationFilter);
+            final List<Application> applications = new ArrayList<Application>();
+            if (results != null && !results.isEmpty()) {
+                Application previousApp = null;
+                Application app = null;
+                for (final Map<String, Object> result : results) {
+                    app = toApplication(result);
+                    if (previousApp != null && previousApp.getSid().equals(app.getSid()))
+                        app = previousApp;
+                    // if there is a number bound to this application populate the latter with the
+                    // number details
+                    if (result.get("num_sid") != null) {
+                        populateApplicationWithNumber(app, result, "num_");
+                    }
+                    if (previousApp == null || !previousApp.getSid().equals(app.getSid())) {
+                        // is this is a new application in the result map add it to the list. Remember,
+                        // the same app can be returned many times if it's related to many numbers
+                        applications.add(app);
+                    }
+                    previousApp = app;
+                }
+            }
+            return applications;
+        } finally {
+            session.close();
+        }
+    }
+
+    @Override
     public List<Application> getApplications(final Sid accountSid) {
         final SqlSession session = sessions.openSession();
         try {
             final List<Map<String, Object>> results = session.selectList(namespace + "getApplications", accountSid.toString());
+            final List<Application> applications = new ArrayList<Application>();
+            if (results != null && !results.isEmpty()) {
+                for (final Map<String, Object> result : results) {
+                    applications.add(toApplication(result));
+                }
+            }
+            return applications;
+        } finally {
+            session.close();
+        }
+    }
+
+    @Override
+    public List<Application> getApplications ( ApplicationFilter applicationFilter ) {
+        final SqlSession session = sessions.openSession();
+        try {
+            final List<Map<String, Object>> results = session.selectList(namespace + "getApplicationsUsingFilters", applicationFilter);
             final List<Application> applications = new ArrayList<Application>();
             if (results != null && !results.isEmpty()) {
                 for (final Map<String, Object> result : results) {
@@ -230,4 +280,5 @@ public final class MybatisApplicationsDao implements ApplicationsDao {
         map.put("kind", writeApplicationKind(application.getKind()));
         return map;
     }
+
 }
