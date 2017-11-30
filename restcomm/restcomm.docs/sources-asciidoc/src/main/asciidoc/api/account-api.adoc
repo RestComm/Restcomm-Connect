@@ -55,10 +55,19 @@ In the process, all child accounts will also be migrated.
 [cols=",",options="header",]
 |==============================================================================================
 |Parameter |Description
-|Organization | The new Organization SID or Domain Name to move the account. *Required*
+|Organization |The new Organization SID or Domain Name to move the account. *Required*
 |==============================================================================================
 
-
+==== Response Status
+[cols=",",options="header",]
+|==============================================================================================
+|Status |Description
+|200 OK |Migration operation completed successfully
+|403 Forbidden |Only Super Admin is allowed for the migrate operation
+|412 Precondition Failed |Target Organization SID or Domain Name is missing
+|404 Not Found |Target Account SID is missing
+|400 Bad Request |Target Account is not a top level account or target account is already in the new organization
+|==============================================================================================
 
 **Get information about the default account.**
 
