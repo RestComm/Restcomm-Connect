@@ -1,0 +1,91 @@
+<?xml version="1.0"?>
+<project basedir="." default="download" name="download">
+  <taskdef onerror="fail" resource="net/sf/antcontrib/antlib.xml">
+    <classpath>
+      <pathelement location="${ant.file.download}/../ant-contrib-1.0b3.jar"/>
+    </classpath>
+  </taskdef>
+
+  <property name="ddd.folder" value="ddd"/>
+  <property name="versions.file" value="ddd-versions.properties"/>
+  <property name="s3.cmd.prefix" value="s3://cxs-artifacts"/>
+  <mkdir dir="${ddd.folder}"/>
+
+  <target name="download">
+      <echo>Please specify the storage with selecting specific targets [box|s3]</echo>
+  </target>
+
+
+  <target name="box">
+	<property file="${versions.file}" prefix="x"/>
+	<propertyselector property="propertyList"
+	  delimiter=","
+ 	  match="download\.([^\.]*)\.filename"
+	  select="\1"
+	  casesensitive="false"/>
+	 
+	<for list="${propertyList}" param="sequence">
+	  <sequential>
+	    <echo>Downloading ${x.download.@{sequence}.filename}</echo>
+	    <!--echo>${x.download.@{sequence}.s3url}</echo>
+	    <echo>${x.download.@{sequence}.boxurl}</echo-->
+            <available file="${ddd.folder}/${x.download.@{sequence}.filename}" property="got.file"/>
+	    <antcall target="get-file-box">
+              <param name="filename" value="${x.download.@{sequence}.filename}"/>
+              <param name="s3url" value="${x.download.@{sequence}.s3url}"/>
+              <param name="boxurl" value="${x.download.@{sequence}.boxurl}"/>
+           </antcall>
+	   <var name="got.file" unset="true"/>
+	  </sequential>
+	</for>
+  </target>
+
+  <target name="get-file-box" unless="got.file">
+    <exec executable="wget" failonerror="true">
+      <arg value="-O"/>
+      <arg value="${ddd.folder}/${filename}"/>
+      <arg value="${boxurl}"/>
+    </exec>
+  </target>
+
+  <target name="s3">
+	<property file="ddd-versions.properties" prefix="x"/>
+	<propertyselector property="propertyList"
+	  delimiter=","
+ 	  match="download\.([^\.]*)\.filename"
+	  select="\1"
+	  casesensitive="false"/>
+	 
+	<for list="${propertyList}" param="sequence">
+	  <sequential>
+	    <echo>Downloading ${x.download.@{sequence}.filename}</echo>
+            <available file="${ddd.folder}/${x.download.@{sequence}.filename}" property="got.file"/>
+	    <antcall target="get-file-s3">
+              <param name="filename" value="${x.download.@{sequence}.filename}"/>
+              <param name="s3url" value="${x.download.@{sequence}.s3url}"/>
+              <param name="boxurl" value="${x.download.@{sequence}.boxurl}"/>
+           </antcall>
+	   <var name="got.file" unset="true"/>
+	  </sequential>
+	</for>
+  </target>
+
+  <target name="get-file-s3" unless="got.file">
+    <exec executable="s3cmd" failonerror="true">
+      <arg value="get"/>
+      <arg value="--recursive"/>
+      <arg value="${s3.cmd.prefix}/${s3url}"/>
+      <arg value="${ddd.folder}/${filename}"/>
+    </exec>
+  </target>
+
+  <target name="get-file-s3-win">
+    <exec executable="${PYTHON_DIR}\python.exe" failonerror="true">
+      <arg value="${PYTHON_DIR}\Scripts\s3cmd" />
+      <arg value="get"/>
+      <arg value="--recursive"/>
+      <arg value="${s3.cmd.prefix}/${s3url}"/>
+      <arg value="${ddd.folder}/${filename}"/>
+    </exec>
+  </target>
+</project>
