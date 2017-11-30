@@ -26,6 +26,7 @@ import org.restcomm.connect.email.api.EmailResponse;
 import org.restcomm.connect.email.api.Mail;
 import org.restcomm.connect.http.converter.EmailMessageConverter;
 import org.restcomm.connect.http.converter.RestCommResponseConverter;
+import org.restcomm.connect.http.exceptions.InvalidEmailException;
 import org.restcomm.connect.identity.EmailValidator;
 
 import javax.annotation.PostConstruct;
@@ -255,16 +256,6 @@ public class EmailMessagesEndpoint extends SecuredEndpoint {
             }else if (Observing.class.equals(klass)){
                 mailerService.tell(new EmailRequest(emailMsg), self());
             }
-        }
-    }
-
-    private static class InvalidEmailException extends Exception {
-        //Parameterless Constructor
-        public InvalidEmailException() {}
-
-        //Constructor that accepts a message
-        public InvalidEmailException(String message) {
-            super(message);
         }
     }
 

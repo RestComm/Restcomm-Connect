@@ -65,7 +65,7 @@ import org.restcomm.connect.http.exceptions.AccountAlreadyClosed;
 import org.restcomm.connect.http.exceptions.AuthorizationException;
 import org.restcomm.connect.http.exceptions.EmailAlreadyExisted;
 import org.restcomm.connect.http.exceptions.InsufficientPermission;
-import org.restcomm.connect.http.exceptions.InvalidEmailFormat;
+import org.restcomm.connect.http.exceptions.InvalidEmailException;
 import org.restcomm.connect.http.exceptions.PasswordTooWeak;
 import org.restcomm.connect.http.exceptions.RcmlserverNotifyError;
 import org.restcomm.connect.identity.EmailValidator;
@@ -465,7 +465,7 @@ public class AccountsEndpoint extends SecuredEndpoint {
      * @throws AccountAlreadyClosed
      */
     private Account prepareAccountForUpdate(final Account account, final MultivaluedMap<String, String> data)
-            throws AccountAlreadyClosed, PasswordTooWeak, EmailAlreadyExisted, InvalidEmailFormat {
+            throws AccountAlreadyClosed, PasswordTooWeak, EmailAlreadyExisted, InvalidEmailException {
         Account result = account;
         boolean isPasswordReset = false;
         Account.Status newStatus = null;
@@ -513,14 +513,14 @@ public class AccountsEndpoint extends SecuredEndpoint {
             if (data.containsKey("EmailAddress")) {
                 String newEmailAddress = data.getFirst("EmailAddress").toLowerCase();
                 if (!EmailValidator.isValidEmailFormat(newEmailAddress)) {
-                    throw new InvalidEmailFormat();
+                    throw new InvalidEmailException();
                 }
                 if (accountsDao.getAccount(newEmailAddress) != null) {
                     throw new EmailAlreadyExisted();
                 }
                 result = result.setEmailAddress(newEmailAddress);
             }
-        } catch (AuthorizationException | AccountAlreadyClosed | PasswordTooWeak | EmailAlreadyExisted | InvalidEmailFormat e) {
+        } catch (AuthorizationException | AccountAlreadyClosed | PasswordTooWeak | EmailAlreadyExisted | InvalidEmailException e) {
             // some exceptions should reach outer layers and result in 403
             throw e;
         } catch (Exception e) {

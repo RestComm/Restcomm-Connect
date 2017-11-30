@@ -20,11 +20,16 @@
 
 package org.restcomm.connect.http.exceptions;
 
-import org.restcomm.connect.commons.exceptions.RestcommRuntimeException;
-
 
 /**
  * @author ddh.huy@gmail.com (Huy Dang)
  */
-public class InvalidEmailFormat extends RestcommRuntimeException {
+public class InvalidEmailException extends RuntimeException {
+    //Parameterless Constructor
+    public InvalidEmailException() {}
+
+    //Constructor that accepts a message
+    public InvalidEmailException(String message) {
+        super(message);
+    }
 }
