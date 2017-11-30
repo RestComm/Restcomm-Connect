@@ -68,6 +68,10 @@ public class AccountsMigrationEndpointTest {
         assertNotNull(childAccount1);
         String childNewOrg = childAccount1.get("organization").getAsString();
         assertEquals(newOrganizationSid, childNewOrg);
+
+        //Migrate Parent Account and child accounts
+        assertNotNull(RestcommAccountsTool.getInstance().migrateAccount(deploymentUrl.toString(), adminUsername,
+                adminAuthToken, parentSid, originalOrganizationSid));
     }
 
 
