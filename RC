@@ -9,21 +9,21 @@ export RC_DEPENDENCIES=$RC_HOME/dependencies
 
 export MAVEN_OPTS="-Xms1024m -Xmx2048m -XX:MaxPermSize=1024m"
 
-build_restcomm()
+rc_build()
 {
     export MAJOR_VERSION_NUMBER=7.6
     export BUILD_NUMBER=0
+    mkdir -p $RC_DEPENDENCIES
     ant release -f $RC_HOME/release/build.xml -Drestcomm.release.version=$MAJOR_VERSION_NUMBER.$BUILD_NUMBER -Drestcomm.branch.name=restcomm-release-$MAJOR_VERSION_NUMBER.$BUILD_NUMBER -Dcheckout.restcomm.dir=$RC_HOME -Dworkspace.restcomm.dir=$RC_HOME/restcomm -Dcheckout.dir=$RC_DEPENDENCIES
 }
 
-start_restcomm()
+rc_start()
 {
-    mkdir -p $RC_DEPENDENCIES
-    cp -rf $RC_DEPENDENCIES/* $RC_RELEASE/
+    cp -rf $RC_CONFIGURATION/* $RC_RELEASE/
     $RC_RELEASE/bin/restcomm/start-restcomm.sh
 }
 
-stop_restcomm()
+rc_stop()
 {
     $RC_RELEASE/bin/restcomm/stop-restcomm.sh
 }
