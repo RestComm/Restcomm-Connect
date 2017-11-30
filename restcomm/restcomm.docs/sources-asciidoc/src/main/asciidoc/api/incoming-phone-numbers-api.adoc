@@ -578,3 +578,42 @@ match different numbers.
 
 
 
+[[resource-uri-5]]
+==== Resource URI
+
+*/2012-04-24/Accounts/\{TargetAccountSid}/IncomingPhoneNumbers/migrate*
+
+[[http-methods-2]]
+==== HTTP Methods
+
+[[http-post-3]]
+===== HTTP POST
+
+Migrates all numbers of `TargetAccountSid's` account tree to provided destination organization.
+Only super admins have permission to perform this operation.
+[NOTE]
+====
+This operation will impact all child accounts in downwards hierarchy.
+====
+
+
+[[required-parameters-3]]
+====== Required Parameters
+
+Your request *must* include OrganizationSid.
+
+[cols=",",]
+|==============================================================================================================================================================================================================================================================================
+|*Parameter* |*Description*
+|OrganizationSid | Sid of destination organization, where we want to migrate numbers.
+|==============================================================================================================================================================================================================================================================================
+
+[[http-put-3]]
+===== HTTP PUT
+
+Not Supported.
+
+[[http-delete-4]]
+===== HTTP DELETE
+
+Not Supported.  
