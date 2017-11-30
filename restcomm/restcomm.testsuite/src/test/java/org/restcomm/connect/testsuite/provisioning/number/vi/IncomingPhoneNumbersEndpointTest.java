@@ -789,30 +789,6 @@ public class IncomingPhoneNumbersEndpointTest {
     @Test
     @Category(FeatureAltTests.class)
     public void testMigratePhoneNumberSuccess() {
-        stubFor(post(urlEqualTo("/test"))
-                .withRequestBody(containing("queryDID"))
-                .withRequestBody(containing("123350001"))
-                .willReturn(aResponse()
-                    .withStatus(200)
-                    .withHeader("Content-Type", "text/xml")
-                    .withBody(IncomingPhoneNumbersEndpointTestUtils.queryDIDSuccessResponse)));
-
-        stubFor(post(urlEqualTo("/test"))
-                .withRequestBody(containing("assignDID"))
-                .withRequestBody(containing("123350001"))
-                .willReturn(aResponse()
-                    .withStatus(200)
-                    .withHeader("Content-Type", "text/xml")
-                    .withBody(IncomingPhoneNumbersEndpointTestUtils.purchaseNumberSuccessResponse)));
-
-        stubFor(post(urlEqualTo("/test"))
-                .withRequestBody(containing("releaseDID"))
-                .withRequestBody(containing("123350001"))
-                .willReturn(aResponse()
-                    .withStatus(200)
-                    .withHeader("Content-Type", "text/xml")
-                    .withBody(IncomingPhoneNumbersEndpointTestUtils.deleteNumberSuccessResponse)));
-        // Get Account using admin email address and user email address
         Client jerseyClient = Client.create();
         jerseyClient.addFilter(new HTTPBasicAuthFilter(adminUsername, adminAuthToken));
 
