@@ -611,24 +611,15 @@ public class AccountsEndpoint extends SecuredEndpoint {
             return null;
         }
 
-        //Attempt to get Organization by domain name
-        organization = organizationsDao.getOrganizationByDomainName(organizationId);
-
-        if (organization != null) {
+        if (Sid.pattern.matcher(organizationId).matches()) {
+            //Attempt to get Organization by SID
+            organization = organizationsDao.getOrganization(new Sid(organizationId));
             return organization;
         } else {
-            //Attempt to match organizationId to organizationSid
-            try {
-                organizationSid = new Sid(organizationId);
-                organization = organizationsDao.getOrganization(organizationSid);
-                return organization;
-            } catch (IllegalArgumentException e) {
-                if (logger.isDebugEnabled()) {
-                    logger.debug("Exception while tried to match organizationId to organizationSid");
-                }
-            }
+            //Attempt to get Organization by domain name
+            organization = organizationsDao.getOrganizationByDomainName(organizationId);
+            return organization;
         }
-        return organization;
     }
 
     protected Response migrateAccountOrganization(final String identifier, final MultivaluedMap<String, String> data,
