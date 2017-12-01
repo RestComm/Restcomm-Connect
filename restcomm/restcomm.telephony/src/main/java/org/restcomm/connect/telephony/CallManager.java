@@ -137,7 +137,9 @@ import akka.event.Logging;
 import akka.event.LoggingAdapter;
 import akka.util.Timeout;
 import gov.nist.javax.sip.header.UserAgent;
+import org.restcomm.connect.interpreter.NumberSelectionResult;
 import org.restcomm.connect.interpreter.NumberSelectorService;
+import org.restcomm.connect.interpreter.ResultType;
 import org.restcomm.connect.interpreter.SIPOrganizationUtil;
 import scala.concurrent.Await;
 import scala.concurrent.Future;
@@ -1225,62 +1227,67 @@ public final class CallManager extends RestcommUntypedActor {
                 sendNotFound(request, sourceOrganizationSid, phone, fromClientAccountSid);
                 return true;
             }
-            number = numberSelector.searchNumber(phone, sourceOrganizationSid, destOrg);
-            if(number  != null && !destOrg.equals(sourceOrganizationSid)) {
+            NumberSelectionResult result = numberSelector.searchNumberWithResult(phone, sourceOrganizationSid, destOrg);
+            number = result.getNumber();
+            if(number  != null
+                    && !destOrg.equals(sourceOrganizationSid)
+                    && result.getType().equals(ResultType.REGULAR)
+                    && result.getUsedFilter() != null
+                    && result.getUsedFilter().getPureSIP().equals(false)) {
                 // We found the number but organization was not proper
                 sendNotFound(request, sourceOrganizationSid, phone, fromClientAccountSid);
-                return true;
+                isFoundHostedApp = true;
             } else {
                 if (number != null) {
-                final VoiceInterpreterParams.Builder builder = new VoiceInterpreterParams.Builder();
-                builder.setConfiguration(configuration);
-                builder.setStorage(storage);
-                builder.setCallManager(self);
-                builder.setConferenceCenter(conferences);
-                builder.setBridgeManager(bridges);
-                builder.setSmsService(sms);
-                //https://github.com/RestComm/Restcomm-Connect/issues/1939
-                Sid accSid = fromClientAccountSid == null ? number.getAccountSid() : fromClientAccountSid;
-                builder.setAccount(accSid);
-                builder.setPhone(number.getAccountSid());
-                builder.setVersion(number.getApiVersion());
-                // notifications should go to fromClientAccountSid email if not present then to number account
-                // https://github.com/RestComm/Restcomm-Connect/issues/2011
-                final Account account = accounts.getAccount(accSid);
-                builder.setEmailAddress(account.getEmailAddress());
-                final Sid sid = number.getVoiceApplicationSid();
-                if (sid != null) {
-                    final Application application = applications.getApplication(sid);
-                    RcmlserverConfigurationSet rcmlserverConfig = RestcommConfiguration.getInstance().getRcmlserver();
-                    RcmlserverResolver rcmlserverResolver = RcmlserverResolver.getInstance(rcmlserverConfig.getBaseUrl(), rcmlserverConfig.getApiPath());
-                    builder.setUrl(UriUtils.resolve(rcmlserverResolver.resolveRelative(application.getRcmlUrl())));
-                } else {
-                    builder.setUrl(UriUtils.resolve(number.getVoiceUrl()));
-                }
-                final String voiceMethod = number.getVoiceMethod();
-                if (voiceMethod == null || voiceMethod.isEmpty()) {
-                    builder.setMethod("POST");
-                } else {
-                    builder.setMethod(voiceMethod);
-                }
-                URI uri = number.getVoiceFallbackUrl();
-                if (uri != null)
-                    builder.setFallbackUrl(UriUtils.resolve(uri));
-                else
-                    builder.setFallbackUrl(null);
-                builder.setFallbackMethod(number.getVoiceFallbackMethod());
-                builder.setStatusCallback(number.getStatusCallback());
-                builder.setStatusCallbackMethod(number.getStatusCallbackMethod());
-                builder.setMonitoring(monitoring);
-                final Props props = VoiceInterpreter.props(builder.build());
-                final ActorRef interpreter = getContext().actorOf(props);
+                    final VoiceInterpreterParams.Builder builder = new VoiceInterpreterParams.Builder();
+                    builder.setConfiguration(configuration);
+                    builder.setStorage(storage);
+                    builder.setCallManager(self);
+                    builder.setConferenceCenter(conferences);
+                    builder.setBridgeManager(bridges);
+                    builder.setSmsService(sms);
+                    //https://github.com/RestComm/Restcomm-Connect/issues/1939
+                    Sid accSid = fromClientAccountSid == null ? number.getAccountSid() : fromClientAccountSid;
+                    builder.setAccount(accSid);
+                    builder.setPhone(number.getAccountSid());
+                    builder.setVersion(number.getApiVersion());
+                    // notifications should go to fromClientAccountSid email if not present then to number account
+                    // https://github.com/RestComm/Restcomm-Connect/issues/2011
+                    final Account account = accounts.getAccount(accSid);
+                    builder.setEmailAddress(account.getEmailAddress());
+                    final Sid sid = number.getVoiceApplicationSid();
+                    if (sid != null) {
+                        final Application application = applications.getApplication(sid);
+                        RcmlserverConfigurationSet rcmlserverConfig = RestcommConfiguration.getInstance().getRcmlserver();
+                        RcmlserverResolver rcmlserverResolver = RcmlserverResolver.getInstance(rcmlserverConfig.getBaseUrl(), rcmlserverConfig.getApiPath());
+                        builder.setUrl(UriUtils.resolve(rcmlserverResolver.resolveRelative(application.getRcmlUrl())));
+                    } else {
+                        builder.setUrl(UriUtils.resolve(number.getVoiceUrl()));
+                    }
+                    final String voiceMethod = number.getVoiceMethod();
+                    if (voiceMethod == null || voiceMethod.isEmpty()) {
+                        builder.setMethod("POST");
+                    } else {
+                        builder.setMethod(voiceMethod);
+                    }
+                    URI uri = number.getVoiceFallbackUrl();
+                    if (uri != null)
+                        builder.setFallbackUrl(UriUtils.resolve(uri));
+                    else
+                        builder.setFallbackUrl(null);
+                    builder.setFallbackMethod(number.getVoiceFallbackMethod());
+                    builder.setStatusCallback(number.getStatusCallback());
+                    builder.setStatusCallbackMethod(number.getStatusCallbackMethod());
+                    builder.setMonitoring(monitoring);
+                    final Props props = VoiceInterpreter.props(builder.build());
+                    final ActorRef interpreter = getContext().actorOf(props);
 
-                final ActorRef call = call(null);
-                final SipApplicationSession application = request.getApplicationSession();
-                application.setAttribute(Call.class.getName(), call);
-                call.tell(request, self);
-                interpreter.tell(new StartInterpreter(call), self);
-                isFoundHostedApp = true;
+                    final ActorRef call = call(null);
+                    final SipApplicationSession application = request.getApplicationSession();
+                    application.setAttribute(Call.class.getName(), call);
+                    call.tell(request, self);
+                    interpreter.tell(new StartInterpreter(call), self);
+                    isFoundHostedApp = true;
                 }
             }
         } catch (Exception notANumber) {
