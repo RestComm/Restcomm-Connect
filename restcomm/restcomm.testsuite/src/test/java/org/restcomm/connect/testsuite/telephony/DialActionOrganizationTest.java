@@ -340,8 +340,8 @@ public class DialActionOrganizationTest {
         int liveCallsArraySize = MonitoringServiceTool.getInstance().getLiveCallsArraySize(deploymentUrl.toString(), superAdminAccountSid, adminAuthToken);
         logger.info("&&&&& LiveCalls: "+liveCalls);
         logger.info("&&&&& LiveCallsArraySize: "+liveCallsArraySize);
-        assertTrue(liveCalls == 2);
-        assertTrue(liveCallsArraySize == 2);
+        assertEquals(2, liveCalls);
+        assertEquals(2, liveCallsArraySize);
 
         Thread.sleep(3000);
 
@@ -352,8 +352,8 @@ public class DialActionOrganizationTest {
         liveCallsArraySize = MonitoringServiceTool.getInstance().getLiveCallsArraySize(deploymentUrl.toString(), superAdminAccountSid, adminAuthToken);
         logger.info("&&&&& LiveCalls: "+liveCalls);
         logger.info("&&&&& LiveCallsArraySize: "+liveCallsArraySize);
-        assertTrue(liveCalls == 0);
-        assertTrue(liveCallsArraySize == 0);
+        assertEquals(0, liveCalls);
+        assertEquals(0, liveCallsArraySize);
 
     }
 
@@ -418,7 +418,7 @@ public class DialActionOrganizationTest {
 
         logger.info("About to check the Requests");
         List<LoggedRequest> requests = findAll(getRequestedFor(urlPathMatching("/1111")));
-        assertTrue(requests.size() == 1);
+        assertEquals(1, requests.size());
         //        requests.get(0).g;
         String requestBody = new URL(requests.get(0).getAbsoluteUrl()).getQuery();// .getQuery();// .getBodyAsString();
         List<String> params = Arrays.asList(requestBody.split("&"));
@@ -431,8 +431,8 @@ public class DialActionOrganizationTest {
         JsonObject cdr = RestcommCallsTool.getInstance().getCall(deploymentUrl.toString(), adminAccountSidOrg2, adminAuthToken, callSid);
         JsonObject jsonObj = cdr.getAsJsonObject();
         assertTrue(jsonObj.get("status").getAsString().equalsIgnoreCase("completed"));
-        assertTrue(MonitoringServiceTool.getInstance().getStatistics(deploymentUrl.toString(),adminAccountSidOrg2, adminAuthToken)==0);
-        assertTrue(MonitoringServiceTool.getInstance().getLiveCallsArraySize(deploymentUrl.toString(),adminAccountSidOrg2, adminAuthToken)==0);
+        assertEquals(0, MonitoringServiceTool.getInstance().getStatistics(deploymentUrl.toString(),adminAccountSidOrg2, adminAuthToken));
+        assertEquals(0, MonitoringServiceTool.getInstance().getLiveCallsArraySize(deploymentUrl.toString(),adminAccountSidOrg2, adminAuthToken));
     }
 
     /**
@@ -629,8 +629,8 @@ public class DialActionOrganizationTest {
         int liveCallsArraySize = MonitoringServiceTool.getInstance().getLiveCallsArraySize(deploymentUrl.toString(), superAdminAccountSid, adminAuthToken);
         logger.info("&&&&& LiveCalls: "+liveCalls);
         logger.info("&&&&& LiveCallsArraySize: "+liveCallsArraySize);
-        assertTrue(liveCalls == 2);
-        assertTrue(liveCallsArraySize == 2);
+        assertEquals(2, liveCalls);
+        assertEquals(2, liveCallsArraySize);
         assertTrue(getConferencesSize(adminAccountSidOrg2)>=1);
         int numOfParticipants = getParticipantsSize(confRoom2, adminAccountSidOrg2);
         logger.info("Number of participants: "+numOfParticipants);
@@ -646,12 +646,12 @@ public class DialActionOrganizationTest {
         liveCallsArraySize = MonitoringServiceTool.getInstance().getLiveCallsArraySize(deploymentUrl.toString(), superAdminAccountSid, adminAuthToken);
         logger.info("&&&&& LiveCalls: "+liveCalls);
         logger.info("&&&&& LiveCallsArraySize: "+liveCallsArraySize);
-        assertTrue(liveCalls == 0);
-        assertTrue(liveCallsArraySize == 0);
+        assertEquals(0, liveCalls);
+        assertEquals(0, liveCallsArraySize);
         assertTrue(getConferencesSize(adminAccountSidOrg2)>=1);
         int confRoom2Participants = getParticipantsSize(confRoom2, adminAccountSidOrg2);
         logger.info("&&&&& ConfRoom2Participants: "+confRoom2Participants);
-        assertTrue(confRoom2Participants==0);
+        assertEquals(0, confRoom2Participants);
     }
 
     private int getConferencesSize(String accountSid) {
