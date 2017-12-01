@@ -139,7 +139,6 @@ import akka.util.Timeout;
 import gov.nist.javax.sip.header.UserAgent;
 import org.restcomm.connect.interpreter.NumberSelectionResult;
 import org.restcomm.connect.interpreter.NumberSelectorService;
-import org.restcomm.connect.interpreter.ResultType;
 import org.restcomm.connect.interpreter.SIPOrganizationUtil;
 import scala.concurrent.Await;
 import scala.concurrent.Future;
@@ -1224,20 +1223,17 @@ public final class CallManager extends RestcommUntypedActor {
             Sid destOrg = SIPOrganizationUtil.searchOrganizationBySIPRequest(storage.getOrganizationsDao(), request);
             if (destOrg == null) {
                 //organization was not proper.
-                sendNotFound(request, sourceOrganizationSid, phone, fromClientAccountSid);
-                return true;
+                return isFoundHostedApp;
             }
             NumberSelectionResult result = numberSelector.searchNumberWithResult(phone, sourceOrganizationSid, destOrg);
             number = result.getNumber();
-            if(number  != null
-                    && !destOrg.equals(sourceOrganizationSid)
-                    && result.getType().equals(ResultType.REGULAR)
-                    && result.getUsedFilter() != null
-                    && result.getUsedFilter().getPureSIP().equals(false)) {
+            if(numberSelector.isFailedCall(result, sourceOrganizationSid, destOrg)
+                     ) {
                 // We found the number but organization was not proper
                 sendNotFound(request, sourceOrganizationSid, phone, fromClientAccountSid);
                 isFoundHostedApp = true;
             } else {
+
                 if (number != null) {
                     final VoiceInterpreterParams.Builder builder = new VoiceInterpreterParams.Builder();
                     builder.setConfiguration(configuration);
