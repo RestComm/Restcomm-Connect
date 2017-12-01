@@ -1,5 +1,4 @@
 /*
-/*
  * TeleStax, Open Source Cloud Communications
  * Copyright 2011-2014, Telestax Inc and individual contributors
  * by the @authors tag.
@@ -21,17 +20,16 @@
 package org.restcomm.connect.interpreter;
 
 import org.restcomm.connect.dao.entities.IncomingPhoneNumber;
-import org.restcomm.connect.dao.entities.IncomingPhoneNumberFilter;
 
 public class NumberSelectionResult {
 
     IncomingPhoneNumber number;
-    IncomingPhoneNumberFilter usedFilter;
+    Boolean organizationFiltered = false;
     ResultType type;
 
-    public NumberSelectionResult(IncomingPhoneNumber number, IncomingPhoneNumberFilter usedFilter, ResultType type) {
+    public NumberSelectionResult(IncomingPhoneNumber number, Boolean organizationFiltered, ResultType type) {
         this.number = number;
-        this.usedFilter = usedFilter;
+        this.organizationFiltered = organizationFiltered;
         this.type = type;
     }
 
@@ -39,11 +37,21 @@ public class NumberSelectionResult {
         return number;
     }
 
-    public IncomingPhoneNumberFilter getUsedFilter() {
-        return usedFilter;
+    public Boolean getOrganizationFiltered() {
+        return organizationFiltered;
+    }
+
+    public void setOrganizationFiltered(Boolean organizationFiltered) {
+        this.organizationFiltered = organizationFiltered;
     }
 
     public ResultType getType() {
         return type;
     }
+
+    public void setType(ResultType type) {
+        this.type = type;
+    }
+
+
 }

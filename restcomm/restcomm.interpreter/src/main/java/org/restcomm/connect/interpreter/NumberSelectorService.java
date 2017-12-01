@@ -39,13 +39,14 @@ import org.restcomm.connect.dao.entities.IncomingPhoneNumberFilter;
  * This Service will be used in different protocol scenarios to find if some
  * application is associated to the incoming session/number.
  *
- * Different queries to IncomingPhoneNumbersDao will be performed to try locating
- * the proper application.
+ * Different queries to IncomingPhoneNumbersDao will be performed to try
+ * locating the proper application.
  *
  *
- * Is expected that protocol scenario will provide meaningful Organization details
- * for source and destination. If protocol doesnt support Organizations yet, then
- * null values are allowed, but Regexes will not be evaluated in these cases.
+ * Is expected that protocol scenario will provide meaningful Organization
+ * details for source and destination. If protocol doesnt support Organizations
+ * yet, then null values are allowed, but Regexes will not be evaluated in these
+ * cases.
  */
 public class NumberSelectorService {
 
@@ -110,51 +111,58 @@ public class NumberSelectorService {
     /**
      * Here we expect a perfect match in DB.
      *
-     * Several rules regarding organization scoping will be applied in the
-     * DAO filter to ensure only applicable numbers in DB are retrieved.
+     * Several rules regarding organization scoping will be applied in the DAO
+     * filter to ensure only applicable numbers in DB are retrieved.
      *
-     * @param number the number to mtach against IncomingPhoneNumbersDao
+     * @param number the number to match against IncomingPhoneNumbersDao
      * @param sourceOrganizationSid
      * @param destinationOrganizationSid
      * @return the matched number, null if not matched.
      */
     private NumberSelectionResult findSingleNumber(String number,
             Sid sourceOrganizationSid, Sid destinationOrganizationSid) {
-        NumberSelectionResult matchedNumber = new NumberSelectionResult(null, null,null);
+        NumberSelectionResult matchedNumber = new NumberSelectionResult(null, false, null);
         IncomingPhoneNumberFilter.Builder filterBuilder = IncomingPhoneNumberFilter.Builder.builder();
         filterBuilder.byPhoneNumber(number);
-        if (destinationOrganizationSid != null) {
-            filterBuilder.byOrgSid(destinationOrganizationSid.toString());
-        }
-
-        //if not organizations are provided, restrict search to non SIP numbers
-        if (sourceOrganizationSid == null || destinationOrganizationSid == null) {
-            logger.debug("Organizations are null, restrict PureSIP numbers.");
-            filterBuilder.byPureSIP(Boolean.FALSE);
-        }
-
-        //this rule forbids using PureSIP numbers if organizations doesnt match
-        //this means only external provider numbers will be evaluated in DB
-        if (sourceOrganizationSid != null
-                && !sourceOrganizationSid.equals(destinationOrganizationSid)) {
-            filterBuilder.byPureSIP(Boolean.FALSE);
-        }
-
-        IncomingPhoneNumberFilter numFilter = filterBuilder.build();
-        if (logger.isDebugEnabled()) {
-            logger.debug("Searching with filter:" + numFilter);
-        }
-        List<IncomingPhoneNumber> matchedNumbers = numbersDao.getIncomingPhoneNumbersByFilter(numFilter);
-        if (logger.isDebugEnabled()) {
-            logger.debug("Num of results:" + matchedNumbers.size());
-        }
-        //we expect a perfect match, so first result taken
-        if (matchedNumbers != null && matchedNumbers.size() > 0) {
-            if (logger.isDebugEnabled()) {
-                logger.debug("Matched number with filter:" + matchedNumbers.get(0));
+        int unfilteredCount = numbersDao.getTotalIncomingPhoneNumbers(filterBuilder.build());
+        if (unfilteredCount > 0) {
+            if (destinationOrganizationSid != null) {
+                filterBuilder.byOrgSid(destinationOrganizationSid.toString());
             }
 
-            matchedNumber = new NumberSelectionResult(matchedNumbers.get(0),numFilter, ResultType.REGULAR);
+            //if not organizations are provided, restrict search to non SIP numbers
+            if (sourceOrganizationSid == null || destinationOrganizationSid == null) {
+                logger.debug("Organizations are null, restrict PureSIP numbers.");
+                filterBuilder.byPureSIP(Boolean.FALSE);
+            }
+
+            //this rule forbids using PureSIP numbers if organizations doesnt match
+            //this means only external provider numbers will be evaluated in DB
+            if (sourceOrganizationSid != null
+                    && !sourceOrganizationSid.equals(destinationOrganizationSid)) {
+                filterBuilder.byPureSIP(Boolean.FALSE);
+            }
+
+            IncomingPhoneNumberFilter numFilter = filterBuilder.build();
+            if (logger.isDebugEnabled()) {
+                logger.debug("Searching with filter:" + numFilter);
+            }
+            List<IncomingPhoneNumber> matchedNumbers = numbersDao.getIncomingPhoneNumbersByFilter(numFilter);
+            if (logger.isDebugEnabled()) {
+                logger.debug("Num of results:" + matchedNumbers.size() + ".unfilteredCount:" + unfilteredCount);
+            }
+            //we expect a perfect match, so first result taken
+            if (matchedNumbers != null && matchedNumbers.size() > 0) {
+                if (logger.isDebugEnabled()) {
+                    logger.debug("Matched number with filter:" + matchedNumbers.get(0));
+                }
+
+                matchedNumber = new NumberSelectionResult(matchedNumbers.get(0), Boolean.FALSE, ResultType.REGULAR);
+            } else {
+                //without organization fileter we had results,so this is
+                //marked as filtered by organization
+                matchedNumber.setOrganizationFiltered(Boolean.TRUE);
+            }
         }
         return matchedNumber;
     }
@@ -169,13 +177,19 @@ public class NumberSelectorService {
      */
     private NumberSelectionResult findByNumber(List<String> numberQueries,
             Sid sourceOrganizationSid, Sid destinationOrganizationSid) {
-        NumberSelectionResult matchedNumber = new NumberSelectionResult(null, null,null);
+        Boolean orgFiltered = false;
+        NumberSelectionResult matchedNumber = new NumberSelectionResult(null, orgFiltered, null);
         int i = 0;
         while (matchedNumber.number == null && i < numberQueries.size()) {
             matchedNumber = findSingleNumber(numberQueries.get(i),
                     sourceOrganizationSid, destinationOrganizationSid);
+            //preserve the orgFiltered flag along the queries
+            if (matchedNumber.getOrganizationFiltered()) {
+                orgFiltered = true;
+            }
             i = i + 1;
         }
+        matchedNumber.setOrganizationFiltered(orgFiltered);
         return matchedNumber;
     }
 
@@ -186,11 +200,31 @@ public class NumberSelectorService {
     }
 
     /**
-    * The main logic is:
-    * -Find a perfect match in DB using different formats.
-    * -If not matched, use available Regexes in the organization.
-    * -If not matched, try with the special * match.
-    *
+     *
+     * @param result whether the call should be rejected depending on results
+     * found
+     * @param srcOrg
+     * @param destOrg
+     * @return
+     */
+    public boolean isFailedCall(NumberSelectionResult result, Sid srcOrg, Sid destOrg) {
+        boolean failCall = false;
+
+        if (result.getNumber() == null) {
+            if (!destOrg.equals(srcOrg)
+                    && result.getOrganizationFiltered()) {
+                failCall = true;
+            }
+        }
+
+        return failCall;
+    }
+
+    /**
+     * The main logic is: -Find a perfect match in DB using different formats.
+     * -If not matched, use available Regexes in the organization. -If not
+     * matched, try with the special * match.
+     *
      * @param phone
      * @param sourceOrganizationSid
      * @param destinationOrganizationSid
@@ -208,19 +242,25 @@ public class NumberSelectorService {
         NumberSelectionResult numberfound = findByNumber(numberQueries, sourceOrganizationSid, destinationOrganizationSid);
         if (numberfound.number == null) {
             //only use regex if perfect match didnt worked
-            if (destinationOrganizationSid != null &&
-                    destinationOrganizationSid.equals(sourceOrganizationSid)
+            if (destinationOrganizationSid != null
+                    && destinationOrganizationSid.equals(sourceOrganizationSid)
                     && phone.matches("[\\d,*,#,+]+")) {
                 //check regex if source and dest orgs are the same
                 //only use regex if org available
                 //check if there is a Regex match only if parameter is a String aka phone Number
-                numberfound = findByRegex(numberQueries, sourceOrganizationSid, destinationOrganizationSid);
+                NumberSelectionResult regexFound = findByRegex(numberQueries, sourceOrganizationSid, destinationOrganizationSid);
+                if (regexFound.getNumber() != null) {
+                    numberfound = regexFound;
+                }
+                if (numberfound.number == null) {
+                    //if no regex match found, try with special star number in the end
+                    NumberSelectionResult starfound = findSingleNumber("*", sourceOrganizationSid, destinationOrganizationSid);
+                    if (starfound.number != null) {
+                        numberfound = new NumberSelectionResult(starfound.number, false, ResultType.REGEX);
+                    }
+                }
             }
-            if (numberfound.number == null) {
-                //if no regex match found, try with special star number in the end
-                numberfound = findSingleNumber("*", sourceOrganizationSid, destinationOrganizationSid);
-                numberfound.type=ResultType.STAR;
-            }
+
         }
         return numberfound;
     }
@@ -242,19 +282,20 @@ public class NumberSelectorService {
      * This will take the regexes available in given organization, and evalute
      * them agsint the given list of numbers, returning the first match.
      *
-     * The list of regexes will be ordered by length to ensure the longest regexes
-     * matching any number in the list is returned first.
+     * The list of regexes will be ordered by length to ensure the longest
+     * regexes matching any number in the list is returned first.
      *
      * In this case, organization details are required.
      *
      * @param numberQueries
      * @param sourceOrganizationSid
      * @param destOrg
-     * @return the longest regex matching any number in the list, null if no match
+     * @return the longest regex matching any number in the list, null if no
+     * match
      */
     private NumberSelectionResult findByRegex(List<String> numberQueries,
             Sid sourceOrganizationSid, Sid destOrg) {
-        NumberSelectionResult numberFound = new NumberSelectionResult(null, null,null);
+        NumberSelectionResult numberFound = new NumberSelectionResult(null, false, null);
         IncomingPhoneNumberFilter.Builder filterBuilder = IncomingPhoneNumberFilter.Builder.builder();
         filterBuilder.byOrgSid(destOrg.toString());
         filterBuilder.byPureSIP(Boolean.TRUE);
@@ -282,8 +323,8 @@ public class NumberSelectorService {
      * @return the first regex matching any number in list, null if no match
      */
     public NumberSelectionResult findFirstMatchingRegex(List<String> numberQueries, Set<IncomingPhoneNumber> regexSet
-            ) {
-        NumberSelectionResult matchedRegex = new NumberSelectionResult(null, null,null);
+    ) {
+        NumberSelectionResult matchedRegex = new NumberSelectionResult(null, false, null);
         try {
             Iterator<IncomingPhoneNumber> iterator = regexSet.iterator();
             while (matchedRegex.number == null && iterator.hasNext()) {
@@ -307,7 +348,7 @@ public class NumberSelectorService {
                     Matcher m = p.matcher(numberQueries.get(i));
                     if (m.find()) {
                         //match found, exit from loops and return
-                        matchedRegex = new NumberSelectionResult(currentRegex, null,ResultType.REGEX);
+                        matchedRegex = new NumberSelectionResult(currentRegex, false, ResultType.REGEX);
                     } else if (logger.isInfoEnabled()) {
                         String msg = String.format("Regex \"%s\" cannot be matched for phone number \"%s\"", phoneRegexPattern, numberQueries.get(i));
                         logger.info(msg);
