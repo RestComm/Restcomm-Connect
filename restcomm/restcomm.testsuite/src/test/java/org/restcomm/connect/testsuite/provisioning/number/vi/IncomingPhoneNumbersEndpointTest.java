@@ -818,11 +818,14 @@ public class IncomingPhoneNumbersEndpointTest {
         assertEquals(403, clientResponse.getStatus());
     }
 
+    /**
+     * super admin's number migration is not allowed
+     */
     @Test
     @Category(FeatureExpTests.class)
     public void testMigratePhoneNumberSuperAdminMigration() {
         Client jerseyClient = Client.create();
-        jerseyClient.addFilter(new HTTPBasicAuthFilter(adminOrg2AccountSid, adminAuthToken));
+        jerseyClient.addFilter(new HTTPBasicAuthFilter(adminAccountSid, adminAuthToken));
 
         String provisioningURL = deploymentUrl + baseURL + "IncomingPhoneNumbers/migrate";
         WebResource webResource = jerseyClient.resource(provisioningURL);
