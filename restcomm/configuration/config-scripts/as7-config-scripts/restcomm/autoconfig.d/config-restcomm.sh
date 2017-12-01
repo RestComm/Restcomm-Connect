@@ -687,14 +687,6 @@ otherRestCommConf(){
     echo "CACHE_NO_WAV $CACHE_NO_WAV"
     sed -i "s|<cache-no-wav>.*</cache-no-wav>|<cache-no-wav>${CACHE_NO_WAV}</cache-no-wav>|" $FILE
 
-    if [ -n "$CONFERENCE_TIMEOUT" ]; then
-        echo "CONFERENCE_TIMEOUT $CONFERENCE_TIMEOUT"
-        xmlstarlet ed --inplace -d "/restcomm/runtime-settings/conference-timeout" \
-                -s "/restcomm/runtime-settings" -t elem  -n conference-timeout \
-                -i "/restcomm/runtime-settings/conference-timeout" -t attr -n class -v "$CONFERENCE_TIMEOUT" \
-        $FILE
-    fi
-
     echo "End Rest RestComm configuration"
 }
 
