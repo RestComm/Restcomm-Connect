@@ -134,6 +134,14 @@ public abstract class SecuredEndpoint extends AbstractEndpoint {
     }
 
     /**
+     * Checks if the operated account is a direct child of effective account
+     * @return
+     */
+    protected boolean isDirectChildOfAccount(final Account effectiveAccount, final Account operatedAccount) {
+        return operatedAccount.getParentSid().equals(effectiveAccount.getSid());
+    }
+
+    /**
      * Checks if the effective account is a super account (top level account)
      *
      */
