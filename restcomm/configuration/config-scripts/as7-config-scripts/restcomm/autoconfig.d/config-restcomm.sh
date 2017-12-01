@@ -836,6 +836,11 @@ configDnsProvisioningManager() {
 
 }
 
+configConferenceTimeout(){
+    echo "Configure conference timeout $CONFERENCE_TIMEOUT"
+	xmlstarlet ed --inplace -u "/restcomm/runtime-settings/conference-timeout" -v "$CONFERENCE_TIMEOUT" $FILE
+}
+
 # MAIN
 echo 'Configuring RestComm...'
 configRCJavaOpts
@@ -875,4 +880,5 @@ confRVD
 configRMSNetworking
 configAsrDriver
 configDnsProvisioningManager
+configConferenceTimeout
 echo 'Configured RestComm!'
