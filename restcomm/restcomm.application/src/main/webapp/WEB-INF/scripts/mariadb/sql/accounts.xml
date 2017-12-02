@@ -39,7 +39,8 @@
 	<update id="updateAccount" parameterType="map">
 		UPDATE restcomm_accounts SET date_updated=#{date_updated},
 		email_address=#{email_address}, friendly_name=#{friendly_name},
-		type=#{type}, status=#{status}, auth_token=#{auth_token}, role=#{role}
+		type=#{type}, status=#{status}, auth_token=#{auth_token}, role=#{role},
+		organization_sid=#{organization_sid}
 		WHERE sid=#{sid};
 	</update>
 
