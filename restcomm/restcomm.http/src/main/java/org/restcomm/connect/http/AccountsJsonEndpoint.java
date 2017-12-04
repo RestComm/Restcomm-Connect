@@ -97,4 +97,11 @@ public final class AccountsJsonEndpoint extends AccountsEndpoint {
     }
 
 
+    @Path("/migrate/{accountSid}")
+    @Consumes(APPLICATION_FORM_URLENCODED)
+    @POST
+    public Response migrateAccount(@PathParam("accountSid") final String accountSid, final MultivaluedMap<String, String> data) {
+        return migrateAccountOrganization(accountSid, data, APPLICATION_JSON_TYPE);
+    }
+
 }
