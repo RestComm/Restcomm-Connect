@@ -78,7 +78,7 @@
     LEFT OUTER JOIN restcomm_applications a_sms ON n.sms_application_sid = a_sms.sid
     LEFT OUTER JOIN restcomm_applications a_ussd ON n.ussd_application_sid = a_ussd.sid
     LEFT OUTER JOIN restcomm_applications a_refer ON n.refer_application_sid = a_refer.sid
-    WHERE n.account_sid=#{accountSid}
+    WHERE 1=1
     <if test="friendlyName != null">
       AND n.friendly_name=#{friendlyName}
     </if>
@@ -122,7 +122,7 @@
     LEFT OUTER JOIN restcomm_applications a_sms ON n.sms_application_sid = a_sms.sid
     LEFT OUTER JOIN restcomm_applications a_ussd ON n.ussd_application_sid = a_ussd.sid
     LEFT OUTER JOIN restcomm_applications a_refer ON n.refer_application_sid = a_refer.sid
-    WHERE n.account_sid=#{accountSid}
+    WHERE 1=1
     <if test="friendlyName != null">
       AND n.friendly_name like #{friendlyName}
     </if>
@@ -155,7 +155,7 @@
   </select>  
   
   <select id="getTotalIncomingPhoneNumbersByUsingFilters" parameterType="org.restcomm.connect.dao.entities.IncomingPhoneNumberFilter" resultType="int">
-		SELECT COUNT(*) FROM restcomm_incoming_phone_numbers WHERE account_sid=#{accountSid}
+		SELECT COUNT(*) FROM restcomm_incoming_phone_numbers WHERE 1=1
 
         <if test="friendlyName != null">
             AND friendly_name like #{friendlyName}
