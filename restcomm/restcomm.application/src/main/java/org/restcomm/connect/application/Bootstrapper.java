@@ -1,29 +1,24 @@
 package org.restcomm.connect.application;
 
-import java.net.UnknownHostException;
-import java.util.List;
-import java.util.Properties;
-
-import javax.media.mscontrol.MsControlException;
-import javax.media.mscontrol.MsControlFactory;
-import javax.media.mscontrol.spi.Driver;
-import javax.media.mscontrol.spi.DriverManager;
-import javax.servlet.ServletContext;
-import javax.servlet.ServletException;
-import javax.servlet.sip.SipServlet;
-import javax.servlet.sip.SipServletContextEvent;
-import javax.servlet.sip.SipServletListener;
-import javax.servlet.sip.SipURI;
-
+import akka.actor.Actor;
+import akka.actor.ActorRef;
+import akka.actor.ActorSystem;
+import akka.actor.Props;
+import akka.actor.UntypedActor;
+import akka.actor.UntypedActorFactory;
+import com.typesafe.config.Config;
+import com.typesafe.config.ConfigFactory;
 import org.apache.commons.configuration.Configuration;
 import org.apache.commons.configuration.ConfigurationException;
 import org.apache.commons.configuration.XMLConfiguration;
 import org.apache.commons.configuration.interpol.ConfigurationInterpolator;
+import org.apache.http.impl.client.CloseableHttpClient;
 import org.apache.log4j.Logger;
 import org.joda.time.DateTime;
 import org.mobicents.servlet.sip.SipConnector;
 import org.restcomm.connect.application.config.ConfigurationStringLookup;
 import org.restcomm.connect.commons.Version;
+import org.restcomm.connect.commons.common.http.CustomHttpClientBuilder;
 import org.restcomm.connect.commons.configuration.RestcommConfiguration;
 import org.restcomm.connect.commons.dao.Sid;
 import org.restcomm.connect.commons.loader.ObjectFactory;
@@ -35,31 +30,34 @@ import org.restcomm.connect.dao.entities.Organization;
 import org.restcomm.connect.dao.entities.shiro.ShiroResources;
 import org.restcomm.connect.extension.controller.ExtensionBootstrapper;
 import org.restcomm.connect.identity.IdentityContext;
+import org.restcomm.connect.interpreter.NumberSelectorService;
 import org.restcomm.connect.monitoringservice.MonitoringService;
 import org.restcomm.connect.mrb.api.StartMediaResourceBroker;
 import org.restcomm.connect.mscontrol.api.MediaServerControllerFactory;
 import org.restcomm.connect.mscontrol.api.MediaServerInfo;
 import org.restcomm.connect.mscontrol.jsr309.Jsr309ControllerFactory;
 import org.restcomm.connect.mscontrol.mms.MmsControllerFactory;
-
-import com.typesafe.config.Config;
-import com.typesafe.config.ConfigFactory;
-
-import akka.actor.ActorRef;
-import akka.actor.ActorSystem;
-import akka.actor.Props;
-import akka.actor.UntypedActor;
-import akka.actor.UntypedActorFactory;
-import org.apache.http.impl.client.CloseableHttpClient;
-import org.restcomm.connect.commons.common.http.CustomHttpClientBuilder;
-import org.restcomm.connect.interpreter.NumberSelectorService;
+import org.restcomm.connect.sdr.api.SdrService;
+import org.restcomm.connect.sdr.api.StartSdrService;
 import scala.concurrent.ExecutionContext;
 
+import javax.media.mscontrol.MsControlException;
+import javax.media.mscontrol.MsControlFactory;
+import javax.media.mscontrol.spi.Driver;
+import javax.media.mscontrol.spi.DriverManager;
+import javax.servlet.ServletContext;
+import javax.servlet.ServletException;
+import javax.servlet.sip.SipServlet;
+import javax.servlet.sip.SipServletContextEvent;
+import javax.servlet.sip.SipServletListener;
+import javax.servlet.sip.SipURI;
+import java.net.UnknownHostException;
+import java.util.List;
+import java.util.Properties;
+
 /**
- *
  * @author <a href="mailto:gvagenas@gmail.com">gvagenas</a>
  * @author maria-farooq@live.com (Maria Farooq)
- *
  */
 
 public final class Bootstrapper extends SipServlet implements SipServletListener {
@@ -82,7 +80,7 @@ public final class Bootstrapper extends SipServlet implements SipServletListener
 
     private MediaServerControllerFactory mediaServerControllerFactory(final Configuration configuration, ClassLoader loader, DaoManager storage, ActorRef monitoring)
             throws ServletException {
-        Configuration settings ;
+        Configuration settings;
         String compatibility = configuration.subset("mscontrol").getString("compatibility", "rms");
 
         MediaServerControllerFactory factory;
@@ -140,7 +138,7 @@ public final class Bootstrapper extends SipServlet implements SipServletListener
 
         // Configure the transport to be used by the connector
         final String mediaTransport = configuration.getString("media-server.transport", "udp");
-        if(logger.isInfoEnabled()) {
+        if (logger.isInfoEnabled()) {
             logger.info("JSR 309 - media-server.transport: udp");
         }
         properties.setProperty("connector.sip.transport", mediaTransport);
@@ -148,24 +146,24 @@ public final class Bootstrapper extends SipServlet implements SipServletListener
         // Configure SIP connector using RestComm binding address
         SipURI sipURI = outboundInterface(getServletContext(), mediaTransport);
         properties.setProperty("connector.sip.address", sipURI.getHost());
-        if(logger.isInfoEnabled()) {
+        if (logger.isInfoEnabled()) {
             logger.info("JSR 309 - connector.sip.address: " + sipURI.getHost());
         }
         properties.setProperty("connector.sip.port", String.valueOf(sipURI.getPort()));
-        if(logger.isInfoEnabled()) {
+        if (logger.isInfoEnabled()) {
             logger.info("JSR 309 - connector.sip.port: " + String.valueOf(sipURI.getPort()));
         }
 
         // Configure Media Server address based on restcomm configuration file
         final String mediaAddress = configuration.getString("media-server.address", "127.0.0.1");
         properties.setProperty("mediaserver.sip.ipaddress", mediaAddress);
-        if(logger.isInfoEnabled()) {
+        if (logger.isInfoEnabled()) {
             logger.info("JSR 309 - mediaserver.sip.ipaddress: " + mediaAddress);
         }
 
         final String mediaPort = configuration.getString("media-server.port", "5060");
         properties.setProperty("mediaserver.sip.port", mediaPort);
-        if(logger.isInfoEnabled()) {
+        if (logger.isInfoEnabled()) {
             logger.info("JSR 309 - mediaserver.sip.port: " + mediaPort);
         }
 
@@ -188,9 +186,9 @@ public final class Bootstrapper extends SipServlet implements SipServletListener
             }
             if (logger.isInfoEnabled()) {
                 if (result == null) {
-                    logger.info("Outbound interface is NULL! Looks like there was no "+transport+" in the list of connectors");
+                    logger.info("Outbound interface is NULL! Looks like there was no " + transport + " in the list of connectors");
                 } else {
-                    logger.info("Outbound interface found: "+result.toString());
+                    logger.info("Outbound interface found: " + result.toString());
                 }
             }
         } else {
@@ -201,7 +199,7 @@ public final class Bootstrapper extends SipServlet implements SipServletListener
         return result;
     }
 
-    private ActorRef mediaResourceBroker(final Configuration configuration, final DaoManager storage, final ClassLoader loader, final ActorRef monitoring) throws UnknownHostException{
+    private ActorRef mediaResourceBroker(final Configuration configuration, final DaoManager storage, final ClassLoader loader, final ActorRef monitoring) throws UnknownHostException {
         final Props props = new Props(new UntypedActorFactory() {
             private static final long serialVersionUID = 1L;
 
@@ -228,7 +226,7 @@ public final class Bootstrapper extends SipServlet implements SipServletListener
     private DaoManager storage(final Configuration configuration, Configuration daoManagerConfiguration, final ClassLoader loader, final ExecutionContext ec) throws ObjectInstantiationException {
         final String classpath = daoManagerConfiguration.getString("dao-manager[@class]");
         final DaoManager daoManager = (DaoManager) new ObjectFactory(loader).getObjectInstance(classpath);
-        daoManager.configure(configuration, daoManagerConfiguration, ec );
+        daoManager.configure(configuration, daoManagerConfiguration, ec);
         daoManager.start();
         return daoManager;
     }
@@ -246,6 +244,22 @@ public final class Bootstrapper extends SipServlet implements SipServletListener
 
     }
 
+    private ActorRef sdrService(final Configuration configuration, final ClassLoader loader) throws Exception {
+        final String className = configuration.getString("sdr-service[@class]");
+        if (className != null && loader.loadClass(className).isAssignableFrom(SdrService.class)) {
+            final Props props = new Props(new UntypedActorFactory() {
+                @Override
+                public Actor create() throws Exception {
+                    return (Actor) new ObjectFactory(loader).getObjectInstance(className);
+                }
+            });
+            ActorRef sdr = system.actorOf(props);
+            sdr.tell(new StartSdrService(configuration), null);
+            return sdr;
+        }
+        return null;
+    }
+
     private String uri(final ServletContext context) {
         return context.getContextPath();
     }
@@ -253,41 +267,43 @@ public final class Bootstrapper extends SipServlet implements SipServletListener
     /**
      * generateDefaultDomainName based on RC hostname
      * https://github.com/RestComm/Restcomm-Connect/issues/2085
+     *
      * @param configuration
      * @param storage
      * @param sipUriHostAsFallbackDomain - if hostname is not provided in restcomm.xml then provided sipuri host will be used as domain.
      */
-    private boolean generateDefaultDomainName (final Configuration configuration, final DaoManager storage, final SipURI sipUriHostAsFallbackDomain) {
-        try{
+    private boolean generateDefaultDomainName(final Configuration configuration, final DaoManager storage, final SipURI sipUriHostAsFallbackDomain) {
+        try {
             final Sid defaultOrganization = new Sid("ORafbe225ad37541eba518a74248f0ac4c");
             String hostname = configuration.getString("hostname");
 
-            if(hostname != null && !hostname.trim().equals("")){
-                if(logger.isInfoEnabled())
-                    logger.info("Generate Default Domain Name based on RC hostname: "+hostname);
-            }else{
-                if(sipUriHostAsFallbackDomain != null){
-                    logger.warn("Hostname property is null in restcomm.xml, will assign this host as domain: "+sipUriHostAsFallbackDomain.getHost());
+            if (hostname != null && !hostname.trim().equals("")) {
+                if (logger.isInfoEnabled())
+                    logger.info("Generate Default Domain Name based on RC hostname: " + hostname);
+            } else {
+                if (sipUriHostAsFallbackDomain != null) {
+                    logger.warn("Hostname property is null in restcomm.xml, will assign this host as domain: " + sipUriHostAsFallbackDomain.getHost());
                     hostname = sipUriHostAsFallbackDomain.getHost();
-                }else {
+                } else {
                     logger.error("Hostname property is null in restcomm.xml, As well restcomm outbound sipuri is NULL.");
                     return false;
                 }
             }
 
             Organization organization = storage.getOrganizationsDao().getOrganization(defaultOrganization);
-            if(organization == null){
+            if (organization == null) {
                 storage.getOrganizationsDao().addOrganization(new Organization(defaultOrganization, hostname, DateTime.now(), DateTime.now(), Organization.Status.ACTIVE));
-            }else{
+            } else {
                 organization = organization.setDomainName(hostname);
                 storage.getOrganizationsDao().updateOrganization(organization);
             }
-        }catch(Exception e){
+        } catch (Exception e) {
             logger.error("Unable to generateDefaultDomainName {}", e);
             return false;
         }
         return true;
     }
+
     @Override
     public void servletInitialized(SipServletContextEvent event) {
         if (event.getSipServlet().getClass().equals(Bootstrapper.class)) {
@@ -363,11 +379,24 @@ public final class Bootstrapper extends SipServlet implements SipServletListener
             ActorRef monitoring = monitoringService(xml, storage, loader);
             if (monitoring != null) {
                 context.setAttribute(MonitoringService.class.getName(), monitoring);
-                if(logger.isInfoEnabled()) {
+                if (logger.isInfoEnabled()) {
                     logger.info("Monitoring Service created and stored in the context");
                 }
             } else {
                 logger.error("Monitoring Service is null");
+            }
+
+            //Initialize Sdr Service
+            try {
+                ActorRef sdrService = sdrService(xml, loader);
+                if (sdrService != null) {
+                    context.setAttribute(SdrService.class.getName(), monitoring);
+                    if (logger.isInfoEnabled()) {
+                        logger.info("Sdr Service created and stored in the context");
+                    }
+                }
+            } catch (Exception e) {
+                logger.error("Exception during Sdr Service initialization: " + e.getStackTrace());
             }
 
             CloseableHttpClient buildDefaultClient = CustomHttpClientBuilder.buildDefaultClient(RestcommConfiguration.getInstance().getMain());
@@ -385,7 +414,7 @@ public final class Bootstrapper extends SipServlet implements SipServletListener
             try {
                 extensionBootstrapper.start();
             } catch (IllegalAccessException | InstantiationException | ClassNotFoundException e) {
-                logger.error("Exception during extension scanner start: "+e.getStackTrace());
+                logger.error("Exception during extension scanner start: " + e.getStackTrace());
             }
 
             // Create the media server controller factory
@@ -414,7 +443,7 @@ public final class Bootstrapper extends SipServlet implements SipServletListener
             InstanceId instanceId = null;
             SipURI sipURI = null;
             try {
-                sipURI = outboundInterface(context,"udp");
+                sipURI = outboundInterface(context, "udp");
                 if (sipURI != null) {
                     generateInstanceId = new GenerateInstanceId(context, sipURI);
                 } else {
@@ -424,14 +453,14 @@ public final class Bootstrapper extends SipServlet implements SipServletListener
                 }
                 instanceId = generateInstanceId.instanceId();
             } catch (UnknownHostException e) {
-                logger.error("UnknownHostException during the generation of InstanceId: "+e);
+                logger.error("UnknownHostException during the generation of InstanceId: " + e);
             }
 
             context.setAttribute(InstanceId.class.getName(), instanceId);
             monitoring.tell(instanceId, null);
             RestcommConfiguration.getInstance().getMain().setInstanceId(instanceId.getId().toString());
 
-            if(!generateDefaultDomainName(xml.subset("http-client"), storage, sipURI)){
+            if (!generateDefaultDomainName(xml.subset("http-client"), storage, sipURI)) {
                 logger.error("Unable to generate DefaultDomainName, Restcomm Akka system will exit now...");
                 system.shutdown();
                 system.awaitTermination();

@@ -147,6 +147,13 @@
 		</dependency>
 
 		<dependency>
+			<groupId>org.restcomm</groupId>
+			<artifactId>restcomm-connect.sdr.api</artifactId>
+			<version>${project.version}</version>
+			<scope>provided</scope>
+		</dependency>
+
+		<dependency>
 			<groupId>javax.sip</groupId>
 			<artifactId>jain-sip-ri</artifactId>
 			<version>${sip-ri.version}</version>
@@ -167,8 +174,7 @@
             <artifactId>restcomm-connect.http</artifactId>
             <version>${project.version}</version>
         </dependency>
-
-    </dependencies>
+	</dependencies>
 
 	<build>
 		<plugins>
