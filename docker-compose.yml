@@ -77,6 +77,14 @@ services:
       RCADVCONF_HSQL_DIR: /var/restcomm/data # Defines path where HSQL data will be persisted.
 
 
+      # Powermedia XMS integration: uncomment below env vars. Also:
+      #
+      # RMSCONF_MS_COMPATIBILITY_MODE: xms
+      # RMSCONF_MS_ADDRESS: 127.0.0.1 # The IP of a working Powermedia XMS server.
+      # NOTE: In our example, we are assuming Powermedia XMS is installed on the host where Restcomm-Connect is running in a Docker container. As
+      # such, they can share a docker volume for storing recordings (the `recordings` volume). XMS should be configured to store files to that
+      # directory. For more complex examples, you'll want to set up NFS shares, etc.
+
 
       #  The RestComm docker image supports the same set of environment variables with RestComm, with some prefix, depending on the config file it is in.
       #  - Variables that are located at "restcomm.conf" need to be prefixed with "RCBCONF_"
