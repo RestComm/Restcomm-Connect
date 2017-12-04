@@ -50,7 +50,12 @@ public final class Organization {
         if(sid == null)
             throw new IllegalArgumentException("Organization sid can not be empty.");
         this.sid = sid;
-        this.domainName = domainName;
+
+        if(domainName.endsWith(".")){
+            this.domainName = domainName.substring(0, domainName.lastIndexOf('.'));
+        }else{
+            this.domainName = domainName;
+        }
         this.dateCreated = dateCreated;
         this.dateUpdated = dateUpdated;
         this.status = status;
@@ -91,6 +96,8 @@ public final class Organization {
     }
 
     public String getDomainName() {
+        if(domainName != null && domainName.endsWith("."))
+            return domainName.substring(0, domainName.lastIndexOf('.'));
         return domainName;
     }
 
