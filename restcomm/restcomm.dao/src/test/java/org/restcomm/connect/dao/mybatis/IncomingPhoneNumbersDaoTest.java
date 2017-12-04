@@ -137,6 +137,8 @@ public class IncomingPhoneNumbersDaoTest {
         number.setSmsFallbackUrl(url);
         number.setSmsFallbackMethod(method);
         number.setSmsApplicationSid(application);
+        Sid newOrganizationSid = Sid.generate(Sid.Type.ORGANIZATION);
+        number.setOrganizationSid(newOrganizationSid);
         numbers.updateIncomingPhoneNumber(number);
         // Read the updated application from the data store.
         result = numbers.getIncomingPhoneNumber(sid);
@@ -160,6 +162,7 @@ public class IncomingPhoneNumbersDaoTest {
         assertTrue(result.getSmsFallbackMethod().equals(number.getSmsFallbackMethod()));
         assertTrue(result.getSmsApplicationSid().equals(number.getSmsApplicationSid()));
         assertTrue(result.getUri().equals(number.getUri()));
+        assertEquals(newOrganizationSid.toString(), result.getOrganizationSid().toString());
         // Delete the incoming phone number.
         numbers.removeIncomingPhoneNumber(sid);
         // Validate that the incoming phone number was removed.
