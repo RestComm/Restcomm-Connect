@@ -128,10 +128,8 @@ public class NumberSelectorService {
         if (unfilteredCount > 0) {
             if (destinationOrganizationSid != null) {
                 filterBuilder.byOrgSid(destinationOrganizationSid.toString());
-            }
-
-            //if not organizations are provided, restrict search to non SIP numbers
-            if (sourceOrganizationSid == null || destinationOrganizationSid == null) {
+            }else{
+                //restrict search to non SIP numbers
                 logger.debug("Organizations are null, restrict PureSIP numbers.");
                 filterBuilder.byPureSIP(Boolean.FALSE);
             }
