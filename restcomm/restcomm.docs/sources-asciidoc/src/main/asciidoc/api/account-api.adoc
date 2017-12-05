@@ -31,7 +31,7 @@ Accounts and sub-accounts are useful for things like segmenting phone numbers an
 
 **HTTP POST/PUT**. Modifies an Account resource and returns the representation, including the properties above. Below you will find a list of optional parameters.
 
-=== Request Parameters
+==== Request Parameters
 
 [cols=",",options="header",]
 |==============================================================================================
@@ -39,6 +39,34 @@ Accounts and sub-accounts are useful for things like segmenting phone numbers an
 |FriendlyName |A description of this account, up to 64 characters long.
 |Status |The status of this account. Possible values are active, suspended, and closed.
 |Password |A password that will be used to generate the AuthToken for the new Account resource.
+|==============================================================================================
+
+=== Account Migration to new Organization
+
+Account Migration operation can be used to migrate a top level account to a new organization.
+In the process, all child accounts will also be migrated.
+
+* Account Migration Resource URI */2012-04-24/Accounts/migrate/\{AccountSid}*
+* Method *HTTP POST*
+* The operation is allowed for Super Admin only
+* The account to migrate must be a top level account (child of Super Admin)
+
+==== Request Parameters
+[cols=",",options="header",]
+|==============================================================================================
+|Parameter |Description
+|Organization |The new Organization SID or Domain Name to move the account. *Required*
+|==============================================================================================
+
+==== Response Status
+[cols=",",options="header",]
+|==============================================================================================
+|Status |Description
+|200 OK |Migration operation completed successfully
+|403 Forbidden |Only Super Admin is allowed for the migrate operation
+|412 Precondition Failed |Target Organization SID or Domain Name is missing
+|404 Not Found |Target Account SID is missing
+|400 Bad Request |Target Account is not a top level account or target account is already in the new organization
 |==============================================================================================
 
 **Get information about the default account.**
