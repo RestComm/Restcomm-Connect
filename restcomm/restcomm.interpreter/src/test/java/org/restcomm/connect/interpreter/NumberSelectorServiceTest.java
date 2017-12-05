@@ -53,16 +53,15 @@ public class NumberSelectorServiceTest {
                 thenReturn(emptyNumbers, emptyNumbers, emptyNumbers);
         when(numDao.getIncomingPhoneNumbersRegex((IncomingPhoneNumberFilter) any())).
                 thenReturn(emptyNumbers);
+        when(numDao.getTotalIncomingPhoneNumbers((IncomingPhoneNumberFilter) any())).
+                thenReturn(0,0,0);
         InOrder inOrder = inOrder(numDao);
         NumberSelectorService service = new NumberSelectorService(numDao);
 
         IncomingPhoneNumber found = service.searchNumber(number, srcSid, destSid);
 
         Assert.assertNull(found);
-        inOrder.verify(numDao, times(2)).getIncomingPhoneNumbersByFilter((IncomingPhoneNumberFilter) any());
-        inOrder.verify(numDao, times(1)).getIncomingPhoneNumbersRegex((IncomingPhoneNumberFilter) any());
-        inOrder.verify(numDao, times(1)).getIncomingPhoneNumbersByFilter((IncomingPhoneNumberFilter) any());
-
+        inOrder.verify(numDao, times(3)).getTotalIncomingPhoneNumbers((IncomingPhoneNumberFilter) any());
     }
 
     @Test
@@ -75,6 +74,8 @@ public class NumberSelectorServiceTest {
         builder.setPhoneNumber(number);
         numbers.add(builder.build());
         IncomingPhoneNumbersDao numDao = Mockito.mock(IncomingPhoneNumbersDao.class);
+        when(numDao.getTotalIncomingPhoneNumbers((IncomingPhoneNumberFilter) any())).
+                thenReturn(1);
         when(numDao.getIncomingPhoneNumbersByFilter((IncomingPhoneNumberFilter) any())).
                 thenReturn(numbers);
         InOrder inOrder = inOrder(numDao);
@@ -99,6 +100,8 @@ public class NumberSelectorServiceTest {
         builder.setPhoneNumber(number);
         numbers.add(builder.build());
         IncomingPhoneNumbersDao numDao = Mockito.mock(IncomingPhoneNumbersDao.class);
+        when(numDao.getTotalIncomingPhoneNumbers((IncomingPhoneNumberFilter) any())).
+                thenReturn(1,1);
         when(numDao.getIncomingPhoneNumbersByFilter((IncomingPhoneNumberFilter) any())).
                 thenReturn(emptyList, numbers);
         InOrder inOrder = inOrder(numDao);
@@ -123,6 +126,8 @@ public class NumberSelectorServiceTest {
         builder.setPhoneNumber(number);
         numbers.add(builder.build());
         IncomingPhoneNumbersDao numDao = Mockito.mock(IncomingPhoneNumbersDao.class);
+        when(numDao.getTotalIncomingPhoneNumbers((IncomingPhoneNumberFilter) any())).
+                thenReturn(1,1);
         when(numDao.getIncomingPhoneNumbersByFilter((IncomingPhoneNumberFilter) any())).
                 thenReturn(emptyList, numbers);
         InOrder inOrder = inOrder(numDao);
@@ -146,6 +151,8 @@ public class NumberSelectorServiceTest {
         builder.setPhoneNumber(number);
         numbers.add(builder.build());
         IncomingPhoneNumbersDao numDao = Mockito.mock(IncomingPhoneNumbersDao.class);
+        when(numDao.getTotalIncomingPhoneNumbers((IncomingPhoneNumberFilter) any())).
+                thenReturn(1);
         when(numDao.getIncomingPhoneNumbersByFilter((IncomingPhoneNumberFilter) any())).
                 thenReturn(numbers);
         InOrder inOrder = inOrder(numDao);
@@ -171,6 +178,8 @@ public class NumberSelectorServiceTest {
         builder.setPhoneNumber(star);
         numbers.add(builder.build());
         IncomingPhoneNumbersDao numDao = Mockito.mock(IncomingPhoneNumbersDao.class);
+        when(numDao.getTotalIncomingPhoneNumbers((IncomingPhoneNumberFilter) any())).
+                thenReturn(1,1,1);
         when(numDao.getIncomingPhoneNumbersByFilter((IncomingPhoneNumberFilter) any())).
                 thenReturn(emptyList,emptyList, numbers);
         when(numDao.getIncomingPhoneNumbersRegex((IncomingPhoneNumberFilter) any())).
@@ -182,23 +191,25 @@ public class NumberSelectorServiceTest {
 
         Assert.assertNotNull(found);
         Assert.assertEquals(star, found.getPhoneNumber());
-        inOrder.verify(numDao, times(2)).getIncomingPhoneNumbersByFilter((IncomingPhoneNumberFilter) any());
-        inOrder.verify(numDao, times(1)).getIncomingPhoneNumbersRegex((IncomingPhoneNumberFilter) any());
+        inOrder.verify(numDao, times(3)).getIncomingPhoneNumbersByFilter((IncomingPhoneNumberFilter) any());
     }
 
     @Test
     public void testRegexNoOrg() {
         Sid srcSid = null;
         Sid destSid = null;
-        String regex = "12.*";
+        String regex = "12        when(numDao.getTotalIncomingPhoneNumbers((IncomingPhoneNumberFilter) any())).\n" +
+"                thenReturn(1,1,1);.*";
         List<IncomingPhoneNumber> emptyNumbers = new ArrayList();
         List<IncomingPhoneNumber> numbers = new ArrayList();
         final IncomingPhoneNumber.Builder builder = IncomingPhoneNumber.builder();
         builder.setPhoneNumber(regex);
         numbers.add(builder.build());
         IncomingPhoneNumbersDao numDao = Mockito.mock(IncomingPhoneNumbersDao.class);
+        when(numDao.getTotalIncomingPhoneNumbers((IncomingPhoneNumberFilter) any())).
+                thenReturn(1,1,1);
         when(numDao.getIncomingPhoneNumbersByFilter((IncomingPhoneNumberFilter) any())).
-                thenReturn(emptyNumbers, emptyNumbers, emptyNumbers);
+                thenReturn(emptyNumbers, emptyNumbers);
         when(numDao.getIncomingPhoneNumbersRegex((IncomingPhoneNumberFilter) any())).
                 thenReturn(numbers);
         InOrder inOrder = inOrder(numDao);
@@ -207,7 +218,7 @@ public class NumberSelectorServiceTest {
         IncomingPhoneNumber found = service.searchNumber("1234", srcSid, destSid);
 
         Assert.assertNull(found);
-        inOrder.verify(numDao, times(3)).getIncomingPhoneNumbersByFilter((IncomingPhoneNumberFilter) any());
+        inOrder.verify(numDao, times(2)).getIncomingPhoneNumbersByFilter((IncomingPhoneNumberFilter) any());
         inOrder.verify(numDao, never()).getIncomingPhoneNumbersRegex((IncomingPhoneNumberFilter) any());
 
     }
@@ -226,6 +237,8 @@ public class NumberSelectorServiceTest {
         builder.setPhoneNumber(longestRegex);
         numbers.add(builder.build());
         IncomingPhoneNumbersDao numDao = Mockito.mock(IncomingPhoneNumbersDao.class);
+        when(numDao.getTotalIncomingPhoneNumbers((IncomingPhoneNumberFilter) any())).
+                thenReturn(1,1);
         when(numDao.getIncomingPhoneNumbersByFilter((IncomingPhoneNumberFilter) any())).
                 thenReturn(emptyNumbers, emptyNumbers);
         when(numDao.getIncomingPhoneNumbersRegex((IncomingPhoneNumberFilter) any())).

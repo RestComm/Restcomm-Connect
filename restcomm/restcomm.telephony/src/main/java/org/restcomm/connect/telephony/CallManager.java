@@ -137,6 +137,7 @@ import akka.event.Logging;
 import akka.event.LoggingAdapter;
 import akka.util.Timeout;
 import gov.nist.javax.sip.header.UserAgent;
+import org.restcomm.connect.interpreter.NumberSelectionResult;
 import org.restcomm.connect.interpreter.NumberSelectorService;
 import org.restcomm.connect.interpreter.SIPOrganizationUtil;
 import scala.concurrent.Await;
@@ -1192,6 +1193,18 @@ public final class CallManager extends RestcommUntypedActor {
         transferorActor.tell(new Hangup(), null);
     }
 
+
+    private void sendNotFound(final SipServletRequest request, Sid sourceOrganizationSid, String phone, Sid fromClientAccountSid) throws IOException {
+        //organization was not proper.
+        final SipServletResponse response = request.createResponse(SC_NOT_FOUND);
+        response.send();
+        String sourceDomainName = storage.getOrganizationsDao().getOrganization(sourceOrganizationSid).getDomainName();
+        // We found the number but organization was not proper
+        String errMsg = String.format("provided number %s does not belong to your domain %s.", phone, sourceDomainName);
+        logger.warning(errMsg+" Requiested URI was: "+ request.getRequestURI());
+        sendNotification(fromClientAccountSid, errMsg, 11005, "error", true);
+    }
+
     /**
      * Try to locate a hosted voice app corresponding to the callee/To address. If one is found, begin execution, otherwise
      * return false;
@@ -1208,18 +1221,19 @@ public final class CallManager extends RestcommUntypedActor {
         IncomingPhoneNumber number = null;
         try {
             Sid destOrg = SIPOrganizationUtil.searchOrganizationBySIPRequest(storage.getOrganizationsDao(), request);
-            if(destOrg == null) {
+            if (destOrg == null) {
                 //organization was not proper.
-                final SipServletResponse response = request.createResponse(SC_NOT_FOUND);
-                response.send();
-                String sourceDomainName = storage.getOrganizationsDao().getOrganization(sourceOrganizationSid).getDomainName();
+                return isFoundHostedApp;
+            }
+            NumberSelectionResult result = numberSelector.searchNumberWithResult(phone, sourceOrganizationSid, destOrg);
+            number = result.getNumber();
+            if(numberSelector.isFailedCall(result, sourceOrganizationSid, destOrg)
+                     ) {
                 // We found the number but organization was not proper
-                String errMsg = String.format("provided number %s does not belong to your domain %s.", phone, sourceDomainName);
-                logger.warning(errMsg+" Requiested URI was: "+ request.getRequestURI());
-                sendNotification(fromClientAccountSid, errMsg, 11005, "error", true);
-                return true;
+                sendNotFound(request, sourceOrganizationSid, phone, fromClientAccountSid);
+                isFoundHostedApp = true;
             } else {
-                number = numberSelector.searchNumber(phone, sourceOrganizationSid, destOrg);
+
                 if (number != null) {
                     final VoiceInterpreterParams.Builder builder = new VoiceInterpreterParams.Builder();
                     builder.setConfiguration(configuration);
