@@ -392,6 +392,11 @@
 				<permission>RestComm:*:Geolocation</permission>
 			</role>
 		</security-roles>
+		<!-- conference-timeout is allowed life of a conference in restcomm
+				after that all participants will be asked to leave and conference will be closed.
+				default value is 14400 seconds/(4 hours).
+				Please provide value in seconds -->
+		<conference-timeout>14400</conference-timeout>
 	</runtime-settings>
 
 	<!--Bandwidth Provisioning API Configuration class: BandwidthNumberProvisioningManager

@@ -66,7 +66,7 @@ public final class IncomingPhoneNumber {
     private String referMethod;
     private Sid referApplicationSid;
     private String referApplicationName;
-    private final Sid organizationSid;
+    private Sid organizationSid;
 
     // Capabilities
     private Boolean voiceCapable;
@@ -666,6 +666,10 @@ public final class IncomingPhoneNumber {
 
     public void setUssdApplicationName(String ussdApplicationName) {
         this.ussdApplicationName = ussdApplicationName;
+    }
+
+    public void setOrganizationSid(Sid organizationSid) {
+        this.organizationSid = organizationSid;
     }
 
     public String getVoiceApplicationName() {
