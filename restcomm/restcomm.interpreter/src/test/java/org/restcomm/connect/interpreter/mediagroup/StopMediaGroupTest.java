@@ -230,6 +230,7 @@ public class StopMediaGroupTest {
                 //creating new call
                 interpreter.tell(new CallResponse(new CallInfo(
                         new Sid("ACae6e420f425248d6a26948c17a9e2acf"),
+                        new Sid("ACae6e420f425248d6a26948c17a9e2acf"),
                         CallStateChanged.State.IN_PROGRESS,
                         CreateCallType.SIP,
                         "inbound",
@@ -285,6 +286,7 @@ public class StopMediaGroupTest {
                 //creating new call
                 interpreter.tell(new CallResponse(new CallInfo(
                         new Sid("ACae6e420f425248d6a26948c17a9e2acf"),
+                        new Sid("ACae6e420f425248d6a26948c17a9e2acf"),
                         CallStateChanged.State.IN_PROGRESS,
                         CreateCallType.SIP,
                         "inbound",
@@ -339,6 +341,7 @@ public class StopMediaGroupTest {
 
                 //creating new call
                 interpreter.tell(new CallResponse(new CallInfo(
+                        new Sid("ACae6e420f425248d6a26948c17a9e2acf"),
                         new Sid("ACae6e420f425248d6a26948c17a9e2acf"),
                         CallStateChanged.State.IN_PROGRESS,
                         CreateCallType.SIP,
