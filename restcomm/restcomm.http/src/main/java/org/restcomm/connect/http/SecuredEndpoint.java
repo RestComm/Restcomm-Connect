@@ -116,8 +116,20 @@ public abstract class SecuredEndpoint extends AbstractEndpoint {
      * Grants general purpose access if any valid token exists in the request
      */
     protected void checkAuthenticatedAccount() {
-        if (userIdentityContext.getEffectiveAccount() == null) {
+        Account account = userIdentityContext.getEffectiveAccount();
+        if (account == null) {
             throw new NotAuthenticated();
+        }
+        Account.Status accountStatus = account.getStatus();
+        if (accountStatus != Account.Status.ACTIVE && accountStatus != Account.Status.UNINITIALIZED) {
+            throw new AuthorizationException();
+        }
+        Sid parentSid = account.getParentSid();
+        if (parentSid != null) {
+            Account parentAccount = this.accountsDao.getAccount(parentSid);
+            if (parentAccount.getStatus() != Account.Status.ACTIVE) {
+                throw new AuthorizationException();
+            }
         }
     }
 
