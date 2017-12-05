@@ -33,7 +33,7 @@
   <property name="restcomm-media.distro.zip.path" value="${checkout.dir}/${restcomm-media.download.distro.file}"/>
 
   <!-- <property name="restcomm-olympus.download.url" value="https://mobicents.ci.cloudbees.com/job/Olympus/${olympus.build}/artifact/target/olympus.war"/> -->
-  <property name="restcomm-olympus.download.url" value="https://app.box.com/shared/static/oip2fkm1emf27w93gt4i2erxuik1fypt.war"/>
+  <property name="restcomm-olympus.download.url" value="https://app.box.com/shared/static/mkq2e680mvlqzoxuh9q4c1zeqc1mobdk.war"/>
   <property name="restcomm-olympus.path" value="${configuration.directory}/olympus.war"/>
 
   <!-- Determine RVD retrieval URL
