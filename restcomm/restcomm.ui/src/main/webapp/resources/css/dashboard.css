@@ -1421,6 +1421,17 @@ form[role=login] input:-webkit-autofill:focus{
     width: 50%;
 }
 
+.apps-list .apps-list-name-buttons {
+    width: 30px;
+}
+
+.apps-list .edit-name-button {
+  opacity: 0;
+}
+.apps-row:hover .edit-name-button {
+    opacity: 1;
+}
+
 .apps-list .apps-list-type {
     width: 20%;
 }

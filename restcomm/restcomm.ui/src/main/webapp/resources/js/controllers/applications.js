@@ -6,6 +6,10 @@ angular.module('rcApp.controllers').controller('ApplicationsCtrl', function ($sc
     $scope.reverse = false;
 
     $scope.appsList = RCommApplications.query({accountSid: accountSid, includeNumbers: true});
+
+    $scope.commitNewName = function(app, newName) {
+      console.log("renaming app to " + newName);
+    }
 });
 
 angular.module('rcApp.controllers').controller('ApplicationDetailsCtrl', function ($scope, RCommApplications, RvdProjects, SessionService, $stateParams, $location, $dialog, Notifications, $filter, $httpParamSerializer, FileRetriever) {
