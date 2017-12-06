@@ -1,10 +1,26 @@
 package org.restcomm.connect.testsuite.telephony;
 
-import com.github.tomakehurst.wiremock.junit.WireMockRule;
+import static com.github.tomakehurst.wiremock.client.WireMock.aResponse;
+import static com.github.tomakehurst.wiremock.client.WireMock.get;
+import static com.github.tomakehurst.wiremock.client.WireMock.stubFor;
+import static com.github.tomakehurst.wiremock.client.WireMock.urlPathEqualTo;
+import static org.cafesip.sipunit.SipAssert.assertLastOperationSuccess;
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertTrue;
+
+import java.net.URL;
+import java.text.ParseException;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+
+import javax.sip.message.Response;
+
 import org.apache.log4j.Logger;
 import org.cafesip.sipunit.SipCall;
 import org.cafesip.sipunit.SipPhone;
-import org.cafesip.sipunit.SipRequest;
 import org.cafesip.sipunit.SipStack;
 import org.jboss.arquillian.container.mss.extension.SipStackTool;
 import org.jboss.arquillian.container.test.api.Deployment;
@@ -17,32 +33,17 @@ import org.junit.BeforeClass;
 import org.junit.Rule;
 import org.junit.Test;
 import org.junit.runner.RunWith;
-import org.restcomm.connect.commons.Version;
 import org.restcomm.connect.testsuite.NetworkPortAssigner;
 import org.restcomm.connect.testsuite.WebArchiveUtil;
+import org.restcomm.connect.testsuite.http.RestcommConferenceTool;
+import org.restcomm.connect.testsuite.tools.MonitoringServiceTool;
 
-import javax.sip.message.Response;
-import java.net.URL;
-import java.text.ParseException;
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
-
-import static com.github.tomakehurst.wiremock.client.WireMock.aResponse;
-import static com.github.tomakehurst.wiremock.client.WireMock.get;
-import static com.github.tomakehurst.wiremock.client.WireMock.stubFor;
-import static com.github.tomakehurst.wiremock.client.WireMock.urlPathEqualTo;
-import static org.cafesip.sipunit.SipAssert.assertLastOperationSuccess;
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertTrue;
+import com.github.tomakehurst.wiremock.junit.WireMockRule;
 
 @RunWith(Arquillian.class)
-public class DialPureSipNumbersFromPstn {
-    private final static Logger logger = Logger.getLogger(DialPureSipNumbersFromPstn.class.getName());
+public class DialPureSipNumbersFromPstnTest {
+    private final static Logger logger = Logger.getLogger(DialPureSipNumbersFromPstnTest.class.getName());
 
-    private static final String version = Version.getVersion();
     private static final byte[] bytes = new byte[]{118, 61, 48, 13, 10, 111, 61, 117, 115, 101, 114, 49, 32, 53, 51, 54, 53,
             53, 55, 54, 53, 32, 50, 51, 53, 51, 54, 56, 55, 54, 51, 55, 32, 73, 78, 32, 73, 80, 52, 32, 49, 50, 55, 46, 48, 46,
             48, 46, 49, 13, 10, 115, 61, 45, 13, 10, 99, 61, 73, 78, 32, 73, 80, 52, 32, 49, 50, 55, 46, 48, 46, 48, 46, 49,
@@ -52,9 +53,6 @@ public class DialPureSipNumbersFromPstn {
 
     @ArquillianResource
     URL deploymentUrl;
-
-    private String adminAccountSid = "ACae6e420f425248d6a26948c17a9e2acf";
-    private String adminAuthToken = "77f8c12cc7b8f8423e5c38b035249166";
 
     private static int mediaPort = NetworkPortAssigner.retrieveNextPortByFile();
 
@@ -71,20 +69,15 @@ public class DialPureSipNumbersFromPstn {
     private static String bobPort = String.valueOf(NetworkPortAssigner.retrieveNextPortByFile());
     private String bobContact = "sip:bob@127.0.0.1:" + bobPort;
 
-    // George is a simple SIP Client. Will not register with Restcomm
-    private SipStack georgeSipStack;
-    private SipPhone georgePhone;
-    private static String georgePort = String.valueOf(NetworkPortAssigner.retrieveNextPortByFile());
-    private String georgeContact = "sip:+131313@127.0.0.1:" + georgePort;
-
     private static int restcommPort = 5080;
     private static int restcommHTTPPort = 8080;
     private static String restcommContact = "127.0.0.1:" + restcommPort;
-    private static String dialRestcomm = "sip:1111@" + restcommContact;
-    private static String dialRestcomm2 = "sip:2222@" + restcommContact;
-    private static String dialRestcommWithStatusCallback = "sip:7777@" + restcommContact;
-    private static String dialNumberNoCallerId = "<Response><Dial><Number url=\"http://127.0.0.1:" + restcommHTTPPort + "/restcomm/hello-play.xml\">131313</Number></Dial></Response>";
-    private static String dialNumberRcml = "<Response><Dial callerId=\"+13055872294\"><Number url=\"http://127.0.0.1:" + restcommHTTPPort + "/restcomm/hello-play.xml\">131313</Number></Dial></Response>";
+    private static String dialRestcomm = "sip:1111@test.restcomm.com";
+    private final String confRoom2 = "confRoom2";
+    private String dialConfernceRcml = "<Response><Dial><Conference>"+confRoom2+"</Conference></Dial></Response>";
+
+    private String superAdminAccountSid = "ACae6e420f425248d6a26948c17a9e2acf";
+    private String adminAuthToken = "77f8c12cc7b8f8423e5c38b035249166";
 
 
     @BeforeClass
@@ -97,13 +90,7 @@ public class DialPureSipNumbersFromPstn {
         if (System.getProperty("arquillian_sip_port") != null) {
             restcommPort = Integer.valueOf(System.getProperty("arquillian_sip_port"));
             restcommContact = "127.0.0.1:" + restcommPort;
-            dialRestcomm = "sip:1111@" + restcommContact;
-            dialRestcommWithStatusCallback = "sip:7777@" + restcommContact;
-        }
-        if (System.getProperty("arquillian_http_port") != null) {
-            restcommHTTPPort = Integer.valueOf(System.getProperty("arquillian_http_port"));
-            dialNumberNoCallerId = "<Response><Dial><Number url=\"http://127.0.0.1:" + restcommHTTPPort + "/restcomm/hello-play.xml\">131313</Number></Dial></Response>";
-            dialNumberRcml = "<Response><Dial callerId=\"+13055872294\"><Number url=\"http://127.0.0.1:" + restcommHTTPPort + "/restcomm/hello-play.xml\">131313</Number></Dial></Response>";
+            dialRestcomm = "sip:1111@test.restcomm.com";
         }
     }
 
@@ -111,9 +98,6 @@ public class DialPureSipNumbersFromPstn {
     public void before() throws Exception {
         bobSipStack = tool1.initializeSipStack(SipStack.PROTOCOL_UDP, "127.0.0.1", bobPort, restcommContact);
         bobPhone = bobSipStack.createSipPhone("127.0.0.1", SipStack.PROTOCOL_UDP, restcommPort, bobContact);
-
-        georgeSipStack = tool2.initializeSipStack(SipStack.PROTOCOL_UDP, "127.0.0.1", georgePort, restcommContact);
-        georgePhone = georgeSipStack.createSipPhone("127.0.0.1", SipStack.PROTOCOL_UDP, restcommPort, georgeContact);
     }
 
     @After
@@ -123,13 +107,6 @@ public class DialPureSipNumbersFromPstn {
         }
         if (bobSipStack != null) {
             bobSipStack.dispose();
-        }
-
-        if (georgePhone != null) {
-            georgePhone.dispose();
-        }
-        if (georgeSipStack != null) {
-            georgeSipStack.dispose();
         }
 
         Thread.sleep(3000);
@@ -162,12 +139,7 @@ public class DialPureSipNumbersFromPstn {
                 .willReturn(aResponse()
                         .withStatus(200)
                         .withHeader("Content-Type", "text/xml")
-                        .withBody(dialNumberRcml)));
-
-        // Prepare George phone to receive call
-        georgePhone.setLoopback(true);
-        SipCall georgeCall = georgePhone.createSipCall();
-        georgeCall.listenForIncomingCall();
+                        .withBody(dialConfernceRcml)));
 
         // Create outgoing call with first phone
         final SipCall bobCall = bobPhone.createSipCall();
@@ -188,24 +160,18 @@ public class DialPureSipNumbersFromPstn {
         bobCall.sendInviteOkAck();
         assertTrue(!(bobCall.getLastReceivedResponse().getStatusCode() >= 400));
 
-        assertTrue(georgeCall.waitForIncomingCall(30 * 1000));
-        assertTrue(georgeCall.sendIncomingCallResponse(Response.RINGING, "Ringing-George", 3600));
-        final SipRequest lastRequest = georgeCall.getLastReceivedRequest();
-        String receivedBody = new String(lastRequest.getRawContent());
-        assertTrue(georgeCall.sendIncomingCallResponse(Response.OK, "OK-George", 3600, receivedBody, "application", "sdp",
-                null, null));
-        // the number dialed uses a callerId of "+13055872294", which is what George should receive
-        String contactHeader = georgeCall.getLastReceivedRequest().getMessage().getHeader("Contact").toString().replaceAll("\r\n","");
-        assertTrue(contactHeader.equalsIgnoreCase("Contact: \"+13055872294\" <sip:+13055872294@" + restcommContact + ">"));
-        assertTrue(georgeCall.waitForAck(50 * 1000));
+        Thread.sleep(2000);
 
-        Thread.sleep(3000);
-        georgeCall.listenForDisconnect();
-        // hangup.
-        bobCall.disconnect();
-        assertTrue(!bobCall.callTimeoutOrError());
-        assertTrue(georgeCall.waitForDisconnect(30 * 1000));
-        assertTrue(georgeCall.respondToDisconnect());
+        int liveCalls = MonitoringServiceTool.getInstance().getStatistics(deploymentUrl.toString(), superAdminAccountSid, adminAuthToken);
+        int liveCallsArraySize = MonitoringServiceTool.getInstance().getLiveCallsArraySize(deploymentUrl.toString(), superAdminAccountSid, adminAuthToken);
+        logger.info("&&&&& LiveCalls: "+liveCalls);
+        logger.info("&&&&& LiveCallsArraySize: "+liveCallsArraySize);
+        assertEquals(1, liveCalls);
+        assertEquals(1, liveCallsArraySize);
+        assertEquals(1, RestcommConferenceTool.getInstance().getConferencesSize(deploymentUrl.toString(), superAdminAccountSid, adminAuthToken));
+        int numOfParticipants = RestcommConferenceTool.getInstance().getParticipantsSize(deploymentUrl.toString(), superAdminAccountSid, adminAuthToken, confRoom2);
+        logger.info("Number of participants: "+numOfParticipants);
+        assertEquals(1, numOfParticipants);
     }
 
 }
