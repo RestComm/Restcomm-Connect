@@ -172,31 +172,3 @@ rcDirectives.directive('rcEndpointUrl', function() {
     templateUrl: 'templates/rc-endpoint-url.html'
   };
 });
-
-rcDirectives.directive('ngFocus', function($timeout) {
- return {
-     link: function ( scope, element, attrs ) {
-         scope.$watch( attrs.ngFocus, function ( val ) {
-             if ( angular.isDefined( val ) && val ) {
-                 $timeout( function () { element[0].focus(); } );
-             }
-         }, true);
-
-         element.bind('blur', function () {
-             if ( angular.isDefined( attrs.ngFocusLost ) ) {
-              $timeout(function () {
-                scope.$apply( attrs.ngFocusLost );
-              }, 1)
-             }
-         });
-         element.on('keyup', function (event) {
-            if (event.keyCode==13) {
-              scope.$apply( attrs.ngFocusLost );
-            }
-            if (event.keyCode==27) {
-              scope.$apply( attrs.ngFocusLostCancel);
-            }
-         });
-     }
- };
-});
