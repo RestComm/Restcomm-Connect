@@ -1414,6 +1414,15 @@ form[role=login] input:-webkit-autofill:focus{
 
 /* -- Applications -----------------------------------------------------*/
 
+#iii {
+  position: relative;
+}
+
+#bbb {
+  position: absolute;
+  rignt: 0;
+}
+
 .apps-list {
 }
 
@@ -1422,7 +1431,7 @@ form[role=login] input:-webkit-autofill:focus{
 }
 
 .apps-list .apps-list-name-buttons {
-    width: 30px;
+    width: 65px;
 }
 
 .apps-list .edit-name-button {
@@ -1430,6 +1439,10 @@ form[role=login] input:-webkit-autofill:focus{
 }
 .apps-row:hover .edit-name-button {
     opacity: 1;
+}
+
+.apps-list .cancel-name-button {
+  margin-right: 6px;
 }
 
 .apps-list .apps-list-type {

@@ -36,7 +36,7 @@
                     <td class="apps-list-name">
                         <div ng-hide="editingAppName"><a class="rc-link" href="#/applications/{{app.sid}}">{{ app.friendly_name }}</a></div>
                         <div ng-show="editingAppName">
-                            <input ng-model="newName"  ng-focus="editingAppName" ng-focus-lost="editingAppName=false;" ng-focus-lost-cancel="editingAppName=false" type="text" class="form-control rc-list-inplace-edit">
+                            <input ng-model="newName" type="text" class="form-control">
                         </div>
                         <div class="visible-xs">
                             <span ng-show="app.numbers[0].phone_number">{{ app.numbers[0].phone_number }}<span ng-show="app.numbers[1]"> and {{ app.numbers.length - 1 }} more</span></span><!-- <a ng-hide="app.numbers[0].phone_number" href="#/numbers/incoming">assign</a> -->
@@ -44,8 +44,12 @@
                         </div>
                     </td>
                     <td class="apps-list-name-buttons hidden-xs">
-                        <h5 ng-hide="editingAppName" class="edit-name-button"><i ng-click="editingAppName=true; newName=app.friendly_name" class="fa fa-pencil clickable"></i></h5>
-                        <h5 class="commit-name-button"><i ng-click="commitNewName(app, newName)" class="fa fa-check clickable"></i></h5>
+                        <h5 ng-hide="editingAppName" class="edit-name-button pull-right"><i ng-click="editingAppName=true; newName=app.friendly_name" class="fa fa-pencil clickable"></i></h5>
+                        <div>
+                            <span ng-show="editingAppName" class="cancel-name-button"><i ng-click="editingAppName=false" class="fa fa-close clickable"></i></span>
+                            <span ng-show="editingAppName" class="commit-name-button"><i ng-click="commitNewName(app, newName); editingAppName=false" class="fa fa-check clickable"></i></span>
+                        </div>
+
                     </td>
                     <td class="apps-list-type">
                         <div>
