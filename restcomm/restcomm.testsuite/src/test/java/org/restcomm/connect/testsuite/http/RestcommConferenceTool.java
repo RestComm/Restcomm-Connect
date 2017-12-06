@@ -27,6 +27,7 @@ import javax.ws.rs.core.MultivaluedMap;
 import org.apache.log4j.Logger;
 import org.restcomm.connect.dao.entities.ConferenceDetailRecordList;
 
+import com.google.gson.JsonArray;
 import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
 import com.google.gson.JsonParser;
@@ -165,5 +166,28 @@ public class RestcommConferenceTool {
         JsonObject jsonObject = parser.parse(response).getAsJsonObject();
 
         return jsonObject;
+    }
+
+    public int getConferencesSize(String deploymentUrl, String accountSid, String adminAuthToken) {
+        JsonObject conferences = RestcommConferenceTool.getInstance().getConferences(deploymentUrl.toString(),accountSid, adminAuthToken);
+        JsonArray conferenceArray = conferences.getAsJsonArray("conferences");
+        return conferenceArray.size();
+    }
+
+    public int getParticipantsSize(String deploymentUrl, String accountSid, String adminAuthToken, final String name) {
+        JsonObject conferences = RestcommConferenceTool.getInstance().getConferences(deploymentUrl.toString(),accountSid, adminAuthToken);
+        JsonArray conferenceArray = conferences.getAsJsonArray("conferences");
+        String confSid = null;
+        for(int i = 0; i < conferenceArray.size(); i++) {
+            JsonObject confObj = conferenceArray.get(i).getAsJsonObject();
+            String confName = confObj.get("friendly_name").getAsString();
+            if (confName.equalsIgnoreCase(name)) {
+                confSid = confObj.get("sid").getAsString();
+                break;
+            }
+        }
+        JsonObject participants = RestcommConferenceParticipantsTool.getInstance().getParticipants(deploymentUrl.toString(), accountSid, adminAuthToken, confSid);
+        JsonArray participantsArray = participants.getAsJsonArray("calls");
+        return participantsArray.size();
     }
 }
