@@ -11,7 +11,7 @@ export MAVEN_OPTS="-Xms1024m -Xmx2048m -XX:MaxPermSize=1024m"
 
 rc_build()
 {
-    export MAJOR_VERSION_NUMBER=7.6
+    export MAJOR_VERSION_NUMBER=8.2
     export BUILD_NUMBER=0
     mkdir -p $RC_DEPENDENCIES
     ant release -f $RC_HOME/release/build.xml -Drestcomm.release.version=$MAJOR_VERSION_NUMBER.$BUILD_NUMBER -Drestcomm.branch.name=restcomm-release-$MAJOR_VERSION_NUMBER.$BUILD_NUMBER -Dcheckout.restcomm.dir=$RC_HOME -Dworkspace.restcomm.dir=$RC_HOME/restcomm -Dcheckout.dir=$RC_DEPENDENCIES
