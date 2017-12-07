@@ -35,7 +35,7 @@ Supported Tags
 A note on the docker image tags:
 
 * Tag "latest". Points to the latest binary from the Continuous Delivery server. Uses the https://github.com/RestComm/Restcomm-Connect[master] development branch : restcomm/restcomm:latest. *We don't advice to use "latest" tag for production as it is constantly changing, and as well new features and fixes may not be documented.
-* Tag "7.7.0" pointing to current specific GA release (v770ga).
+* We provide specific tags for GA releases (e.g. v770ga). Prefer to use release tags over `latest`, to avoid accidental updates.
 
 
 [[quick-test]]
