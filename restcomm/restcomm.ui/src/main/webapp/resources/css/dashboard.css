@@ -1430,6 +1430,10 @@ form[role=login] input:-webkit-autofill:focus{
     width: 50%;
 }
 
+.apps-list .inline-edit {
+  font-size: inherit;
+}
+
 .apps-list .apps-list-name-buttons {
     width: 65px;
 }

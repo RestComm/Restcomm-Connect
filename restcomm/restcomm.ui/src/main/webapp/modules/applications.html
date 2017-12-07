@@ -36,7 +36,7 @@
                     <td class="apps-list-name">
                         <div ng-hide="editingAppName"><a class="rc-link" href="#/applications/{{app.sid}}">{{ app.friendly_name }}</a></div>
                         <div ng-show="editingAppName">
-                            <input ng-model="newName" type="text" class="form-control">
+                            <input ng-model="newName" type="text" class="form-control inline-edit">
                         </div>
                         <div class="visible-xs">
                             <span ng-show="app.numbers[0].phone_number">{{ app.numbers[0].phone_number }}<span ng-show="app.numbers[1]"> and {{ app.numbers.length - 1 }} more</span></span><!-- <a ng-hide="app.numbers[0].phone_number" href="#/numbers/incoming">assign</a> -->
