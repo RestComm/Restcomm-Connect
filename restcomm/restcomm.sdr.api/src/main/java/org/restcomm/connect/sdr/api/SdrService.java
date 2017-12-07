@@ -25,8 +25,6 @@ import org.restcomm.connect.commons.patterns.Observing;
 import org.restcomm.connect.commons.patterns.StopObserving;
 import org.restcomm.connect.telephony.api.CallStateChanged;
 
-import javax.servlet.sip.SipServletMessage;
-
 /**
  * @author oleg.agafonov@telestax.com (Oleg Agafonov)
  */
@@ -44,8 +42,8 @@ public abstract class SdrService extends RestcommUntypedActor {
             onCallStateChanged((CallStateChanged) message, self, sender);
         } else if (message instanceof StopObserving) {
             onStopObserving((StopObserving) message, self, sender);
-        } else if (message instanceof SipServletMessage) {
-            onSipServletMessage((SipServletMessage) message, self, sender);
+        } else if (message instanceof B2BUASdrMessage) {
+            onB2BUASdrMessage((B2BUASdrMessage) message, self, sender);
         }
     }
 
@@ -57,5 +55,5 @@ public abstract class SdrService extends RestcommUntypedActor {
 
     protected abstract void onStopObserving(StopObserving message, ActorRef self, ActorRef sender);
 
-    protected abstract void onSipServletMessage(SipServletMessage message, ActorRef self, ActorRef sender);
+    protected abstract void onB2BUASdrMessage(B2BUASdrMessage message, ActorRef self, ActorRef sender);
 }
