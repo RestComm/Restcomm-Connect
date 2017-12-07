@@ -7,7 +7,8 @@ This is a quick user guide for running Restcomm on Docker. You will learn how to
 Prerequisites
 ^^^^^^^^^^^^^^
 
-* *Docker:* Make sure you have Docker installed: https://docs.docker.com/engine/installation/
+* *Docker:* Just in case you don't have Docker installed already: https://docs.docker.com/engine/installation/
+* *Docker-Compose*: Make sure you follow the official installation guide for your platform: https://docs.docker.com/compose/install/
 * *System requirements:* Please ensure you have allowed Docker to run with enough memory. Restcomm requires minimum *3GB* to start 2 java processes: Jboss with Restcomm services and standalone mediaserver.
 * *Enabling Text-to-Speech:* Get a free API KEY VoiceRss account as explained  http://www.voicerss.org/[HERE]
 * *Firewall:* RestComm is a system that relies heavily on network. Ensure there is no firewall blocking any ports that RestComm relies on (you can find them in `docker-compose.yml`). If in doubt, temporarily disable your firewall to ensure that is not the cause of your problems.
