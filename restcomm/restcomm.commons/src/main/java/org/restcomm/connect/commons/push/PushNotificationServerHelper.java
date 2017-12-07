@@ -82,8 +82,8 @@ public class PushNotificationServerHelper {
             public Void call() throws Exception {
                 Map<String, String> params = new HashMap<>();
                 params.put("Identity", pushClientIdentity);
+                HttpPost httpPost = new HttpPost(pushNotificationServerUrl);
                 try {
-                    HttpPost httpPost = new HttpPost(pushNotificationServerUrl);
                     httpPost.setEntity(new StringEntity(new Gson().toJson(params), ContentType.APPLICATION_JSON));
                     if (logger.isDebugEnabled()) {
                         logger.debug("Sending push server notification to client with identity: " + pushClientIdentity);
@@ -94,6 +94,8 @@ public class PushNotificationServerHelper {
                     }
                 } catch (Exception e) {
                     logger.error("Exception while sending push server notification, " + e);
+                } finally {
+                    httpPost.releaseConnection();
                 }
                 return null;
             }
