@@ -9,8 +9,8 @@ angular.module('rcApp.controllers').controller('ApplicationsCtrl', function ($sc
 
     $scope.commitNewName = function(app, newName) {
       console.log("renaming app to " + newName);
-        RCommApplications.save({accountSid: accountSid, applicationSid: app.sid}, $httpParamSerializer({FriendlyName: newName}), function () {
-          app.friendly_name = newName; // TODO reload results from server when proper support for retrieving single app with number is built
+        RCommApplications.save({accountSid: accountSid, applicationSid: app.sid}, $httpParamSerializer({FriendlyName: newName}), function (result) {
+          app.friendly_name = result.friendly_name;
         });
 
     }

@@ -954,7 +954,7 @@ form[role=login] input:-webkit-autofill:focus{
     color: #6d6e70;
 }
 .rc-list tr {
-    height: 2.5em;
+    height: 2.85em;
 }
 
 .rc-list > tbody > tr > td {
@@ -1430,23 +1430,20 @@ form[role=login] input:-webkit-autofill:focus{
     width: 50%;
 }
 
-.apps-list .inline-edit {
-  font-size: inherit;
-}
-
 .apps-list .apps-list-name-buttons {
     width: 65px;
 }
 
 .apps-list .edit-name-button {
-  opacity: 0;
+    opacity: 0;
+    margin-left: -30px;
 }
 .apps-row:hover .edit-name-button {
     opacity: 1;
 }
 
 .apps-list .cancel-name-button {
-  margin-right: 6px;
+    margin-right: 6px;
 }
 
 .apps-list .apps-list-type {
