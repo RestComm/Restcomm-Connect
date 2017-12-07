@@ -172,4 +172,3 @@ rcDirectives.directive('rcEndpointUrl', function() {
     templateUrl: 'templates/rc-endpoint-url.html'
   };
 });
-
