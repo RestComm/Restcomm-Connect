@@ -45,7 +45,7 @@ public class EmailValidator {
             isValid = true;
         } catch (AddressException ex) {
             isValid = false;
-            logger.error("Email " + email + " is invalid");
+            logger.warn("Email " + email + " is invalid");
         }
         return isValid;
     }
