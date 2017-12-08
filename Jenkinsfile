@@ -10,6 +10,7 @@ node("cxs-ups-testsuites_large") {
      sh "mvn -f restcomm/pom.xml  -T 1.5C clean install -pl \\!restcomm.testsuite -Dmaven.test.failure.ignore=true -Dmaven.test.redirectTestOutputToFile=true"
      //keep this build for later use
      junit '**/target/surefire-reports/*.xml'
+     step( [ $class: 'JacocoPublisher' ] )
      //prevent to report this test results two times
      sh "mvn -f restcomm/pom.xml  clean"
    }
