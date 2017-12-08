@@ -20,9 +20,12 @@ Run RestComm
 
 RestComm-Connect includes a single `docker-compose.yml` file, which is meant to document how the RestComm Docker image should be deployed.
 
-It comes with sane defaults for a standalone development environment, so it should pretty much work out of the box, if you set the correct value for `RCBCONF_STATIC_ADDRESS` and `RCBCONF_VOICERSS_KEY`.
+It comes with sane defaults for a standalone development environment, so it should pretty much work out of the box.
 
-To try it out, change to the folder where `docker-compose.yml` is located and run:
+1. Make sure you set your the local ethernet/wifi IP address on your laptop as the value for `RCBCONF_STATIC_ADDRESS`.
+1. Get an API key for Text-to-Speech and set it as the value for `RCBCONF_VOICERSS_KEY`.
+1. To try it all out, change to the folder where `docker-compose.yml` is located and run:
+
 [source:bash]
 ----
 $ docker-compose up
