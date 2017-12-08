@@ -1,7 +1,4 @@
 node("cxs-ups-testsuites_large") {
-    def isPRMergeBuild() {
-        return (env.BRANCH_NAME ==~ /^PR-\d+$/)
-    }
 
    echo sh(returnStdout: true, script: 'env')
 
@@ -32,7 +29,7 @@ node("cxs-ups-testsuites_large") {
         junit testResults: '**/target/surefire-reports/*.xml', testDataPublishers: [[$class: 'StabilityTestDataPublisher']]
         //prevent to report this test results two times
         sh "mvn -f restcomm/pom.xml  clean"
-        if (isPRMergeBuild()) {
+        if (env.BRANCH_NAME ==~ /^PR-\d+$/) {
             step([$class: 'Mailer', notifyEveryUnstableBuild: true, recipients: emailextrecipients([[$class: 'FailingTestSuspectsRecipientProvider']])])
             if (currentBuild.currentResult != 'SUCCESS' ) { // Other values: SUCCESS, UNSTABLE, FAILURE
                 setGitHubPullRequestStatus ("${context}", 'Testsuite unstable', 'FAILURE')
