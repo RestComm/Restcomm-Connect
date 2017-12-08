@@ -25,7 +25,7 @@ services:
 
     environment:
       ## =============================== IMPORTANT!!    While most of the below defaults should be fine, YOU PROBABLY NEED TO CHANGE THIS!!
-      RCBCONF_STATIC_ADDRESS: 127.0.0.1   # YOUR LOCAL IP ADDRESS GOES HERE. On OSX/macOS, you can also use 127.0.0.1.
+      RCBCONF_STATIC_ADDRESS: 127.0.0.1   # YOUR LOCAL IP ADDRESS GOES HERE.
       ## =============================== IMPORTANT ========================================================================================
 
       ENVCONFURL: https://raw.githubusercontent.com/RestComm/Restcomm-Docker/master/env_files/restcomm_env_locally.sh
@@ -125,7 +125,8 @@ services:
     # To specify additional custom port connectors add `ADDITIONAL_CONNECTOR_1=second-sip-udp:5090`, `ADDITIONAL_CONNECTOR_2=second-sip-tcpp:5090`
     # env vars and export port in this section. More info http://documentation.telestax.com/core/sip_servlets/SIP_Servlets_Server_User_Guide.html
 
-#   IMPORTANT! COMMENT OUT BELOW ON OSX / macOS
+#   IMPORTANT! COMMENT OUT BELOW ON OSX / macOS. (you thought "Host" is really your host, didn't you? Well, let me tell you
+#   about this embedded hypervisor called "xhyve" and how it's not all really "native" the way you took that to mean...  : )  )
 #    network_mode: "host"
 
     restart: always
