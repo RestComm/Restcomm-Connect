@@ -7,6 +7,7 @@ node("cxs-ups-testsuites_large") {
    }
 
    stage ("Build") {
+     slackSend "Build Started - ${env.JOB_NAME} ${env.BUILD_NUMBER} (<${env.BUILD_URL}|Open>)"
      // Run the maven build with in-module unit testing
      sh "mvn -f restcomm/pom.xml  -T 1.5C clean install -pl \\!restcomm.testsuite -Dmaven.test.failure.ignore=true -Dmaven.test.redirectTestOutputToFile=true"
      //keep this build for later use
