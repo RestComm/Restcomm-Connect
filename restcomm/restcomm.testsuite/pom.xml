@@ -435,7 +435,7 @@
                 <artifactId>maven-surefire-plugin</artifactId>
                 <version>2.19.1</version>
                 <configuration>
-                    <argLine>-Xms256m -Xmx2048m -XX:MaxPermSize=1024m</argLine>
+                    <argLine>-Xms256m -Xmx2048m -XX:MaxPermSize=1024m ${jacocoArgLine}</argLine>
                     <reuseForks>false</reuseForks>
                 </configuration>
             </plugin>
@@ -464,7 +464,7 @@
                             <parallel>classes</parallel>
                             <threadCountClasses>5</threadCountClasses>
                             <!-- start with low memory to increase forks -->
-                            <argLine>-Xms256m -Xmx2048m -XX:MaxPermSize=512m</argLine>
+                            <argLine>-Xms256m -Xmx2048m -XX:MaxPermSize=512m ${jacocoArgLine}</argLine>
                             <systemPropertyVariables>
                                 <!--use different arquillian configuration to tweak maps
                                 depending on forked JVM-->
@@ -491,13 +491,12 @@
                         <artifactId>maven-surefire-plugin</artifactId>
                         <version>2.19.1</version>
                         <configuration>
-                            <argLine>-Xms256m -Xmx2048m -XX:MaxPermSize=1024m</argLine>
                             <reuseForks>false</reuseForks>
                             <skipTests>${skipUTs}</skipTests>
                             <parallel>classes</parallel>
                             <threadCountClasses>5</threadCountClasses>
                             <!-- start with low memory to increase forks -->
-                            <argLine>-Xms256m -Xmx2048m -XX:MaxPermSize=512m</argLine>
+                            <argLine>-Xms256m -Xmx2048m -XX:MaxPermSize=512m ${jacocoArgLine}</argLine>
                             <systemPropertyVariables>
                                 <!--use different arquillian configuration to tweak maps
                                 depending on forked JVM-->
