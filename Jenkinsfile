@@ -13,7 +13,7 @@ node("cxs-ups-testsuites_large") {
      //keep this build for later use
      junit '**/target/surefire-reports/*.xml'
      step( [ $class: 'JacocoPublisher' ] )
-     setGitHubPullRequestStatus ("${context}", 'Build completed', 'SUCCESS')
+     setGitHubPullRequestStatus ('CI', 'UT Passed', 'PENDING')
      //prevent to report this test results two times
      sh "mvn -f restcomm/pom.xml  clean"
    }
@@ -33,8 +33,10 @@ node("cxs-ups-testsuites_large") {
         if (env.BRANCH_NAME ==~ /^PR-\d+$/) {
             step([$class: 'Mailer', notifyEveryUnstableBuild: true, recipients: emailextrecipients([[$class: 'FailingTestSuspectsRecipientProvider']])])
             if (currentBuild.currentResult != 'SUCCESS' ) { // Other values: SUCCESS, UNSTABLE, FAILURE
-                setGitHubPullRequestStatus ("${context}", 'Testsuite unstable', 'FAILURE')
-            }            
+                setGitHubPullRequestStatus ('CI', 'IT unstable', 'FAILURE')
+            } else {
+               setGitHubPullRequestStatus ('CI', 'IT passed', 'SUCCESS')
+            }
         }
     }
 }
