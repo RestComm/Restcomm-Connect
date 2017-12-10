@@ -10,6 +10,7 @@ node("cxs-ups-testsuites_large") {
      slackSend "Build Started - ${env.JOB_NAME} ${env.BUILD_NUMBER} (<${env.BUILD_URL}|Open>)"
      // Run the maven build with in-module unit testing
      sh "mvn -f restcomm/pom.xml  -T 1.5C clean install -pl \\!restcomm.testsuite -Dmaven.test.failure.ignore=true -Dmaven.test.redirectTestOutputToFile=true"
+     checkstyle canComputeNew: false, defaultEncoding: '', healthy: '', pattern: '**/checkstyle-result.xml', unHealthy: ''
      //keep this build for later use
      junit '**/target/surefire-reports/*.xml'
      step( [ $class: 'JacocoPublisher' ] )
