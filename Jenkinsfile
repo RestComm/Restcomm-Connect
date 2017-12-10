@@ -13,7 +13,6 @@ node("cxs-ups-testsuites_large") {
      //keep this build for later use
      junit '**/target/surefire-reports/*.xml'
      step( [ $class: 'JacocoPublisher' ] )
-     setGitHubPullRequestStatus ('CI', 'UT Passed', 'PENDING')
      //prevent to report this test results two times
      sh "mvn -f restcomm/pom.xml  clean"
    }
