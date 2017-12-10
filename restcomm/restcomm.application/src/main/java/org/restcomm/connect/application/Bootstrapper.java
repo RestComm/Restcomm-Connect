@@ -246,7 +246,7 @@ public final class Bootstrapper extends SipServlet implements SipServletListener
 
     private ActorRef sdrService(final Configuration configuration, final ClassLoader loader) throws Exception {
         final String className = configuration.getString("sdr-service[@class]");
-        if (className != null && SdrService.class.isAssignableFrom(loader.loadClass(className))) {
+        if (className != null) {
             final Props props = new Props(new UntypedActorFactory() {
                 @Override
                 public Actor create() throws Exception {
@@ -390,7 +390,7 @@ public final class Bootstrapper extends SipServlet implements SipServletListener
             try {
                 ActorRef sdrService = sdrService(xml, loader);
                 if (sdrService != null) {
-                    context.setAttribute(SdrService.class.getName(), monitoring);
+                    context.setAttribute(SdrService.class.getName(), sdrService);
                     if (logger.isInfoEnabled()) {
                         logger.info("Sdr Service created and stored in the context");
                     }
