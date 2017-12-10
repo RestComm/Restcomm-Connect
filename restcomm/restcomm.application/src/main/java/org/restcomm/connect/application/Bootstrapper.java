@@ -246,7 +246,7 @@ public final class Bootstrapper extends SipServlet implements SipServletListener
 
     private ActorRef sdrService(final Configuration configuration, final ClassLoader loader) throws Exception {
         final String className = configuration.getString("sdr-service[@class]");
-        if (className != null && loader.loadClass(className).isAssignableFrom(SdrService.class)) {
+        if (className != null && SdrService.class.isAssignableFrom(loader.loadClass(className))) {
             final Props props = new Props(new UntypedActorFactory() {
                 @Override
                 public Actor create() throws Exception {
