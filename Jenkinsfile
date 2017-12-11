@@ -22,6 +22,7 @@ node("cxs-ups-testsuites_large") {
     stage("CITestsuiteSeq") {
         sh 'mvn -f restcomm/restcomm.testsuite/pom.xml  clean install -DskipUTs=false  -Dmaven.test.failure.ignore=true -Dmaven.test.redirectTestOutputToFile=true -Dfailsafe.rerunFailingTestsCount=1 -DexcludedGroups="org.restcomm.connect.commons.annotations.ParallelClassTests or org.restcomm.connect.commons.annotations.UnstableTests or org.restcomm.connect.commons.annotations.BrokenTests or org.restcomm.connect.commons.annotations.FeatureAltTests or org.restcomm.connect.commons.annotations.FeatureExpTests"'
         junit testResults: '**/target/surefire-reports/*.xml', testDataPublishers: [[$class: 'StabilityTestDataPublisher']]
+        step( [ $class: 'JacocoPublisher' ] )
         //prevent to report this test results two times
         sh "mvn -f restcomm/pom.xml  clean"
     }
@@ -29,6 +30,7 @@ node("cxs-ups-testsuites_large") {
     stage("CITestsuiteParallel") {
         sh 'mvn -f restcomm/restcomm.testsuite/pom.xml  clean install -Pparallel-testing -DforkCount=16 -Dmaven.test.failure.ignore=true -Dmaven.test.redirectTestOutputToFile=true -Dfailsafe.rerunFailingTestsCount=1 -Dgroups="org.restcomm.connect.commons.annotations.ParallelClassTests" -DexcludedGroups="org.restcomm.connect.commons.annotations.UnstableTests or org.restcomm.connect.commons.annotations.BrokenTests or org.restcomm.connect.commons.annotations.FeatureAltTests or org.restcomm.connect.commons.annotations.FeatureExpTests"'
         junit testResults: '**/target/surefire-reports/*.xml', testDataPublishers: [[$class: 'StabilityTestDataPublisher']]
+        step( [ $class: 'JacocoPublisher' ] )
         //prevent to report this test results two times
         sh "mvn -f restcomm/pom.xml  clean"
         if (env.BRANCH_NAME ==~ /^PR-\d+$/) {
