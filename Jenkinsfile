@@ -9,7 +9,7 @@ node("cxs-ups-testsuites_large") {
    stage ("Build") {
      
      // Run the maven build with in-module unit testing and sonar
-     sh "mvn -f restcomm/pom.xml -pl \\!restcomm.testsuite -Dmaven.test.failure.ignore=true -Dmaven.test.redirectTestOutputToFile=true -Dsonar.host.url=https://sonarqube.com -Dsonar.login=dd43f79a4bd32b1f2c484362e8a4de676a8388c4 -Dsonar.organization=jaimecasero-github -Dsonar.branch=master -T 1.5C package sonar:sonar"
+     sh "mvn -f restcomm/pom.xml -pl \\!restcomm.testsuite -Dmaven.test.failure.ignore=true -Dmaven.test.redirectTestOutputToFile=true -Dsonar.host.url=https://sonarqube.com -Dsonar.login=dd43f79a4bd32b1f2c484362e8a4de676a8388c4 -Dsonar.organization=jaimecasero-github -Dsonar.branch=master package sonar:sonar"
 
      checkstyle canComputeNew: false, defaultEncoding: '', healthy: '', pattern: '**/checkstyle-result.xml', unHealthy: ''
      //keep this build for later use
