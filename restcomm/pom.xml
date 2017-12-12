@@ -176,6 +176,7 @@
                 <module>restcomm.dns.api</module>
                 <module>restcomm.monitoring.service</module>
                 <module>restcomm.tts.awspolly</module>
+		<module>restcomm.sdr.api</module>
   </modules>
 
 	<dependencyManagement>
