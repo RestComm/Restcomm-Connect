@@ -209,7 +209,7 @@ public class SmppTest {
 	}
 
     private String smsEchoRcmlPureSipProviderNumber = "<Response><Sms to=\""+from+"\" from=\""+toPureSipProviderNumber+"\">"+msgBodyResp+"</Sms></Response>";
-	@Test
+	@Test //https://telestax.atlassian.net/browse/RESTCOMM-1428, https://telestax.atlassian.net/browse/POSTMORTEM-13
 	public void testSendSMPPMessageToRestcommPureSipProviderNumber () throws SmppInvalidArgumentException, IOException, InterruptedException {
 
         stubFor(get(urlPathEqualTo("/smsApp"))
