@@ -26,7 +26,7 @@ import javax.servlet.sip.SipServletMessage;
 /**
  * @author oleg.agafonov@telestax.com (Oleg Agafonov)
  */
-public class B2BUASdrMessage {
+public final class B2BUASdrMessage {
 
     private Sid accountSid;
 
