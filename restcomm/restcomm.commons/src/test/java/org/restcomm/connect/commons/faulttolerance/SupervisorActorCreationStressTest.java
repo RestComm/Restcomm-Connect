@@ -17,6 +17,10 @@ import org.junit.Test;
 import org.restcomm.connect.commons.faulttolerance.tool.ActorCreatingThread;
 
 import akka.actor.ActorSystem;
+import org.junit.Ignore;
+import org.junit.experimental.categories.Category;
+
+import org.restcomm.connect.commons.annotations.WithInSecsTests;
 
 /**
  * @author mariafarooq
@@ -27,10 +31,10 @@ public class SupervisorActorCreationStressTest {
 	protected static ActorSystem system;
 
     //nThreads the number of threads in the pool
-    private static final int nThreads 		= 1500;
+    private static final int nThreads 		= 150;
     //we can increase decrease value of this to put less request to create actors from RestcommSupervisor
     // each of this thread will ask RestcommSupervisor to create a SimpleActor
-    private static final int THREAD_COUNT = 3000;
+    private static final int THREAD_COUNT = 300;
 
 	public static AtomicInteger actorSuccessCount;
 	public static AtomicInteger actorFailureCount;
@@ -45,6 +49,7 @@ public class SupervisorActorCreationStressTest {
     }
 
 	@Test
+        @Category(value={WithInSecsTests.class})
 	public void testCreateSampleAkkaActor() throws ConfigurationException, MalformedURLException, UnknownHostException, InterruptedException {
     	ExecutorService executor = Executors.newFixedThreadPool(nThreads);
 		for (int i = 0; i < THREAD_COUNT; i++) {
