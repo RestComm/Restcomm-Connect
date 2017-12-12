@@ -7,7 +7,12 @@ def runTestsuite(exludedGroups = "org.restcomm.connect.commons.annotations.Broke
 def buildRC() {
      // Run the maven build with in-module unit testing and sonar
     try {
-     sh "mvn -f restcomm/pom.xml -pl \\!restcomm.testsuite -Dmaven.test.redirectTestOutputToFile=true -Dsonar.host.url=https://sonarqube.com -Dsonar.login=dd43f79a4bd32b1f2c484362e8a4de676a8388c4 -Dsonar.organization=jaimecasero-github -Dsonar.branch=master install sonar:sonar"
+        if (env.BRANCH_NAME == 'master') {
+            //do sonar just in master
+            sh "mvn -f restcomm/pom.xml -pl \\!restcomm.testsuite -Dmaven.test.redirectTestOutputToFile=true -Dsonar.host.url=https://sonarqube.com -Dsonar.login=dd43f79a4bd32b1f2c484362e8a4de676a8388c4 -Dsonar.organization=jaimecasero-github -Dsonar.branch=master install sonar:sonar"
+        } else {
+            sh "mvn -f restcomm/pom.xml -pl \\!restcomm.testsuite -Dmaven.test.redirectTestOutputToFile=true install"
+        }
     } catch(err) {
         publishRCResults()
         throw err
@@ -24,11 +29,11 @@ def publishRCResults() {
     }
     if (env.BRANCH_NAME ==~ /^PR-\d+$/) {
         //step([$class: 'Mailer', notifyEveryUnstableBuild: true, recipients: emailextrecipients([[$class: 'FailingTestSuspectsRecipientProvider']])])
-        if (currentBuild.currentResult != 'SUCCESS' ) { // Other values: SUCCESS, UNSTABLE, FAILURE
+        /*if (currentBuild.currentResult != 'SUCCESS' ) { // Other values: SUCCESS, UNSTABLE, FAILURE
             setGitHubPullRequestStatus (context:'CI', message:'IT unstable', state:'FAILURE')
         } else {
            setGitHubPullRequestStatus (context:'CI', message:'IT passed', state:'SUCCESS')
-        }
+        }*/
     }
 
 }
@@ -44,16 +49,26 @@ node("cxs-ups-testsuites_large") {
    stage ("Build") {
     buildRC()
    }
-/*
+
     stage("CITestsuiteSeq") {
-        runTestsuite("org.restcomm.connect.commons.annotations.ParallelClassTests or org.restcomm.connect.commons.annotations.UnstableTests or org.restcomm.connect.commons.annotations.BrokenTests or org.restcomm.connect.commons.annotations.FeatureAltTests or org.restcomm.connect.commons.annotations.FeatureExpTests")
+        if (env.BRANCH_NAME == 'master') {
+            runTestsuite("org.restcomm.connect.commons.annotations.ParallelClassTests or org.restcomm.connect.commons.annotations.UnstableTests or org.restcomm.connect.commons.annotations.BrokenTests")
+        } else {
+            //exclude alt and exp to make it lighter
+            runTestsuite("org.restcomm.connect.commons.annotations.ParallelClassTests or org.restcomm.connect.commons.annotations.UnstableTests or org.restcomm.connect.commons.annotations.BrokenTests or org.restcomm.connect.commons.annotations.FeatureAltTests or org.restcomm.connect.commons.annotations.FeatureExpTests")
+        }
     }
 
 
     stage("CITestsuiteParallel") {
-        runTestuite("org.restcomm.connect.commons.annotations.UnstableTests or org.restcomm.connect.commons.annotations.BrokenTests or org.restcomm.connect.commons.annotations.FeatureAltTests or org.restcomm.connect.commons.annotations.FeatureExpTests", "org.restcomm.connect.commons.annotations.ParallelClassTests", "16" , "parallel-testing")
+        if (env.BRANCH_NAME == 'master') {
+            runTestuite("org.restcomm.connect.commons.annotations.UnstableTests or org.restcomm.connect.commons.annotations.BrokenTests", "org.restcomm.connect.commons.annotations.ParallelClassTests", "16" , "parallel-testing")
+        } else {
+            //exclude alt and exp to make it lighter
+            runTestuite("org.restcomm.connect.commons.annotations.UnstableTests or org.restcomm.connect.commons.annotations.BrokenTests or org.restcomm.connect.commons.annotations.FeatureAltTests or org.restcomm.connect.commons.annotations.FeatureExpTests", "org.restcomm.connect.commons.annotations.ParallelClassTests", "16" , "parallel-testing")
+        }
     }
-*/
+
 
     stage("PublishResults") {
         publishRCResults()
