@@ -19,8 +19,6 @@
  */
 package org.restcomm.connect.interpreter;
 
-import com.google.i18n.phonenumbers.NumberParseException;
-import com.google.i18n.phonenumbers.PhoneNumberUtil;
 import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.Iterator;
@@ -29,11 +27,16 @@ import java.util.Set;
 import java.util.TreeSet;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
+
 import org.apache.log4j.Logger;
+import org.restcomm.connect.commons.dao.Protocol;
 import org.restcomm.connect.commons.dao.Sid;
 import org.restcomm.connect.dao.IncomingPhoneNumbersDao;
 import org.restcomm.connect.dao.entities.IncomingPhoneNumber;
 import org.restcomm.connect.dao.entities.IncomingPhoneNumberFilter;
+
+import com.google.i18n.phonenumbers.NumberParseException;
+import com.google.i18n.phonenumbers.PhoneNumberUtil;
 
 /**
  * This Service will be used in different protocol scenarios to find if some
@@ -120,7 +123,7 @@ public class NumberSelectorService {
      * @return the matched number, null if not matched.
      */
     private NumberSelectionResult findSingleNumber(String number,
-            Sid sourceOrganizationSid, Sid destinationOrganizationSid) {
+            Sid sourceOrganizationSid, Sid destinationOrganizationSid, Protocol requestProtocol) {
         NumberSelectionResult matchedNumber = new NumberSelectionResult(null, false, null);
         IncomingPhoneNumberFilter.Builder filterBuilder = IncomingPhoneNumberFilter.Builder.builder();
         filterBuilder.byPhoneNumber(number);
@@ -128,8 +131,8 @@ public class NumberSelectorService {
         if (unfilteredCount > 0) {
             if (destinationOrganizationSid != null) {
                 filterBuilder.byOrgSid(destinationOrganizationSid.toString());
-            }else{
-                //restrict search to non SIP numbers
+            } else if ((requestProtocol == null) || (!requestProtocol.equals(Protocol.SMPP))){
+                //restrict search to non SIP numbers but not for SMPP as in SMPP we dont have org info available
                 logger.debug("Organizations are null, restrict PureSIP numbers.");
                 filterBuilder.byPureSIP(Boolean.FALSE);
             }
@@ -174,13 +177,13 @@ public class NumberSelectorService {
      * @return the matched number, null if not matched.
      */
     private NumberSelectionResult findByNumber(List<String> numberQueries,
-            Sid sourceOrganizationSid, Sid destinationOrganizationSid) {
+            Sid sourceOrganizationSid, Sid destinationOrganizationSid, Protocol requestProtocol) {
         Boolean orgFiltered = false;
         NumberSelectionResult matchedNumber = new NumberSelectionResult(null, orgFiltered, null);
         int i = 0;
         while (matchedNumber.number == null && i < numberQueries.size()) {
             matchedNumber = findSingleNumber(numberQueries.get(i),
-                    sourceOrganizationSid, destinationOrganizationSid);
+                    sourceOrganizationSid, destinationOrganizationSid, requestProtocol);
             //preserve the orgFiltered flag along the queries
             if (matchedNumber.getOrganizationFiltered()) {
                 orgFiltered = true;
@@ -191,9 +194,27 @@ public class NumberSelectorService {
         return matchedNumber;
     }
 
+    /**
+     * @param phone
+     * @param sourceOrganizationSid
+     * @param destinationOrganizationSid
+     * @return
+     */
     public IncomingPhoneNumber searchNumber(String phone,
             Sid sourceOrganizationSid, Sid destinationOrganizationSid) {
-        NumberSelectionResult searchNumber = searchNumberWithResult(phone, sourceOrganizationSid, destinationOrganizationSid);
+        return searchNumber(phone, sourceOrganizationSid, destinationOrganizationSid, null);
+    }
+
+    /**
+     * @param phone
+     * @param sourceOrganizationSid
+     * @param destinationOrganizationSid
+     * @param requestProtocol
+     * @return
+     */
+    public IncomingPhoneNumber searchNumber(String phone,
+            Sid sourceOrganizationSid, Sid destinationOrganizationSid, Protocol requestProtocol) {
+        NumberSelectionResult searchNumber = searchNumberWithResult(phone, sourceOrganizationSid, destinationOrganizationSid, requestProtocol);
         return searchNumber.number;
     }
 
@@ -226,10 +247,11 @@ public class NumberSelectorService {
      * @param phone
      * @param sourceOrganizationSid
      * @param destinationOrganizationSid
+     * @param requestProtocol
      * @return
      */
     public NumberSelectionResult searchNumberWithResult(String phone,
-            Sid sourceOrganizationSid, Sid destinationOrganizationSid) {
+            Sid sourceOrganizationSid, Sid destinationOrganizationSid, Protocol requestProtocol) {
         if (logger.isDebugEnabled()) {
             logger.debug("getMostOptimalIncomingPhoneNumber: " + phone
                     + ",srcOrg:" + sourceOrganizationSid
@@ -237,7 +259,7 @@ public class NumberSelectorService {
         }
         List<String> numberQueries = createPhoneQuery(phone);
 
-        NumberSelectionResult numberfound = findByNumber(numberQueries, sourceOrganizationSid, destinationOrganizationSid);
+        NumberSelectionResult numberfound = findByNumber(numberQueries, sourceOrganizationSid, destinationOrganizationSid, requestProtocol);
         if (numberfound.number == null) {
             //only use regex if perfect match didnt worked
             if (destinationOrganizationSid != null
@@ -252,7 +274,7 @@ public class NumberSelectorService {
                 }
                 if (numberfound.number == null) {
                     //if no regex match found, try with special star number in the end
-                    NumberSelectionResult starfound = findSingleNumber("*", sourceOrganizationSid, destinationOrganizationSid);
+                    NumberSelectionResult starfound = findSingleNumber("*", sourceOrganizationSid, destinationOrganizationSid, requestProtocol);
                     if (starfound.number != null) {
                         numberfound = new NumberSelectionResult(starfound.number, false, ResultType.REGEX);
                     }

@@ -66,6 +66,7 @@ import org.apache.commons.configuration.HierarchicalConfiguration;
 import org.joda.time.DateTime;
 import org.restcomm.connect.commons.configuration.RestcommConfiguration;
 import org.restcomm.connect.commons.configuration.sets.RcmlserverConfigurationSet;
+import org.restcomm.connect.commons.dao.Protocol;
 import org.restcomm.connect.commons.dao.Sid;
 import org.restcomm.connect.commons.faulttolerance.RestcommUntypedActor;
 import org.restcomm.connect.commons.patterns.StopObserving;
@@ -1237,7 +1238,7 @@ public final class CallManager extends RestcommUntypedActor {
                 //organization was not proper.
                 return isFoundHostedApp;
             }
-            NumberSelectionResult result = numberSelector.searchNumberWithResult(phone, sourceOrganizationSid, destOrg);
+            NumberSelectionResult result = numberSelector.searchNumberWithResult(phone, sourceOrganizationSid, destOrg, Protocol.SIP);
             number = result.getNumber();
             if(numberSelector.isFailedCall(result, sourceOrganizationSid, destOrg)
                      ) {
