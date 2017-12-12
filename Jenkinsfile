@@ -23,7 +23,7 @@ def publishRCResults() {
        slackSend "Build unstable - ${env.JOB_NAME} ${env.BUILD_NUMBER} (<${env.BUILD_URL}|Open>)"
     }
     if (env.BRANCH_NAME ==~ /^PR-\d+$/) {
-        step([$class: 'Mailer', notifyEveryUnstableBuild: true, recipients: emailextrecipients([[$class: 'FailingTestSuspectsRecipientProvider']])])
+        //step([$class: 'Mailer', notifyEveryUnstableBuild: true, recipients: emailextrecipients([[$class: 'FailingTestSuspectsRecipientProvider']])])
         if (currentBuild.currentResult != 'SUCCESS' ) { // Other values: SUCCESS, UNSTABLE, FAILURE
             setGitHubPullRequestStatus (context:'CI', message:'IT unstable', state:'FAILURE')
         } else {
@@ -44,12 +44,12 @@ node("cxs-ups-testsuites_large") {
    stage ("Build") {
     buildRC()
    }
-
+/*
     stage("CITestsuiteSeq") {
         runTestsuite("org.restcomm.connect.commons.annotations.ParallelClassTests or org.restcomm.connect.commons.annotations.UnstableTests or org.restcomm.connect.commons.annotations.BrokenTests or org.restcomm.connect.commons.annotations.FeatureAltTests or org.restcomm.connect.commons.annotations.FeatureExpTests")
     }
 
-/*
+
     stage("CITestsuiteParallel") {
         runTestuite("org.restcomm.connect.commons.annotations.UnstableTests or org.restcomm.connect.commons.annotations.BrokenTests or org.restcomm.connect.commons.annotations.FeatureAltTests or org.restcomm.connect.commons.annotations.FeatureExpTests", "org.restcomm.connect.commons.annotations.ParallelClassTests", "16" , "parallel-testing")
     }
