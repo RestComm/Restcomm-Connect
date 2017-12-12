@@ -1,4 +1,4 @@
-angular.module('rcApp.controllers').controller('ApplicationsCtrl', function ($scope, RCommApplications, SessionService) {
+angular.module('rcApp.controllers').controller('ApplicationsCtrl', function ($scope, RCommApplications, SessionService, $httpParamSerializer) {
     var accountSid = SessionService.get("sid");
 
     // only client-side sorting..
@@ -6,6 +6,14 @@ angular.module('rcApp.controllers').controller('ApplicationsCtrl', function ($sc
     $scope.reverse = false;
 
     $scope.appsList = RCommApplications.query({accountSid: accountSid, includeNumbers: true});
+
+    $scope.commitNewName = function(app, newName) {
+      console.log("renaming app to " + newName);
+        RCommApplications.save({accountSid: accountSid, applicationSid: app.sid}, $httpParamSerializer({FriendlyName: newName}), function (result) {
+          app.friendly_name = result.friendly_name;
+        });
+
+    }
 });
 
 angular.module('rcApp.controllers').controller('ApplicationDetailsCtrl', function ($scope, RCommApplications, RvdProjects, SessionService, $stateParams, $location, $dialog, Notifications, $filter, $httpParamSerializer, FileRetriever) {
