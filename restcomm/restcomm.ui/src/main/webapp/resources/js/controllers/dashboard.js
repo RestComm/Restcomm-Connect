@@ -121,7 +121,7 @@ rcMod.controller('DashboardCtrl', function ($scope, $resource, $rootScope, RComm
         top: 15,
         right: 50,
         bottom: 100,
-        left: 35
+        left: 50
       },
       x: function(d, i){return d[0];},
       y: function(d){return d[1];},
@@ -144,10 +144,10 @@ rcMod.controller('DashboardCtrl', function ($scope, $resource, $rootScope, RComm
         }
       },
       y1Axis: {
-        axisLabel: 'Number of Calls',
+        // axisLabel: 'Number of Calls',
       },
       y2Axis: {
-        axisLabel: 'Duration'
+        // axisLabel: 'Duration'
       },
       lines: { // for line chart
         yDomain: [0, 1000]
@@ -167,10 +167,10 @@ rcMod.controller('DashboardCtrl', function ($scope, $resource, $rootScope, RComm
       type: "historicalBarChart",
       height: 400,
       margin: {
-        top: 15,
+        top: 30,
         right: 50,
         bottom: 100,
-        left: 35
+        left: 50
       },
       x: function(d, i){ return d[0];},
       y: function(d){ return d[1];},

@@ -103,6 +103,7 @@ import org.restcomm.connect.interpreter.VoiceInterpreter;
 import org.restcomm.connect.interpreter.VoiceInterpreterParams;
 import org.restcomm.connect.monitoringservice.MonitoringService;
 import org.restcomm.connect.mscontrol.api.MediaServerControllerFactory;
+import org.restcomm.connect.sdr.api.SdrService;
 import org.restcomm.connect.telephony.api.CallInfo;
 import org.restcomm.connect.telephony.api.CallManagerResponse;
 import org.restcomm.connect.telephony.api.CallResponse;
@@ -170,6 +171,7 @@ public final class CallManager extends RestcommUntypedActor {
     private final SipFactory sipFactory;
     private final DaoManager storage;
     private final ActorRef monitoring;
+    private final ActorRef sdr;
     private final NumberSelectorService numberSelector;
 
     // configurable switch whether to use the To field in a SIP header to determine the callee address
@@ -315,6 +317,9 @@ public final class CallManager extends RestcommUntypedActor {
 
         //Monitoring Service
         this.monitoring = (ActorRef) context.getAttribute(MonitoringService.class.getName());
+
+        //Sdr Service
+        this.sdr = (ActorRef) context.getAttribute(SdrService.class.getName());
 
         extensions = ExtensionController.getInstance().getExtensions(ExtensionType.CallManager);
         if (logger.isInfoEnabled()) {
@@ -889,6 +894,7 @@ public final class CallManager extends RestcommUntypedActor {
             builder.setEmailAddress(account.getEmailAddress());
             builder.setRcml(rcml);
             builder.setMonitoring(monitoring);
+            builder.setSdr(sdr);
             final Props props = VoiceInterpreter.props(builder.build());
             final ActorRef interpreter = getContext().actorOf(props);
             final ActorRef call = call(null);
@@ -918,6 +924,7 @@ public final class CallManager extends RestcommUntypedActor {
         builder.setEmailAddress(account.getEmailAddress());
         builder.setRcml(rcml);
         builder.setMonitoring(monitoring);
+        builder.setSdr(sdr);
         final Props props = VoiceInterpreter.props(builder.build());
         final ActorRef interpreter = getContext().actorOf(props);
 
@@ -943,6 +950,7 @@ public final class CallManager extends RestcommUntypedActor {
         builder.setEmailAddress(account.getEmailAddress());
         builder.setRcml(rcml);
         builder.setMonitoring(monitoring);
+        builder.setSdr(sdr);
         final Props props = VoiceInterpreter.props(builder.build());
         final ActorRef interpreter = getContext().actorOf(props);
 
@@ -1177,6 +1185,7 @@ public final class CallManager extends RestcommUntypedActor {
         builder.setStatusCallback(null);
         builder.setStatusCallbackMethod("POST");
         builder.setMonitoring(monitoring);
+        builder.setSdr(sdr);
 
         // Ask first transferorActor leg to execute with the new Interpreter
         final Props props = VoiceInterpreter.props(builder.build());
@@ -1198,7 +1207,10 @@ public final class CallManager extends RestcommUntypedActor {
         //organization was not proper.
         final SipServletResponse response = request.createResponse(SC_NOT_FOUND);
         response.send();
-        String sourceDomainName = storage.getOrganizationsDao().getOrganization(sourceOrganizationSid).getDomainName();
+        String sourceDomainName = "";
+        if (sourceOrganizationSid != null) {
+            sourceDomainName = storage.getOrganizationsDao().getOrganization(sourceOrganizationSid).getDomainName();
+        }
         // We found the number but organization was not proper
         String errMsg = String.format("provided number %s does not belong to your domain %s.", phone, sourceDomainName);
         logger.warning(errMsg+" Requiested URI was: "+ request.getRequestURI());
@@ -1275,6 +1287,7 @@ public final class CallManager extends RestcommUntypedActor {
                     builder.setStatusCallback(number.getStatusCallback());
                     builder.setStatusCallbackMethod(number.getStatusCallbackMethod());
                     builder.setMonitoring(monitoring);
+                    builder.setSdr(sdr);
                     final Props props = VoiceInterpreter.props(builder.build());
                     final ActorRef interpreter = getContext().actorOf(props);
 
@@ -1346,6 +1359,7 @@ public final class CallManager extends RestcommUntypedActor {
                 builder.setFallbackUrl(null);
             builder.setFallbackMethod(client.getVoiceFallbackMethod());
             builder.setMonitoring(monitoring);
+            builder.setSdr(sdr);
             final Props props = VoiceInterpreter.props(builder.build());
             final ActorRef interpreter = getContext().actorOf(props);
             final ActorRef call = call(null);
@@ -1596,6 +1610,7 @@ public final class CallManager extends RestcommUntypedActor {
         builder.setFallbackUrl(request.fallbackUrl());
         builder.setFallbackMethod(request.fallbackMethod());
         builder.setMonitoring(monitoring);
+        builder.setSdr(sdr);
         final Props props = VoiceInterpreter.props(builder.build());
         final ActorRef interpreter = getContext().actorOf(props);
         interpreter.tell(new StartInterpreter(request.call()), self);
@@ -1681,6 +1696,7 @@ public final class CallManager extends RestcommUntypedActor {
         builder.setStatusCallback(request.callback());
         builder.setStatusCallbackMethod(request.callbackMethod());
         builder.setMonitoring(monitoring);
+        builder.setSdr(sdr);
         final Props props = VoiceInterpreter.props(builder.build());
 
         // Ask first call leg to execute with the new Interpreter
@@ -2489,6 +2505,7 @@ public final class CallManager extends RestcommUntypedActor {
             builder.setVersion(runtime.getString("api-version"));
             builder.setRcml(rcml);
             builder.setMonitoring(monitoring);
+            builder.setSdr(sdr);
             builder.setAsImsUa(actAsImsUa);
             if (actAsImsUa) {
                 builder.setImsUaLogin(user);
