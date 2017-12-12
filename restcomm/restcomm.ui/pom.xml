@@ -16,25 +16,54 @@
 	<build>
 		<finalName>restcomm-management</finalName>
 		<plugins>
-			<!-- JRebel -->
 			<plugin>
-				<groupId>org.zeroturnaround</groupId>
-				<artifactId>jrebel-maven-plugin</artifactId>
-				<version>1.1.1</version>
+				<groupId>com.github.eirslett</groupId>
+				<artifactId>frontend-maven-plugin</artifactId>
+				<version>1.6</version>
+
 				<executions>
 					<execution>
-						<id>generate-rebel-xml</id>
-						<phase>process-resources</phase>
+						<id>install node and npm</id>
 						<goals>
-							<goal>generate</goal>
+							<goal>install-node-and-npm</goal>
 						</goals>
+						<configuration>
+							<nodeVersion>v4.6.0</nodeVersion>
+							<npmVersion>2.15.9</npmVersion>
+						</configuration>
+					</execution>
+
+					<execution>
+						<id>npm install</id>
+						<goals>
+							<goal>npm</goal>
+						</goals>
+						<configuration>
+							<arguments>install</arguments>
+						</configuration>
+					</execution>
+
+					<execution>
+						<id>grunt</id>
+						<goals>
+							<goal>grunt</goal>
+						</goals>
+						<configuration>
+							<arguments>--no-color</arguments>
+						</configuration>
 					</execution>
 				</executions>
 			</plugin>
 			<plugin>
 				<groupId>org.apache.maven.plugins</groupId>
 				<artifactId>maven-war-plugin</artifactId>
-				<version>2.3</version>
+				<version>2.4</version>
+				<configuration>
+					<failOnMissingWebXml>false</failOnMissingWebXml>
+					<warSourceDirectory>
+						${basedir}/target/dist
+					</warSourceDirectory>
+				</configuration>
 			</plugin>
 		</plugins>
 	</build>
