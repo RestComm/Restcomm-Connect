@@ -62,10 +62,10 @@ node("cxs-ups-testsuites_large") {
 
     stage("CITestsuiteParallel") {
         if (env.BRANCH_NAME == 'master') {
-            runTestuite("org.restcomm.connect.commons.annotations.UnstableTests or org.restcomm.connect.commons.annotations.BrokenTests", "org.restcomm.connect.commons.annotations.ParallelClassTests", "16" , "parallel-testing")
+            runTestsuite("org.restcomm.connect.commons.annotations.UnstableTests or org.restcomm.connect.commons.annotations.BrokenTests", "org.restcomm.connect.commons.annotations.ParallelClassTests", "16" , "parallel-testing")
         } else {
             //exclude alt and exp to make it lighter
-            runTestuite("org.restcomm.connect.commons.annotations.UnstableTests or org.restcomm.connect.commons.annotations.BrokenTests or org.restcomm.connect.commons.annotations.FeatureAltTests or org.restcomm.connect.commons.annotations.FeatureExpTests", "org.restcomm.connect.commons.annotations.ParallelClassTests", "16" , "parallel-testing")
+            runTestsuite("org.restcomm.connect.commons.annotations.UnstableTests or org.restcomm.connect.commons.annotations.BrokenTests or org.restcomm.connect.commons.annotations.FeatureAltTests or org.restcomm.connect.commons.annotations.FeatureExpTests", "org.restcomm.connect.commons.annotations.ParallelClassTests", "16" , "parallel-testing")
         }
     }
 
