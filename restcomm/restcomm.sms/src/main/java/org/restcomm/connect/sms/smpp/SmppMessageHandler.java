@@ -32,7 +32,6 @@ import javax.servlet.sip.SipURI;
 import org.apache.commons.configuration.Configuration;
 import org.restcomm.connect.commons.configuration.RestcommConfiguration;
 import org.restcomm.connect.commons.configuration.sets.RcmlserverConfigurationSet;
-import org.restcomm.connect.commons.dao.Protocol;
 import org.restcomm.connect.commons.dao.Sid;
 import org.restcomm.connect.commons.faulttolerance.RestcommUntypedActor;
 import org.restcomm.connect.commons.util.UriUtils;
@@ -76,6 +75,7 @@ import akka.actor.UntypedActorFactory;
 import akka.event.Logging;
 import akka.event.LoggingAdapter;
 import org.restcomm.connect.interpreter.NumberSelectorService;
+import org.restcomm.connect.interpreter.SearchModifier;
 
 //import org.restcomm.connect.extension.api.ExtensionRequest;
 //import org.restcomm.connect.extension.api.ExtensionResponse;
@@ -169,7 +169,7 @@ public class SmppMessageHandler extends RestcommUntypedActor {
 
 
         // Try to find an application defined for the phone number.
-        IncomingPhoneNumber number = numberSelector.searchNumber(phone, null, null, Protocol.SMPP);
+        IncomingPhoneNumber number = numberSelector.searchNumber(phone, null, null, null);
         try {
             if (number != null) {
                 ActorRef interpreter = null;
