@@ -183,12 +183,17 @@ public class SmppMessageHandler extends RestcommUntypedActor {
                 builder.setAccountId(number.getAccountSid());
                 builder.setVersion(number.getApiVersion());
                 final Sid sid = number.getSmsApplicationSid();
+                boolean isApplicationNull=true;
                 if (sid != null) {
                     final Application application = applications.getApplication(sid);
-                    RcmlserverConfigurationSet rcmlserverConfig = RestcommConfiguration.getInstance().getRcmlserver();
-                    RcmlserverResolver resolver = RcmlserverResolver.getInstance(rcmlserverConfig.getBaseUrl(), rcmlserverConfig.getApiPath());
-                    builder.setUrl(UriUtils.resolve(resolver.resolveRelative(application.getRcmlUrl())));
-                } else if (appUri != null) {
+                    if(application != null){
+                    	isApplicationNull=false;
+                        RcmlserverConfigurationSet rcmlserverConfig = RestcommConfiguration.getInstance().getRcmlserver();
+                        RcmlserverResolver resolver = RcmlserverResolver.getInstance(rcmlserverConfig.getBaseUrl(), rcmlserverConfig.getApiPath());
+                        builder.setUrl(UriUtils.resolve(resolver.resolveRelative(application.getRcmlUrl())));
+                    }
+                }
+                if (isApplicationNull && appUri != null) {
                     builder.setUrl(UriUtils.resolve(appUri));
                 } else {
                     logger.warning("the matched number doesn't have SMS application attached, number: "+number.getPhoneNumber());
