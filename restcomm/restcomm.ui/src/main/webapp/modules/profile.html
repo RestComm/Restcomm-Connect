@@ -29,7 +29,7 @@
                 <div class="col-md-2 col-sm-2 col-xs-12 account-field-title">Auth Token</div>
                 <div class="col-md-6 col-sm-4 col-xs-12 account-field-value">
                     <img src="resources/img/v2/d-r-pass-visible.png" class="auth-token-toggle" ng-click="authTokenType = (authTokenType === 'password' ? 'text' : 'password')">
-                    <input type="{{authTokenType}}" class="account-sid-auth-token-input" value="{{ loggedAccount.auth_token }}" readonly ng-init="authTokenType = 'password'" ng-click="authTokenType = 'text'" uib-tooltip="Click to view" tooltip-enable="authTokenType === 'password'">
+                    <input type="{{authTokenType}}" class="account-sid-auth-token-input" value="{{ urlAccount.auth_token }}" readonly ng-init="authTokenType = 'password'" ng-click="authTokenType = 'text'" uib-tooltip="Click to view" tooltip-enable="authTokenType === 'password'">
                 </div>
             </div>
             <div class="row">
