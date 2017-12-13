@@ -24,7 +24,7 @@ def publishRCResults() {
     checkstyle canComputeNew: false, defaultEncoding: '', healthy: '', pattern: '**/checkstyle-result.xml', unHealthy: ''
     junit '**/target/surefire-reports/*.xml'
     step( [ $class: 'JacocoPublisher' ] )
-    if (currentBuild.currentResult != 'SUCCESS' ) {
+    if ((env.BRANCH_NAME == 'master') && (currentBuild.currentResult != 'SUCCESS') ) {
        slackSend "Build unstable - ${env.JOB_NAME} ${env.BUILD_NUMBER} (<${env.BUILD_URL}|Open>)"
     }
     if (env.BRANCH_NAME ==~ /^PR-\d+$/) {
