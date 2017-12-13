@@ -16,12 +16,12 @@
  *  You should have received a copy of the GNU Affero General Public License
  *  along with this program.  If not, see <http://www.gnu.org/licenses/>
  */
-package org.restcomm.connect.commons.dao;
+package org.restcomm.connect.interpreter;
 
 /**
  * @author maria-farooq@live.com (Maria Farooq)
  */
-public enum Protocol {
-    SIP, SMPP, HTTP
+public enum SearchModifier {
+    ORG_COMPLIANT
 
 }
