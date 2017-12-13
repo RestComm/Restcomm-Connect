@@ -244,7 +244,7 @@ public class NumberSelectorService {
      * The main logic is: -Find a perfect match in DB using different formats.
      * -If not matched, use available Regexes in the organization. -If not
      * matched, try with the special * match.
-     * 
+     *
      * @param phone
      * @param sourceOrganizationSid
      * @param destinationOrganizationSid
