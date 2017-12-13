@@ -187,7 +187,7 @@ public class SmppMessageHandler extends RestcommUntypedActor {
                 if (sid != null) {
                     final Application application = applications.getApplication(sid);
                     if(application != null){
-                    	isApplicationNull=false;
+                        isApplicationNull=false;
                         RcmlserverConfigurationSet rcmlserverConfig = RestcommConfiguration.getInstance().getRcmlserver();
                         RcmlserverResolver resolver = RcmlserverResolver.getInstance(rcmlserverConfig.getBaseUrl(), rcmlserverConfig.getApiPath());
                         builder.setUrl(UriUtils.resolve(resolver.resolveRelative(application.getRcmlUrl())));
