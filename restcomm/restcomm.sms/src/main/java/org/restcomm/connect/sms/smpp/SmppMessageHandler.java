@@ -32,6 +32,7 @@ import javax.servlet.sip.SipURI;
 import org.apache.commons.configuration.Configuration;
 import org.restcomm.connect.commons.configuration.RestcommConfiguration;
 import org.restcomm.connect.commons.configuration.sets.RcmlserverConfigurationSet;
+import org.restcomm.connect.commons.dao.Protocol;
 import org.restcomm.connect.commons.dao.Sid;
 import org.restcomm.connect.commons.faulttolerance.RestcommUntypedActor;
 import org.restcomm.connect.commons.util.UriUtils;
@@ -168,7 +169,7 @@ public class SmppMessageHandler extends RestcommUntypedActor {
 
 
         // Try to find an application defined for the phone number.
-        IncomingPhoneNumber number = numberSelector.searchNumber(phone, null, null);
+        IncomingPhoneNumber number = numberSelector.searchNumber(phone, null, null, Protocol.SMPP);
         try {
             if (number != null) {
                 ActorRef interpreter = null;
@@ -182,12 +183,17 @@ public class SmppMessageHandler extends RestcommUntypedActor {
                 builder.setAccountId(number.getAccountSid());
                 builder.setVersion(number.getApiVersion());
                 final Sid sid = number.getSmsApplicationSid();
+                boolean isApplicationNull=true;
                 if (sid != null) {
                     final Application application = applications.getApplication(sid);
-                    RcmlserverConfigurationSet rcmlserverConfig = RestcommConfiguration.getInstance().getRcmlserver();
-                    RcmlserverResolver resolver = RcmlserverResolver.getInstance(rcmlserverConfig.getBaseUrl(), rcmlserverConfig.getApiPath());
-                    builder.setUrl(UriUtils.resolve(resolver.resolveRelative(application.getRcmlUrl())));
-                } else if (appUri != null) {
+                    if(application != null){
+                        isApplicationNull=false;
+                        RcmlserverConfigurationSet rcmlserverConfig = RestcommConfiguration.getInstance().getRcmlserver();
+                        RcmlserverResolver resolver = RcmlserverResolver.getInstance(rcmlserverConfig.getBaseUrl(), rcmlserverConfig.getApiPath());
+                        builder.setUrl(UriUtils.resolve(resolver.resolveRelative(application.getRcmlUrl())));
+                    }
+                }
+                if (isApplicationNull && appUri != null) {
                     builder.setUrl(UriUtils.resolve(appUri));
                 } else {
                     logger.warning("the matched number doesn't have SMS application attached, number: "+number.getPhoneNumber());
