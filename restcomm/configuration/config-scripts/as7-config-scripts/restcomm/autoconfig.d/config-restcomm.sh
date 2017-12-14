@@ -833,6 +833,22 @@ configConferenceTimeout(){
 	xmlstarlet ed --inplace -u "/restcomm/runtime-settings/conference-timeout" -v "$CONFERENCE_TIMEOUT" $FILE
 }
 
+configSdrService(){
+    if  [ -n "$SDR_SERVICE_CLASS" ]; then
+        echo "Configure Sdr service"
+    	xmlstarlet ed --inplace -d "/restcomm/runtime-settings/sdr-service" \
+                -s "/restcomm/runtime-settings" -t elem  -n sdr-service \
+                -i "/restcomm/runtime-settings/sdr-service" -t attr -n class -v "$SDR_SERVICE_CLASS" \
+                $FILE
+        if  [ -n "$SDR_SERVICE_HTTP_URI" ]; then
+	    xmlstarlet ed --inplace -s "/restcomm/runtime-settings/sdr-service" -t elem -n http-uri -v "$SDR_SERVICE_HTTP_URI" $FILE
+	    fi
+        if  [ -n "$SDR_SERVICE_AMQP_URI" ]; then
+	    xmlstarlet ed --inplace -s "/restcomm/runtime-settings/sdr-service" -t elem -n amqp-uri -v "$SDR_SERVICE_AMQP_URI" $FILE
+	    fi
+	fi
+}
+
 # MAIN
 echo 'Configuring RestComm...'
 configRCJavaOpts
@@ -873,4 +889,5 @@ configRMSNetworking
 configAsrDriver
 configDnsProvisioningManager
 configConferenceTimeout
+configSdrService
 echo 'Configured RestComm!'
