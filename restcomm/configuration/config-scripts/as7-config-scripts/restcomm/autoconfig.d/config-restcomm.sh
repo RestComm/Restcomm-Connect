@@ -834,10 +834,10 @@ configConferenceTimeout(){
 }
 
 configSdrService(){
+    xmlstarlet ed --inplace -d "/restcomm/runtime-settings/sdr-service" $FILE
     if  [ -n "$SDR_SERVICE_CLASS" ]; then
         echo "Configure Sdr service"
-    	xmlstarlet ed --inplace -d "/restcomm/runtime-settings/sdr-service" \
-                -s "/restcomm/runtime-settings" -t elem  -n sdr-service \
+    	xmlstarlet ed --inplace -s "/restcomm/runtime-settings" -t elem  -n sdr-service \
                 -i "/restcomm/runtime-settings/sdr-service" -t attr -n class -v "$SDR_SERVICE_CLASS" \
                 $FILE
         if  [ -n "$SDR_SERVICE_HTTP_URI" ]; then
