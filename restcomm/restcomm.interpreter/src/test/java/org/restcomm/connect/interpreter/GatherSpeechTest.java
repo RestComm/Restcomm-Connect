@@ -231,6 +231,7 @@ public class GatherSpeechTest {
                 expectMsgClass(GetCallInfo.class);
                 interpreter.tell(new CallResponse(new CallInfo(
                         new Sid("ACae6e420f425248d6a26948c17a9e2acf"),
+                        new Sid("ACae6e420f425248d6a26948c17a9e2acf"),
                         CallStateChanged.State.IN_PROGRESS,
                         CreateCallType.SIP,
                         "inbound",
@@ -298,6 +299,7 @@ public class GatherSpeechTest {
                 expectMsgClass(GetCallInfo.class);
                 interpreter.tell(new CallResponse(new CallInfo(
                         new Sid("ACae6e420f425248d6a26948c17a9e2acf"),
+                        new Sid("ACae6e420f425248d6a26948c17a9e2acf"),
                         CallStateChanged.State.IN_PROGRESS,
                         CreateCallType.SIP,
                         "inbound",
@@ -348,6 +350,7 @@ public class GatherSpeechTest {
 
                 expectMsgClass(GetCallInfo.class);
                 interpreter.tell(new CallResponse(new CallInfo(
+                        new Sid("ACae6e420f425248d6a26948c17a9e2acf"),
                         new Sid("ACae6e420f425248d6a26948c17a9e2acf"),
                         CallStateChanged.State.IN_PROGRESS,
                         CreateCallType.SIP,
@@ -426,6 +429,7 @@ public class GatherSpeechTest {
                 expectMsgClass(GetCallInfo.class);
                 interpreter.tell(new CallResponse(new CallInfo(
                         new Sid("ACae6e420f425248d6a26948c17a9e2acf"),
+                        new Sid("ACae6e420f425248d6a26948c17a9e2acf"),
                         CallStateChanged.State.IN_PROGRESS,
                         CreateCallType.SIP,
                         "inbound",
@@ -486,6 +490,7 @@ public class GatherSpeechTest {
 
                 expectMsgClass(GetCallInfo.class);
                 interpreter.tell(new CallResponse(new CallInfo(
+                        new Sid("ACae6e420f425248d6a26948c17a9e2acf"),
                         new Sid("ACae6e420f425248d6a26948c17a9e2acf"),
                         CallStateChanged.State.IN_PROGRESS,
                         CreateCallType.SIP,
@@ -579,6 +584,7 @@ public class GatherSpeechTest {
 
                 expectMsgClass(GetCallInfo.class);
                 interpreter.tell(new CallResponse(new CallInfo(
+                        new Sid("ACae6e420f425248d6a26948c17a9e2acf"),
                         new Sid("ACae6e420f425248d6a26948c17a9e2acf"),
                         CallStateChanged.State.IN_PROGRESS,
                         CreateCallType.SIP,

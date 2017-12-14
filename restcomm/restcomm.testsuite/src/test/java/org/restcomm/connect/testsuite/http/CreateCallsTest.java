@@ -145,6 +145,7 @@ public class CreateCallsTest {
     }
 
     @Test
+    @Category(UnstableTests.class)
     // Create a call to a SIP URI. Non-regression test for issue https://bitbucket.org/telestax/telscale-restcomm/issue/175
     // Use Calls Rest API to dial Bob (SIP URI sip:bob@127.0.0.1:5090) and connect him to the RCML app dial-number-entry.xml.
     // This RCML will dial +131313 which George's phone is listening (use the dial-number-entry.xml as a side effect to verify

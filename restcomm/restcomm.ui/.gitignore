@@ -1,6 +1,12 @@
-.classpath
-.settings
-.project
+# OSX Files
+.DS_Store
+
+# IntelliJ Files
+.idea
+
+# Output Files
 target
-bin
-logs
+
+# Node Files
+node
+node_modules
