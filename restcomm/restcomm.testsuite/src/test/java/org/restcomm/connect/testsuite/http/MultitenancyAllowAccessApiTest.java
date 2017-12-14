@@ -138,6 +138,7 @@ public class MultitenancyAllowAccessApiTest {
     }
 
     @Test
+    @Category(UnstableTests.class)
     public void postListSameAccount() throws ClientProtocolException, IOException {
         String baseUrl = deploymentUrl.toString() + apiPath + primaryAccountSid + "/";
         for (Endpoint endpoint : Endpoint.values()) {
@@ -196,6 +197,7 @@ public class MultitenancyAllowAccessApiTest {
     }
 
     @Test
+    @Category(UnstableTests.class)
     public void postElementSameAccount() throws ClientProtocolException, IOException {
         Endpoint endpoints[] = modifyPostParameters("3");
         String baseUrl = deploymentUrl.toString() + apiPath + primaryAccountSid + "/";

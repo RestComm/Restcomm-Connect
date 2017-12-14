@@ -261,6 +261,8 @@ public abstract class BaseVoiceInterpreter extends RestcommUntypedActor {
     String speechResult;
     //Monitoring service
     ActorRef monitoring;
+    //Sdr service
+    ActorRef sdr;
 
     final Set<Transition> transitions = new HashSet<Transition>();
     int recordingDuration = -1;

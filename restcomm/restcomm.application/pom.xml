@@ -266,9 +266,16 @@
 			<version>${project.version}</version>
 		</dependency>
 
+
 		<dependency>
 			<groupId>org.restcomm</groupId>
 			<artifactId>restcomm-connect.dns.api</artifactId>
+			<version>${project.version}</version>
+		</dependency>
+
+		<dependency>
+			<groupId>org.restcomm</groupId>
+			<artifactId>restcomm-connect.sdr.api</artifactId>
 			<version>${project.version}</version>
 		</dependency>
 

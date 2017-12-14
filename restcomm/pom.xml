@@ -80,6 +80,8 @@
 	</distributionManagement>
 
 	<properties>
+            <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
+            
 		<scala-lang.version>2.10.1</scala-lang.version>
 		<akka.version>2.1.2</akka.version>
 		<guava.version>14.0.1</guava.version>
@@ -176,6 +178,7 @@
                 <module>restcomm.dns.api</module>
                 <module>restcomm.monitoring.service</module>
                 <module>restcomm.tts.awspolly</module>
+		<module>restcomm.sdr.api</module>
   </modules>
 
 	<dependencyManagement>
@@ -697,20 +700,14 @@
 				</configuration>
 			</plugin>
 			<!-- When testing maven sure fire spawns a new JVM. Setting it to never fixed the issue. -->
-			<!--
 			<plugin>
 				<groupId>org.apache.maven.plugins</groupId>
 				<artifactId>maven-surefire-plugin</artifactId>
-				<version>2.18.1</version>
 				<configuration>
-					<forkMode>never</forkMode>
-					<argLine>-Xms1024m -Xmx1024m -XX:MaxPermSize=2048m</argLine>
-					<systemPropertyVariables>
-						<user.name>${user.name}</user.name>
-					</systemPropertyVariables>
+                                    <!-- Sets the VM argument line used when unit tests are run. -->
+                                    <argLine>${jacocoArgLine}</argLine>
 				</configuration>
 			</plugin>
-			-->
 			<!-- Checkstyle -->
 			<plugin>
 				<groupId>org.apache.maven.plugins</groupId>
@@ -745,6 +742,46 @@
 		                <artifactId>license-maven-plugin</artifactId>
 		                <version>1.13</version>
 		        </plugin>
+                    <plugin>
+                        <groupId>org.jacoco</groupId>
+                        <artifactId>jacoco-maven-plugin</artifactId>
+                        <version>0.7.9</version>
+                        <executions>
+                            <!--
+                                Prepares the property pointing to the JaCoCo runtime agent which
+                                is passed as VM argument when Maven the Surefire plugin is executed.
+                            -->
+                            <execution>
+                                <id>pre-unit-test</id>
+                                <goals>
+                                    <goal>prepare-agent</goal>
+                                </goals>
+                                <configuration>
+                                    <!--
+                                        Sets the name of the property containing the settings
+                                        for JaCoCo runtime agent.
+                                    -->
+                                    <propertyName>jacocoArgLine</propertyName>
+                                    <append>true</append>
+                                </configuration>
+                            </execution>
+                            <!--
+                                Ensures that the code coverage report for unit tests is created after
+                                unit tests have been run.
+                            -->
+                            <execution>
+                                <id>post-unit-test</id>
+                                <phase>test</phase>
+                                <goals>
+                                    <goal>report</goal>
+                                </goals>
+                                <configuration>
+                                    <!-- Sets the output directory for the code coverage report. -->
+                                    <outputDirectory>${project.reporting.outputDirectory}/jacoco-ut</outputDirectory>
+                                </configuration>
+                            </execution>
+                        </executions>
+                    </plugin>                        
 		</plugins>
 		<pluginManagement>
 			<plugins>
