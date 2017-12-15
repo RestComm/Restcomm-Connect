@@ -222,6 +222,34 @@ public class ApplicationsEndpointTest {
         assertTrue(applicationJson == null);
     }
 
+    @Test
+    public void testGetApplicationByFriendlyName ( ) throws ParseException, IllegalArgumentException, IOException {
+        JsonArray applications;
+        // Define application attributes
+        String friendlyName = "";
+        // GET applications with empty friendly name
+        applications = RestcommApplicationsTool.getInstance().getApplicationsByFriendlyName(deploymentUrl.toString(),
+                                                                                            adminUsername, adminAuthToken,
+                                                                                            adminAccountSid, friendlyName);
+        assertTrue(applications.size() == 0);
+
+        // GET application with non-existent friendly name
+        friendlyName = "rvd";
+        applications = RestcommApplicationsTool.getInstance().getApplicationsByFriendlyName(deploymentUrl.toString(),
+                                                                                            adminUsername, adminAuthToken,
+                                                                                            adminAccountSid, friendlyName);
+        assertTrue(applications.size() == 0);
+
+        // GET application with friendly name
+        friendlyName = "rvdESDemo";
+        applications = RestcommApplicationsTool.getInstance().getApplicationsByFriendlyName(deploymentUrl.toString(),
+                                                                                            adminUsername, adminAuthToken,
+                                                                                            adminAccountSid, friendlyName);
+        assertTrue(applications.size() == 1);
+        Assert.assertEquals(friendlyName, applications.get(0).getAsJsonObject().get("friendly_name").getAsString());
+        Assert.assertEquals(adminAccountSid, applications.get(0).getAsJsonObject().get("account_sid").getAsString());
+    }
+
     @Deployment(name = "ApplicationsEndpointTest", managed = true, testable = false)
     public static WebArchive createWebArchiveNoGw() {
         logger.info("Packaging Test App");

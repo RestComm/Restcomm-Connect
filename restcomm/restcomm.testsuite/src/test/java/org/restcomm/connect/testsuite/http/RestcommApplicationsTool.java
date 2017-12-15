@@ -125,6 +125,20 @@ public class RestcommApplicationsTool {
         return jsonResponse;
     }
 
+    public JsonArray getApplicationsByFriendlyName ( String deploymentUrl, String adminUsername, String adminAuthToken,
+                                                     String adminAccountSid, String friendlyName ) {
+        Client jerseyClient = Client.create();
+        jerseyClient.addFilter(new HTTPBasicAuthFilter(adminUsername, adminAuthToken));
+        String url = getApplicationsUrl(deploymentUrl, adminAccountSid, false);
+        WebResource webResource = jerseyClient.resource(url);
+        if (friendlyName != null)
+            webResource = webResource.queryParam("FriendlyName", friendlyName);
+        String response = webResource.accept(MediaType.APPLICATION_JSON).get(String.class);
+        JsonParser parser = new JsonParser();
+        JsonArray jsonResponse = parser.parse(response).getAsJsonArray();
+        return jsonResponse;
+    }
+
     public JsonObject updateApplication(String deploymentUrl, String adminUsername, String adminAuthToken,
             String adminAccountSid, String applicationSid, MultivaluedMap<String, String> applicationParams, boolean usePut) {
         Client jerseyClient = Client.create();
