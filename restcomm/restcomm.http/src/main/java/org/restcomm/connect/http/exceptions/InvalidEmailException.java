@@ -24,7 +24,7 @@ package org.restcomm.connect.http.exceptions;
 /**
  * @author ddh.huy@gmail.com (Huy Dang)
  */
-public class InvalidEmailException extends RuntimeException {
+public class InvalidEmailException extends Exception {
     //Parameterless Constructor
     public InvalidEmailException() {}
 
