@@ -41,9 +41,28 @@ updateMaxMediaFileSize() {
     fi
 }
 
+# $1 is RVD_HTTP_TIMEOUT
+updateHttpTimeout() {
+  if [ -z $1 ]; then
+      xmlstarlet ed -P -d "/rvd/defaultHttpTimeout" "$RVD_XML_FILE" > ${RVD_XML_FILE}_tmp
+      mv ${RVD_XML_FILE}_tmp ${RVD_XML_FILE}
+      echo "disabled defaultHttpTimeout option";
+  else
+      matchesCount=`xmlstarlet sel -t -v "count(/rvd/defaultHttpTimeout)" "$RVD_XML_FILE"`
+      if [ $matchesCount -ge 1 ]; then
+          xmlstarlet ed -P -u "/rvd/defaultHttpTimeout" -v "$1" "$RVD_XML_FILE" > ${RVD_XML_FILE}_tmp
+          mv ${RVD_XML_FILE}_tmp ${RVD_XML_FILE}
+      else
+          xmlstarlet ed -P -s "/rvd" -t elem -n "defaultHttpTimeout" -v "$1" "$RVD_XML_FILE" > ${RVD_XML_FILE}_tmp
+          mv ${RVD_XML_FILE}_tmp ${RVD_XML_FILE}
+      fi
+      echo "set defaultHttpTimeout to $1"
+  fi
+}
+
 # MAIN
 
-if [[ "$RVD_UNDEPLOY" = true || "$RVD_UNDEPLOY" = TRUE || "$RVD_UNDEPLOY" != True ]]; then
+if [[ "$RVD_UNDEPLOY" = true || "$RVD_UNDEPLOY" = TRUE || "$RVD_UNDEPLOY" = True ]]; then
     echo "Skipping RVD configuration since it's not deployed"
 else
     if [ -z "$RESTCOMM_HOME" ]
@@ -65,5 +84,9 @@ else
         updateVideoSupport false
     fi
     updateMaxMediaFileSize "$RVD_MAX_MEDIA_FILE_SIZE"
+
+    updateHttpTimeout "$RVD_HTTP_TIMEOUT"
+
+
     echo "Updated rvd.xml"
 fi
