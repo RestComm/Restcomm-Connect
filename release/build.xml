@@ -13,17 +13,16 @@
   <property location="${workspace.restcomm.dir}/configuration" name="configuration.directory"/>
 
   <!--mobicents binaries versions-->
-  <property name="sipservlets-build" value="782"/>
-  <property name="restcomm-sipservlets-as7.version" value="3.1.${sipservlets-build}"/>
+  <property name="sipservlets-build" value="89"/>
+  <property name="restcomm-sipservlets-as7.version" value="3.2.0-${sipservlets-build}"/>
   <!--<property name="jain-sip-ri.version" value="7.0.3.190" />-->
   <property name="restcomm-media.version" value="6.0"/>
   <property name="restcomm-media.build" value="23"/>
   <!--property name="mobicents-diameter.version" value="6.1.2.GA" /-->
 
   <!-- mobicents SIP Servlets 7.x on JBoss AS7-->
-  <property name="restcomm-sipservlets.as7.distro.version" value="${restcomm-sipservlets-as7.version}-jboss-as-7.2.0.Final"/>
-  <property name="restcomm-sipservlets.as7.download.distro.file" value="restcomm-sip-servlets-${restcomm-sipservlets.as7.distro.version}.zip"/>
-  <property name="restcomm-sipservlets.as7.download.url" value="https://mobicents.ci.cloudbees.com/job/RestcommSipServlets-Release/${sipservlets-build}/artifact/${restcomm-sipservlets.as7.download.distro.file}"/>
+  <property name="restcomm-sipservlets.as7.download.distro.file" value="restcomm-sip-servlets-3.2.0-89-jboss-as-7.2.0.Final.zip"/>
+  <property name="restcomm-sipservlets.as7.download.url" value="https://app.box.com/shared/static/bz0fnva3yiv5m93qnzn0xnn5j2zme8og.zip"/>
   <property name="restcomm-sipservlets.as7.distro.zip.path" value="${checkout.dir}/${restcomm-sipservlets.as7.download.distro.file}"/>
 
   <property name="restcomm-media.download.distro.file" value="restcomm-media-server.zip"/>
@@ -34,7 +33,7 @@
   <property name="restcomm-media.distro.zip.path" value="${checkout.dir}/${restcomm-media.download.distro.file}"/>
 
   <!-- <property name="restcomm-olympus.download.url" value="https://mobicents.ci.cloudbees.com/job/Olympus/${olympus.build}/artifact/target/olympus.war"/> -->
-  <property name="restcomm-olympus.download.url" value="https://mobicents.ci.cloudbees.com/job/Olympus-2.X/lastSuccessfulBuild/artifact/target/olympus.war"/>
+  <property name="restcomm-olympus.download.url" value="https://app.box.com/shared/static/6vke26kyns2mlbt99yguagziimi2hao8.war"/>
   <property name="restcomm-olympus.path" value="${configuration.directory}/olympus.war"/>
 
   <!-- Determine RVD retrieval URL
@@ -116,7 +115,9 @@
     <echo>Downloading Restcomm SipServlets JBoss AS7 version: ${restcomm-sipservlets-as7.version}</echo>
     <exec executable="wget" failonerror="true">
       <arg value="${restcomm-sipservlets.as7.download.url}"/>
+      <arg value="--output-document=restcomm-sipservlets-as7.zip"/>
     </exec>
+    <move file="${base.dir}/restcomm-sipservlets-as7.zip" tofile="${base.dir}/${restcomm-sipservlets.as7.download.distro.file}"/>
     <move file="${base.dir}/${restcomm-sipservlets.as7.download.distro.file}" todir="${checkout.dir}"/>
   </target>
 
@@ -144,6 +145,7 @@
     <echo>Downloading Restcomm Olympus version: ${olympus.version}</echo>
     <exec executable="wget" failonerror="true">
       <arg value="${restcomm-olympus.download.url}"/>
+      <arg value="--output-document=olympus.war"/>
     </exec>
     <move file="${base.dir}/olympus.war" todir="${configuration.directory}"/>
   </target>

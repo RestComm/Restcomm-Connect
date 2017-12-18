@@ -28,8 +28,9 @@ import static javax.ws.rs.core.Response.ok;
 import static javax.ws.rs.core.Response.status;
 import static javax.ws.rs.core.Response.Status.BAD_REQUEST;
 import static javax.ws.rs.core.Response.Status.FORBIDDEN;
-import static javax.ws.rs.core.Response.Status.NOT_FOUND;
 import static javax.ws.rs.core.Response.Status.INTERNAL_SERVER_ERROR;
+import static javax.ws.rs.core.Response.Status.NOT_FOUND;
+import static javax.ws.rs.core.Response.Status.OK;
 
 import java.net.URI;
 import java.util.ArrayList;
@@ -55,7 +56,9 @@ import org.restcomm.connect.dao.entities.Account;
 import org.restcomm.connect.dao.entities.IncomingPhoneNumber;
 import org.restcomm.connect.dao.entities.IncomingPhoneNumberFilter;
 import org.restcomm.connect.dao.entities.IncomingPhoneNumberList;
+import org.restcomm.connect.dao.entities.Organization;
 import org.restcomm.connect.dao.entities.RestCommResponse;
+import org.restcomm.connect.dao.entities.SearchFilterMode;
 import org.restcomm.connect.extension.api.ApiRequest;
 import org.restcomm.connect.http.converter.AvailableCountriesConverter;
 import org.restcomm.connect.http.converter.AvailableCountriesList;
@@ -305,18 +308,25 @@ public abstract class IncomingPhoneNumbersEndpoint extends SecuredEndpoint {
             int limit = Integer.parseInt(pageSize);
             int pageAsInt = Integer.parseInt(page);
             int offset = (page == "0") ? 0 : (((pageAsInt - 1) * limit) + limit);
-            IncomingPhoneNumberFilter incomingPhoneNumberFilter = new IncomingPhoneNumberFilter(accountSid, friendlyNameFilter,
-                    phoneNumberFilter);
-            final int total = dao.getTotalIncomingPhoneNumbers(incomingPhoneNumberFilter);
+            IncomingPhoneNumberFilter.Builder filterBuilder = IncomingPhoneNumberFilter.Builder.builder();
+            filterBuilder.byAccountSid(accountSid);
+            filterBuilder.byFriendlyName(friendlyNameFilter);
+            filterBuilder.byPhoneNumber(phoneNumberFilter);
+            filterBuilder.usingMode(SearchFilterMode.WILDCARD_MATCH);
+            final int total = dao.getTotalIncomingPhoneNumbers(filterBuilder.build());
 
             if (pageAsInt > (total / limit)) {
                 return status(javax.ws.rs.core.Response.Status.BAD_REQUEST).build();
             }
 
-            incomingPhoneNumberFilter = new IncomingPhoneNumberFilter(accountSid, friendlyNameFilter, phoneNumberFilter, sortBy,
-                    reverse, limit, offset);
+            filterBuilder.byAccountSid(accountSid);
+            filterBuilder.byFriendlyName(friendlyNameFilter);
+            filterBuilder.byPhoneNumber(phoneNumberFilter);
+            filterBuilder.sortedBy(sortBy, reverse);
+            filterBuilder.limited(limit, offset);
+            filterBuilder.usingMode(SearchFilterMode.WILDCARD_MATCH);
 
-            final List<IncomingPhoneNumber> incomingPhoneNumbers = dao.getIncomingPhoneNumbersByFilter(incomingPhoneNumberFilter);
+            final List<IncomingPhoneNumber> incomingPhoneNumbers = dao.getIncomingPhoneNumbersByFilter(filterBuilder.build());
 
             listConverter.setCount(total);
             listConverter.setPage(pageAsInt);
@@ -357,7 +367,9 @@ public abstract class IncomingPhoneNumbersEndpoint extends SecuredEndpoint {
             }
             Boolean isSip = Boolean.parseBoolean(isSIP);
             Boolean available = true;
-            List<IncomingPhoneNumber> incomingPhoneNumbers = dao.getIncomingPhoneNumber(number);
+            IncomingPhoneNumberFilter.Builder filterBuilder = IncomingPhoneNumberFilter.Builder.builder();
+            filterBuilder.byPhoneNumber(number);
+            List<IncomingPhoneNumber> incomingPhoneNumbers = dao.getIncomingPhoneNumbersByFilter(filterBuilder.build());
             /* check if number is occupied by same organization or different.
              * if it is occupied by different organization then we can add it in current.
              * but it has to be pure sip as provider numbers must be unique even across organizations.
@@ -442,13 +454,7 @@ public abstract class IncomingPhoneNumbersEndpoint extends SecuredEndpoint {
             }
             secure(operatedAccount, incomingPhoneNumber.getAccountSid(), SecuredType.SECURED_STANDARD );
             boolean updated = true;
-            if(phoneNumberProvisioningManager != null && (incomingPhoneNumber.isPureSip() == null || !incomingPhoneNumber.isPureSip())) {
-                String domainName = organizationsDao.getOrganization(operatedAccount.getOrganizationSid()).getDomainName();
-                phoneNumberParameters.setVoiceUrl((callbackPort == null || callbackPort.trim().isEmpty()) ? domainName : domainName+":"+callbackPort);
-                if(logger.isDebugEnabled())
-                    logger.debug("updateNumber " + incomingPhoneNumber +" phoneNumberParameters: " + phoneNumberParameters);
-                updated = phoneNumberProvisioningManager.updateNumber(convertIncomingPhoneNumbertoPhoneNumber(incomingPhoneNumber), phoneNumberParameters);
-            }
+            updated = updateNumberAtPhoneNumberProvisioningManager(incomingPhoneNumber, organizationsDao.getOrganization(operatedAccount.getOrganizationSid()));
             if(updated) {
                 dao.updateIncomingPhoneNumber(update(incomingPhoneNumber, data));
                 if (APPLICATION_JSON_TYPE == responseType) {
@@ -643,5 +649,112 @@ public abstract class IncomingPhoneNumbersEndpoint extends SecuredEndpoint {
                 incomingPhoneNumber.isMmsCapable(),
                 incomingPhoneNumber.isFaxCapable(),
                 false);
+    }
+
+    /**
+     * @param targetAccountSid
+     * @param data
+     * @param responseType
+     * @return
+     */
+    protected Response migrateIncomingPhoneNumbers(String targetAccountSid, MultivaluedMap<String, String> data, MediaType responseType) {
+        Account effectiveAccount = userIdentityContext.getEffectiveAccount();
+        secure(effectiveAccount, "RestComm:Modify:IncomingPhoneNumbers");
+        allowOnlySuperAdmin();
+        try{
+            Account targetAccount = accountsDao.getAccount(targetAccountSid);
+            // this is to avoid if mistakenly provided super admin account as targetAccountSid
+            // if this check is not in place and someone mistakenly provided super admin
+            // then all accounts and sub account in platform will be impacted
+            if(targetAccount == null){
+                return status(NOT_FOUND).entity("Account not found").build();
+            }
+            if(targetAccount.getParentSid() == null){
+                return status(BAD_REQUEST).entity("Super Admin account numbers can not be migrated. Please provide a valid account sid").build();
+            }else{
+                String organizationSidStr = data.getFirst("OrganizationSid");
+                if(organizationSidStr == null){
+                    return status(BAD_REQUEST).entity("OrganizationSid cannot be null").build();
+                }
+                Sid organizationSid = null;
+                try{
+                    organizationSid = new Sid(organizationSidStr);
+                }catch(IllegalArgumentException iae){
+                    return status(BAD_REQUEST).entity("OrganizationSid is not valid").build();
+                }
+                Organization destinationOrganization = organizationsDao.getOrganization(organizationSid);
+                if(destinationOrganization == null){
+                    return status(NOT_FOUND).entity("Destination organization not found").build();
+                }
+                migrateNumbersFromAccountTree(targetAccount, destinationOrganization);
+                return status(OK).build();
+            }
+        }catch(Exception e){
+            logger.error("Exception while performing migrateIncomingPhoneNumbers: ", e);
+            return status(INTERNAL_SERVER_ERROR).build();
+        }
+    }
+
+    /**
+     * @param targetAccount
+     * @param destinationOrganization
+     */
+    private void migrateNumbersFromAccountTree(Account targetAccount, Organization destinationOrganization) {
+        List<String> subAccountsToClose = accountsDao.getSubAccountSidsRecursive(targetAccount.getSid());
+        if (subAccountsToClose != null && !subAccountsToClose.isEmpty()) {
+            int i = subAccountsToClose.size(); // is is the count of accounts left to process
+            // we iterate backwards to handle child account numbers first, parent account's numbers next
+            while (i > 0) {
+                i --;
+                String migrateSid = subAccountsToClose.get(i);
+                try {
+                    Account subAccount = accountsDao.getAccount(new Sid(migrateSid));
+                    migrateSingleAccountNumbers(subAccount, destinationOrganization);
+                } catch (Exception e) {
+                    // if anything bad happens, log the error and continue migrating the rest of the accounts numbers.
+                    logger.error("Failed migrating (child) account's numbers: account sid '" + migrateSid + "'");
+                }
+            }
+        }
+        // migrate parent account numbers too
+        migrateSingleAccountNumbers(targetAccount, destinationOrganization);
+
+    }
+
+    /**
+     * @param account
+     * @param destinationOrganization
+     */
+    private void migrateSingleAccountNumbers(Account account, Organization destinationOrganization) {
+        List<IncomingPhoneNumber> incomingPhoneNumbers = dao.getIncomingPhoneNumbers(account.getSid());
+        if(incomingPhoneNumbers != null) {
+            for (int i=0; i<incomingPhoneNumbers.size(); i++){
+                IncomingPhoneNumber incomingPhoneNumber = incomingPhoneNumbers.get(i);
+                incomingPhoneNumber.setOrganizationSid(destinationOrganization.getSid());
+                //update organization in db
+                dao.updateIncomingPhoneNumber(incomingPhoneNumber);
+                //update number at provider's end
+                if(!updateNumberAtPhoneNumberProvisioningManager(incomingPhoneNumber, destinationOrganization)){
+                    //if number could not be updated at provider's end, log the error and keep moving to next number.
+                    logger.error(String.format("could not update number %s at number provider %s ", incomingPhoneNumber.getPhoneNumber(), phoneNumberProvisioningManager));
+                }
+            }
+        }
+    }
+
+    /**
+     * @param incomingPhoneNumber
+     * @param organization
+     * @return
+     */
+    private boolean updateNumberAtPhoneNumberProvisioningManager(IncomingPhoneNumber incomingPhoneNumber, Organization organization){
+        if(phoneNumberProvisioningManager != null && (incomingPhoneNumber.isPureSip() == null || !incomingPhoneNumber.isPureSip())) {
+            String domainName = organization.getDomainName();
+            phoneNumberParameters.setVoiceUrl((callbackPort == null || callbackPort.trim().isEmpty()) ? domainName : domainName+":"+callbackPort);
+            if(logger.isDebugEnabled())
+                logger.debug("updateNumber " + incomingPhoneNumber +" phoneNumberParameters: " + phoneNumberParameters);
+            return phoneNumberProvisioningManager.updateNumber(convertIncomingPhoneNumbertoPhoneNumber(incomingPhoneNumber), phoneNumberParameters);
+        }
+        return true;
     }
 }

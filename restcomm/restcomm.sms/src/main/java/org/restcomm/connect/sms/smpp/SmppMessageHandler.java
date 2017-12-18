@@ -38,7 +38,6 @@ import org.restcomm.connect.commons.util.UriUtils;
 import org.restcomm.connect.dao.AccountsDao;
 import org.restcomm.connect.dao.ApplicationsDao;
 import org.restcomm.connect.dao.DaoManager;
-import org.restcomm.connect.dao.IncomingPhoneNumbersDao;
 import org.restcomm.connect.dao.common.OrganizationUtil;
 import org.restcomm.connect.dao.entities.Application;
 import org.restcomm.connect.dao.entities.IncomingPhoneNumber;
@@ -50,6 +49,7 @@ import org.restcomm.connect.extension.api.RestcommExtensionException;
 import org.restcomm.connect.extension.api.RestcommExtensionGeneric;
 import org.restcomm.connect.extension.controller.ExtensionController;
 import org.restcomm.connect.http.client.rcmlserver.resolver.RcmlserverResolver;
+import org.restcomm.connect.interpreter.NumberSelectorService;
 import org.restcomm.connect.interpreter.StartInterpreter;
 import org.restcomm.connect.monitoringservice.MonitoringService;
 import org.restcomm.connect.sms.SmsSession;
@@ -67,7 +67,6 @@ import com.cloudhopper.smpp.type.SmppChannelException;
 import com.cloudhopper.smpp.type.SmppInvalidArgumentException;
 import com.cloudhopper.smpp.type.SmppTimeoutException;
 import com.cloudhopper.smpp.type.UnrecoverablePduException;
-import com.google.i18n.phonenumbers.PhoneNumberUtil;
 
 import akka.actor.ActorRef;
 import akka.actor.Props;
@@ -88,6 +87,7 @@ public class SmppMessageHandler extends RestcommUntypedActor {
     private final Configuration configuration;
     private final SipFactory sipFactory;
     private final ActorRef monitoringService;
+    private final NumberSelectorService numberSelector;
     //List of extensions for SmsService
     List<RestcommExtensionGeneric> extensions;
 
@@ -97,6 +97,7 @@ public class SmppMessageHandler extends RestcommUntypedActor {
         this.configuration = (Configuration) servletContext.getAttribute(Configuration.class.getName());
         this.sipFactory = (SipFactory) servletContext.getAttribute(SipFactory.class.getName());
         this.monitoringService = (ActorRef) servletContext.getAttribute(MonitoringService.class.getName());
+        numberSelector = (NumberSelectorService) servletContext.getAttribute(NumberSelectorService.class.getName());
         //FIXME:Should new ExtensionType.SmppMessageHandler be defined?
         extensions = ExtensionController.getInstance().getExtensions(ExtensionType.SmsService);
         if (logger.isInfoEnabled()) {
@@ -165,33 +166,9 @@ public class SmppMessageHandler extends RestcommUntypedActor {
         String to = request.getSmppTo();
         String phone = to;
 
-        final PhoneNumberUtil phoneNumberUtil = PhoneNumberUtil.getInstance();
 
-        try {
-            phone = phoneNumberUtil.format(phoneNumberUtil.parse(to, "US"), PhoneNumberUtil.PhoneNumberFormat.E164);
-        } catch (Exception e) {}
         // Try to find an application defined for the phone number.
-        final IncomingPhoneNumbersDao numbersDao = storage.getIncomingPhoneNumbersDao();
-        List<IncomingPhoneNumber> numbers = numbersDao.getIncomingPhoneNumber(phone);
-        IncomingPhoneNumber number = null;
-        if(!numbers.isEmpty()){
-            RegexRemover.removeRegexes(numbers);
-            number = numbers.get(0);
-        }
-
-        if(number == null){
-            numbers = numbersDao.getIncomingPhoneNumber(to);
-            RegexRemover.removeRegexes(numbers);
-            number = numbers.isEmpty() ? null : numbers.get(0);
-        }
-
-        if(number == null){
-            // https://github.com/Mobicents/RestComm/issues/84 using wildcard as default application
-            numbers = numbersDao.getIncomingPhoneNumber("*");
-            RegexRemover.removeRegexes(numbers);
-            number = numbers.isEmpty() ? null : numbers.get(0);
-        }
-
+        IncomingPhoneNumber number = numberSelector.searchNumber(phone, null, null, null);
         try {
             if (number != null) {
                 ActorRef interpreter = null;
@@ -205,14 +182,19 @@ public class SmppMessageHandler extends RestcommUntypedActor {
                 builder.setAccountId(number.getAccountSid());
                 builder.setVersion(number.getApiVersion());
                 final Sid sid = number.getSmsApplicationSid();
+                boolean isApplicationNull=true;
                 if (sid != null) {
                     final Application application = applications.getApplication(sid);
-                    RcmlserverConfigurationSet rcmlserverConfig = RestcommConfiguration.getInstance().getRcmlserver();
-                    RcmlserverResolver resolver = RcmlserverResolver.getInstance(rcmlserverConfig.getBaseUrl(), rcmlserverConfig.getApiPath());
-                    builder.setUrl(UriUtils.resolve(resolver.resolveRelative(application.getRcmlUrl())));
-                } else if (appUri != null) {
+                    if(application != null){
+                        isApplicationNull=false;
+                        RcmlserverConfigurationSet rcmlserverConfig = RestcommConfiguration.getInstance().getRcmlserver();
+                        RcmlserverResolver resolver = RcmlserverResolver.getInstance(rcmlserverConfig.getBaseUrl(), rcmlserverConfig.getApiPath());
+                        builder.setUrl(UriUtils.resolve(resolver.resolveRelative(application.getRcmlUrl())));
+                    }
+                }
+                if (isApplicationNull && appUri != null) {
                     builder.setUrl(UriUtils.resolve(appUri));
-                } else {
+                } else if (isApplicationNull){
                     logger.warning("the matched number doesn't have SMS application attached, number: "+number.getPhoneNumber());
                     return false;
                 }

@@ -482,7 +482,10 @@ public abstract class CallsEndpoint extends SecuredEndpoint {
             cdr = dao.getCallDetailRecord(new Sid(callSid));
 
             if (cdr != null) {
-                secure(account, cdr.getAccountSid(), SecuredType.SECURED_STANDARD);
+                //allow super admin to perform LCM on any call - https://telestax.atlassian.net/browse/RESTCOMM-1171
+                if(!isSuperAdmin()){
+                    secure(account, cdr.getAccountSid(), SecuredType.SECURED_STANDARD);
+                }
             } else {
                 return Response.status(NOT_ACCEPTABLE).build();
             }

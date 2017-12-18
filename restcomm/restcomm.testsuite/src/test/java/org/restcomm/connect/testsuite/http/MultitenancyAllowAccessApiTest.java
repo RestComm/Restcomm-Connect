@@ -42,7 +42,8 @@ import org.junit.experimental.categories.Category;
 import org.junit.runner.RunWith;
 
 import org.restcomm.connect.commons.Version;
-import org.restcomm.connect.testsuite.UnstableTests;
+import org.restcomm.connect.commons.annotations.FeatureAltTests;
+import org.restcomm.connect.commons.annotations.UnstableTests;
 import wiremock.org.apache.http.client.ClientProtocolException;
 
 /**
@@ -123,6 +124,7 @@ public class MultitenancyAllowAccessApiTest {
     }
 
     @Test
+    @Category(FeatureAltTests.class)
     public void getListSubaccount() throws ClientProtocolException, IOException {
         String baseUrl = deploymentUrl.toString() + apiPath + subaccountaAccountSid + "/";
         for (Endpoint endpoint : Endpoint.values()) {
@@ -136,6 +138,7 @@ public class MultitenancyAllowAccessApiTest {
     }
 
     @Test
+    @Category(UnstableTests.class)
     public void postListSameAccount() throws ClientProtocolException, IOException {
         String baseUrl = deploymentUrl.toString() + apiPath + primaryAccountSid + "/";
         for (Endpoint endpoint : Endpoint.values()) {
@@ -150,6 +153,7 @@ public class MultitenancyAllowAccessApiTest {
     }
 
     @Test
+    @Category(FeatureAltTests.class)
     public void postListSubaccount() throws ClientProtocolException, IOException {
         Endpoint endpoints[] = modifyPostParameters("2");
         String baseUrl = deploymentUrl.toString() + apiPath + subaccountaAccountSid + "/";
@@ -179,7 +183,7 @@ public class MultitenancyAllowAccessApiTest {
     }
 
     @Test
-    @Category(UnstableTests.class)
+    @Category({UnstableTests.class, FeatureAltTests.class})
     public void getElementSubaccount() throws ClientProtocolException, IOException {
         String baseUrl = deploymentUrl.toString() + apiPath + subaccountaAccountSid + "/";
         for (Endpoint endpoint : Endpoint.values()) {
@@ -193,6 +197,7 @@ public class MultitenancyAllowAccessApiTest {
     }
 
     @Test
+    @Category(UnstableTests.class)
     public void postElementSameAccount() throws ClientProtocolException, IOException {
         Endpoint endpoints[] = modifyPostParameters("3");
         String baseUrl = deploymentUrl.toString() + apiPath + primaryAccountSid + "/";
@@ -208,6 +213,7 @@ public class MultitenancyAllowAccessApiTest {
     }
 
     @Test
+    @Category(FeatureAltTests.class)
     public void postElementSubaccount() throws ClientProtocolException, IOException {
         Endpoint endpoints[] = modifyPostParameters("4");
         String baseUrl = deploymentUrl.toString() + apiPath + subaccountaAccountSid + "/";
@@ -236,6 +242,7 @@ public class MultitenancyAllowAccessApiTest {
     }
 
     @Test
+    @Category(FeatureAltTests.class)
     public void deleteElementSubaccount() throws ClientProtocolException, IOException {
         String baseUrl = deploymentUrl.toString() + apiPath + subaccountaAccountSid + "/";
         for (Endpoint endpoint : Endpoint.values()) {

@@ -31,13 +31,13 @@ import org.restcomm.connect.commons.patterns.Observe;
 import org.restcomm.connect.commons.patterns.Observing;
 import org.restcomm.connect.commons.patterns.StopObserving;
 import org.restcomm.connect.mscontrol.api.MediaServerController;
-import org.restcomm.connect.mscontrol.api.messages.CloseMediaSession;
 import org.restcomm.connect.mscontrol.api.messages.CreateMediaSession;
 import org.restcomm.connect.mscontrol.api.messages.JoinCall;
 import org.restcomm.connect.mscontrol.api.messages.JoinComplete;
-import org.restcomm.connect.mscontrol.api.messages.Stop;
 import org.restcomm.connect.mscontrol.api.messages.MediaServerControllerStateChanged.MediaServerControllerState;
+import org.restcomm.connect.mscontrol.api.messages.Stop;
 import org.restcomm.connect.telephony.api.ConferenceStateChanged;
+import org.restcomm.connect.telephony.util.ConferenceTestUtil;
 
 import akka.actor.ActorRef;
 import akka.event.Logging;
@@ -53,7 +53,7 @@ public final class MockMmsConferenceController extends MediaServerController {
     private final LoggingAdapter logger = Logging.getLogger(getContext().system(), this);
     // Observers
     private final List<ActorRef> observers;
-    private Sid conferenceSid;
+    private Sid conferenceSid = ConferenceTestUtil.TEST_CNF_SID;
 
     public MockMmsConferenceController(final ActorRef mrb) {
         super();

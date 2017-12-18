@@ -38,6 +38,7 @@ import org.jboss.shrinkwrap.api.spec.WebArchive;
 import org.jboss.shrinkwrap.resolver.api.maven.archive.ShrinkWrapMaven;
 import org.junit.Rule;
 import org.junit.Test;
+import org.junit.experimental.categories.Category;
 import org.junit.runner.RunWith;
 
 import com.github.tomakehurst.wiremock.junit.WireMockRule;
@@ -48,6 +49,7 @@ import com.sun.jersey.api.client.ClientResponse;
 import com.sun.jersey.api.client.WebResource;
 import com.sun.jersey.api.client.filter.HTTPBasicAuthFilter;
 import org.restcomm.connect.commons.Version;
+import org.restcomm.connect.commons.annotations.FeatureAltTests;
 
 /**
  * @author <a href="mailto:jean.deruelle@telestax.com">Jean Deruelle</a>
@@ -145,6 +147,7 @@ public class NexmoAvailablePhoneNumbersEndpointTest {
      * available local phone numbers in the United States in the 510 area code.
      */
     @Test
+    @Category(FeatureAltTests.class)
     public void testSearchUSLocalPhoneNumbersWith501AreaCode() {
         stubFor(get(urlMatching("/nexmo/number/search/.*/.*/US\\?pattern=1501&search_pattern=0"))
                 .willReturn(aResponse()
@@ -179,6 +182,7 @@ public class NexmoAvailablePhoneNumbersEndpointTest {
      * available local phone numbers in the United States in the 510 area code.
      */
     @Test
+    @Category(FeatureAltTests.class)
     public void testSearchCALocalPhoneNumbersWith450AreaCode() {
         stubFor(get(urlMatching("/nexmo/number/search/.*/.*/CA\\?pattern=1450&search_pattern=0"))
                 .willReturn(aResponse()

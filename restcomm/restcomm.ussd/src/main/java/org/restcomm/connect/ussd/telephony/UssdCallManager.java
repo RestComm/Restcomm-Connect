@@ -50,7 +50,6 @@ import org.restcomm.connect.dao.common.OrganizationUtil;
 import org.restcomm.connect.dao.entities.Account;
 import org.restcomm.connect.dao.entities.Application;
 import org.restcomm.connect.dao.entities.IncomingPhoneNumber;
-import org.restcomm.connect.dao.entities.MostOptimalNumberResponse;
 import org.restcomm.connect.http.client.rcmlserver.resolver.RcmlserverResolver;
 import org.restcomm.connect.interpreter.StartInterpreter;
 import org.restcomm.connect.telephony.api.CallManagerResponse;
@@ -67,6 +66,8 @@ import akka.actor.UntypedActor;
 import akka.actor.UntypedActorFactory;
 import akka.event.Logging;
 import akka.event.LoggingAdapter;
+import org.restcomm.connect.interpreter.NumberSelectorService;
+import org.restcomm.connect.interpreter.SIPOrganizationUtil;
 
 /**
  * @author <a href="mailto:gvagenas@gmail.com">gvagenas</a>
@@ -85,6 +86,8 @@ public class UssdCallManager extends RestcommUntypedActor {
     private final String ussdGatewayUri;
     private final String ussdGatewayUsername;
     private final String ussdGatewayPassword;
+
+    private final NumberSelectorService numberSelector;
 
     // configurable switch whether to use the To field in a SIP header to determine the callee address
     // alternatively the Request URI can be used
@@ -111,6 +114,7 @@ public class UssdCallManager extends RestcommUntypedActor {
         this.ussdGatewayUri = ussdGatewayConfig.getString("ussd-gateway-uri");
         this.ussdGatewayUsername = ussdGatewayConfig.getString("ussd-gateway-user");
         this.ussdGatewayPassword = ussdGatewayConfig.getString("ussd-gateway-password");
+        numberSelector = (NumberSelectorService) context.getAttribute(NumberSelectorService.class.getName());
     }
 
     private ActorRef ussdCall() {
@@ -218,12 +222,11 @@ public class UssdCallManager extends RestcommUntypedActor {
         boolean isFoundHostedApp = false;
 
         final IncomingPhoneNumbersDao numbersDao = storage.getIncomingPhoneNumbersDao();
-        IncomingPhoneNumber number = null;
 
         if (request.getContentType().equals("application/vnd.3gpp.ussd+xml")) {
             // This is a USSD Invite
-            MostOptimalNumberResponse mostOptimalNumber = OrganizationUtil.getMostOptimalIncomingPhoneNumber(storage, request, id, sourceOrganizationSid);
-            number = mostOptimalNumber.number();
+            Sid destOrg = SIPOrganizationUtil.searchOrganizationBySIPRequest(storage.getOrganizationsDao(), request);
+            IncomingPhoneNumber number = numberSelector.searchNumber(id, sourceOrganizationSid, destOrg);
             if (number != null) {
                 final UssdInterpreterParams.Builder builder = new UssdInterpreterParams.Builder();
                 builder.setConfiguration(configuration);

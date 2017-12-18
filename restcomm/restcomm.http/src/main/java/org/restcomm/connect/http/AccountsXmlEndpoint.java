@@ -87,4 +87,11 @@ public final class AccountsXmlEndpoint extends AccountsEndpoint {
             final MultivaluedMap<String, String> data) {
         return updateAccount(accountSid, data, APPLICATION_XML_TYPE);
     }
+
+    @Path("/migrate/{accountSid}")
+    @Consumes(APPLICATION_FORM_URLENCODED)
+    @POST
+    public Response migrateAccount(@PathParam("accoutSid") final String accountSid, final MultivaluedMap<String, String> data) {
+        return migrateAccountOrganization(accountSid, data, APPLICATION_XML_TYPE);
+    }
 }

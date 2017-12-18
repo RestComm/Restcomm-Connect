@@ -23,6 +23,8 @@ import org.junit.Rule;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.restcomm.connect.commons.Version;
+import org.restcomm.connect.commons.annotations.FeatureAltTests;
+import org.restcomm.connect.commons.annotations.FeatureExpTests;
 import org.restcomm.connect.testsuite.http.RestcommCallsTool;
 
 import javax.sip.Dialog;
@@ -52,8 +54,10 @@ import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertTrue;
 import org.junit.experimental.categories.Category;
+import org.restcomm.connect.commons.annotations.ParallelClassTests;
+import org.restcomm.connect.commons.annotations.WithInMinsTests;
 import org.restcomm.connect.testsuite.NetworkPortAssigner;
-import org.restcomm.connect.testsuite.UnstableTests;
+import org.restcomm.connect.commons.annotations.UnstableTests;
 import org.restcomm.connect.testsuite.WebArchiveUtil;
 
 /**
@@ -63,6 +67,7 @@ import org.restcomm.connect.testsuite.WebArchiveUtil;
  * @author jean.deruelle@telestax.com
  */
 @RunWith(Arquillian.class)
+@Category(ParallelClassTests.class)
 public class TestDialVerbPartTwo {
     private final static Logger logger = Logger.getLogger(TestDialVerbPartTwo.class.getName());
 
@@ -192,6 +197,7 @@ public class TestDialVerbPartTwo {
     private String dialClientRcml = "<Response><Dial timeLimit=\"10\" timeout=\"10\"><Client>alice</Client></Dial></Response>";
     //Test for issue RESTCOMM-617
     @Test
+    @Category(FeatureAltTests.class)
     public synchronized void testDialClientAliceToBigDID() throws InterruptedException, ParseException {
         stubFor(get(urlPathEqualTo("/1111"))
                 .willReturn(aResponse()
@@ -247,6 +253,7 @@ public class TestDialVerbPartTwo {
             "\t\t\t<Sms to=\"bob\" from=\"+12223334499\">Hello World!</Sms>\n" +
             "</Response>";
     @Test
+    @Category(UnstableTests.class)
     public synchronized void testDialClientAliceWithRecord() throws InterruptedException, ParseException {
         stubFor(get(urlPathEqualTo("/1111"))
                 .willReturn(aResponse()
@@ -318,6 +325,7 @@ public class TestDialVerbPartTwo {
     }
 
     @Test
+    @Category(UnstableTests.class)
     public synchronized void testDialClientAliceWithRecord2() throws InterruptedException, ParseException {
         stubFor(get(urlPathEqualTo("/1111"))
                 .willReturn(aResponse()
@@ -391,6 +399,7 @@ public class TestDialVerbPartTwo {
     }
 
     @Test
+    @Category(FeatureAltTests.class)
     public synchronized void testDialConferenceWithDialActionSms() throws InterruptedException, ParseException {
         stubFor(get(urlPathEqualTo("/1111"))
                 .willReturn(aResponse()
@@ -446,6 +455,7 @@ public class TestDialVerbPartTwo {
     }
 
     @Test
+    @Category(FeatureAltTests.class)
     public synchronized void testDialConferenceWithDialActionNoRcml() throws InterruptedException, ParseException {
         stubFor(get(urlPathEqualTo("/1111"))
                 .willReturn(aResponse()
@@ -497,7 +507,7 @@ public class TestDialVerbPartTwo {
             "<Sms to=\"bob\" from=\"+12223334499\">Hello World!</Sms></Response>";
     private String dialConferenceNoDialActionRcml = "<Response><Dial><Conference>test</Conference></Dial></Response>";
     @Test
-    @Category(UnstableTests.class)
+    @Category({UnstableTests.class, FeatureAltTests.class})
     public synchronized void testDialConferenceNoDialAction_SendSms() throws InterruptedException, ParseException {
         stubFor(get(urlPathEqualTo("/1111"))
                 .willReturn(aResponse()
@@ -548,6 +558,7 @@ public class TestDialVerbPartTwo {
     }
 
     @Test
+    @Category(FeatureAltTests.class)
     public synchronized void testDialConferenceNoDialAction_NoSms() throws InterruptedException, ParseException {
         stubFor(get(urlPathEqualTo("/1111"))
                 .willReturn(aResponse()
@@ -592,6 +603,7 @@ public class TestDialVerbPartTwo {
     }
 
     @Test //Test case for issue 320
+    @Category(FeatureAltTests.class)
     public synchronized void testDialClientAliceWithRecordAndStatusCallbackForApp() throws InterruptedException, ParseException {
         stubFor(get(urlPathEqualTo("/1111"))
                 .willReturn(aResponse()
@@ -694,7 +706,7 @@ public class TestDialVerbPartTwo {
     }
 
     @Test //Test case for issue 320
-    @Category(UnstableTests.class)
+    @Category({UnstableTests.class,FeatureAltTests.class})
     public synchronized void testDialClientAliceWithRecordAndStatusCallbackForAppForThreeCalls() throws InterruptedException, ParseException, MalformedURLException {
         stubFor(get(urlPathEqualTo("/1111"))
                 .willReturn(aResponse()
@@ -1140,6 +1152,7 @@ public class TestDialVerbPartTwo {
 
     private String dialNumberRcmlWrongScreeningUrl = "<Response><Dial callerId=\"+13055872294\"><Number url=\"/restcomm/invalid.xml\">131313</Number></Dial></Response>";
     @Test
+    @Category(FeatureAltTests.class)
     public synchronized void testDialNumberGeorgeWithWrongScreeningUrl() throws InterruptedException, ParseException {
         stubFor(get(urlPathEqualTo("/1111"))
                 .willReturn(aResponse()
@@ -1203,6 +1216,7 @@ public class TestDialVerbPartTwo {
 
     //Non-regression test for https://github.com/Mobicents/RestComm/issues/505
     @Test
+    @Category(FeatureExpTests.class)
     public synchronized void testDialNumberGeorge_403Forbidden() throws InterruptedException, ParseException {
         stubFor(get(urlPathEqualTo("/1111"))
                 .willReturn(aResponse()
@@ -1251,6 +1265,7 @@ public class TestDialVerbPartTwo {
 
     //Non-regression test for https://github.com/Mobicents/RestComm/issues/505
     @Test
+    @Category(FeatureExpTests.class)
     public synchronized void testDialNumberGeorge_404_OnBye() throws InterruptedException, ParseException {
         stubFor(get(urlPathEqualTo("/1111"))
                 .willReturn(aResponse()
@@ -1352,6 +1367,7 @@ public class TestDialVerbPartTwo {
 
     private String didRcml = "<Response><Play>/restcomm/audio/demo-prompt.wav</Play></Response>";
     @Test
+    @Category(FeatureAltTests.class)
     public synchronized void testDialNumberWithPlusSign() throws InterruptedException, ParseException {
         stubFor(get(urlPathEqualTo("/12349876543"))
                 .willReturn(aResponse()
@@ -1390,6 +1406,7 @@ public class TestDialVerbPartTwo {
     }
 
     @Test
+    @Category(FeatureAltTests.class)
     public synchronized void testDialNumberWithOUTPlusSign() throws InterruptedException, ParseException {
         stubFor(get(urlPathEqualTo("/12349876543"))
                 .willReturn(aResponse()
@@ -1428,6 +1445,7 @@ public class TestDialVerbPartTwo {
     }
 
     @Test
+    @Category(FeatureExpTests.class)
     public synchronized void testDialNumberNoCountryAccessCode() throws InterruptedException, ParseException {
         stubFor(get(urlPathEqualTo("/12349876543"))
                 .willReturn(aResponse()
@@ -1519,6 +1537,7 @@ public class TestDialVerbPartTwo {
 
     private String hangupActionRcml = "<Response><Hangup /></Response>";
 
+    @Category(UnstableTests.class)
     @Test // (customised from testDialClientAliceWithRecordAndStatusCallbackForApp)
     public synchronized void testDialClientAliceWithActionAndStatusCallbackForApp() throws InterruptedException, ParseException {
         stubFor(get(urlPathEqualTo("/1111"))
@@ -1593,6 +1612,7 @@ public class TestDialVerbPartTwo {
 
 
     @Test // (customised from testDialClientAliceWithRecordAndStatusCallbackForApp)
+    @Category(FeatureAltTests.class)
     public synchronized void testDialTimeOutClientAliceWithActionAndStatusCallbackForApp() throws InterruptedException, ParseException {
         stubFor(get(urlPathEqualTo("/1111"))
                 .willReturn(aResponse()

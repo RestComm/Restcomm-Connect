@@ -515,8 +515,57 @@ curl -X GET  https://administrator%40company.com:77f8c12cc7b8f8423e5c38b03524916
 ....
 
 == Incoming Phone Number Regex Support
-[cols=",",]
-|==================================================================================================================================================================================================================================================
+
+=== Logic
+The following diagram depicts the main logic regarding incoming phone numbers, 
+and regular expressions during an actual call:
+
+[plantuml,Regex Logic]
+....
+:Retrieve Number from DB (In IncomingOrganization);
+
+if (Number Matched?) then (yes)
+  :Trigger linked Application;
+else (no)
+  if (IncomingOrganization != null?) then (yes)
+    :Retrieve Regexes In IncomingOrganization;
+    :Sort Regexes by Length;
+    repeat
+      if (Number Matched?) then (yes)
+        :Trigger linked Application;
+      endif
+    repeat while (more regexes || !matched?)
+  else (no)
+    :No application found;
+  endif
+endif
+
+....
+
+
+As we can see, the perfect match against the incoming number will be attempted 
+first. Then, if no matching is found the regular expressions associated to the 
+Organization will be evaluated.
+
+WARNING: Watch out, Regex has been disabled for incoming SMPP/SMS messages because SMPP is not supporting Organizations.
+
+
+=== Regular Expression examples
+
+The following table provides examples on how the logic is exercised depending on current
+contents of DB.
+|===
+|*IncomingPhoneNumber*|*DB Table*|*Description*
+| 16508251255 | "16508251255" "16.*" | Perfect match against "16508251255"
+| 16508251255 | "16508251256" "16.*" | No Perfect match found. regex "16.*" applies
+| 16508251255 | "16508251256" "16.+++*+++","16508.+++*+++" | No Perfect match found. longest regex "16508.*" applies
+|===
+
+
+The following table provides examples on  how a single regular expression may 
+match different numbers.
+
+|===
 |*Regex Sample* |*Description*
 |7777\|8888 | Matches the numbers 7777 or 8888
 |^*77...33#$| Matches any number that starts with *77 and and the three dots matches any character and it must end with a # sign
@@ -525,8 +574,46 @@ curl -X GET  https://administrator%40company.com:77f8c12cc7b8f8423e5c38b03524916
 |[45]234[23] | matches 42342, 42343, 52342 and 52343
 |^*222*...*...*500#$| the Regext (^*222*...*...*500#$) matches *222*888*999*500# or *222*444*321*500#  the dots maches any character
 |999...| Matches 999222, 999123, 999555 the dots matches any character
+|===
 
-WARNING: Watch out, Regex has been disabled for incoming SMPP/SMS messages because SMPP is not supporting Organizations.
 
 
-|=====================================================================================================================================================================================================================================================
+[[resource-uri-5]]
+==== Resource URI
+
+*/2012-04-24/Accounts/\{TargetAccountSid}/IncomingPhoneNumbers/migrate*
+
+[[http-methods-2]]
+==== HTTP Methods
+
+[[http-post-3]]
+===== HTTP POST
+
+Migrates all numbers of `TargetAccountSid's` account tree to provided destination organization.
+Only super admins have permission to perform this operation.
+[NOTE]
+====
+This operation will impact all child accounts in downwards hierarchy.
+====
+
+
+[[required-parameters-3]]
+====== Required Parameters
+
+Your request *must* include OrganizationSid.
+
+[cols=",",]
+|==============================================================================================================================================================================================================================================================================
+|*Parameter* |*Description*
+|OrganizationSid | Sid of destination organization, where we want to migrate numbers.
+|==============================================================================================================================================================================================================================================================================
+
+[[http-put-3]]
+===== HTTP PUT
+
+Not Supported.
+
+[[http-delete-4]]
+===== HTTP DELETE
+
+Not Supported.  

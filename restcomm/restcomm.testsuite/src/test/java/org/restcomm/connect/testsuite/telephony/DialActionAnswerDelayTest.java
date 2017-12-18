@@ -70,8 +70,11 @@ import com.google.gson.JsonObject;
 import java.util.HashMap;
 import java.util.Map;
 import org.junit.experimental.categories.Category;
+import org.restcomm.connect.commons.annotations.FeatureAltTests;
+import org.restcomm.connect.commons.annotations.ParallelClassTests;
 import org.restcomm.connect.testsuite.NetworkPortAssigner;
-import org.restcomm.connect.testsuite.UnstableTests;
+import org.restcomm.connect.commons.annotations.UnstableTests;
+import org.restcomm.connect.commons.annotations.WithInMinsTests;
 import org.restcomm.connect.testsuite.WebArchiveUtil;
 
 /**
@@ -82,6 +85,7 @@ import org.restcomm.connect.testsuite.WebArchiveUtil;
  *
  */
 @RunWith(Arquillian.class)
+@Category(value={FeatureAltTests.class, ParallelClassTests.class})
 public class DialActionAnswerDelayTest {
 
     private final static Logger logger = Logger.getLogger(DialActionAnswerDelayTest.class.getName());
@@ -277,6 +281,7 @@ public class DialActionAnswerDelayTest {
     }
 
     @Test //No regression test for https://github.com/Mobicents/RestComm/issues/505
+    @Category(UnstableTests.class)
     public void testDialActionInvalidCallCheckCallStatusCompleted() throws ParseException, InterruptedException {
 
         stubFor(get(urlPathEqualTo("/1111"))
@@ -334,6 +339,7 @@ public class DialActionAnswerDelayTest {
     }
 
     @Test
+    @Category(WithInMinsTests.class)
     public void testDialActionAliceAnswers() throws ParseException, InterruptedException {
 
         stubFor(get(urlPathEqualTo("/1111"))
@@ -738,6 +744,7 @@ public class DialActionAnswerDelayTest {
     }
 
     @Test
+    @Category(WithInMinsTests.class)
     public void testSipInviteCustomHeaders() throws ParseException, InterruptedException {
 
         stubFor(get(urlPathEqualTo("/1111"))
@@ -836,6 +843,7 @@ public class DialActionAnswerDelayTest {
     }
 
     @Test //TODO: PASSES when run individually. to check
+    @Category(WithInMinsTests.class)
     public void testDialCallDurationAliceAnswers() throws ParseException, InterruptedException {
 
         stubFor(get(urlPathEqualTo("/1111"))

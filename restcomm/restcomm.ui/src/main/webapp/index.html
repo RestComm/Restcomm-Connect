@@ -1,6 +1,8 @@
 <!DOCTYPE html>
 <html>
     <head>
+        <meta name="viewport" content="width=device-width, initial-scale=1.0">
+        <meta charset="utf-8">
         <title>RestComm</title>
 
         <link rel="icon" type="image/png" href="resources/img/favicon.png">
@@ -10,6 +12,7 @@
         <link rel="stylesheet" href="lib/animate/animate.css" />
         <link rel="stylesheet" href="lib/world-flags/stylesheets/flags16.css" />
         <link rel="stylesheet" href="lib/nvd3/nv.d3.css">
+        <link rel="stylesheet" href="lib/ui-carousel/ui-carousel.css">
         <link rel="stylesheet" href="resources/css/restcomm.css" />
         <link rel="stylesheet" href="resources/css/datepicker.css" />
         <link rel="stylesheet" href="resources/css/dashboard.css" />
@@ -29,7 +32,14 @@
             }
             body {
                 /* Margin bottom by footer height */
-                margin-bottom: 70px;
+                margin-bottom: 40px;
+            }
+
+            @media(max-width:768px) {
+                body {
+                    /* Margin bottom by footer height */
+                    margin-bottom: 40px;
+                }
             }
 
                 /* Wrapper for page content to push down footer */
@@ -47,9 +57,15 @@
                 bottom: 0;
                 width: 100%;
 
-                height:70px;
+                height: 40px;
                 box-shadow: 1px -2px 1px rgba(219,219,219,1);
-                background:#eeeeee;
+                background: #eeeeee;
+            }
+
+            @media(max-width:768px) {
+                #footer {
+                    height: 40px;
+                }
             }
 
                 /* Custom page CSS
@@ -73,12 +89,14 @@
 
                 /* Lastly, apply responsive CSS fixes as necessary */
             @media (max-width: 767px) {
+/*
                 #footer {
                     margin-left: -20px;
                     margin-right: -20px;
                     padding-left: 20px;
                     padding-right: 20px;
                 }
+*/
                 #wrap > .container-fluid {
                     padding-top: 0px;
                 }
@@ -109,9 +127,11 @@
 
         <!-- Angular does some things with CSS so it's good to load this in the head -->
         <script type="text/javascript" src="lib/jquery/jquery.js"></script>
-        <script type="text/javascript" src="lib/file-upload/angular-file-upload-shim.min.js"></script>
+        <script type="text/javascript" src="lib/filesaver/Blob.js"></script>
+        <script type="text/javascript" src="lib/filesaver/FileSaver.min.js"></script>
         <script type="text/javascript" src="lib/angular/angular.min.js"></script>
-        <script type="text/javascript" src="lib/file-upload/angular-file-upload.min.js"></script>
+        <script type="text/javascript" src="lib/file-upload/ng-file-upload-shim.min.js"></script>
+        <script type="text/javascript" src="lib/file-upload/ng-file-upload.min.js"></script>
         <script type="text/javascript" src="lib/angular-ui-router/angular-ui-router.js"></script>
         <script type="text/javascript" src="lib/angular-resource/angular-resource.min.js"></script>
         <script type="text/javascript" src="lib/angular/angular-datepicker.js"></script>
@@ -123,9 +143,11 @@
         <script type="text/javascript" src="lib/ng-password-strength/js/ng-password-strength.js"></script>
         <script type="text/javascript" src="lib/http-auth-interceptor/http-auth-interceptor.js"></script>
         <script type="text/javascript" src="lib/angular-sanitize/angular-sanitize.min.js"></script>
-		<script type="text/javascript" src="lib/d3/d3.min.js"></script>
+        <script type="text/javascript" src="lib/d3/d3.min.js"></script>
         <script type="text/javascript" src="lib/nvd3/nv.d3.js"></script>
         <script type="text/javascript" src="lib/angular-nvd3/angular-nvd3.js"></script>
+        <script type="text/javascript" src="lib/ui-carousel/ui-carousel.js"></script>
+        <script type="text/javascript" src="lib/filesaver/angular-file-saver.min.js"></script>
 
         <script type="text/javascript" src="resources/js/restcomm.js"></script>
         <script type="text/javascript" src="resources/js/controllers.js"></script>
@@ -133,6 +155,7 @@
         <script type="text/javascript" src="resources/js/controllers/navbar.js"></script>
         <script type="text/javascript" src="resources/js/controllers/login.js"></script>
         <script type="text/javascript" src="resources/js/controllers/dashboard.js"></script>
+        <script type="text/javascript" src="resources/js/controllers/applications.js"></script>
         <script type="text/javascript" src="resources/js/controllers/logs-calls.js"></script>
         <script type="text/javascript" src="resources/js/controllers/logs-messages.js"></script>
         <script type="text/javascript" src="resources/js/controllers/logs-notifications.js"></script>
@@ -174,14 +197,28 @@
             <div ui-view></div>
 
             <div id="footer" class="footer" ng-hide="loggedUser">
-                <a href="https://telestax.com" target="_blank"><img id="telestax-footer" src="resources/img/v2/telestax-footer.png"></a>
-                <a href="https://www.youtube.com/c/TeleStax" target="_blank"><img id="youtube" src="resources/img/v2/s-m-youtube.png"></a>
-                <a href="https://plus.google.com/+TeleStax/posts" target="_blank"><img id="googleplus" src="resources/img/v2/s-m-google+.png"></a>
-                <a href="https://www.linkedin.com/company/telestax" target="_blank"><img id="linkedin" src="resources/img/v2/s-m-linkedin.png"></a>
-                <a href="https://twitter.com/telestax" target="_blank"><img id="twitter" src="resources/img/v2/s-m-twitter.png"></a>
-                <a href="https://www.facebook.com/Telestax" target="_blank"><img id="facebook" src="resources/img/v2/s-m-facebook.png"></a>
+                <span class="pull-left">
+                    <a href="https://telestax.com" target="_blank"><img id="telestax-footer" src="resources/img/v2/telestax-footer.png"></a>
+                </span>
+                <span class="pull-right footer-social-media">
+                    <a href="https://www.facebook.com/Telestax" target="_blank">
+                        <img src="resources/img/v2/s-m-facebook.png">
+                    </a>
+                    <a href="https://twitter.com/telestax" target="_blank">
+                        <img src="resources/img/v2/s-m-twitter.png">
+                    </a>
+                    <a href="https://www.linkedin.com/company/telestax" target="_blank">
+                        <img src="resources/img/v2/s-m-linkedin.png">
+                    </a>
+                    <a href="https://plus.google.com/+TeleStax/posts" target="_blank">
+                        <img src="resources/img/v2/s-m-google+.png">
+                    </a>
+                    <a href="https://www.youtube.com/c/TeleStax" target="_blank">
+                        <img src="resources/img/v2/s-m-youtube.png">
+                    </a>
+                </span>
                 <div class="telestax-rights">
-                    <h5>&copy; 2016 Telestax, Inc. All rights reserved</h5>
+                    <h5>&copy; 2017 Telestax, Inc. All rights reserved</h5>
                 </div>
             </div>
 
