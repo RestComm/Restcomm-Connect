@@ -180,7 +180,7 @@ public class DialActionAnswerDelayTest {
 
         georgeSipStack = tool4.initializeSipStack(SipStack.PROTOCOL_UDP, "127.0.0.1", georgePort, restcommContact);
         georgePhone = georgeSipStack.createSipPhone("127.0.0.1", SipStack.PROTOCOL_UDP, restcommPort, georgeContact);
-        dialActionRcmlPlay = "<Response><Play>"+deploymentUrl.toString()+"restcomm/audio/demo-prompt.wav</Play></Response>";
+        dialActionRcmlPlay = "<Response><Play>"+deploymentUrl.toString()+"audio/demo-prompt.wav</Play></Response>";
 
     }
 
