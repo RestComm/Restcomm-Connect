@@ -37,8 +37,10 @@ import java.net.URL;
 import java.text.ParseException;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.HashMap;
 import java.util.Iterator;
 import java.util.List;
+import java.util.Map;
 
 import javax.sip.address.SipURI;
 import javax.sip.header.Header;
@@ -60,22 +62,20 @@ import org.junit.Before;
 import org.junit.BeforeClass;
 import org.junit.Rule;
 import org.junit.Test;
+import org.junit.experimental.categories.Category;
 import org.junit.runner.RunWith;
 import org.restcomm.connect.commons.Version;
+import org.restcomm.connect.commons.annotations.FeatureAltTests;
+import org.restcomm.connect.commons.annotations.ParallelClassTests;
+import org.restcomm.connect.commons.annotations.UnstableTests;
+import org.restcomm.connect.commons.annotations.WithInMinsTests;
+import org.restcomm.connect.testsuite.NetworkPortAssigner;
+import org.restcomm.connect.testsuite.WebArchiveUtil;
 import org.restcomm.connect.testsuite.http.RestcommCallsTool;
 
 import com.github.tomakehurst.wiremock.junit.WireMockRule;
 import com.github.tomakehurst.wiremock.verification.LoggedRequest;
 import com.google.gson.JsonObject;
-import java.util.HashMap;
-import java.util.Map;
-import org.junit.experimental.categories.Category;
-import org.restcomm.connect.commons.annotations.FeatureAltTests;
-import org.restcomm.connect.commons.annotations.ParallelClassTests;
-import org.restcomm.connect.testsuite.NetworkPortAssigner;
-import org.restcomm.connect.commons.annotations.UnstableTests;
-import org.restcomm.connect.commons.annotations.WithInMinsTests;
-import org.restcomm.connect.testsuite.WebArchiveUtil;
 
 /**
  * Test for Dial Action attribute. Reference: https://www.twilio.com/docs/api/twiml/dial#attributes-action The 'action'
@@ -1162,9 +1162,6 @@ public class DialActionAnswerDelayTest {
         SipCall aliceCall = alicePhone.createSipCall();
         aliceCall.listenForIncomingCall();
 
-        SipCall georgeCall = georgePhone.createSipCall();
-        georgeCall.listenForIncomingCall();
-
         // Create outgoing call with first phone
         final SipCall bobCall = bobPhone.createSipCall();
         bobCall.initiateOutgoingCall(bobContact, dialClientWithActionUrl, null, body, "application", "sdp", null, null);
@@ -1196,12 +1193,8 @@ public class DialActionAnswerDelayTest {
 
         bobCall.sendInviteOkAck();
         assertTrue(!(bobCall.getLastReceivedResponse().getStatusCode() >= 400));
-        assertTrue(georgeCall.waitForAck(50 * 1000));
 
         Thread.sleep(3000);
-
-        // hangup.
-        georgeCall.disconnect();
 
         bobCall.listenForDisconnect();
         assertTrue(bobCall.waitForDisconnect(30 * 1000));

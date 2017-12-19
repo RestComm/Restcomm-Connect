@@ -749,7 +749,7 @@ public final class Call extends RestcommUntypedActor {
 
     private void onStopWaiting(StopWaiting message, ActorRef sender) throws Exception {
         if(is(waitingForAnswer)) {
-            fsm.transition(message, inProgress);
+            sendInviteOk();
         }
     }
 
