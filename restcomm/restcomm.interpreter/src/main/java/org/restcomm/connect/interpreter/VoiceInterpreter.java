@@ -2535,7 +2535,7 @@ public class VoiceInterpreter extends BaseVoiceInterpreter {
         }
         if (attribute != null && !dialActionExecuted) {
             if(logger.isInfoEnabled()){
-                logger.info("Proceeding to execute Dial Action attribute");
+                logger.info("Proceeding to execute Dial Action attribute, dial verb : "+verb.toString());
             }
             this.dialActionExecuted = true;
 

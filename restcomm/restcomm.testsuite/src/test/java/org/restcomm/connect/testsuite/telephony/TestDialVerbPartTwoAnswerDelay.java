@@ -309,7 +309,7 @@ public class TestDialVerbPartTwoAnswerDelay {
 
         JsonArray recordings = RestcommCallsTool.getInstance().getRecordings(deploymentUrl.toString(), adminAccountSid, adminAuthToken);
         assertNotNull(recordings);
-        assertTrue("7.0".equalsIgnoreCase(((JsonObject)recordings.get(0)).get("duration").getAsString()));
+        assertEquals(7.0,((JsonObject)recordings.get(0)).get("duration").getAsDouble(), 0.5);
         assertNotNull(((JsonObject)recordings.get(0)).get("uri").getAsString());
     }
 
@@ -383,7 +383,7 @@ public class TestDialVerbPartTwoAnswerDelay {
 
         JsonArray recordings = RestcommCallsTool.getInstance().getRecordings(deploymentUrl.toString(), adminAccountSid, adminAuthToken);
         assertNotNull(recordings);
-        assertTrue("7.0".equalsIgnoreCase(((JsonObject)recordings.get(0)).get("duration").getAsString()));
+        assertEquals(7.0, ((JsonObject)recordings.get(0)).get("duration").getAsDouble(), 0.5);
         assertNotNull(((JsonObject)recordings.get(0)).get("uri").getAsString());
     }
 
@@ -463,14 +463,14 @@ public class TestDialVerbPartTwoAnswerDelay {
 
         JsonArray recordings = RestcommCallsTool.getInstance().getRecordings(deploymentUrl.toString(), adminAccountSid, adminAuthToken);
         assertNotNull(recordings);
-        assertTrue("7.0".equalsIgnoreCase(((JsonObject)recordings.get(0)).get("duration").getAsString()));
+        assertEquals(7.0, ((JsonObject)recordings.get(0)).get("duration").getAsDouble(), 0.5);
         assertNotNull(((JsonObject)recordings.get(0)).get("uri").getAsString());
 
         logger.info("About to check the Status Callback Requests");
         Map<String, String> statusCallbacks = new HashMap<String,String>();
 
         List<LoggedRequest> requests = findAll(getRequestedFor(urlPathMatching("/StatusCallBack.*")));
-        assertTrue(requests.size()==3);
+        assertEquals(2, requests.size());
 
 //        for (LoggedRequest loggedRequest : requests) {
 //            String queryParam = loggedRequest.getUrl().replaceFirst("/StatusCallBack?", "");
