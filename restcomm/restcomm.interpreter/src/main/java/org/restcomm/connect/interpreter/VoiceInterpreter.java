@@ -111,6 +111,7 @@ import org.restcomm.connect.telephony.api.RemoveParticipant;
 import org.restcomm.connect.telephony.api.StartBridge;
 import org.restcomm.connect.telephony.api.StopBridge;
 import org.restcomm.connect.telephony.api.StopConference;
+import org.restcomm.connect.telephony.api.StopWaiting;
 import org.restcomm.connect.tts.api.SpeechSynthesizerResponse;
 import scala.concurrent.Await;
 import scala.concurrent.Future;
@@ -2733,9 +2734,6 @@ public class VoiceInterpreter extends BaseVoiceInterpreter {
                 if(logger.isInfoEnabled()) {
                     logger.info("Received timeout, will cancel branches, current VoiceIntepreter state: " + state);
                 }
-                if(enable200OkDelay){
-                    outboundCallResponse = SipServletResponse.SC_REQUEST_TIMEOUT;
-                }
                 //The forking timeout reached, we have to cancel all dial branches
                 final UntypedActorContext context = getContext();
                 context.setReceiveTimeout(Duration.Undefined());
@@ -2749,9 +2747,15 @@ public class VoiceInterpreter extends BaseVoiceInterpreter {
                             logger.info("Canceled branch: " + branch.path()+", isTerminated: "+branch.isTerminated());
                         }
                     }
-                    // Stop playing the ringing tone from inbound call
-                    msResponsePending = true;
-                    call.tell(new StopMediaGroup(), self());
+                    // if enable200OkDelay is true, call is not ringing so no need to send stop ringing
+                    if(enable200OkDelay){
+                        outboundCallResponse = SipServletResponse.SC_REQUEST_TIMEOUT;
+                        call.tell(new StopWaiting(), self());
+                    } else {
+                        // Stop playing the ringing tone from inbound call
+                        msResponsePending = true;
+                        call.tell(new StopMediaGroup(), self());
+                    }
                 } else if (outboundCall != null) {
                     outboundCall.tell(new Cancel(), source);
                     call.tell(new Hangup(outboundCallResponse), self());
