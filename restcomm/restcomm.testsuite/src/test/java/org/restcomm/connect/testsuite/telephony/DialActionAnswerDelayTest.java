@@ -1194,7 +1194,8 @@ public class DialActionAnswerDelayTest {
         bobCall.sendInviteOkAck();
         assertTrue(!(bobCall.getLastReceivedResponse().getStatusCode() >= 400));
 
-        Thread.sleep(3000);
+        //prompt plays for 5 seconds
+        Thread.sleep(8000);
 
         bobCall.listenForDisconnect();
         assertTrue(bobCall.waitForDisconnect(30 * 1000));
