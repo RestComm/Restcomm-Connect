@@ -64,13 +64,13 @@ public class JBossConnectorDiscover implements HttpConnectorDiscover {
             LOG.info("JBoss Connectors found:" + jbossObjs.size());
             for (ObjectName obj : jbossObjs) {
                 Boolean bound = (Boolean) mbs.getAttribute(obj, "bound");
-                String scheme = mbs.getAttribute(obj, "name").toString().replaceAll("\"", "");
-                Integer port = (Integer) mbs.getAttribute(obj, "boundPort");
-                String address = ((String) mbs.getAttribute(obj, "boundAddress")).replaceAll("\"", "");
-                if (LOG.isInfoEnabled()) {
-                    LOG.info("Jboss Http Connector: " + scheme + "://" + address + ":" + port);
-                }
                 if (bound) {
+                    String scheme = mbs.getAttribute(obj, "name").toString().replaceAll("\"", "");
+                    Integer port = (Integer) mbs.getAttribute(obj, "boundPort");
+                    String address = ((String) mbs.getAttribute(obj, "boundAddress")).replaceAll("\"", "");
+                    if (LOG.isInfoEnabled()) {
+                        LOG.info("Jboss Http Connector: " + scheme + "://" + address + ":" + port);
+                    }
                     HttpConnector httpConnector = new HttpConnector(scheme, address, port, scheme.equalsIgnoreCase("https"));
                     endPoints.add(httpConnector);
                 } else {
