@@ -97,6 +97,8 @@ import org.restcomm.connect.telephony.api.Hangup;
 import org.restcomm.connect.telephony.api.InitializeOutbound;
 import org.restcomm.connect.telephony.api.Reject;
 import org.restcomm.connect.telephony.api.RemoveParticipant;
+import org.restcomm.connect.telephony.api.StopWaiting;
+
 import scala.concurrent.duration.Duration;
 
 import javax.sdp.SdpException;
@@ -740,6 +742,14 @@ public final class Call extends RestcommUntypedActor {
             onBridgeStateChanged((BridgeStateChanged) message, self, sender);
         } else if (CallHoldStateChange.class.equals(klass)) {
             onCallHoldStateChange((CallHoldStateChange)message, sender);
+        } else if (StopWaiting.class.equals(klass)) {
+            onStopWaiting((StopWaiting)message, sender);
+        }
+    }
+
+    private void onStopWaiting(StopWaiting message, ActorRef sender) throws Exception {
+        if(is(waitingForAnswer)) {
+            fsm.transition(message, inProgress);
         }
     }
 
