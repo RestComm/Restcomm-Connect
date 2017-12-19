@@ -230,6 +230,10 @@ public class VoiceInterpreter extends BaseVoiceInterpreter {
     // Controls if VI will wait MS response to move to the next verb
     protected boolean msResponsePending;
 
+    private boolean callWaitingForAnswer = false;
+
+    private DownloaderResponse callWaitingForAnswerDownloaderResponse;
+
     public VoiceInterpreter(VoiceInterpreterParams params) {
         super();
         final ActorRef source = self();
@@ -1163,10 +1167,17 @@ public class VoiceInterpreter extends BaseVoiceInterpreter {
                 return;
             }
             if (dialBranches == null || dialBranches.size()==0) {
-                if(logger.isInfoEnabled()) {
-                    logger.info("Downloader response is success, moving to Ready state");
+                if(enable200OkDelay && is(finishDialing) && callWaitingForAnswer && sender.equals(call)){
+                    if(logger.isInfoEnabled()) {
+                        logger.info("Downloader response is success, but callWaitingForAnswer: will wait for call to move to in progress");
+                    }
+                    callWaitingForAnswerDownloaderResponse = response;
+                }else {
+                    if(logger.isInfoEnabled()) {
+                        logger.info("Downloader response is success, moving to Ready state");
+                    }
+                    fsm.transition(message, ready);
                 }
-                fsm.transition(message, ready);
             } else {
                 return;
             }
@@ -1224,10 +1235,7 @@ public class VoiceInterpreter extends BaseVoiceInterpreter {
 
                         if (dialBranches != null && dialBranches.contains(sender)) {
                             removeDialBranch(message, sender);
-                            //in case of enable200OkDelay: dont check Dial branches yet, wait for call to move to in progress
-                            if(!enable200OkDelay) {
-                                checkDialBranch(message, sender, action);
-                            }
+                            checkDialBranch(message, sender, action);
                         }
                         else {
                             //case for LCM testTerminateDialForkCallWhileRinging_LCM_to_dial_branches
@@ -1344,6 +1352,9 @@ public class VoiceInterpreter extends BaseVoiceInterpreter {
                 break;
             case WAIT_FOR_ANSWER:
             case IN_PROGRESS:
+                if(call!=null && call.equals(sender) && event.state().equals(CallStateChanged.State.WAIT_FOR_ANSWER)){
+                    callWaitingForAnswer  = true;
+                }
                 if (is(initializingCall) || is(rejecting)) {
                     if (parser != null) {
                         //This is an inbound call
@@ -1369,11 +1380,11 @@ public class VoiceInterpreter extends BaseVoiceInterpreter {
                         final GetNextVerb next = new GetNextVerb();
                         parser.tell(next, self());
                     }
-                } else if (enable200OkDelay && is(finishDialing)) {
+                } else if (enable200OkDelay && is(finishDialing) && sender.equals(call) && event.state().equals(CallStateChanged.State.WAIT_FOR_ANSWER) && callWaitingForAnswerDownloaderResponse!=null) {
                     if (logger.isInfoEnabled()) {
-                        logger.info("Waiting call is inProgress we can proceed with dial action");
+                        logger.info("Waiting call is inProgress we can proceed to ready state");
                     }
-                    checkDialBranch(message, sender, action);
+                    fsm.transition(callWaitingForAnswerDownloaderResponse, ready);
                 }
                 // Update the storage for conferencing.
                 if (callRecord != null && !is(initializingCall) && !is(rejecting)) {
