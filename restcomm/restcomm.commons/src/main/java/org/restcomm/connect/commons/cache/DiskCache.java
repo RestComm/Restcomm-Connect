@@ -176,7 +176,9 @@ public final class DiskCache extends RestcommUntypedActor {
             try {
                 response = new DiskCacheResponse(cache((DiskCacheRequest) message));
             } catch (final Exception exception) {
-                logger.error("Issue while caching {}", exception);
+                if (logger.isDebugEnabled()) {
+                    logger.debug("Issue while caching", exception);
+                }
                 response = new DiskCacheResponse(exception);
             }
             sender.tell(response, self);
