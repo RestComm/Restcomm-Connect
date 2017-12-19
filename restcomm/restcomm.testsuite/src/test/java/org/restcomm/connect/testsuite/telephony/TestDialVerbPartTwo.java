@@ -93,7 +93,7 @@ public class TestDialVerbPartTwo {
     @Rule
     public WireMockRule wireMockRule = new WireMockRule(mockPort); // No-args constructor defaults to port 8080
     private String dialClientWithRecordingRcml = "<Response><Dial timeLimit=\"10\" timeout=\"10\" record=\"true\" action=\"http://127.0.0.1:" + mockPort + "/action\" method=\"GET\"><Client>alice</Client></Dial></Response>";
-    private String dialConferenceWithDialActionRcml = "<Response><Dial action=\"http://127.0.0.1:" + mockPort + "/action\" method=\"GET\"><Conference>test</Conference></Dial></Response>";
+    private String dialConferenceWithDialActionRcml = "<Response><Dial action=\"http://127.0.0.1:" + mockPort + "/action\" method=\"GET\"><Conference>test9876</Conference></Dial></Response>";
     private String dialClientWithRecordingRcml2 = "<Response><Dial timeLimit=\"10\" timeout=\"10\" record=\"true\" action=\"http://127.0.0.1:" + mockPort + "/action&sticky_numToDial=00306986971731\" method=\"GET\"><Client>alice</Client></Dial></Response>";
     private String dialRecordWithActionRcml = "<Response><Record action=\"http://127.0.0.1:" + mockPort + "/recordAction\" method=\"GET\" finishOnKey=\"*\" maxLength=\"10\" playBeep=\"true\"/></Response>";
     private String dialClientWithActionRcml = "<Response><Dial action=\"http://127.0.0.1:" + mockPort + "/action\" method=\"GET\"><Client>alice</Client></Dial></Response>";
@@ -168,20 +168,23 @@ public class TestDialVerbPartTwo {
     @After
     public void after() throws Exception {
         if (bobPhone != null) {
+            bobPhone.unregister(bobContact, 3600);
             bobPhone.dispose();
         }
         if (bobSipStack != null) {
             bobSipStack.dispose();
         }
 
+        if (alicePhone != null) {
+            alicePhone.unregister(aliceContact, 3600);
+            alicePhone.dispose();
+        }
         if (aliceSipStack != null) {
             aliceSipStack.dispose();
         }
-        if (alicePhone != null) {
-            alicePhone.dispose();
-        }
 
         if (georgePhone != null) {
+            georgePhone.unregister(georgeContact, 3600);
             georgePhone.dispose();
         }
         if (georgeSipStack != null) {
@@ -189,6 +192,8 @@ public class TestDialVerbPartTwo {
         }
         Thread.sleep(3000);
         wireMockRule.resetRequests();
+//        wireMockRule.resetMappings();
+//        wireMockRule.resetScenarios();
         /* these will only work in Java8, but seems unccesary
         wireMockRule.resetMappings();
         wireMockRule.resetScenarios();*/
@@ -505,17 +510,20 @@ public class TestDialVerbPartTwo {
         assertTrue(bobCall.waitForAnswer(5000));
     }
 
-    private String dialConferenceNoDialActionSendSMSRcml = "<Response><Dial><Conference>test</Conference></Dial>" +
+    private String dialConferenceNoDialActionSendSMSRcml = "<Response><Dial><Conference>test12345</Conference></Dial>" +
             "<Sms to=\"bob\" from=\"+12223334499\">Hello World!</Sms></Response>";
     private String dialConferenceNoDialActionRcml = "<Response><Dial><Conference>test</Conference></Dial></Response>";
     @Test
     @Category({UnstableTests.class, FeatureAltTests.class})
     public synchronized void testDialConferenceNoDialAction_SendSms() throws InterruptedException, ParseException {
+        wireMockRule.resetRequests();
         stubFor(get(urlPathEqualTo("/1111"))
                 .willReturn(aResponse()
                         .withStatus(200)
                         .withHeader("Content-Type", "text/xml")
-                        .withBody(dialConferenceNoDialActionSendSMSRcml)));
+//                        .withBody(dialConferenceNoDialActionSendSMSRcml)));
+                        .withBody("<Response><Dial><Conference>test12345</Conference></Dial>" +
+                                "<Sms to=\"bob\" from=\"+12223334499\">Hello World!</Sms></Response>")));
 
         // Phone2 register as alice
         SipURI uri = aliceSipStack.getAddressFactory().createSipURI(null, restcommContact);
