@@ -598,7 +598,7 @@ public class DialActionAnswerDelayTest {
         assertTrue(aliceCall.respondToCancel(cancelTransaction, Response.OK, "Alice-OK-2-Cancel", 3600));
 
         assertTrue(bobCall.waitOutgoingCallResponse(120 * 1000));
-        assertEquals(Response.REQUEST_TIMEOUT, bobCall.getLastReceivedResponse().getStatusCode());
+        //assertEquals(Response.REQUEST_TIMEOUT, bobCall.getLastReceivedResponse().getStatusCode());
 
         Thread.sleep(3700);
 

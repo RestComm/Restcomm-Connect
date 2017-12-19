@@ -1352,7 +1352,7 @@ public class VoiceInterpreter extends BaseVoiceInterpreter {
                 break;
             case WAIT_FOR_ANSWER:
             case IN_PROGRESS:
-                if(call!=null && call.equals(sender) && event.state().equals(CallStateChanged.State.WAIT_FOR_ANSWER)){
+                if(call!=null && (call == sender) && event.state().equals(CallStateChanged.State.WAIT_FOR_ANSWER)){
                     callWaitingForAnswer  = true;
                 }
                 if (is(initializingCall) || is(rejecting)) {
@@ -1380,7 +1380,7 @@ public class VoiceInterpreter extends BaseVoiceInterpreter {
                         final GetNextVerb next = new GetNextVerb();
                         parser.tell(next, self());
                     }
-                } else if (enable200OkDelay && is(finishDialing) && sender.equals(call) && event.state().equals(CallStateChanged.State.WAIT_FOR_ANSWER) && callWaitingForAnswerDownloaderResponse!=null) {
+                } else if (enable200OkDelay && is(finishDialing) && sender.equals(call) && event.state().equals(CallStateChanged.State.IN_PROGRESS) && callWaitingForAnswerDownloaderResponse!=null) {
                     if (logger.isInfoEnabled()) {
                         logger.info("Waiting call is inProgress we can proceed to ready state");
                     }
