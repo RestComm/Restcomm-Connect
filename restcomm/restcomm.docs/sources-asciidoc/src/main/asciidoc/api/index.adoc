@@ -40,3 +40,4 @@ Restcomm Accounts have the following subresources. Click on a link to read the A
 * <<gateway-api.adoc#gateways,Restcomm API – Gateway>>
 * <<monitoring-service.adoc#monitoring, Restcomm API - Supervisor/Monitoring Service>>
 * <<outbound-proxy-api.adoc#outbound-proxy,Restcomm API – OutboundProxy>>
+* <<extensions-multiprovider-configuration.adoc,Restcomm API – MultiProvider Extension Configuration>>
