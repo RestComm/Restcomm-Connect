@@ -1182,21 +1182,11 @@ public class DialActionAnswerDelayTest {
         assertNotNull(cancelTransaction);
         assertTrue(aliceCall.respondToCancel(cancelTransaction, Response.OK, "Alice-OK-2-Cancel", 3600));
 
-//        assertTrue(georgeCall.waitForIncomingCall(5000));
-//        assertTrue(georgeCall.sendIncomingCallResponse(Response.RINGING, "Ringing-George", 3600));
-//        String receivedBody = new String(georgeCall.getLastReceivedRequest().getRawContent());
-//        assertTrue(georgeCall.sendIncomingCallResponse(Response.OK, "OK-George", 3600, receivedBody, "application", "sdp", null,
-//                null));
-
         assertTrue(bobCall.waitOutgoingCallResponse(50 * 1000));
         assertEquals(Response.OK, bobCall.getLastReceivedResponse().getStatusCode());
 
         bobCall.sendInviteOkAck();
         assertTrue(!(bobCall.getLastReceivedResponse().getStatusCode() >= 400));
-
-        //prompt plays for 5 seconds
-        Thread.sleep(8000);
-
         bobCall.listenForDisconnect();
         assertTrue(bobCall.waitForDisconnect(30 * 1000));
         assertTrue(bobCall.respondToDisconnect());
