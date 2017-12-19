@@ -6,6 +6,7 @@ import com.google.gson.JsonArray;
 import com.google.gson.JsonObject;
 import gov.nist.javax.sip.header.ContentType;
 import org.apache.log4j.Logger;
+import org.cafesip.sipunit.Credential;
 import org.cafesip.sipunit.SipCall;
 import org.cafesip.sipunit.SipPhone;
 import org.cafesip.sipunit.SipRequest;
@@ -28,6 +29,7 @@ import org.restcomm.connect.commons.annotations.FeatureExpTests;
 import org.restcomm.connect.testsuite.http.RestcommCallsTool;
 
 import javax.sip.Dialog;
+import javax.sip.DialogState;
 import javax.sip.SipException;
 import javax.sip.address.SipURI;
 import javax.sip.header.FromHeader;
@@ -543,6 +545,7 @@ public class TestDialVerbPartTwo {
         assertTrue(!(bobCall.getLastReceivedResponse().getStatusCode() >= 400));
 
         //Now bob is connected to the conference room
+        bobCall.listenForMessage();
 
         Thread.sleep(7000);
 
@@ -550,7 +553,7 @@ public class TestDialVerbPartTwo {
         bobCall.disconnect();
         assertTrue(bobCall.waitForAnswer(5000));
 
-        bobCall.listenForMessage();
+
         assertTrue(bobCall.waitForMessage(60 * 1000));
         assertTrue(bobCall.sendMessageResponse(200, "OK-Message Received", 3600));
         Request messageReceived = bobCall.getLastReceivedMessageRequest();
@@ -726,11 +729,13 @@ public class TestDialVerbPartTwo {
 
         // Phone2 register as alice
         SipURI uri = aliceSipStack.getAddressFactory().createSipURI(null, restcommContact);
-        assertTrue(alicePhone.register(uri, "alice", "1234", aliceContact, 3600, 3600));
+        assertTrue(alicePhone.register(uri, "alice", "1234", aliceContact, 600, 600));
 
         // Prepare second phone to receive call
         SipCall aliceCall = alicePhone.createSipCall();
+        alicePhone.setLoopback(true);
         aliceCall.listenForIncomingCall();
+
 
         // Create outgoing call with first phone
         final SipCall bobCall = bobPhone.createSipCall();
@@ -838,11 +843,13 @@ public class TestDialVerbPartTwo {
 
         Thread.sleep(3000);
 
+        assertTrue(alicePhone.register(uri, "alice", "1234", aliceContact, 600, 600));
+
         recordings = RestcommCallsTool.getInstance().getRecordings(deploymentUrl.toString(), adminAccountSid, adminAuthToken);
         assertNotNull(recordings);
         assertTrue(recordings.size() >= 2);
         double duration = recordings.get(1).getAsJsonObject().get("duration").getAsDouble();
-        assertEquals(3.0, duration, 0.5);
+        assertEquals(7.0, duration, 0.5);
         assertNotNull(((JsonObject)recordings.get(1)).get("uri").getAsString());
 
         /*
@@ -900,7 +907,7 @@ public class TestDialVerbPartTwo {
         recordings = RestcommCallsTool.getInstance().getRecordings(deploymentUrl.toString(), adminAccountSid, adminAuthToken);
         assertNotNull(recordings);
         assertTrue(recordings.size() >= 3);
-        assertTrue("7.0".equalsIgnoreCase(((JsonObject)recordings.get(2)).get("duration").getAsString()));
+        assertEquals(7.0, ((JsonObject)recordings.get(2)).get("duration").getAsDouble(), 0.5);
         assertNotNull(((JsonObject)recordings.get(2)).get("uri").getAsString());
 
         logger.info("About to check the Status Callback Requests");
@@ -1048,10 +1055,14 @@ public class TestDialVerbPartTwo {
         bobCall.sendInviteOkAck();
         assertTrue(!(bobCall.getLastReceivedResponse().getStatusCode() >= 400));
 
+        bobCall.listenForDisconnect();
+
         //Here we have Restcomm voice mail app for 10 sec
         Thread.sleep(5000);
 
         Dialog dialog = bobCall.getDialog();
+        assertNotNull(dialog);
+        assertEquals(DialogState.CONFIRMED, dialog.getState());
         String infoBody = "\n" +
                 "Signal=*\n" +
                 "Duration=28";
@@ -1070,7 +1081,7 @@ public class TestDialVerbPartTwo {
         SipTransaction infoTransaction = bobPhone.sendRequestWithTransaction(info, false, dialog);
         assertNotNull(infoTransaction);
 
-        bobCall.listenForDisconnect();
+
         assertTrue(bobCall.waitForDisconnect(5000));
         assertTrue(bobCall.respondToDisconnect());
 
