@@ -1224,7 +1224,10 @@ public class VoiceInterpreter extends BaseVoiceInterpreter {
 
                         if (dialBranches != null && dialBranches.contains(sender)) {
                             removeDialBranch(message, sender);
-                            checkDialBranch(message, sender, action);
+                            //in case of enable200OkDelay: dont check Dial branches yet, wait for call to move to in progress
+                            if(!enable200OkDelay) {
+                                checkDialBranch(message, sender, action);
+                            }
                         }
                         else {
                             //case for LCM testTerminateDialForkCallWhileRinging_LCM_to_dial_branches
@@ -1366,6 +1369,11 @@ public class VoiceInterpreter extends BaseVoiceInterpreter {
                         final GetNextVerb next = new GetNextVerb();
                         parser.tell(next, self());
                     }
+                } else if (enable200OkDelay && is(finishDialing)) {
+                    if (logger.isInfoEnabled()) {
+                        logger.info("Waiting call is inProgress we can proceed with dial action");
+                    }
+                    checkDialBranch(message, sender, action);
                 }
                 // Update the storage for conferencing.
                 if (callRecord != null && !is(initializingCall) && !is(rejecting)) {

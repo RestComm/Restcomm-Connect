@@ -22,11 +22,9 @@ package org.restcomm.connect.testsuite.telephony;
 
 import static com.github.tomakehurst.wiremock.client.WireMock.aResponse;
 import static com.github.tomakehurst.wiremock.client.WireMock.findAll;
-import static com.github.tomakehurst.wiremock.client.WireMock.get;
 import static com.github.tomakehurst.wiremock.client.WireMock.post;
 import static com.github.tomakehurst.wiremock.client.WireMock.postRequestedFor;
 import static com.github.tomakehurst.wiremock.client.WireMock.stubFor;
-import static com.github.tomakehurst.wiremock.client.WireMock.urlPathEqualTo;
 import static com.github.tomakehurst.wiremock.client.WireMock.urlPathMatching;
 import static org.cafesip.sipunit.SipAssert.assertLastOperationSuccess;
 import static org.junit.Assert.assertEquals;
@@ -146,7 +144,10 @@ public class DialActionAnswerDelayTest {
     private static int restcommPort = 5080;
     private static int restcommHTTPPort = 8080;
     private static String restcommContact = "127.0.0.1:" + restcommPort;
-    private static String dialClientWithActionUrl = "sip:1111@" + restcommContact; // Application: dial-client-entry_wActionUrl.xml
+    private static String dialClientWithActionUrl = "sip:+12223334455@" + restcommContact; // Application: dial-client-entry_wActionUrl.xml
+
+    private String dialActionRcml = "<Response><Dial><Number>+131313</Number></Dial></Response>";
+    private String dialActionRcmlPlay;
 
     @BeforeClass
     public static void beforeClass() throws Exception {
@@ -218,18 +219,9 @@ public class DialActionAnswerDelayTest {
         Thread.sleep(4000);
     }
 
-    String dialClientWithAction = "<Response><Dial timeLimit=\"10\" timeout=\"3\" action=\"http://127.0.0.1:"+ mockPort +"/DialAction\" " +
-            "method=\"POST\"><Client>alice</Client></Dial></Response>";
-
     @Test
     @Category(UnstableTests.class)
     public void testDialActionInvalidCall() throws ParseException, InterruptedException {
-
-        stubFor(get(urlPathEqualTo("/1111"))
-                .willReturn(aResponse()
-                        .withStatus(200)
-                        .withHeader("Content-Type", "text/xml")
-                        .withBody(dialClientWithAction)));
 
         stubFor(post(urlPathMatching("/DialAction.*"))
                 .willReturn(aResponse()
@@ -263,7 +255,7 @@ public class DialActionAnswerDelayTest {
         String requestBody = requests.get(0).getBodyAsString();
         String[] params = requestBody.split("&");
         assertTrue(requestBody.contains("DialCallStatus=failed"));
-        assertTrue(requestBody.contains("To=%2B1111"));
+        assertTrue(requestBody.contains("To=%2B12223334455"));
         assertTrue(requestBody.contains("From=bob"));
         assertTrue(requestBody.contains("DialCallDuration=0"));
         Iterator iter = Arrays.asList(params).iterator();
@@ -284,12 +276,6 @@ public class DialActionAnswerDelayTest {
     @Test //No regression test for https://github.com/Mobicents/RestComm/issues/505
     @Category(UnstableTests.class)
     public void testDialActionInvalidCallCheckCallStatusCompleted() throws ParseException, InterruptedException {
-
-        stubFor(get(urlPathEqualTo("/1111"))
-                .willReturn(aResponse()
-                        .withStatus(200)
-                        .withHeader("Content-Type", "text/xml")
-                        .withBody(dialClientWithAction)));
 
         stubFor(post(urlPathMatching("/DialAction.*"))
                 .willReturn(aResponse()
@@ -320,7 +306,7 @@ public class DialActionAnswerDelayTest {
         String[] params = requestBody.split("&");
         //DialCallStatus should be null since there was no call made - since Alice is not registered
         assertTrue(requestBody.contains("DialCallStatus=failed"));
-        assertTrue(requestBody.contains("To=%2B1111"));
+        assertTrue(requestBody.contains("To=%2B12223334455"));
         assertTrue(requestBody.contains("From=bob"));
         assertTrue(requestBody.contains("DialCallDuration=0"));
         assertTrue(requestBody.contains("CallStatus=wait-for-answer"));
@@ -342,12 +328,6 @@ public class DialActionAnswerDelayTest {
     @Test
     @Category(WithInMinsTests.class)
     public void testDialActionAliceAnswers() throws ParseException, InterruptedException {
-
-        stubFor(get(urlPathEqualTo("/1111"))
-                .willReturn(aResponse()
-                        .withStatus(200)
-                        .withHeader("Content-Type", "text/xml")
-                        .withBody(dialClientWithAction)));
 
         stubFor(post(urlPathMatching("/DialAction.*"))
                 .willReturn(aResponse()
@@ -409,7 +389,7 @@ public class DialActionAnswerDelayTest {
         String requestBody = requests.get(0).getBodyAsString();
         String[] params = requestBody.split("&");
         assertTrue(requestBody.contains("DialCallStatus=completed"));
-        assertTrue(requestBody.contains("To=%2B1111"));
+        assertTrue(requestBody.contains("To=%2B12223334455"));
         assertTrue(requestBody.contains("From=bob"));
         assertTrue(requestBody.contains("DialCallDuration=3"));
         Iterator iter = Arrays.asList(params).iterator();
@@ -428,12 +408,6 @@ public class DialActionAnswerDelayTest {
 
     @Test
     public void testDialActionAliceAnswersAliceHangup() throws ParseException, InterruptedException {
-
-        stubFor(get(urlPathEqualTo("/1111"))
-                .willReturn(aResponse()
-                        .withStatus(200)
-                        .withHeader("Content-Type", "text/xml")
-                        .withBody(dialClientWithAction)));
 
         stubFor(post(urlPathMatching("/DialAction.*"))
                 .willReturn(aResponse()
@@ -493,7 +467,7 @@ public class DialActionAnswerDelayTest {
         String requestBody = requests.get(0).getBodyAsString();
         String[] params = requestBody.split("&");
         assertTrue(requestBody.contains("DialCallStatus=completed"));
-        assertTrue(requestBody.contains("To=%2B1111"));
+        assertTrue(requestBody.contains("To=%2B12223334455"));
         assertTrue(requestBody.contains("From=bob"));
         assertTrue(requestBody.contains("DialCallDuration=3"));
         Iterator iter = Arrays.asList(params).iterator();
@@ -512,12 +486,6 @@ public class DialActionAnswerDelayTest {
 
     @Test
     public void testDialActionAliceAnswersBobDisconnects() throws ParseException, InterruptedException {
-
-        stubFor(get(urlPathEqualTo("/1111"))
-                .willReturn(aResponse()
-                        .withStatus(200)
-                        .withHeader("Content-Type", "text/xml")
-                        .withBody(dialClientWithAction)));
 
         stubFor(post(urlPathMatching("/DialAction.*"))
                 .willReturn(aResponse()
@@ -577,7 +545,7 @@ public class DialActionAnswerDelayTest {
         String requestBody = requests.get(0).getBodyAsString();
         String[] params = requestBody.split("&");
         assertTrue(requestBody.contains("DialCallStatus=completed"));
-        assertTrue(requestBody.contains("To=%2B1111"));
+        assertTrue(requestBody.contains("To=%2B12223334455"));
         assertTrue(requestBody.contains("From=bob"));
         assertTrue(requestBody.contains("DialCallDuration=3"));
         Iterator iter = Arrays.asList(params).iterator();
@@ -596,12 +564,6 @@ public class DialActionAnswerDelayTest {
 
     @Test
     public void testDialActionAliceNOAnswer() throws ParseException, InterruptedException {
-
-        stubFor(get(urlPathEqualTo("/1111"))
-                .willReturn(aResponse()
-                        .withStatus(200)
-                        .withHeader("Content-Type", "text/xml")
-                        .withBody(dialClientWithAction)));
 
         stubFor(post(urlPathMatching("/DialAction.*"))
                 .willReturn(aResponse()
@@ -652,7 +614,7 @@ public class DialActionAnswerDelayTest {
             logger.info("requestBody: \n"+"\n ---------------------- \n"+msgToPrint+"\n---------------------- ");
         }
         assertTrue(requestBody.contains("DialCallStatus=canceled"));
-        assertTrue(requestBody.contains("To=%2B1111"));
+        assertTrue(requestBody.contains("To=%2B12223334455"));
         assertTrue(requestBody.contains("From=bob"));
         assertTrue(requestBody.contains("DialRingDuration=3"));
         assertTrue(requestBody.contains("DialCallDuration=0"));
@@ -672,12 +634,6 @@ public class DialActionAnswerDelayTest {
 
     @Test
     public void testDialActionAliceBusy() throws ParseException, InterruptedException {
-
-        stubFor(get(urlPathEqualTo("/1111"))
-                .willReturn(aResponse()
-                        .withStatus(200)
-                        .withHeader("Content-Type", "text/xml")
-                        .withBody(dialClientWithAction)));
 
         stubFor(post(urlPathMatching("/DialAction.*"))
                 .willReturn(aResponse()
@@ -727,7 +683,7 @@ public class DialActionAnswerDelayTest {
             logger.info("requestBody: \n"+requestBody);
         }
         assertTrue(requestBody.contains("DialCallStatus=busy"));
-        assertTrue(requestBody.contains("To=%2B1111"));
+        assertTrue(requestBody.contains("To=%2B12223334455"));
         assertTrue(requestBody.contains("From=bob"));
         assertTrue(requestBody.contains("DialCallDuration=0"));
         Iterator iter = Arrays.asList(params).iterator();
@@ -747,12 +703,6 @@ public class DialActionAnswerDelayTest {
     @Test
     @Category(WithInMinsTests.class)
     public void testSipInviteCustomHeaders() throws ParseException, InterruptedException {
-
-        stubFor(get(urlPathEqualTo("/1111"))
-                .willReturn(aResponse()
-                        .withStatus(200)
-                        .withHeader("Content-Type", "text/xml")
-                        .withBody(dialClientWithAction)));
 
         stubFor(post(urlPathMatching("/DialAction.*"))
                 .willReturn(aResponse()
@@ -846,12 +796,6 @@ public class DialActionAnswerDelayTest {
     @Test //TODO: PASSES when run individually. to check
     @Category(WithInMinsTests.class)
     public void testDialCallDurationAliceAnswers() throws ParseException, InterruptedException {
-
-        stubFor(get(urlPathEqualTo("/1111"))
-                .willReturn(aResponse()
-                        .withStatus(200)
-                        .withHeader("Content-Type", "text/xml")
-                        .withBody(dialClientWithAction)));
 
         stubFor(post(urlPathMatching("/DialAction.*"))
                 .willReturn(aResponse()
@@ -949,12 +893,6 @@ public class DialActionAnswerDelayTest {
     @Test //TODO: PASSES when run individually. to check
     public void testDialCallDurationAliceBusy() throws ParseException, InterruptedException {
 
-        stubFor(get(urlPathEqualTo("/1111"))
-                .willReturn(aResponse()
-                        .withStatus(200)
-                        .withHeader("Content-Type", "text/xml")
-                        .withBody(dialClientWithAction)));
-
         stubFor(post(urlPathMatching("/DialAction.*"))
                 .willReturn(aResponse()
                         .withStatus(200)));
@@ -1035,17 +973,8 @@ public class DialActionAnswerDelayTest {
         assertTrue(dialCdr.get("direction").getAsString().equalsIgnoreCase("outbound-api"));
     }
 
-
-    private String dialActionRcml = "<Response><Dial><Number>+131313</Number></Dial></Response>";
-
     @Test
     public void testDialActionAliceNOAnswerRcmlOnDialAction() throws ParseException, InterruptedException {
-
-        stubFor(get(urlPathEqualTo("/1111"))
-                .willReturn(aResponse()
-                        .withStatus(200)
-                        .withHeader("Content-Type", "text/xml")
-                        .withBody(dialClientWithAction)));
 
         stubFor(post(urlPathMatching("/DialAction.*"))
                 .willReturn(aResponse()
@@ -1118,7 +1047,7 @@ public class DialActionAnswerDelayTest {
             logger.info("requestBody: \n"+"\n ---------------------- \n"+msgToPrint+"\n---------------------- ");
         }
         assertTrue(requestBody.contains("DialCallStatus=canceled"));
-        assertTrue(requestBody.contains("To=%2B1111"));
+        assertTrue(requestBody.contains("To=%2B12223334455"));
         assertTrue(requestBody.contains("From=bob"));
         assertTrue(requestBody.contains("DialRingDuration=3"));
         assertTrue(requestBody.contains("DialCallDuration=0"));
@@ -1136,17 +1065,8 @@ public class DialActionAnswerDelayTest {
         assertNotNull(cdr);
     }
 
-
-    private String dialActionRcmlPlay;
-
     @Test
     public void testDialActionAliceNOAnswerRcmlPlayOnDialAction() throws ParseException, InterruptedException {
-
-        stubFor(get(urlPathEqualTo("/1111"))
-                .willReturn(aResponse()
-                        .withStatus(200)
-                        .withHeader("Content-Type", "text/xml")
-                        .withBody(dialClientWithAction)));
 
         stubFor(post(urlPathMatching("/DialAction.*"))
                 .willReturn(aResponse()
@@ -1203,7 +1123,7 @@ public class DialActionAnswerDelayTest {
             logger.info("requestBody: \n"+"\n ---------------------- \n"+msgToPrint+"\n---------------------- ");
         }
         assertTrue(requestBody.contains("DialCallStatus=canceled"));
-        assertTrue(requestBody.contains("To=%2B1111"));
+        assertTrue(requestBody.contains("To=%2B12223334455"));
         assertTrue(requestBody.contains("From=bob"));
         assertTrue(requestBody.contains("DialRingDuration=3"));
         assertTrue(requestBody.contains("DialCallDuration=0"));
@@ -1239,7 +1159,7 @@ public class DialActionAnswerDelayTest {
         replacements.put("5092", String.valueOf(henriquePort));
         List<String> resources = new ArrayList(Arrays.asList("dial-client-entry_wActionUrl.xml"));
         return WebArchiveUtil.createWebArchiveNoGw("restcomm-delay.xml",
-                "restcomm.script_dialAction_New",resources, replacements);
+                "restcomm.script_dialActionTest",resources, replacements);
     }
 
 }
