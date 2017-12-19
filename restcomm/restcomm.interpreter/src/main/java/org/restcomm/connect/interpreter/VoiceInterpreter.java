@@ -2747,7 +2747,7 @@ public class VoiceInterpreter extends BaseVoiceInterpreter {
                             logger.info("Canceled branch: " + branch.path()+", isTerminated: "+branch.isTerminated());
                         }
                     }
-                    // if enable200OkDelay is true, call is not ringing so no need to send stop ringing
+                    // if enable200OkDelay is true, call was not playing ringing tone, so no need to send stop ringing
                     if(enable200OkDelay){
                         outboundCallResponse = SipServletResponse.SC_REQUEST_TIMEOUT;
                         call.tell(new StopWaiting(), self());
