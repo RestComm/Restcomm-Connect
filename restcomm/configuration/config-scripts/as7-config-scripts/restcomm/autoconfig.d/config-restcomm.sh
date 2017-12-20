@@ -637,12 +637,12 @@ otherRestCommConf(){
 	mv $FILE.bak $FILE
 
     #Remove if is set in earlier run.
-    grep -q 'allowLegacyHelloMessages' $RESTCOMM_BIN/standalone.conf && sed -i "s|-Dsun.security.ssl.allowLegacyHelloMessages=false -Djsse.enableSNIExtension=.* ||" $RESTCOMM_BIN/standalone.conf
+    grep -q 'allowLegacyHelloMessages' $RESTCOMM_BIN/standalone.conf && sed -i -E "s/(.*)( -Dsun.security.ssl.allowLegacyHelloMessages=false -Djsse.enableSNIExtension=)(true|false)(.*)/\1\4/" $RESTCOMM_BIN/standalone.conf
 
     if [[ "$SSLSNI" == "false" || "$SSLSNI" == "FALSE" ]]; then
-		  sed -i "s|-Djava.awt.headless=true|& -Dsun.security.ssl.allowLegacyHelloMessages=false -Djsse.enableSNIExtension=false |" $RESTCOMM_BIN/standalone.conf
+		  sed -i "s|-Djava.awt.headless=true|& -Dsun.security.ssl.allowLegacyHelloMessages=false -Djsse.enableSNIExtension=false|" $RESTCOMM_BIN/standalone.conf
 	else
-	 	  sed -i "s|-Djava.awt.headless=true|& -Dsun.security.ssl.allowLegacyHelloMessages=false -Djsse.enableSNIExtension=true |" $RESTCOMM_BIN/standalone.conf
+	 	  sed -i "s|-Djava.awt.headless=true|& -Dsun.security.ssl.allowLegacyHelloMessages=false -Djsse.enableSNIExtension=true|" $RESTCOMM_BIN/standalone.conf
 	fi
 
 	if [ -n "$HSQL_DIR" ]; then
