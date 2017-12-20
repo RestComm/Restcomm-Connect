@@ -249,9 +249,6 @@ private final String actionUrlRcmlWithTimeLimit = "<Dial timeout=\"50\" timeLimi
                         .withHeader("Content-Type", "text/xml")
                         .withBody(actionUrlRcmlWithTimeLimit)));
 
-//        SipURI uri = aliceSipStack.getAddressFactory().createSipURI(null, restcommContact);
-//        assertTrue(alicePhone.register(uri, "alice", "1234", aliceContact, 3600, 3600));
-
         final SipCall aliceCall = alicePhone.createSipCall();
         aliceCall.listenForIncomingCall();
 

@@ -3390,6 +3390,7 @@ public class VoiceInterpreter extends BaseVoiceInterpreter {
                 call = null;
             }
 
+            getContext().stop(parser);
             getContext().stop(self());
             postCleanup();
         }
