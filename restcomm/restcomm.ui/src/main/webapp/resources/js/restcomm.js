@@ -177,6 +177,11 @@ rcMod.config(['$stateProvider','$urlRouterProvider', function($stateProvider, $u
       templateUrl: 'modules/application-details.html',
       controller: 'ApplicationDetailsCtrl'
   });
+  $stateProvider.state('restcomm.application-templates',{
+        url:'/application-templates',
+        templateUrl: 'modules/application-templates.html',
+        controller: 'ApplicationTemplatesCtrl'
+  });
   $stateProvider.state('restcomm.clients',{
     url:'/numbers/clients',
     templateUrl: 'modules/numbers-clients.html',

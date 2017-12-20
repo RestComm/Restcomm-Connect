@@ -1565,6 +1565,54 @@ form[role=login] input:-webkit-autofill:focus{
     min-width: 50px;
 }
 
+/* -- Application templates ------------------------------------------------- */
+
+.template-item .item-top {
+  text-align: center;
+  padding: 50px;
+}
+
+.template-item .item-bottom {
+  text-align: center;
+  background-color: #458ECC;
+  color: white;
+  padding-top: 8px;
+  padding-bottom: 8px;
+}
+
+.template-item {
+  margin: 0px 5px 38px 5px;
+  box-shadow: 1px 1px 1px #888888;
+}
+
+.template-item .template-icon {
+  font-size: 50px;
+}
+
+.template-tags .checkbox {
+  margin-right: 50px;
+}
+
+.template-tags {
+  margin-top: 20px;
+}
+
+.template-search {
+  margin-top: 5px;
+}
+
+.templates-head {
+  margin-bottom: 24px;
+}
+
+.templates-head .templates-title {
+  margin-top: 8px;
+}
+
+.templates-view .search-form input {
+  width: 100%;
+}
+
 
 /* -- Numbers --------------------------------------------------------------- */
 
