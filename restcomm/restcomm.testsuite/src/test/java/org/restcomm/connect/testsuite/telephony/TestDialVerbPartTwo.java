@@ -192,8 +192,6 @@ public class TestDialVerbPartTwo {
         }
         Thread.sleep(3000);
         wireMockRule.resetRequests();
-//        wireMockRule.resetMappings();
-//        wireMockRule.resetScenarios();
         /* these will only work in Java8, but seems unccesary
         wireMockRule.resetMappings();
         wireMockRule.resetScenarios();*/
@@ -516,7 +514,7 @@ public class TestDialVerbPartTwo {
     @Test
     @Category({UnstableTests.class, FeatureAltTests.class})
     public synchronized void testDialConferenceNoDialAction_SendSms() throws InterruptedException, ParseException {
-        wireMockRule.resetRequests();
+//        wireMockRule.resetMappings();
         stubFor(get(urlPathEqualTo("/1111"))
                 .willReturn(aResponse()
                         .withStatus(200)
