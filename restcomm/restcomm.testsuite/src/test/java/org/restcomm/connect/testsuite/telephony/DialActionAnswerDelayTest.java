@@ -1109,7 +1109,7 @@ public class DialActionAnswerDelayTest {
         assertTrue(!(bobCall.getLastReceivedResponse().getStatusCode() >= 400));
         bobCall.listenForDisconnect();
         logger.info("bob listenForDisconnect");
-        assertTrue(bobCall.waitForDisconnect(90 * 1000));
+        assertTrue(bobCall.waitForDisconnect(120 * 1000));
         assertTrue(bobCall.respondToDisconnect());
 
         Thread.sleep(5000);
