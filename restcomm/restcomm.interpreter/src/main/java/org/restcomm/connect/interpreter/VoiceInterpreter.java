@@ -925,22 +925,15 @@ public class VoiceInterpreter extends BaseVoiceInterpreter {
         }
     }
 
-    /**
-     * if 200 ok delay is enabled we need to answer only the calls
-     * which are having any further call enabler verbs in their RCML.
-     * @return
-     */
-    private boolean isVerbCallEnabler(){
-        if(Verbs.play.equals(verb.name()) || Verbs.say.equals(verb.name()) || Verbs.gather.equals(verb.name()))
-            return true;
-        return false;
-    }
     private void onTagMessage(Object message) throws TransitionFailedException, TransitionNotFoundException, TransitionRollbackException {
         verb = (Tag) message;
         if (logger.isDebugEnabled()) {
             logger.debug("Tag received, name: "+verb.name()+", text: "+verb.text());
         }
-        if(enable200OkDelay && callWaitingForAnswer && isVerbCallEnabler()){
+
+        // if 200 ok delay is enabled we need to answer only the calls
+        // which are having any further call enabler verbs in their RCML.
+        if(enable200OkDelay && callWaitingForAnswer && Verbs.isThisVerbCallEnabler(verb)){
             if(logger.isInfoEnabled()) {
                 logger.info("Tag received, but callWaitingForAnswer: will tell call to stop waiting");
             }
