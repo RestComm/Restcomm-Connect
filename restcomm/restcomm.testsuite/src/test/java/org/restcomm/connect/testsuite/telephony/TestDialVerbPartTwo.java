@@ -850,7 +850,7 @@ public class TestDialVerbPartTwo {
         assertNotNull(recordings);
         assertTrue(recordings.size() >= 2);
         double duration = recordings.get(1).getAsJsonObject().get("duration").getAsDouble();
-        assertEquals(7.0, duration, 0.5);
+        assertEquals(7.0, duration, 1.0);
         assertNotNull(((JsonObject)recordings.get(1)).get("uri").getAsString());
 
         /*
@@ -908,7 +908,7 @@ public class TestDialVerbPartTwo {
         recordings = RestcommCallsTool.getInstance().getRecordings(deploymentUrl.toString(), adminAccountSid, adminAuthToken);
         assertNotNull(recordings);
         assertTrue(recordings.size() >= 3);
-        assertEquals(7.0, ((JsonObject)recordings.get(2)).get("duration").getAsDouble(), 0.5);
+        assertEquals(7.0, ((JsonObject)recordings.get(2)).get("duration").getAsDouble(), 1.0);
         assertNotNull(((JsonObject)recordings.get(2)).get("uri").getAsString());
 
         logger.info("About to check the Status Callback Requests");
