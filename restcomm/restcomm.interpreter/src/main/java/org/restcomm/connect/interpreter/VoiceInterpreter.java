@@ -2767,6 +2767,9 @@ public class VoiceInterpreter extends BaseVoiceInterpreter {
                 if(logger.isInfoEnabled()) {
                     logger.info("Received timeout, will cancel branches, current VoiceIntepreter state: " + state);
                 }
+                if(enable200OkDelay){
+                    outboundCallResponse = SipServletResponse.SC_REQUEST_TIMEOUT;
+                }
                 //The forking timeout reached, we have to cancel all dial branches
                 final UntypedActorContext context = getContext();
                 context.setReceiveTimeout(Duration.Undefined());
@@ -2780,14 +2783,9 @@ public class VoiceInterpreter extends BaseVoiceInterpreter {
                             logger.info("Canceled branch: " + branch.path()+", isTerminated: "+branch.isTerminated());
                         }
                     }
-                    // if enable200OkDelay is true, call was not playing ringing tone, so no need to send stop ringing
-                    if(enable200OkDelay){
-                        outboundCallResponse = SipServletResponse.SC_REQUEST_TIMEOUT;
-                    } else {
-                        // Stop playing the ringing tone from inbound call
-                        msResponsePending = true;
-                        call.tell(new StopMediaGroup(), self());
-                    }
+                    // Stop playing the ringing tone from inbound call
+                    msResponsePending = true;
+                    call.tell(new StopMediaGroup(), self());
                 } else if (outboundCall != null) {
                     outboundCall.tell(new Cancel(), source);
                     call.tell(new Hangup(outboundCallResponse), self());
