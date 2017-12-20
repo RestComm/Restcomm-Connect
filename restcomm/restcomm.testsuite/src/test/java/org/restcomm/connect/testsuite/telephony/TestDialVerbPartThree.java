@@ -44,9 +44,7 @@ import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertTrue;
 import org.junit.experimental.categories.Category;
 import org.restcomm.connect.commons.annotations.ParallelClassTests;
-import org.restcomm.connect.commons.annotations.WithInMinsTests;
 import org.restcomm.connect.testsuite.NetworkPortAssigner;
-import org.restcomm.connect.commons.annotations.UnstableTests;
 import org.restcomm.connect.testsuite.WebArchiveUtil;
 
 /**
@@ -170,7 +168,7 @@ public class TestDialVerbPartThree {
 //Non regression test for https://github.com/Mobicents/RestComm/issues/612
 private final String actionUrlRcmlWithTimeLimit = "<Dial timeout=\"50\" timeLimit=\"5\"><Uri>sip:alice@127.0.0.1:" + alicePort + "</Uri></Dial>";
     @Test
-    @Category({UnstableTests.class, FeatureAltTests.class})
+    @Category({FeatureAltTests.class})
     public synchronized void testRecord_ExecuteRCML_ReturnedFromActionURL() throws InterruptedException, ParseException {
 
         stubFor(get(urlPathEqualTo("/1111"))
@@ -234,7 +232,7 @@ private final String actionUrlRcmlWithTimeLimit = "<Dial timeout=\"50\" timeLimi
 
     //Non regression test for https://github.com/Mobicents/RestComm/issues/612
     @Test
-    @Category({UnstableTests.class, FeatureAltTests.class})
+    @Category({FeatureAltTests.class})
     public synchronized void testRecord_ExecuteRCML_ReturnedFromActionURLWithNullFinishOnKey() throws InterruptedException, ParseException {
 
         stubFor(get(urlPathEqualTo("/1111"))
@@ -339,7 +337,6 @@ private final String actionUrlRcmlWithTimeLimit = "<Dial timeout=\"50\" timeLimi
     }
 
     @Test
-    @Category(UnstableTests.class)
 // Non regression test for https://bitbucket.org/telestax/telscale-restcomm/issue/132/implement-twilio-sip-out
     public synchronized void testDialSip() throws InterruptedException, ParseException {
         stubFor(get(urlPathEqualTo("/1111"))
