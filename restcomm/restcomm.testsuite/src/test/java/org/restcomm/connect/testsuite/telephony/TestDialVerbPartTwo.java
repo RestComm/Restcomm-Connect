@@ -555,7 +555,7 @@ public class TestDialVerbPartTwo {
         assertTrue(bobCall.waitForAnswer(5000));
 
 
-        assertTrue(bobCall.waitForMessage(60 * 1000));
+        assertTrue(bobCall.waitForMessage(90 * 1000));
         assertTrue(bobCall.sendMessageResponse(200, "OK-Message Received", 3600));
         Request messageReceived = bobCall.getLastReceivedMessageRequest();
         assertTrue(new String(messageReceived.getRawContent()).equalsIgnoreCase("Hello World!"));
