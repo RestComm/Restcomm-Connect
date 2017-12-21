@@ -692,7 +692,6 @@ public class TestDialVerbPartTwoAnswerDelay {
             "<Sms to=\"bob\" from=\"+12223334499\">Hello World!</Sms></Response>";
     //Test for issue RESTCOMM-617
     @Test
-    @Category(UnstableTests.class)
     public synchronized void testDialClientAliceSendSmsToBob() throws InterruptedException, ParseException {
         stubFor(get(urlPathEqualTo("/1111"))
                 .willReturn(aResponse()
