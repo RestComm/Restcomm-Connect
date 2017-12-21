@@ -1569,24 +1569,38 @@ form[role=login] input:-webkit-autofill:focus{
 
 .template-item .item-top {
   text-align: center;
-  padding: 50px;
+  padding: 5px;
 }
 
 .template-item .item-bottom {
   text-align: center;
   background-color: #458ECC;
   color: white;
-  padding-top: 8px;
-  padding-bottom: 8px;
+  padding: 8px;
 }
 
 .template-item {
   margin: 0px 5px 38px 5px;
   box-shadow: 1px 1px 1px #888888;
+  opacity: 0.8;
+}
+
+.template-item:hover {
+  opacity: 1.0;
 }
 
 .template-item .template-icon {
   font-size: 50px;
+}
+
+.template-item .template-description {
+  height: 140px;
+  padding-top: 24px;
+}
+
+.template-item .tag-icons {
+  color: #777;
+  text-align: right;
 }
 
 .template-tags .checkbox {
@@ -1598,7 +1612,7 @@ form[role=login] input:-webkit-autofill:focus{
 }
 
 .template-search {
-  margin-top: 5px;
+  margin-top: 7px;
 }
 
 .templates-head {
@@ -1612,6 +1626,12 @@ form[role=login] input:-webkit-autofill:focus{
 .templates-view .search-form input {
   width: 100%;
 }
+
+.template-tags label {
+    font-size: 1.2em;
+    font-weight: bold;
+}
+
 
 
 /* -- Numbers --------------------------------------------------------------- */
