@@ -49,6 +49,7 @@ import static org.junit.Assert.assertTrue;
 import org.junit.experimental.categories.Category;
 import org.restcomm.connect.commons.annotations.FeatureAltTests;
 import org.restcomm.connect.commons.annotations.ParallelClassTests;
+import org.restcomm.connect.commons.annotations.UnstableTests;
 import org.restcomm.connect.testsuite.NetworkPortAssigner;
 import org.restcomm.connect.testsuite.WebArchiveUtil;
 
@@ -240,6 +241,7 @@ public class TestDialVerbPartTwoAnswerDelay {
             "\t\t\t<Sms to=\"bob\" from=\"+12223334499\">Hello World!</Sms>\n" +
             "</Response>";
     @Test
+    @Category(UnstableTests.class)
     public synchronized void testDialClientAliceWithRecord() throws InterruptedException, ParseException {
         stubFor(get(urlPathEqualTo("/1111"))
                 .willReturn(aResponse()
@@ -311,6 +313,7 @@ public class TestDialVerbPartTwoAnswerDelay {
     }
 
     @Test
+    @Category(UnstableTests.class)
     public synchronized void testDialClientAliceWithRecord2() throws InterruptedException, ParseException {
         stubFor(get(urlPathEqualTo("/1111"))
                 .willReturn(aResponse()
