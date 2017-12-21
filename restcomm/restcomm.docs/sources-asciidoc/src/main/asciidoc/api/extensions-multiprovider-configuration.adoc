@@ -8,6 +8,7 @@
 The Multiprovider extension allows per account SMS and Voice routing.
 
 IMPORTANT: The MultiProvider feature is available only to Commercial users of Restcomm Connect.
+
 IMPORTANT: This REST API is only accessible by the super-admin.
 
 
