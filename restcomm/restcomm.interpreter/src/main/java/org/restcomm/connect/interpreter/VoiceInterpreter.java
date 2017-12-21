@@ -19,16 +19,28 @@
  */
 package org.restcomm.connect.interpreter;
 
-import akka.actor.Actor;
-import akka.actor.ActorRef;
-import akka.actor.Props;
-import akka.actor.ReceiveTimeout;
-import akka.actor.UntypedActorContext;
-import akka.actor.UntypedActorFactory;
-import akka.event.Logging;
-import akka.event.LoggingAdapter;
-import akka.pattern.AskTimeoutException;
-import akka.util.Timeout;
+import static akka.pattern.Patterns.ask;
+
+import java.io.IOException;
+import java.math.BigDecimal;
+import java.net.MalformedURLException;
+import java.net.URI;
+import java.net.URISyntaxException;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Currency;
+import java.util.HashMap;
+import java.util.Iterator;
+import java.util.LinkedList;
+import java.util.List;
+import java.util.Map;
+import java.util.concurrent.TimeUnit;
+
+import javax.servlet.sip.SipServletMessage;
+import javax.servlet.sip.SipServletRequest;
+import javax.servlet.sip.SipServletResponse;
+import javax.servlet.sip.SipSession;
+
 import org.apache.commons.configuration.Configuration;
 import org.apache.commons.lang.StringUtils;
 import org.apache.http.HttpStatus;
@@ -111,31 +123,22 @@ import org.restcomm.connect.telephony.api.RemoveParticipant;
 import org.restcomm.connect.telephony.api.StartBridge;
 import org.restcomm.connect.telephony.api.StopBridge;
 import org.restcomm.connect.telephony.api.StopConference;
+import org.restcomm.connect.telephony.api.StopWaiting;
 import org.restcomm.connect.tts.api.SpeechSynthesizerResponse;
+
+import akka.actor.Actor;
+import akka.actor.ActorRef;
+import akka.actor.Props;
+import akka.actor.ReceiveTimeout;
+import akka.actor.UntypedActorContext;
+import akka.actor.UntypedActorFactory;
+import akka.event.Logging;
+import akka.event.LoggingAdapter;
+import akka.pattern.AskTimeoutException;
+import akka.util.Timeout;
 import scala.concurrent.Await;
 import scala.concurrent.Future;
 import scala.concurrent.duration.Duration;
-
-import javax.servlet.sip.SipServletMessage;
-import javax.servlet.sip.SipServletRequest;
-import javax.servlet.sip.SipServletResponse;
-import javax.servlet.sip.SipSession;
-import java.io.IOException;
-import java.math.BigDecimal;
-import java.net.MalformedURLException;
-import java.net.URI;
-import java.net.URISyntaxException;
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.Currency;
-import java.util.HashMap;
-import java.util.Iterator;
-import java.util.LinkedList;
-import java.util.List;
-import java.util.Map;
-import java.util.concurrent.TimeUnit;
-
-import static akka.pattern.Patterns.ask;
 
 /**
  * @author thomas.quintana@telestax.com (Thomas Quintana)
@@ -228,6 +231,10 @@ public class VoiceInterpreter extends BaseVoiceInterpreter {
 
     // Controls if VI will wait MS response to move to the next verb
     protected boolean msResponsePending;
+
+    private boolean callWaitingForAnswer = false;
+
+    private Tag callWaitingForAnswerPendingTag;
 
     public VoiceInterpreter(VoiceInterpreterParams params) {
         super();
@@ -923,69 +930,80 @@ public class VoiceInterpreter extends BaseVoiceInterpreter {
         if (logger.isDebugEnabled()) {
             logger.debug("Tag received, name: "+verb.name()+", text: "+verb.text());
         }
-        if (playWaitUrlPending) {
-            if (!(Verbs.play.equals(verb.name()) || Verbs.say.equals(verb.name()))) {
-                if (logger.isInfoEnabled()) {
-                    logger.info("Tag for waitUrl is neither Play or Say");
-                }
-                fsm.transition(message, hangingUp);
+
+        // if 200 ok delay is enabled we need to answer only the calls
+        // which are having any further call enabler verbs in their RCML.
+        if(enable200OkDelay && callWaitingForAnswer && Verbs.isThisVerbCallEnabler(verb)){
+            if(logger.isInfoEnabled()) {
+                logger.info("Tag received, but callWaitingForAnswer: will tell call to stop waiting");
             }
-            if (Verbs.say.equals(verb.name())) {
-                fsm.transition(message, checkingCache);
+            callWaitingForAnswerPendingTag = verb;
+            call.tell(new StopWaiting(), self());
+        } else {
+            if (playWaitUrlPending) {
+                if (!(Verbs.play.equals(verb.name()) || Verbs.say.equals(verb.name()))) {
+                    if (logger.isInfoEnabled()) {
+                        logger.info("Tag for waitUrl is neither Play or Say");
+                    }
+                    fsm.transition(message, hangingUp);
+                }
+                if (Verbs.say.equals(verb.name())) {
+                    fsm.transition(message, checkingCache);
+                } else if (Verbs.play.equals(verb.name())) {
+                    fsm.transition(message, caching);
+                }
+                return;
+            }
+            if (CallStateChanged.State.RINGING == callState) {
+                if (Verbs.reject.equals(verb.name())) {
+                    fsm.transition(message, rejecting);
+                } else if (Verbs.pause.equals(verb.name())) {
+                    fsm.transition(message, pausing);
+                } else {
+                    fsm.transition(message, initializingCall);
+                }
+            } else if (Verbs.dial.equals(verb.name())) {
+                action = verb.attribute(GatherAttributes.ATTRIBUTE_ACTION);
+                if (action != null && dialActionExecuted) {
+                    //We have a new Dial verb that contains Dial Action URL again.
+                    //We set dialActionExecuted to false in order to execute Dial Action again
+                    dialActionExecuted = false;
+                }
+                dialRecordAttribute = verb.attribute("record");
+                fsm.transition(message, startDialing);
+            } else if (Verbs.fax.equals(verb.name())) {
+                fsm.transition(message, caching);
             } else if (Verbs.play.equals(verb.name())) {
                 fsm.transition(message, caching);
-            }
-            return;
-        }
-        if (CallStateChanged.State.RINGING == callState) {
-            if (Verbs.reject.equals(verb.name())) {
-                fsm.transition(message, rejecting);
+            } else if (Verbs.say.equals(verb.name())) {
+                // fsm.transition(message, synthesizing);
+                fsm.transition(message, checkingCache);
+            } else if (Verbs.gather.equals(verb.name())) {
+                gatherVerb = verb;
+                fsm.transition(message, processingGatherChildren);
             } else if (Verbs.pause.equals(verb.name())) {
                 fsm.transition(message, pausing);
+            } else if (Verbs.hangup.equals(verb.name())) {
+                if (logger.isInfoEnabled()) {
+                    String msg = String.format("Next verb is Hangup, current state is %s , callInfo state %s", fsm.state(), callInfo.state());
+                    logger.info(msg);
+                }
+                if (is(finishDialing)) {
+                    fsm.transition(message, finished);
+                } else {
+                    fsm.transition(message, hangingUp);
+                }
+            } else if (Verbs.redirect.equals(verb.name())) {
+                fsm.transition(message, redirecting);
+            } else if (Verbs.record.equals(verb.name())) {
+                fsm.transition(message, creatingRecording);
+            } else if (Verbs.sms.equals(verb.name())) {
+                fsm.transition(message, creatingSmsSession);
+            } else if (Verbs.email.equals(verb.name())) {
+                fsm.transition(message, sendingEmail);
             } else {
-                fsm.transition(message, initializingCall);
+                invalidVerb(verb);
             }
-        } else if (Verbs.dial.equals(verb.name())) {
-            action = verb.attribute(GatherAttributes.ATTRIBUTE_ACTION);
-            if (action != null && dialActionExecuted) {
-                //We have a new Dial verb that contains Dial Action URL again.
-                //We set dialActionExecuted to false in order to execute Dial Action again
-                dialActionExecuted = false;
-            }
-            dialRecordAttribute = verb.attribute("record");
-            fsm.transition(message, startDialing);
-        } else if (Verbs.fax.equals(verb.name())) {
-            fsm.transition(message, caching);
-        } else if (Verbs.play.equals(verb.name())) {
-            fsm.transition(message, caching);
-        } else if (Verbs.say.equals(verb.name())) {
-            // fsm.transition(message, synthesizing);
-            fsm.transition(message, checkingCache);
-        } else if (Verbs.gather.equals(verb.name())) {
-            gatherVerb = verb;
-            fsm.transition(message, processingGatherChildren);
-        } else if (Verbs.pause.equals(verb.name())) {
-            fsm.transition(message, pausing);
-        } else if (Verbs.hangup.equals(verb.name())) {
-            if (logger.isInfoEnabled()) {
-                String msg = String.format("Next verb is Hangup, current state is %s , callInfo state %s", fsm.state(), callInfo.state());
-                logger.info(msg);
-            }
-            if (is(finishDialing)) {
-                fsm.transition(message, finished);
-            } else {
-                fsm.transition(message, hangingUp);
-            }
-        } else if (Verbs.redirect.equals(verb.name())) {
-            fsm.transition(message, redirecting);
-        } else if (Verbs.record.equals(verb.name())) {
-            fsm.transition(message, creatingRecording);
-        } else if (Verbs.sms.equals(verb.name())) {
-            fsm.transition(message, creatingSmsSession);
-        } else if (Verbs.email.equals(verb.name())) {
-            fsm.transition(message, sendingEmail);
-        } else {
-            invalidVerb(verb);
         }
     }
 
@@ -1340,6 +1358,9 @@ public class VoiceInterpreter extends BaseVoiceInterpreter {
                 break;
             case WAIT_FOR_ANSWER:
             case IN_PROGRESS:
+                if(call!=null && (call == sender) && event.state().equals(CallStateChanged.State.WAIT_FOR_ANSWER)){
+                    callWaitingForAnswer  = true;
+                }
                 if (is(initializingCall) || is(rejecting)) {
                     if (parser != null) {
                         //This is an inbound call
@@ -1365,6 +1386,12 @@ public class VoiceInterpreter extends BaseVoiceInterpreter {
                         final GetNextVerb next = new GetNextVerb();
                         parser.tell(next, self());
                     }
+                } else if (enable200OkDelay && sender.equals(call) && event.state().equals(CallStateChanged.State.IN_PROGRESS) && callWaitingForAnswerPendingTag != null) {
+                    if (logger.isInfoEnabled()) {
+                        logger.info("Waiting call is inProgress we can proceed to the pending tag execution");
+                    }
+                    callWaitingForAnswer = false;
+                    onTagMessage(callWaitingForAnswerPendingTag);
                 }
                 // Update the storage for conferencing.
                 if (callRecord != null && !is(initializingCall) && !is(rejecting)) {
