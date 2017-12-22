@@ -156,7 +156,7 @@ rcMod.controller('DashboardCtrl', function ($scope, $resource, $rootScope, RComm
         yDomain: [0, 100]
       },
       tooltipContent: function (key, x, y, e, graph) {
-        return '<h3 class="text-center" style="font-size: 1.2em;"><strong>' + e.point[0] + '</strong></h3>' +
+        return '<h3 class="text-center"><strong>' + e.point[0] + '</strong></h3>' +
           '<p>' +  y + ' ' + key.substr(0, key.indexOf('(')) + '</p>';
       },
     }
@@ -191,7 +191,7 @@ rcMod.controller('DashboardCtrl', function ($scope, $resource, $rootScope, RComm
         }
       },
       tooltipContent: function (key, x, y, e, graph) {
-        return '<h3 class="text-center" style="font-size: 1.2em;"><strong>' + e.point[0] + '</strong></h3>' +
+        return '<h3 class="text-center"><strong>' + e.point[0] + '</strong></h3>' +
           '<p>' +  y + ' ' + key + '</p>';
       }
     }

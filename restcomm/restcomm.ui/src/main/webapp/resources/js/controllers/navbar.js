@@ -43,17 +43,6 @@ rcMod.controller('UserMenuCtrl', function($scope, $http, $resource, $rootScope, 
   }
   getAccountList();
 
-  // add account -------------------------------------------------------------
-
-  $scope.showAboutModal = function () {
-    $uibModal.open({
-      controller: AboutModalCtrl,
-      scope: $scope,
-      windowClass: 'temp-modal-lg',
-      templateUrl: 'modules/modals/modal-about.html'
-    });
-  };
-
 });
 
 rcMod.controller('SubAccountsCtrl', function($scope, $resource, $stateParams, $uibModal, RCommAccounts,Notifications) {
@@ -249,40 +238,3 @@ rcMod.controller('ProfileCtrl', function($scope, $resource, $stateParams, Sessio
     });
   }
 });
-
-// Register Account Modal
-
-var AboutModalCtrl = function($scope, $uibModalInstance, RCommJMX, RCVersion) {
-
-  $scope.Math = window.Math;
-
-  $scope.getData = function() {
-    $scope.version = RCVersion.get({
-      accountSid : $scope.sid
-    }, function(data) {
-      if (data) {
-        var version = $scope.version;
-        var pattern = /(\d{4})(\d{2})(\d{2})(\d{2})(\d{2})/;
-        $scope.releaseDate = new Date(data.Date.replace(pattern,
-          '$1-$2-$3 $4:$5'));
-      }
-
-    }, function() {
-    });
-    $scope.info = RCommJMX.get({
-      path : 'java.lang:type=*'
-    }, function(data) {
-      $scope.OS = data.value['java.lang:type=OperatingSystem'];
-      $scope.JVM = data.value['java.lang:type=Runtime'];
-      $scope.Memory = data.value['java.lang:type=Memory'];
-      $scope.Threads = data.value['java.lang:type=Threading'];
-    }, function() {
-    });
-  };
-
-  $scope.cancel = function() {
-    $uibModalInstance.dismiss('cancel');
-  };
-
-  $scope.getData();
-};

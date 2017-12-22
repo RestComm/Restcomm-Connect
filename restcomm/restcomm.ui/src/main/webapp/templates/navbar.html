@@ -7,7 +7,7 @@
 <div class="logo-container-inside container-fluid" ng-if="!!loggedAccount" ng-controller="UserMenuCtrl">
     <div class="row ">
         <div class="col-md-6 col-sm-6 logo-inside">
-            <a ng-href="#/dashboard"><img src="resources/img/v2/restcomm-console-inside.svg"></a>
+            <a ng-href="#/dashboard"></a>
         </div>
         <div class="col-md-6 col-sm-6 user-menu">
             <ul class="pull-right">
@@ -30,11 +30,6 @@
             <span ng-class="{'active': location.indexOf('/applications') === 0}">
                 <a ng-href="#/applications">Applications</a>
             </span>
-            <!--
-            <span ng-class="{'active': location.indexOf('/dashboard') === 0}">
-                <a ng-href="#/dashboard">Dashboard</a>
-            </span>
-            -->
             <span ng-class="{'active': (location.indexOf('/numbers/incoming') === 0 || location.indexOf('/numbers/register-incoming') === 0)}">
                 <a ng-href="#/numbers/incoming">Numbers</a>
             </span>
@@ -47,16 +42,15 @@
         </div>
         <span class="primary-tabs-mobile">
             <a ng-click="$root.mobileMenu = !$root.mobileMenu">
-                <i class="fa fa-bars" style="font-size: 2em; margin: 5px 15px;"></i>
+                <i class="fa fa-bars"></i>
             </a>
-            <span style="float: right; margin-right: 10px; margin-top: 9px;">{{ friendlyName }}</span>
+            <span>{{ friendlyName }}</span>
         </span>
     </div>
 
     <div class="mobile-menu" ng-show="$root.mobileMenu">
         <ul class="nav">
             <li><a ng-href="#/applications" ng-click="$root.mobileMenu = false">Applications</a></li>
-            <!--<li><a ng-href="#/dashboard" ng-click="$root.mobileMenu = false">Dashboard</a></li>-->
             <li><a ng-href="#/numbers/incoming" ng-click="$root.mobileMenu = false">Numbers</a></li>
             <li><a ng-href="#/numbers/clients" ng-click="$root.mobileMenu = false">Clients</a></li>
             <li><a ng-href="#/logs" ng-click="$root.mobileMenu = false">Logs</a></li>
