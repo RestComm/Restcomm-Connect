@@ -384,6 +384,9 @@ public final class SmsSession extends RestcommUntypedActor {
                     sms.setHeader(header.getKey(), header.getValue());
                 }
             }
+            sms.addHeader("X-RestComm-Type", "sms");
+            sms.addHeader("X-RestComm-SmsType", "SIP");
+            sms.addHeader("X-RestComm-AccountSid", toClient.getAccountSid().toString());
             sms.send();
         } catch (final Exception exception) {
             // Notify the observers.
