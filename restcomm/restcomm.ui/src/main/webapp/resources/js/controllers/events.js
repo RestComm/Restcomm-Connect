@@ -1,6 +1,6 @@
 'use strict';
 
-angular.module('rcApp').controller('EventsCtrl', function ($rootScope, rappService, $state, Notifications, urlStateTracker, $location) {
+angular.module('rcApp').controller('EventsCtrl', function ($rootScope, $state, Notifications, urlStateTracker, $location) {
 
 	$rootScope.$on('$stateChangeStart', function(event, toState, toParams, fromState, fromParams, options){
 	    //console.log("switching states: " + fromState.name + " -> " + toState.name);
