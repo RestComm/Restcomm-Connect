@@ -28,7 +28,7 @@
             <div class="row">
                 <div class="col-md-2 col-sm-2 col-xs-12 account-field-title">Auth Token</div>
                 <div class="col-md-6 col-sm-4 col-xs-12 account-field-value">
-                    <img src="resources/img/v2/d-r-pass-visible.png" class="auth-token-toggle" ng-click="authTokenType = (authTokenType === 'password' ? 'text' : 'password')">
+                    <i class="fa fa-eye{{authTokenType == 'password' ? '-slash' : ''}} auth-token-toggle" ng-click="authTokenType = (authTokenType === 'password' ? 'text' : 'password')"></i>
                     <input type="{{authTokenType}}" class="account-sid-auth-token-input" value="{{ urlAccount.auth_token }}" readonly ng-init="authTokenType = 'password'" ng-click="authTokenType = 'text'" uib-tooltip="Click to view" tooltip-enable="authTokenType === 'password'">
                 </div>
             </div>
@@ -53,7 +53,7 @@
             <div class="row">
                 <div class="col-md-2 col-sm-2 col-xs-12 account-field-title"><strong>Password</strong></div>
                 <div class="col-md-4 col-sm-4 col-xs-12 account-field-value">
-                    <div ng-show="newPassword" class="password-strength" ng-password-strength="newPassword" strength="pwdStrength" css-mode="bootstrap" inner-class="progress-bar" inner-class-prefix="progress-bar-" style="padding: inherit;">
+                    <div ng-show="newPassword" class="password-strength" ng-password-strength="newPassword" strength="pwdStrength" css-mode="bootstrap" inner-class="progress-bar" inner-class-prefix="progress-bar-">
                         <uib-progressbar value="pwdStrength"></uib-progressbar>
                     </div>
                     <input id="newPassword" name="newPassword" type="password" class="form-control" ng-class="{'password-transparent' : newPassword}" placeholder="New Password" ng-model="newPassword" />

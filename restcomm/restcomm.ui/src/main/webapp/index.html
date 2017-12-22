@@ -13,117 +13,7 @@
         <link rel="stylesheet" href="lib/world-flags/stylesheets/flags16.css" />
         <link rel="stylesheet" href="lib/nvd3/nv.d3.css">
         <link rel="stylesheet" href="lib/ui-carousel/ui-carousel.css">
-        <link rel="stylesheet" href="resources/css/restcomm.css" />
-        <link rel="stylesheet" href="resources/css/datepicker.css" />
         <link rel="stylesheet" href="resources/css/dashboard.css" />
-        <link rel="stylesheet" type="text/css" href="https://fonts.googleapis.com/css?family=Lato:100italic,100,300italic,300,400italic,400,700italic,700,900italic,900">
-        <style type="text/css">
-
-            .sidebar-nav {
-                padding: 9px 0;
-            }
-
-                /* Sticky footer styles
-                -------------------------------------------------- */
-
-            html {
-                position: relative;
-                min-height: 100%;
-            }
-            body {
-                /* Margin bottom by footer height */
-                margin-bottom: 40px;
-            }
-
-            @media(max-width:768px) {
-                body {
-                    /* Margin bottom by footer height */
-                    margin-bottom: 40px;
-                }
-            }
-
-                /* Wrapper for page content to push down footer */
-            #wrap {
-                min-height: 100%;
-                height: auto !important;
-                height: 100%;
-                /* Negative indent footer by it's height */
-                /* margin: 0 auto -70px; */
-            }
-
-                /* Set the fixed height of the footer here */
-            #footer {
-                position: absolute;
-                bottom: 0;
-                width: 100%;
-
-                height: 40px;
-                box-shadow: 1px -2px 1px rgba(219,219,219,1);
-                background: #eeeeee;
-            }
-
-            @media(max-width:768px) {
-                #footer {
-                    height: 40px;
-                }
-            }
-
-                /* Custom page CSS
-                -------------------------------------------------- */
-                /* Not required for template or sticky footer method. */
-
-            .container {
-                width: auto;
-                max-width: 960px;
-            }
-
-            #wrap > .container-fluid {
-                padding-top: 60px;
-            }
-            #wrap .container {
-                padding-top: 60px;
-            }
-            .container .credit {
-                margin: 20px 0;
-            }
-
-                /* Lastly, apply responsive CSS fixes as necessary */
-            @media (max-width: 767px) {
-/*
-                #footer {
-                    margin-left: -20px;
-                    margin-right: -20px;
-                    padding-left: 20px;
-                    padding-right: 20px;
-                }
-*/
-                #wrap > .container-fluid {
-                    padding-top: 0px;
-                }
-            }
-
-            @media (max-width: 980px) {
-                /* Enable use of floated navbar text */
-                .navbar-text.pull-right {
-                    float: none;
-                    padding-left: 5px;
-                    padding-right: 5px;
-                }
-                #wrap > .container-fluid {
-                    padding-top: 0px;
-                }
-            }
-
-            #dropdown-list{
-            max-height: 500px;
-            overflow: auto;
-            position: relative;
-            box-shadow:none;
-            }
-
-
-
-        </style>
 
         <!-- Angular does some things with CSS so it's good to load this in the head -->
         <script type="text/javascript" src="lib/jquery/jquery.js"></script>
@@ -162,28 +52,18 @@
         <script type="text/javascript" src="resources/js/controllers/logs-recordings.js"></script>
         <script type="text/javascript" src="resources/js/controllers/logs-transcriptions.js"></script>
         <script type="text/javascript" src="resources/js/controllers/numbers-incoming.js"></script>
-        <script type="text/javascript" src="resources/js/controllers/numbers-outgoing.js"></script>
         <script type="text/javascript" src="resources/js/controllers/numbers-sip-clients.js"></script>
         <script type="text/javascript" src="resources/js/controllers/events.js"></script>
         <script type="text/javascript" src="resources/js/services.js"></script>
         <script type="text/javascript" src="resources/js/filters.js"></script>
         <script type="text/javascript" src="resources/js/directives.js"></script>
 
-        <!-- Restcomm Apps dependencies -->
-        <script type="text/javascript" src="resources/js/restcommApps/Module.js"></script>
-        <script type="text/javascript" src="resources/js/restcommApps/appManager.js"></script>
-        <script type="text/javascript" src="resources/js/restcommApps/appConfig.js"></script>
-        <script type="text/javascript" src="resources/js/restcommApps/services.js"></script>
-
-        <!-- Keycloak -->
-        <!-- <script type="text/javascript" src="lib/keycloak/keycloak.js"></script> -->
-
     </head>
     <body>
         <div id="wrap">
             <div class="notifications-wrapper" data-ng-show="notifications.data.length > 0">
                 <div ng-repeat="notification in notifications.data">
-                    <div class="alert alert-{{notification.type}}" style="padding: 9px; margin-bottom: 0;" ng-click="notifications.remove($index)">
+                    <div class="alert alert-{{notification.type}}" ng-click="notifications.remove($index)">
                         <span ng-show="notification.type == 'success'"><i class="fa fa-check-circle"></i> </span>
                         <span ng-show="notification.type == 'info'"><i class="fa fa-info-circle"></i></span>
                         <span ng-show="notification.type == 'danger'"><i class="fa fa-exclamation-circle"></i></span>
@@ -197,27 +77,25 @@
             <div ui-view></div>
 
             <div id="footer" class="footer" ng-hide="loggedUser">
-                <span class="pull-left">
-                    <a href="https://telestax.com" target="_blank"><img id="telestax-footer" src="resources/img/v2/telestax-footer.png"></a>
-                </span>
+                <a href="https://telestax.com" class="pull-left" target="_blank"></a>
                 <span class="pull-right footer-social-media">
                     <a href="https://www.facebook.com/Telestax" target="_blank">
-                        <img src="resources/img/v2/s-m-facebook.png">
+                        <i class="fa fa-facebook"></i>
                     </a>
                     <a href="https://twitter.com/telestax" target="_blank">
-                        <img src="resources/img/v2/s-m-twitter.png">
+                        <i class="fa fa-twitter"></i>
                     </a>
                     <a href="https://www.linkedin.com/company/telestax" target="_blank">
-                        <img src="resources/img/v2/s-m-linkedin.png">
+                        <i class="fa fa-linkedin-square"></i>
                     </a>
                     <a href="https://plus.google.com/+TeleStax/posts" target="_blank">
-                        <img src="resources/img/v2/s-m-google+.png">
+                        <i class="fa fa-google-plus"></i>
                     </a>
                     <a href="https://www.youtube.com/c/TeleStax" target="_blank">
-                        <img src="resources/img/v2/s-m-youtube.png">
+                        <i class="fa fa-youtube-play"></i>
                     </a>
                 </span>
-                <div class="telestax-rights">
+                <div class="footer-text">
                     <h5>&copy; 2017 Telestax, Inc. All rights reserved</h5>
                 </div>
             </div>

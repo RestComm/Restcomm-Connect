@@ -28,42 +28,6 @@ rcDirectives.directive('passwordMatch', [function () {
   };
 }]);
 
-rcDirectives.directive('rcPageTitle', function() {
-  return {
-    restrict: 'E',
-    scope: {
-      icon: '@',
-      title: '@',
-      subTitle: '@'
-    },
-    templateUrl: 'templates/rc-pagetitle.html'
-  };
-});
-
-rcDirectives.directive('rcNumbersPills', function() {
-  return {
-    restrict: 'E',
-    templateUrl: 'templates/rc-numbers-pills.html'
-  };
-});
-
-rcDirectives.directive('rcLogsPills', function() {
-  return {
-    restrict: 'E',
-    templateUrl: 'templates/rc-logs-pills.html'
-  };
-});
-
-rcDirectives.directive('rcListFilter', function() {
-  return {
-    restrict: 'E',
-    scope: {
-      filter: '='
-    },
-    templateUrl: 'templates/rc-list-filter.html'
-  };
-});
-
 rcDirectives.directive('rcListSort', function ($timeout) {
   return {
     restrict: 'A',
