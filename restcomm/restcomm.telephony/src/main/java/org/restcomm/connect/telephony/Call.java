@@ -782,6 +782,9 @@ public final class Call extends RestcommUntypedActor {
     }
 
     private void addCustomHeaders(SipServletMessage message) {
+        message.addHeader("X-RestComm-Type", "call");
+        if (type != null)
+            message.addHeader("X-RestComm-CallType", type.toString());
         if (apiVersion != null)
             message.addHeader("X-RestComm-ApiVersion", apiVersion);
         if (accountId != null)
@@ -990,7 +993,7 @@ public final class Call extends RestcommUntypedActor {
             if(userAgent!=null){
                 invite.setHeader("User-Agent", userAgent);
             }
-            addCustomHeadersToMap(rcmlHeaders);
+            addCustomHeaders(invite);
             // adding custom headers for SIP Out
             // https://bitbucket.org/telestax/telscale-restcomm/issue/132/implement-twilio-sip-out
             addHeadersToMessage(invite, rcmlHeaders, "X-");
@@ -1026,17 +1029,6 @@ public final class Call extends RestcommUntypedActor {
             final UntypedActorContext context = getContext();
             context.setReceiveTimeout(Duration.create(timeout, TimeUnit.SECONDS));
             executeStatusCallback(CallbackState.INITIATED);
-        }
-
-        /**
-         * addCustomHeadersToMap
-         */
-        private void addCustomHeadersToMap(Map<String, String> headers) {
-            if (apiVersion != null)
-                headers.put("RestComm-ApiVersion", apiVersion);
-            if (accountId != null)
-                headers.put("RestComm-AccountSid", accountId.toString());
-            headers.put("RestComm-CallSid", id.toString());
         }
 
         //TODO: put this in a central place
