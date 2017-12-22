@@ -5,52 +5,22 @@
             <h2 class="templates-title">Template Galery</h2>
         </div>
         <div class="col-md-6 form-inline template-tags">
-            <div class="checkbox"><label><input ng-model="filter.tagVoice" type="checkbox"> Voice</label></div>
-            <div class="checkbox"><label><input ng-model="filter.tagSms" type="checkbox"> SMS</label></div>
-            <div class="checkbox"><label><input ng-model="filter.tagUssd"  type="checkbox"> USSD</label></div>
+            <div class="checkbox"><label><input ng-model="queryTags.tagVoice" type="checkbox"> Voice</label></div>
+            <div class="checkbox"><label><input ng-model="queryTags.tagSms" type="checkbox"> SMS</label></div>
+            <div class="checkbox"><label><input ng-model="queryTags.tagUssd"  type="checkbox"> USSD</label></div>
         </div>
         <div class="col-md-3 template-search">
             <form class="search-form">
                 <img class="search-icon" src="resources/img/v2/search-icon.png">
-                <input name="q" type="text" size="40" placeholder="Search..." ng-model="filter.templateName" uib-tooltip="Search by template name" tooltip-popup-delay="1000">
+                <input name="q" type="text" size="40" placeholder="Search..." ng-model="query.name" uib-tooltip="Search by template name" tooltip-popup-delay="1000">
             </form>
         </div>
     </div>
 
     <div class="row">
-        <div ng-repeat="template in templateList.results" class="col-md-2">
-            <div ng-show="$first" class="template-item">
-                <div class="item-top">
-                    <div class="tag-icons">
-                        <i ng-show="template.tags.indexOf('voice') != -1" class="fa fa-microphone"></i>
-                        <i ng-show="template.tags.indexOf('sms') != -1" class="fa fa-comment"></i>
-                        <i ng-show="template.tags.indexOf('ussd') != -1" class="fa fa-sitemap"></i>
-                    </div>
-                    <div class="template-description">
-                        <i class="fa fa-plus"></i>
-                    </div>
-                </div>
-                <div class="item-bottom">
-                    <div class="fit-to-size">Blank</div>
-                </div>
-            </div>
-
-            <div class="template-item">
-                <div class="item-top">
-                    <div class="tag-icons">
-                        <i ng-show="template.tags.indexOf('voice') != -1" class="fa fa-microphone"></i>
-                        <i ng-show="template.tags.indexOf('sms') != -1" class="fa fa-comment"></i>
-                        <i ng-show="template.tags.indexOf('ussd') != -1" class="fa fa-sitemap"></i>
-                    </div>
-                    <div class="template-description">
-                        <!--<span class="template-icon"><i class="fa fa-microphone"></i></span>-->
-                        <div title="{{template.description}}">{{template.description}}</div>
-                    </div>
-                </div>
-                <div class="item-bottom">
-                    <div class="fit-to-size" title="{{template.name}}">{{template.name}}</div>
-                </div>
-            </div>
+        <application-template template="blankVoiceTemplate" class="col-md-2"></application-template>
+        <div ng-repeat="template in templateList.results | filter:query | tagFilter:queryTags" class="col-md-2">
+            <application-template template="template"></application-template>
         </div>
     </div>
 
