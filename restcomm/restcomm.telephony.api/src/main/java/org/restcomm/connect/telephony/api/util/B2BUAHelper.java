@@ -41,7 +41,8 @@ import javax.servlet.sip.SipServletResponse;
 import javax.servlet.sip.SipSession;
 import javax.servlet.sip.SipURI;
 
-import org.apache.log4j.Logger;
+ import gov.nist.javax.sip.message.SIPRequest;
+ import org.apache.log4j.Logger;
 import org.joda.time.DateTime;
 import org.mobicents.javax.servlet.sip.SipSessionExt;
 import org.restcomm.connect.commons.configuration.RestcommConfiguration;
@@ -164,6 +165,7 @@ import org.restcomm.connect.telephony.api.CallStateChanged;
                      ((SipSessionExt) outRequest.getSession()).setBypassLoadBalancer(true);
                      ((SipSessionExt) outRequest.getSession()).setBypassProxy(true);
                  }
+                 addCustomHeaders(outRequest, client);
                  outRequest.send();
                  outRequest.getSession().setAttribute(FROM_INET_URI, from);
 
@@ -302,6 +304,7 @@ import org.restcomm.connect.telephony.api.CallStateChanged;
                      ((SipSessionExt) outRequest.getSession()).setBypassProxy(true);
                  }
              }
+             addCustomHeaders(outRequest, fromClient);
              outRequest.send();
              Address originalFromAddress = request.getFrom();
              SipURI originalFromUri = (SipURI) originalFromAddress.getURI();
@@ -364,6 +367,16 @@ import org.restcomm.connect.telephony.api.CallStateChanged;
              }
          }
          return false;
+     }
+
+     private static void addCustomHeaders(SipServletRequest request, Client fromClient) {
+         if (request.getMethod().equals(SIPRequest.INVITE)) {
+             request.addHeader("X-RestComm-Type", "call");
+             request.addHeader("X-RestComm-CallType", "P2P");
+         } else if (request.getMethod().equals(SIPRequest.MESSAGE)) {
+             request.addHeader("X-RestComm-Type", "sms");
+         }
+         request.addHeader("X-RestComm-AccountSid", fromClient.getAccountSid().toString());
      }
 
      // Issue 308: https://telestax.atlassian.net/browse/RESTCOMM-308
