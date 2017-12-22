@@ -369,14 +369,15 @@ import org.restcomm.connect.telephony.api.CallStateChanged;
          return false;
      }
 
-     private static void addCustomHeaders(SipServletRequest request, Client fromClient) {
+     private static void addCustomHeaders(SipServletRequest request, Client client) {
          if (request.getMethod().equals(SIPRequest.INVITE)) {
              request.addHeader("X-RestComm-Type", "call");
              request.addHeader("X-RestComm-CallType", "P2P");
          } else if (request.getMethod().equals(SIPRequest.MESSAGE)) {
              request.addHeader("X-RestComm-Type", "sms");
+             request.addHeader("X-RestComm-SmsType", "SIP");
          }
-         request.addHeader("X-RestComm-AccountSid", fromClient.getAccountSid().toString());
+         request.addHeader("X-RestComm-AccountSid", client.getAccountSid().toString());
      }
 
      // Issue 308: https://telestax.atlassian.net/browse/RESTCOMM-308
