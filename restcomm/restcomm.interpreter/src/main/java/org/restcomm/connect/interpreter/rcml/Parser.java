@@ -44,7 +44,7 @@ import static javax.xml.stream.XMLStreamConstants.*;
 /**
  * @author quintana.thomas@gmail.com (Thomas Quintana)
  */
-public final class Parser extends RestcommUntypedActor {
+public class Parser extends RestcommUntypedActor {
     private static Logger logger = Logger.getLogger(Parser.class);
     private Tag document;
     private Iterator<Tag> iterator;

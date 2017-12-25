@@ -28,6 +28,7 @@ import org.restcomm.connect.commons.annotations.FeatureExpTests;
 import org.restcomm.connect.testsuite.http.RestcommCallsTool;
 
 import javax.sip.Dialog;
+import javax.sip.DialogState;
 import javax.sip.SipException;
 import javax.sip.address.SipURI;
 import javax.sip.header.FromHeader;
@@ -55,9 +56,8 @@ import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertTrue;
 import org.junit.experimental.categories.Category;
 import org.restcomm.connect.commons.annotations.ParallelClassTests;
-import org.restcomm.connect.commons.annotations.WithInMinsTests;
-import org.restcomm.connect.testsuite.NetworkPortAssigner;
 import org.restcomm.connect.commons.annotations.UnstableTests;
+import org.restcomm.connect.testsuite.NetworkPortAssigner;
 import org.restcomm.connect.testsuite.WebArchiveUtil;
 
 /**
@@ -91,7 +91,7 @@ public class TestDialVerbPartTwo {
     @Rule
     public WireMockRule wireMockRule = new WireMockRule(mockPort); // No-args constructor defaults to port 8080
     private String dialClientWithRecordingRcml = "<Response><Dial timeLimit=\"10\" timeout=\"10\" record=\"true\" action=\"http://127.0.0.1:" + mockPort + "/action\" method=\"GET\"><Client>alice</Client></Dial></Response>";
-    private String dialConferenceWithDialActionRcml = "<Response><Dial action=\"http://127.0.0.1:" + mockPort + "/action\" method=\"GET\"><Conference>test</Conference></Dial></Response>";
+    private String dialConferenceWithDialActionRcml = "<Response><Dial action=\"http://127.0.0.1:" + mockPort + "/action\" method=\"GET\"><Conference>test9876</Conference></Dial></Response>";
     private String dialClientWithRecordingRcml2 = "<Response><Dial timeLimit=\"10\" timeout=\"10\" record=\"true\" action=\"http://127.0.0.1:" + mockPort + "/action&sticky_numToDial=00306986971731\" method=\"GET\"><Client>alice</Client></Dial></Response>";
     private String dialRecordWithActionRcml = "<Response><Record action=\"http://127.0.0.1:" + mockPort + "/recordAction\" method=\"GET\" finishOnKey=\"*\" maxLength=\"10\" playBeep=\"true\"/></Response>";
     private String dialClientWithActionRcml = "<Response><Dial action=\"http://127.0.0.1:" + mockPort + "/action\" method=\"GET\"><Client>alice</Client></Dial></Response>";
@@ -166,20 +166,23 @@ public class TestDialVerbPartTwo {
     @After
     public void after() throws Exception {
         if (bobPhone != null) {
+            bobPhone.unregister(bobContact, 3600);
             bobPhone.dispose();
         }
         if (bobSipStack != null) {
             bobSipStack.dispose();
         }
 
+        if (alicePhone != null) {
+            alicePhone.unregister(aliceContact, 3600);
+            alicePhone.dispose();
+        }
         if (aliceSipStack != null) {
             aliceSipStack.dispose();
         }
-        if (alicePhone != null) {
-            alicePhone.dispose();
-        }
 
         if (georgePhone != null) {
+            georgePhone.unregister(georgeContact, 3600);
             georgePhone.dispose();
         }
         if (georgeSipStack != null) {
@@ -503,17 +506,20 @@ public class TestDialVerbPartTwo {
         assertTrue(bobCall.waitForAnswer(5000));
     }
 
-    private String dialConferenceNoDialActionSendSMSRcml = "<Response><Dial><Conference>test</Conference></Dial>" +
+    private String dialConferenceNoDialActionSendSMSRcml = "<Response><Dial><Conference>test12345</Conference></Dial>" +
             "<Sms to=\"bob\" from=\"+12223334499\">Hello World!</Sms></Response>";
     private String dialConferenceNoDialActionRcml = "<Response><Dial><Conference>test</Conference></Dial></Response>";
     @Test
-    @Category({UnstableTests.class, FeatureAltTests.class})
+    @Category({FeatureAltTests.class})
     public synchronized void testDialConferenceNoDialAction_SendSms() throws InterruptedException, ParseException {
+//        wireMockRule.resetMappings();
         stubFor(get(urlPathEqualTo("/1111"))
                 .willReturn(aResponse()
                         .withStatus(200)
                         .withHeader("Content-Type", "text/xml")
-                        .withBody(dialConferenceNoDialActionSendSMSRcml)));
+//                        .withBody(dialConferenceNoDialActionSendSMSRcml)));
+                        .withBody("<Response><Dial><Conference>test12345</Conference></Dial>" +
+                                "<Sms to=\"bob\" from=\"+12223334499\">Hello World!</Sms></Response>")));
 
         // Phone2 register as alice
         SipURI uri = aliceSipStack.getAddressFactory().createSipURI(null, restcommContact);
@@ -543,6 +549,7 @@ public class TestDialVerbPartTwo {
         assertTrue(!(bobCall.getLastReceivedResponse().getStatusCode() >= 400));
 
         //Now bob is connected to the conference room
+        bobCall.listenForMessage();
 
         Thread.sleep(7000);
 
@@ -550,8 +557,8 @@ public class TestDialVerbPartTwo {
         bobCall.disconnect();
         assertTrue(bobCall.waitForAnswer(5000));
 
-        bobCall.listenForMessage();
-        assertTrue(bobCall.waitForMessage(60 * 1000));
+
+        assertTrue(bobCall.waitForMessage(90 * 1000));
         assertTrue(bobCall.sendMessageResponse(200, "OK-Message Received", 3600));
         Request messageReceived = bobCall.getLastReceivedMessageRequest();
         assertTrue(new String(messageReceived.getRawContent()).equalsIgnoreCase("Hello World!"));
@@ -706,7 +713,7 @@ public class TestDialVerbPartTwo {
     }
 
     @Test //Test case for issue 320
-    @Category({UnstableTests.class,FeatureAltTests.class})
+    @Category({FeatureAltTests.class})
     public synchronized void testDialClientAliceWithRecordAndStatusCallbackForAppForThreeCalls() throws InterruptedException, ParseException, MalformedURLException {
         stubFor(get(urlPathEqualTo("/1111"))
                 .willReturn(aResponse()
@@ -726,11 +733,13 @@ public class TestDialVerbPartTwo {
 
         // Phone2 register as alice
         SipURI uri = aliceSipStack.getAddressFactory().createSipURI(null, restcommContact);
-        assertTrue(alicePhone.register(uri, "alice", "1234", aliceContact, 3600, 3600));
+        assertTrue(alicePhone.register(uri, "alice", "1234", aliceContact, 600, 600));
 
         // Prepare second phone to receive call
         SipCall aliceCall = alicePhone.createSipCall();
+        alicePhone.setLoopback(true);
         aliceCall.listenForIncomingCall();
+
 
         // Create outgoing call with first phone
         final SipCall bobCall = bobPhone.createSipCall();
@@ -838,11 +847,13 @@ public class TestDialVerbPartTwo {
 
         Thread.sleep(3000);
 
+        assertTrue(alicePhone.register(uri, "alice", "1234", aliceContact, 600, 600));
+
         recordings = RestcommCallsTool.getInstance().getRecordings(deploymentUrl.toString(), adminAccountSid, adminAuthToken);
         assertNotNull(recordings);
         assertTrue(recordings.size() >= 2);
         double duration = recordings.get(1).getAsJsonObject().get("duration").getAsDouble();
-        assertEquals(3.0, duration, 0.5);
+        assertEquals(7.0, duration, 1.0);
         assertNotNull(((JsonObject)recordings.get(1)).get("uri").getAsString());
 
         /*
@@ -900,7 +911,7 @@ public class TestDialVerbPartTwo {
         recordings = RestcommCallsTool.getInstance().getRecordings(deploymentUrl.toString(), adminAccountSid, adminAuthToken);
         assertNotNull(recordings);
         assertTrue(recordings.size() >= 3);
-        assertTrue("7.0".equalsIgnoreCase(((JsonObject)recordings.get(2)).get("duration").getAsString()));
+        assertEquals(7.0, ((JsonObject)recordings.get(2)).get("duration").getAsDouble(), 1.0);
         assertNotNull(((JsonObject)recordings.get(2)).get("uri").getAsString());
 
         logger.info("About to check the Status Callback Requests");
@@ -1002,7 +1013,6 @@ public class TestDialVerbPartTwo {
     }
 
     @Test
-    @Category(UnstableTests.class)
     //Test case for github issue 859
     public synchronized void testRecordWithActionAndStatusCallbackForAppWithBobSendsFinishKey() throws InterruptedException, ParseException {
         stubFor(get(urlPathEqualTo("/1111"))
@@ -1048,10 +1058,14 @@ public class TestDialVerbPartTwo {
         bobCall.sendInviteOkAck();
         assertTrue(!(bobCall.getLastReceivedResponse().getStatusCode() >= 400));
 
+        bobCall.listenForDisconnect();
+
         //Here we have Restcomm voice mail app for 10 sec
         Thread.sleep(5000);
 
         Dialog dialog = bobCall.getDialog();
+        assertNotNull(dialog);
+        assertEquals(DialogState.CONFIRMED, dialog.getState());
         String infoBody = "\n" +
                 "Signal=*\n" +
                 "Duration=28";
@@ -1070,7 +1084,7 @@ public class TestDialVerbPartTwo {
         SipTransaction infoTransaction = bobPhone.sendRequestWithTransaction(info, false, dialog);
         assertNotNull(infoTransaction);
 
-        bobCall.listenForDisconnect();
+
         assertTrue(bobCall.waitForDisconnect(5000));
         assertTrue(bobCall.respondToDisconnect());
 
@@ -1537,7 +1551,6 @@ public class TestDialVerbPartTwo {
 
     private String hangupActionRcml = "<Response><Hangup /></Response>";
 
-    @Category(UnstableTests.class)
     @Test // (customised from testDialClientAliceWithRecordAndStatusCallbackForApp)
     public synchronized void testDialClientAliceWithActionAndStatusCallbackForApp() throws InterruptedException, ParseException {
         stubFor(get(urlPathEqualTo("/1111"))
