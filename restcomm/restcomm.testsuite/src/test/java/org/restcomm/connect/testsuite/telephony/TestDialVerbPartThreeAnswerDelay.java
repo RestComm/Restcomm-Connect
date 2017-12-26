@@ -18,6 +18,7 @@ import org.junit.Rule;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.restcomm.connect.commons.Version;
+import org.restcomm.connect.commons.annotations.UnstableTests;
 import org.restcomm.connect.testsuite.telephony.security.DigestServerAuthenticationMethod;
 
 import javax.sip.address.SipURI;
@@ -160,6 +161,7 @@ public class TestDialVerbPartThreeAnswerDelay {
 
     @Test
 // Non regression test for https://bitbucket.org/telestax/telscale-restcomm/issue/132/implement-twilio-sip-out
+    @Category(UnstableTests.class)
     public synchronized void testDialSip() throws InterruptedException, ParseException {
         stubFor(get(urlPathEqualTo("/1111"))
                 .willReturn(aResponse()

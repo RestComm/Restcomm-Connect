@@ -669,9 +669,6 @@ public abstract class BaseVoiceInterpreter extends RestcommUntypedActor {
     }
 
     ActorRef parser(final String xml) {
-        if(logger.isDebugEnabled()) {
-            logger.debug("About to create Parser for RCML "+xml);
-        }
         final Props props = new Props(new UntypedActorFactory() {
                 private static final long serialVersionUID = 1L;
 
