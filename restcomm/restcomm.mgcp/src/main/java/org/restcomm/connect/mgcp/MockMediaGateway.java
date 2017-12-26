@@ -365,12 +365,10 @@ public class MockMediaGateway extends RestcommUntypedActor {
 
     private void onReceiveTimeout (Object message) {
         if (logger.isInfoEnabled()) {
-            logger.info("MockMediaGatewat - Max recording length reached");
+            logger.info("Max recording length reached");
         }
         stopRecording();
         notify(recordingRqnt, recordingRqntSender);
-        getContext().setReceiveTimeout(Duration.Undefined());
-
     }
 
     private void writeRecording (File srcWaveFile, File outWaveFile, int duration) {
