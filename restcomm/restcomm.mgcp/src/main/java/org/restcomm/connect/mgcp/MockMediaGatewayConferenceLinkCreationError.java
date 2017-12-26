@@ -32,13 +32,13 @@ public final class MockMediaGatewayConferenceLinkCreationError extends MockMedia
     @Override
     protected void createConnection (final Object message, final ActorRef sender) {
         final jain.protocol.ip.mgcp.message.CreateConnection crcx = (jain.protocol.ip.mgcp.message.CreateConnection) message;
-        if(logger.isDebugEnabled())
-            logger.debug(crcx.toString());
+        if(logger.isInfoEnabled())
+            logger.info("createConnection: " +crcx.toString());
         // check if its a conference and call link request
-        if(crcx.getSecondEndpointIdentifier() != null && crcx.getSecondEndpointIdentifier().getLocalEndpointName() != null){
+        if(crcx.getSecondEndpointIdentifier() != null && crcx.getSecondEndpointIdentifier().getLocalEndpointName() != null && crcx.getSecondEndpointIdentifier().getLocalEndpointName().contains("cnf")){
             // if yes then fail this connection request
-            if(logger.isDebugEnabled())
-                logger.debug("got conference and call link request, will fail it! with error code Endpoint_Unknown");
+            if(logger.isInfoEnabled())
+                logger.info("got conference and call link request, will fail it! with error code Endpoint_Unknown");
             StringBuilder buffer = new StringBuilder();
             buffer.append(connectionIdPool.get());
             ConnectionIdentifier connId = new ConnectionIdentifier(buffer.toString());
