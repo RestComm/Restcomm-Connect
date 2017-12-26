@@ -109,7 +109,7 @@ public class MockMediaGateway extends RestcommUntypedActor {
     private RevolvingCounter requestIdPool;
     private RevolvingCounter sessionIdPool;
     private RevolvingCounter transactionIdPool;
-    private RevolvingCounter connectionIdPool;
+    protected RevolvingCounter connectionIdPool;
     private RevolvingCounter endpointIdPool;
 
     private Map<String, String> connEndpointMap;

@@ -23,6 +23,7 @@ import akka.actor.ActorRef;
 import akka.event.Logging;
 import akka.event.LoggingAdapter;
 import jain.protocol.ip.mgcp.message.CreateConnectionResponse;
+import jain.protocol.ip.mgcp.message.parms.ConnectionIdentifier;
 import jain.protocol.ip.mgcp.message.parms.ReturnCode;
 
 public final class MockMediaGatewayConferenceLinkCreationError extends MockMediaGateway {
@@ -38,7 +39,10 @@ public final class MockMediaGatewayConferenceLinkCreationError extends MockMedia
             // if yes then fail this connection request
             if(logger.isDebugEnabled())
                 logger.debug("got conference and call link request, will fail it! with error code Endpoint_Unknown");
-            sender.tell(new CreateConnectionResponse(self(), ReturnCode.Endpoint_Unknown, null), self());
+            StringBuilder buffer = new StringBuilder();
+            buffer.append(connectionIdPool.get());
+            ConnectionIdentifier connId = new ConnectionIdentifier(buffer.toString());
+            sender.tell(new CreateConnectionResponse(self(), ReturnCode.Endpoint_Unknown, connId), self());
         }else {
             // if not then let daddy proceed with existing mocked mechanism.
             super.createConnection(message, sender);
