@@ -41,6 +41,7 @@ import com.google.gson.JsonObject;
 
 /**
  * @author mariafarooq
+ * https://telestax.atlassian.net/browse/RESTCOMM-1343
  */
 @RunWith(Arquillian.class)
 @Category(value={SequentialClassTests.class})
@@ -117,7 +118,7 @@ public class DialConferenceConnectionFailureTest {
     private final String confRoom2 = "confRoom2";
     private String dialConfernceRcml = "<Response><Dial><Conference>"+confRoom2+"</Conference></Dial></Response>";
     @Test
-    public synchronized void testDialConferenceClientsDisconnect() throws InterruptedException {
+    public synchronized void testDialConferenceConnectionFailureCallCleanupTest() throws InterruptedException {
         stubFor(get(urlPathEqualTo("/1111"))
                 .willReturn(aResponse()
                         .withStatus(200)
@@ -169,7 +170,7 @@ public class DialConferenceConnectionFailureTest {
         assertEquals(1, RestcommConferenceTool.getInstance().getConferencesSize(deploymentUrl.toString(), adminAccountSid, adminAuthToken));
         int numOfParticipants = RestcommConferenceTool.getInstance().getParticipantsSize(deploymentUrl.toString(), adminAccountSid, adminAuthToken, confRoom2);
         logger.info("Number of participants: "+numOfParticipants);
-        assertEquals(1, numOfParticipants);
+        assertEquals(2, numOfParticipants);
 
         JsonObject metrics = MonitoringServiceTool.getInstance().getMetrics(deploymentUrl.toString(),adminAccountSid, adminAuthToken);
         Map<String, Integer> mgcpResources = MonitoringServiceTool.getInstance().getMgcpResources(metrics);
@@ -187,14 +188,10 @@ public class DialConferenceConnectionFailureTest {
         Thread.sleep(5000);
         liveCalls = MonitoringServiceTool.getInstance().getStatistics(deploymentUrl.toString(), adminAccountSid, adminAuthToken);
         liveCallsArraySize = MonitoringServiceTool.getInstance().getLiveCallsArraySize(deploymentUrl.toString(), adminAccountSid, adminAuthToken);
-        logger.info("&&&&& LiveCalls: "+liveCalls);
-        logger.info("&&&&& LiveCallsArraySize: "+liveCallsArraySize);
         assertEquals(0, liveCalls);
         assertEquals(0, liveCallsArraySize);
         assertEquals(1, RestcommConferenceTool.getInstance().getConferencesSize(deploymentUrl.toString(), adminAccountSid, adminAuthToken));
-        numOfParticipants = RestcommConferenceTool.getInstance().getParticipantsSize(deploymentUrl.toString(), adminAccountSid, adminAuthToken, confRoom2);
-        logger.info("Number of participants: "+numOfParticipants);
-        assertEquals(0, numOfParticipants);
+        assertEquals(0, RestcommConferenceTool.getInstance().getParticipantsSize(deploymentUrl.toString(), adminAccountSid, adminAuthToken, confRoom2));
 
         metrics = MonitoringServiceTool.getInstance().getMetrics(deploymentUrl.toString(),adminAccountSid, adminAuthToken);
         mgcpResources = MonitoringServiceTool.getInstance().getMgcpResources(metrics);
