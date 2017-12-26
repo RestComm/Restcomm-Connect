@@ -44,7 +44,9 @@ import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertTrue;
 import org.junit.experimental.categories.Category;
 import org.restcomm.connect.commons.annotations.ParallelClassTests;
+import org.restcomm.connect.commons.annotations.WithInMinsTests;
 import org.restcomm.connect.testsuite.NetworkPortAssigner;
+import org.restcomm.connect.commons.annotations.UnstableTests;
 import org.restcomm.connect.testsuite.WebArchiveUtil;
 
 /**
@@ -166,9 +168,8 @@ public class TestDialVerbPartThree {
 
 
 //Non regression test for https://github.com/Mobicents/RestComm/issues/612
-private final String actionUrlRcmlWithTimeLimit = "<Dial timeout=\"50\" timeLimit=\"5\"><Uri>sip:alice@127.0.0.1:" + alicePort + "</Uri></Dial>";
     @Test
-    @Category({FeatureAltTests.class})
+    @Category({UnstableTests.class, FeatureAltTests.class})
     public synchronized void testRecord_ExecuteRCML_ReturnedFromActionURL() throws InterruptedException, ParseException {
 
         stubFor(get(urlPathEqualTo("/1111"))
@@ -181,11 +182,9 @@ private final String actionUrlRcmlWithTimeLimit = "<Dial timeout=\"50\" timeLimi
                 .willReturn(aResponse()
                         .withStatus(200)
                         .withHeader("Content-Type", "text/xml")
-                        .withBody(actionUrlRcmlWithTimeLimit)));
+                        .withBody(actionUrlRcml)));
 
-        SipURI uri = aliceSipStack.getAddressFactory().createSipURI(null, restcommContact);
-        assertTrue(alicePhone.register(uri, "alice", "1234", aliceContact, 3600, 3600));
-
+        //Prepare Fotini phone to receive a call
         final SipCall aliceCall = alicePhone.createSipCall();
         aliceCall.listenForIncomingCall();
 
@@ -232,7 +231,7 @@ private final String actionUrlRcmlWithTimeLimit = "<Dial timeout=\"50\" timeLimi
 
     //Non regression test for https://github.com/Mobicents/RestComm/issues/612
     @Test
-    @Category({FeatureAltTests.class})
+    @Category({UnstableTests.class, FeatureAltTests.class})
     public synchronized void testRecord_ExecuteRCML_ReturnedFromActionURLWithNullFinishOnKey() throws InterruptedException, ParseException {
 
         stubFor(get(urlPathEqualTo("/1111"))
@@ -245,8 +244,9 @@ private final String actionUrlRcmlWithTimeLimit = "<Dial timeout=\"50\" timeLimi
                 .willReturn(aResponse()
                         .withStatus(200)
                         .withHeader("Content-Type", "text/xml")
-                        .withBody(actionUrlRcmlWithTimeLimit)));
+                        .withBody(actionUrlRcml)));
 
+        //Prepare Fotini phone to receive a call
         final SipCall aliceCall = alicePhone.createSipCall();
         aliceCall.listenForIncomingCall();
 
@@ -272,20 +272,22 @@ private final String actionUrlRcmlWithTimeLimit = "<Dial timeout=\"50\" timeLimi
 
         //At this point bob leaves a voicemail
 
+        //Now Fotini should receive a call
         assertTrue(aliceCall.waitForIncomingCall(30 * 1000));
         assertTrue(aliceCall.sendIncomingCallResponse(100, "Trying-Fotini", 600));
         assertTrue(aliceCall.sendIncomingCallResponse(180, "Ringing-Fotini", 600));
         String receivedBody = new String(aliceCall.getLastReceivedRequest().getRawContent());
         assertTrue(aliceCall.sendIncomingCallResponse(Response.OK, "OK-Fotini", 3600, receivedBody, "application", "sdp", null, null));
         assertTrue(aliceCall.waitForAck(5000));
-
         aliceCall.listenForDisconnect();
 
         Thread.sleep(2000);
 
+        // hangup.
+
         assertTrue(bobCall.disconnect());
 
-        assertTrue(aliceCall.waitForDisconnect(125 * 1000));
+        assertTrue(aliceCall.waitForDisconnect(50 * 1000));
         assertTrue(aliceCall.respondToDisconnect());
     }
 
@@ -337,6 +339,7 @@ private final String actionUrlRcmlWithTimeLimit = "<Dial timeout=\"50\" timeLimi
     }
 
     @Test
+    @Category(UnstableTests.class)
 // Non regression test for https://bitbucket.org/telestax/telscale-restcomm/issue/132/implement-twilio-sip-out
     public synchronized void testDialSip() throws InterruptedException, ParseException {
         stubFor(get(urlPathEqualTo("/1111"))
