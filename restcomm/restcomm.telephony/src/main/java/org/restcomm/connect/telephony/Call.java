@@ -2581,6 +2581,14 @@ public final class Call extends RestcommUntypedActor {
                     fsm.transition(message, busy);
                 } else if (is(failingNoAnswer)) {
                     fsm.transition(message, noAnswer);
+                } else if (is(joining)) {
+                    // https://telestax.atlassian.net/browse/RESTCOMM-1343
+                    // if call was in joining state and we received INACTIVE MS response.
+                    // means: MS failed to bridge the call to the conference.
+                    // call should move to failed state so proper sip response is generated &
+                    // call resources get cleaned up
+                    logger.error("Call failed to join conference, media operation to connect call with conference failed.");
+                    fsm.transition(message, failed);
                 }
                 break;
 
@@ -2642,9 +2650,7 @@ public final class Call extends RestcommUntypedActor {
         if (is(inProgress)) {
             fsm.transition(message, leaving);
         } else {
-            if (logger.isDebugEnabled()) {
-                logger.debug("Received Leave for Call: "+self.path()+", but state is :"+fsm.state().toString());
-            }
+            logger.error("Received Leave for Call: "+self.path()+", but state is :"+fsm.state().toString());
         }
     }
 
