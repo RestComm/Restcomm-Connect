@@ -142,29 +142,9 @@ public class DialConferenceConnectionFailureTest {
         bobCall.sendInviteOkAck();
         assertTrue(!(bobCall.getLastReceivedResponse().getStatusCode() >= 400));
 
-        final SipCall georgeCall = georgePhone.createSipCall();
-        georgeCall.initiateOutgoingCall(georgeContact, dialRestcomm, null, body, "application", "sdp", null, null);
-        assertLastOperationSuccess(georgeCall);
-        assertTrue(georgeCall.waitOutgoingCallResponse(5 * 1000));
-        int responseGeorge = georgeCall.getLastReceivedResponse().getStatusCode();
-        assertTrue(responseGeorge == Response.TRYING || responseGeorge == Response.RINGING);
-
-        if (responseGeorge == Response.TRYING) {
-            assertTrue(georgeCall.waitOutgoingCallResponse(5 * 1000));
-            assertEquals(Response.RINGING, georgeCall.getLastReceivedResponse().getStatusCode());
-        }
-
-        assertTrue(georgeCall.waitOutgoingCallResponse(5 * 1000));
-        assertEquals(Response.OK, georgeCall.getLastReceivedResponse().getStatusCode());
-        georgeCall.sendInviteOkAck();
-        assertTrue(!(georgeCall.getLastReceivedResponse().getStatusCode() >= 400));
-
-        Thread.sleep(2000);
         bobCall.listenForDisconnect();
-        georgeCall.listenForDisconnect();
-
         assertTrue(bobCall.waitForDisconnect(80 * 1000));
-        assertTrue(georgeCall.waitForDisconnect(80 * 1000));
+        Thread.sleep(2000);
 
         int liveCalls = MonitoringServiceTool.getInstance().getStatistics(deploymentUrl.toString(), adminAccountSid, adminAuthToken);
         int liveCallsArraySize = MonitoringServiceTool.getInstance().getLiveCallsArraySize(deploymentUrl.toString(), adminAccountSid, adminAuthToken);
