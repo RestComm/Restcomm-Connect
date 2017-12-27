@@ -109,7 +109,7 @@ public class MockMediaGateway extends RestcommUntypedActor {
     private RevolvingCounter requestIdPool;
     private RevolvingCounter sessionIdPool;
     private RevolvingCounter transactionIdPool;
-    private RevolvingCounter connectionIdPool;
+    protected RevolvingCounter connectionIdPool;
     private RevolvingCounter endpointIdPool;
 
     private Map<String, String> connEndpointMap;
@@ -426,7 +426,7 @@ public class MockMediaGateway extends RestcommUntypedActor {
 
     }
 
-    private void createConnection (final Object message, final ActorRef sender) {
+    protected void createConnection (final Object message, final ActorRef sender) {
         final ActorRef self = self();
         final jain.protocol.ip.mgcp.message.CreateConnection crcx = (jain.protocol.ip.mgcp.message.CreateConnection) message;
         System.out.println(crcx.toString());
