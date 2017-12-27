@@ -144,26 +144,23 @@ public class DialConferenceConnectionFailureTest {
 
         bobCall.listenForDisconnect();
         assertTrue(bobCall.waitForDisconnect(80 * 1000));
-        Thread.sleep(2000);
+
+        Thread.sleep(3000);
 
         int liveCalls = MonitoringServiceTool.getInstance().getStatistics(deploymentUrl.toString(), adminAccountSid, adminAuthToken);
         int liveCallsArraySize = MonitoringServiceTool.getInstance().getLiveCallsArraySize(deploymentUrl.toString(), adminAccountSid, adminAuthToken);
-        logger.info("&&&&& LiveCalls: "+liveCalls);
-        logger.info("&&&&& LiveCallsArraySize: "+liveCallsArraySize);
         assertEquals(0, liveCalls);
         assertEquals(0, liveCallsArraySize);
         assertEquals(1, RestcommConferenceTool.getInstance().getConferencesSize(deploymentUrl.toString(), adminAccountSid, adminAuthToken));
         int numOfParticipants = RestcommConferenceTool.getInstance().getParticipantsSize(deploymentUrl.toString(), adminAccountSid, adminAuthToken, confRoom2);
-        logger.info("Number of participants: "+numOfParticipants);
         assertEquals(0, numOfParticipants);
 
+        logger.info("going to check mgcpResources");
         JsonObject metrics = MonitoringServiceTool.getInstance().getMetrics(deploymentUrl.toString(),adminAccountSid, adminAuthToken);
         Map<String, Integer> mgcpResources = MonitoringServiceTool.getInstance().getMgcpResources(metrics);
-        int mgcpEndpoints = mgcpResources.get("MgcpEndpoints");
-        int mgcpConnections = mgcpResources.get("MgcpConnections");
-
-        assertEquals(0, mgcpEndpoints);
-        assertEquals(0, mgcpConnections);
+        
+        assertEquals(0, (int)mgcpResources.get("MgcpEndpoints"));
+        assertEquals(0, (int)mgcpResources.get("MgcpConnections"));
     }
 
     @Deployment(name = "DialConferenceTest", managed = true, testable = false)
