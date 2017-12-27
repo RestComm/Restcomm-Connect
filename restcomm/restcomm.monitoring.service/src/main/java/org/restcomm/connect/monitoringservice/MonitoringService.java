@@ -207,6 +207,7 @@ public class MonitoringService extends RestcommUntypedActor {
         } else if (MgcpEndpointDeleted.class.equals(klass)) {
             MgcpEndpointDeleted mgcpEndpointDeleted = (MgcpEndpointDeleted)message;
             mgcpEndpointMap.values().removeAll(Collections.singleton(mgcpEndpointDeleted.getEndpoint()));
+            logger.info("MonitoringService: Deleted endpoint: "+mgcpEndpointDeleted.getEndpoint());
             String endpoint = mgcpEndpointDeleted.getEndpoint();
             if (endpoint.contains("ivr")) {
                 mgcpEndpointsIvr.decrementAndGet();

@@ -2595,6 +2595,10 @@ public final class Call extends RestcommUntypedActor {
                     // call should move to failed state so proper sip response is generated &
                     // call resources get cleaned up
                     logger.error("Call failed to join conference, media operation to connect call with conference failed.");
+                    // Let conference know the call exited the room so it does keep waiting for it to complete the join
+                    this.conferencing = false;
+                    this.conference.tell(new Left(self()), self);
+                    this.conference = null;
                     fsm.transition(new Hangup("failed to join conference"), failed);
                 }
                 break;
