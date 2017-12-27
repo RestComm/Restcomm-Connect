@@ -1426,7 +1426,6 @@ public final class Call extends RestcommUntypedActor {
                             }
                             addCustomHeaders(resp);
                             resp.send();
-                        
                         }
                     }
                 } catch (Exception e) {
