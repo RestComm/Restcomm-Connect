@@ -289,7 +289,7 @@
         <dependency>
             <groupId>com.github.tomakehurst</groupId>
             <artifactId>wiremock</artifactId>
-            <version>1.57</version>
+            <version>1.56</version>
             <!-- Include this if you have dependency conflicts for Guava, Jetty, Jackson
             or Apache HTTP Client -->
             <classifier>standalone</classifier>
@@ -505,7 +505,7 @@
                                 every forked JVM/test class-->
                                 <arquillian_http_port>${surefire.forkNumber}509</arquillian_http_port>
                                 <arquillian_sip_port>${surefire.forkNumber}508</arquillian_sip_port>
-                            </systemPropertyVariables>                            
+                            </systemPropertyVariables>
                         </configuration>
                     </plugin>
                 </plugins>

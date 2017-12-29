@@ -186,9 +186,8 @@ public class TestDialVerbPartTwo {
         }
         Thread.sleep(3000);
         wireMockRule.resetRequests();
-        /* these will only work in Java8, but seems unccesary
+        wireMockRule.resetScenarios();
         wireMockRule.resetMappings();
-        wireMockRule.resetScenarios();*/
         Thread.sleep(2000);
     }
 

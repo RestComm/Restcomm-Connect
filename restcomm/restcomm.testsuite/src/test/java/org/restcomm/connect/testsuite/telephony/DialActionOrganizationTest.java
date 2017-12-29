@@ -758,7 +758,7 @@ public class DialActionOrganizationTest {
         logger.info("&&&&& LiveCallsArraySize: "+liveCallsArraySize);
         assertEquals(0, liveCalls);
         assertEquals(0,liveCallsArraySize);
-        
+
 
     }
 
@@ -1050,6 +1050,8 @@ public class DialActionOrganizationTest {
 
         Thread.sleep(1000);
         wireMockRule.resetRequests();
+        wireMockRule.resetScenarios();
+        wireMockRule.resetMappings();
         Thread.sleep(4000);
     }
 
