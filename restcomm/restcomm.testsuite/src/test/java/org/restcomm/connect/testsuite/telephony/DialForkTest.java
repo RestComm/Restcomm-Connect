@@ -228,6 +228,8 @@ public class DialForkTest {
         }
         Thread.sleep(1000);
         wireMockRule.resetRequests();
+        wireMockRule.resetScenarios();
+        wireMockRule.resetMappings();
         Thread.sleep(4000);
     }
 
