@@ -2662,7 +2662,9 @@ public final class Call extends RestcommUntypedActor {
         if (is(inProgress)) {
             fsm.transition(message, leaving);
         } else {
-            logger.error("Received Leave for Call: "+self.path()+", but state is :"+fsm.state().toString());
+            if (logger.isDebugEnabled()) {
+            logger.debug("Received Leave for Call: "+self.path()+", but state is :"+fsm.state().toString());
+            }
         }
     }
 
