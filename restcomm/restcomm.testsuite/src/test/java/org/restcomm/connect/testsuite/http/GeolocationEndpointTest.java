@@ -92,8 +92,6 @@ public class GeolocationEndpointTest {
     @After
     public void after() throws InterruptedException {
         wireMockRule.resetRequests();
-        wireMockRule.resetScenarios();
-        wireMockRule.resetMappings();
         Thread.sleep(1000);
     }
 

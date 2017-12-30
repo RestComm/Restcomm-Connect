@@ -136,8 +136,6 @@ import static org.junit.Assert.assertTrue;
         }
         Thread.sleep(2000);
         wireMockRule.resetRequests();
-        wireMockRule.resetScenarios();
-        wireMockRule.resetMappings();
         Thread.sleep(2000);
     }
 

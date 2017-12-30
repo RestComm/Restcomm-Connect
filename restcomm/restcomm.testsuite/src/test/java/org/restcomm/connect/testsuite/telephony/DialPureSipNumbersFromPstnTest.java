@@ -111,8 +111,9 @@ public class DialPureSipNumbersFromPstnTest {
 
         Thread.sleep(3000);
         wireMockRule.resetRequests();
+        /* these will only work in Java8, but seems unccesary
         wireMockRule.resetMappings();
-        wireMockRule.resetScenarios();
+        wireMockRule.resetScenarios();*/
         Thread.sleep(2000);
     }
 

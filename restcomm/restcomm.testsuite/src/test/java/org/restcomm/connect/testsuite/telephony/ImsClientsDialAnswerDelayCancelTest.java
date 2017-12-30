@@ -176,8 +176,6 @@ public class ImsClientsDialAnswerDelayCancelTest {
 
         Thread.sleep(3000);
         wireMockRule.resetRequests();
-        wireMockRule.resetScenarios();
-        wireMockRule.resetMappings();
         Thread.sleep(3000);
     }
 

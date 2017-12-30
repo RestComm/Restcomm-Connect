@@ -119,8 +119,6 @@ public class LiveCallModificationMuteUnMuteTest {
         }
         Thread.sleep(1000);
         wireMockRule.resetRequests();
-        wireMockRule.resetScenarios();
-        wireMockRule.resetMappings();
         Thread.sleep(4000);
     }
 
@@ -190,21 +188,21 @@ public class LiveCallModificationMuteUnMuteTest {
         JsonArray callsArray = partObject.getAsJsonArray("calls");
         int size = callsArray.size();
         assertEquals(2, size);
-
+        
         logger.info("callsArray: "+callsArray);
-
+        
         //any call sid
         String firstCallSid = callsArray.get(0).getAsJsonObject().get("sid").getAsString();
 
-        //Going to mute :
+        //Going to mute : 
         JsonObject muteResponse = RestcommConferenceParticipantsTool.getInstance().modifyCall(deploymentUrl.toString(), adminAccountSid, conferenceSid, adminAuthToken, firstCallSid, true);
-        assertNotNull(muteResponse);
+        assertNotNull(muteResponse);        
         JsonObject modifiedParticipant = RestcommConferenceParticipantsTool.getInstance().getParticipant(deploymentUrl.toString(), adminAccountSid, conferenceSid, adminAuthToken, firstCallSid);
         assertNotNull(modifiedParticipant);
         Boolean muted = modifiedParticipant.get("muted").getAsBoolean();
         assertTrue(muted);
-
-        //Going to unmute :
+        
+        //Going to unmute : 
         JsonObject unmuteResponse = RestcommConferenceParticipantsTool.getInstance().modifyCall(deploymentUrl.toString(), adminAccountSid, conferenceSid, adminAuthToken, firstCallSid, false);
         assertNotNull(muteResponse);
         modifiedParticipant = RestcommConferenceParticipantsTool.getInstance().getParticipant(deploymentUrl.toString(), adminAccountSid, conferenceSid, adminAuthToken, firstCallSid);
@@ -212,7 +210,7 @@ public class LiveCallModificationMuteUnMuteTest {
         muted = modifiedParticipant.get("muted").getAsBoolean();
         assertTrue(!muted);
     }
-
+    
     @Deployment(name = "LiveCallModificationTest", managed = true, testable = false)
     public static WebArchive createWebArchiveNoGw() {
         logger.info("Packaging Test App");
