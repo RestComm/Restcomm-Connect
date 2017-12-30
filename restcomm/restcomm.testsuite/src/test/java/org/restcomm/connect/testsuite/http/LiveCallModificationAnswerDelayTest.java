@@ -130,8 +130,6 @@ public class LiveCallModificationAnswerDelayTest {
         }
         Thread.sleep(1000);
         wireMockRule.resetRequests();
-        wireMockRule.resetScenarios();
-        wireMockRule.resetMappings();
         Thread.sleep(4000);
     }
 
@@ -700,7 +698,7 @@ public class LiveCallModificationAnswerDelayTest {
             assertTrue(bobCall.waitOutgoingCallResponse(5 * 1000));
             assertEquals(Response.RINGING, bobCall.getLastReceivedResponse().getStatusCode());
         }
-
+        
         String bobCallSid = bobCall.getLastReceivedResponse().getMessage().getHeader("X-RestComm-CallSid").toString().split(":")[1].trim();
 
         assertTrue(georgeCall.waitForIncomingCall(30 * 1000));
@@ -741,12 +739,12 @@ public class LiveCallModificationAnswerDelayTest {
         JsonObject jsonObj = cdr.getAsJsonObject();
         logger.info("Status for call: "+aliceCallSid+" : "+jsonObj.get("status").getAsString());
         assertTrue(jsonObj.get("status").getAsString().equalsIgnoreCase("canceled"));
-
+        
         cdr = RestcommCallsTool.getInstance().getCall(deploymentUrl.toString(), adminAccountSid, adminAuthToken, georgeCallSid);
         jsonObj = cdr.getAsJsonObject();
         logger.info("Status for call: "+georgeCallSid+" : "+jsonObj.get("status").getAsString());
         assertTrue(jsonObj.get("status").getAsString().equalsIgnoreCase("canceled"));
-
+        
         cdr = RestcommCallsTool.getInstance().getCall(deploymentUrl.toString(), adminAccountSid, adminAuthToken, bobCallSid);
         jsonObj = cdr.getAsJsonObject();
         logger.info("Status for call: "+bobCallSid+" : "+jsonObj.get("status").getAsString());
@@ -795,7 +793,7 @@ public class LiveCallModificationAnswerDelayTest {
             assertTrue(bobCall.waitOutgoingCallResponse(5 * 1000));
             assertEquals(Response.RINGING, bobCall.getLastReceivedResponse().getStatusCode());
         }
-
+        
         String bobCallSid = bobCall.getLastReceivedResponse().getMessage().getHeader("X-RestComm-CallSid").toString().split(":")[1].trim();
 
 //        assertTrue(bobCall.waitOutgoingCallResponse(5 * 1000));
@@ -839,12 +837,12 @@ public class LiveCallModificationAnswerDelayTest {
         JsonObject jsonObj = cdr.getAsJsonObject();
         logger.info("Status for call: "+aliceCallSid+" : "+jsonObj.get("status").getAsString());
         assertTrue(jsonObj.get("status").getAsString().equalsIgnoreCase("canceled"));
-
+        
         cdr = RestcommCallsTool.getInstance().getCall(deploymentUrl.toString(), adminAccountSid, adminAuthToken, georgeCallSid);
         jsonObj = cdr.getAsJsonObject();
         logger.info("Status for call: "+georgeCallSid+" : "+jsonObj.get("status").getAsString());
         assertTrue(jsonObj.get("status").getAsString().equalsIgnoreCase("canceled"));
-
+        
         cdr = RestcommCallsTool.getInstance().getCall(deploymentUrl.toString(), adminAccountSid, adminAuthToken, bobCallSid);
         jsonObj = cdr.getAsJsonObject();
         logger.info("Status for call: "+bobCallSid+" : "+jsonObj.get("status").getAsString());
@@ -901,7 +899,7 @@ public class LiveCallModificationAnswerDelayTest {
             assertTrue(bobCall.waitOutgoingCallResponse(5 * 1000));
             assertEquals(Response.RINGING, bobCall.getLastReceivedResponse().getStatusCode());
         }
-
+        
         String bobCallSid = bobCall.getLastReceivedResponse().getMessage().getHeader("X-RestComm-CallSid").toString().split(":")[1].trim();
 
 //        assertTrue(bobCall.waitOutgoingCallResponse(5 * 1000));
@@ -939,7 +937,7 @@ public class LiveCallModificationAnswerDelayTest {
 
         assertTrue(bobCall.waitOutgoingCallResponse(5 * 1000));
         assertEquals(Response.REQUEST_TERMINATED, bobCall.getLastReceivedResponse().getStatusCode());
-
+        
         //Wait to cancel the other branches
         Thread.sleep(3000);
 
@@ -947,12 +945,12 @@ public class LiveCallModificationAnswerDelayTest {
         JsonObject jsonObj = cdr.getAsJsonObject();
         logger.info("Status for call: "+aliceCallSid+" : "+jsonObj.get("status").getAsString());
         assertTrue(jsonObj.get("status").getAsString().equalsIgnoreCase("canceled"));
-
+        
         cdr = RestcommCallsTool.getInstance().getCall(deploymentUrl.toString(), adminAccountSid, adminAuthToken, georgeCallSid);
         jsonObj = cdr.getAsJsonObject();
         logger.info("Status for call: "+georgeCallSid+" : "+jsonObj.get("status").getAsString());
         assertTrue(jsonObj.get("status").getAsString().equalsIgnoreCase("canceled"));
-
+        
         cdr = RestcommCallsTool.getInstance().getCall(deploymentUrl.toString(), adminAccountSid, adminAuthToken, bobCallSid);
         jsonObj = cdr.getAsJsonObject();
         logger.info("Status for call: "+bobCallSid+" : "+jsonObj.get("status").getAsString());
