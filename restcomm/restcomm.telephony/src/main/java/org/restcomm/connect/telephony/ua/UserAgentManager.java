@@ -182,7 +182,7 @@ public final class UserAgentManager extends RestcommUntypedActor {
                 // of connectivity. We don't need to remove the registration here. It will be handled only if the OPTIONS ping
                 // times out and the related calls from the client cleaned up as well
                 try{
-                    ping(result.getLocation());
+                    ping(result.getAddressOfRecord());
                 }catch(ServletParseException spe){
                     logger.warning("Bad Parameters: "+result.getLocation());
                     registrations.removeRegistration(result);
@@ -201,7 +201,7 @@ public final class UserAgentManager extends RestcommUntypedActor {
                     // of connectivity. We don't need to remove the registration here. It will be handled only if the OPTIONS ping
                     // times out and the related calls from the client cleaned up as well
                     try{
-                        ping(result.getLocation());
+                        ping(result.getAddressOfRecord());
                     }catch(ServletParseException spe){
                         logger.warning("Bad Parameters: "+result.getLocation());
                         registrations.removeRegistration(result);
@@ -250,7 +250,7 @@ public final class UserAgentManager extends RestcommUntypedActor {
                 logger.debug("Registrations for InstanceId: "+ instanceId +" , returned "+results.size()+" registrations");
             }
             for (final Registration result : results) {
-                final String to = result.getLocation();
+                final String to = result.getAddressOfRecord();
                 try{
                     ping(to);
                 }catch(ServletParseException spe){

@@ -105,18 +105,18 @@ import org.restcomm.connect.telephony.api.CallStateChanged;
              Sid toOrganizationSid = OrganizationUtil.getOrganizationSidBySipURIHost(storage, (SipURI) request.getTo().getURI());
              final Registration registration = registrations.getRegistration(user, toOrganizationSid);
              if (registration != null) {
-                 final String location = registration.getLocation();
+                 final String address_of_record = registration.getAddressOfRecord();
                  final String aor = registration.getAddressOfRecord();
                  SipURI to;
                  SipURI from;
-                 to = (SipURI) sipFactory.createURI(location);
+                 to = (SipURI) sipFactory.createURI(address_of_record);
                  Sid fromOrganizationSid = OrganizationUtil.getOrganizationSidBySipURIHost(storage, (SipURI) request.getFrom().getURI());
                  // if both clients don't belong to same organization, call should not be allowed.
                  if(!toOrganizationSid.equals(fromOrganizationSid)){
                      logger.warn(String.format("B2B clients do not belong to same organization. from-client: %s belong to %s . where as to-client %s belong to %s", client.getLogin(), fromOrganizationSid, user, toOrganizationSid));
                      return false;
                  }
-                 from = (SipURI) sipFactory.createURI((registrations.getRegistration(client.getLogin(), fromOrganizationSid)).getLocation());
+                 from = (SipURI) sipFactory.createURI((registrations.getRegistration(client.getLogin(), fromOrganizationSid)).getAddressOfRecord());
                  final SipSession incomingSession = request.getSession();
                  // create and send the outgoing invite and do the session linking
                  incomingSession.setAttribute(B2BUA_LAST_REQUEST, request);
