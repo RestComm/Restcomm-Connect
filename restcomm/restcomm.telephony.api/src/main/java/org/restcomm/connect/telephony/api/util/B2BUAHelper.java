@@ -41,7 +41,8 @@ import javax.servlet.sip.SipServletResponse;
 import javax.servlet.sip.SipSession;
 import javax.servlet.sip.SipURI;
 
-import org.apache.log4j.Logger;
+ import akka.actor.ActorSystem;
+ import org.apache.log4j.Logger;
 import org.joda.time.DateTime;
 import org.mobicents.javax.servlet.sip.SipSessionExt;
 import org.restcomm.connect.commons.configuration.RestcommConfiguration;
@@ -54,7 +55,9 @@ import org.restcomm.connect.dao.common.OrganizationUtil;
 import org.restcomm.connect.dao.entities.CallDetailRecord;
 import org.restcomm.connect.dao.entities.Client;
 import org.restcomm.connect.dao.entities.Registration;
-import org.restcomm.connect.telephony.api.CallStateChanged;
+ import org.restcomm.connect.telephony.api.CallInfo;
+ import org.restcomm.connect.telephony.api.CallInfoStreamEvent;
+ import org.restcomm.connect.telephony.api.CallStateChanged;
 
 /**
   * Helper methods for proxying SIP messages between Restcomm clients that are connecting in peer to peer mode
@@ -72,6 +75,10 @@ import org.restcomm.connect.telephony.api.CallStateChanged;
      public static final String B2BUA_LAST_FINAL_RESPONSE = "lastFinalResponse";
      private static final String B2BUA_LINKED_SESSION = "linkedSession";
      private static final String CDR_SID = "callDetailRecord_sid";
+     private static final String CDR_ACCOUNT_SID = "callDetailRecord_accountSid";
+     private static final String CDR_DIRECTION = "callDetailRecord_direction";
+     private static final String CDR_FROM = "callDetailRecord_from";
+     private static final String CDR_TO = "callDetailRecord_to";
 
      private static final Logger logger = Logger.getLogger(B2BUAHelper.class);
 
@@ -85,7 +92,7 @@ import org.restcomm.connect.telephony.api.CallStateChanged;
       * @throws IOException
       */
      // This is used for redirect calls to Restcomm clients from Restcomm Clients
-     public static boolean redirectToB2BUA(final SipServletRequest request, final Client client, Client toClient,
+     public static boolean redirectToB2BUA(final ActorSystem system, final SipServletRequest request, final Client client, Client toClient,
                                            DaoManager storage, SipFactory sipFactory, final boolean patchForNat) throws IOException {
          request.getSession().setAttribute("lastRequest", request);
 
@@ -196,6 +203,16 @@ import org.restcomm.connect.telephony.api.CallStateChanged;
 
                  incomingSession.setAttribute(CDR_SID, callRecord.getSid());
                  outgoingSession.setAttribute(CDR_SID, callRecord.getSid());
+                 incomingSession.setAttribute(CDR_ACCOUNT_SID, client.getSid());
+                 outgoingSession.setAttribute(CDR_ACCOUNT_SID, client.getSid());
+                 incomingSession.setAttribute(CDR_DIRECTION, "Client-To-Client");
+                 outgoingSession.setAttribute(CDR_DIRECTION, "Client-To-Client");
+                 incomingSession.setAttribute(CDR_FROM, client.getLogin());
+                 outgoingSession.setAttribute(CDR_FROM, client.getLogin());
+                 incomingSession.setAttribute(CDR_TO, toClient.getLogin());
+                 outgoingSession.setAttribute(CDR_TO, toClient.getLogin());
+
+                 sendCallInfoStreamEvent(system, request, CallStateChanged.State.QUEUED);
 
                  return true; // successfully proxied the SIP request between two registered clients
              }
@@ -216,7 +233,7 @@ import org.restcomm.connect.telephony.api.CallStateChanged;
       */
      // https://telestax.atlassian.net/browse/RESTCOMM-335
      // This is used for redirect calls to PSTN Numbers and SIP URIs from Restcomm Clients
-     public static boolean redirectToB2BUA(final SipServletRequest request, final Client fromClient, final SipURI from,
+     public static boolean redirectToB2BUA(final ActorSystem system, final SipServletRequest request, final Client fromClient, final SipURI from,
              SipURI to, String proxyUsername, String proxyPassword, DaoManager storage, SipFactory sipFactory,
              boolean callToSipUri, final boolean patchForNat) {
          request.getSession().setAttribute("lastRequest", request);
@@ -355,6 +372,16 @@ import org.restcomm.connect.telephony.api.CallStateChanged;
 
              incomingSession.setAttribute(CDR_SID, callRecord.getSid());
              outgoingSession.setAttribute(CDR_SID, callRecord.getSid());
+             incomingSession.setAttribute(CDR_ACCOUNT_SID, fromClient.getSid());
+             outgoingSession.setAttribute(CDR_ACCOUNT_SID, fromClient.getSid());
+             incomingSession.setAttribute(CDR_DIRECTION, "Client-To-Client");
+             outgoingSession.setAttribute(CDR_DIRECTION, "Client-To-Client");
+             incomingSession.setAttribute(CDR_FROM, fromClient.getLogin());
+             outgoingSession.setAttribute(CDR_FROM, fromClient.getLogin());
+             incomingSession.setAttribute(CDR_TO, to.toString());
+             outgoingSession.setAttribute(CDR_TO, to.toString());
+
+             sendCallInfoStreamEvent(system, request, CallStateChanged.State.QUEUED);
 
              return true; // successfully proxied the SIP request
          } catch (IOException exception) {
@@ -442,7 +469,7 @@ import org.restcomm.connect.telephony.api.CallStateChanged;
       * @param response
       * @throws IOException
       */
-     public static void forwardResponse(final SipServletResponse response, final boolean patchForNat) throws IOException {
+     public static void forwardResponse(final ActorSystem system, final SipServletResponse response, final boolean patchForNat) throws IOException {
          if (logger.isInfoEnabled()) {
              logger.info(String.format("B2BUA: Got response: \n %s", response));
          }
@@ -487,7 +514,10 @@ import org.restcomm.connect.telephony.api.CallStateChanged;
                  }
                  callRecord = callRecord.setDuration(seconds);
                  records.updateCallDetailRecord(callRecord);
+
+                 sendCallInfoStreamEvent(system, request, CallStateChanged.State.CANCELED);
              }
+
              return;
          }
 
@@ -581,11 +611,13 @@ import org.restcomm.connect.telephony.api.CallStateChanged;
              }
 
              records.updateCallDetailRecord(callRecord);
+
+             sendCallInfoStreamEvent(system, linkedRequest, CallStateChanged.State.valueOf(callRecord.getStatus()));
          }
 
      }
 
-     public static void updateCDR(SipServletMessage message, CallStateChanged.State state) {
+     public static void updateCDR(ActorSystem system, SipServletMessage message, CallStateChanged.State state) {
          CallDetailRecordsDao records = daoManager.getCallDetailRecordsDao();
          SipServletRequest request = null;
 
@@ -612,6 +644,8 @@ import org.restcomm.connect.telephony.api.CallStateChanged;
              }
              callRecord = callRecord.setDuration(seconds);
              records.updateCallDetailRecord(callRecord);
+
+             sendCallInfoStreamEvent(system, message, state);
          }
      }
 
@@ -626,4 +660,24 @@ import org.restcomm.connect.telephony.api.CallStateChanged;
          return (linkedB2BUASession != null);
      }
 
+     private static void sendCallInfoStreamEvent(ActorSystem system, SipServletMessage message, CallStateChanged.State state) {
+         SipSession session = message.getSession();
+         Object sid = session.getAttribute(CDR_SID);
+         if (sid != null) {
+             CallInfo callInfo = new CallInfo(
+                     (Sid) sid,
+                     (Sid) session.getAttribute(CDR_ACCOUNT_SID),
+                     state,
+                     null,
+                     (String) session.getAttribute(CDR_DIRECTION),
+                     null,
+                     null,
+                     null,
+                     (String) session.getAttribute(CDR_FROM),
+                     (String) session.getAttribute(CDR_TO),
+                     null, null, false, false, false, null, null
+             );
+             system.eventStream().publish(new CallInfoStreamEvent(callInfo));
+         }
+     }
  }

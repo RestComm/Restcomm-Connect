@@ -37,7 +37,6 @@ import org.restcomm.connect.mscontrol.api.MediaServerControllerFactory;
 import org.restcomm.connect.mscontrol.api.MediaServerInfo;
 import org.restcomm.connect.mscontrol.jsr309.Jsr309ControllerFactory;
 import org.restcomm.connect.mscontrol.mms.MmsControllerFactory;
-import org.restcomm.connect.sdr.api.SdrService;
 import org.restcomm.connect.sdr.api.StartSdrService;
 import scala.concurrent.ExecutionContext;
 
@@ -388,13 +387,7 @@ public final class Bootstrapper extends SipServlet implements SipServletListener
 
             //Initialize Sdr Service
             try {
-                ActorRef sdrService = sdrService(xml, loader);
-                if (sdrService != null) {
-                    context.setAttribute(SdrService.class.getName(), sdrService);
-                    if (logger.isInfoEnabled()) {
-                        logger.info("Sdr Service created and stored in the context");
-                    }
-                }
+                sdrService(xml, loader);
             } catch (Exception e) {
                 logger.error("Exception during Sdr Service initialization: " + e.getStackTrace());
             }
