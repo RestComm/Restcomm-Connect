@@ -1729,17 +1729,40 @@ form[role=login] input:-webkit-autofill:focus{
 }
 
 .template-item .template-icon {
-  font-size: 50px;
+  font-size: 80px;
 }
 
-.template-item .template-description {
+.template-item .template-body {
+  display: table;
   height: 140px;
-  padding-top: 24px;
+  width: 100%;
+}
+
+.template-item .template-body .template-description {
+  display: none;
+}
+
+.template-item .template-body .template-icon {
+  display: table-cell;
+  vertical-align: middle;
+}
+
+.template-item:hover .template-body .template-description {
+  display: table-cell;
+  vertical-align: middle;
+}
+
+.template-item:hover .template-body .template-icon {
+  display: none;
 }
 
 .template-item .tag-icons {
   color: #777;
   text-align: right;
+}
+
+.template-item .tag-icons i {
+  margin-left: 5px;
 }
 
 .template-tags .checkbox {

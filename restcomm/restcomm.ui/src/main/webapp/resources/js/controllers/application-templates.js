@@ -6,7 +6,7 @@ angular.module('rcApp.controllers').controller('ApplicationTemplatesCtrl', funct
   $scope.queryTags = {tagVoice:true, tagSms: true, tagUssd: true};
   $scope.query = {};
   $scope.templateList = RvdProjectTemplates.query();
-  $scope.blankVoiceTemplate = {id: 'BLANK', name: 'Blank', description: 'Empty voice application', tags: ['voice']};
+  $scope.blankVoiceTemplate = {id: 'BLANK', name: 'Blank', description: 'Empty voice application', tags: ['voice','sms','ussd']};
   //$scope.appsList = RCommApplications.query({accountSid: accountSid, includeNumbers: true});
 
 });

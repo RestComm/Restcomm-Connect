@@ -5,9 +5,12 @@
             <i ng-show="template.tags.indexOf('sms') != -1" class="fa fa-comment"></i>
             <i ng-show="template.tags.indexOf('ussd') != -1" class="fa fa-sitemap"></i>
         </div>
-        <div class="template-description">
+        <div class="template-body">
             <!--<span class="template-icon"><i class="fa fa-microphone"></i></span>-->
-            <div title="{{template.description}}">{{template.description}}</div>
+            <div class='template-description' title="{{template.description}}">{{template.description}}</div>
+            <div class="template-icon">
+                <i class='fa fa-phone'></i>
+            </div>
         </div>
     </div>
     <div class="item-bottom">
