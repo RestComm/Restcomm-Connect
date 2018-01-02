@@ -79,7 +79,7 @@ angular.module('rcApp.controllers').controller('ApplicationCreationWizardCtrl', 
     }
 });
 
-angular.module('rcApp.controllers').controller('ApplicationCreationCtrl', function ($scope, $rootScope, $location, Notifications, RvdProjectImporter, RvdProjects) {
+angular.module('rcApp.controllers').controller('ApplicationCreationCtrl', function ($scope, $rootScope, $location, Notifications, RvdProjectImporter, RvdProjects, $stateParams) {
     var appOptions = {}, droppedFiles; // all options the application needs to be created like name, kind ... anything else ?
     if ( !!$rootScope.droppedFiles ) {
         droppedFiles = $rootScope.droppedFiles;

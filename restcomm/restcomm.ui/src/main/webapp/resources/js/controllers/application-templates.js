@@ -1,6 +1,6 @@
 'use strict';
 
-angular.module('rcApp.controllers').controller('ApplicationTemplatesCtrl', function ($scope, SessionService, RvdProjectTemplates) {
+angular.module('rcApp.controllers').controller('ApplicationTemplatesCtrl', function ($scope, $state, SessionService, RvdProjectTemplates) {
   var accountSid = SessionService.get("sid");
 
   $scope.queryTags = {tagVoice:true, tagSms: true, tagUssd: true};
@@ -8,6 +8,11 @@ angular.module('rcApp.controllers').controller('ApplicationTemplatesCtrl', funct
   $scope.templateList = RvdProjectTemplates.query();
   $scope.blankVoiceTemplate = {id: 'BLANK', name: 'Blank', description: 'Empty voice application', tags: ['voice','sms','ussd']};
   //$scope.appsList = RCommApplications.query({accountSid: accountSid, includeNumbers: true});
+
+  $scope.templateClicked = function (template) {
+    console.log('template ', template, ' clicked');
+    $state.go('restcomm.application-creation', {templateId: template.id});
+  }
 
 });
 
@@ -19,7 +24,6 @@ rcDirectives.directive('applicationTemplate', function () {
       template: '='
     },
     link: function( scope, element, attrs) {
-      console.log('added  new template item', scope.template);
     }
   }
 });
