@@ -5,8 +5,8 @@
 
                 <h3 ng-hide="droppedFiles || isExternalApp || template">New Visual Designer application</h3>
                 <h3 ng-show="droppedFiles">Import Visual Designer application</h3>
-                <h3 ng-show="isExternalApp">New External Application</h3>
-                <h3 ng-show="template">New '{{template.name}}' Application from template</h3>
+                <h3 ng-show="isExternalApp">New External application</h3>
+                <h3 ng-show="template">New '{{template.name}}' application from template</h3>
 
 
                 <div class="row params-section">
@@ -24,7 +24,7 @@
                                 </div>
                                 <div class="col-sm-10">
                                     <div class="btn-group kind-selection">
-                                        <button type="button" class="btn btn-selection dropdown-toggle" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
+                                        <button type="button" class="btn btn-selection dropdown-toggle" ng-class="{disabled: !!template && template.id != 'BLANK'}" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
                                             {{appOptions.kind}} <span class="caret"></span>
                                         </button>
                                         <!--<span class="dropdown-toggle kind-selection" data-toggle="dropdown">{{appOptions.kind}}</span>-->

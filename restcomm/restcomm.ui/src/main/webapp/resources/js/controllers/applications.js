@@ -121,7 +121,7 @@ angular.module('rcApp.controllers').controller('ApplicationCreationCtrl', functi
       var params = {};
       if (!!templateId && templateId != 'BLANK') {
         // templateId is available, create from template
-        params.templateId = templateId;
+        params.template = templateId;
         params.name = options.name;
       } else {
         params.name = options.name;
@@ -197,8 +197,12 @@ var confirmApplicationDelete = function(app, $dialog, $scope, Notifications, RCo
                     Notifications.success('RestComm Application "' + app.friendly_name + '" has been deleted.');
                     $location.path( "/applications" );
                 },
-                function() {
-                    Notifications.error('Failed to delete application "' + app.friendly_name + '".');
+                function(response) {
+                    if (response.status != 404) {
+                      Notifications.error('Failed to delete application "' + app.friendly_name + '".');
+                    } else {
+                      $location.path( "/applications" );
+                    }
                 }
             );
         } else
