@@ -32,6 +32,7 @@ import org.restcomm.connect.commons.annotations.concurrency.ThreadSafe;
 import org.restcomm.connect.commons.dao.Sid;
 import org.restcomm.connect.dao.ConferenceDetailRecordsDao;
 import org.restcomm.connect.dao.DaoUtils;
+import org.restcomm.connect.dao.entities.ConferenceClosingFilter;
 import org.restcomm.connect.dao.entities.ConferenceDetailRecord;
 import org.restcomm.connect.dao.entities.ConferenceDetailRecordFilter;
 import org.restcomm.connect.dao.entities.ConferenceRecordCountFilter;
@@ -199,6 +200,19 @@ public final class MybatisConferenceDetailRecordsDao implements ConferenceDetail
     }
 
     @Override
+    public boolean completeConferenceDetailRecord(ConferenceClosingFilter ccf) {
+        final SqlSession session = sessions.openSession();
+        try {
+            final Map<String, Object> result = session.selectOne(namespace + "completeConferenceDetailRecord", toMap(ccf));
+            System.out.println("completeConferenceDetailRecord result is: "+result.toString() +" | KeySet is: "+result.keySet());
+            //TODO: fix below hardcoded true as per real retuls
+            return true;
+        } finally {
+            session.close();
+        }
+    }
+
+    @Override
     public void removeConferenceDetailRecord(Sid sid) {
         // TODO Add support for conference modification after basic API's as twillio's
     }
@@ -275,6 +289,16 @@ public final class MybatisConferenceDetailRecordsDao implements ConferenceDetail
         map.put("master_bridge_conn_id", cdr.getMasterBridgeConnectionIdentifier());
         map.put("master_ivr_conn_id", cdr.getMasterIVRConnectionIdentifier());
         map.put("moderator_present", cdr.isModeratorPresent());
+        return map;
+    }
+
+    private Map<String, Object> toMap(final ConferenceClosingFilter cdr) {
+        final Map<String, Object> map = new HashMap<String, Object>();
+        map.put("sid", DaoUtils.writeSid(cdr.getSid()));
+        map.put("date_updated", DaoUtils.writeDateTime(cdr.getDateUpdated()));
+        map.put("status", cdr.getStatus());
+        map.put("slave_ms_id", cdr.getSlaveMsId());
+        map.put("am_i_master", cdr.isAmIMaster());
         return map;
     }
 }
