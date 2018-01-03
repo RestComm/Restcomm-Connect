@@ -19,31 +19,33 @@
  */
 package org.restcomm.connect.dao.entities;
 
-import org.joda.time.DateTime;
+import java.util.Calendar;
+import java.util.Date;
+
 import org.restcomm.connect.commons.annotations.concurrency.Immutable;
-import org.restcomm.connect.commons.dao.Sid;
 
 /**
  * @author maria-farooq@live.com (Maria Farooq)
  */
 @Immutable
 public final class ConferenceClosingFilter {
-    private final Sid sid;
+    private final String sid;
     private final String status;
     private final String slaveMsId;
-    private final DateTime dateUpdated;
+    private final Date dateUpdated;
     private final boolean amIMaster;
+    private boolean completed;
 
-    public ConferenceClosingFilter(Sid sid, String status, String slaveMsId, boolean amIMaster) {
+    public ConferenceClosingFilter(String sid, String status, String slaveMsId, boolean amIMaster) {
         super();
         this.sid = sid;
         this.status = status;
         this.slaveMsId = slaveMsId;
-        this.dateUpdated = DateTime.now();
+        this.dateUpdated = Calendar.getInstance().getTime();
         this.amIMaster = amIMaster;
     }
 
-    public Sid getSid() {
+    public String getSid() {
         return sid;
     }
 
@@ -55,7 +57,7 @@ public final class ConferenceClosingFilter {
         return slaveMsId;
     }
 
-    public DateTime getDateUpdated() {
+    public Date getDateUpdated() {
         return dateUpdated;
     }
 
@@ -63,4 +65,11 @@ public final class ConferenceClosingFilter {
         return amIMaster;
     }
 
+    public boolean isCompleted() {
+        return completed;
+    }
+
+    public void setCompleted(boolean completed) {
+        this.completed = completed;
+    }
 }

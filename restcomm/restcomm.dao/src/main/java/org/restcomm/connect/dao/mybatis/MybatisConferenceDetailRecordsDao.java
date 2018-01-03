@@ -202,9 +202,12 @@ public final class MybatisConferenceDetailRecordsDao implements ConferenceDetail
     @Override
     public boolean completeConferenceDetailRecord(ConferenceClosingFilter ccf) {
         final SqlSession session = sessions.openSession();
+
+        //ConferenceClosingFilter ccfMapper = session.getMapper(ConferenceClosingFilter.class);
         try {
-            final Map<String, Object> result = session.selectOne(namespace + "completeConferenceDetailRecord", toMap(ccf));
-            System.out.println("completeConferenceDetailRecord result is: "+result.toString() +" | KeySet is: "+result.keySet());
+        	//session.select(namespace + "completeConferenceDetailRecord", toMap(ccf), handler);
+            final Map<String, Object> result = session.selectOne(namespace + "completeConferenceDetailRecord", ccf);
+            System.out.println("completeConferenceDetailRecord result is: "+result);
             //TODO: fix below hardcoded true as per real retuls
             return true;
         } finally {
@@ -294,7 +297,7 @@ public final class MybatisConferenceDetailRecordsDao implements ConferenceDetail
 
     private Map<String, Object> toMap(final ConferenceClosingFilter cdr) {
         final Map<String, Object> map = new HashMap<String, Object>();
-        map.put("sid", DaoUtils.writeSid(cdr.getSid()));
+        map.put("sid", cdr.getSid());
         map.put("date_updated", DaoUtils.writeDateTime(cdr.getDateUpdated()));
         map.put("status", cdr.getStatus());
         map.put("slave_ms_id", cdr.getSlaveMsId());
