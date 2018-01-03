@@ -672,7 +672,7 @@ rcServices.factory('RvdProjects', function($resource) {
 });
 
 rcServices.factory('RvdProjectTemplates', function($resource) {
-  return $resource('/restcomm-rvd/api/templates', {}, {
+  return $resource('/restcomm-rvd/api/templates/:templateId', {}, {
     query: {
       method: 'GET',
       isArray: false

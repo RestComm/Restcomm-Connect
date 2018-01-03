@@ -10,8 +10,7 @@ angular.module('rcApp.controllers').controller('ApplicationTemplatesCtrl', funct
   //$scope.appsList = RCommApplications.query({accountSid: accountSid, includeNumbers: true});
 
   $scope.templateClicked = function (template) {
-    console.log('template ', template, ' clicked');
-    $state.go('restcomm.application-creation', {templateId: template.id});
+    $state.go('restcomm.application-creation-from-template', {templateId: template.id});
   }
 
 });

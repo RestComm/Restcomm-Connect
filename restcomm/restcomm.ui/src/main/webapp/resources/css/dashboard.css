@@ -1648,6 +1648,10 @@ form[role=login] input:-webkit-autofill:focus{
     min-height: 250px;
 }
 
+.app-creation .change-template-button {
+  padding-left: 0;
+}
+
 .app-details .details-section-title {
     padding-top: 0;
 }

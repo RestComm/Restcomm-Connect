@@ -164,10 +164,13 @@ rcMod.config(['$stateProvider','$urlRouterProvider', function($stateProvider, $u
       url:'/applications/new',
       templateUrl: 'modules/application-creation.html',
       controller: 'ApplicationCreationCtrl',
-      params: {
-        templateId: null
-      }
   });
+  $stateProvider.state('restcomm.application-creation-from-template',{
+      url:'/applications/new/:templateId',
+      templateUrl: 'modules/application-creation.html',
+      controller: 'ApplicationCreationCtrl',
+  });
+
   $stateProvider.state('restcomm.application-external-creation',{
       url:'/applications/new-external',
       templateUrl: 'modules/application-creation.html',

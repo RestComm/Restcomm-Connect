@@ -18,7 +18,7 @@
     </div>
 
     <div class="row">
-        <application-template template="blankVoiceTemplate" ng-click='templateClicked(blankVoiceTemplate)' class="col-md-3"></application-template>
+        <application-template template="blankVoiceTemplate" ng-click="$root.goTo('/applications/new')" class="col-md-3"></application-template>
         <div ng-repeat="template in templateList.results | filter:query | tagFilter:queryTags" class="col-md-3">
             <application-template template="template" ng-click='templateClicked(template)'></application-template>
         </div>

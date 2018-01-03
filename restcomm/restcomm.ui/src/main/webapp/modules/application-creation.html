@@ -3,10 +3,10 @@
         <div class="col-md-offset-2 col-md-8">
             <div class="app-creation-content">
 
-                <h3 ng-hide="droppedFiles || isExternalApp">New Visual Designer application</h3>
+                <h3 ng-hide="droppedFiles || isExternalApp || template">New Visual Designer application</h3>
                 <h3 ng-show="droppedFiles">Import Visual Designer application</h3>
                 <h3 ng-show="isExternalApp">New External Application</h3>
-
+                <h3 ng-show="template">New '{{template.name}}' Application from template</h3>
 
 
                 <div class="row params-section">
@@ -28,7 +28,7 @@
                                             {{appOptions.kind}} <span class="caret"></span>
                                         </button>
                                         <!--<span class="dropdown-toggle kind-selection" data-toggle="dropdown">{{appOptions.kind}}</span>-->
-                                        <ul class="dropdown-menu">
+                                        <ul ng-show='!template || template.id == "BLANK"' class="dropdown-menu">
                                             <li><button class="btn btn-link" ng-click='setKind(appOptions,"voice")'>voice</button></li>
                                             <li><button class="btn btn-link" ng-click='setKind(appOptions,"sms")'>sms</button></li>
                                             <li><button class="btn btn-link" ng-click='setKind(appOptions,"ussd")'>ussd</button></li>
@@ -51,6 +51,12 @@
                     </form>
                 </div>
 
+                <div ng-hide='droppedFiles || isExternalApp' class="row">
+                    <div class="col-md-6">
+                        <button ng-click="$root.goTo('/application-templates')" class="change-template-button btn btn-link">change template</button>
+                    </div>
+                </div>
+
             </div>
 
             <div class="row bottom-row">
@@ -60,7 +66,7 @@
                     <span class="hidden-xs">Close</span>
                     <span class="visible-xs"><i class="fa fa-times"></i></span>
                 </button>
-                <button ng-if="!droppedFiles && !isExternalApp" class="rc-btn btn-primary save-btn" ng-click="createRvdApplication(appOptions)">
+                <button ng-if="!droppedFiles && !isExternalApp" class="rc-btn btn-primary save-btn" ng-click="createRvdApplication(appOptions, template.id)">
                     <span class="hidden-xs">Next</span>
                     <span class="visible-xs"><i class="fa fa-chevron-right"></i></span>
                 </button>
