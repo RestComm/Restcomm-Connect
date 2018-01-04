@@ -20,12 +20,12 @@
 package org.restcomm.connect.dao;
 
 import java.util.List;
+import java.util.Map;
 
 import org.joda.time.DateTime;
-import org.restcomm.connect.dao.entities.ConferenceClosingFilter;
+import org.restcomm.connect.commons.dao.Sid;
 import org.restcomm.connect.dao.entities.ConferenceDetailRecord;
 import org.restcomm.connect.dao.entities.ConferenceDetailRecordFilter;
-import org.restcomm.connect.commons.dao.Sid;
 import org.restcomm.connect.dao.entities.ConferenceRecordCountFilter;
 
 /**
@@ -64,5 +64,5 @@ public interface ConferenceDetailRecordsDao {
 
     void updateModeratorPresent(ConferenceDetailRecord cdr);
 
-    boolean completeConferenceDetailRecord(ConferenceClosingFilter ccf);
+    boolean completeConferenceDetailRecord(Map params);
 }
