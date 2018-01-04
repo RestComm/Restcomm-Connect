@@ -202,8 +202,7 @@ public final class MybatisConferenceDetailRecordsDao implements ConferenceDetail
     public boolean completeConferenceDetailRecord(Map params) {
         final SqlSession session = sessions.openSession();
         try {
-        	session.selectOne(namespace + "completeConferenceDetailRecord", params);
-            System.out.println("completeConferenceDetailRecord result: "+params);
+            session.selectOne(namespace + "completeConferenceDetailRecord", params);
             return (boolean)params.get("completed");
         } finally {
             session.close();

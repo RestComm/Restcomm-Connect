@@ -477,3 +477,33 @@ BEGIN
 
 END //
 DELIMITER ;
+
+DELIMITER //
+DROP PROCEDURE IF EXISTS completeConferenceDetailRecord;
+CREATE PROCEDURE completeConferenceDetailRecord
+	(IN in_sid VARCHAR(100)
+	,IN in_status VARCHAR(100)
+	,IN in_slave_ms_id VARCHAR(100)
+	,IN in_date_updated TIMESTAMP
+	,IN amIMaster BOOLEAN
+	,OUT completed BOOLEAN)
+	
+BEGIN
+	SET completed=FALSE;
+	IF(amIMaster) THEN 
+		UPDATE restcomm_conference_detail_records SET restcomm_conference_detail_records.master_present=FALSE,restcomm_conference_detail_records.date_updated=in_date_updated WHERE restcomm_conference_detail_records.sid=in_sid;
+		IF NOT EXISTS (SELECT restcomm_media_resource_broker_entity.conference_sid,restcomm_media_resource_broker_entity.slave_ms_id,restcomm_media_resource_broker_entity.slave_ms_bridge_ep_id,restcomm_media_resource_broker_entity.slave_ms_cnf_ep_id,restcomm_media_resource_broker_entity.is_bridged_together FROM restcomm_media_resource_broker_entity WHERE conference_sid=in_sid ) THEN 
+			UPDATE restcomm_conference_detail_records SET status=in_status,date_updated=in_date_updated WHERE sid=in_sid;
+			SET completed=TRUE;
+		END IF;
+	ELSE 
+		DELETE FROM restcomm_media_resource_broker_entity WHERE conference_sid=in_sid AND slave_ms_id=in_slave_ms_id;
+		IF NOT(SELECT master_present FROM restcomm_conference_detail_records WHERE sid=in_sid) THEN 
+			IF NOT EXISTS(SELECT restcomm_media_resource_broker_entity.conference_sid,restcomm_media_resource_broker_entity.slave_ms_id,restcomm_media_resource_broker_entity.slave_ms_bridge_ep_id,restcomm_media_resource_broker_entity.slave_ms_cnf_ep_id,restcomm_media_resource_broker_entity.is_bridged_together FROM restcomm_media_resource_broker_entity WHERE conference_sid=in_sid ) THEN 
+				UPDATE restcomm_conference_detail_records SET status=in_status,date_updated=in_date_updated WHERE sid=in_sid;
+				SET completed=TRUE;
+			END IF;
+		END IF;
+	END IF;
+END //
+DELIMITER ;
