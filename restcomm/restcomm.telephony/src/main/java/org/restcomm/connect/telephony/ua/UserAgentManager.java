@@ -182,9 +182,9 @@ public final class UserAgentManager extends RestcommUntypedActor {
                 // of connectivity. We don't need to remove the registration here. It will be handled only if the OPTIONS ping
                 // times out and the related calls from the client cleaned up as well
                 try{
-                    ping(result.getAddressOfRecord());
+                    ping(result.getLocation(),result.getAddressOfRecord());
                 }catch(ServletParseException spe){
-                    logger.warning("Bad Parameters: "+result.getLocation());
+                    logger.warning("Bad Parameters: "+result.getLocation() + "," + result.getAddressOfRecord());
                     registrations.removeRegistration(result);
                 }
                 //registrations.removeRegistration(result);
@@ -201,9 +201,9 @@ public final class UserAgentManager extends RestcommUntypedActor {
                     // of connectivity. We don't need to remove the registration here. It will be handled only if the OPTIONS ping
                     // times out and the related calls from the client cleaned up as well
                     try{
-                        ping(result.getAddressOfRecord());
+                        ping(result.getLocation(),result.getAddressOfRecord());
                     }catch(ServletParseException spe){
-                        logger.warning("Bad Parameters: "+result.getLocation());
+                        logger.warning("Bad Parameters: "+result.getLocation() + "," + result.getAddressOfRecord());
                         registrations.removeRegistration(result);
                     }
                     // registrations.removeRegistration(result);
@@ -250,11 +250,12 @@ public final class UserAgentManager extends RestcommUntypedActor {
                 logger.debug("Registrations for InstanceId: "+ instanceId +" , returned "+results.size()+" registrations");
             }
             for (final Registration result : results) {
-                final String to = result.getAddressOfRecord();
+                final String location = result.getLocation();
+                final String aor = result.getAddressOfRecord();
                 try{
-                    ping(to);
+                    ping(location,aor);
                 }catch(ServletParseException spe){
-                    logger.warning("Bad Parameters: "+to);
+                    logger.warning("Bad Parameters: "+aor);
                     registrations.removeRegistration(result);
                 }
             }
@@ -330,7 +331,7 @@ public final class UserAgentManager extends RestcommUntypedActor {
     private void removeRegistration(final SipServletMessage sipServletMessage, boolean locationInContact) throws ServletParseException{
         String user = ((SipURI)sipServletMessage.getTo().getURI()).getUser();
         SipURI location = locationInContact ? ((SipURI)sipServletMessage.getAddressHeader("Contact").getURI()) :
-            ((SipURI)sipServletMessage.getTo().getURI());
+            ((SipURI)sipServletMessage.getAddressHeader("Request-URI").getURI());
         if(logger.isDebugEnabled()) {
             logger.debug("Error response for the OPTIONS to: "+location+" will remove registration");
         }
@@ -423,9 +424,9 @@ public final class UserAgentManager extends RestcommUntypedActor {
         }
     }
 
-    private void ping(final String to) throws ServletException {
+    private void ping(final String location, final String aor) throws ServletException {
         final SipApplicationSession application = factory.createApplicationSession();
-        String toTransport = ((SipURI) factory.createURI(to)).getTransportParam();
+        String toTransport = ((SipURI) factory.createURI(aor)).getTransportParam();
         if (toTransport == null) {
             // RESTCOMM-301 NPE in RestComm Ping
             toTransport = "udp";
@@ -439,8 +440,8 @@ public final class UserAgentManager extends RestcommUntypedActor {
         StringBuilder buffer = new StringBuilder();
         buffer.append("sip:restcomm").append("@").append(outboundInterface.getHost());
         final String from = buffer.toString();
-        final SipServletRequest ping = factory.createRequest(application, "OPTIONS", from, to);
-        final SipURI uri = (SipURI) factory.createURI(to);
+        final SipServletRequest ping = factory.createRequest(application, "OPTIONS", from, aor);
+        final SipURI uri = (SipURI) factory.createURI(location);
         ping.pushRoute(uri);
         ping.setRequestURI(uri);
         final SipSession session = ping.getSession();
