@@ -146,6 +146,7 @@ The above commands will print an output similar to the one below:
 |Status |The status of this account. Default is active, possible values are active, suspended, and closed.
 |Password(Required) |A password that will be used to generate the AuthToken for the new Account resource.
 |Role(Required) |The security role that this Account resource will use. If no role is provided then the role of the account resource creating this will be inherited to the new Account resource and may compromise the system.
+|OrganizationSid |Sid of organization, in case you want to create this account under a different account than its parent account. By default each new account will inherit its parent's organization. Please note only Super Admins have right to create an account under a different organization.
 |==============================================================================================================================================================================================================================
 
 
@@ -165,10 +166,16 @@ curl -X GET https://[primarySid]:[primaryAuthToken]@127.0.0.1:8080/restcomm/2012
 curl -X GET https://[primarySid]:[primaryAuthToken]@127.0.0.1:8080/restcomm/2012-04-24/Accounts/
 ----
 
-Here is an example of how to createa a **sub-account**. The sub-account will inherit the same permissions has the Administrator's account.
+Here is an example of how to create a **sub-account**. The sub-account will inherit the same permissions has the Administrator's account.
 
 ....
 curl -X POST https://administrator%40company.com:77f8c12cc7b8f8423e5c38b035249166@127.0.0.1:8080/restcomm/2012-04-24/Accounts/ -d "FriendlyName=MySubAccount" -d "EmailAddress=test@telestax.com" -d "Password=restcomm"
+....
+
+Here is an example of creating an account under a specific organization.
+
+....
+curl -X POST https://<Sid>:<authToken>@<restcommAdress>/restcomm/2012-04-24/Accounts/ -d "FriendlyName=MySubAccount" -d "EmailAddress=test@telestax.com" -d "Password=restcomm" -d "OrganizationSid=<OrganizationSid>"
 ....
 
 
