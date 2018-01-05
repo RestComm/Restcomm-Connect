@@ -199,6 +199,17 @@ public final class MybatisConferenceDetailRecordsDao implements ConferenceDetail
     }
 
     @Override
+    public boolean completeConferenceDetailRecord(Map params) {
+        final SqlSession session = sessions.openSession();
+        try {
+            session.selectOne(namespace + "completeConferenceDetailRecord", params);
+            return (boolean)params.get("completed");
+        } finally {
+            session.close();
+        }
+    }
+
+    @Override
     public void removeConferenceDetailRecord(Sid sid) {
         // TODO Add support for conference modification after basic API's as twillio's
     }
