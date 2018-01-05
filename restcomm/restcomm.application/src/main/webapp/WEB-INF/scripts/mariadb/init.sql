@@ -487,8 +487,10 @@ CREATE PROCEDURE completeConferenceDetailRecord
 	,IN in_date_updated TIMESTAMP
 	,IN amIMaster BOOLEAN
 	,OUT completed BOOLEAN)
-	
+
 BEGIN
+
+START TRANSACTION;
 	SET completed=FALSE;
 	IF(amIMaster) THEN 
 		UPDATE restcomm_conference_detail_records SET restcomm_conference_detail_records.master_present=FALSE,restcomm_conference_detail_records.date_updated=in_date_updated WHERE restcomm_conference_detail_records.sid=in_sid;
@@ -505,5 +507,7 @@ BEGIN
 			END IF;
 		END IF;
 	END IF;
+COMMIT;
+
 END //
 DELIMITER ;
