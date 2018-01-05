@@ -268,7 +268,9 @@ public final class SmsService extends RestcommUntypedActor {
             final SipServletResponse messageAccepted = request.createResponse(SipServletResponse.SC_ACCEPTED);
             messageAccepted.send();
 
-            monitoringService.tell(new TextMessage(((SipURI)request.getFrom().getURI()).getUser(), ((SipURI)request.getTo().getURI()).getUser(), TextMessage.SmsState.INBOUND_TO_APP), self);
+            TextMessage textMessage = new TextMessage(((SipURI)request.getFrom().getURI()).getUser(), ((SipURI)request.getTo().getURI()).getUser(), TextMessage.SmsState.INBOUND_TO_APP);
+            monitoringService.tell(textMessage, self);
+            system.eventStream().publish(textMessage);
 
             return;
 
@@ -297,7 +299,9 @@ public final class SmsService extends RestcommUntypedActor {
                                     logger.info("P2P, Message from: " + client.getLogin() + " redirected to registered client: "
                                             + toClient.getLogin());
                                 }
-                                monitoringService.tell(new TextMessage(((SipURI)request.getFrom().getURI()).getUser(), ((SipURI)request.getTo().getURI()).getUser(), TextMessage.SmsState.INBOUND_TO_CLIENT), self);
+                                TextMessage textMessage = new TextMessage(((SipURI)request.getFrom().getURI()).getUser(), ((SipURI)request.getTo().getURI()).getUser(), TextMessage.SmsState.INBOUND_TO_CLIENT);
+                                monitoringService.tell(textMessage, self);
+                                system.eventStream().publish(textMessage);
                                 return;
                             } else {
                                 String errMsg = "Cannot Connect to Client: " + toClient.getFriendlyName()
@@ -369,6 +373,7 @@ public final class SmsService extends RestcommUntypedActor {
                     resp.send();
                 }
                 ec.executePostOutboundAction(far, extensions);
+
             }
         } else {
             final SipServletResponse response = request.createResponse(SC_NOT_FOUND);
@@ -376,7 +381,9 @@ public final class SmsService extends RestcommUntypedActor {
             // We didn't find anyway to handle the SMS.
             String errMsg = "Restcomm cannot process this SMS because the destination number is not hosted locally. To: "+toUser;
             sendNotification(errMsg, 11005, "error", true);
-            monitoringService.tell(new TextMessage(((SipURI)request.getFrom().getURI()).getUser(), ((SipURI)request.getTo().getURI()).getUser(), TextMessage.SmsState.NOT_FOUND), self);
+            TextMessage textMessage = new TextMessage(((SipURI)request.getFrom().getURI()).getUser(), ((SipURI)request.getTo().getURI()).getUser(), TextMessage.SmsState.NOT_FOUND);
+            monitoringService.tell(textMessage, self);
+            system.eventStream().publish(textMessage);
         }}
 
 
