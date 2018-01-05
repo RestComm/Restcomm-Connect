@@ -1209,6 +1209,9 @@ public final class Call extends RestcommUntypedActor {
                 logger.warning(strBuffer.toString());
             }
             msController.tell(new CloseMediaSession(), source);
+            //Github issue 2261 - https://github.com/RestComm/Restcomm-Connect/issues/2261
+            //Set a ReceivedTimeout duration to make sure call doesn't block waiting for the response from MmsCallController
+            context().setReceiveTimeout(Duration.create(2000, TimeUnit.MILLISECONDS));
         }
     }
 
@@ -2321,7 +2324,7 @@ public final class Call extends RestcommUntypedActor {
         } else if (is(stopping)) {
             fsm.transition(message, completed);
         } else {
-            if (!is(leaving))
+            if (!is(leaving) && !is(canceling) && !is(canceled))
                 fsm.transition(message, stopping);
         }
     }
