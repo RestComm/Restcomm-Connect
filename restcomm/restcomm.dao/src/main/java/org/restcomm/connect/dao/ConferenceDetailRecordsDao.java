@@ -64,5 +64,15 @@ public interface ConferenceDetailRecordsDao {
 
     void updateModeratorPresent(ConferenceDetailRecord cdr);
 
+    /**
+     * @param params
+     * {sid, mode=IN, jdbcType=VARCHAR}
+     * {status, mode=IN, jdbcType=VARCHAR}
+     * {slaveMsId, mode=IN, jdbcType=VARCHAR}
+     * {dateUpdated, mode=IN, jdbcType=TIMESTAMP}
+     * {amIMaster, mode=IN, jdbcType=BOOLEAN}
+     * {completed, mode=OUT, jdbcType=BOOLEAN}
+     * @return true/false depending on if calling agent was able to complete the conference or not.
+     */
     boolean completeConferenceDetailRecord(Map params);
 }
