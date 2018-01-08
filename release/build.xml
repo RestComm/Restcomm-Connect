@@ -16,8 +16,8 @@
   <property name="sipservlets-build" value="89"/>
   <property name="restcomm-sipservlets-as7.version" value="3.2.0-${sipservlets-build}"/>
   <!--<property name="jain-sip-ri.version" value="7.0.3.190" />-->
-  <property name="restcomm-media.version" value="6.0"/>
-  <property name="restcomm-media.build" value="23"/>
+  <property name="restcomm-media.version" value="7.0.0"/>
+  <property name="restcomm-media.build" value="32"/>
   <!--property name="mobicents-diameter.version" value="6.1.2.GA" /-->
 
   <!-- mobicents SIP Servlets 7.x on JBoss AS7-->
@@ -25,11 +25,12 @@
   <property name="restcomm-sipservlets.as7.download.url" value="https://app.box.com/shared/static/bz0fnva3yiv5m93qnzn0xnn5j2zme8og.zip"/>
   <property name="restcomm-sipservlets.as7.distro.zip.path" value="${checkout.dir}/${restcomm-sipservlets.as7.download.distro.file}"/>
 
-  <property name="restcomm-media.download.distro.file" value="restcomm-media-server.zip"/>
+  <property name="restcomm-media.download.distro.name" value="restcomm-media-server-${restcomm-media.version}-${restcomm-media.build}"/>
+  <property name="restcomm-media.download.distro.file" value="${restcomm-media.download.distro.name}.zip"/>
   <!--<property name="mobicents-media.download.url" value="https://github.com/Mobicents/mediaserver/releases/download/3.0.2.FINAL/mms-server-3.0.2.Final.zip" />-->
   <!--property name="mobicents-media.download.url" value="https://mobicents.ci.cloudbees.com/view/MediaServer/job/Mobicents-MediaServer-2.x/lastSuccessfulBuild/artifact/bootstrap/target/mms-server.zip" /-->
   <!--property name="mobicents-media.download.url" value="https://mobicents.ci.cloudbees.com/view/MediaServer/job/Mobicents-MediaServer-4.x/lastSuccessfulBuild/artifact/bootstrap/target/mms-server.zip"/-->
-  <property name="restcomm-media.download.url" value="https://mobicents.ci.cloudbees.com/view/MediaServer/job/Restcomm-MediaServer-6.x/${restcomm-media.build}/artifact/bootstrap/target/restcomm-media-server.zip"/>
+  <property name="restcomm-media.download.url" value="https://github.com/RestComm/mediaserver/releases/download/${restcomm-media.version}-${restcomm-media.build}/restcomm-media-server-${restcomm-media.version}-${restcomm-media.build}.zip" />
   <property name="restcomm-media.distro.zip.path" value="${checkout.dir}/${restcomm-media.download.distro.file}"/>
 
   <!-- <property name="restcomm-olympus.download.url" value="https://mobicents.ci.cloudbees.com/job/Olympus/${olympus.build}/artifact/target/olympus.war"/> -->
@@ -135,8 +136,7 @@
     <exec executable="wget" failonerror="true">
       <arg value="${restcomm-media.download.url}"/>
     </exec>
-    <move file="${base.dir}/restcomm-media-server.zip" todir="${checkout.dir}"/>
-    <move file="${checkout.dir}/restcomm-media-server.zip" tofile="${checkout.dir}/${restcomm-media.download.distro.file}"/>
+    <move file="${base.dir}/${restcomm-media.download.distro.file}" todir="${checkout.dir}"/>
   </target>
 
   <!--Olympus-->
@@ -162,11 +162,14 @@
 
   <target depends="get-restcomm-media" name="extract-restcomm-media">
     <delete dir="${checkout.restcomm-media.dir}" failonerror="false"/>
-    <delete dir="${release.as7.dir}/mobicents-media-server" failonerror="false"/>
+    <delete dir="${release.as7.dir}/restcomm-media-server" failonerror="false"/>
     <!--unzip src="${mobicents-media.distro.zip.path}" dest="${release.dir}/mobicents-media"/-->
     <unzip dest="${release.as7.dir}/mediaserver" src="${restcomm-media.distro.zip.path}"/>
+    <exec executable="ls" failonerror="false">
+      <arg value="-l ${release.as7.dir}/mediaserver"/>
+    </exec>
     <move todir="${release.as7.dir}/mediaserver">
-      <fileset dir="${release.as7.dir}/mediaserver/restcomm-media-server"/>
+      <fileset dir="${release.as7.dir}/mediaserver/${restcomm-media.download.distro.name}"/>
     </move>
     <!-- copy failonerror="true" file="${configuration.directory}/mms-server-beans.xml" tofile="${release.as7.dir}/mediaserver/deploy/server-beans.xml"/ -->
     <chmod dir="${release.as7.dir}/mediaserver" includes="**/*.sh" perm="ugo+rx"/>
