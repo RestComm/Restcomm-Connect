@@ -2271,7 +2271,6 @@ public abstract class BaseVoiceInterpreter extends RestcommUntypedActor {
                 final SmsSessionRequest sms = new SmsSessionRequest(from, to, body, null);
                 session.tell(sms, source);
                 smsSessions.put(sid, session);
-                getContext().system().eventStream().publish(sms);
             }
             // Parses "action".
             attribute = verb.attribute("action");
