@@ -811,13 +811,6 @@ public abstract class BaseVoiceInterpreter extends RestcommUntypedActor {
             final SmsSessionResponse response = (SmsSessionResponse) message;
             final SmsSessionInfo info = response.info();
             SmsMessage record = (SmsMessage) info.attributes().get("record");
-            if (response.succeeded()) {
-                final DateTime now = DateTime.now();
-                record = record.setDateSent(now);
-                record = record.setStatus(Status.SENT);
-            } else {
-                record = record.setStatus(Status.FAILED);
-            }
             final SmsMessagesDao messages = storage.getSmsMessagesDao();
             messages.updateSmsMessage(record);
             // Notify the callback listener.
