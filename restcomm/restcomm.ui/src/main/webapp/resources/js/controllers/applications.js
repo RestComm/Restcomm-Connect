@@ -79,13 +79,14 @@ angular.module('rcApp.controllers').controller('ApplicationCreationWizardCtrl', 
     }
 });
 
-angular.module('rcApp.controllers').controller('ApplicationCreationCtrl', function ($scope, $rootScope, $location, Notifications, RvdProjectImporter, RvdProjects, $stateParams, RvdProjectTemplates) {
+angular.module('rcApp.controllers').controller('ApplicationCreationCtrl', function ($scope, $rootScope, $location, Notifications, RvdProjectImporter, RvdProjects, $stateParams, RvdProjectTemplates, $timeout) {
     // the following variables are used as flags from the templates on the type of application creation: isExternalApp / droppedFiles / templateId
     $scope.templateId = $stateParams.templateId;
     var appOptions = {}, droppedFiles; // all options the application needs to be created like name, kind ... anything else ?
     if ( !!$rootScope.droppedFiles ) {
         droppedFiles = $rootScope.droppedFiles;
         delete $rootScope.droppedFiles;
+        $timeout(function () {angular.element(document).find("#project-name-input").select();}, 10);
     }
 
     if (!droppedFiles) {
@@ -96,10 +97,13 @@ angular.module('rcApp.controllers').controller('ApplicationCreationCtrl', functi
         options.kind = kind;
     }
 
+    // create project from template
     if ($scope.templateId) {
       if ($scope.templateId != 'BLANK') {
         $scope.template = RvdProjectTemplates.get({templateId:$scope.templateId}, function () {
           appOptions.kind = effectiveAppTemplateKind($scope.template); // update app kind based on template tags
+          appOptions.name = $scope.template.name + " " + Math.floor(Date.now() / 1000);
+          $timeout(function () {angular.element(document).find("#project-name-input").select();}, 10);
         });
       } else {
         $scope.template = {id: 'BLANK', name: 'Blank', description: 'Empty voice application', tags: ['voice','sms','ussd']};
