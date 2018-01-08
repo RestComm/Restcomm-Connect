@@ -22,7 +22,6 @@ package org.restcomm.connect.sdr.api;
 import akka.actor.ActorRef;
 import org.restcomm.connect.commons.faulttolerance.RestcommUntypedActor;
 import org.restcomm.connect.commons.stream.StreamEvent;
-import org.restcomm.connect.dao.entities.SmsMessage;
 import org.restcomm.connect.telephony.api.CallInfoStreamEvent;
 
 /**
@@ -39,14 +38,10 @@ public abstract class SdrService extends RestcommUntypedActor {
             onStartSdrService((StartSdrService) message, self, sender);
         } else if (message instanceof CallInfoStreamEvent) {
             onCallInfoStreamEvent((CallInfoStreamEvent) message, self, sender);
-        } else if (message instanceof SmsMessage) {
-            onSmsMessage((SmsMessage) message, self, sender);
         }
     }
 
     protected abstract void onStartSdrService(StartSdrService message, ActorRef self, ActorRef sender);
 
     protected abstract void onCallInfoStreamEvent(CallInfoStreamEvent message, ActorRef self, ActorRef sender);
-
-    protected abstract void onSmsMessage(SmsMessage message, ActorRef self, ActorRef sender);
 }
