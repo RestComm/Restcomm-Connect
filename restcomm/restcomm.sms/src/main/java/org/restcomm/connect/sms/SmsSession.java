@@ -283,9 +283,7 @@ public final class SmsSession extends RestcommUntypedActor {
             charset = CharsetUtil.CHARSET_GSM;
         }
 
-        TextMessage textMessage = new TextMessage(last.from(), last.to(), TextMessage.SmsState.OUTBOUND);
-        monitoringService.tell(textMessage, self());
-        system.eventStream().publish(textMessage);
+        monitoringService.tell(new TextMessage(last.from(), last.to(), TextMessage.SmsState.OUTBOUND), self());
         final ClientsDao clients = storage.getClientsDao();
         String to;
         if (last.to().toLowerCase().startsWith("client")) {

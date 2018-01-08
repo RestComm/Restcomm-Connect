@@ -20,13 +20,11 @@
  */
 package org.restcomm.connect.telephony.api;
 
-import org.restcomm.connect.commons.stream.StreamEvent;
-
 /**
  * @author <a href="mailto:gvagenas@gmail.com">gvagenas</a>
  *
  */
-public class TextMessage implements StreamEvent {
+public class TextMessage {
     public static enum SmsState {INBOUND_TO_APP, INBOUND_TO_CLIENT, INBOUND_TO_PROXY_OUT, OUTBOUND, NOT_FOUND}
     private final String from;
     private final String to;
