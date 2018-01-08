@@ -23,7 +23,6 @@ import akka.actor.ActorRef;
 import org.restcomm.connect.commons.faulttolerance.RestcommUntypedActor;
 import org.restcomm.connect.commons.stream.StreamEvent;
 import org.restcomm.connect.telephony.api.CallInfoStreamEvent;
-import org.restcomm.connect.telephony.api.TextMessage;
 
 /**
  * @author oleg.agafonov@telestax.com (Oleg Agafonov)
@@ -39,14 +38,10 @@ public abstract class SdrService extends RestcommUntypedActor {
             onStartSdrService((StartSdrService) message, self, sender);
         } else if (message instanceof CallInfoStreamEvent) {
             onCallInfoStreamEvent((CallInfoStreamEvent) message, self, sender);
-        } else if (message instanceof TextMessage) {
-            onTextMessage((TextMessage) message, self, sender);
         }
     }
 
     protected abstract void onStartSdrService(StartSdrService message, ActorRef self, ActorRef sender);
 
     protected abstract void onCallInfoStreamEvent(CallInfoStreamEvent message, ActorRef self, ActorRef sender);
-
-    protected abstract void onTextMessage(TextMessage message, ActorRef self, ActorRef sender);
 }
