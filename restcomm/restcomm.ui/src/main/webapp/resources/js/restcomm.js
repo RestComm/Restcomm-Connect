@@ -24,21 +24,13 @@ rcMod.config(['$stateProvider','$urlRouterProvider', function($stateProvider, $u
   $stateProvider.state('public.login',{
     url:"/login",
     templateUrl:'modules/login.html',
-    controller:'LoginCtrl',
-    resolve: {
-        identity: function (IdentityConfig) {
-            return IdentityConfig.getIdentity();
-        }
-    }
+    controller:'LoginCtrl'
   });
   $stateProvider.state('public.uninitialized',{
     url:"/uninitialized",
     templateUrl: 'modules/uninitialized.html',
     controller:'UninitializedCtrl',
     resolve: {
-        identity: function (IdentityConfig) {
-            return IdentityConfig.getIdentity();
-        },
         uninitialized: function (AuthService,$q) {
             try {
                 return $q.when(AuthService.checkAccess()).then(function () {
@@ -53,35 +45,6 @@ rcMod.config(['$stateProvider','$urlRouterProvider', function($stateProvider, $u
         }
     }
   });
-  $stateProvider.state('public.identity-registration',{
-    url:"/identity-registration",
-    templateUrl:'modules/identity-registration.html',
-    controller:'IdentityRegistrationCtrl',
-    resolve: {
-        identity: function (IdentityConfig, $state, Notifications,$q) {
-            var deferred = $q.defer();
-            var valueOrPromise = IdentityConfig.getIdentity();
-            if (valueOrPromise === null) // identity notion is not applicable - keycloak is not used
-                deferred.reject('IDENTITY_REGISTRATION_NOT_AVAILABLE');
-            else {
-                valueOrPromise.then(function (registeredInstance) {
-                    deferred.reject("KEYCLOAK_INSTANCE_ALREADY_REGISTERED");
-                }, function (value) {
-                    if (value == "KEYCLOAK_INSTANCE_NOT_REGISTERED") {
-                        deferred.resolve(null); // no instance registered - that's prefectly fine for this view
-                    } else {
-                        // we shouldn't be here
-                        Notifications.error('Invalid state error');
-                        deferred.reject(value);
-                    }
-                });
-            }
-            return deferred.promise;
-        }
-    }
-  });
-  $stateProvider.state('public.registerinstance',{
-  });
   // 'restcomm' state assumes (requires) an authorized restcomm Account to have been determined. Child states can take that for granted.
   $stateProvider.state('restcomm',{
     templateUrl:'templates/restcomm-state.html',
@@ -89,9 +52,6 @@ rcMod.config(['$stateProvider','$urlRouterProvider', function($stateProvider, $u
     resolve: {
         authorize: function (AuthService) {
             return AuthService.checkAccess();
-        },
-        identity: function (IdentityConfig) {
-            return IdentityConfig.getIdentity();
         },
         dashboardConfig: function (PublicConfig) {
 
@@ -239,114 +199,12 @@ rcMod.config(['$stateProvider','$urlRouterProvider', function($stateProvider, $u
 
 }]);
 
-// Keycloak configuration ***
-
-var keycloakAuth = {};
-var keycloakLogout = function(){
-    keycloakAuth.loggedIn = false;
-    keycloakAuth.authz = null;
-    window.location = keycloakAuth.logoutUrl;
-};
-
 angular.element(document).ready(['$http',function ($http) {
   // manually inject $q since it's not available
   var initInjector = angular.injector(["ng"]);
   var $q = initInjector.get("$q");
-
-  // try to retrieve Identity server configuration
-  var serverPromise = $q.defer();
-  // disable until organizations/keycloak in place
-  /*
-  $http.get("/restcomm/2012-04-24/Identity/Server").success(function (serverConfig) {
-    console.log(serverConfig);
-    serverPromise.resolve(serverConfig);
-  }).error( function (response) {
-    if (response.status == 404)
-        serverPromise.resolve(null);
-    else
-        serverPromise.reject();
-  });
-  */
-  serverPromise.resolve(null);
-
-  // try to retrieve IdentityInstance
-  var instancePromise = $q.defer();
-  // disable until organizations/keycloak in place
-  /*
-  $http.get("/restcomm/2012-04-24/Identity/Instances/current").success(function (instance) {
-    instancePromise.resolve(instance);
-  }).error(function (response) {
-   if (response.status == 404)
-      instancePromise.resolve(null);
-    else
-      instancePromise.reject();
-  });*/
-  instancePromise.resolve(null);
-
-  // when both responses are received do sth...
-  $q.all([serverPromise.promise,instancePromise.promise]).then(function (responses) {
-    //console.log("SUCCESS");
-    // create a constant with keycloak server and instance identity configuration
-    var identityConfig = new IdentityConfig(responses[0],responses[1],$q);
-    angular.module('rcApp').constant('IdentityConfig', identityConfig);
-    angular.module('rcApp').factory('KeycloakAuth', function() {
-      return keycloakAuth;
-    });
-    if ( identityConfig.securedByKeycloak() ) {
-      // if the instance is already secured by keycloak
-      var keycloak = new Keycloak({ url: identityConfig.server.authServerUrl, realm: identityConfig.server.realm, clientId: identityConfig.instance.name + "-restcomm-ui" });
-			keycloakAuth.loggedIn = false;
-			keycloak.init({ onLoad: 'login-required' }).success(function () {
-				keycloakAuth.loggedIn = true;
-				keycloakAuth.authz = keycloak;
-				keycloakAuth.logoutUrl = identityConfig.server.authServerUrl + "/realms/" + identityConfig.server.realm + "/protocol/openid-connect/logout?redirect_uri=" + window.location.origin;
-        angular.bootstrap(document, ["rcApp"]);
-			}).error(function (a, b) {
-					window.location.reload();
-			});
-    } else
-    if (identityConfig.identityServerConfigured() && !identityConfig.securedByKeycloak()){
-      // keycloak is already configured but no identity instance yet
-      angular.bootstrap(document, ["rcApp"]);
-    } else {
-      // no identity configuration. We should run in compatibility authorization mode
-      angular.bootstrap(document, ["rcApp"]);
-    }
-
-  }, function () {
-    console.log("Internal server error");
-  });
+  angular.bootstrap(document, ["rcApp"]);
 }]);
-
-
-// Authorization interceptor. It's effective when restcomm is secured by Keycloak.
-angular.module('rcApp').factory('authInterceptor', function($q) {
-    return {
-        request: function (config) {
-            if (!keycloakAuth.authz)
-                return config;
-            var deferred = $q.defer();
-            if (keycloakAuth.authz.token) {
-                keycloakAuth.authz.updateToken(5).success(function() {
-                    config.headers = config.headers || {};
-                    config.headers.Authorization = 'Bearer ' + keycloakAuth.authz.token;
-                    deferred.resolve(config);
-                }).error(function() {
-                    deferred.reject('Failed to refresh token');
-                });
-            }
-            return deferred.promise;
-        }
-    };
-}).config(['$httpProvider','IdentityConfig', function($httpProvider,IdentityConfig) {
-    if ( IdentityConfig.securedByKeycloak() ) {
-        $httpProvider.interceptors.push('authInterceptor');
-    }
-}]);
-
-// End-of Keycloak configuration ***
-
-
 
 
 rcMod.directive('equals', function() {
@@ -390,7 +248,7 @@ rcMod.run(function($rootScope, $location, $anchorScroll, AuthService) {
 // There is a circular dependency issue when directly injecting AuthService in the function. A workaround using $injector has
 // been used - http://stackoverflow.com/questions/20647483/angularjs-injecting-service-into-a-http-interceptor-circular-dependency
 rcMod.
-  factory('authHttpResponseInterceptor',['$q','$location','$injector','IdentityConfig','Notifications',function($q,$location,$injector,IdentityConfig, Notifications){
+  factory('authHttpResponseInterceptor',['$q','$location','$injector','Notifications',function($q,$location,$injector, Notifications){
     return {
       request: function(config) {
           var restcomm_prefix = "/restcomm/"
@@ -430,11 +288,9 @@ rcMod.
       }
     }
   }])
-  .config(['$httpProvider','IdentityConfig', function($httpProvider, IdentityConfig) {
-    if ( IdentityConfig.securedByRestcomm() ) {
-        // http Intercpetor to check auth failures for xhr requests
-        $httpProvider.interceptors.push('authHttpResponseInterceptor');
-    }
+  .config(['$httpProvider', function($httpProvider) {
+      // http Intercpetor to check auth failures for xhr requests
+      $httpProvider.interceptors.push('authHttpResponseInterceptor');
   }]);
 
 /*

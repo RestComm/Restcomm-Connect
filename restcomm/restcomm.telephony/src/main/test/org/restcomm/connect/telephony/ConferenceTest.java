@@ -42,6 +42,7 @@ import org.restcomm.connect.telephony.api.ConferenceInfo;
 import org.restcomm.connect.telephony.api.ConferenceResponse;
 import org.restcomm.connect.telephony.api.ConferenceStateChanged;
 import org.restcomm.connect.telephony.api.CreateConference;
+import org.restcomm.connect.telephony.api.StopConference;
 import org.restcomm.connect.telephony.util.ConferenceTestUtil;
 
 import akka.actor.ActorRef;
@@ -302,5 +303,42 @@ public class ConferenceTest extends ConferenceTestUtil{
         });
         return system.actorOf(props);
     }
+
+    @Test
+	public void testStopConferenceWithNoLocalParticipants() throws URISyntaxException {
+        new JavaTestKit(system) {
+            {
+            	daoManager = mock(DaoManager.class);
+            	CallDetailRecordsDao callDetailRecordsDao = mock(CallDetailRecordsDao.class);
+            	ConferenceDetailRecordsDao conferenceDetailRecordsDao = mock(ConferenceDetailRecordsDao.class);
+            	when(callDetailRecordsDao.getTotalRunningCallDetailRecordsByConferenceSid(any(Sid.class))).thenReturn(0);
+            	when(daoManager.getCallDetailRecordsDao()).thenReturn(callDetailRecordsDao);
+            	when(daoManager.getConferenceDetailRecordsDao()).thenReturn(conferenceDetailRecordsDao);
+            	
+            	
+                final ActorRef tester = getRef();
+                // Create MockFailingMmsControllerFactory
+                MediaServerControllerFactory factory = new MockMmsControllerFactory(system, null);
+                // Create ConferenceCenter
+                final ActorRef conferenceCenter = conferenceCenter(factory, daoManager);
+
+                // get a fresh conference from conferenecneter
+                final CreateConference create = new CreateConference(CONFERENCE_FRIENDLY_NAME_1, new Sid(CALL_SID));
+                conferenceCenter.tell(create, tester);
+                ConferenceCenterResponse conferenceCenterResponse = expectMsgClass(ConferenceCenterResponse.class);
+                ActorRef conferene = conferenceCenterResponse.get();
+                
+                // start observing conference
+                conferene.tell(new Observe(tester), tester);
+                Observing observingResponse = expectMsgClass(Observing.class);
+                assertTrue(observingResponse.succeeded());
+
+                // stop conference while no local participants is there
+                conferene.tell(new StopConference(), tester);
+                ConferenceStateChanged conferenceStateChanged = expectMsgClass(ConferenceStateChanged.class);
+                assertEquals(ConferenceStateChanged.State.COMPLETED, conferenceStateChanged.state());
+            	
+            }};
+	}
 
 }

@@ -12,26 +12,3 @@ angular.module('rcApp.controllers').controller('RestcommCtrl', function ($scope,
     $scope.loggedAccount = AuthService.getAccount();
     $scope.sid = AuthService.getAccountSid();
 });
-
-angular.module('rcApp.controllers').controller('IdentityRegistrationCtrl', function ($scope, RCommIdentityInstances) {
-    $scope.info = {
-        InitialAccessToken: "",
-        RedirectUrl: "",
-        KeycloakBaseUrl: ""
-    };
-    $scope.accountInfo = {
-        username: "",
-        password: ""
-    };
-
-    $scope.registerInstance = function(info, accountInfo) {
-        var authHeader = "Basic " + btoa(accountInfo.username + ":" + accountInfo.password);
-        RCommIdentityInstances.register(info, authHeader).success(function (data, status) {
-            console.log("successfully registered instance");
-        }).error(function (data, status) {
-            console.log("error registering instance");
-        });
-
-    }
-
-});

@@ -333,6 +333,10 @@ public final class Conference extends RestcommUntypedActor {
             }
             //tell call api client to kick all remote calls
             kickoutRemoteParticipants();
+            // Stop the conference if ALL local participants have been evicted
+            if (calls.isEmpty()) {
+                fsm.transition(message, stopping);
+            }
         }
     }
 
