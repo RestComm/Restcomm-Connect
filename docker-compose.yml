@@ -28,7 +28,7 @@ services:
       RCBCONF_STATIC_ADDRESS: 127.0.0.1   # YOUR LOCAL IP ADDRESS GOES HERE.
       ## =============================== IMPORTANT ========================================================================================
 
-      ENVCONFURL: https://raw.githubusercontent.com/RestComm/Restcomm-Docker/master/env_files/restcomm_env_locally.sh
+      # ENVCONFURL: https://raw.githubusercontent.com/RestComm/Restcomm-Docker/master/env_files/restcomm_env_locally.sh
       # REPOUSR: Username for `ENVCONFURL` if Authentication needed.
       # REPOPWD: Password for `ENVCONFURL` if Authentication needed.
 
