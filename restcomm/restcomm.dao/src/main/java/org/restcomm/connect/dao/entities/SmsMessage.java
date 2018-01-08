@@ -28,13 +28,12 @@ import org.joda.time.DateTime;
 import org.restcomm.connect.commons.annotations.concurrency.Immutable;
 import org.restcomm.connect.commons.annotations.concurrency.NotThreadSafe;
 import org.restcomm.connect.commons.dao.Sid;
-import org.restcomm.connect.commons.stream.StreamEvent;
 
 /**
  * @author quintana.thomas@gmail.com (Thomas Quintana)
  */
 @Immutable
-public final class SmsMessage implements StreamEvent {
+public final class SmsMessage {
     public static final int MAX_SIZE = 160;
     private final Sid sid;
     private final DateTime dateCreated;
