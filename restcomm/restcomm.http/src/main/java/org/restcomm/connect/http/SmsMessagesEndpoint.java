@@ -399,13 +399,6 @@ public abstract class SmsMessagesEndpoint extends SecuredEndpoint {
                 final SmsSessionResponse response = (SmsSessionResponse) message;
                 final SmsSessionInfo info = response.info();
                 SmsMessage record = (SmsMessage) info.attributes().get("record");
-                if (response.succeeded()) {
-                    final DateTime now = DateTime.now();
-                    record = record.setDateSent(now);
-                    record = record.setStatus(Status.SENT);
-                } else {
-                    record = record.setStatus(Status.FAILED);
-                }
                 dao.updateSmsMessage(record);
                 final UntypedActorContext context = getContext();
                 final ActorRef self = self();
