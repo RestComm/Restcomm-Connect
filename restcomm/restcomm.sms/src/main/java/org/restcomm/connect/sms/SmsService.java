@@ -298,8 +298,7 @@ public final class SmsService extends RestcommUntypedActor {
                     // Send the SMS.
                     TlvSet tlvSet = new TlvSet();
                     final SmsSessionRequest sms = new SmsSessionRequest(client.getLogin(), toUser, new String(request.getRawContent()), request, tlvSet, null);
-                    TextMessage textMessage = new TextMessage(((SipURI)request.getFrom().getURI()).getUser(), ((SipURI)request.getTo().getURI()).getUser(), TextMessage.SmsState.INBOUND_TO_PROXY_OUT);
-                    monitoringService.tell(textMessage, self);
+                    monitoringService.tell(new TextMessage(((SipURI)request.getFrom().getURI()).getUser(), ((SipURI)request.getTo().getURI()).getUser(), TextMessage.SmsState.INBOUND_TO_PROXY_OUT), self);
                     session.tell(sms, self());
                 } else {
                     if (logger.isDebugEnabled()) {
