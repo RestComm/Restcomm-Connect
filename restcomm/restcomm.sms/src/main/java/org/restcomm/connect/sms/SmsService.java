@@ -286,6 +286,7 @@ public final class SmsService extends RestcommUntypedActor {
                 final SmsMessage record = builder.build();
                 final SmsMessagesDao messages = storage.getSmsMessagesDao();
                 messages.addSmsMessage(record);
+                getContext().system().eventStream().publish(record);
                 // Store the sms record in the sms session.
                 session.tell(new SmsSessionAttribute("record", record), self());
                 // Send the SMS.
