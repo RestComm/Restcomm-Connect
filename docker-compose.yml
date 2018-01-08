@@ -46,8 +46,8 @@ services:
       RCADVCONF_TRUSTSTORE_ALIAS: restcomm
 
       #Functional configuration. Make sure these match the published port range in the `ports` section below.
-      RMSCONF_MEDIASERVER_LOWEST_PORT: 65000
-      RMSCONF_MEDIASERVER_HIGHEST_PORT: 65050
+      RMSCONF_MEDIA_LOW_PORT: 65000
+      RMSCONF_MEDIA_HIGH_PORT: 65050
 
       #RestComm Port configuration. Make sure these match the published ports in the `ports` section below.
       RCBCONF_SIP_PORT_UDP: 5080
