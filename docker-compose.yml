@@ -26,6 +26,7 @@ services:
     environment:
       ## =============================== IMPORTANT!!    While most of the below defaults should be fine, YOU PROBABLY NEED TO CHANGE THIS!!
       RCBCONF_STATIC_ADDRESS: 127.0.0.1   # YOUR LOCAL IP ADDRESS GOES HERE.
+      RMSCONF_EXTERNAL_ADDRESS: 127.0.0.1  # YOUR LOCAL IP ADDRESS GOES HERE.
       ## =============================== IMPORTANT ========================================================================================
 
       # ENVCONFURL: https://raw.githubusercontent.com/RestComm/Restcomm-Docker/master/env_files/restcomm_env_locally.sh
