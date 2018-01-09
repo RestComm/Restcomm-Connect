@@ -79,12 +79,16 @@ angular.module('rcApp.controllers').controller('ApplicationCreationWizardCtrl', 
     }
 });
 
-angular.module('rcApp.controllers').controller('ApplicationCreationCtrl', function ($scope, $rootScope, $location, Notifications, RvdProjectImporter, RvdProjects) {
+angular.module('rcApp.controllers').controller('ApplicationCreationCtrl', function ($scope, $rootScope, $location, Notifications, RvdProjectImporter, RvdProjects, $stateParams, RvdProjectTemplates, $timeout) {
+    // the following variables are used as flags from the templates on the type of application creation: isExternalApp / droppedFiles / templateId
+    $scope.templateId = $stateParams.templateId;
     var appOptions = {}, droppedFiles; // all options the application needs to be created like name, kind ... anything else ?
     if ( !!$rootScope.droppedFiles ) {
         droppedFiles = $rootScope.droppedFiles;
         delete $rootScope.droppedFiles;
+        $timeout(function () {angular.element(document).find("#project-name-input").select();}, 10);
     }
+
     if (!droppedFiles) {
         appOptions.kind = "voice"; // by default create voice applications
     }
@@ -93,14 +97,47 @@ angular.module('rcApp.controllers').controller('ApplicationCreationCtrl', functi
         options.kind = kind;
     }
 
-    $scope.createRvdApplication = function(options) {
-        RvdProjects.create({applicationSid: options.name, kind:options.kind}, null, function (data) { // RVD does not have an intuitive API :-( // NOTE 'null' is VERY IMPORTANT here as it makes $resource and the kind as a query parameter
-            Notifications.success("RVD application created");
-            $location.path("/applications/" + data.sid);
-            window.open("/restcomm-rvd#/designer/" + data.sid + "=" + data.name);
+    // create project from template
+    if ($scope.templateId) {
+      if ($scope.templateId != 'BLANK') {
+        $scope.template = RvdProjectTemplates.get({templateId:$scope.templateId}, function () {
+          appOptions.kind = effectiveAppTemplateKind($scope.template); // update app kind based on template tags
+          appOptions.name = $scope.template.name + " " + Math.floor(Date.now() / 1000);
+          $timeout(function () {angular.element(document).find("#project-name-input").select();}, 10);
         });
-
+      } else {
+        $scope.template = {id: 'BLANK', name: 'Blank', description: 'Empty application', tags: ['voice','sms','ussd']};
+      }
     }
+
+    function effectiveAppTemplateKind(template) {
+      if (template) {
+        if (template.tags.indexOf('voice') != -1)
+          return 'voice';
+        if (template.tags.indexOf('sms') != -1)
+                  return 'sms';
+        if (template.tags.indexOf('ussd') != -1)
+                  return 'voice';
+      }
+    }
+
+    $scope.createRvdApplication = function(options, templateId) {
+      var params = {};
+      if (!!templateId && templateId != 'BLANK') {
+        // templateId is available, create from template
+        params.template = templateId;
+        params.name = options.name;
+      } else {
+        params.name = options.name;
+        params.kind = options.kind;
+      }
+      RvdProjects.save(params, null, function (data) { // RVD does not have an intuitive API :-( // NOTE 'null' is VERY IMPORTANT here as it makes $resource and the kind as a query parameter
+          Notifications.success("RVD application created");
+          $location.path("/applications/" + data.sid);
+          window.open("/restcomm-rvd#/designer/" + data.sid + "=" + data.name);
+      });
+    }
+
 
     // if we're importing, use imported filename to suggest a name for the newly created project
     if (droppedFiles) {
@@ -164,8 +201,12 @@ var confirmApplicationDelete = function(app, $dialog, $scope, Notifications, RCo
                     Notifications.success('RestComm Application "' + app.friendly_name + '" has been deleted.');
                     $location.path( "/applications" );
                 },
-                function() {
-                    Notifications.error('Failed to delete application "' + app.friendly_name + '".');
+                function(response) {
+                    if (response.status != 404) {
+                      Notifications.error('Failed to delete application "' + app.friendly_name + '".');
+                    } else {
+                      $location.path( "/applications" );
+                    }
                 }
             );
         } else

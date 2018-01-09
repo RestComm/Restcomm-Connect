@@ -123,8 +123,14 @@ rcMod.config(['$stateProvider','$urlRouterProvider', function($stateProvider, $u
   $stateProvider.state('restcomm.application-creation',{
       url:'/applications/new',
       templateUrl: 'modules/application-creation.html',
-      controller: 'ApplicationCreationCtrl'
+      controller: 'ApplicationCreationCtrl',
   });
+  $stateProvider.state('restcomm.application-creation-from-template',{
+      url:'/applications/new/:templateId',
+      templateUrl: 'modules/application-creation.html',
+      controller: 'ApplicationCreationCtrl',
+  });
+
   $stateProvider.state('restcomm.application-external-creation',{
       url:'/applications/new-external',
       templateUrl: 'modules/application-creation.html',
@@ -134,6 +140,11 @@ rcMod.config(['$stateProvider','$urlRouterProvider', function($stateProvider, $u
       url:'/applications/:applicationSid',
       templateUrl: 'modules/application-details.html',
       controller: 'ApplicationDetailsCtrl'
+  });
+  $stateProvider.state('restcomm.application-templates',{
+        url:'/application-templates',
+        templateUrl: 'modules/application-templates.html',
+        controller: 'ApplicationTemplatesCtrl'
   });
   $stateProvider.state('restcomm.clients',{
     url:'/numbers/clients',

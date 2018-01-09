@@ -1648,6 +1648,10 @@ form[role=login] input:-webkit-autofill:focus{
     min-height: 250px;
 }
 
+.app-creation .change-template-button {
+  padding-left: 0;
+}
+
 .app-details .details-section-title {
     padding-top: 0;
 }
@@ -1703,6 +1707,104 @@ form[role=login] input:-webkit-autofill:focus{
 .app-creation .kind-selection > button {
     min-width: 50px;
 }
+
+/* -- Application templates ------------------------------------------------- */
+
+.template-item .item-top {
+  text-align: center;
+  padding: 5px;
+}
+
+.template-item .item-bottom {
+  text-align: center;
+  background-color: #458ECC;
+  color: white;
+  padding: 8px;
+}
+
+.template-item {
+  /*margin: 0px 5px 38px 5px; REMOVE ME*/
+  margin-bottom: 35px;
+  box-shadow: 1px 1px 1px #888888;
+  opacity: 0.8;
+}
+
+.template-item:hover {
+  opacity: 1.0;
+}
+
+.template-item .template-icon {
+  font-size: 80px;
+}
+
+.template-item .template-body {
+  display: table;
+  height: 140px;
+  width: 100%;
+}
+
+.template-item .template-body .template-description {
+  display: none;
+}
+
+.template-item .template-body .template-icon {
+  display: table-cell;
+  vertical-align: middle;
+}
+
+.template-item:hover .template-body .template-description {
+  display: table-cell;
+  vertical-align: middle;
+}
+
+.template-item:hover .template-body .template-icon {
+  display: none;
+}
+
+.template-item .tag-icons {
+  color: #777;
+  text-align: right;
+}
+
+.template-item .tag-icons i {
+  margin-left: 5px;
+}
+
+/*.template-tags .checkbox {
+  margin-right: 50px;
+}*/
+
+.template-tags .checkbox i {
+  margin-left: 7px;
+  margin-right: 5px;
+}
+
+.template-tags {
+  margin-top: 10px;
+}
+
+.template-search {
+  margin-top: 12px;
+}
+
+.templates-head {
+  margin-bottom: 24px;
+}
+
+.templates-head .templates-title {
+  margin-top: 8px;
+}
+
+.templates-view .search-form input {
+  width: 100%;
+}
+
+
+.template-tags label {
+    font-size: 1.2em;
+    font-weight: bold;
+}
+
 
 
 /* -- Numbers --------------------------------------------------------------- */
