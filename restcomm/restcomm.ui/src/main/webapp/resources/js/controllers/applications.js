@@ -86,7 +86,6 @@ angular.module('rcApp.controllers').controller('ApplicationCreationCtrl', functi
     if ( !!$rootScope.droppedFiles ) {
         droppedFiles = $rootScope.droppedFiles;
         delete $rootScope.droppedFiles;
-        $timeout(function () {angular.element(document).find("#project-name-input").select();}, 10);
     }
 
     if (!droppedFiles) {
@@ -103,7 +102,6 @@ angular.module('rcApp.controllers').controller('ApplicationCreationCtrl', functi
         $scope.template = RvdProjectTemplates.get({templateId:$scope.templateId}, function () {
           appOptions.kind = effectiveAppTemplateKind($scope.template); // update app kind based on template tags
           appOptions.name = $scope.template.name + " " + Math.floor(Date.now() / 1000);
-          $timeout(function () {angular.element(document).find("#project-name-input").select();}, 10);
         });
       } else {
         $scope.template = {id: 'BLANK', name: 'Blank', description: 'Empty application', tags: ['voice','sms','ussd']};
