@@ -42,7 +42,7 @@
                 <td class="clients-list-friendly-name hidden-xs">
                     <div class="" ng-hide="editingFriendlyName === sc.login">{{ sc.friendly_name  }} </div>
                     <div class="" ng-show="editingFriendlyName === sc.login">
-                        <input type="text" class="form-control" onkeyup="if(event.keyCode === 13) {this.blur()}" ng-model="sc.friendly_name" ng-blur="editingFriendlyName = undefined; setFriendlyName(sc)" autofocus />
+                        <input type="text" class="form-control" onkeyup="if(event.keyCode === 13) {this.blur()}" ng-model="sc.friendly_name" ng-blur="editingFriendlyName = undefined; setFriendlyName(sc)" autofocus="editingFriendlyName === sc.login" />
                     </div>
                 </td>
                 <td class="clients-list-applications">
