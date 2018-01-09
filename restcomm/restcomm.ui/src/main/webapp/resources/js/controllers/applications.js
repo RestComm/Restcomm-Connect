@@ -106,7 +106,7 @@ angular.module('rcApp.controllers').controller('ApplicationCreationCtrl', functi
           $timeout(function () {angular.element(document).find("#project-name-input").select();}, 10);
         });
       } else {
-        $scope.template = {id: 'BLANK', name: 'Blank', description: 'Empty voice application', tags: ['voice','sms','ussd']};
+        $scope.template = {id: 'BLANK', name: 'Blank', description: 'Empty application', tags: ['voice','sms','ussd']};
       }
     }
 
