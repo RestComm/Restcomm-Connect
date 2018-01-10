@@ -3,7 +3,7 @@
 /* Controllers */
 
 // defining controllers module. Each module is defined at it's own file at resources/js/controllers/*.js
-angular.module('rcApp.controllers', ['ui.bootstrap','angular-datepicker']);
+angular.module('rcApp.controllers', ['ui.bootstrap']);
 
 // Shorter controllers are also defined here to avoid creating too many files.
 

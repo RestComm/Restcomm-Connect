@@ -134,22 +134,22 @@ rcServices.factory('AuthService',function(RCommAccounts,$http, $location, Sessio
         method:"GET",
         url:"/restcomm/2012-04-24/Accounts.json/" + encodeURIComponent(username),
         headers:{Authorization: auth_header}
-      }).success(function(data, status, headers, config) {
-          if (status == 200) {
+      }).then(function(response) {
+          if (response.status === 200) {
             //if(data.date_created && data.date_created == data.date_updated) {
-            if(data.status) {
-              if(data.status == 'uninitialized') {
-                setActiveAccount(data);
+            if(response.data.status) {
+              if(response.data.status === 'uninitialized') {
+                setActiveAccount(response.data);
                 deferred.resolve("UNINITIALIZED");
                 return;
               }
-              else if(data.status == 'suspended') {
+              else if(response.data.status === 'suspended') {
                 clearActiveAccount();
                 deferred.reject('SUSPENDED');
                 return;
               }
-              else if (data.status == 'active') {
-                setActiveAccount(data);
+              else if (response.data.status === 'active') {
+                setActiveAccount(response.data);
                 deferred.resolve('OK');
                 return;
               }
@@ -159,8 +159,8 @@ rcServices.factory('AuthService',function(RCommAccounts,$http, $location, Sessio
           clearActiveAccount();
           deferred.reject('UNKNOWN_ERROR');
           return;
-        }).
-        error(function(data) {
+        },
+        function(response) {
           clearActiveAccount();
           deferred.reject('AUTH_ERROR');
           return;
@@ -189,15 +189,15 @@ rcServices.factory('AuthService',function(RCommAccounts,$http, $location, Sessio
         headers: {
             Authorization: auth_header,
             'Content-Type': 'application/x-www-form-urlencoded'
-        }}).
-        success(function(account) {
-          setActiveAccount(account);
-          deferred.resolve();
-        }).
-        error(function(data) {
-          clearActiveAccount();
-          deferred.reject('PASSWORD_UPDATE_FAILED');
-        });
+        }}).then(
+          function(response) {
+            setActiveAccount(response.data);
+            deferred.resolve();
+          },
+          function(response) {
+            clearActiveAccount();
+            deferred.reject('PASSWORD_UPDATE_FAILED');
+          });
         return deferred.promise;
     }
 
