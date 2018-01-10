@@ -46,7 +46,6 @@ import org.restcomm.connect.commons.dao.Sid;
 import org.restcomm.connect.commons.faulttolerance.RestcommUntypedActor;
 import org.restcomm.connect.commons.push.PushNotificationServerHelper;
 import org.restcomm.connect.commons.util.UriUtils;
-import org.restcomm.connect.dao.AccountsDao;
 import org.restcomm.connect.dao.ApplicationsDao;
 import org.restcomm.connect.dao.ClientsDao;
 import org.restcomm.connect.dao.DaoManager;
@@ -175,7 +174,6 @@ public final class SmsService extends RestcommUntypedActor {
             logger.error("Null Organization: fromUri: "+fromURI);
         }
         final Client client = clients.getClient(fromUser, sourceOrganizationSid);
-        final AccountsDao accounts = storage.getAccountsDao();
         final ApplicationsDao applications = storage.getApplicationsDao();
 
         // Make sure we force clients to authenticate.
@@ -194,7 +192,7 @@ public final class SmsService extends RestcommUntypedActor {
         // registered
         final String toUser = CallControlHelper.getUserSipId(request, useTo);
         // Try to see if the request is destined for an application we are hosting.
-        if (redirectToHostedSmsApp(self, request, accounts, applications, toUser, sourceOrganizationSid)) {
+        if (redirectToHostedSmsApp(self, request, applications, sourceOrganizationSid)) {
             // Tell the sender we received the message okay.
             if(logger.isInfoEnabled()) {
                 logger.info("Message to :" + toUser + " matched to one of the hosted applications");
@@ -311,13 +309,11 @@ public final class SmsService extends RestcommUntypedActor {
      *
      * @param self
      * @param request
-     * @param accounts
      * @param applications
-     * @param id
      * @throws IOException
      */
-    private boolean redirectToHostedSmsApp(final ActorRef self, final SipServletRequest request, final AccountsDao accounts,
-            final ApplicationsDao applications, String id, Sid sourceOrganizationSid) throws IOException {
+    private boolean redirectToHostedSmsApp(final ActorRef self, final SipServletRequest request,
+            final ApplicationsDao applications, Sid sourceOrganizationSid) throws IOException {
         boolean isFoundHostedApp = false;
 
         // Handle the SMS message.
@@ -328,7 +324,7 @@ public final class SmsService extends RestcommUntypedActor {
         try {
             if (number != null) {
                 URI appUri = number.getSmsUrl();
-                ActorRef interpreter = null;
+                Props props = null;
                 if (appUri != null || number.getSmsApplicationSid() != null) {
                     final SmsInterpreterParams.Builder builder = new SmsInterpreterParams.Builder();
                     builder.setSmsService(self);
@@ -356,8 +352,7 @@ public final class SmsService extends RestcommUntypedActor {
                         builder.setFallbackUrl(UriUtils.resolve(number.getSmsFallbackUrl()));
                         builder.setFallbackMethod(number.getSmsFallbackMethod());
                     }
-                    final Props props = SmsInterpreter.props(builder.build());
-                    interpreter = getContext().actorOf(props);
+                    props = SmsInterpreter.props(builder.build());
                 }
                 Sid organizationSid = storage.getOrganizationsDao().getOrganization(storage.getAccountsDao().getAccount(number.getAccountSid()).getOrganizationSid()).getSid();
                 if(logger.isDebugEnabled())
@@ -366,9 +361,14 @@ public final class SmsService extends RestcommUntypedActor {
                 final ActorRef session = session(this.configuration, organizationSid);
 
                 session.tell(request, self);
-                final StartInterpreter start = new StartInterpreter(session);
-                interpreter.tell(start, self);
-                isFoundHostedApp = true;
+                if (props == null) {
+                    String errMsg = "No valid appUri nor SMS Application SID configured for this number : " + to;
+                    sendNotification(errMsg, 12003, "warning", true);
+                } else {
+                    final StartInterpreter start = new StartInterpreter(session);
+                    getContext().actorOf(props).tell(start, self);
+                    isFoundHostedApp = true;
+                }
             }
         } catch (Exception e) {
             String errMsg = "There is no valid Restcomm SMS Request URL configured for this number : " + to;
