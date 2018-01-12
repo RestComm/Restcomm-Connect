@@ -447,13 +447,13 @@ public final class UserAgentManager extends RestcommUntypedActor {
         final SipSession session = ping.getSession();
         session.setHandler("UserAgentManager");
         if(logger.isDebugEnabled()) {
-            logger.debug("About to send OPTIONS keepalive to: "+to);
+            logger.debug("About to send OPTIONS keepalive to: "+location);
         }
         try {
             ping.send();
         } catch (IOException e) {
             if (logger.isInfoEnabled()) {
-                logger.info("There was a problem while trying to ping client: "+to+" , will remove registration. " + e.getMessage());
+                logger.info("There was a problem while trying to ping client: "+location+" , will remove registration. " + e.getMessage());
             }
             removeRegistration(ping);
         }
