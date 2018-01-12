@@ -5,6 +5,7 @@ import org.apache.ibatis.session.SqlSessionFactoryBuilder;
 import org.joda.time.DateTime;
 import org.junit.After;
 import org.junit.Before;
+import org.junit.Ignore;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
 import org.restcomm.connect.commons.annotations.UnstableTests;
@@ -22,6 +23,7 @@ import static org.junit.Assert.assertNotNull;
  * Created by gvagenas on 21/10/2016.
  */
 @Category(UnstableTests.class)
+@Ignore
 public class ExtensionConfigurationDaoTest {
     private static MybatisDaoManager manager;
     private MybatisExtensionsConfigurationDao extensionsConfigurationDao;
