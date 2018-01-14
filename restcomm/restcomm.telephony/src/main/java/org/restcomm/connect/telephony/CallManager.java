@@ -611,10 +611,12 @@ public final class CallManager extends RestcommUntypedActor {
                 ec.executePreOutboundAction(er, this.extensions);
                 if (er.isAllowed()) {
                     if (actAsProxyOut) {
+                        addHeadersToMessage(request, er.getOutboundProxyHeaders());
                         processRequestAndProxyOut(request, client, toUser);
                     } else if (isWebRTC(request)) {
                         //This is a WebRTC client that dials out
                         //TODO: should we inject headers for this case?
+                        addHeadersToMessage(request, er.getOutboundProxyHeaders());
                         proxyThroughMediaServerAsNumber(request, client, toUser);
                     } else {
                         // https://telestax.atlassian.net/browse/RESTCOMM-335
@@ -632,7 +634,7 @@ public final class CallManager extends RestcommUntypedActor {
                             proxyUsername = er.getOutboundProxyUsername();
                         }
                         if (er.getOutboundProxyPassword() != null && !er.getOutboundProxyPassword().isEmpty()) {
-                            proxyUsername = er.getOutboundProxyPassword();
+                            proxyPassword = er.getOutboundProxyPassword();
                         }
                         // proxy DID or number if the outbound proxy fields are not empty in the restcomm.xml
                         if (proxyURI != null && !proxyURI.isEmpty()) {
