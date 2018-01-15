@@ -56,6 +56,11 @@ import org.restcomm.connect.email.EmailService;
 import org.restcomm.connect.email.api.EmailRequest;
 import org.restcomm.connect.email.api.EmailResponse;
 import org.restcomm.connect.email.api.Mail;
+import org.restcomm.connect.extension.api.ExtensionResponse;
+import org.restcomm.connect.extension.api.ExtensionType;
+import org.restcomm.connect.extension.api.IExtensionFeatureAccessRequest;
+import org.restcomm.connect.extension.api.RestcommExtensionGeneric;
+import org.restcomm.connect.extension.controller.ExtensionController;
 import org.restcomm.connect.http.client.Downloader;
 import org.restcomm.connect.http.client.DownloaderResponse;
 import org.restcomm.connect.http.client.HttpRequestDescriptor;
@@ -74,6 +79,7 @@ import org.restcomm.connect.sms.api.SmsSessionAttribute;
 import org.restcomm.connect.sms.api.SmsSessionInfo;
 import org.restcomm.connect.sms.api.SmsSessionRequest;
 import org.restcomm.connect.sms.api.SmsSessionResponse;
+import org.restcomm.connect.telephony.api.FeatureAccessRequest;
 
 import java.io.IOException;
 import java.math.BigDecimal;
@@ -148,7 +154,10 @@ public final class SmsInterpreter extends RestcommUntypedActor {
     private ConcurrentHashMap<String, String> customHttpHeaderMap = new ConcurrentHashMap<String, String>();
     private ConcurrentHashMap<String, String> customRequestHeaderMap;
 
-    public SmsInterpreter(final SmsInterpreterParams params) {
+    //List of extensions for SmsInterpreter
+    List<RestcommExtensionGeneric> extensions;
+
+    public SmsInterpreter (final SmsInterpreterParams params) {
         super();
         final ActorRef source = self();
         uninitialized = new State("uninitialized", null, null);
@@ -220,43 +229,44 @@ public final class SmsInterpreter extends RestcommUntypedActor {
         this.fallbackMethod = params.getFallbackMethod();
         this.sessions = new HashMap<Sid, ActorRef>();
         this.normalizeNumber = runtime.getBoolean("normalize-numbers-for-outbound-calls");
+        extensions = ExtensionController.getInstance().getExtensions(ExtensionType.FeatureAccessControl);
     }
 
-    public static Props props(final SmsInterpreterParams params) {
+    public static Props props (final SmsInterpreterParams params) {
         return new Props(new UntypedActorFactory() {
             @Override
-            public Actor create() throws Exception {
+            public Actor create () throws Exception {
                 return new SmsInterpreter(params);
             }
         });
     }
 
-    private ActorRef downloader() {
+    private ActorRef downloader () {
         final Props props = new Props(new UntypedActorFactory() {
             private static final long serialVersionUID = 1L;
 
             @Override
-            public UntypedActor create() throws Exception {
+            public UntypedActor create () throws Exception {
                 return new Downloader();
             }
         });
         return getContext().actorOf(props);
     }
 
-    ActorRef mailer(final Configuration configuration) {
+    ActorRef mailer (final Configuration configuration) {
         final Props props = new Props(new UntypedActorFactory() {
             private static final long serialVersionUID = 1L;
 
             @Override
-            public Actor create() throws Exception {
+            public Actor create () throws Exception {
                 return new EmailService(configuration);
             }
         });
         return getContext().actorOf(props);
     }
 
-    protected String format(final String number) {
-        if(normalizeNumber) {
+    protected String format (final String number) {
+        if (normalizeNumber) {
             final PhoneNumberUtil numbersUtil = PhoneNumberUtil.getInstance();
             try {
                 final PhoneNumber result = numbersUtil.parse(number, "US");
@@ -269,7 +279,7 @@ public final class SmsInterpreter extends RestcommUntypedActor {
         }
     }
 
-    protected void invalidVerb(final Tag verb) {
+    protected void invalidVerb (final Tag verb) {
         final ActorRef self = self();
         final Notification notification = notification(WARNING_NOTIFICATION, 14110, "Invalid Verb for SMS Reply");
         final NotificationsDao notifications = storage.getNotificationsDao();
@@ -279,7 +289,7 @@ public final class SmsInterpreter extends RestcommUntypedActor {
         parser.tell(next, self);
     }
 
-    protected Notification notification(final int log, final int error, final String message) {
+    protected Notification notification (final int log, final int error, final String message) {
         final Notification.Builder builder = Notification.builder();
         final Sid sid = Sid.generate(Sid.Type.NOTIFICATION);
         builder.setSid(sid);
@@ -328,13 +338,13 @@ public final class SmsInterpreter extends RestcommUntypedActor {
 
     @SuppressWarnings("unchecked")
     @Override
-    public void onReceive(final Object message) throws Exception {
+    public void onReceive (final Object message) throws Exception {
         final Class<?> klass = message.getClass();
         final State state = fsm.state();
         if (StartInterpreter.class.equals(klass)) {
             fsm.transition(message, acquiringLastSmsRequest);
         } else if (SmsSessionRequest.class.equals(klass)) {
-            customRequestHeaderMap = ((SmsSessionRequest)message).headers();
+            customRequestHeaderMap = ((SmsSessionRequest) message).headers();
             fsm.transition(message, downloadingRcml);
         } else if (DownloaderResponse.class.equals(klass)) {
             final DownloaderResponse response = (DownloaderResponse) message;
@@ -368,8 +378,8 @@ public final class SmsInterpreter extends RestcommUntypedActor {
                     }
                 }
             }
-        }  else if (ParserFailed.class.equals(klass)) {
-            if(logger.isInfoEnabled()) {
+        } else if (ParserFailed.class.equals(klass)) {
+            if (logger.isInfoEnabled()) {
                 logger.info("ParserFailed received. Will stop the call");
             }
             fsm.transition(message, finished);
@@ -378,7 +388,24 @@ public final class SmsInterpreter extends RestcommUntypedActor {
             if (Verbs.redirect.equals(verb.name())) {
                 fsm.transition(message, redirecting);
             } else if (Verbs.sms.equals(verb.name())) {
-                fsm.transition(message, creatingSmsSession);
+                //Check if Outbound SMS is allowed
+                ExtensionController ec = ExtensionController.getInstance();
+                final IExtensionFeatureAccessRequest far = new FeatureAccessRequest(FeatureAccessRequest.Feature.OUTBOUND_SMS, accountId);
+                ExtensionResponse er = ec.executePreInboundAction(far, this.extensions);
+
+                if (er.isAllowed()) {
+                    fsm.transition(message, creatingSmsSession);
+                } else {
+                    if (logger.isDebugEnabled()) {
+                        final String errMsg = "Outbound SMS is not Allowed";
+                        logger.debug(errMsg);
+                    }
+                    final NotificationsDao notifications = storage.getNotificationsDao();
+                    final Notification notification = notification(WARNING_NOTIFICATION, 11001, "Outbound SMS is now allowed");
+                    notifications.addNotification(notification);
+                    fsm.transition(message, finished);
+                    return;
+                }
             } else if (Verbs.email.equals(verb.name())) {
                 fsm.transition(message, sendingEmail);
             } else {

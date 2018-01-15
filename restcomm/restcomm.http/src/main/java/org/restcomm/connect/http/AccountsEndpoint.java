@@ -38,6 +38,9 @@ import org.restcomm.connect.dao.entities.Client;
 import org.restcomm.connect.dao.entities.IncomingPhoneNumber;
 import org.restcomm.connect.dao.entities.Organization;
 import org.restcomm.connect.dao.entities.RestCommResponse;
+import org.restcomm.connect.extension.api.ExtensionResponse;
+import org.restcomm.connect.extension.api.IExtensionFeatureAccessRequest;
+import org.restcomm.connect.extension.controller.ExtensionController;
 import org.restcomm.connect.http.client.rcmlserver.RcmlserverApi;
 import org.restcomm.connect.http.client.rcmlserver.RcmlserverNotifications;
 import org.restcomm.connect.http.converter.AccountConverter;
@@ -52,6 +55,7 @@ import org.restcomm.connect.identity.passwords.PasswordValidator;
 import org.restcomm.connect.identity.passwords.PasswordValidatorFactory;
 import org.restcomm.connect.provisioning.number.api.PhoneNumberProvisioningManager;
 import org.restcomm.connect.provisioning.number.api.PhoneNumberProvisioningManagerProvider;
+import org.restcomm.connect.telephony.api.FeatureAccessRequest;
 
 import javax.annotation.PostConstruct;
 import javax.servlet.ServletContext;
@@ -376,57 +380,71 @@ public class AccountsEndpoint extends SecuredEndpoint {
 
         // what if effectiveAccount is null ?? - no need to check since we checkAuthenticatedAccount() in AccountsEndoint.init()
         final Sid sid = userIdentityContext.getEffectiveAccount().getSid();
-        final Account parent = accountsDao.getAccount(sid);
-        Account account = null;
-        try {
-            account = createFrom(sid, data, parent);
-        } catch (IllegalArgumentException  illegalArgumentException) {
-            return status(BAD_REQUEST).entity(illegalArgumentException.getMessage()).build();
-        }catch (final NullPointerException exception) {
-            return status(BAD_REQUEST).entity(exception.getMessage()).build();
-        } catch (PasswordTooWeak passwordTooWeak) {
-            return status(BAD_REQUEST).entity(buildErrorResponseBody("Password too weak",responseType)).type(responseType).build();
-        }
 
-        // If Account already exists don't add it again
+        ExtensionController ec = ExtensionController.getInstance();
+        IExtensionFeatureAccessRequest far = new FeatureAccessRequest(FeatureAccessRequest.Feature.SUBACCOUNTS, sid);
+        ExtensionResponse er = ec.executePreInboundAction(far, extensions);
+
+        if (er.isAllowed()) {
+            final Account parent = accountsDao.getAccount(sid);
+            Account account = null;
+            try {
+                account = createFrom(sid, data, parent);
+            } catch (IllegalArgumentException  illegalArgumentException) {
+                return status(BAD_REQUEST).entity(illegalArgumentException.getMessage()).build();
+            }catch (final NullPointerException exception) {
+                return status(BAD_REQUEST).entity(exception.getMessage()).build();
+            } catch (PasswordTooWeak passwordTooWeak) {
+                return status(BAD_REQUEST).entity(buildErrorResponseBody("Password too weak",responseType)).type(responseType).build();
+            }
+
+            // If Account already exists don't add it again
         /*
             Account creation rules:
             - either be Administrator or have the following permission: RestComm:Create:Accounts
             - only Administrators can choose a role for newly created accounts. Normal users will create accounts with the same role as their own.
          */
-        if (accountsDao.getAccount(account.getSid()) == null && !account.getEmailAddress().equalsIgnoreCase("administrator@company.com")) {
-            if (parent.getStatus().equals(Account.Status.ACTIVE) && isSecuredByPermission("RestComm:Create:Accounts")) {
-                if (!hasAccountRole(getAdministratorRole()) || !data.containsKey("Role")) {
-                    account = account.setRole(parent.getRole());
-                }
-                accountsDao.addAccount(account);
+            if (accountsDao.getAccount(account.getSid()) == null && !account.getEmailAddress().equalsIgnoreCase("administrator@company.com")) {
+                if (parent.getStatus().equals(Account.Status.ACTIVE) && isSecuredByPermission("RestComm:Create:Accounts")) {
+                    if (!hasAccountRole(getAdministratorRole()) || !data.containsKey("Role")) {
+                        account = account.setRole(parent.getRole());
+                    }
+                    accountsDao.addAccount(account);
 
-                // Create default SIP client data
-                MultivaluedMap<String, String> clientData = new MultivaluedMapImpl();
-                String username = data.getFirst("EmailAddress").split("@")[0];
-                clientData.add("Login", username);
-                clientData.add("Password", data.getFirst("Password"));
-                clientData.add("FriendlyName", account.getFriendlyName());
-                clientData.add("AccountSid", account.getSid().toString());
-                Client client = clientDao.getClient(clientData.getFirst("Login"), account.getOrganizationSid());
-                if (client == null) {
-                    client = createClientFrom(account.getSid(), clientData);
-                    clientDao.addClient(client);
+                    // Create default SIP client data
+                    MultivaluedMap<String, String> clientData = new MultivaluedMapImpl();
+                    String username = data.getFirst("EmailAddress").split("@")[0];
+                    clientData.add("Login", username);
+                    clientData.add("Password", data.getFirst("Password"));
+                    clientData.add("FriendlyName", account.getFriendlyName());
+                    clientData.add("AccountSid", account.getSid().toString());
+                    Client client = clientDao.getClient(clientData.getFirst("Login"), account.getOrganizationSid());
+                    if (client == null) {
+                        client = createClientFrom(account.getSid(), clientData);
+                        clientDao.addClient(client);
+                    }
+                } else {
+                    throw new InsufficientPermission();
                 }
             } else {
-                throw new InsufficientPermission();
+                return status(CONFLICT).entity("The email address used for the new account is already in use.").build();
+            }
+
+            if (APPLICATION_JSON_TYPE == responseType) {
+                return ok(gson.toJson(account), APPLICATION_JSON).build();
+            } else if (APPLICATION_XML_TYPE == responseType) {
+                final RestCommResponse response = new RestCommResponse(account);
+                return ok(xstream.toXML(response), APPLICATION_XML).build();
+            } else {
+                return null;
             }
         } else {
-            return status(CONFLICT).entity("The email address used for the new account is already in use.").build();
-        }
-
-        if (APPLICATION_JSON_TYPE == responseType) {
-            return ok(gson.toJson(account), APPLICATION_JSON).build();
-        } else if (APPLICATION_XML_TYPE == responseType) {
-            final RestCommResponse response = new RestCommResponse(account);
-            return ok(xstream.toXML(response), APPLICATION_XML).build();
-        } else {
-            return null;
+            if (logger.isDebugEnabled()) {
+                final String errMsg = "Creation of sub-accounts is not Allowed";
+                logger.debug(errMsg);
+            }
+            String errMsg = "Creation of sub-accounts is not Allowed";
+            return status(Response.Status.FORBIDDEN).entity(errMsg).build();
         }
     }
 
