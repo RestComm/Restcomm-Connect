@@ -21,10 +21,13 @@ package org.restcomm.connect.ussd.telephony;
 
 import static javax.servlet.sip.SipServlet.OUTBOUND_INTERFACES;
 import static javax.servlet.sip.SipServletResponse.SC_BAD_REQUEST;
+import static javax.servlet.sip.SipServletResponse.SC_FORBIDDEN;
 import static javax.servlet.sip.SipServletResponse.SC_NOT_FOUND;
 import static javax.servlet.sip.SipServletResponse.SC_OK;
 
 import java.io.IOException;
+import java.net.URI;
+import java.net.URISyntaxException;
 import java.util.List;
 import java.util.regex.Pattern;
 
@@ -37,6 +40,7 @@ import javax.servlet.sip.SipServletResponse;
 import javax.servlet.sip.SipURI;
 
 import org.apache.commons.configuration.Configuration;
+import org.joda.time.DateTime;
 import org.restcomm.connect.commons.configuration.RestcommConfiguration;
 import org.restcomm.connect.commons.configuration.sets.RcmlserverConfigurationSet;
 import org.restcomm.connect.commons.dao.Sid;
@@ -46,15 +50,23 @@ import org.restcomm.connect.dao.AccountsDao;
 import org.restcomm.connect.dao.ApplicationsDao;
 import org.restcomm.connect.dao.DaoManager;
 import org.restcomm.connect.dao.IncomingPhoneNumbersDao;
+import org.restcomm.connect.dao.NotificationsDao;
 import org.restcomm.connect.dao.common.OrganizationUtil;
 import org.restcomm.connect.dao.entities.Account;
 import org.restcomm.connect.dao.entities.Application;
 import org.restcomm.connect.dao.entities.IncomingPhoneNumber;
+import org.restcomm.connect.dao.entities.Notification;
+import org.restcomm.connect.extension.api.ExtensionResponse;
+import org.restcomm.connect.extension.api.ExtensionType;
+import org.restcomm.connect.extension.api.IExtensionFeatureAccessRequest;
+import org.restcomm.connect.extension.api.RestcommExtensionGeneric;
+import org.restcomm.connect.extension.controller.ExtensionController;
 import org.restcomm.connect.http.client.rcmlserver.resolver.RcmlserverResolver;
 import org.restcomm.connect.interpreter.StartInterpreter;
 import org.restcomm.connect.telephony.api.CallManagerResponse;
 import org.restcomm.connect.telephony.api.CreateCall;
 import org.restcomm.connect.telephony.api.ExecuteCallScript;
+import org.restcomm.connect.telephony.api.FeatureAccessRequest;
 import org.restcomm.connect.telephony.api.InitializeOutbound;
 import org.restcomm.connect.telephony.api.util.CallControlHelper;
 import org.restcomm.connect.ussd.interpreter.UssdInterpreter;
@@ -95,6 +107,9 @@ public class UssdCallManager extends RestcommUntypedActor {
 
     private final LoggingAdapter logger = Logging.getLogger(getContext().system(), this);
 
+    //List of extensions for UssdCallManager
+    List<RestcommExtensionGeneric> extensions;
+
     /**
      * @param configuration
      * @param context
@@ -115,6 +130,8 @@ public class UssdCallManager extends RestcommUntypedActor {
         this.ussdGatewayUsername = ussdGatewayConfig.getString("ussd-gateway-user");
         this.ussdGatewayPassword = ussdGatewayConfig.getString("ussd-gateway-password");
         numberSelector = (NumberSelectorService) context.getAttribute(NumberSelectorService.class.getName());
+
+        extensions = ExtensionController.getInstance().getExtensions(ExtensionType.FeatureAccessControl);
     }
 
     private ActorRef ussdCall() {
@@ -228,51 +245,140 @@ public class UssdCallManager extends RestcommUntypedActor {
             Sid destOrg = SIPOrganizationUtil.searchOrganizationBySIPRequest(storage.getOrganizationsDao(), request);
             IncomingPhoneNumber number = numberSelector.searchNumber(id, sourceOrganizationSid, destOrg);
             if (number != null) {
-                final UssdInterpreterParams.Builder builder = new UssdInterpreterParams.Builder();
-                builder.setConfiguration(configuration);
-                builder.setStorage(storage);
-                builder.setAccount(number.getAccountSid());
-                builder.setVersion(number.getApiVersion());
-                final Account account = accounts.getAccount(number.getAccountSid());
-                builder.setEmailAddress(account.getEmailAddress());
-                final Sid sid = number.getUssdApplicationSid();
-                if (sid != null) {
-                    final Application application = applications.getApplication(sid);
-                    RcmlserverConfigurationSet rcmlserverConfig = RestcommConfiguration.getInstance().getRcmlserver();
-                    RcmlserverResolver resolver = RcmlserverResolver.getInstance(rcmlserverConfig.getBaseUrl(), rcmlserverConfig.getApiPath());
-                    builder.setUrl(UriUtils.resolve(resolver.resolveRelative(application.getRcmlUrl())));
-                } else {
-                    builder.setUrl(UriUtils.resolve(number.getUssdUrl()));
-                }
-                final String ussdMethod = number.getUssdMethod();
-                if (ussdMethod == null || ussdMethod.isEmpty()) {
-                    builder.setMethod("POST");
-                } else {
-                    builder.setMethod(ussdMethod);
-                }
-                if (number.getUssdFallbackUrl() != null)
-                    builder.setFallbackUrl(number.getUssdFallbackUrl());
-                builder.setFallbackMethod(number.getUssdFallbackMethod());
-                builder.setStatusCallback(number.getStatusCallback());
-                builder.setStatusCallbackMethod(number.getStatusCallbackMethod());
-                final Props props = UssdInterpreter.props(builder.build());
-                final ActorRef ussdInterpreter = getContext().actorOf(props);
-                final ActorRef ussdCall = ussdCall();
-                ussdCall.tell(request, self);
 
-                ussdInterpreter.tell(new StartInterpreter(ussdCall), self);
+                ExtensionController ec = ExtensionController.getInstance();
+                IExtensionFeatureAccessRequest far = new FeatureAccessRequest(FeatureAccessRequest.Feature.INBOUND_USSD, number.getAccountSid());
+                ExtensionResponse er = ec.executePreInboundAction(far, extensions);
 
-                SipApplicationSession applicationSession = request.getApplicationSession();
-                applicationSession.setAttribute("UssdCall", "true");
-                applicationSession.setAttribute(UssdInterpreter.class.getName(), ussdInterpreter);
-                applicationSession.setAttribute(UssdCall.class.getName(), ussdCall);
-                isFoundHostedApp = true;
+                if (er.isAllowed()) {
+                    final UssdInterpreterParams.Builder builder = new UssdInterpreterParams.Builder();
+                    builder.setConfiguration(configuration);
+                    builder.setStorage(storage);
+                    builder.setAccount(number.getAccountSid());
+                    builder.setVersion(number.getApiVersion());
+                    final Account account = accounts.getAccount(number.getAccountSid());
+                    builder.setEmailAddress(account.getEmailAddress());
+                    final Sid sid = number.getUssdApplicationSid();
+                    if (sid != null) {
+                        final Application application = applications.getApplication(sid);
+                        RcmlserverConfigurationSet rcmlserverConfig = RestcommConfiguration.getInstance().getRcmlserver();
+                        RcmlserverResolver resolver = RcmlserverResolver.getInstance(rcmlserverConfig.getBaseUrl(), rcmlserverConfig.getApiPath());
+                        builder.setUrl(UriUtils.resolve(resolver.resolveRelative(application.getRcmlUrl())));
+                    } else {
+                        builder.setUrl(UriUtils.resolve(number.getUssdUrl()));
+                    }
+                    final String ussdMethod = number.getUssdMethod();
+                    if (ussdMethod == null || ussdMethod.isEmpty()) {
+                        builder.setMethod("POST");
+                    } else {
+                        builder.setMethod(ussdMethod);
+                    }
+                    if (number.getUssdFallbackUrl() != null)
+                        builder.setFallbackUrl(number.getUssdFallbackUrl());
+                    builder.setFallbackMethod(number.getUssdFallbackMethod());
+                    builder.setStatusCallback(number.getStatusCallback());
+                    builder.setStatusCallbackMethod(number.getStatusCallbackMethod());
+                    final Props props = UssdInterpreter.props(builder.build());
+                    final ActorRef ussdInterpreter = getContext().actorOf(props);
+                    final ActorRef ussdCall = ussdCall();
+                    ussdCall.tell(request, self);
+
+                    ussdInterpreter.tell(new StartInterpreter(ussdCall), self);
+
+                    SipApplicationSession applicationSession = request.getApplicationSession();
+                    applicationSession.setAttribute("UssdCall", "true");
+                    applicationSession.setAttribute(UssdInterpreter.class.getName(), ussdInterpreter);
+                    applicationSession.setAttribute(UssdCall.class.getName(), ussdCall);
+                    isFoundHostedApp = true;
+                } else {
+                    if (logger.isDebugEnabled()) {
+                        final String errMsg = "Inbound USSD session is not Allowed";
+                        logger.debug(errMsg);
+                    }
+                    String errMsg = "Inbound USSD session to Number: " + number.getPhoneNumber()
+                            + " is not allowed";
+
+                    sendNotification(errMsg, 11001, "warning", true);
+                    final SipServletResponse resp = request.createResponse(SC_FORBIDDEN, "Inbound USSD session is not Allowed");
+                    resp.send();
+                    ec.executePostOutboundAction(far, extensions);
+                    return false;
+                }
             } else {
                 logger.info("USSD Number registration NOT FOUND");
                 request.createResponse(SipServletResponse.SC_NOT_FOUND).send();
             }
         }
         return isFoundHostedApp;
+    }
+
+    private void sendNotification(String errMessage, int errCode, String errType, boolean createNotification) {
+        NotificationsDao notifications = storage.getNotificationsDao();
+        Notification notification;
+
+        if (errType == "warning") {
+            logger.warning(errMessage); // send message to console
+            if (createNotification) {
+                notification = notification(WARNING_NOTIFICATION, errCode, errMessage);
+                notifications.addNotification(notification);
+            }
+        } else if (errType == "error") {
+            logger.error(errMessage); // send message to console
+            if (createNotification) {
+                notification = notification(ERROR_NOTIFICATION, errCode, errMessage);
+                notifications.addNotification(notification);
+            }
+        } else if (errType == "info") {
+            if(logger.isInfoEnabled()) {
+                logger.info(errMessage); // send message to console
+            }
+        }
+    }
+
+    private Notification notification(final int log, final int error, final String message) {
+        String version = configuration.subset("runtime-settings").getString("api-version");
+        Sid accountId = new Sid("ACae6e420f425248d6a26948c17a9e2acf");
+        //        Sid callSid = new Sid("CA00000000000000000000000000000000");
+        final Notification.Builder builder = Notification.builder();
+        final Sid sid = Sid.generate(Sid.Type.NOTIFICATION);
+        builder.setSid(sid);
+        // builder.setAccountSid(accountId);
+        builder.setAccountSid(accountId);
+        //        builder.setCallSid(callSid);
+        builder.setApiVersion(version);
+        builder.setLog(log);
+        builder.setErrorCode(error);
+        final String base = configuration.subset("runtime-settings").getString("error-dictionary-uri");
+        StringBuilder buffer = new StringBuilder();
+        buffer.append(base);
+        if (!base.endsWith("/")) {
+            buffer.append("/");
+        }
+        buffer.append(error).append(".html");
+        final URI info = URI.create(buffer.toString());
+        builder.setMoreInfo(info);
+        builder.setMessageText(message);
+        final DateTime now = DateTime.now();
+        builder.setMessageDate(now);
+        try {
+            builder.setRequestUrl(new URI(""));
+        } catch (URISyntaxException e) {
+            e.printStackTrace();
+        }
+        /**
+         * if (response != null) { builder.setRequestUrl(request.getUri()); builder.setRequestMethod(request.getMethod());
+         * builder.setRequestVariables(request.getParametersAsString()); }
+         **/
+
+        builder.setRequestMethod("");
+        builder.setRequestVariables("");
+        buffer = new StringBuilder();
+        buffer.append("/").append(version).append("/Accounts/");
+        buffer.append(accountId.toString()).append("/Notifications/");
+        buffer.append(sid.toString());
+        final URI uri = URI.create(buffer.toString());
+        builder.setUri(uri);
+        return builder.build();
     }
 
     private void processRequest(SipServletRequest request) throws IOException {

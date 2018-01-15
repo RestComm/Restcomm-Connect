@@ -47,8 +47,23 @@ public class FeatureAccessRequest implements IExtensionFeatureAccessRequest {
         this.feature = feature;
     }
 
-    public Sid getAccountSid () {
+    public Sid getAccountId () {
         return accountSid;
+    }
+
+    @Override
+    public String getAccountSid () {
+        return accountSid.toString();
+    }
+
+    @Override
+    public boolean isAllowed () {
+        return false;
+    }
+
+    @Override
+    public void setAllowed (boolean allowed) {
+
     }
 
     public void setAccountSid (Sid accountSid) {
