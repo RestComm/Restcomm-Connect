@@ -1323,6 +1323,7 @@ public final class CallManager extends RestcommUntypedActor {
                         call.tell(request, self);
                         interpreter.tell(new StartInterpreter(call), self);
                         isFoundHostedApp = true;
+                        ec.executePostOutboundAction(far, extensions);
                     }
                 }
             } else {

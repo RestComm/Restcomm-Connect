@@ -1587,6 +1587,7 @@ public abstract class BaseVoiceInterpreter extends RestcommUntypedActor {
                     String errMsg = "ASR feature is not allowed";
                     notification(WARNING_NOTIFICATION, 11001, errMsg);
                     call.tell(new Hangup(errMsg), source);
+                    return;
                 }
                 ec.executePostOutboundAction(er, extensions);
             }

@@ -7,8 +7,7 @@ public class FeatureAccessRequest implements IExtensionFeatureAccessRequest {
 
     public enum Feature {
         OUTBOUND_VOICE("outbound-voice"), INBOUND_VOICE("inbound-voice"), OUTBOUND_SMS("outbound-sms"),
-        INBOUND_SMS("inbound-sms"), ASR("asr"), OUTBOUND_USSD("outbound-ussd"), INBOUND_USSD("inbound_ussd"),
-        SUBACCOUNTS("subaccounts");
+        INBOUND_SMS("inbound-sms"), ASR("asr"), OUTBOUND_USSD("outbound-ussd"), INBOUND_USSD("inbound_ussd");
 
         private final String text;
 
