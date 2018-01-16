@@ -393,6 +393,7 @@ public final class SmsService extends RestcommUntypedActor {
                     final StartInterpreter start = new StartInterpreter(session);
                     interpreter.tell(start, self);
                     isFoundHostedApp = true;
+                    ec.executePostOutboundAction(far, extensions);
                 } else {
                     if (logger.isDebugEnabled()) {
                         final String errMsg = "Inbound SMS is not Allowed";

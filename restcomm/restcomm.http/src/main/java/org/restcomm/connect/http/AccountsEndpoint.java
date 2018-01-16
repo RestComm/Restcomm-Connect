@@ -38,8 +38,7 @@ import org.restcomm.connect.dao.entities.Client;
 import org.restcomm.connect.dao.entities.IncomingPhoneNumber;
 import org.restcomm.connect.dao.entities.Organization;
 import org.restcomm.connect.dao.entities.RestCommResponse;
-import org.restcomm.connect.extension.api.ExtensionResponse;
-import org.restcomm.connect.extension.api.IExtensionFeatureAccessRequest;
+import org.restcomm.connect.extension.api.ApiRequest;
 import org.restcomm.connect.extension.controller.ExtensionController;
 import org.restcomm.connect.http.client.rcmlserver.RcmlserverApi;
 import org.restcomm.connect.http.client.rcmlserver.RcmlserverNotifications;
@@ -55,7 +54,6 @@ import org.restcomm.connect.identity.passwords.PasswordValidator;
 import org.restcomm.connect.identity.passwords.PasswordValidatorFactory;
 import org.restcomm.connect.provisioning.number.api.PhoneNumberProvisioningManager;
 import org.restcomm.connect.provisioning.number.api.PhoneNumberProvisioningManagerProvider;
-import org.restcomm.connect.telephony.api.FeatureAccessRequest;
 
 import javax.annotation.PostConstruct;
 import javax.servlet.ServletContext;
@@ -382,10 +380,9 @@ public class AccountsEndpoint extends SecuredEndpoint {
         final Sid sid = userIdentityContext.getEffectiveAccount().getSid();
 
         ExtensionController ec = ExtensionController.getInstance();
-        IExtensionFeatureAccessRequest far = new FeatureAccessRequest(FeatureAccessRequest.Feature.SUBACCOUNTS, sid);
-        ExtensionResponse er = ec.executePreInboundAction(far, extensions);
+        ApiRequest apiRequest = new ApiRequest(sid.toString(), data, ApiRequest.Type.CREATE_SUBACCOUNT);
 
-        if (er.isAllowed()) {
+        if (executePostApiAction(apiRequest)) {
             final Account parent = accountsDao.getAccount(sid);
             Account account = null;
             try {
@@ -430,6 +427,8 @@ public class AccountsEndpoint extends SecuredEndpoint {
                 return status(CONFLICT).entity("The email address used for the new account is already in use.").build();
             }
 
+            executePostApiAction(apiRequest);
+
             if (APPLICATION_JSON_TYPE == responseType) {
                 return ok(gson.toJson(account), APPLICATION_JSON).build();
             } else if (APPLICATION_XML_TYPE == responseType) {
@@ -443,6 +442,7 @@ public class AccountsEndpoint extends SecuredEndpoint {
                 final String errMsg = "Creation of sub-accounts is not Allowed";
                 logger.debug(errMsg);
             }
+            executePostApiAction(apiRequest);
             String errMsg = "Creation of sub-accounts is not Allowed";
             return status(Response.Status.FORBIDDEN).entity(errMsg).build();
         }
