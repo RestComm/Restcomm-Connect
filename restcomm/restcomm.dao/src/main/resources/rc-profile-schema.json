@@ -1,6 +1,11 @@
 {
-    "title": "rc-profile",
-    "items": {
-        "title": "rc-fac-extension-schema"
+    "$schema": "http://json-schema.org/draft-04/schema#",
+    "id": "resource:/rc-profile-schema.json#",
+    "additionalProperties": false,
+    "type": "object",
+    "properties": {
+        "FACEnablement": {
+            "$ref": "rc-fac-extension-schema.json#/definitions/FACEnablement"
+        }
     }
 }

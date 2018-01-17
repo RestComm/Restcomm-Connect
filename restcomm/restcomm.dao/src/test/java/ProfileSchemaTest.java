@@ -41,7 +41,7 @@ public class ProfileSchemaTest {
 
     @Test
     public void testFreePlan() throws Exception{
-        final JsonNode fstabSchema = JsonLoader.fromResource("/rc-fac-extension-schema.json");
+        final JsonNode fstabSchema = JsonLoader.fromResource("/rc-profile-schema.json");
         final JsonNode good = JsonLoader.fromResource("/freePlan.json");
 
         final JsonSchemaFactory factory = JsonSchemaFactory.byDefault();
@@ -57,7 +57,7 @@ public class ProfileSchemaTest {
     @Test
     public void testRetrieveAllowedPrefixes() throws Exception{
         final JsonNode good = JsonLoader.fromResource("/freePlan.json");
-        JsonPointer pointer = JsonPointer.compile("/FACExtension/destinations/allowedPrefixes");
+        JsonPointer pointer = JsonPointer.compile("/FACEnablement/destinations/allowedPrefixes");
         JsonNode at = good.at(pointer);
         Assert.assertNotNull(at);
         Assert.assertTrue(at.isArray());
@@ -66,7 +66,7 @@ public class ProfileSchemaTest {
 
     @Test
     public void testInvalidFeature() throws Exception{
-        final JsonNode fstabSchema = JsonLoader.fromResource("/rc-fac-extension-schema.json");
+        final JsonNode fstabSchema = JsonLoader.fromResource("/rc-profile-schema.json");
         final JsonNode good = JsonLoader.fromResource("/invalidFeature.json");
 
         final JsonSchemaFactory factory = JsonSchemaFactory.byDefault();
