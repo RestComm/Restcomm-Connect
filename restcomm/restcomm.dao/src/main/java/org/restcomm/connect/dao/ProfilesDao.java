@@ -41,11 +41,6 @@ public interface ProfilesDao {
     List<Profile> getAllProfiles();
 
     /**
-     * @return number of total profiles in the system
-     */
-    Integer getTotalProfiles();
-
-    /**
      * @param profile
      * @return
      */
