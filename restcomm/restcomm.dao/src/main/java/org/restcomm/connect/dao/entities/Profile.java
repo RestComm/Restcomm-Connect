@@ -30,12 +30,14 @@ import org.restcomm.connect.commons.dao.Sid;
 @Immutable
 public final class Profile {
     private final Sid sid;
+    private final byte[] profileDocument;
     private final DateTime dateCreated;
     private final DateTime dateUpdated;
 
-    public Profile(final Sid sid, final DateTime dateCreated, final DateTime dateUpdated) {
+    public Profile(final Sid sid, final byte[] profileDocument, final DateTime dateCreated, final DateTime dateUpdated) {
         super();
         this.sid = sid;
+        this.profileDocument = profileDocument;
         this.dateCreated = dateCreated;
         this.dateUpdated = dateUpdated;
     }
@@ -46,6 +48,10 @@ public final class Profile {
 
     public Sid getSid() {
         return sid;
+    }
+
+    public byte[] getProfileDocument() {
+        return profileDocument;
     }
 
     public DateTime getDateCreated() {
@@ -59,16 +65,22 @@ public final class Profile {
     @NotThreadSafe
     public static final class Builder {
         private Sid sid;
+        private byte[] profileDocument;
         private DateTime dateCreated;
 
         private Builder() {
             super();
             sid = null;
+            profileDocument = null;
             dateCreated = null;
         }
 
         public Profile build() {
-            return new Profile(sid, dateCreated, DateTime.now());
+            return new Profile(sid, profileDocument, dateCreated, DateTime.now());
+        }
+
+        public void setProfileDocument(final byte[] profileDocument) {
+            this.profileDocument = profileDocument;
         }
 
         public void setSid(final Sid sid) {
