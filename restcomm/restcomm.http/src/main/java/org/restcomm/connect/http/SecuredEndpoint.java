@@ -121,15 +121,21 @@ public abstract class SecuredEndpoint extends AbstractEndpoint {
             throw new NotAuthenticated();
         }
         Account.Status accountStatus = account.getStatus();
-        if (accountStatus != Account.Status.ACTIVE && accountStatus != Account.Status.UNINITIALIZED) {
+        if (accountStatus == Account.Status.CLOSED
+            || accountStatus == Account.Status.SUSPENDED
+            || accountStatus == Account.Status.INACTIVE) {
             throw new AuthorizationException();
         }
         Sid parentSid = account.getParentSid();
         if (parentSid != null) {
             Account parentAccount = this.accountsDao.getAccount(parentSid);
-            if (parentAccount.getStatus() != Account.Status.ACTIVE) {
+            if (parentAccount.getStatus() == Account.Status.CLOSED
+                    || parentAccount.getStatus() == Account.Status.SUSPENDED
+                    || parentAccount.getStatus() == Account.Status.INACTIVE) {
                 throw new AuthorizationException();
             }
+        } else {
+            // parentSid is NULL -> this is super admin account
         }
     }
 

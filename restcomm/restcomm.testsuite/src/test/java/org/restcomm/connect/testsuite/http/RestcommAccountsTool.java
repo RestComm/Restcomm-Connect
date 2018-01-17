@@ -165,12 +165,12 @@ public class RestcommAccountsTool {
 		MultivaluedMap<String, String> params = new MultivaluedMapImpl();
 		params.add("EmailAddress", emailAddress);
 		params.add("Password", password);
-		params.add("Role", "Administartor");
+		params.add("Role", "Developer");
 		if (friendlyName != null)
 			params.add("FriendlyName", friendlyName);
 		if (organizationSid != null)
 			params.add("OrganizationSid", organizationSid);
-
+		logger.info("createAccountResponse" + params.toString());
 		ClientResponse response = webResource.accept(MediaType.APPLICATION_JSON).post(ClientResponse.class, params);
 		return response;
 	}

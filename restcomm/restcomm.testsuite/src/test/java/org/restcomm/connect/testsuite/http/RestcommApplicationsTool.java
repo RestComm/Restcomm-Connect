@@ -26,10 +26,13 @@ import java.io.IOException;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.MultivaluedMap;
 
+import org.apache.log4j.Logger;
+
 import com.google.gson.JsonArray;
 import com.google.gson.JsonObject;
 import com.google.gson.JsonParser;
 import com.sun.jersey.api.client.Client;
+import com.sun.jersey.api.client.ClientResponse;
 import com.sun.jersey.api.client.WebResource;
 import com.sun.jersey.api.client.filter.HTTPBasicAuthFilter;
 
@@ -40,6 +43,8 @@ public class RestcommApplicationsTool {
 
     private static RestcommApplicationsTool instance;
     private static String applicationsUrl;
+
+    private final static Logger logger = Logger.getLogger(RestcommApplicationsTool.class);
 
     public static RestcommApplicationsTool getInstance() {
         if (instance == null) {
@@ -90,6 +95,19 @@ public class RestcommApplicationsTool {
         return jsonResponse;
     }
 
+
+    public ClientResponse createApplicationResponse ( String deploymentUrl, String accountSid, String accountUsername,
+                                                      String accountAuthToken,
+                                                      MultivaluedMap<String, String> applicationParams ) {
+        Client jerseyClient = Client.create();
+        jerseyClient.addFilter(new HTTPBasicAuthFilter(accountUsername, accountAuthToken));
+        String url = getApplicationsUrl(deploymentUrl, accountSid, false);
+        WebResource webResource = jerseyClient.resource(url);
+        ClientResponse response = webResource.accept(MediaType.APPLICATION_JSON).post(ClientResponse.class,
+                                                                                      applicationParams);
+        return response;
+    }
+
     public JsonObject getApplication(String deploymentUrl, String adminUsername, String adminAuthToken, String adminAccountSid,
             String applicationSid) {
         Client jerseyClient = Client.create();
@@ -124,6 +142,15 @@ public class RestcommApplicationsTool {
         JsonArray jsonResponse = parser.parse(response).getAsJsonArray();
         return jsonResponse;
     }
+    
+    public ClientResponse getApplicationsResponse ( String deploymentUrl, String adminUsername, String adminAuthToken, String adminAccountSid ) {
+        Client jerseyClient = Client.create();
+        jerseyClient.addFilter(new HTTPBasicAuthFilter(adminUsername, adminAuthToken));
+        String url = getApplicationsUrl(deploymentUrl, adminAccountSid, false);
+        WebResource webResource = jerseyClient.resource(url);
+        ClientResponse response = webResource.accept(MediaType.APPLICATION_JSON).get(ClientResponse.class);
+        return response;
+    }
 
     public JsonObject updateApplication(String deploymentUrl, String adminUsername, String adminAuthToken,
             String adminAccountSid, String applicationSid, MultivaluedMap<String, String> applicationParams, boolean usePut) {
@@ -142,6 +169,23 @@ public class RestcommApplicationsTool {
         return jsonResponse;
     }
 
+    public ClientResponse updateApplicationResponse ( String deploymentUrl, String adminUsername, String adminAuthToken,
+                                                      String adminAccountSid, String applicationSid,
+                                                      MultivaluedMap<String, String> applicationParams,
+                                                      boolean usePut ) {
+        Client jerseyClient = Client.create();
+        jerseyClient.addFilter(new HTTPBasicAuthFilter(adminUsername, adminAuthToken));
+        String url = getApplicationUrl(deploymentUrl, adminAccountSid, applicationSid, false);
+        WebResource webResource = jerseyClient.resource(url);
+        ClientResponse response;
+        if (usePut) {
+            response = webResource.accept(MediaType.APPLICATION_JSON).put(ClientResponse.class, applicationParams);
+        } else {
+            response = webResource.accept(MediaType.APPLICATION_JSON).post(ClientResponse.class, applicationParams);
+        }
+        return response;
+    }
+
     public void deleteApplication(String deploymentUrl, String adminUsername, String adminAuthToken, String adminAccountSid,
             String applicationSid) throws IOException {
         String endpoint = getEndpoint(deploymentUrl).replaceAll("http://", "");
@@ -152,4 +196,17 @@ public class RestcommApplicationsTool {
         WebResource webResource = jerseyClient.resource(url);
         webResource.accept(MediaType.APPLICATION_JSON).delete();
     }
+
+    public ClientResponse deleteApplicationResponse ( String deploymentUrl, String adminUsername, String adminAuthToken,
+                                            String adminAccountSid, String applicationSid ) throws IOException {
+        String endpoint = getEndpoint(deploymentUrl).replaceAll("http://", "");
+        String url = getApplicationUrl("http://" + adminAccountSid + ":" + adminAuthToken + "@" + endpoint,
+                                       adminAccountSid, applicationSid, false);
+        Client jerseyClient = Client.create();
+        jerseyClient.addFilter(new HTTPBasicAuthFilter(adminAccountSid, adminAuthToken));
+        WebResource webResource = jerseyClient.resource(url);
+        ClientResponse response = webResource.accept(MediaType.APPLICATION_JSON).delete(ClientResponse.class);
+        return response;
+    }
+
 }
