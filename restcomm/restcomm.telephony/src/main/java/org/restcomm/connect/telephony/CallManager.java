@@ -607,17 +607,17 @@ public final class CallManager extends RestcommUntypedActor {
                 sendNotification(client.getAccountSid(), errMsg, 11002, "info", true);
 
                 ExtensionController ec = ExtensionController.getInstance();
-                IExtensionCreateCallRequest er = new CreateCall(fromUser, toUser, "", "", false, 0, CreateCallType.PSTN, client.getAccountSid(), null, null, null, null);
+                CreateCall er = new CreateCall(fromUser, toUser, "", "", false, 0, CreateCallType.PSTN, client.getAccountSid(), null, null, null, null);
                 ec.executePreOutboundAction(er, this.extensions);
                 if (er.isAllowed()) {
                     if (actAsProxyOut) {
                         addHeadersToMessage(request, er.getOutboundProxyHeaders());
-                        processRequestAndProxyOut(request, client, toUser);
+                        processRequestAndProxyOut(request, client, toUser, er);
                     } else if (isWebRTC(request)) {
                         //This is a WebRTC client that dials out
                         //TODO: should we inject headers for this case?
                         addHeadersToMessage(request, er.getOutboundProxyHeaders());
-                        proxyThroughMediaServerAsNumber(request, client, toUser);
+                        proxyThroughMediaServerAsNumber(request, client, toUser, er);
                     } else {
                         // https://telestax.atlassian.net/browse/RESTCOMM-335
                         String proxyURI = activeProxy;
@@ -836,7 +836,7 @@ public final class CallManager extends RestcommUntypedActor {
         return false;
     }
 
-    private void processRequestAndProxyOut(final SipServletRequest request, final Client client, final String destNumber) {
+    private void processRequestAndProxyOut(final SipServletRequest request, final Client client, final String destNumber, CreateCall er) {
         String requestFromHost = null;
 
         ProxyRule matchedProxyRule = null;
@@ -899,7 +899,7 @@ public final class CallManager extends RestcommUntypedActor {
             builder.setSdr(sdr);
             final Props props = VoiceInterpreter.props(builder.build());
             final ActorRef interpreter = getContext().actorOf(props);
-            final ActorRef call = call(null);
+            final ActorRef call = call(er);
             final SipApplicationSession application = request.getApplicationSession();
             application.setAttribute(Call.class.getName(), call);
             call.tell(request, self());
@@ -911,7 +911,7 @@ public final class CallManager extends RestcommUntypedActor {
         }
     }
 
-    private void proxyThroughMediaServerAsNumber(final SipServletRequest request, final Client client, final String destNumber) {
+    private void proxyThroughMediaServerAsNumber(final SipServletRequest request, final Client client, final String destNumber, CreateCall er) {
         String rcml = "<Response><Dial>" + destNumber + "</Dial></Response>";
         final VoiceInterpreterParams.Builder builder = new VoiceInterpreterParams.Builder();
         builder.setConfiguration(configuration);
@@ -930,7 +930,7 @@ public final class CallManager extends RestcommUntypedActor {
         final Props props = VoiceInterpreter.props(builder.build());
         final ActorRef interpreter = getContext().actorOf(props);
 
-        final ActorRef call = call(null);
+        final ActorRef call = call(er);
         final SipApplicationSession application = request.getApplicationSession();
         application.setAttribute(Call.class.getName(), call);
         call.tell(request, self());

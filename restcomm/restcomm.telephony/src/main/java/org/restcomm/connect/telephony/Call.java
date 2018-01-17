@@ -1074,20 +1074,8 @@ public final class Call extends RestcommUntypedActor {
                     if(logger.isDebugEnabled()) {
                         logger.debug("headerName="+headerName+" headerVal="+message.getHeader(headerName)+" concatValue="+sb.toString());
                     }
-                    if(!headerName.equalsIgnoreCase("Request-URI")){
-                        try {
-                            String headerVal = message.getHeader(headerName);
-                            if(headerVal!=null && !headerVal.isEmpty()) {
-                                message.setHeader(headerName , headerVal+sb.toString());
-                            }else{
-                                message.addHeader(headerName , sb.toString());
-                            }
-                        } catch (IllegalArgumentException iae) {
-                            if(logger.isErrorEnabled()) {
-                                logger.error("Exception while setting message header: "+iae.getMessage());
-                            }
-                        }
-                    }else{
+
+                    if( headerName.equalsIgnoreCase("Request-URI") ) {
                         //handle Request-URI
                         javax.servlet.sip.URI reqURI = message.getRequestURI();
                         if(logger.isDebugEnabled()) {
@@ -1108,6 +1096,54 @@ public final class Call extends RestcommUntypedActor {
                         message.setRequestURI(reqURI);
                         if(logger.isDebugEnabled()) {
                             logger.debug("ReqURI="+reqURI.toString()+" msgReqURI="+message.getRequestURI());
+                        }
+                    } else if( headerName.equalsIgnoreCase("Route") ){
+                        //handle Route
+                        String headerVal = message.getHeader(headerName);
+                        //TODO: do we want to add arbitrary parameters?
+
+                        if(logger.isDebugEnabled()) {
+                            logger.debug("ROUTE: "+headerName + "=" + headerVal);
+                        }
+                        //check how many pairs of host +port
+                        for(String keyValPair :entry.getValue()){
+                            String parName = "";
+                            String parVal = "";
+                            int equalsPos = keyValPair.indexOf("=");
+                            parName = keyValPair.substring(0, equalsPos);
+                            parVal = keyValPair.substring(equalsPos+1);
+
+                            if (parName.isEmpty() || parName.equalsIgnoreCase("host_name")) {
+                                try {
+                                    final SipURI uri = factory.createSipURI(null, parVal);
+                                    message.pushRoute((SipURI)uri);
+                                } catch (Exception e) {
+                                    if(logger.isDebugEnabled()) {
+                                        logger.debug("error adding ROUTE uri ="
+                                                + parVal);
+                                    }
+                                }
+
+                            }
+
+                            if(logger.isDebugEnabled()) {
+                                logger.debug("ROUTE pars ="+parName+"="+parVal+" equalsPos="+equalsPos+" keyValPair="+keyValPair);
+                            }
+                        }
+                    } else {
+                        try {
+                            String headerVal = message.getHeader(headerName);
+                            if (headerVal != null && !headerVal.isEmpty()) {
+                                message.setHeader(headerName,
+                                        headerVal + sb.toString());
+                            } else {
+                                message.addHeader(headerName, sb.toString());
+                            }
+                        } catch (IllegalArgumentException iae) {
+                            if (logger.isErrorEnabled()) {
+                                logger.error("Exception while setting message header: "
+                                        + iae.getMessage());
+                            }
                         }
                     }
                     if(logger.isDebugEnabled()) {
