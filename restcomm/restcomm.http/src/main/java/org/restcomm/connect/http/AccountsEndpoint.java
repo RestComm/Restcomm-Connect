@@ -382,7 +382,7 @@ public class AccountsEndpoint extends SecuredEndpoint {
         ExtensionController ec = ExtensionController.getInstance();
         ApiRequest apiRequest = new ApiRequest(sid.toString(), data, ApiRequest.Type.CREATE_SUBACCOUNT);
 
-        if (executePostApiAction(apiRequest)) {
+        if (executePreApiAction(apiRequest)) {
             final Account parent = accountsDao.getAccount(sid);
             Account account = null;
             try {

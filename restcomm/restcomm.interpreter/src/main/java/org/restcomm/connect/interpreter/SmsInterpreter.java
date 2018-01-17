@@ -395,6 +395,7 @@ public final class SmsInterpreter extends RestcommUntypedActor {
 
                 if (er.isAllowed()) {
                     fsm.transition(message, creatingSmsSession);
+                    ec.executePostInboundAction(far, extensions);
                 } else {
                     if (logger.isDebugEnabled()) {
                         final String errMsg = "Outbound SMS is not Allowed";
@@ -404,6 +405,7 @@ public final class SmsInterpreter extends RestcommUntypedActor {
                     final Notification notification = notification(WARNING_NOTIFICATION, 11001, "Outbound SMS is now allowed");
                     notifications.addNotification(notification);
                     fsm.transition(message, finished);
+                    ec.executePostInboundAction(far, extensions);
                     return;
                 }
             } else if (Verbs.email.equals(verb.name())) {

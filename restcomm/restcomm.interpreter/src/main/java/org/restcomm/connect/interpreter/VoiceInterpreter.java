@@ -1008,6 +1008,7 @@ public class VoiceInterpreter extends BaseVoiceInterpreter {
 
                 if (er.isAllowed()) {
                     fsm.transition(message, creatingSmsSession);
+                    ec.executePostInboundAction(far, extensions);
                 } else {
                     if (logger.isDebugEnabled()) {
                         final String errMsg = "Outbound SMS is not Allowed";
@@ -1017,6 +1018,7 @@ public class VoiceInterpreter extends BaseVoiceInterpreter {
                     final Notification notification = notification(WARNING_NOTIFICATION, 11001, "Outbound SMS is now allowed");
                     notifications.addNotification(notification);
                     fsm.transition(message, rejecting);
+                    ec.executePostInboundAction(far, extensions);
                     return;
                 }
             } else if (Verbs.email.equals(verb.name())) {
