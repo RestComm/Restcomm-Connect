@@ -1,0 +1,10 @@
+{
+    "FACExtension": {
+        "invalidFeature": {
+            "allowedPrefixes": ["US",
+                "Canada"]
+        }
+
+
+    }
+}
