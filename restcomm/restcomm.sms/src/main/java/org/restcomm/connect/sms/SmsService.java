@@ -311,6 +311,7 @@ public final class SmsService extends RestcommUntypedActor {
                     final SipServletResponse resp = request.createResponse(SC_FORBIDDEN, "Call not allowed");
                     resp.send();
                 }
+                ec.executePostOutboundAction(far, extensions);
             }
         } else {
             final SipServletResponse response = request.createResponse(SC_NOT_FOUND);

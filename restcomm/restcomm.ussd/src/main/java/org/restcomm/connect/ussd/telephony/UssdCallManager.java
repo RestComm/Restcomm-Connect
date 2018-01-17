@@ -290,6 +290,7 @@ public class UssdCallManager extends RestcommUntypedActor {
                     applicationSession.setAttribute(UssdInterpreter.class.getName(), ussdInterpreter);
                     applicationSession.setAttribute(UssdCall.class.getName(), ussdCall);
                     isFoundHostedApp = true;
+                    ec.executePostOutboundAction(far, extensions);
                 } else {
                     if (logger.isDebugEnabled()) {
                         final String errMsg = "Inbound USSD session is not Allowed";
