@@ -111,8 +111,8 @@ public final class MybatisProfileAssociationsDao implements ProfileAssociationsD
         final SqlSession session = sessions.openSession();
         try {
         	Map<String, Object> map = new HashMap<String, Object>();
-        	map.put("profile_sid", oldProfileSid);
-        	map.put("old_profile_sid", newProfileSid);
+        	map.put("profile_sid", newProfileSid);
+        	map.put("old_profile_sid", oldProfileSid);
             session.update(namespace + "updateAssociatedProfileOfAllSuchProfileSid", map);
             session.commit();
             map = null;

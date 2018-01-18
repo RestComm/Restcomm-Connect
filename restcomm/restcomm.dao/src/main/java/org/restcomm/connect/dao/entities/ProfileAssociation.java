@@ -70,6 +70,13 @@ public final class ProfileAssociation{
         return dateUpdated;
     }
 
+    /**
+     * @param newProfileSid
+     * @return
+     */
+    public ProfileAssociation setProfileSid(final Sid newProfileSid){
+    	return new ProfileAssociation(newProfileSid, targetSid, dateCreated, Calendar.getInstance().getTime());
+    }
     @NotThreadSafe
     public static final class Builder {
         private Sid profileSid;
@@ -91,8 +98,8 @@ public final class ProfileAssociation{
             this.targetSid = targetSid;
         }
 
-        public void setSid(final Sid sid) {
-            this.profileSid = sid;
+        public void setSid(final Sid profileSid) {
+            this.profileSid = profileSid;
         }
 
         public void setDateCreated(final Date dateCreated) {
