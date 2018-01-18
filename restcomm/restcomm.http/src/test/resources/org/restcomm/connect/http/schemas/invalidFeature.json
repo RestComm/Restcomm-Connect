@@ -1,10 +1,8 @@
 {
     "featureEnablement": {
-        "invalidFeature": {
-            "allowedPrefixes": ["US",
-                "Canada"]
-        }
-
-
+        "DIDPurchase": {
+            "allowedCountries": ["US",
+                "CAnada"]
+        } 
     }
 }

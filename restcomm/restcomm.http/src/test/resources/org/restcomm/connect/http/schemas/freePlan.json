@@ -1,8 +1,11 @@
 {
     "featureEnablement": {
-        "destinations": {
-            "allowedPrefixes": ["US",
+        "DIDPurchase": {
+            "allowedCountries": ["US",
                 "CA"]
+        },        
+        "destinations": {
+            "allowedPrefixes": ["+1"]
         },
         "outboundPSTN": {
         },
