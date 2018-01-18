@@ -30,13 +30,13 @@ public interface ProfileAssociationsDao {
 
     /**
      * @param targetSid
-     * @return a single profile as per provided profile sid
+     * @return ProfileAssociation as per provided target sid
      */
     ProfileAssociation getProfileAssociationByTargetSid(String targetSid);
 
     /**
      * @param profileSid
-     * @return List of all profiles associated with a give profile sid
+     * @return List of all ProfileAssociation with a give profile sid
      */
     List<ProfileAssociation> getProfileAssociationsByProfileSid(String profileSid);
 
