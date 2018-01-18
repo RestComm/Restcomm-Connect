@@ -15,9 +15,14 @@
     SELECT * FROM "restcomm_profiles" WHERE "sid"=#{sid};
   </select>
   
-  <update id="updateOrganization" parameterType="map">
-    UPDATE "restcomm_profiles" SET "date_updated"=#{date_updated},
-    "document"=#{document}
-    WHERE "sid"=#{sid};
+  <update id="updateProfile" parameterType="org.restcomm.connect.dao.entities.Profile">
+    UPDATE "restcomm_profiles" SET "date_updated"=#{dateUpdated, jdbcType=TIMESTAMP},
+    "document"=#{profileDocument, jdbcType=BLOB}
+    WHERE "sid"=#{sid, jdbcType=VARCHAR};
+  </update>
+  
+  <update id="deleteProfile" parameterType="string">
+    DELETE from "restcomm_profiles"
+    WHERE "sid"=#{sid, jdbcType=VARCHAR};
   </update>
 </mapper>
