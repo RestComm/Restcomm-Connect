@@ -1,6 +1,6 @@
 {
     "$schema": "http://json-schema.org/draft-04/schema#",
-    "id": "resource:/org/restcomm/connect/dao/schemas/rc-profile-schema.json#",
+    "id": "resource:/org/restcomm/connect/http/schemas/rc-profile-schema.json#",
     "additionalProperties": false,
     "type": "object",
     "properties": {
