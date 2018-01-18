@@ -1,8 +1,11 @@
 {
-    "FACEnablement": {
+    "featureEnablement": {
+        "DIDPurchase": {
+            "allowedCountries": ["US",
+                "CA"]
+        },        
         "destinations": {
-            "allowedPrefixes": ["US",
-                "Canada"]
+            "allowedPrefixes": ["+1"]
         },
         "outboundPSTN": {
         },
@@ -13,5 +16,12 @@
         "inboundSMS": {
         }
 
-    }
+    },
+    "sessionThrottling": {
+        "PSTNCallsPerTime": {
+            "events" : 300,
+            "time" : 30,
+            "timeUnit" : "days"
+        }
+    }    
 }

@@ -79,7 +79,7 @@ public class ProfileSchemaTest {
         JsonNode at = good.at(pointer);
         Assert.assertNotNull(at);
         Assert.assertTrue(at.isArray());
-        Assert.assertEquals("US", at.get(0).asText());
+        Assert.assertEquals("+1", at.get(0).asText());
     }
 
     @Test

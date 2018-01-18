@@ -16,7 +16,7 @@
                             "description": "ISO_3166-1 alpha2 country codes",
                             "items": {
                                 "type": "string",
-                                "pattern": "^[A-Z][A-Z]"
+                                "pattern": "^[A-Z][A-Z]$"
 
                             }
                         }
