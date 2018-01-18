@@ -170,4 +170,9 @@ public class DaoManagerMock implements DaoManager {
     public OrganizationsDao getOrganizationsDao() {
         return null;
     }
+
+    @Override
+    public ProfilesDao getProfilesDao() {
+        return null;
+    }
 }
