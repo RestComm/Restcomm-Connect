@@ -19,7 +19,6 @@
  */
 package org.restcomm.connect.dao.entities;
 
-import java.io.Serializable;
 import java.util.Calendar;
 import java.util.Date;
 
@@ -30,7 +29,7 @@ import org.restcomm.connect.commons.annotations.concurrency.NotThreadSafe;
  * @author maria.farooq@telestax.com (Maria Farooq)
  */
 @Immutable
-public final class Profile implements Serializable{
+public final class Profile{
     private final String sid;
     private final byte[] profileDocument;
     private final Date dateCreated;
