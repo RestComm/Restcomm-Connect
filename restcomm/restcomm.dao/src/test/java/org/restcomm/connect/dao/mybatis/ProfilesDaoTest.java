@@ -20,6 +20,7 @@
 package org.restcomm.connect.dao.mybatis;
 
 import java.io.FileInputStream;
+import java.io.IOException;
 import java.io.InputStream;
 import java.net.URISyntaxException;
 
@@ -31,14 +32,20 @@ import org.junit.Before;
 import org.junit.Test;
 import org.restcomm.connect.commons.dao.Sid;
 import org.restcomm.connect.dao.OrganizationsDao;
+import org.restcomm.connect.dao.ProfilesDao;
 import org.restcomm.connect.dao.entities.Organization;
+import org.restcomm.connect.dao.entities.Profile;
+
+import com.fasterxml.jackson.databind.JsonNode;
+import com.github.fge.jackson.JsonLoader;
 
 import junit.framework.Assert;
 
-public class OrganizationsDaoTest extends DaoTest {
+public class ProfilesDaoTest extends DaoTest {
     private static MybatisDaoManager manager;
+    private static final String jsonProfile = "{ \"FACEnablement\": { \"destinations\": { \"allowedPrefixes\": [\"US\", \"Canada\"] }, \"outboundPSTN\": { }, \"inboundPSTN\": { }, \"outboundSMS\": { }, \"inboundSMS\": { } }}";
 
-    public OrganizationsDaoTest() {
+    public ProfilesDaoTest() {
         super();
     }
 
@@ -63,38 +70,37 @@ public class OrganizationsDaoTest extends DaoTest {
     }
 
     @Test
-    public void addOrganizationsTest() throws IllegalArgumentException, URISyntaxException {
-        OrganizationsDao dao = manager.getOrganizationsDao();
-        Sid sid = Sid.generate(Sid.Type.ORGANIZATION);
-        dao.addOrganization(new Organization(sid, "test.restcomm.com", new DateTime(), new DateTime(), Organization.Status.ACTIVE));
-        Organization organization = dao.getOrganization(sid);
-        Assert.assertNotNull("Organization not found",organization);
-        Assert.assertNotNull(organization.getSid());
+    public void addProfileTest() throws IllegalArgumentException, URISyntaxException, IOException {
+        ProfilesDao dao = manager.getProfilesDao();
+        Sid sid = Sid.generate(Sid.Type.PROFILE);
+        Profile.Builder builder = Profile.builder();
+        builder.setDateCreated(new DateTime());
+        builder.setSid(sid);
+        byte[] binaryProfileDocument = jsonProfile.getBytes();
+        System.out.println("binaryProfileDocument: "+binaryProfileDocument);
+        builder.setProfileDocument(binaryProfileDocument);
+        dao.addProfile(builder.build());
+        Profile profile = dao.getProfile(sid);
+        Assert.assertNotNull(profile);
+        Assert.assertEquals(sid, profile.getSid());
+        Assert.assertEquals(binaryProfileDocument, profile.getProfileDocument());
     }
 
     @Test
-    public void addOrganizationsTestWithDot() throws IllegalArgumentException, URISyntaxException {
-        OrganizationsDao dao = manager.getOrganizationsDao();
-        Sid sid = Sid.generate(Sid.Type.ORGANIZATION);
-        dao.addOrganization(new Organization(sid, "test.restcomm.com.", new DateTime(), new DateTime(), Organization.Status.ACTIVE));
-        Organization organization = dao.getOrganization(sid);
-        Assert.assertEquals("test.restcomm.com",organization.getDomainName());
-    }
-
-    @Test
-    public void readOrganization() {
+    public void readProfile() {
         OrganizationsDao dao = manager.getOrganizationsDao();
         Organization organization = dao.getOrganization(new Sid("ORafbe225ad37541eba518a74248f0ac4d"));
         Assert.assertNotNull("Organization not found",organization);
     }
 
     @Test
-    public void readOrganizationByDomainDomain() {
-        OrganizationsDao dao = manager.getOrganizationsDao();
-        Organization organization = dao.getOrganizationByDomainName("test2.restcomm.com");
-        Assert.assertNotNull("Organization not found",organization);
-        organization = dao.getOrganizationByDomainName("test2.restcomm.com.");
-        Assert.assertNotNull("Organization not found",organization);
+    public void updateProfile() {
+    	
+    }
+
+    @Test
+    public void deleteProfile() {
+    	
     }
 
 }
