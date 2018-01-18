@@ -1,4 +1,6 @@
-package org.restcomm.connect.dao.schemas;
+package org.restcomm.connect.http.schemas;
+
+import org.junit.Test;
 
 /*
  * TeleStax, Open Source Cloud Communications
@@ -26,9 +28,8 @@ import com.github.fge.jackson.JsonLoader;
 import com.github.fge.jsonschema.core.report.ProcessingReport;
 import com.github.fge.jsonschema.main.JsonSchema;
 import com.github.fge.jsonschema.main.JsonSchemaFactory;
+
 import junit.framework.Assert;
-import org.junit.Test;
-import static org.junit.Assert.*;
 
 /**
  *
@@ -43,8 +44,8 @@ public class ProfileSchemaTest {
 
     @Test
     public void testFreePlan() throws Exception{
-        final JsonNode fstabSchema = JsonLoader.fromResource("/org/restcomm/connect/dao/schemas/rc-profile-schema.json");
-        final JsonNode good = JsonLoader.fromResource("/org/restcomm/connect/dao/schemas/freePlan.json");
+        final JsonNode fstabSchema = JsonLoader.fromResource("/org/restcomm/connect/http/schemas/rc-profile-schema.json");
+        final JsonNode good = JsonLoader.fromResource("/org/restcomm/connect/http/schemas/freePlan.json");
 
         final JsonSchemaFactory factory = JsonSchemaFactory.byDefault();
 
@@ -58,8 +59,8 @@ public class ProfileSchemaTest {
 
     @Test
     public void testEmptyProfile() throws Exception{
-        final JsonNode fstabSchema = JsonLoader.fromResource("/org/restcomm/connect/dao/schemas/rc-profile-schema.json");
-        final JsonNode good = JsonLoader.fromResource("/org/restcomm/connect/dao/schemas/emptyProfile.json");
+        final JsonNode fstabSchema = JsonLoader.fromResource("/org/restcomm/connect/http/schemas/rc-profile-schema.json");
+        final JsonNode good = JsonLoader.fromResource("/org/restcomm/connect/http/schemas/emptyProfile.json");
 
         final JsonSchemaFactory factory = JsonSchemaFactory.byDefault();
 
@@ -73,8 +74,8 @@ public class ProfileSchemaTest {
 
     @Test
     public void testRetrieveAllowedPrefixes() throws Exception{
-        final JsonNode good = JsonLoader.fromResource("/org/restcomm/connect/dao/schemas/freePlan.json");
-        JsonPointer pointer = JsonPointer.compile("/FeatureEnablement/destinations/allowedPrefixes");
+        final JsonNode good = JsonLoader.fromResource("/org/restcomm/connect/http/schemas/freePlan.json");
+        JsonPointer pointer = JsonPointer.compile("/FACEnablement/destinations/allowedPrefixes");
         JsonNode at = good.at(pointer);
         Assert.assertNotNull(at);
         Assert.assertTrue(at.isArray());
@@ -83,8 +84,8 @@ public class ProfileSchemaTest {
 
     @Test
     public void testInvalidFeature() throws Exception{
-        final JsonNode fstabSchema = JsonLoader.fromResource("/org/restcomm/connect/dao/schemas/rc-profile-schema.json");
-        final JsonNode good = JsonLoader.fromResource("/org/restcomm/connect/dao/schemas/invalidFeature.json");
+        final JsonNode fstabSchema = JsonLoader.fromResource("/org/restcomm/connect/http/schemas/rc-profile-schema.json");
+        final JsonNode good = JsonLoader.fromResource("/org/restcomm/connect/http/schemas/invalidFeature.json");
 
         final JsonSchemaFactory factory = JsonSchemaFactory.byDefault();
 
