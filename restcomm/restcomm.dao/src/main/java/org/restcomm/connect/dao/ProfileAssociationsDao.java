@@ -47,16 +47,26 @@ public interface ProfileAssociationsDao {
     int addProfileAssociation(ProfileAssociation profileAssociation);
 
     /**
+     * update ProfileAssociation Of TargetSid to new Profile Sid.
      * @param profileAssociation
      */
-    void updateProfileAssociation(ProfileAssociation profileAssociation);
+    void updateProfileAssociationOfTargetSid(ProfileAssociation profileAssociation);
 
     /**
+     * update Associated Profile Of All Such ProfileSid
+     * @param oldProfileSid
+     * @param newProfileSid
+     */
+    void updateAssociatedProfileOfAllSuchProfileSid(String oldProfileSid, String newProfileSid);
+
+    /**
+     * will delete all associations of given profile sid
      * @param profileSid
      */
     void deleteProfileAssociationByProfileSid(String profileSid);
 
     /**
+     * will delete all associations of given target sid
      * @param targetSid
      */
     void deleteProfileAssociationByTargetSid(String targetSid);

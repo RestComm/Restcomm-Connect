@@ -58,14 +58,14 @@ public class ProfileAssociationsDaoTest extends DaoTest {
         ProfileAssociation resultantProfileAssociation = dao.getProfileAssociationByTargetSid(targetSid.toString());
         Assert.assertNotNull(resultantProfileAssociation);
         Assert.assertEquals(profileAssociation.toString(), resultantProfileAssociation.toString());
-        
+
         //Read ProfileAssociation ByTargetSid
         List<ProfileAssociation> resultantProfileAssociations = dao.getProfileAssociationsByProfileSid(profileSid.toString());
         Assert.assertNotNull(resultantProfileAssociations);
         Assert.assertEquals(1, resultantProfileAssociations.size());
         Assert.assertEquals(profileAssociation.toString(), resultantProfileAssociations.get(0).toString());
         
-        // Add another ProfileAssociation
+        // Add another ProfileAssociation with same profile
         Sid targetSid2 = Sid.generate(Sid.Type.ACCOUNT);
         ProfileAssociation profileAssociation2 = new ProfileAssociation(profileSid, targetSid2, Calendar.getInstance().getTime(), Calendar.getInstance().getTime());
         dao.addProfileAssociation(profileAssociation2);
