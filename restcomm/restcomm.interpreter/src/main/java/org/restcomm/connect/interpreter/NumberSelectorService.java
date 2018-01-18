@@ -279,7 +279,7 @@ public class NumberSelectorService {
         if (numberfound.number == null) {
             //only use regex if perfect match didnt worked
             if (destinationOrganizationSid != null
-                    && destinationOrganizationSid.equals(sourceOrganizationSid)
+                    &&  (sourceOrganizationSid == null || destinationOrganizationSid.equals(sourceOrganizationSid))
                     && phone.matches("[\\d,*,#,+]+")) {
                 //check regex if source and dest orgs are the same
                 //only use regex if org available
