@@ -35,9 +35,10 @@ public interface ProfileAssociationsDao {
     ProfileAssociation getProfileAssociationByTargetSid(String targetSid);
 
     /**
-     * @return List of all profile associations in the system
+     * @param profileSid
+     * @return List of all profiles associated with a give profile sid
      */
-    List<ProfileAssociation> getAllProfileAssociations();
+    List<ProfileAssociation> getProfileAssociationsByProfileSid(String profileSid);
 
     /**
      * @param profileAssociation
@@ -51,7 +52,12 @@ public interface ProfileAssociationsDao {
     void updateProfileAssociation(ProfileAssociation profileAssociation);
 
     /**
-     * @param profileAssociation
+     * @param profileSid
      */
-    void deleteProfileAssociationByProfileSid(String sid);
+    void deleteProfileAssociationByProfileSid(String profileSid);
+
+    /**
+     * @param targetSid
+     */
+    void deleteProfileAssociationByTargetSid(String targetSid);
 }
