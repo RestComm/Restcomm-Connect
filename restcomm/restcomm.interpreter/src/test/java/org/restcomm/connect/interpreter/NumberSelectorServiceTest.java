@@ -252,8 +252,54 @@ public class NumberSelectorServiceTest {
         Assert.assertEquals(longestRegex, found.getPhoneNumber());
         inOrder.verify(numDao, times(2)).getIncomingPhoneNumbersByFilter((IncomingPhoneNumberFilter) any());
         inOrder.verify(numDao, times(1)).getIncomingPhoneNumbersRegex((IncomingPhoneNumberFilter) any());
-
     }
+
+    @Test
+    public void testRegexMatch2() {
+        Sid srcSid = Sid.generate(Sid.Type.ORGANIZATION);
+        Sid destSid = srcSid;
+        String regex1 = "123456*";
+        String regex2 = "554433*";
+        String regex3 = "778899*";
+        String regex4 = "987456*";
+        String regex5 = "987456789*";
+        String regex6 = "12*";
+        String regex7 = "*";
+        List<IncomingPhoneNumber> emptyNumbers = new ArrayList();
+        List<IncomingPhoneNumber> numbers = new ArrayList();
+        final IncomingPhoneNumber.Builder builder = IncomingPhoneNumber.builder();
+        builder.setPhoneNumber(regex1);
+        numbers.add(builder.build());
+        builder.setPhoneNumber(regex2);
+        numbers.add(builder.build());
+        builder.setPhoneNumber(regex3);
+        numbers.add(builder.build());
+        builder.setPhoneNumber(regex4);
+        numbers.add(builder.build());
+        builder.setPhoneNumber(regex5);
+        numbers.add(builder.build());
+        builder.setPhoneNumber(regex6);
+        numbers.add(builder.build());
+        builder.setPhoneNumber(regex7);
+        numbers.add(builder.build());
+        IncomingPhoneNumbersDao numDao = Mockito.mock(IncomingPhoneNumbersDao.class);
+        when(numDao.getTotalIncomingPhoneNumbers((IncomingPhoneNumberFilter) any())).
+                thenReturn(1,1);
+        when(numDao.getIncomingPhoneNumbersByFilter((IncomingPhoneNumberFilter) any())).
+                thenReturn(emptyNumbers, emptyNumbers);
+        when(numDao.getIncomingPhoneNumbersRegex((IncomingPhoneNumberFilter) any())).
+                thenReturn(numbers);
+        InOrder inOrder = inOrder(numDao);
+        NumberSelectorService service = new NumberSelectorService(numDao);
+
+        IncomingPhoneNumber found = service.searchNumber("987456", srcSid, destSid);
+
+        Assert.assertNotNull(found);
+        Assert.assertEquals(regex4, found.getPhoneNumber());
+        inOrder.verify(numDao, times(3)).getIncomingPhoneNumbersByFilter((IncomingPhoneNumberFilter) any());
+        inOrder.verify(numDao, times(1)).getIncomingPhoneNumbersRegex((IncomingPhoneNumberFilter) any());
+    }
+
 
     @Test
     public void testRegexMatchFromNullSrcOrg() {
