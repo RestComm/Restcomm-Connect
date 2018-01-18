@@ -24,18 +24,25 @@ import java.util.Date;
 
 import org.restcomm.connect.commons.annotations.concurrency.Immutable;
 import org.restcomm.connect.commons.annotations.concurrency.NotThreadSafe;
+import org.restcomm.connect.commons.dao.Sid;
 
 /**
  * @author maria.farooq@telestax.com (Maria Farooq)
  */
 @Immutable
 public final class ProfileAssociation{
-    private final String profileSid;
-    private final String targetSid;
+    private final Sid profileSid;
+    private final Sid targetSid;
     private final Date dateCreated;
     private final Date dateUpdated;
 
-    public ProfileAssociation(final String profileSid, final String targetSid, final Date dateCreated, final Date dateUpdated) {
+    /**
+     * @param profileSid
+     * @param targetSid can be account or organizaation Sid
+     * @param dateCreated
+     * @param dateUpdated
+     */
+    public ProfileAssociation(final Sid profileSid, final Sid targetSid, final Date dateCreated, final Date dateUpdated) {
         super();
         this.profileSid = profileSid;
         this.targetSid = targetSid;
@@ -47,11 +54,11 @@ public final class ProfileAssociation{
         return new Builder();
     }
 
-    public String getProfileSid() {
+    public Sid getProfileSid() {
         return profileSid;
     }
 
-    public String getTargetSid() {
+    public Sid getTargetSid() {
         return targetSid;
     }
 
@@ -65,27 +72,27 @@ public final class ProfileAssociation{
 
     @NotThreadSafe
     public static final class Builder {
-        private String sid;
-        private String targetSid;
+        private Sid profileSid;
+        private Sid targetSid;
         private Date dateCreated;
 
         private Builder() {
             super();
-            sid = null;
+            profileSid = null;
             targetSid = null;
             dateCreated = null;
         }
 
         public ProfileAssociation build() {
-            return new ProfileAssociation(sid, targetSid, dateCreated, Calendar.getInstance().getTime());
+            return new ProfileAssociation(profileSid, targetSid, dateCreated, Calendar.getInstance().getTime());
         }
 
-        public void setProfileDocument(final String targetSid) {
+        public void setProfileDocument(final Sid targetSid) {
             this.targetSid = targetSid;
         }
 
-        public void setSid(final String sid) {
-            this.sid = sid;
+        public void setSid(final Sid sid) {
+            this.profileSid = sid;
         }
 
         public void setDateCreated(final Date dateCreated) {
