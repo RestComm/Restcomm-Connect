@@ -26,9 +26,10 @@ services:
     environment:
       ## =============================== IMPORTANT!!    While most of the below defaults should be fine, YOU PROBABLY NEED TO CHANGE THIS!!
       RCBCONF_STATIC_ADDRESS: 127.0.0.1   # YOUR LOCAL IP ADDRESS GOES HERE.
+      RMSCONF_EXTERNAL_ADDRESS: 127.0.0.1  # YOUR LOCAL IP ADDRESS GOES HERE.
       ## =============================== IMPORTANT ========================================================================================
 
-      ENVCONFURL: https://raw.githubusercontent.com/RestComm/Restcomm-Docker/master/env_files/restcomm_env_locally.sh
+      # ENVCONFURL: https://raw.githubusercontent.com/RestComm/Restcomm-Docker/master/env_files/restcomm_env_locally.sh
       # REPOUSR: Username for `ENVCONFURL` if Authentication needed.
       # REPOPWD: Password for `ENVCONFURL` if Authentication needed.
 
@@ -46,8 +47,8 @@ services:
       RCADVCONF_TRUSTSTORE_ALIAS: restcomm
 
       #Functional configuration. Make sure these match the published port range in the `ports` section below.
-      RMSCONF_MEDIASERVER_LOWEST_PORT: 65000
-      RMSCONF_MEDIASERVER_HIGHEST_PORT: 65050
+      RMSCONF_MEDIA_LOW_PORT: 65000
+      RMSCONF_MEDIA_HIGH_PORT: 65050
 
       #RestComm Port configuration. Make sure these match the published ports in the `ports` section below.
       RCBCONF_SIP_PORT_UDP: 5080
