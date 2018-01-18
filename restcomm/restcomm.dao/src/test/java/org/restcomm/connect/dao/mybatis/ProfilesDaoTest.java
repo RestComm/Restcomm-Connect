@@ -23,6 +23,7 @@ import java.io.FileInputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.net.URISyntaxException;
+import java.util.Calendar;
 
 import org.apache.ibatis.session.SqlSessionFactory;
 import org.apache.ibatis.session.SqlSessionFactoryBuilder;
@@ -70,36 +71,21 @@ public class ProfilesDaoTest extends DaoTest {
     }
 
     @Test
-    public void addProfileTest() throws IllegalArgumentException, URISyntaxException, IOException {
+    public void ProfileCRUDTest() throws IllegalArgumentException, URISyntaxException, IOException {
         ProfilesDao dao = manager.getProfilesDao();
-        Sid sid = Sid.generate(Sid.Type.PROFILE);
-        Profile.Builder builder = Profile.builder();
-        builder.setDateCreated(new DateTime());
-        builder.setSid(sid);
-        byte[] binaryProfileDocument = jsonProfile.getBytes();
-        builder.setProfileDocument(binaryProfileDocument);
-        dao.addProfile(builder.build());
-        Profile profile = dao.getProfile(sid);
-        Assert.assertNotNull(profile);
-        Assert.assertEquals(sid, profile.getSid());
-        Assert.assertEquals(binaryProfileDocument, profile.getProfileDocument());
-    }
+        Profile profile = new Profile(Sid.generate(Sid.Type.PROFILE).toString(), jsonProfile.getBytes(), Calendar.getInstance().getTime(), Calendar.getInstance().getTime());
 
-    @Test
-    public void readProfile() {
-        OrganizationsDao dao = manager.getOrganizationsDao();
-        Organization organization = dao.getOrganization(new Sid("ORafbe225ad37541eba518a74248f0ac4d"));
-        Assert.assertNotNull("Organization not found",organization);
-    }
+        // Add Profile
+        dao.addProfile(profile);
 
-    @Test
-    public void updateProfile() {
-    	
-    }
+        // Read Profile
+        Profile resultantProfile = dao.getProfile(profile.getSid());
+        Assert.assertNotNull(resultantProfile);
+        Assert.assertEquals(profile.getSid(), resultantProfile.getSid());
+        Assert.assertEquals(profile.getProfileDocument(), resultantProfile.getProfileDocument());
 
-    @Test
-    public void deleteProfile() {
-    	
-    }
+        // Update Profile
 
+        // Delete Profile
+    }
 }

@@ -33,7 +33,7 @@ public interface ProfilesDao {
      * @param sid
      * @return a single profile as per provided profile sid
      */
-    Profile getProfile(Sid sid);
+    Profile getProfile(String sid);
 
     /**
      * @return List of all profiles in the system
