@@ -1,0 +1,17 @@
+{
+    "FACEnablement": {
+        "destinations": {
+            "allowedPrefixes": ["US",
+                "Canada"]
+        },
+        "outboundPSTN": {
+        },
+        "inboundPSTN": {
+        },
+        "outboundSMS": {
+        },
+        "inboundSMS": {
+        }
+
+    }
+}
