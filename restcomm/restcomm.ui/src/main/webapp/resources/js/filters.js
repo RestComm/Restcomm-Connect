@@ -32,7 +32,7 @@ rcFilters.filter('noHTML', function () {
 rcFilters.filter("toDuration", function () {
   return function(timeInSeconds) {
     if (timeInSeconds < 60) {
-      return seconds + 's';
+      return timeInSeconds + 's';
     }
     else if (timeInSeconds < 60 * 60) {
       var minutes = parseInt(timeInSeconds / 60, 10);

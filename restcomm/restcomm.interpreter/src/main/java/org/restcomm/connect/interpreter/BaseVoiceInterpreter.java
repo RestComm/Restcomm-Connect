@@ -74,6 +74,11 @@ import org.restcomm.connect.email.EmailService;
 import org.restcomm.connect.email.api.EmailRequest;
 import org.restcomm.connect.email.api.EmailResponse;
 import org.restcomm.connect.email.api.Mail;
+import org.restcomm.connect.extension.api.ExtensionResponse;
+import org.restcomm.connect.extension.api.ExtensionType;
+import org.restcomm.connect.extension.api.IExtensionFeatureAccessRequest;
+import org.restcomm.connect.extension.api.RestcommExtensionGeneric;
+import org.restcomm.connect.extension.controller.ExtensionController;
 import org.restcomm.connect.fax.FaxRequest;
 import org.restcomm.connect.fax.InterfaxService;
 import org.restcomm.connect.http.client.Downloader;
@@ -102,6 +107,7 @@ import org.restcomm.connect.sms.api.SmsSessionResponse;
 import org.restcomm.connect.telephony.api.CallInfo;
 import org.restcomm.connect.telephony.api.CallManagerResponse;
 import org.restcomm.connect.telephony.api.CallStateChanged;
+import org.restcomm.connect.telephony.api.FeatureAccessRequest;
 import org.restcomm.connect.telephony.api.GetCallInfo;
 import org.restcomm.connect.telephony.api.Hangup;
 import org.restcomm.connect.telephony.api.Reject;
@@ -261,11 +267,16 @@ public abstract class BaseVoiceInterpreter extends RestcommUntypedActor {
     String speechResult;
     //Monitoring service
     ActorRef monitoring;
+    //Sdr service
+    ActorRef sdr;
 
     final Set<Transition> transitions = new HashSet<Transition>();
     int recordingDuration = -1;
 
     protected RestcommConfiguration restcommConfiguration;
+
+    //List of extensions for VoiceInterpreter
+    List<RestcommExtensionGeneric> extensions;
 
     public BaseVoiceInterpreter() {
         super();
@@ -404,6 +415,8 @@ public abstract class BaseVoiceInterpreter extends RestcommUntypedActor {
         transitions.add(new Transition(sendingSms, creatingRecording));
         transitions.add(new Transition(sendingSms, creatingSmsSession));
         transitions.add(new Transition(sendingSms, hangingUp));
+
+        extensions = ExtensionController.getInstance().getExtensions(ExtensionType.FeatureAccessControl);
     }
 
     @Override
@@ -1560,6 +1573,23 @@ public abstract class BaseVoiceInterpreter extends RestcommUntypedActor {
                 inputType = Collect.Type.DTMF;
             } else {
                 inputType = Collect.Type.parseOrDefault(typeAttr.value(), Collect.Type.DTMF);
+            }
+
+            if (inputType.equals(Collect.Type.SPEECH) || inputType.equals(Collect.Type.DTMF_SPEECH)) {
+                ExtensionController ec = ExtensionController.getInstance();
+                final IExtensionFeatureAccessRequest far = new FeatureAccessRequest(FeatureAccessRequest.Feature.ASR, accountId);
+                ExtensionResponse er = ec.executePreInboundAction(far, extensions);
+                if (!er.isAllowed()) {
+                    if (logger.isDebugEnabled()) {
+                        final String errMsg = "ASR feature is not allowed";
+                        logger.debug(errMsg);
+                    }
+                    String errMsg = "ASR feature is not allowed";
+                    notification(WARNING_NOTIFICATION, 11001, errMsg);
+                    call.tell(new Hangup(errMsg), source);
+                    return;
+                }
+                ec.executePostOutboundAction(er, extensions);
             }
 
             // parse attribute "language"

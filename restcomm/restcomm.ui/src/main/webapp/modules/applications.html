@@ -2,7 +2,7 @@
     <div class="row">
         <div class="col-md-4 col-xs-6">
             <form class="search-form">
-                <img class="search-icon" src="resources/img/v2/search-icon.png">
+                <i class="fa fa-search search-icon"></i>
                 <input name="q" type="text" size="40" placeholder="Search..." ng-model="query.friendly_name" uib-tooltip="Search by application name" tooltip-popup-delay="1000">
             </form>
         </div>
@@ -26,18 +26,32 @@
             <table ng-show="(appsList | filter:query).length > 0" class="table table-hover apps-list rc-list" ng-cloak>
                 <thead>
                 <th class="apps-list-name" rc-list-sort by="predicate" order="'friendly_name'" reverse="reverse">Name</th>
+                <th class="apps-list-name-buttons hidden-xs">&nbsp;</th>
                 <th class="apps-list-type" rc-list-sort by="predicate" order="'kind'" reverse="reverse">Type</th>
                 <th class="apps-list-number hidden-xs" rc-list-sort by="predicate" order="'numbers'" reverse="reverse">Numbers</th>
                 <th class="apps-list-action visible-xs">&nbsp</th>
                 </thead>
                 <tbody>
-                <tr class="number-row" ng-repeat="app in filtered = (appsList | filter:query | orderBy:predicate:reverse )">
+                <tr class="apps-row" ng-repeat="app in filtered = (appsList | filter:query | orderBy:predicate:reverse )">
                     <td class="apps-list-name">
-                        <div><a class="rc-link" href="#/applications/{{app.sid}}">{{ app.friendly_name }}</a></div>
+                        <div ng-hide="editingAppName">
+                            <div ng-hide="editingAppName" class="edit-name-button pull-left"><i ng-click="editingAppName=true; newName=app.friendly_name" class="fa fa-pencil clickable"></i></div>
+                            <a class="rc-link" href="#/applications/{{app.sid}}">{{ app.friendly_name }}</a>
+                        </div>
+                        <div ng-show="editingAppName">
+                            <input ng-model="newName" type="text" class="form-control rc-list-inplace-edit">
+                        </div>
                         <div class="visible-xs">
                             <span ng-show="app.numbers[0].phone_number">{{ app.numbers[0].phone_number }}<span ng-show="app.numbers[1]"> and {{ app.numbers.length - 1 }} more</span></span><!-- <a ng-hide="app.numbers[0].phone_number" href="#/numbers/incoming">assign</a> -->
                             <span ng-show="!app.numbers[0].phone_number"><a href="#/numbers/incoming">None. Click to assign</a></span>
                         </div>
+                    </td>
+                    <td class="apps-list-name-buttons hidden-xs">
+                        <div>
+                            <span ng-show="editingAppName" class="cancel-name-button"><i ng-click="editingAppName=false" class="fa fa-close clickable"></i></span>
+                            <span ng-show="editingAppName" class="commit-name-button"><i ng-click="commitNewName(app, newName); editingAppName=false" class="fa fa-check clickable"></i></span>
+                        </div>
+
                     </td>
                     <td class="apps-list-type">
                         <div>
@@ -57,7 +71,7 @@
                 </tr>
                 </tbody>
                 <tfoot>
-                <td colspan="3">
+                <td colspan="4">
                     <div class="row">
                         <div class="col-md-4">
                             <small class="rc-list-summary">1 to {{ (appsList | filter:query).length }} of {{ (appsList | filter:query).length }} Application{{ (appsList | filter:query).length === 1 ? "" : "s" }}</small>

@@ -28,39 +28,21 @@ rcDirectives.directive('passwordMatch', [function () {
   };
 }]);
 
-rcDirectives.directive('rcPageTitle', function() {
+rcDirectives.directive('autofocus', function ($timeout) {
   return {
-    restrict: 'E',
-    scope: {
-      icon: '@',
-      title: '@',
-      subTitle: '@'
-    },
-    templateUrl: 'templates/rc-pagetitle.html'
-  };
-});
-
-rcDirectives.directive('rcNumbersPills', function() {
-  return {
-    restrict: 'E',
-    templateUrl: 'templates/rc-numbers-pills.html'
-  };
-});
-
-rcDirectives.directive('rcLogsPills', function() {
-  return {
-    restrict: 'E',
-    templateUrl: 'templates/rc-logs-pills.html'
-  };
-});
-
-rcDirectives.directive('rcListFilter', function() {
-  return {
-    restrict: 'E',
-    scope: {
-      filter: '='
-    },
-    templateUrl: 'templates/rc-list-filter.html'
+    restrict: 'A',
+    link: function (scope, element, attrs) {
+      scope.$watch(attrs.autofocus, function (newValue) {
+        $timeout(function () {
+          if (attrs.autofocus === '' || newValue) {
+            element[0].focus();
+            if (element[0].select) {
+              element[0].select();
+            }
+          }
+        }, 25);
+      });
+    }
   };
 });
 
@@ -172,4 +154,3 @@ rcDirectives.directive('rcEndpointUrl', function() {
     templateUrl: 'templates/rc-endpoint-url.html'
   };
 });
-

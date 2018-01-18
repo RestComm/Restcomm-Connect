@@ -1,6 +1,6 @@
 'use strict';
 
-angular.module('rcApp').controller('EventsCtrl', function ($rootScope, rappService, $state, Notifications, urlStateTracker, $location) {
+angular.module('rcApp').controller('EventsCtrl', function ($rootScope, $state, Notifications, urlStateTracker, $location) {
 
 	$rootScope.$on('$stateChangeStart', function(event, toState, toParams, fromState, fromParams, options){
 	    //console.log("switching states: " + fromState.name + " -> " + toState.name);
@@ -17,17 +17,6 @@ angular.module('rcApp').controller('EventsCtrl', function ($rootScope, rappServi
 	        //Notifications.error('Unauthorized access');
 	        urlStateTracker.remember($location);
 	        $state.go("public.login");
-	    } else
-	    if (error == "KEYCLOAK_INSTANCE_NOT_REGISTERED") {
-	        console.log("Identity Instance not registered.");
-	        $state.go("public.identity-registration");
-	    } else
-	    if (error == "KEYCLOAK_INSTANCE_ALREADY_REGISTERED") {
-	        console.log("Identity Instance is already registered.");
-	        $state.go("restcomm.dashboard");
-	    } else
-	    if (error == "IDENTITY_REGISTRATION_NOT_AVAILABLE") { // we are trying to access restcomm registration view while in restcomm-authentication mode
-	        $state.go("restcomm.dashboard");
 	    } else
 	    if (error == 'RESTCOMM_ACCOUNT_NOT_INITIALIZED') {
 	        $state.go('public.uninitialized');

@@ -637,12 +637,12 @@ otherRestCommConf(){
 	mv $FILE.bak $FILE
 
     #Remove if is set in earlier run.
-    grep -q 'allowLegacyHelloMessages' $RESTCOMM_BIN/standalone.conf && sed -i "s|-Dsun.security.ssl.allowLegacyHelloMessages=false -Djsse.enableSNIExtension=.* ||" $RESTCOMM_BIN/standalone.conf
+    grep -q 'allowLegacyHelloMessages' $RESTCOMM_BIN/standalone.conf && sed -i -E "s/(.*)( -Dsun.security.ssl.allowLegacyHelloMessages=false -Djsse.enableSNIExtension=)(true|false)(.*)/\1\4/" $RESTCOMM_BIN/standalone.conf
 
     if [[ "$SSLSNI" == "false" || "$SSLSNI" == "FALSE" ]]; then
-		  sed -i "s|-Djava.awt.headless=true|& -Dsun.security.ssl.allowLegacyHelloMessages=false -Djsse.enableSNIExtension=false |" $RESTCOMM_BIN/standalone.conf
+		  sed -i "s|-Djava.awt.headless=true|& -Dsun.security.ssl.allowLegacyHelloMessages=false -Djsse.enableSNIExtension=false|" $RESTCOMM_BIN/standalone.conf
 	else
-	 	  sed -i "s|-Djava.awt.headless=true|& -Dsun.security.ssl.allowLegacyHelloMessages=false -Djsse.enableSNIExtension=true |" $RESTCOMM_BIN/standalone.conf
+	 	  sed -i "s|-Djava.awt.headless=true|& -Dsun.security.ssl.allowLegacyHelloMessages=false -Djsse.enableSNIExtension=true|" $RESTCOMM_BIN/standalone.conf
 	fi
 
 	if [ -n "$HSQL_DIR" ]; then
@@ -833,6 +833,22 @@ configConferenceTimeout(){
 	xmlstarlet ed --inplace -u "/restcomm/runtime-settings/conference-timeout" -v "$CONFERENCE_TIMEOUT" $FILE
 }
 
+configSdrService(){
+    xmlstarlet ed --inplace -d "/restcomm/runtime-settings/sdr-service" $FILE
+    if  [ -n "$SDR_SERVICE_CLASS" ]; then
+        echo "Configure Sdr service"
+    	xmlstarlet ed --inplace -s "/restcomm/runtime-settings" -t elem  -n sdr-service \
+                -i "/restcomm/runtime-settings/sdr-service" -t attr -n class -v "$SDR_SERVICE_CLASS" \
+                $FILE
+        if  [ -n "$SDR_SERVICE_HTTP_URI" ]; then
+	    xmlstarlet ed --inplace -s "/restcomm/runtime-settings/sdr-service" -t elem -n http-uri -v "$SDR_SERVICE_HTTP_URI" $FILE
+	    fi
+        if  [ -n "$SDR_SERVICE_AMQP_URI" ]; then
+	    xmlstarlet ed --inplace -s "/restcomm/runtime-settings/sdr-service" -t elem -n amqp-uri -v "$SDR_SERVICE_AMQP_URI" $FILE
+	    fi
+	fi
+}
+
 # MAIN
 echo 'Configuring RestComm...'
 configRCJavaOpts
@@ -873,4 +889,5 @@ configRMSNetworking
 configAsrDriver
 configDnsProvisioningManager
 configConferenceTimeout
+configSdrService
 echo 'Configured RestComm!'

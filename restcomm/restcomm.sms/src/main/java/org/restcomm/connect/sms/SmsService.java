@@ -19,25 +19,14 @@
  */
 package org.restcomm.connect.sms;
 
-import static javax.servlet.sip.SipServletResponse.SC_NOT_FOUND;
-
-import java.io.IOException;
-import java.math.BigDecimal;
-import java.net.URI;
-import java.net.URISyntaxException;
-import java.util.Currency;
-import java.util.List;
-import java.util.concurrent.TimeUnit;
-
-import javax.servlet.ServletConfig;
-import javax.servlet.ServletContext;
-import javax.servlet.sip.SipApplicationSession;
-import javax.servlet.sip.SipFactory;
-import javax.servlet.sip.SipServlet;
-import javax.servlet.sip.SipServletRequest;
-import javax.servlet.sip.SipServletResponse;
-import javax.servlet.sip.SipURI;
-
+import akka.actor.ActorRef;
+import akka.actor.ActorSystem;
+import akka.actor.Props;
+import akka.actor.UntypedActor;
+import akka.actor.UntypedActorContext;
+import akka.actor.UntypedActorFactory;
+import akka.event.Logging;
+import akka.event.LoggingAdapter;
 import org.apache.commons.configuration.Configuration;
 import org.joda.time.DateTime;
 import org.restcomm.connect.commons.configuration.RestcommConfiguration;
@@ -60,12 +49,16 @@ import org.restcomm.connect.dao.entities.Notification;
 import org.restcomm.connect.dao.entities.SmsMessage;
 import org.restcomm.connect.dao.entities.SmsMessage.Direction;
 import org.restcomm.connect.dao.entities.SmsMessage.Status;
+import org.restcomm.connect.extension.api.ExtensionResponse;
 import org.restcomm.connect.extension.api.ExtensionType;
 import org.restcomm.connect.extension.api.IExtensionCreateSmsSessionRequest;
+import org.restcomm.connect.extension.api.IExtensionFeatureAccessRequest;
 import org.restcomm.connect.extension.api.RestcommExtensionException;
 import org.restcomm.connect.extension.api.RestcommExtensionGeneric;
 import org.restcomm.connect.extension.controller.ExtensionController;
 import org.restcomm.connect.http.client.rcmlserver.resolver.RcmlserverResolver;
+import org.restcomm.connect.interpreter.NumberSelectorService;
+import org.restcomm.connect.interpreter.SIPOrganizationUtil;
 import org.restcomm.connect.interpreter.SmsInterpreter;
 import org.restcomm.connect.interpreter.SmsInterpreterParams;
 import org.restcomm.connect.interpreter.StartInterpreter;
@@ -75,22 +68,31 @@ import org.restcomm.connect.sms.api.DestroySmsSession;
 import org.restcomm.connect.sms.api.SmsServiceResponse;
 import org.restcomm.connect.sms.api.SmsSessionAttribute;
 import org.restcomm.connect.sms.api.SmsSessionRequest;
+import org.restcomm.connect.telephony.api.FeatureAccessRequest;
 import org.restcomm.connect.telephony.api.TextMessage;
 import org.restcomm.connect.telephony.api.util.B2BUAHelper;
 import org.restcomm.connect.telephony.api.util.CallControlHelper;
 import org.restcomm.smpp.parameter.TlvSet;
-
-import akka.actor.ActorRef;
-import akka.actor.ActorSystem;
-import akka.actor.Props;
-import akka.actor.UntypedActor;
-import akka.actor.UntypedActorContext;
-import akka.actor.UntypedActorFactory;
-import akka.event.Logging;
-import akka.event.LoggingAdapter;
-import org.restcomm.connect.interpreter.NumberSelectorService;
-import org.restcomm.connect.interpreter.SIPOrganizationUtil;
 import scala.concurrent.duration.Duration;
+
+import javax.servlet.ServletConfig;
+import javax.servlet.ServletContext;
+import javax.servlet.sip.SipApplicationSession;
+import javax.servlet.sip.SipFactory;
+import javax.servlet.sip.SipServlet;
+import javax.servlet.sip.SipServletRequest;
+import javax.servlet.sip.SipServletResponse;
+import javax.servlet.sip.SipURI;
+import java.io.IOException;
+import java.math.BigDecimal;
+import java.net.URI;
+import java.net.URISyntaxException;
+import java.util.Currency;
+import java.util.List;
+import java.util.concurrent.TimeUnit;
+
+import static javax.servlet.sip.SipServletResponse.SC_FORBIDDEN;
+import static javax.servlet.sip.SipServletResponse.SC_NOT_FOUND;
 
 /**
  * @author quintana.thomas@gmail.com (Thomas Quintana)
@@ -254,45 +256,62 @@ public final class SmsService extends RestcommUntypedActor {
                 }, system.dispatcher());
             } else {
                 // Since toUser is null, try to route the message outside using the SMS Aggregator
-                if(logger.isInfoEnabled()) {
+                if (logger.isInfoEnabled()) {
                     logger.info("Restcomm will route this SMS to an external aggregator: " + client.getLogin() + " to: " + toUser);
                 }
 
-                final SipServletResponse trying = request.createResponse(SipServletResponse.SC_TRYING);
-                trying.send();
-                //TODO:do extensions check here too?
-                ActorRef session = session(this.configuration, sourceOrganizationSid);
+                ExtensionController ec = ExtensionController.getInstance();
+                final IExtensionFeatureAccessRequest far = new FeatureAccessRequest(FeatureAccessRequest.Feature.OUTBOUND_SMS, client.getAccountSid());
+                ExtensionResponse er = ec.executePreInboundAction(far, this.extensions);
 
-                // Create an SMS detail record.
-                final Sid sid = Sid.generate(Sid.Type.SMS_MESSAGE);
-                final SmsMessage.Builder builder = SmsMessage.builder();
-                builder.setSid(sid);
-                builder.setAccountSid(client.getAccountSid());
-                builder.setApiVersion(client.getApiVersion());
-                builder.setRecipient(toUser);
-                builder.setSender(client.getLogin());
-                builder.setBody(new String(request.getRawContent()));
-                builder.setDirection(Direction.OUTBOUND_CALL);
-                builder.setStatus(Status.RECEIVED);
-                builder.setPrice(new BigDecimal("0.00"));
-                // TODO implement currency property to be read from Configuration
-                builder.setPriceUnit(Currency.getInstance("USD"));
-                final StringBuilder buffer = new StringBuilder();
-                buffer.append("/").append(client.getApiVersion()).append("/Accounts/");
-                buffer.append(client.getAccountSid().toString()).append("/SMS/Messages/");
-                buffer.append(sid.toString());
-                final URI uri = URI.create(buffer.toString());
-                builder.setUri(uri);
-                final SmsMessage record = builder.build();
-                final SmsMessagesDao messages = storage.getSmsMessagesDao();
-                messages.addSmsMessage(record);
-                // Store the sms record in the sms session.
-                session.tell(new SmsSessionAttribute("record", record), self());
-                // Send the SMS.
-                TlvSet tlvSet = new TlvSet();
-                final SmsSessionRequest sms = new SmsSessionRequest(client.getLogin(), toUser, new String(request.getRawContent()), request, tlvSet, null);
-                monitoringService.tell(new TextMessage(((SipURI)request.getFrom().getURI()).getUser(), ((SipURI)request.getTo().getURI()).getUser(), TextMessage.SmsState.INBOUND_TO_PROXY_OUT), self);
-                session.tell(sms, self());
+                if (er.isAllowed()) {
+                    final SipServletResponse trying = request.createResponse(SipServletResponse.SC_TRYING);
+                    trying.send();
+                    //TODO:do extensions check here too?
+                    ActorRef session = session(this.configuration, sourceOrganizationSid);
+
+                    // Create an SMS detail record.
+                    final Sid sid = Sid.generate(Sid.Type.SMS_MESSAGE);
+                    final SmsMessage.Builder builder = SmsMessage.builder();
+                    builder.setSid(sid);
+                    builder.setAccountSid(client.getAccountSid());
+                    builder.setApiVersion(client.getApiVersion());
+                    builder.setRecipient(toUser);
+                    builder.setSender(client.getLogin());
+                    builder.setBody(new String(request.getRawContent()));
+                    builder.setDirection(Direction.OUTBOUND_CALL);
+                    builder.setStatus(Status.RECEIVED);
+                    builder.setPrice(new BigDecimal("0.00"));
+                    // TODO implement currency property to be read from Configuration
+                    builder.setPriceUnit(Currency.getInstance("USD"));
+                    final StringBuilder buffer = new StringBuilder();
+                    buffer.append("/").append(client.getApiVersion()).append("/Accounts/");
+                    buffer.append(client.getAccountSid().toString()).append("/SMS/Messages/");
+                    buffer.append(sid.toString());
+                    final URI uri = URI.create(buffer.toString());
+                    builder.setUri(uri);
+                    final SmsMessage record = builder.build();
+                    final SmsMessagesDao messages = storage.getSmsMessagesDao();
+                    messages.addSmsMessage(record);
+                    // Store the sms record in the sms session.
+                    session.tell(new SmsSessionAttribute("record", record), self());
+                    // Send the SMS.
+                    TlvSet tlvSet = new TlvSet();
+                    final SmsSessionRequest sms = new SmsSessionRequest(client.getLogin(), toUser, new String(request.getRawContent()), request, tlvSet, null);
+                    monitoringService.tell(new TextMessage(((SipURI) request.getFrom().getURI()).getUser(), ((SipURI) request.getTo().getURI()).getUser(), TextMessage.SmsState.INBOUND_TO_PROXY_OUT), self);
+                    session.tell(sms, self());
+                } else {
+                    if (logger.isDebugEnabled()) {
+                        final String errMsg = "Outbound SMS from Client " + client.getFriendlyName() + " not Allowed";
+                        logger.debug(errMsg);
+                    }
+                    String errMsg = "Outbound SMS from Client: " + client.getFriendlyName()
+                            + " is not Allowed";
+                    sendNotification(errMsg, 11001, "warning", true);
+                    final SipServletResponse resp = request.createResponse(SC_FORBIDDEN, "Call not allowed");
+                    resp.send();
+                }
+                ec.executePostOutboundAction(far, extensions);
             }
         } else {
             final SipServletResponse response = request.createResponse(SC_NOT_FOUND);
@@ -327,48 +346,68 @@ public final class SmsService extends RestcommUntypedActor {
         IncomingPhoneNumber number = numberSelector.searchNumber(to, sourceOrganizationSid, destOrg);
         try {
             if (number != null) {
-                URI appUri = number.getSmsUrl();
-                ActorRef interpreter = null;
-                if (appUri != null || number.getSmsApplicationSid() != null) {
-                    final SmsInterpreterParams.Builder builder = new SmsInterpreterParams.Builder();
-                    builder.setSmsService(self);
-                    builder.setConfiguration(configuration);
-                    builder.setStorage(storage);
-                    builder.setAccountId(number.getAccountSid());
-                    builder.setVersion(number.getApiVersion());
-                    final Sid sid = number.getSmsApplicationSid();
-                    if (sid != null) {
-                        final Application application = applications.getApplication(sid);
-                        RcmlserverConfigurationSet rcmlserverConfig = RestcommConfiguration.getInstance().getRcmlserver();
-                        RcmlserverResolver resolver = RcmlserverResolver.getInstance(rcmlserverConfig.getBaseUrl(), rcmlserverConfig.getApiPath());
-                        builder.setUrl(UriUtils.resolve(resolver.resolveRelative(application.getRcmlUrl())));
-                    } else {
-                        builder.setUrl(UriUtils.resolve(appUri));
-                    }
-                    final String smsMethod = number.getSmsMethod();
-                    if (smsMethod == null || smsMethod.isEmpty()) {
-                        builder.setMethod("POST");
-                    } else {
-                        builder.setMethod(smsMethod);
-                    }
-                    URI appFallbackUrl = number.getSmsFallbackUrl();
-                    if (appFallbackUrl != null) {
-                        builder.setFallbackUrl(UriUtils.resolve(number.getSmsFallbackUrl()));
-                        builder.setFallbackMethod(number.getSmsFallbackMethod());
-                    }
-                    final Props props = SmsInterpreter.props(builder.build());
-                    interpreter = getContext().actorOf(props);
-                }
-                Sid organizationSid = storage.getOrganizationsDao().getOrganization(storage.getAccountsDao().getAccount(number.getAccountSid()).getOrganizationSid()).getSid();
-                if(logger.isDebugEnabled())
-                    logger.debug("redirectToHostedSmsApp organizationSid = "+organizationSid);
-                //TODO:do extensions check here too?
-                final ActorRef session = session(this.configuration, organizationSid);
 
-                session.tell(request, self);
-                final StartInterpreter start = new StartInterpreter(session);
-                interpreter.tell(start, self);
-                isFoundHostedApp = true;
+                ExtensionController ec = ExtensionController.getInstance();
+                IExtensionFeatureAccessRequest far = new FeatureAccessRequest(FeatureAccessRequest.Feature.INBOUND_SMS, number.getAccountSid());
+                ExtensionResponse er = ec.executePreInboundAction(far, extensions);
+
+                if (er.isAllowed()) {
+                    URI appUri = number.getSmsUrl();
+                    ActorRef interpreter = null;
+                    if (appUri != null || number.getSmsApplicationSid() != null) {
+                        final SmsInterpreterParams.Builder builder = new SmsInterpreterParams.Builder();
+                        builder.setSmsService(self);
+                        builder.setConfiguration(configuration);
+                        builder.setStorage(storage);
+                        builder.setAccountId(number.getAccountSid());
+                        builder.setVersion(number.getApiVersion());
+                        final Sid sid = number.getSmsApplicationSid();
+                        if (sid != null) {
+                            final Application application = applications.getApplication(sid);
+                            RcmlserverConfigurationSet rcmlserverConfig = RestcommConfiguration.getInstance().getRcmlserver();
+                            RcmlserverResolver resolver = RcmlserverResolver.getInstance(rcmlserverConfig.getBaseUrl(), rcmlserverConfig.getApiPath());
+                            builder.setUrl(UriUtils.resolve(resolver.resolveRelative(application.getRcmlUrl())));
+                        } else {
+                            builder.setUrl(UriUtils.resolve(appUri));
+                        }
+                        final String smsMethod = number.getSmsMethod();
+                        if (smsMethod == null || smsMethod.isEmpty()) {
+                            builder.setMethod("POST");
+                        } else {
+                            builder.setMethod(smsMethod);
+                        }
+                        URI appFallbackUrl = number.getSmsFallbackUrl();
+                        if (appFallbackUrl != null) {
+                            builder.setFallbackUrl(UriUtils.resolve(number.getSmsFallbackUrl()));
+                            builder.setFallbackMethod(number.getSmsFallbackMethod());
+                        }
+                        final Props props = SmsInterpreter.props(builder.build());
+                        interpreter = getContext().actorOf(props);
+                    }
+                    Sid organizationSid = storage.getOrganizationsDao().getOrganization(storage.getAccountsDao().getAccount(number.getAccountSid()).getOrganizationSid()).getSid();
+                    if(logger.isDebugEnabled())
+                        logger.debug("redirectToHostedSmsApp organizationSid = "+organizationSid);
+                    //TODO:do extensions check here too?
+                    final ActorRef session = session(this.configuration, organizationSid);
+
+                    session.tell(request, self);
+                    final StartInterpreter start = new StartInterpreter(session);
+                    interpreter.tell(start, self);
+                    isFoundHostedApp = true;
+                    ec.executePostOutboundAction(far, extensions);
+                } else {
+                    if (logger.isDebugEnabled()) {
+                        final String errMsg = "Inbound SMS is not Allowed";
+                        logger.debug(errMsg);
+                    }
+                    String errMsg = "Inbound SMS to Number: " + number.getPhoneNumber()
+                            + " is not allowed";
+                    sendNotification(errMsg, 11001, "warning", true);
+                    final SipServletResponse resp = request.createResponse(SC_FORBIDDEN, "SMS not allowed");
+                    resp.send();
+                    ec.executePostOutboundAction(far, extensions);
+                    return false;
+                }
             }
         } catch (Exception e) {
             String errMsg = "There is no valid Restcomm SMS Request URL configured for this number : " + to;
@@ -495,7 +534,6 @@ public final class SmsService extends RestcommUntypedActor {
                 logger.info(errMessage); // send message to console
             }
         }
-
     }
 
     private Notification notification(final int log, final int error, final String message) {

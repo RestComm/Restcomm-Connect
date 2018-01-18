@@ -14,14 +14,14 @@ rcMod.controller('LogsNotificationsCtrl', function ($scope, $resource, $timeout,
   // default search values
   $scope.search = {
     sub_accounts: false
-  }
+  };
 
   // pagination support ----------------------------------------------------------------------------------------------
 
   $scope.currentPage = 1; //current page
   $scope.maxSize = 5; //pagination max size
   $scope.entryLimit = 10; //max rows for data table
-  $scope.reverse = true;
+  $scope.reverse = false;
   $scope.predicate = "date_created";
 
   $scope.setEntryLimit = function(limit) {

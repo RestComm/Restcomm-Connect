@@ -97,6 +97,8 @@ import org.restcomm.connect.telephony.api.Hangup;
 import org.restcomm.connect.telephony.api.InitializeOutbound;
 import org.restcomm.connect.telephony.api.Reject;
 import org.restcomm.connect.telephony.api.RemoveParticipant;
+import org.restcomm.connect.telephony.api.StopWaiting;
+
 import scala.concurrent.duration.Duration;
 
 import javax.sdp.SdpException;
@@ -476,7 +478,7 @@ public final class Call extends RestcommUntypedActor {
             } else {
                 to = ((TelURL) this.to).getPhoneNumber();
             }
-            final CallInfo info = new CallInfo(id, external, type, direction, created, forwardedFrom, name, from, to, invite, lastResponse, webrtc, muted, isFromApi, callUpdatedTime, mediaAttributes);
+            final CallInfo info = new CallInfo(id, accountId, external, type, direction, created, forwardedFrom, name, from, to, invite, lastResponse, webrtc, muted, isFromApi, callUpdatedTime, mediaAttributes);
             return new CallResponse<CallInfo>(info);
         } catch (Exception e) {
             if (logger.isInfoEnabled()) {
@@ -740,6 +742,14 @@ public final class Call extends RestcommUntypedActor {
             onBridgeStateChanged((BridgeStateChanged) message, self, sender);
         } else if (CallHoldStateChange.class.equals(klass)) {
             onCallHoldStateChange((CallHoldStateChange)message, sender);
+        } else if (StopWaiting.class.equals(klass)) {
+            onStopWaiting((StopWaiting)message, sender);
+        }
+    }
+
+    private void onStopWaiting(StopWaiting message, ActorRef sender) throws Exception {
+        if(is(waitingForAnswer)) {
+            sendInviteOk();
         }
     }
 
@@ -1199,6 +1209,9 @@ public final class Call extends RestcommUntypedActor {
                 logger.warning(strBuffer.toString());
             }
             msController.tell(new CloseMediaSession(), source);
+            //Github issue 2261 - https://github.com/RestComm/Restcomm-Connect/issues/2261
+            //Set a ReceivedTimeout duration to make sure call doesn't block waiting for the response from MmsCallController
+            context().setReceiveTimeout(Duration.create(2000, TimeUnit.MILLISECONDS));
         }
     }
 
@@ -1394,22 +1407,29 @@ public final class Call extends RestcommUntypedActor {
                 try {
                     SipSession session = invite.getSession();
                     SipSession.State sessionState = session.getState();
-                    if (session.isValid() && !sessionState.name().equalsIgnoreCase(SipSession.State.TERMINATED.name())) {
-                        SipServletResponse resp = null;
-                        if (message instanceof CallFail) {
-                            resp = invite.createResponse(500, "Problem to setup the call");
-                            String reason = ((CallFail) message).getReason();
-                            if (reason != null)
-                                resp.addHeader("Reason", reason);
-                        } else {
-                            // https://github.com/RestComm/Restcomm-Connect/issues/1663
-                            // We use 569 only if there is a problem to reach RMS as LB can be configured to take out
-                            // nodes that send back 569. This is meant to protect the cluster from nodes where the RMS
-                            // is in bad state and not responding anymore
-                            resp = invite.createResponse(MEDIA_SERVER_FAILURE_RESPONSE_CODE, "Problem to setup services");
+                    if (session.isValid()) {
+                        if (sessionState.name().equalsIgnoreCase(SipSession.State.CONFIRMED.name()) && !receivedBye) {
+                            //send BYE
+                            Hangup hangup = (message instanceof Hangup) ? (Hangup)message : new Hangup();
+                            sendBye(hangup);
+                        } else if (!sessionState.name().equalsIgnoreCase(SipSession.State.TERMINATED.name())){
+                            //send invite response
+                            SipServletResponse resp = null;
+                            if (message instanceof CallFail) {
+                                resp = invite.createResponse(500, "Problem to setup the call");
+                                String reason = ((CallFail) message).getReason();
+                                if (reason != null)
+                                    resp.addHeader("Reason", reason);
+                            } else {
+                                // https://github.com/RestComm/Restcomm-Connect/issues/1663
+                                // We use 569 only if there is a problem to reach RMS as LB can be configured to take out
+                                // nodes that send back 569. This is meant to protect the cluster from nodes where the RMS
+                                // is in bad state and not responding anymore
+                                resp = invite.createResponse(MEDIA_SERVER_FAILURE_RESPONSE_CODE, "Problem to setup services");
+                            }
+                            addCustomHeaders(resp);
+                            resp.send();
                         }
-                        addCustomHeaders(resp);
-                        resp.send();
                     }
                 } catch (Exception e) {
                     logger.error("Exception while trying to prepare failed response, exception: "+e);
@@ -2304,7 +2324,7 @@ public final class Call extends RestcommUntypedActor {
         } else if (is(stopping)) {
             fsm.transition(message, completed);
         } else {
-            if (!is(leaving))
+            if (!is(leaving) && !is(canceling) && !is(canceled))
                 fsm.transition(message, stopping);
         }
     }
@@ -2571,6 +2591,19 @@ public final class Call extends RestcommUntypedActor {
                     fsm.transition(message, busy);
                 } else if (is(failingNoAnswer)) {
                     fsm.transition(message, noAnswer);
+                } else if (is(joining)) {
+                    // https://telestax.atlassian.net/browse/RESTCOMM-1343
+                    // if call was in joining state and we received INACTIVE MS response.
+                    // means: MS failed to bridge the call to the conference.
+                    // call should move to failed state so proper sip response is generated &
+                    // call resources get cleaned up
+                    logger.error("Call failed to join conference, media operation to connect call with conference failed.");
+                    // Let conference know the call exited the room so
+                    // it does not keep waiting for it to complete the join
+                    this.conferencing = false;
+                    this.conference.tell(new Left(self()), self);
+                    this.conference = null;
+                    fsm.transition(new Hangup("failed to join conference"), failed);
                 }
                 break;
 
@@ -2633,7 +2666,7 @@ public final class Call extends RestcommUntypedActor {
             fsm.transition(message, leaving);
         } else {
             if (logger.isDebugEnabled()) {
-                logger.debug("Received Leave for Call: "+self.path()+", but state is :"+fsm.state().toString());
+            logger.debug("Received Leave for Call: "+self.path()+", but state is :"+fsm.state().toString());
             }
         }
     }

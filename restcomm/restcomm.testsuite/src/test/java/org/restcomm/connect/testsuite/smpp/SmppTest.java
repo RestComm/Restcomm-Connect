@@ -60,6 +60,7 @@ public class SmppTest {
 	private static final String version = Version.getVersion();
 
     private static String to = "7777";
+    private static String toPureSipProviderNumber = "7007";
     private static String from = "9999";
     private static String msgBody = "Message from SMPP Server to Restcomm";
     private static String msgBodyResp = "Response from Restcomm to SMPP server";
@@ -204,6 +205,28 @@ public class SmppTest {
 		assertNotNull(inboundMessageEntity);
 		assertTrue(inboundMessageEntity.getSmppTo().equals(from));
 		assertTrue(inboundMessageEntity.getSmppFrom().equals(to));
+		assertTrue(inboundMessageEntity.getSmppContent().equals(msgBodyResp));
+	}
+
+    private String smsEchoRcmlPureSipProviderNumber = "<Response><Sms to=\""+from+"\" from=\""+toPureSipProviderNumber+"\">"+msgBodyResp+"</Sms></Response>";
+	@Test //https://telestax.atlassian.net/browse/RESTCOMM-1428, https://telestax.atlassian.net/browse/POSTMORTEM-13
+	public void testSendSMPPMessageToRestcommPureSipProviderNumber () throws SmppInvalidArgumentException, IOException, InterruptedException {
+
+        stubFor(get(urlPathEqualTo("/smsApp"))
+                .willReturn(aResponse()
+                        .withStatus(200)
+                        .withHeader("Content-Type", "text/xml")
+                        .withBody(smsEchoRcmlPureSipProviderNumber)));
+
+		mockSmppServer.sendSmppMessageToRestcomm(msgBody,toPureSipProviderNumber,from,CharsetUtil.CHARSET_GSM);
+        Thread.sleep(2000);
+        assertTrue(mockSmppServer.isMessageSent());
+		Thread.sleep(2000);
+		assertTrue(mockSmppServer.isMessageReceived());
+		SmppInboundMessageEntity inboundMessageEntity = mockSmppServer.getSmppInboundMessageEntity();
+		assertNotNull(inboundMessageEntity);
+		assertTrue(inboundMessageEntity.getSmppTo().equals(from));
+		assertTrue(inboundMessageEntity.getSmppFrom().equals(toPureSipProviderNumber));
 		assertTrue(inboundMessageEntity.getSmppContent().equals(msgBodyResp));
 	}
 

@@ -33,12 +33,12 @@ rcMod.controller('DashboardCtrl', function ($scope, $resource, $rootScope, RComm
       {
         key : 'Calls' ,
         bar: true,
-        color: '#44A5AB',
+        color: 'var(--primary-color)',
         values : []
       },
       {
         key : 'Minutes' ,
-        color: '#DD4730',
+        color: 'var(--red-color)',
         'stroke-width': '5px',
         values : []
       }
@@ -118,7 +118,7 @@ rcMod.controller('DashboardCtrl', function ($scope, $resource, $rootScope, RComm
       useInteractiveGuideline: true,
       height: 400,
       margin: {
-        top: 15,
+        top: 30,
         right: 50,
         bottom: 100,
         left: 50
@@ -156,7 +156,7 @@ rcMod.controller('DashboardCtrl', function ($scope, $resource, $rootScope, RComm
         yDomain: [0, 100]
       },
       tooltipContent: function (key, x, y, e, graph) {
-        return '<h3 class="text-center" style="font-size: 1.2em;"><strong>' + e.point[0] + '</strong></h3>' +
+        return '<h3 class="text-center"><strong>' + e.point[0] + '</strong></h3>' +
           '<p>' +  y + ' ' + key.substr(0, key.indexOf('(')) + '</p>';
       },
     }
@@ -191,7 +191,7 @@ rcMod.controller('DashboardCtrl', function ($scope, $resource, $rootScope, RComm
         }
       },
       tooltipContent: function (key, x, y, e, graph) {
-        return '<h3 class="text-center" style="font-size: 1.2em;"><strong>' + e.point[0] + '</strong></h3>' +
+        return '<h3 class="text-center"><strong>' + e.point[0] + '</strong></h3>' +
           '<p>' +  y + ' ' + key + '</p>';
       }
     }

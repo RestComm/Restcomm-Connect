@@ -19,21 +19,25 @@
  */
 package org.restcomm.connect.interpreter;
 
-import com.google.i18n.phonenumbers.NumberParseException;
-import com.google.i18n.phonenumbers.PhoneNumberUtil;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Comparator;
+import java.util.HashSet;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Set;
 import java.util.TreeSet;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
+
 import org.apache.log4j.Logger;
 import org.restcomm.connect.commons.dao.Sid;
 import org.restcomm.connect.dao.IncomingPhoneNumbersDao;
 import org.restcomm.connect.dao.entities.IncomingPhoneNumber;
 import org.restcomm.connect.dao.entities.IncomingPhoneNumberFilter;
+
+import com.google.i18n.phonenumbers.NumberParseException;
+import com.google.i18n.phonenumbers.PhoneNumberUtil;
 
 /**
  * This Service will be used in different protocol scenarios to find if some
@@ -120,7 +124,7 @@ public class NumberSelectorService {
      * @return the matched number, null if not matched.
      */
     private NumberSelectionResult findSingleNumber(String number,
-            Sid sourceOrganizationSid, Sid destinationOrganizationSid) {
+            Sid sourceOrganizationSid, Sid destinationOrganizationSid, Set<SearchModifier> modifiers) {
         NumberSelectionResult matchedNumber = new NumberSelectionResult(null, false, null);
         IncomingPhoneNumberFilter.Builder filterBuilder = IncomingPhoneNumberFilter.Builder.builder();
         filterBuilder.byPhoneNumber(number);
@@ -128,7 +132,7 @@ public class NumberSelectorService {
         if (unfilteredCount > 0) {
             if (destinationOrganizationSid != null) {
                 filterBuilder.byOrgSid(destinationOrganizationSid.toString());
-            }else{
+            } else if ((modifiers != null) && (modifiers.contains(SearchModifier.ORG_COMPLIANT))){
                 //restrict search to non SIP numbers
                 logger.debug("Organizations are null, restrict PureSIP numbers.");
                 filterBuilder.byPureSIP(Boolean.FALSE);
@@ -174,13 +178,13 @@ public class NumberSelectorService {
      * @return the matched number, null if not matched.
      */
     private NumberSelectionResult findByNumber(List<String> numberQueries,
-            Sid sourceOrganizationSid, Sid destinationOrganizationSid) {
+            Sid sourceOrganizationSid, Sid destinationOrganizationSid, Set<SearchModifier> modifiers) {
         Boolean orgFiltered = false;
         NumberSelectionResult matchedNumber = new NumberSelectionResult(null, orgFiltered, null);
         int i = 0;
         while (matchedNumber.number == null && i < numberQueries.size()) {
             matchedNumber = findSingleNumber(numberQueries.get(i),
-                    sourceOrganizationSid, destinationOrganizationSid);
+                    sourceOrganizationSid, destinationOrganizationSid, modifiers);
             //preserve the orgFiltered flag along the queries
             if (matchedNumber.getOrganizationFiltered()) {
                 orgFiltered = true;
@@ -191,9 +195,27 @@ public class NumberSelectorService {
         return matchedNumber;
     }
 
+    /**
+     * @param phone
+     * @param sourceOrganizationSid
+     * @param destinationOrganizationSid
+     * @return
+     */
     public IncomingPhoneNumber searchNumber(String phone,
             Sid sourceOrganizationSid, Sid destinationOrganizationSid) {
-        NumberSelectionResult searchNumber = searchNumberWithResult(phone, sourceOrganizationSid, destinationOrganizationSid);
+        return searchNumber(phone, sourceOrganizationSid, destinationOrganizationSid, new HashSet<>(Arrays.asList(SearchModifier.ORG_COMPLIANT)));
+    }
+
+    /**
+     * @param phone
+     * @param sourceOrganizationSid
+     * @param destinationOrganizationSid
+     * @param modifiers
+     * @return
+     */
+    public IncomingPhoneNumber searchNumber(String phone,
+            Sid sourceOrganizationSid, Sid destinationOrganizationSid, Set<SearchModifier> modifiers) {
+        NumberSelectionResult searchNumber = searchNumberWithResult(phone, sourceOrganizationSid, destinationOrganizationSid, modifiers);
         return searchNumber.number;
     }
 
@@ -229,7 +251,23 @@ public class NumberSelectorService {
      * @return
      */
     public NumberSelectionResult searchNumberWithResult(String phone,
-            Sid sourceOrganizationSid, Sid destinationOrganizationSid) {
+            Sid sourceOrganizationSid, Sid destinationOrganizationSid){
+        return searchNumberWithResult(phone, sourceOrganizationSid, destinationOrganizationSid, new HashSet<>(Arrays.asList(SearchModifier.ORG_COMPLIANT)));
+    }
+
+    /**
+     * The main logic is: -Find a perfect match in DB using different formats.
+     * -If not matched, use available Regexes in the organization. -If not
+     * matched, try with the special * match.
+     *
+     * @param phone
+     * @param sourceOrganizationSid
+     * @param destinationOrganizationSid
+     * @param modifiers
+     * @return
+     */
+    public NumberSelectionResult searchNumberWithResult(String phone,
+            Sid sourceOrganizationSid, Sid destinationOrganizationSid, Set<SearchModifier> modifiers) {
         if (logger.isDebugEnabled()) {
             logger.debug("getMostOptimalIncomingPhoneNumber: " + phone
                     + ",srcOrg:" + sourceOrganizationSid
@@ -237,11 +275,11 @@ public class NumberSelectorService {
         }
         List<String> numberQueries = createPhoneQuery(phone);
 
-        NumberSelectionResult numberfound = findByNumber(numberQueries, sourceOrganizationSid, destinationOrganizationSid);
+        NumberSelectionResult numberfound = findByNumber(numberQueries, sourceOrganizationSid, destinationOrganizationSid, modifiers);
         if (numberfound.number == null) {
             //only use regex if perfect match didnt worked
             if (destinationOrganizationSid != null
-                    && destinationOrganizationSid.equals(sourceOrganizationSid)
+                    &&  (sourceOrganizationSid == null || destinationOrganizationSid.equals(sourceOrganizationSid))
                     && phone.matches("[\\d,*,#,+]+")) {
                 //check regex if source and dest orgs are the same
                 //only use regex if org available
@@ -252,13 +290,32 @@ public class NumberSelectorService {
                 }
                 if (numberfound.number == null) {
                     //if no regex match found, try with special star number in the end
-                    NumberSelectionResult starfound = findSingleNumber("*", sourceOrganizationSid, destinationOrganizationSid);
+                    NumberSelectionResult starfound = findSingleNumber("*", sourceOrganizationSid, destinationOrganizationSid, modifiers);
                     if (starfound.number != null) {
                         numberfound = new NumberSelectionResult(starfound.number, false, ResultType.REGEX);
                     }
                 }
             }
+        }
+        if (numberfound.number == null) {
+            if (logger.isDebugEnabled()) {
+                StringBuffer stringBuffer = new StringBuffer();
 
+                stringBuffer.append("NumberSelectionService didn't match a number because: ");
+
+                if (destinationOrganizationSid == null) {
+                    stringBuffer.append(" - Destination Org is null - ");
+                } else if (sourceOrganizationSid != null && !destinationOrganizationSid.equals(sourceOrganizationSid)) {
+                    stringBuffer.append(" - Source Org is NOT null and DOESN'T match the Destination Org - ");
+                } else if (!phone.matches("[\\d,*,#,+]+")) {
+                    String msg = String.format(" - Phone %s doesn't match regex \"[\\\\d,*,#,+]+\" - ", phone);
+                    stringBuffer.append(msg);
+                } else {
+                    String msg = String.format(" - Phone %s didn't match any of the Regex - ",phone);
+                    stringBuffer.append(msg);
+                }
+                logger.debug(stringBuffer.toString());
+            }
         }
         return numberfound;
     }
@@ -271,7 +328,8 @@ public class NumberSelectorService {
         @Override
         public int compare(IncomingPhoneNumber o1, IncomingPhoneNumber o2) {
             //put o2 first to make longest first in coll
-            return Integer.compare(o2.getPhoneNumber().length(), o1.getPhoneNumber().length());
+            int comparison = Integer.compare(o2.getPhoneNumber().length(), o1.getPhoneNumber().length());
+            return comparison == 0 ? -1 : comparison;
         }
 
     }
@@ -302,6 +360,7 @@ public class NumberSelectorService {
             logger.debug(String.format("Found %d Regex IncomingPhone numbers.", regexList.size()));
         }
         //order by regex length
+
         Set<IncomingPhoneNumber> regexSet = new TreeSet<IncomingPhoneNumber>(new NumberLengthComparator());
         regexSet.addAll(regexList);
         if (regexList != null && regexList.size() > 0) {

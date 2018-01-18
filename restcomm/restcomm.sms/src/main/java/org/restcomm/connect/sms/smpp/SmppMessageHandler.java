@@ -49,6 +49,7 @@ import org.restcomm.connect.extension.api.RestcommExtensionException;
 import org.restcomm.connect.extension.api.RestcommExtensionGeneric;
 import org.restcomm.connect.extension.controller.ExtensionController;
 import org.restcomm.connect.http.client.rcmlserver.resolver.RcmlserverResolver;
+import org.restcomm.connect.interpreter.NumberSelectorService;
 import org.restcomm.connect.interpreter.StartInterpreter;
 import org.restcomm.connect.monitoringservice.MonitoringService;
 import org.restcomm.connect.sms.SmsSession;
@@ -74,7 +75,6 @@ import akka.actor.UntypedActorContext;
 import akka.actor.UntypedActorFactory;
 import akka.event.Logging;
 import akka.event.LoggingAdapter;
-import org.restcomm.connect.interpreter.NumberSelectorService;
 
 //import org.restcomm.connect.extension.api.ExtensionRequest;
 //import org.restcomm.connect.extension.api.ExtensionResponse;
@@ -168,7 +168,7 @@ public class SmppMessageHandler extends RestcommUntypedActor {
 
 
         // Try to find an application defined for the phone number.
-        IncomingPhoneNumber number = numberSelector.searchNumber(phone, null, null);
+        IncomingPhoneNumber number = numberSelector.searchNumber(phone, null, null, null);
         try {
             if (number != null) {
                 ActorRef interpreter = null;
@@ -182,14 +182,19 @@ public class SmppMessageHandler extends RestcommUntypedActor {
                 builder.setAccountId(number.getAccountSid());
                 builder.setVersion(number.getApiVersion());
                 final Sid sid = number.getSmsApplicationSid();
+                boolean isApplicationNull=true;
                 if (sid != null) {
                     final Application application = applications.getApplication(sid);
-                    RcmlserverConfigurationSet rcmlserverConfig = RestcommConfiguration.getInstance().getRcmlserver();
-                    RcmlserverResolver resolver = RcmlserverResolver.getInstance(rcmlserverConfig.getBaseUrl(), rcmlserverConfig.getApiPath());
-                    builder.setUrl(UriUtils.resolve(resolver.resolveRelative(application.getRcmlUrl())));
-                } else if (appUri != null) {
+                    if(application != null){
+                        isApplicationNull=false;
+                        RcmlserverConfigurationSet rcmlserverConfig = RestcommConfiguration.getInstance().getRcmlserver();
+                        RcmlserverResolver resolver = RcmlserverResolver.getInstance(rcmlserverConfig.getBaseUrl(), rcmlserverConfig.getApiPath());
+                        builder.setUrl(UriUtils.resolve(resolver.resolveRelative(application.getRcmlUrl())));
+                    }
+                }
+                if (isApplicationNull && appUri != null) {
                     builder.setUrl(UriUtils.resolve(appUri));
-                } else {
+                } else if (isApplicationNull){
                     logger.warning("the matched number doesn't have SMS application attached, number: "+number.getPhoneNumber());
                     return false;
                 }

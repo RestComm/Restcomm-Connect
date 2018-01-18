@@ -11,10 +11,10 @@
                     <div class="col-xs-12">
                         <label id="rc-password-label" class="sign-in-label" for="rc-password">Password</label>
                         <input type="password" id="rc-password" name="password" placeholder="Enter your password" class="form-control input-lg" ng-model="credentials.token" required />
+                        <section ng-show="!!PublicConfig.resetPasswordUrl">
+                            <a id="forgot-password" target="_blank" href="{{PublicConfig.resetPasswordUrl}}">Forgot password?</a>
+                        </section>
                     </div>
-                    <section ng-show="false || !!PublicConfig.resetPasswordUrl">
-                        <a id="forgot-password" target="_blank" href="{{PublicConfig.resetPasswordUrl}}">Forgot password?</a>
-                    </section>
                 </div>
                 <div class="text-center">
                     <button class="rc-btn btn-primary sign-in-btn" type="submit" name="go">Sign in</button>

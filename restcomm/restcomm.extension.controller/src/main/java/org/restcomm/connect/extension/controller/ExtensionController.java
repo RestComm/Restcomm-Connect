@@ -1,5 +1,6 @@
 package org.restcomm.connect.extension.controller;
 
+import org.restcomm.connect.extension.api.ApiRequest;
 import org.restcomm.connect.extension.api.ExtensionResponse;
 import org.restcomm.connect.extension.api.ExtensionType;
 import org.restcomm.connect.extension.api.IExtensionRequest;
@@ -112,6 +113,57 @@ public class ExtensionController {
         return response;
     }
     public ExtensionResponse executePostOutboundAction(final IExtensionRequest er, List<RestcommExtensionGeneric> extensions) {
+        ExtensionResponse response = new ExtensionResponse();
+        //TODO: implement actual calls
+        return response;
+    }
+
+    public ExtensionResponse executePreInboundAction(final IExtensionRequest er, List<RestcommExtensionGeneric> extensions) {
+        ExtensionResponse response = new ExtensionResponse();
+//        response.setAllowed(true);
+        if (extensions != null && extensions.size() > 0) {
+            for (RestcommExtensionGeneric extension : extensions) {
+                if(logger.isInfoEnabled()) {
+                    logger.info( extension.getName()+" is enabled="+extension.isEnabled());
+                }
+                if (extension.isEnabled()) {
+                    response = extension.preInboundAction(er);
+                    //fail fast
+                    if (!response.isAllowed()){
+                        break;
+                    }
+                }
+            }
+        }
+        return response;
+    }
+
+    public ExtensionResponse executePostInboundAction(final IExtensionRequest er,  List<RestcommExtensionGeneric> extensions) {
+        ExtensionResponse response = new ExtensionResponse();
+        //TODO: implement actual calls
+        return response;
+    }
+
+    public ExtensionResponse executePreApiAction(final ApiRequest apiRequest, List<RestcommExtensionGeneric> extensions) {
+        ExtensionResponse response = new ExtensionResponse();
+
+        if (extensions != null && extensions.size() > 0) {
+            for (RestcommExtensionGeneric extension : extensions) {
+                if(logger.isInfoEnabled()) {
+                    logger.info( extension.getName()+" is enabled="+extension.isEnabled());
+                }
+                if (extension.isEnabled()) {
+                    response = extension.preApiAction(apiRequest);
+                    //fail fast
+                    if (!response.isAllowed())
+                        break;
+                }
+            }
+        }
+        return response;
+    }
+
+    public ExtensionResponse executePostApiAction(final ApiRequest apiRequest, List<RestcommExtensionGeneric> extensions) {
         ExtensionResponse response = new ExtensionResponse();
         //TODO: implement actual calls
         return response;

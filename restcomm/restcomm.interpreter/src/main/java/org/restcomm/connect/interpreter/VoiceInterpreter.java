@@ -57,6 +57,9 @@ import org.restcomm.connect.dao.entities.CallDetailRecord;
 import org.restcomm.connect.dao.entities.MediaAttributes;
 import org.restcomm.connect.dao.entities.Notification;
 import org.restcomm.connect.email.api.EmailResponse;
+import org.restcomm.connect.extension.api.ExtensionResponse;
+import org.restcomm.connect.extension.api.IExtensionFeatureAccessRequest;
+import org.restcomm.connect.extension.controller.ExtensionController;
 import org.restcomm.connect.fax.FaxResponse;
 import org.restcomm.connect.http.client.DownloaderResponse;
 import org.restcomm.connect.http.client.HttpRequestDescriptor;
@@ -101,6 +104,7 @@ import org.restcomm.connect.telephony.api.CreateConference;
 import org.restcomm.connect.telephony.api.DestroyCall;
 import org.restcomm.connect.telephony.api.DestroyConference;
 import org.restcomm.connect.telephony.api.Dial;
+import org.restcomm.connect.telephony.api.FeatureAccessRequest;
 import org.restcomm.connect.telephony.api.GetCallInfo;
 import org.restcomm.connect.telephony.api.GetConferenceInfo;
 import org.restcomm.connect.telephony.api.GetRelatedCall;
@@ -111,6 +115,7 @@ import org.restcomm.connect.telephony.api.RemoveParticipant;
 import org.restcomm.connect.telephony.api.StartBridge;
 import org.restcomm.connect.telephony.api.StopBridge;
 import org.restcomm.connect.telephony.api.StopConference;
+import org.restcomm.connect.telephony.api.StopWaiting;
 import org.restcomm.connect.tts.api.SpeechSynthesizerResponse;
 import scala.concurrent.Await;
 import scala.concurrent.Future;
@@ -228,6 +233,10 @@ public class VoiceInterpreter extends BaseVoiceInterpreter {
 
     // Controls if VI will wait MS response to move to the next verb
     protected boolean msResponsePending;
+
+    private boolean callWaitingForAnswer = false;
+
+    private Tag callWaitingForAnswerPendingTag;
 
     public VoiceInterpreter(VoiceInterpreterParams params) {
         super();
@@ -460,6 +469,7 @@ public class VoiceInterpreter extends BaseVoiceInterpreter {
         this.enable200OkDelay = this.configuration.subset("runtime-settings").getBoolean("enable-200-ok-delay",false);
         this.downloader = downloader();
         this.monitoring = params.getMonitoring();
+        this.sdr = params.getSdr();
         this.rcml = params.getRcml();
         this.asImsUa = params.isAsImsUa();
         this.imsUaLogin = params.getImsUaLogin();
@@ -922,69 +932,100 @@ public class VoiceInterpreter extends BaseVoiceInterpreter {
         if (logger.isDebugEnabled()) {
             logger.debug("Tag received, name: "+verb.name()+", text: "+verb.text());
         }
-        if (playWaitUrlPending) {
-            if (!(Verbs.play.equals(verb.name()) || Verbs.say.equals(verb.name()))) {
-                if (logger.isInfoEnabled()) {
-                    logger.info("Tag for waitUrl is neither Play or Say");
-                }
-                fsm.transition(message, hangingUp);
+
+        // if 200 ok delay is enabled we need to answer only the calls
+        // which are having any further call enabler verbs in their RCML.
+        if(enable200OkDelay && callWaitingForAnswer && Verbs.isThisVerbCallEnabler(verb)){
+            if(logger.isInfoEnabled()) {
+                logger.info("Tag received, but callWaitingForAnswer: will tell call to stop waiting");
             }
-            if (Verbs.say.equals(verb.name())) {
-                fsm.transition(message, checkingCache);
+            callWaitingForAnswerPendingTag = verb;
+            call.tell(new StopWaiting(), self());
+        } else {
+            if (playWaitUrlPending) {
+                if (!(Verbs.play.equals(verb.name()) || Verbs.say.equals(verb.name()))) {
+                    if (logger.isInfoEnabled()) {
+                        logger.info("Tag for waitUrl is neither Play or Say");
+                    }
+                    fsm.transition(message, hangingUp);
+                }
+                if (Verbs.say.equals(verb.name())) {
+                    fsm.transition(message, checkingCache);
+                } else if (Verbs.play.equals(verb.name())) {
+                    fsm.transition(message, caching);
+                }
+                return;
+            }
+            if (CallStateChanged.State.RINGING == callState) {
+                if (Verbs.reject.equals(verb.name())) {
+                    fsm.transition(message, rejecting);
+                } else if (Verbs.pause.equals(verb.name())) {
+                    fsm.transition(message, pausing);
+                } else {
+                    fsm.transition(message, initializingCall);
+                }
+            } else if (Verbs.dial.equals(verb.name())) {
+                action = verb.attribute(GatherAttributes.ATTRIBUTE_ACTION);
+                if (action != null && dialActionExecuted) {
+                    //We have a new Dial verb that contains Dial Action URL again.
+                    //We set dialActionExecuted to false in order to execute Dial Action again
+                    dialActionExecuted = false;
+                }
+                dialRecordAttribute = verb.attribute("record");
+                fsm.transition(message, startDialing);
+            } else if (Verbs.fax.equals(verb.name())) {
+                fsm.transition(message, caching);
             } else if (Verbs.play.equals(verb.name())) {
                 fsm.transition(message, caching);
-            }
-            return;
-        }
-        if (CallStateChanged.State.RINGING == callState) {
-            if (Verbs.reject.equals(verb.name())) {
-                fsm.transition(message, rejecting);
+            } else if (Verbs.say.equals(verb.name())) {
+                // fsm.transition(message, synthesizing);
+                fsm.transition(message, checkingCache);
+            } else if (Verbs.gather.equals(verb.name())) {
+                gatherVerb = verb;
+                fsm.transition(message, processingGatherChildren);
             } else if (Verbs.pause.equals(verb.name())) {
                 fsm.transition(message, pausing);
+            } else if (Verbs.hangup.equals(verb.name())) {
+                if (logger.isInfoEnabled()) {
+                    String msg = String.format("Next verb is Hangup, current state is %s , callInfo state %s", fsm.state(), callInfo.state());
+                    logger.info(msg);
+                }
+                if (is(finishDialing)) {
+                    fsm.transition(message, finished);
+                } else {
+                    fsm.transition(message, hangingUp);
+                }
+            } else if (Verbs.redirect.equals(verb.name())) {
+                fsm.transition(message, redirecting);
+            } else if (Verbs.record.equals(verb.name())) {
+                fsm.transition(message, creatingRecording);
+            } else if (Verbs.sms.equals(verb.name())) {
+
+                //Check if Outbound SMS is allowed
+                ExtensionController ec = ExtensionController.getInstance();
+                final IExtensionFeatureAccessRequest far = new FeatureAccessRequest(FeatureAccessRequest.Feature.OUTBOUND_SMS, accountId);
+                ExtensionResponse er = ec.executePreInboundAction(far, this.extensions);
+
+                if (er.isAllowed()) {
+                    fsm.transition(message, creatingSmsSession);
+                    ec.executePostInboundAction(far, extensions);
+                } else {
+                    if (logger.isDebugEnabled()) {
+                        final String errMsg = "Outbound SMS is not Allowed";
+                        logger.debug(errMsg);
+                    }
+                    final NotificationsDao notifications = storage.getNotificationsDao();
+                    final Notification notification = notification(WARNING_NOTIFICATION, 11001, "Outbound SMS is now allowed");
+                    notifications.addNotification(notification);
+                    fsm.transition(message, rejecting);
+                    ec.executePostInboundAction(far, extensions);
+                    return;
+                }
+            } else if (Verbs.email.equals(verb.name())) {
+                fsm.transition(message, sendingEmail);
             } else {
-                fsm.transition(message, initializingCall);
+                invalidVerb(verb);
             }
-        } else if (Verbs.dial.equals(verb.name())) {
-            action = verb.attribute(GatherAttributes.ATTRIBUTE_ACTION);
-            if (action != null && dialActionExecuted) {
-                //We have a new Dial verb that contains Dial Action URL again.
-                //We set dialActionExecuted to false in order to execute Dial Action again
-                dialActionExecuted = false;
-            }
-            dialRecordAttribute = verb.attribute("record");
-            fsm.transition(message, startDialing);
-        } else if (Verbs.fax.equals(verb.name())) {
-            fsm.transition(message, caching);
-        } else if (Verbs.play.equals(verb.name())) {
-            fsm.transition(message, caching);
-        } else if (Verbs.say.equals(verb.name())) {
-            // fsm.transition(message, synthesizing);
-            fsm.transition(message, checkingCache);
-        } else if (Verbs.gather.equals(verb.name())) {
-            gatherVerb = verb;
-            fsm.transition(message, processingGatherChildren);
-        } else if (Verbs.pause.equals(verb.name())) {
-            fsm.transition(message, pausing);
-        } else if (Verbs.hangup.equals(verb.name())) {
-            if (logger.isInfoEnabled()) {
-                String msg = String.format("Next verb is Hangup, current state is %s , callInfo state %s", fsm.state(), callInfo.state());
-                logger.info(msg);
-            }
-            if (is(finishDialing)) {
-                fsm.transition(message, finished);
-            } else {
-                fsm.transition(message, hangingUp);
-            }
-        } else if (Verbs.redirect.equals(verb.name())) {
-            fsm.transition(message, redirecting);
-        } else if (Verbs.record.equals(verb.name())) {
-            fsm.transition(message, creatingRecording);
-        } else if (Verbs.sms.equals(verb.name())) {
-            fsm.transition(message, creatingSmsSession);
-        } else if (Verbs.email.equals(verb.name())) {
-            fsm.transition(message, sendingEmail);
-        } else {
-            invalidVerb(verb);
         }
     }
 
@@ -1097,6 +1138,8 @@ public class VoiceInterpreter extends BaseVoiceInterpreter {
                     //Enable Monitoring Service for the call
                     if (monitoring != null)
                         call.tell(new Observe(monitoring), self());
+                    if (sdr != null)
+                        call.tell(new Observe(sdr), self());
                 }
             } else {
                 outboundCallInfo = response.get();
@@ -1337,6 +1380,9 @@ public class VoiceInterpreter extends BaseVoiceInterpreter {
                 break;
             case WAIT_FOR_ANSWER:
             case IN_PROGRESS:
+                if(call!=null && (call == sender) && event.state().equals(CallStateChanged.State.WAIT_FOR_ANSWER)){
+                    callWaitingForAnswer  = true;
+                }
                 if (is(initializingCall) || is(rejecting)) {
                     if (parser != null) {
                         //This is an inbound call
@@ -1362,6 +1408,12 @@ public class VoiceInterpreter extends BaseVoiceInterpreter {
                         final GetNextVerb next = new GetNextVerb();
                         parser.tell(next, self());
                     }
+                } else if (enable200OkDelay && sender.equals(call) && event.state().equals(CallStateChanged.State.IN_PROGRESS) && callWaitingForAnswerPendingTag != null) {
+                    if (logger.isInfoEnabled()) {
+                        logger.info("Waiting call is inProgress we can proceed to the pending tag execution");
+                    }
+                    callWaitingForAnswer = false;
+                    onTagMessage(callWaitingForAnswerPendingTag);
                 }
                 // Update the storage for conferencing.
                 if (callRecord != null && !is(initializingCall) && !is(rejecting)) {
@@ -2397,6 +2449,9 @@ public class VoiceInterpreter extends BaseVoiceInterpreter {
                 if (monitoring != null) {
                     outboundCall.tell(new Observe(monitoring), self());
                 }
+                if (sdr != null) {
+                    outboundCall.tell(new Observe(sdr), self());
+                }
                 outboundCall.tell(new Dial(), source);
             } else if (Fork.class.equals(klass)) {
                 final Observe observe = new Observe(source);
@@ -2405,6 +2460,9 @@ public class VoiceInterpreter extends BaseVoiceInterpreter {
                     branch.tell(observe, source);
                     if (monitoring != null) {
                         branch.tell(new Observe(monitoring), self());
+                    }
+                    if (sdr != null) {
+                        branch.tell(new Observe(sdr), self());
                     }
                     branch.tell(dial, source);
                 }
