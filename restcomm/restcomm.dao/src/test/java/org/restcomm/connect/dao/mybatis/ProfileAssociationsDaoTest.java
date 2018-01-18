@@ -4,6 +4,7 @@ import java.io.FileInputStream;
 import java.io.InputStream;
 import java.net.URISyntaxException;
 import java.util.Calendar;
+import java.util.List;
 
 import org.apache.ibatis.session.SqlSessionFactory;
 import org.apache.ibatis.session.SqlSessionFactoryBuilder;
@@ -44,15 +45,25 @@ public class ProfileAssociationsDaoTest extends DaoTest {
     }
 
     @Test
-    public void addOrganizationsTest() throws IllegalArgumentException, URISyntaxException {
+    public void addAndReadTest() throws IllegalArgumentException, URISyntaxException {
         ProfileAssociationsDao dao = manager.getProfileAssociationsDao();
         //TODO: update profile sid type below after merge from master
         Sid profileSid = Sid.generate(Sid.Type.ORGANIZATION);
         Sid targetSid = Sid.generate(Sid.Type.ACCOUNT);
         ProfileAssociation profileAssociation = new ProfileAssociation(profileSid, targetSid, Calendar.getInstance().getTime(), Calendar.getInstance().getTime());
+        //Add ProfileAssociation
         dao.addProfileAssociation(profileAssociation);
+        
+        //Read ProfileAssociation ByTargetSid
         ProfileAssociation resultantProfileAssociation = dao.getProfileAssociationByTargetSid(targetSid.toString());
         Assert.assertNotNull(resultantProfileAssociation);
+        Assert.assertEquals(profileAssociation.toString(), resultantProfileAssociation.toString());
+        
+        //Read ProfileAssociation ByTargetSid
+        List<ProfileAssociation> resultantProfileAssociations = dao.getProfileAssociationsByProfileSid(profileSid.toString());
+        Assert.assertNotNull(resultantProfileAssociations);
+        Assert.assertEquals(1, resultantProfileAssociations.size());
+        Assert.assertEquals(profileAssociation.toString(), resultantProfileAssociations.get(0).toString());
     }
 
 }

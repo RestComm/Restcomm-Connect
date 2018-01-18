@@ -100,4 +100,9 @@ public final class ProfileAssociation{
         }
     }
 
+    @Override
+    public String toString() {
+        return "ProfileAssociation [profileSid=" + profileSid + ", targetSid=" + targetSid + ", dateCreated="
+                + dateCreated + ", dateUpdated=" + dateUpdated + "]";
+    }
 }
