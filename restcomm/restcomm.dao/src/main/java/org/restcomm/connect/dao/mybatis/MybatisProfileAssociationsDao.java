@@ -19,10 +19,12 @@
  */
 package org.restcomm.connect.dao.mybatis;
 
+import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
+import org.apache.ibatis.session.SqlSession;
 import org.apache.ibatis.session.SqlSessionFactory;
 import org.joda.time.DateTime;
 import org.restcomm.connect.commons.annotations.concurrency.ThreadSafe;
@@ -46,35 +48,87 @@ public final class MybatisProfileAssociationsDao implements ProfileAssociationsD
 
     @Override
     public ProfileAssociation getProfileAssociationByTargetSid(String targetSid) {
-        // TODO Auto-generated method stub
-        return null;
+        final SqlSession session = sessions.openSession();
+        try {
+            final Map<String, Object> result = session.selectOne(namespace + "getProfileAssociationByTargetSid", targetSid);
+            if (result != null) {
+                return toProfileAssociation(result);
+            } else {
+                return null;
+            }
+        } finally {
+            session.close();
+        }
     }
 
     @Override
-    public List<ProfileAssociation> getAllProfileAssociations() {
-        // TODO Auto-generated method stub
-        return null;
+    public List<ProfileAssociation> getProfileAssociationsByProfileSid(String profileSid) {
+
+        final SqlSession session = sessions.openSession();
+
+        try {
+            final List<Map<String, Object>> results = session.selectList(namespace + "getProfileAssociationsByProfileSid",
+            		profileSid);
+            final List<ProfileAssociation> profiles = new ArrayList<ProfileAssociation>();
+
+            if (results != null && !results.isEmpty()) {
+                for (final Map<String, Object> result : results) {
+                    profiles.add(toProfileAssociation(result));
+                }
+            }
+            return profiles;
+        } finally {
+            session.close();
+        }
     }
 
     @Override
     public int addProfileAssociation(ProfileAssociation profileAssociation) {
-        // TODO Auto-generated method stub
-        return 0;
+        final SqlSession session = sessions.openSession();
+        int effectedRows = 0;
+        try {
+            effectedRows = session.insert(namespace + "addProfileAssociation", toMap(profileAssociation));
+            session.commit();
+        } finally {
+            session.close();
+        }
+        return effectedRows;
     }
 
     @Override
     public void updateProfileAssociation(ProfileAssociation profileAssociation) {
-        // TODO Auto-generated method stub
-        
+        final SqlSession session = sessions.openSession();
+        try {
+            session.update(namespace + "updateProfileAssociation", toMap(profileAssociation));
+            session.commit();
+        } finally {
+            session.close();
+        }
     }
 
     @Override
-    public void deleteProfileAssociationByProfileSid(String sid) {
-        // TODO Auto-generated method stub
-        
+    public void deleteProfileAssociationByProfileSid(String profileSid) {
+        final SqlSession session = sessions.openSession();
+        try {
+            session.delete(namespace + "deleteProfileAssociationByProfileSid", profileSid);
+            session.commit();
+        } finally {
+            session.close();
+        }
     }
 
-    private ProfileAssociation toProfileAssociations(final Map<String, Object> map) {
+    @Override
+    public void deleteProfileAssociationByTargetSid(String targetSid) {
+        final SqlSession session = sessions.openSession();
+        try {
+            session.delete(namespace + "deleteProfileAssociationByTargetSid", targetSid);
+            session.commit();
+        } finally {
+            session.close();
+        }
+    }
+
+    private ProfileAssociation toProfileAssociation(final Map<String, Object> map) {
         final Sid profileSid = DaoUtils.readSid(map.get("profile_sid"));
         final Sid targetSid = DaoUtils.readSid(map.get("target_sid"));
         final DateTime dateCreated = DaoUtils.readDateTime(map.get("date_created"));
