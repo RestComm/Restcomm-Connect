@@ -23,6 +23,8 @@ import java.io.FileInputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.net.URISyntaxException;
+import java.sql.SQLException;
+import java.util.Arrays;
 import java.util.Calendar;
 
 import org.apache.ibatis.session.SqlSessionFactory;
@@ -71,7 +73,7 @@ public class ProfilesDaoTest extends DaoTest {
     }
 
     @Test
-    public void ProfileCRUDTest() throws IllegalArgumentException, URISyntaxException, IOException {
+    public void ProfileCRUDTest() throws IllegalArgumentException, URISyntaxException, IOException, SQLException {
         ProfilesDao dao = manager.getProfilesDao();
         Profile profile = new Profile(Sid.generate(Sid.Type.PROFILE).toString(), jsonProfile.getBytes(), Calendar.getInstance().getTime(), Calendar.getInstance().getTime());
 
@@ -82,7 +84,7 @@ public class ProfilesDaoTest extends DaoTest {
         Profile resultantProfile = dao.getProfile(profile.getSid());
         Assert.assertNotNull(resultantProfile);
         Assert.assertEquals(profile.getSid(), resultantProfile.getSid());
-        Assert.assertEquals(profile.getProfileDocument(), resultantProfile.getProfileDocument());
+        Assert.assertTrue(Arrays.equals(profile.getProfileDocument(), resultantProfile.getProfileDocument()));
 
         // Update Profile
 

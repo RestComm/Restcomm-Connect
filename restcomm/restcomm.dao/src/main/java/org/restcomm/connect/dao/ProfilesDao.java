@@ -19,6 +19,7 @@
  */
 package org.restcomm.connect.dao;
 
+import java.sql.SQLException;
 import java.util.List;
 
 import org.restcomm.connect.commons.dao.Sid;
@@ -32,13 +33,15 @@ public interface ProfilesDao {
     /**
      * @param sid
      * @return a single profile as per provided profile sid
+     * @throws SQLException 
      */
-    Profile getProfile(String sid);
+    Profile getProfile(String sid) throws SQLException;
 
     /**
      * @return List of all profiles in the system
+     * @throws SQLException 
      */
-    List<Profile> getAllProfiles();
+    List<Profile> getAllProfiles() throws SQLException;
 
     /**
      * @param profile

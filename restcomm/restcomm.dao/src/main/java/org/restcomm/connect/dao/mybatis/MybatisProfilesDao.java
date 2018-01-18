@@ -48,7 +48,7 @@ public final class MybatisProfilesDao implements ProfilesDao {
     }
 
     @Override
-    public Profile getProfile(String sid) {
+    public Profile getProfile(String sid) throws SQLException {
         final SqlSession session = sessions.openSession();
         try {
             final Map<String, Object> result = session.selectOne(namespace + "getProfile", sid.toString());
@@ -63,7 +63,7 @@ public final class MybatisProfilesDao implements ProfilesDao {
     }
 
     @Override
-    public List<Profile> getAllProfiles() {
+    public List<Profile> getAllProfiles() throws SQLException {
         final SqlSession session = sessions.openSession();
         try {
             final List<Map<String, Object>> results = session.selectList(namespace + "getAllProfiles");
@@ -116,19 +116,13 @@ public final class MybatisProfilesDao implements ProfilesDao {
     }
 
 
-    private Profile toProfile(final Map<String, Object> map) {
+    private Profile toProfile(final Map<String, Object> map) throws SQLException {
         final String sid = DaoUtils.readString(map.get("sid"));
         final DateTime dateCreated = DaoUtils.readDateTime(map.get("date_created"));
         final DateTime dateUpdated = DaoUtils.readDateTime(map.get("date_updated"));
         final Blob document = (Blob) map.get("document");
-        System.out.println("blob: "+document);
         byte[] documentArr;
-		try {
-			documentArr = document.getBytes(1, (int) document.length());
-		} catch (SQLException e) {
-			e.printStackTrace();
-			return null;
-		}
+		documentArr = document.getBytes(1, (int) document.length());
         return new Profile(sid, documentArr, dateCreated.toDate(), dateUpdated.toDate());
     }
 }
