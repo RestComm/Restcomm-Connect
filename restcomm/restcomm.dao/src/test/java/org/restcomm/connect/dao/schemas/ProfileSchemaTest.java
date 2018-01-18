@@ -74,7 +74,7 @@ public class ProfileSchemaTest {
     @Test
     public void testRetrieveAllowedPrefixes() throws Exception{
         final JsonNode good = JsonLoader.fromResource("/org/restcomm/connect/dao/schemas/freePlan.json");
-        JsonPointer pointer = JsonPointer.compile("/FACEnablement/destinations/allowedPrefixes");
+        JsonPointer pointer = JsonPointer.compile("/FeatureEnablement/destinations/allowedPrefixes");
         JsonNode at = good.at(pointer);
         Assert.assertNotNull(at);
         Assert.assertTrue(at.isArray());
