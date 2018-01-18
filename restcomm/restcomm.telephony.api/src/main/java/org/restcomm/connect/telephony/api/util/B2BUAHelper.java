@@ -24,6 +24,7 @@ import java.net.InetAddress;
 import java.net.URI;
 import java.net.UnknownHostException;
 import java.util.Currency;
+import java.util.ListIterator;
 import java.util.Vector;
 
 import javax.sdp.Connection;
@@ -40,6 +41,7 @@ import javax.servlet.sip.SipServletRequest;
 import javax.servlet.sip.SipServletResponse;
 import javax.servlet.sip.SipSession;
 import javax.servlet.sip.SipURI;
+import javax.sip.header.RouteHeader;
 
 import org.apache.log4j.Logger;
 import org.joda.time.DateTime;
@@ -302,6 +304,36 @@ import org.restcomm.connect.telephony.api.CallStateChanged;
                      ((SipSessionExt) outRequest.getSession()).setBypassProxy(true);
                  }
              }
+             final ListIterator<String> routeHeaders = request.getHeaders(RouteHeader.NAME);
+             if (logger.isInfoEnabled()) {
+                 logger.info("COPYING ROUTES: all routeHeaders="+routeHeaders.toString());
+             }
+             while (routeHeaders.hasNext()) {
+                String routeHeader = routeHeaders.next();
+                if (logger.isInfoEnabled()) {
+                    logger.info("COPYING ROUTE: 1routeHeader=" + routeHeader);
+                }
+                try {
+                    int scPos = routeHeader.indexOf(";");
+                    String host = routeHeader.substring(0, scPos).replace("<sip:", "");
+                    if (logger.isInfoEnabled()) {
+                        logger.info("COPYING ROUTE: 2routeHeader="
+                                + routeHeader.toString() + " pos=" + scPos
+                                + " host=" + host);
+                    }
+                    final SipURI uri = sipFactory.createSipURI(null, host);
+                    outRequest.pushRoute(uri);
+                    if (logger.isInfoEnabled()) {
+                        logger.info("COPYING ROUTE: uri=" + uri.toString());
+                    }
+                } catch (Exception e) {
+                    if (logger.isInfoEnabled()) {
+                        logger.info("ERROR COPYING ROUTE: uri=" + routeHeader
+                                + " msg=" + e.getMessage());
+                    }
+                }
+             }
+
              outRequest.send();
              Address originalFromAddress = request.getFrom();
              SipURI originalFromUri = (SipURI) originalFromAddress.getURI();

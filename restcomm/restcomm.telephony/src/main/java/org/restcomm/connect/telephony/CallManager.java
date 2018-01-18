@@ -138,9 +138,11 @@ import akka.event.Logging;
 import akka.event.LoggingAdapter;
 import akka.util.Timeout;
 import gov.nist.javax.sip.header.UserAgent;
+
 import org.restcomm.connect.interpreter.NumberSelectionResult;
 import org.restcomm.connect.interpreter.NumberSelectorService;
 import org.restcomm.connect.interpreter.SIPOrganizationUtil;
+
 import scala.concurrent.Await;
 import scala.concurrent.Future;
 import scala.concurrent.duration.Duration;
@@ -669,7 +671,7 @@ public final class CallManager extends RestcommUntypedActor {
                 return;
             }
             if (actAsProxyOut) {
-                processRequestAndProxyOut(request, client, toUser);
+                processRequestAndProxyOut(request, client, toUser, null);
                 return;
             }
         }
@@ -705,42 +707,85 @@ public final class CallManager extends RestcommUntypedActor {
                 if (logger.isDebugEnabled()) {
                     logger.debug("headerName=" + headerName + " headerVal=" + message.getHeader(headerName) + " concatValue=" + sb.toString());
                 }
-                if (!headerName.equalsIgnoreCase("Request-URI")) {
+
+                if( headerName.equalsIgnoreCase("Request-URI") ) {
+                    //handle Request-URI
+                    javax.servlet.sip.URI reqURI = message.getRequestURI();
+                    if(logger.isDebugEnabled()) {
+                        logger.debug("ReqURI="+reqURI.toString()+" msgReqURI="+message.getRequestURI());
+                    }
+                    for(String keyValPair :entry.getValue()){
+                        String parName = "";
+                        String parVal = "";
+                        int equalsPos = keyValPair.indexOf("=");
+                        parName = keyValPair.substring(0, equalsPos);
+                        parVal = keyValPair.substring(equalsPos+1);
+                        reqURI.setParameter(parName, parVal);
+                        if(logger.isDebugEnabled()) {
+                            logger.debug("ReqURI pars ="+parName+"="+parVal+" equalsPos="+equalsPos+" keyValPair="+keyValPair);
+                        }
+                    }
+
+                    message.setRequestURI(reqURI);
+                    if(logger.isDebugEnabled()) {
+                        logger.debug("ReqURI="+reqURI.toString()+" msgReqURI="+message.getRequestURI());
+                    }
+                } else if( headerName.equalsIgnoreCase("Route") ){
+                    //handle Route
+                    String headerVal = message.getHeader(headerName);
+                    //TODO: do we want to add arbitrary parameters?
+
+                    if(logger.isDebugEnabled()) {
+                        logger.debug("ROUTE: "+headerName + "=" + headerVal);
+                    }
+                    //check how many pairs of host +port
+                    for(String keyValPair :entry.getValue()){
+                        String parName = "";
+                        String parVal = "";
+                        int equalsPos = keyValPair.indexOf("=");
+                        parName = keyValPair.substring(0, equalsPos);
+                        parVal = keyValPair.substring(equalsPos+1);
+
+                        if (parName.isEmpty() || parName.equalsIgnoreCase("host_name")) {
+                            try {
+                                if(logger.isDebugEnabled()) {
+                                    logger.debug("adding ROUTE parVal =" + parVal);
+                                }
+                                final SipURI uri = sipFactory.createSipURI(null, parVal);
+                                message.pushRoute((SipURI)uri);
+                                if(logger.isDebugEnabled()) {
+                                    logger.debug("added ROUTE parVal =" + uri.toString());
+                                }
+                            } catch (Exception e) {
+                                if(logger.isDebugEnabled()) {
+                                    logger.debug("error adding ROUTE uri ="
+                                            + parVal);
+                                }
+                            }
+
+                        }
+
+                        if(logger.isDebugEnabled()) {
+                            logger.debug("ROUTE pars ="+parName+"="+parVal+" equalsPos="+equalsPos+" keyValPair="+keyValPair);
+                        }
+                    }
+                } else {
                     try {
                         String headerVal = message.getHeader(headerName);
                         if (headerVal != null && !headerVal.isEmpty()) {
-                            message.setHeader(headerName, headerVal + sb.toString());
+                            message.setHeader(headerName,
+                                    headerVal + sb.toString());
                         } else {
                             message.addHeader(headerName, sb.toString());
                         }
                     } catch (IllegalArgumentException iae) {
                         if (logger.isErrorEnabled()) {
-                            logger.error("Exception while setting message header: " + iae.getMessage());
+                            logger.error("Exception while setting message header: "
+                                    + iae.getMessage());
                         }
-                    }
-                } else {
-                    //handle Request-URI
-                    javax.servlet.sip.URI reqURI = message.getRequestURI();
-                    if (logger.isDebugEnabled()) {
-                        logger.debug("ReqURI=" + reqURI.toString() + " msgReqURI=" + message.getRequestURI());
-                    }
-                    for (String keyValPair : entry.getValue()) {
-                        String parName = "";
-                        String parVal = "";
-                        int equalsPos = keyValPair.indexOf("=");
-                        parName = keyValPair.substring(0, equalsPos);
-                        parVal = keyValPair.substring(equalsPos + 1);
-                        reqURI.setParameter(parName, parVal);
-                        if (logger.isDebugEnabled()) {
-                            logger.debug("ReqURI pars =" + parName + "=" + parVal + " equalsPos=" + equalsPos + " keyValPair=" + keyValPair);
-                        }
-                    }
-
-                    message.setRequestURI(reqURI);
-                    if (logger.isDebugEnabled()) {
-                        logger.debug("ReqURI=" + reqURI.toString() + " msgReqURI=" + message.getRequestURI());
                     }
                 }
+
                 if (logger.isDebugEnabled()) {
                     logger.debug("headerName=" + headerName + " headerVal=" + message.getHeader(headerName));
                 }
