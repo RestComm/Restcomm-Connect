@@ -24,6 +24,8 @@ import static javax.servlet.sip.SipServlet.OUTBOUND_INTERFACES;
 import static javax.servlet.sip.SipServletResponse.SC_OK;
 import static javax.servlet.sip.SipServletResponse.SC_PROXY_AUTHENTICATION_REQUIRED;
 import static javax.servlet.sip.SipServletResponse.SC_UNAUTHORIZED;
+import static javax.servlet.sip.SipServletResponse.SC_BUSY_EVERYWHERE;
+import static javax.servlet.sip.SipServletResponse.SC_BUSY_HERE;
 import static org.restcomm.connect.commons.util.HexadecimalUtils.toHex;
 
 import java.io.IOException;
@@ -311,7 +313,11 @@ public final class UserAgentManager extends RestcommUntypedActor {
             }
         } else if (message instanceof SipServletResponse) {
             SipServletResponse response = (SipServletResponse) message;
-            if (response.getStatus()>400 && response.getMethod().equalsIgnoreCase("OPTIONS")) {
+            int responseStatusCode = response.getStatus();
+            if (responseStatusCode > 400
+                    // https://telestax.atlassian.net/browse/RESTCOMM-1582: Fix for User Agent that reply with BUSY when they are in a call
+                    && (responseStatusCode != SC_BUSY_HERE && responseStatusCode != SC_BUSY_EVERYWHERE)
+                    && response.getMethod().equalsIgnoreCase("OPTIONS")) {
                 removeRegistration(response);
             } else if (actAsImsUa && response.getMethod().equalsIgnoreCase(REGISTER)) {
                 proxyResponseFromIms(message, response);
