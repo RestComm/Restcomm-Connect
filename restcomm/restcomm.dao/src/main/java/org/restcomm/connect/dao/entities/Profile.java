@@ -19,22 +19,24 @@
  */
 package org.restcomm.connect.dao.entities;
 
-import org.joda.time.DateTime;
+import java.io.Serializable;
+import java.util.Calendar;
+import java.util.Date;
+
 import org.restcomm.connect.commons.annotations.concurrency.Immutable;
 import org.restcomm.connect.commons.annotations.concurrency.NotThreadSafe;
-import org.restcomm.connect.commons.dao.Sid;
 
 /**
  * @author maria.farooq@telestax.com (Maria Farooq)
  */
 @Immutable
-public final class Profile {
-    private final Sid sid;
+public final class Profile implements Serializable{
+    private final String sid;
     private final byte[] profileDocument;
-    private final DateTime dateCreated;
-    private final DateTime dateUpdated;
+    private final Date dateCreated;
+    private final Date dateUpdated;
 
-    public Profile(final Sid sid, final byte[] profileDocument, final DateTime dateCreated, final DateTime dateUpdated) {
+    public Profile(final String sid, final byte[] profileDocument, final Date dateCreated, final Date dateUpdated) {
         super();
         this.sid = sid;
         this.profileDocument = profileDocument;
@@ -46,7 +48,7 @@ public final class Profile {
         return new Builder();
     }
 
-    public Sid getSid() {
+    public String getSid() {
         return sid;
     }
 
@@ -54,19 +56,19 @@ public final class Profile {
         return profileDocument;
     }
 
-    public DateTime getDateCreated() {
+    public Date getDateCreated() {
         return dateCreated;
     }
 
-    public DateTime getDateUpdated() {
+    public Date getDateUpdated() {
         return dateUpdated;
     }
 
     @NotThreadSafe
     public static final class Builder {
-        private Sid sid;
+        private String sid;
         private byte[] profileDocument;
-        private DateTime dateCreated;
+        private Date dateCreated;
 
         private Builder() {
             super();
@@ -76,18 +78,18 @@ public final class Profile {
         }
 
         public Profile build() {
-            return new Profile(sid, profileDocument, dateCreated, DateTime.now());
+            return new Profile(sid, profileDocument, dateCreated, Calendar.getInstance().getTime());
         }
 
         public void setProfileDocument(final byte[] profileDocument) {
             this.profileDocument = profileDocument;
         }
 
-        public void setSid(final Sid sid) {
+        public void setSid(final String sid) {
             this.sid = sid;
         }
 
-        public void setDateCreated(final DateTime dateCreated) {
+        public void setDateCreated(final Date dateCreated) {
             this.dateCreated = dateCreated;
         }
     }

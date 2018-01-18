@@ -22,7 +22,6 @@ package org.restcomm.connect.dao.mybatis;
 import java.sql.Blob;
 import java.sql.SQLException;
 import java.util.ArrayList;
-import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
@@ -34,8 +33,6 @@ import org.restcomm.connect.commons.dao.Sid;
 import org.restcomm.connect.dao.DaoUtils;
 import org.restcomm.connect.dao.ProfilesDao;
 import org.restcomm.connect.dao.entities.Profile;
-
-import akka.event.slf4j.Logger;
 
 /**
  * @author maria-farooq@live.com (Maria Farooq)
@@ -51,7 +48,7 @@ public final class MybatisProfilesDao implements ProfilesDao {
     }
 
     @Override
-    public Profile getProfile(Sid sid) {
+    public Profile getProfile(String sid) {
         final SqlSession session = sessions.openSession();
         try {
             final Map<String, Object> result = session.selectOne(namespace + "getProfile", sid.toString());
@@ -88,7 +85,7 @@ public final class MybatisProfilesDao implements ProfilesDao {
         final SqlSession session = sessions.openSession();
         int effectedRows = 0;
         try {
-            effectedRows = session.insert(namespace + "addProfile", toMap(profile));
+            effectedRows = session.insert(namespace + "addProfile", profile);
             session.commit();
         } finally {
             session.close();
@@ -120,10 +117,11 @@ public final class MybatisProfilesDao implements ProfilesDao {
 
 
     private Profile toProfile(final Map<String, Object> map) {
-        final Sid sid = DaoUtils.readSid(map.get("sid"));
+        final String sid = DaoUtils.readString(map.get("sid"));
         final DateTime dateCreated = DaoUtils.readDateTime(map.get("date_created"));
         final DateTime dateUpdated = DaoUtils.readDateTime(map.get("date_updated"));
         final Blob document = (Blob) map.get("document");
+        System.out.println("blob: "+document);
         byte[] documentArr;
 		try {
 			documentArr = document.getBytes(1, (int) document.length());
@@ -131,15 +129,6 @@ public final class MybatisProfilesDao implements ProfilesDao {
 			e.printStackTrace();
 			return null;
 		}
-        return new Profile(sid, documentArr, dateCreated, dateUpdated);
-    }
-
-    private Map<String, Object> toMap(final Profile profile) {
-        final Map<String, Object> map = new HashMap<String, Object>();
-        map.put("sid", DaoUtils.writeSid(profile.getSid()));
-        map.put("document", profile.getProfileDocument());
-        map.put("date_created", DaoUtils.writeDateTime(profile.getDateCreated()));
-        map.put("date_updated", DaoUtils.writeDateTime(profile.getDateUpdated()));
-        return map;
+        return new Profile(sid, documentArr, dateCreated.toDate(), dateUpdated.toDate());
     }
 }
