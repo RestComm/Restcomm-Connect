@@ -45,7 +45,7 @@ public class ProfileAssociationsDaoTest extends DaoTest {
     }
 
     @Test
-    public void addAndReadTest() throws IllegalArgumentException, URISyntaxException {
+    public void profileAssociationsCRUDTest() throws IllegalArgumentException, URISyntaxException {
         ProfileAssociationsDao dao = manager.getProfileAssociationsDao();
         //TODO: update profile sid type below after merge from master
         Sid profileSid = Sid.generate(Sid.Type.ORGANIZATION);
@@ -64,7 +64,7 @@ public class ProfileAssociationsDaoTest extends DaoTest {
         Assert.assertNotNull(resultantProfileAssociations);
         Assert.assertEquals(1, resultantProfileAssociations.size());
         Assert.assertEquals(profileAssociation.toString(), resultantProfileAssociations.get(0).toString());
-        
+
         // Add another ProfileAssociation with same profile
         Sid targetSid2 = Sid.generate(Sid.Type.ACCOUNT);
         ProfileAssociation profileAssociation2 = new ProfileAssociation(profileSid, targetSid2, Calendar.getInstance().getTime(), Calendar.getInstance().getTime());
@@ -72,9 +72,31 @@ public class ProfileAssociationsDaoTest extends DaoTest {
         resultantProfileAssociations = dao.getProfileAssociationsByProfileSid(profileSid.toString());
         Assert.assertNotNull(resultantProfileAssociations);
         Assert.assertEquals(2, resultantProfileAssociations.size());
+
+        //Update Associated Profile Of All Such ProfileSid
+        //TODO: update profile sid type below after merge from master
+        Sid newProfileSid = Sid.generate(Sid.Type.ORGANIZATION);
+        dao.updateAssociatedProfileOfAllSuchProfileSid(profileSid.toString(), newProfileSid.toString());
+        Assert.assertEquals(0, dao.getProfileAssociationsByProfileSid(profileSid.toString()).size());
+        Assert.assertEquals(2, dao.getProfileAssociationsByProfileSid(newProfileSid.toString()).size());
+
+        //Update ProfileAssociation of target
+        //TODO: update profile sid type below after merge from master
+        Sid newProfileSid2 = Sid.generate(Sid.Type.ORGANIZATION);
+        profileAssociation = dao.getProfileAssociationsByProfileSid(newProfileSid.toString()).get(0);
+        ProfileAssociation updatedProfileAssociation = profileAssociation.setProfileSid(newProfileSid2);
+        dao.updateProfileAssociationOfTargetSid(updatedProfileAssociation);
+        ProfileAssociation resultantProfileAssociationdao = dao.getProfileAssociationByTargetSid(updatedProfileAssociation.getTargetSid().toString());
+        Assert.assertNotNull(resultantProfileAssociationdao);
+        Assert.assertEquals(updatedProfileAssociation.getProfileSid().toString(), resultantProfileAssociationdao.getProfileSid().toString());
+
+        //Delete ByProfileSid
+        dao.deleteProfileAssociationByProfileSid(newProfileSid2.toString());
+        Assert.assertEquals(0,dao.getProfileAssociationsByProfileSid(newProfileSid2.toString()).size());
         
-        //Update ProfileAssociation
-        
+        //Delete ByTargetSid
+        dao.deleteProfileAssociationByTargetSid(resultantProfileAssociationdao.getProfileSid().toString());
+        Assert.assertNull(dao.getProfileAssociationByTargetSid(resultantProfileAssociationdao.getProfileSid().toString()));
     }
 
 }

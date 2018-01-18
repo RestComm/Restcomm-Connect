@@ -16,13 +16,13 @@
   </select>
   
   <update id="updateProfileAssociationOfTargetSid" parameterType="map">
-    UPDATE "restcomm_profile_associations" SET "date_updated"=#{date_updated},
+    UPDATE "restcomm_profile_associations" SET "date_updated"=NOW(),
     "profile_sid"=#{profile_sid}
     WHERE "target_sid"=#{target_sid};
   </update>
   
   <update id="updateAssociatedProfileOfAllSuchProfileSid" parameterType="map">
-    UPDATE "restcomm_profile_associations" SET "date_updated"=#{date_updated},
+    UPDATE "restcomm_profile_associations" SET "date_updated"=NOW(),
     "profile_sid"=#{profile_sid}
     WHERE "profile_sid"=#{old_profile_sid};
   </update>
