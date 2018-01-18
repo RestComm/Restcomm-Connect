@@ -121,7 +121,7 @@ public final class MybatisProfilesDao implements ProfilesDao {
         final DateTime dateUpdated = DaoUtils.readDateTime(map.get("date_updated"));
         final Blob document = (Blob) map.get("document");
         byte[] documentArr;
-		documentArr = document.getBytes(1, (int) document.length());
+        documentArr = document.getBytes(1, (int) document.length());
         return new Profile(sid, documentArr, dateCreated.toDate(), dateUpdated.toDate());
     }
 }
