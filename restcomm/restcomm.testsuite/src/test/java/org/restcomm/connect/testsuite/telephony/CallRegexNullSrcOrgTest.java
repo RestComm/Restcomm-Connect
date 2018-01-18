@@ -112,7 +112,7 @@ public class CallRegexNullSrcOrgTest {
     private SipStack bobSipStack;
     private SipPhone bobPhone;
     private static String bobPort = String.valueOf(NetworkPortAssigner.retrieveNextPortByFile());
-    private String bobContact = "sip:bob@127.0.0.1:" + bobPort;
+    private String bobContact = "sip:bob@127.1.1.1:" + bobPort;
 
     // Alice is a Restcomm Client with VoiceURL. This Restcomm Client can register with Restcomm and whatever will dial the RCML
     // of the VoiceURL will be executed.
@@ -1642,7 +1642,7 @@ public class CallRegexNullSrcOrgTest {
         replacements.put("5092", String.valueOf(henriquePort));
         replacements.put("5093", String.valueOf(subAccountPort));
         List<String> resources = new ArrayList(Arrays.asList("dial-client-entry_wActionUrl.xml"));
-        return WebArchiveUtil.createWebArchiveNoGw("restcomm_callRegex_null_src_org.xml",
+        return WebArchiveUtil.createWebArchiveNoGw("restcomm_callRegex.xml",
                 "restcomm.script_callRegexTest",resources, replacements);
     }
 
