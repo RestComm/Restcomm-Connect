@@ -296,7 +296,26 @@ public class NumberSelectorService {
                     }
                 }
             }
+        }
+        if (numberfound.number == null) {
+            if (logger.isDebugEnabled()) {
+                StringBuffer stringBuffer = new StringBuffer();
 
+                stringBuffer.append("NumberSelectionService didn't match a number because: ");
+
+                if (destinationOrganizationSid == null) {
+                    stringBuffer.append(" - Destination Org is null - ");
+                } else if (sourceOrganizationSid != null && !destinationOrganizationSid.equals(sourceOrganizationSid)) {
+                    stringBuffer.append(" - Source Org is NOT null and DOESN'T match the Destination Org - ");
+                } else if (!phone.matches("[\\d,*,#,+]+")) {
+                    String msg = String.format(" - Phone %s doesn't match regex \"[\\\\d,*,#,+]+\" - ", phone);
+                    stringBuffer.append(msg);
+                } else {
+                    String msg = String.format(" - Phone %s didn't match any of the Regex - ",phone);
+                    stringBuffer.append(msg);
+                }
+                logger.debug(stringBuffer.toString());
+            }
         }
         return numberfound;
     }
