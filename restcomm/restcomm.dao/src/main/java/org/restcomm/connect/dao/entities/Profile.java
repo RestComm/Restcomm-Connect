@@ -64,7 +64,7 @@ public final class Profile{
     }
 
     public Profile setProfileDocument(byte[] updatedProfileDocument){
-    	return new Profile(this.sid, updatedProfileDocument, this.dateCreated, this.dateUpdated);
+        return new Profile(this.sid, updatedProfileDocument, this.dateCreated, this.dateUpdated);
     }
 
     @NotThreadSafe
