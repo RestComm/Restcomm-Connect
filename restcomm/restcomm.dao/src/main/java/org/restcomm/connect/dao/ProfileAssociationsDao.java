@@ -29,10 +29,10 @@ import org.restcomm.connect.dao.entities.ProfileAssociation;
 public interface ProfileAssociationsDao {
 
     /**
-     * @param sid
+     * @param targetSid
      * @return a single profile as per provided profile sid
      */
-    ProfileAssociation getProfileAssociation(String sid);
+    ProfileAssociation getProfileAssociationByTargetSid(String targetSid);
 
     /**
      * @return List of all profile associations in the system
