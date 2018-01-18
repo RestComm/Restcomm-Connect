@@ -1,0 +1,19 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<!--  @author maria farooq -->
+<mapper namespace="org.mobicents.servlet.sip.restcomm.dao.ProfilesDao">
+  <insert id="addProfile" parameterType="map">
+    INSERT INTO "restcomm_profiles" ("sid", "document", "date_created", "date_updated")
+    VALUES(#{sid}, #{document}, #{date_created}, #{date_updated});
+  </insert>
+  
+  <select id="getProfile" parameterType="string" resultType="hashmap">
+    SELECT * FROM "restcomm_profiles" WHERE "sid"=#{sid};
+  </select>
+  
+  <update id="updateOrganization" parameterType="map">
+    UPDATE "restcomm_profiles" SET "date_updated"=#{date_updated},
+    "document"=#{document}
+    WHERE "sid"=#{sid};
+  </update>
+</mapper>
