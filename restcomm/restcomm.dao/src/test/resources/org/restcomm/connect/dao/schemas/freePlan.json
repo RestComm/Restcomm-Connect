@@ -1,5 +1,5 @@
 {
-    "FACEnablement": {
+    "FeatureEnablement": {
         "destinations": {
             "allowedPrefixes": ["US",
                 "Canada"]

@@ -2,7 +2,7 @@
     "type": "object",
     "id": "#rc-fac-extension-schema.json",
     "definitions": {
-        "FACEnablement": {
+        "FeatureEnablement": {
             "type": "object",
             "additionalProperties": false,
             "properties": {
@@ -16,7 +16,7 @@
                             "description" : "ISO_3166-1 country codes",
                             "items": {
                                 "type": "string",
-                                "pattern": "^[A-Z][A-Z]"
+                                "pattern": "[A-Z][A-Z]"
 
                             }
                         }
@@ -64,13 +64,7 @@
                 },
                 "asr": {
                     "type": "object",
-                    "additionalProperties": false,
-                    "properties": {
-                        "provider": {
-                            "type": "string",
-                            "enum" : ["default", ""]
-                        }
-                    }
+                    "additionalProperties": false
                 },
                 "USSD": {
                     "type": "object",
@@ -78,7 +72,7 @@
                     "properties": {
                         "provider": {
                             "type": "string",
-                            "enum" : ["default", ""]
+                            "enum" : ["default", "virgin", "somos"]
                         }
                     }
                 },
