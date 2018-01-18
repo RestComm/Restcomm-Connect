@@ -1,6 +1,6 @@
 {
     "type": "object",
-    "id": "resource:/rc-fac-extension-schema.json#",
+    "id": "#rc-fac-extension-schema.json",
     "definitions": {
         "FACEnablement": {
             "type": "object",
@@ -13,11 +13,10 @@
                         "allowedCountries": {
                             "type": "array",
                             "additionalItems": false,
+                            "description" : "ISO_3166-1 country codes",
                             "items": {
                                 "type": "string",
-                                "title": "The 0 Schema",
-                                "description": "An explanation about the purpose of this instance.",
-                                "default": ""
+                                "pattern": "^[A-Z][A-Z]"
 
                             }
                         }
@@ -31,10 +30,7 @@
                             "type": "array",
                             "additionalItems": false,
                             "items": {
-                                "type": "string",
-                                "title": "The 0 Schema",
-                                "description": "An explanation about the purpose of this instance.",
-                                "default": ""
+                                "type": "string"
 
                             }
                         }
@@ -45,10 +41,7 @@
                     "additionalProperties": false,
                     "properties": {
                         "limit": {
-                            "type": "integer",
-                            "title": "The Limit Schema",
-                            "description": "An explanation about the purpose of this instance.",
-                            "default": 0
+                            "type": "integer"
 
                         }
                     }
@@ -75,10 +68,7 @@
                     "properties": {
                         "provider": {
                             "type": "string",
-                            "title": "The Provider Schema",
-                            "description": "An explanation about the purpose of this instance.",
-                            "default": ""
-
+                            "enum" : ["default", ""]
                         }
                     }
                 },
@@ -88,10 +78,7 @@
                     "properties": {
                         "provider": {
                             "type": "string",
-                            "title": "The Provider Schema",
-                            "description": "An explanation about the purpose of this instance.",
-                            "default": ""
-
+                            "enum" : ["default", ""]
                         }
                     }
                 },

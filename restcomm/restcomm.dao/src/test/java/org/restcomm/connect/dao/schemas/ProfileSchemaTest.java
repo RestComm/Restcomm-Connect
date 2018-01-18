@@ -1,3 +1,5 @@
+package org.restcomm.connect.dao.schemas;
+
 /*
  * TeleStax, Open Source Cloud Communications
  * Copyright 2011-2014, Telestax Inc and individual contributors
@@ -41,8 +43,23 @@ public class ProfileSchemaTest {
 
     @Test
     public void testFreePlan() throws Exception{
-        final JsonNode fstabSchema = JsonLoader.fromResource("/rc-profile-schema.json");
-        final JsonNode good = JsonLoader.fromResource("/freePlan.json");
+        final JsonNode fstabSchema = JsonLoader.fromResource("/org/restcomm/connect/dao/schemas/rc-profile-schema.json");
+        final JsonNode good = JsonLoader.fromResource("/org/restcomm/connect/dao/schemas/freePlan.json");
+
+        final JsonSchemaFactory factory = JsonSchemaFactory.byDefault();
+
+        final JsonSchema schema = factory.getJsonSchema(fstabSchema);
+
+        ProcessingReport report;
+
+        report = schema.validate(good);
+        Assert.assertTrue(report.isSuccess());
+    }
+
+    @Test
+    public void testEmptyProfile() throws Exception{
+        final JsonNode fstabSchema = JsonLoader.fromResource("/org/restcomm/connect/dao/schemas/rc-profile-schema.json");
+        final JsonNode good = JsonLoader.fromResource("/org/restcomm/connect/dao/schemas/emptyProfile.json");
 
         final JsonSchemaFactory factory = JsonSchemaFactory.byDefault();
 
@@ -56,7 +73,7 @@ public class ProfileSchemaTest {
 
     @Test
     public void testRetrieveAllowedPrefixes() throws Exception{
-        final JsonNode good = JsonLoader.fromResource("/freePlan.json");
+        final JsonNode good = JsonLoader.fromResource("/org/restcomm/connect/dao/schemas/freePlan.json");
         JsonPointer pointer = JsonPointer.compile("/FACEnablement/destinations/allowedPrefixes");
         JsonNode at = good.at(pointer);
         Assert.assertNotNull(at);
@@ -66,8 +83,8 @@ public class ProfileSchemaTest {
 
     @Test
     public void testInvalidFeature() throws Exception{
-        final JsonNode fstabSchema = JsonLoader.fromResource("/rc-profile-schema.json");
-        final JsonNode good = JsonLoader.fromResource("/invalidFeature.json");
+        final JsonNode fstabSchema = JsonLoader.fromResource("/org/restcomm/connect/dao/schemas/rc-profile-schema.json");
+        final JsonNode good = JsonLoader.fromResource("/org/restcomm/connect/dao/schemas/invalidFeature.json");
 
         final JsonSchemaFactory factory = JsonSchemaFactory.byDefault();
 
