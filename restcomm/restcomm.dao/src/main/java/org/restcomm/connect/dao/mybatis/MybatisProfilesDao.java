@@ -29,7 +29,6 @@ import org.apache.ibatis.session.SqlSession;
 import org.apache.ibatis.session.SqlSessionFactory;
 import org.joda.time.DateTime;
 import org.restcomm.connect.commons.annotations.concurrency.ThreadSafe;
-import org.restcomm.connect.commons.dao.Sid;
 import org.restcomm.connect.dao.DaoUtils;
 import org.restcomm.connect.dao.ProfilesDao;
 import org.restcomm.connect.dao.entities.Profile;
@@ -105,7 +104,7 @@ public final class MybatisProfilesDao implements ProfilesDao {
     }
 
     @Override
-    public void deleteProfile(Sid sid) {
+    public void deleteProfile(String sid) {
         final SqlSession session = sessions.openSession();
         try {
             session.delete(namespace + "deleteProfile", sid);
