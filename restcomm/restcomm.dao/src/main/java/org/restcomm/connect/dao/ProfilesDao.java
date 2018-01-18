@@ -32,13 +32,13 @@ public interface ProfilesDao {
     /**
      * @param sid
      * @return a single profile as per provided profile sid
-     * @throws SQLException 
+     * @throws SQLException
      */
     Profile getProfile(String sid) throws SQLException;
 
     /**
      * @return List of all profiles in the system
-     * @throws SQLException 
+     * @throws SQLException
      */
     List<Profile> getAllProfiles() throws SQLException;
 
