@@ -96,11 +96,26 @@ public final class MybatisProfileAssociationsDao implements ProfileAssociationsD
     }
 
     @Override
-    public void updateProfileAssociation(ProfileAssociation profileAssociation) {
+    public void updateProfileAssociationOfTargetSid(ProfileAssociation profileAssociation) {
         final SqlSession session = sessions.openSession();
         try {
-            session.update(namespace + "updateProfileAssociation", toMap(profileAssociation));
+            session.update(namespace + "updateProfileAssociationOfTargetSid", toMap(profileAssociation));
             session.commit();
+        } finally {
+            session.close();
+        }
+    }
+
+	@Override
+	public void updateAssociatedProfileOfAllSuchProfileSid(String oldProfileSid, String newProfileSid) {
+        final SqlSession session = sessions.openSession();
+        try {
+        	Map<String, Object> map = new HashMap<String, Object>();
+        	map.put("profile_sid", oldProfileSid);
+        	map.put("old_profile_sid", newProfileSid);
+            session.update(namespace + "updateAssociatedProfileOfAllSuchProfileSid", map);
+            session.commit();
+            map = null;
         } finally {
             session.close();
         }
