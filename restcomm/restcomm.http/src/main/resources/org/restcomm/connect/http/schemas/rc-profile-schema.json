@@ -4,8 +4,8 @@
     "additionalProperties": false,
     "type": "object",
     "properties": {
-        "FACEnablement": {
-            "$ref": "rc-fac-extension-schema.json#/definitions/FACEnablement"
+        "featureEnablement": {
+            "$ref": "rc-feature-enablement-schema.json#/definitions/featureEnablement"
         },
         "sessionThrottling": {
             "$ref": "rc-session-throttling-schema.json#/definitions/sessionThrottling"
