@@ -1,0 +1,24 @@
+{
+    "FACEnablement": {
+        "destinations": {
+            "allowedPrefixes": ["US",
+                "Canada"]
+        },
+        "outboundPSTN": {
+        },
+        "inboundPSTN": {
+        },
+        "outboundSMS": {
+        },
+        "inboundSMS": {
+        }
+
+    },
+    "sessionThrottling": {
+        "PSTNCallsPerTime": {
+            "events" : 300,
+            "time" : 30,
+            "timeUnit" : "days"
+        }
+    }    
+}
