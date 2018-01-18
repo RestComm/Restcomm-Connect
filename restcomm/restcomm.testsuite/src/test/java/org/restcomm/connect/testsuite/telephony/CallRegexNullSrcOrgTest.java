@@ -41,6 +41,7 @@ import org.junit.Test;
 import org.junit.experimental.categories.Category;
 import org.junit.runner.RunWith;
 import org.restcomm.connect.commons.Version;
+import org.restcomm.connect.commons.annotations.FeatureExpTests;
 import org.restcomm.connect.commons.annotations.ParallelClassTests;
 import org.restcomm.connect.testsuite.NetworkPortAssigner;
 import org.restcomm.connect.testsuite.WebArchiveUtil;
@@ -78,7 +79,7 @@ import static org.junit.Assert.assertTrue;
  *
  */
 @RunWith(Arquillian.class)
-@Category(value={ParallelClassTests.class})
+@Category(value={ParallelClassTests.class, FeatureExpTests.class})
 public class CallRegexNullSrcOrgTest {
 
     private final static Logger logger = Logger.getLogger(CallRegexNullSrcOrgTest.class.getName());
