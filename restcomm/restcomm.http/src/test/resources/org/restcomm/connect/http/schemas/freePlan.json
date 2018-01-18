@@ -2,7 +2,7 @@
     "featureEnablement": {
         "destinations": {
             "allowedPrefixes": ["US",
-                "Canada"]
+                "CA"]
         },
         "outboundPSTN": {
         },
