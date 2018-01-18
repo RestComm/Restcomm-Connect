@@ -77,7 +77,6 @@ public class ProfilesDaoTest extends DaoTest {
         builder.setDateCreated(new DateTime());
         builder.setSid(sid);
         byte[] binaryProfileDocument = jsonProfile.getBytes();
-        System.out.println("binaryProfileDocument: "+binaryProfileDocument);
         builder.setProfileDocument(binaryProfileDocument);
         dao.addProfile(builder.build());
         Profile profile = dao.getProfile(sid);
