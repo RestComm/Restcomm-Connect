@@ -22,7 +22,6 @@ package org.restcomm.connect.dao;
 import java.sql.SQLException;
 import java.util.List;
 
-import org.restcomm.connect.commons.dao.Sid;
 import org.restcomm.connect.dao.entities.Profile;
 
 /**
@@ -57,5 +56,5 @@ public interface ProfilesDao {
     /**
      * @param profile
      */
-    void deleteProfile(Sid sid);
+    void deleteProfile(String sid);
 }
