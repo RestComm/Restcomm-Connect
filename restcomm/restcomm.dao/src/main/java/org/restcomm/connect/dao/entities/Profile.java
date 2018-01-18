@@ -63,6 +63,10 @@ public final class Profile{
         return dateUpdated;
     }
 
+    public Profile setProfileDocument(byte[] updatedProfileDocument){
+    	return new Profile(this.sid, updatedProfileDocument, this.dateCreated, this.dateUpdated);
+    }
+
     @NotThreadSafe
     public static final class Builder {
         private String sid;
