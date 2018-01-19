@@ -328,7 +328,8 @@ public class NumberSelectorService {
         @Override
         public int compare(IncomingPhoneNumber o1, IncomingPhoneNumber o2) {
             //put o2 first to make longest first in coll
-            return Integer.compare(o2.getPhoneNumber().length(), o1.getPhoneNumber().length());
+            int comparison = Integer.compare(o2.getPhoneNumber().length(), o1.getPhoneNumber().length());
+            return comparison == 0 ? -1 : comparison;
         }
 
     }
@@ -359,6 +360,7 @@ public class NumberSelectorService {
             logger.debug(String.format("Found %d Regex IncomingPhone numbers.", regexList.size()));
         }
         //order by regex length
+
         Set<IncomingPhoneNumber> regexSet = new TreeSet<IncomingPhoneNumber>(new NumberLengthComparator());
         regexSet.addAll(regexList);
         if (regexList != null && regexList.size() > 0) {
