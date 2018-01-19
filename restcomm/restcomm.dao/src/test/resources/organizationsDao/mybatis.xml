@@ -39,5 +39,6 @@
 
     <mappers>
         <mapper  url="file:MYBATIS_SANDBOX_PATH/organization.xml"/>
+        <mapper  url="file:MYBATIS_SANDBOX_PATH/profile-association.xml"/>
     </mappers>
 </configuration>
