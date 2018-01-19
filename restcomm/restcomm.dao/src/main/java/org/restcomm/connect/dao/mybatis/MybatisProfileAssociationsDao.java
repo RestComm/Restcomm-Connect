@@ -67,8 +67,7 @@ public final class MybatisProfileAssociationsDao implements ProfileAssociationsD
         final SqlSession session = sessions.openSession();
 
         try {
-            final List<Map<String, Object>> results = session.selectList(namespace + "getProfileAssociationsByProfileSid",
-            		profileSid);
+            final List<Map<String, Object>> results = session.selectList(namespace + "getProfileAssociationsByProfileSid", profileSid);
             final List<ProfileAssociation> profiles = new ArrayList<ProfileAssociation>();
 
             if (results != null && !results.isEmpty()) {
@@ -106,13 +105,13 @@ public final class MybatisProfileAssociationsDao implements ProfileAssociationsD
         }
     }
 
-	@Override
-	public void updateAssociatedProfileOfAllSuchProfileSid(String oldProfileSid, String newProfileSid) {
+    @Override
+    public void updateAssociatedProfileOfAllSuchProfileSid(String oldProfileSid, String newProfileSid) {
         final SqlSession session = sessions.openSession();
         try {
-        	Map<String, Object> map = new HashMap<String, Object>();
-        	map.put("profile_sid", newProfileSid);
-        	map.put("old_profile_sid", oldProfileSid);
+            Map<String, Object> map = new HashMap<String, Object>();
+            map.put("profile_sid", newProfileSid);
+            map.put("old_profile_sid", oldProfileSid);
             session.update(namespace + "updateAssociatedProfileOfAllSuchProfileSid", map);
             session.commit();
             map = null;
