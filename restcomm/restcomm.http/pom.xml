@@ -265,6 +265,12 @@
 			<artifactId>restcomm-connect.extension.controller</artifactId>
 			<version>${project.version}</version>
 		</dependency>
+		        
+  		<dependency>
+    		<groupId>com.github.java-json-tools</groupId>
+    		<artifactId>json-schema-validator</artifactId>
+    		<version>2.2.8</version>
+		</dependency>  
 
 	</dependencies>
 </project>
