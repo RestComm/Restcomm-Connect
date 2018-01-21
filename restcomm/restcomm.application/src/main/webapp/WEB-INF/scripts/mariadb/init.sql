@@ -407,6 +407,13 @@ configuration_data LONGTEXT NOT NULL,
 PRIMARY KEY (account_sid, extension_sid)
 );
 
+CREATE TABLE restcomm_profiles (
+sid TEXT NOT NULL PRIMARY KEY,
+document LONGBLOB NOT NULL,
+date_created DATETIME NOT NULL,
+date_updated DATETIME NOT NULL
+);
+
 INSERT INTO restcomm_organizations VALUES(
 "ORafbe225ad37541eba518a74248f0ac4c", 
 "default.restcomm.com", 
