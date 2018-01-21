@@ -45,10 +45,10 @@ import org.junit.runner.RunWith;
 import com.github.tomakehurst.wiremock.junit.WireMockRule;
 import com.google.gson.JsonArray;
 import com.google.gson.JsonParser;
-import com.sun.jersey.api.client.Client;
-import com.sun.jersey.api.client.ClientResponse;
-import com.sun.jersey.api.client.WebResource;
-import com.sun.jersey.api.client.filter.HTTPBasicAuthFilter;
+import javax.ws.rs.client.Client;import javax.ws.rs.client.ClientBuilder;
+import javax.ws.rs.core.Response;
+import javax.ws.rs.client.WebTarget;
+import org.glassfish.jersey.client.authentication.HttpAuthenticationFeature;
 import org.restcomm.connect.commons.Version;
 
 /**
@@ -92,18 +92,18 @@ public class VoxboneAvailablePhoneNumbersEndpointTest {
                     .withHeader("Content-Type", "application/json")
                     .withBody(VoxboneAvailablePhoneNumbersEndpointTestUtils.body501AreaCode)));
         // Get Account using admin email address and user email address
-        Client jerseyClient = Client.create();
-        jerseyClient.addFilter(new HTTPBasicAuthFilter(adminUsername, adminAuthToken));
+        Client jerseyClient = ClientBuilder.newClient();
+        jerseyClient.register(HttpAuthenticationFeature.basic(adminUsername, adminAuthToken));
 
         String provisioningURL = deploymentUrl + baseURL + "US/Local.json";
-        WebResource webResource = jerseyClient.resource(provisioningURL);
+        WebTarget webResource = jerseyClient.target(provisioningURL);
 
-        ClientResponse clientResponse = webResource.
+        Response clientResponse = webResource.
                 queryParam("AreaCode","501").
-                accept("application/json")
-                .get(ClientResponse.class);
+                request("application/json")
+                .get();
         Assert.assertEquals(200, clientResponse.getStatus());
-        String response = clientResponse.getEntity(String.class);
+        String response = clientResponse.readEntity(String.class);
         System.out.println(response);
         assertTrue(!response.trim().equalsIgnoreCase("[]"));
         JsonParser parser = new JsonParser();
@@ -131,16 +131,16 @@ public class VoxboneAvailablePhoneNumbersEndpointTest {
                     .withStatus(200)
                     .withHeader("Content-Type", "application/json")
                     .withBody(VoxboneAvailablePhoneNumbersEndpointTestUtils.jsonResponseES700)));
-    	Client jerseyClient = Client.create();
-        jerseyClient.addFilter(new HTTPBasicAuthFilter(adminUsername, adminAuthToken));
+    	Client jerseyClient = ClientBuilder.newClient();
+        jerseyClient.register(HttpAuthenticationFeature.basic(adminUsername, adminAuthToken));
 
         String provisioningURL = deploymentUrl + baseURL + "ES/Local.json";
-        WebResource webResource = jerseyClient.resource(provisioningURL);
+        WebTarget webResource = jerseyClient.target(provisioningURL);
 
-        ClientResponse clientResponse = webResource.queryParam("Contains","700").accept("application/json")
-                .get(ClientResponse.class);
+        Response clientResponse = webResource.queryParam("Contains","700").request("application/json")
+                .get();
         assertTrue(clientResponse.getStatus() == 200);
-        String response = clientResponse.getEntity(String.class);
+        String response = clientResponse.readEntity(String.class);
         System.out.println(response);
         assertTrue(!response.trim().equalsIgnoreCase("[]"));
         JsonParser parser = new JsonParser();
@@ -169,16 +169,16 @@ public class VoxboneAvailablePhoneNumbersEndpointTest {
                     .withHeader("Content-Type", "application/json")
                     .withBody(VoxboneAvailablePhoneNumbersEndpointTestUtils.jsonResponseUSRange)));
         // Get Account using admin email address and user email address
-        Client jerseyClient = Client.create();
-        jerseyClient.addFilter(new HTTPBasicAuthFilter(adminUsername, adminAuthToken));
+        Client jerseyClient = ClientBuilder.newClient();
+        jerseyClient.register(HttpAuthenticationFeature.basic(adminUsername, adminAuthToken));
 
         String provisioningURL = deploymentUrl + baseURL + "US/Local.json";
-        WebResource webResource = jerseyClient.resource(provisioningURL);
+        WebTarget webResource = jerseyClient.target(provisioningURL);
 
-        ClientResponse clientResponse = webResource.queryParam("RangeSize","5").queryParam("RangeIndex","2").accept("application/json")
-                .get(ClientResponse.class);
+        Response clientResponse = webResource.queryParam("RangeSize","5").queryParam("RangeIndex","2").request("application/json")
+                .get();
         assertTrue(clientResponse.getStatus() == 200);
-        String response = clientResponse.getEntity(String.class);
+        String response = clientResponse.readEntity(String.class);
         System.out.println(response);
         assertTrue(!response.trim().equalsIgnoreCase("[]"));
         JsonParser parser = new JsonParser();

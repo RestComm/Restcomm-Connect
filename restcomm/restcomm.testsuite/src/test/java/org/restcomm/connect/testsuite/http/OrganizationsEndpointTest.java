@@ -22,7 +22,7 @@ import org.restcomm.connect.commons.annotations.UnstableTests;
 
 import com.google.gson.JsonArray;
 import com.google.gson.JsonObject;
-import com.sun.jersey.api.client.ClientResponse;
+import javax.ws.rs.core.Response;
 
 /**
  * @author maria
@@ -88,7 +88,7 @@ public class OrganizationsEndpointTest extends EndpointTest {
      */
     @Test
     public void getOrganizationFromAdministratorAccount(){
-    	ClientResponse clientResponse = RestcommOrganizationsTool.getInstance().getOrganizationResponse(deploymentUrl.toString(), adminAccountSid, adminAuthToken, org1);
+    	Response clientResponse = RestcommOrganizationsTool.getInstance().getOrganizationResponse(deploymentUrl.toString(), adminAccountSid, adminAuthToken, org1);
     	assertTrue(clientResponse!=null);
     	logger.info("organization: "+clientResponse);
     	assertTrue(clientResponse.getStatus() == 200);
@@ -115,7 +115,7 @@ public class OrganizationsEndpointTest extends EndpointTest {
     @Test
     @Category(FeatureExpTests.class)
     public void getOrganizationFromDeveloperAccount(){
-    	ClientResponse clientResponse = RestcommOrganizationsTool.getInstance().getOrganizationResponse(deploymentUrl.toString(), devAccountSid, devAuthToken, org1);
+    	Response clientResponse = RestcommOrganizationsTool.getInstance().getOrganizationResponse(deploymentUrl.toString(), devAccountSid, devAuthToken, org1);
     	assertTrue(clientResponse!=null);
     	logger.info("organization: "+clientResponse);
     	assertTrue(clientResponse.getStatus() == 403);
@@ -161,7 +161,7 @@ public class OrganizationsEndpointTest extends EndpointTest {
     @Test
     public void createOrganizationTest(){
     	//super admin tries to create org
-    	ClientResponse clientResponse = RestcommOrganizationsTool.getInstance().createOrganizationResponse(deploymentUrl.toString(), superAdminAccountSid, superAdminAuthToken, "newdomain");
+    	Response clientResponse = RestcommOrganizationsTool.getInstance().createOrganizationResponse(deploymentUrl.toString(), superAdminAccountSid, superAdminAuthToken, "newdomain");
     	logger.info("clientResponse: "+clientResponse);
     	assertTrue(clientResponse.getStatus() == 200);
 

@@ -35,10 +35,10 @@ import org.restcomm.connect.commons.annotations.FeatureExpTests;
 import org.restcomm.connect.testsuite.tools.MonitoringServiceTool;
 
 import com.google.gson.JsonObject;
-import com.sun.jersey.api.client.Client;
-import com.sun.jersey.api.client.ClientResponse;
-import com.sun.jersey.api.client.WebResource;
-import com.sun.jersey.api.client.filter.HTTPBasicAuthFilter;
+import javax.ws.rs.client.Client;import javax.ws.rs.client.ClientBuilder;
+import javax.ws.rs.core.Response;
+import javax.ws.rs.client.WebTarget;
+import org.glassfish.jersey.client.authentication.HttpAuthenticationFeature;
 
 /**
  * SupervisorEndpointAccessControlTest Supervisor metrices should be accessible to only Super Admin role.
@@ -89,11 +89,11 @@ public class SupervisorEndpointAccessControlTest extends EndpointTest {
     @Test
     @Category(FeatureExpTests.class)
     public void testAdminPermissionTest() {
-    	Client jerseyClient = Client.create();
-        jerseyClient.addFilter(new HTTPBasicAuthFilter(adminAccountSid, adminAccountAuthToken));
+    	Client jerseyClient = ClientBuilder.newClient();
+        jerseyClient.register(HttpAuthenticationFeature.basic(adminAccountSid, adminAccountAuthToken));
         String url = MonitoringServiceTool.getInstance().getAccountsUrl(deploymentUrl.toString(), adminAccountSid);
-        WebResource webResource = jerseyClient.resource(url+"/metrics");
-        ClientResponse response = webResource.get(ClientResponse.class);
+        WebTarget WebTarget = jerseyClient.target(url+"/metrics");
+        Response response = WebTarget.request().get();
         Assert.assertEquals(403, response.getStatus());
     }
 
@@ -103,11 +103,11 @@ public class SupervisorEndpointAccessControlTest extends EndpointTest {
     @Test
     @Category(FeatureExpTests.class)
     public void testDeveloperPermissionTest() {
-    	Client jerseyClient = Client.create();
-        jerseyClient.addFilter(new HTTPBasicAuthFilter(developerSid, developerAuthToken));
+    	Client jerseyClient = ClientBuilder.newClient();
+        jerseyClient.register(HttpAuthenticationFeature.basic(developerSid, developerAuthToken));
         String url = MonitoringServiceTool.getInstance().getAccountsUrl(deploymentUrl.toString(), developerSid);
-        WebResource webResource = jerseyClient.resource(url+"/metrics");
-        ClientResponse response = webResource.get(ClientResponse.class);
+        WebTarget WebTarget = jerseyClient.target(url+"/metrics");
+        Response response = WebTarget.request().get();
         Assert.assertEquals(403, response.getStatus());
     }
 

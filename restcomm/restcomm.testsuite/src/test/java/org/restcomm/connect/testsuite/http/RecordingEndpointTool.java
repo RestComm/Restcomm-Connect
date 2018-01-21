@@ -21,10 +21,10 @@ package org.restcomm.connect.testsuite.http;
 
 import com.google.gson.JsonObject;
 import com.google.gson.JsonParser;
-import com.sun.jersey.api.client.Client;
-import com.sun.jersey.api.client.WebResource;
-import com.sun.jersey.api.client.filter.HTTPBasicAuthFilter;
-import com.sun.jersey.core.util.MultivaluedMapImpl;
+import javax.ws.rs.client.Client;import javax.ws.rs.client.ClientBuilder;
+import javax.ws.rs.client.WebTarget;
+import org.glassfish.jersey.client.authentication.HttpAuthenticationFeature;
+import javax.ws.rs.core.MultivaluedHashMap;
 import java.util.Map;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.MultivaluedMap;
@@ -57,11 +57,11 @@ public class RecordingEndpointTool {
     }
 
     public JsonObject getRecordingList (String deploymentUrl, String username, String authToken) {
-        Client jerseyClient = Client.create();
-        jerseyClient.addFilter(new HTTPBasicAuthFilter(username, authToken));
+        Client jerseyClient = ClientBuilder.newClient();
+        jerseyClient.register(HttpAuthenticationFeature.basic(username, authToken));
         String url = getAccountsUrl(deploymentUrl, username, true);
-        WebResource webResource = jerseyClient.resource(url);
-        String response = webResource.accept(MediaType.APPLICATION_JSON).get(String.class);
+        WebTarget WebTarget = jerseyClient.target(url);
+        String response = WebTarget.request(MediaType.APPLICATION_JSON).get(String.class);
         JsonParser parser = new JsonParser();
         JsonObject jsonObject = parser.parse(response).getAsJsonObject();
         return jsonObject;
@@ -69,24 +69,28 @@ public class RecordingEndpointTool {
 
     public JsonObject getRecordingList (String deploymentUrl, String username, String authToken, Integer page, Integer pageSize, Boolean json) {
 
-        Client jerseyClient = Client.create();
-        jerseyClient.addFilter(new HTTPBasicAuthFilter(username, authToken));
+        Client jerseyClient = ClientBuilder.newClient();
+        jerseyClient.register(HttpAuthenticationFeature.basic(username, authToken));
         String url = getAccountsUrl(deploymentUrl, username, true);
-        WebResource webResource = jerseyClient.resource(url);
+        WebTarget webTarget = jerseyClient.target(url);
         String response;
 
         if (page != null || pageSize != null) {
-            MultivaluedMap<String, String> params = new MultivaluedMapImpl();
+            MultivaluedMap<String, String> params = new MultivaluedHashMap();
 
-            if (page != null)
+            if (page != null) {
                 params.add("Page", String.valueOf(page));
-            if (pageSize != null)
+                webTarget.queryParam("Page", String.valueOf(page));
+            }
+            if (pageSize != null) {
                 params.add("PageSize", String.valueOf(pageSize));
+                webTarget.queryParam("PageSize", String.valueOf(pageSize));
+            }
 
-            response = webResource.queryParams(params).accept(MediaType.APPLICATION_JSON, MediaType.APPLICATION_XML)
+            response = webTarget.request(MediaType.APPLICATION_JSON, MediaType.APPLICATION_XML)
                     .get(String.class);
         } else {
-            response = webResource.accept(MediaType.APPLICATION_JSON, MediaType.APPLICATION_XML).get(String.class);
+            response = webTarget.request(MediaType.APPLICATION_JSON, MediaType.APPLICATION_XML).get(String.class);
         }
 
         JsonParser parser = new JsonParser();
@@ -96,20 +100,20 @@ public class RecordingEndpointTool {
 
     public JsonObject getRecordingListUsingFilter(String deploymentUrl, String username, String authToken, Map<String, String> filters) {
 
-        Client jerseyClient = Client.create();
-        jerseyClient.addFilter(new HTTPBasicAuthFilter(username, authToken));
+        Client jerseyClient = ClientBuilder.newClient();
+        jerseyClient.register(HttpAuthenticationFeature.basic(username, authToken));
         String url = getAccountsUrl(deploymentUrl, username, true);
-        WebResource webResource = jerseyClient.resource(url);
+        WebTarget webTarget = jerseyClient.target(url);
 
-        MultivaluedMap<String, String> params = new MultivaluedMapImpl();
+        MultivaluedMap<String, String> params = new MultivaluedHashMap();
 
         for (String filterName : filters.keySet()) {
             String filterData = filters.get(filterName);
             params.add(filterName, filterData);
+            webTarget.queryParam(filterName, filterData);
         }
-        webResource = webResource.queryParams(params);
 
-        String response = webResource.accept(MediaType.APPLICATION_JSON).get(String.class);
+        String response = webTarget.request(MediaType.APPLICATION_JSON).get(String.class);
         JsonParser parser = new JsonParser();
         JsonObject jsonObject = parser.parse(response).getAsJsonObject();
 

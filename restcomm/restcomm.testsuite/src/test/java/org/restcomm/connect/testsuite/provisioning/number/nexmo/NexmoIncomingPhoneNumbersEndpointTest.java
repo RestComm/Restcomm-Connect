@@ -50,11 +50,12 @@ import com.github.tomakehurst.wiremock.junit.WireMockRule;
 import com.google.gson.JsonArray;
 import com.google.gson.JsonObject;
 import com.google.gson.JsonParser;
-import com.sun.jersey.api.client.Client;
-import com.sun.jersey.api.client.ClientResponse;
-import com.sun.jersey.api.client.WebResource;
-import com.sun.jersey.api.client.filter.HTTPBasicAuthFilter;
-import com.sun.jersey.core.util.MultivaluedMapImpl;
+import javax.ws.rs.client.Client;import javax.ws.rs.client.ClientBuilder;
+import javax.ws.rs.client.Entity;
+import javax.ws.rs.core.Response;
+import javax.ws.rs.client.WebTarget;
+import org.glassfish.jersey.client.authentication.HttpAuthenticationFeature;
+import javax.ws.rs.core.MultivaluedHashMap;
 import org.restcomm.connect.commons.Version;
 import org.restcomm.connect.commons.annotations.FeatureExpTests;
 
@@ -88,15 +89,15 @@ public class NexmoIncomingPhoneNumbersEndpointTest {
     @Test
     public void testGetAvailableCountries() {
         // Get Account using admin email address and user email address
-        Client jerseyClient = Client.create();
-        jerseyClient.addFilter(new HTTPBasicAuthFilter(adminUsername, adminAuthToken));
+        Client jerseyClient = ClientBuilder.newClient();
+        jerseyClient.register(HttpAuthenticationFeature.basic(adminUsername, adminAuthToken));
 
         String provisioningURL = deploymentUrl + baseURL + "IncomingPhoneNumbers/AvailableCountries.json";
-        WebResource webResource = jerseyClient.resource(provisioningURL);
+        WebTarget webResource = jerseyClient.target(provisioningURL);
 
-        ClientResponse clientResponse = webResource.accept("application/json").get(ClientResponse.class);
+        Response clientResponse = webResource.request("application/json").get();
         Assert.assertEquals(200, clientResponse.getStatus());
-        String response = clientResponse.getEntity(String.class);
+        String response = clientResponse.readEntity(String.class);
         System.out.println(response);
         assertTrue(!response.trim().equalsIgnoreCase("[]"));
         JsonParser parser = new JsonParser();
@@ -126,20 +127,20 @@ public class NexmoIncomingPhoneNumbersEndpointTest {
                     .withBody(NexmoIncomingPhoneNumbersEndpointTestUtils.purchaseNumberSuccessResponse)));
 
         // Get Account using admin email address and user email address
-    	Client jerseyClient = Client.create();
-        jerseyClient.addFilter(new HTTPBasicAuthFilter(adminUsername, adminAuthToken));
+    	Client jerseyClient = ClientBuilder.newClient();
+        jerseyClient.register(HttpAuthenticationFeature.basic(adminUsername, adminAuthToken));
 
         String provisioningURL = deploymentUrl + baseURL + "IncomingPhoneNumbers.json";
-        WebResource webResource = jerseyClient.resource(provisioningURL);
+        WebTarget webResource = jerseyClient.target(provisioningURL);
 
-        MultivaluedMap<String, String> formData = new MultivaluedMapImpl();
+        MultivaluedMap<String, String> formData = new MultivaluedHashMap();
         formData.add("PhoneNumber", "+14156902867");
         formData.add("VoiceUrl", "http://demo.telestax.com/docs/voice.xml");
         formData.add("FriendlyName", "My Company Line");
         formData.add("VoiceMethod", "GET");
-        ClientResponse clientResponse = webResource.type(MediaType.APPLICATION_FORM_URLENCODED_TYPE).accept("application/json").post(ClientResponse.class, formData);
+        Response clientResponse = webResource.request("application/json").post(Entity.form(formData));
         Assert.assertEquals(200, clientResponse.getStatus());
-        String response = clientResponse.getEntity(String.class);
+        String response = clientResponse.readEntity(String.class);
         System.out.println(response);
         assertTrue(!response.trim().equalsIgnoreCase("[]"));
         JsonParser parser = new JsonParser();
@@ -173,20 +174,20 @@ public class NexmoIncomingPhoneNumbersEndpointTest {
                     .withHeader("Content-Type", "application/json")
                     .withBody(NexmoIncomingPhoneNumbersEndpointTestUtils.deleteNumberSuccessResponse)));
         // Get Account using admin email address and user email address
-        Client jerseyClient = Client.create();
-        jerseyClient.addFilter(new HTTPBasicAuthFilter(adminUsername, adminAuthToken));
+        Client jerseyClient = ClientBuilder.newClient();
+        jerseyClient.register(HttpAuthenticationFeature.basic(adminUsername, adminAuthToken));
 
         String provisioningURL = deploymentUrl + baseURL + "IncomingPhoneNumbers.json";
-        WebResource webResource = jerseyClient.resource(provisioningURL);
+        WebTarget webResource = jerseyClient.target(provisioningURL);
 
-        MultivaluedMap<String, String> formData = new MultivaluedMapImpl();
+        MultivaluedMap<String, String> formData = new MultivaluedHashMap();
         formData.add("PhoneNumber", "+34911067000");
         formData.add("VoiceUrl", "http://demo.telestax.com/docs/voice.xml");
         formData.add("FriendlyName", "My Company Line");
         formData.add("VoiceMethod", "GET");
-        ClientResponse clientResponse = webResource.type(MediaType.APPLICATION_FORM_URLENCODED_TYPE).accept("application/json").post(ClientResponse.class, formData);
+        Response clientResponse = webResource.request("application/json").post(Entity.form(formData));
         Assert.assertEquals(200, clientResponse.getStatus());
-        String response = clientResponse.getEntity(String.class);
+        String response = clientResponse.readEntity(String.class);
         logger.info("testDeletePhoneNumberSuccess response for buyNumber: "+response);
         assertTrue(!response.trim().equalsIgnoreCase("[]"));
         JsonParser parser = new JsonParser();
@@ -197,8 +198,8 @@ public class NexmoIncomingPhoneNumbersEndpointTest {
 
         String phoneNumberSid = jsonResponse.get("sid").getAsString();
         provisioningURL = deploymentUrl + baseURL + "IncomingPhoneNumbers/" + phoneNumberSid + ".json";
-        webResource = jerseyClient.resource(provisioningURL);
-        clientResponse = webResource.type(MediaType.APPLICATION_FORM_URLENCODED_TYPE).accept("application/json").delete(ClientResponse.class);
+        webResource = jerseyClient.target(provisioningURL);
+        clientResponse = webResource.request("application/json").delete();
         logger.info("testDeletePhoneNumberSuccess delete response: "+clientResponse);
         assertTrue(clientResponse.getStatus() == 204);
     }
@@ -218,20 +219,20 @@ public class NexmoIncomingPhoneNumbersEndpointTest {
                     .withBody(NexmoIncomingPhoneNumbersEndpointTestUtils.purchaseNumberSuccessResponse)));
 
         // Get Account using admin email address and user email address
-        Client jerseyClient = Client.create();
-        jerseyClient.addFilter(new HTTPBasicAuthFilter(adminUsername, adminAuthToken));
+        Client jerseyClient = ClientBuilder.newClient();
+        jerseyClient.register(HttpAuthenticationFeature.basic(adminUsername, adminAuthToken));
 
         String provisioningURL = deploymentUrl + baseURL + "IncomingPhoneNumbers.json";
-        WebResource webResource = jerseyClient.resource(provisioningURL);
+        WebTarget webResource = jerseyClient.target(provisioningURL);
 
-        MultivaluedMap<String, String> formData = new MultivaluedMapImpl();
+        MultivaluedMap<String, String> formData = new MultivaluedHashMap();
         formData.add("PhoneNumber", "+14156902860");
         formData.add("VoiceUrl", "http://demo.telestax.com/docs/voice.xml");
         formData.add("FriendlyName", "My Company Line");
         formData.add("VoiceMethod", "GET");
-        ClientResponse clientResponse = webResource.type(MediaType.APPLICATION_FORM_URLENCODED_TYPE).accept("application/json").post(ClientResponse.class, formData);
+        Response clientResponse = webResource.request("application/json").post(Entity.form(formData));
         assertEquals(400, clientResponse.getStatus());
-        String response = clientResponse.getEntity(String.class);
+        String response = clientResponse.readEntity(String.class);
         System.out.println(response);
         assertTrue(!response.trim().equalsIgnoreCase("[]"));
 //        JsonParser parser = new JsonParser();
@@ -265,20 +266,20 @@ public class NexmoIncomingPhoneNumbersEndpointTest {
                     .withHeader("Content-Type", "application/json")
                     .withBody(NexmoIncomingPhoneNumbersEndpointTestUtils.deleteNumberSuccessResponse)));
         // Get Account using admin email address and user email address
-        Client jerseyClient = Client.create();
-        jerseyClient.addFilter(new HTTPBasicAuthFilter(adminUsername, adminAuthToken));
+        Client jerseyClient = ClientBuilder.newClient();
+        jerseyClient.register(HttpAuthenticationFeature.basic(adminUsername, adminAuthToken));
 
         String provisioningURL = deploymentUrl + baseURL + "IncomingPhoneNumbers.json";
-        WebResource webResource = jerseyClient.resource(provisioningURL);
+        WebTarget webResource = jerseyClient.target(provisioningURL);
 
-        MultivaluedMap<String, String> formData = new MultivaluedMapImpl();
+        MultivaluedMap<String, String> formData = new MultivaluedHashMap();
         formData.add("PhoneNumber", "+33911067000");
         formData.add("VoiceUrl", "http://demo.telestax.com/docs/voice.xml");
         formData.add("FriendlyName", "My Company Line");
         formData.add("VoiceMethod", "GET");
-        ClientResponse clientResponse = webResource.type(MediaType.APPLICATION_FORM_URLENCODED_TYPE).accept("application/json").post(ClientResponse.class, formData);
+        Response clientResponse = webResource.request("application/json").post(Entity.form(formData));
         Assert.assertEquals(200, clientResponse.getStatus());
-        String response = clientResponse.getEntity(String.class);
+        String response = clientResponse.readEntity(String.class);
         System.out.println(response);
         assertTrue(!response.trim().equalsIgnoreCase("[]"));
         JsonParser parser = new JsonParser();
@@ -289,15 +290,15 @@ public class NexmoIncomingPhoneNumbersEndpointTest {
 
         String phoneNumberSid = jsonResponse.get("sid").getAsString();
         provisioningURL = deploymentUrl + baseURL + "IncomingPhoneNumbers/" + phoneNumberSid + ".json";
-        webResource = jerseyClient.resource(provisioningURL);
-        formData = new MultivaluedMapImpl();
+        webResource = jerseyClient.target(provisioningURL);
+        formData = new MultivaluedHashMap();
         formData.add("VoiceUrl", "http://demo.telestax.com/docs/voice2.xml");
         formData.add("SmsUrl", "http://demo.telestax.com/docs/sms2.xml");
         formData.add("VoiceMethod", "POST");
         formData.add("SMSMethod", "GET");
-        clientResponse = webResource.type(MediaType.APPLICATION_FORM_URLENCODED_TYPE).accept("application/json").post(ClientResponse.class, formData);
+        clientResponse = webResource.request("application/json").post(Entity.form(formData));
         assertTrue(clientResponse.getStatus() == 200);
-        response = clientResponse.getEntity(String.class);
+        response = clientResponse.readEntity(String.class);
         System.out.println(response);
         assertTrue(!response.trim().equalsIgnoreCase("[]"));
         parser = new JsonParser();
@@ -306,8 +307,8 @@ public class NexmoIncomingPhoneNumbersEndpointTest {
         assertTrue(NexmoIncomingPhoneNumbersEndpointTestUtils.match(jsonResponse.toString(),NexmoIncomingPhoneNumbersEndpointTestUtils.jSonResultUpdateSuccessPurchaseNumber));
 
         provisioningURL = deploymentUrl + baseURL + "IncomingPhoneNumbers/" + phoneNumberSid + ".json";
-        webResource = jerseyClient.resource(provisioningURL);
-        clientResponse = webResource.type(MediaType.APPLICATION_FORM_URLENCODED_TYPE).accept("application/json").delete(ClientResponse.class);
+        webResource = jerseyClient.target(provisioningURL);
+        clientResponse = webResource.request("application/json").delete();
         assertTrue(clientResponse.getStatus() == 204);
     }
 

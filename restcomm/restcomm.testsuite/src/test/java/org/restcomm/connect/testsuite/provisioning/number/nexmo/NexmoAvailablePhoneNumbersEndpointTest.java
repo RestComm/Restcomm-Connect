@@ -44,10 +44,10 @@ import org.junit.runner.RunWith;
 import com.github.tomakehurst.wiremock.junit.WireMockRule;
 import com.google.gson.JsonArray;
 import com.google.gson.JsonParser;
-import com.sun.jersey.api.client.Client;
-import com.sun.jersey.api.client.ClientResponse;
-import com.sun.jersey.api.client.WebResource;
-import com.sun.jersey.api.client.filter.HTTPBasicAuthFilter;
+import javax.ws.rs.client.Client;import javax.ws.rs.client.ClientBuilder;
+import javax.ws.rs.core.Response;
+import javax.ws.rs.client.WebTarget;
+import org.glassfish.jersey.client.authentication.HttpAuthenticationFeature;
 import org.restcomm.connect.commons.Version;
 import org.restcomm.connect.commons.annotations.FeatureAltTests;
 
@@ -72,10 +72,10 @@ public class NexmoAvailablePhoneNumbersEndpointTest {
     private String adminAccountSid = "ACae6e420f425248d6a26948c17a9e2acf";
     private String adminAuthToken = "77f8c12cc7b8f8423e5c38b035249166";
     private String baseURL = "2012-04-24/Accounts/" + adminAccountSid + "/AvailablePhoneNumbers/";
-    
+
     @Rule
     public WireMockRule wireMockRule = new WireMockRule(8090); // No-args constructor defaults to port 8080
-    
+
     /*
      * Testing https://docs.nexmo.com/index.php/developer-api/number-search Example 1
      */
@@ -87,28 +87,28 @@ public class NexmoAvailablePhoneNumbersEndpointTest {
                     .withHeader("Content-Type", "text/json")
                     .withBody(NexmoAvailablePhoneNumbersEndpointTestUtils.jsonResponseES700)));
         // Get Account using admin email address and user email address
-    	Client jerseyClient = Client.create();
-        jerseyClient.addFilter(new HTTPBasicAuthFilter(adminUsername, adminAuthToken));
+    	Client jerseyClient = ClientBuilder.newClient();
+        jerseyClient.register(HttpAuthenticationFeature.basic(adminUsername, adminAuthToken));
 
         String provisioningURL = deploymentUrl + baseURL + "ES/Local.json";
-        WebResource webResource = jerseyClient.resource(provisioningURL);
+        WebTarget webResource = jerseyClient.target(provisioningURL);
 
-        ClientResponse clientResponse = webResource.queryParam("Contains","700").accept("application/json")
-                .get(ClientResponse.class);
+        Response clientResponse = webResource.queryParam("Contains","700").request("application/json")
+                .get();
         assertTrue(clientResponse.getStatus() == 200);
-        String response = clientResponse.getEntity(String.class);
+        String response = clientResponse.readEntity(String.class);
         System.out.println(response);
         assertTrue(!response.trim().equalsIgnoreCase("[]"));
         JsonParser parser = new JsonParser();
         JsonArray jsonResponse = parser.parse(response).getAsJsonArray();
-        
+
         System.out.println(jsonResponse);
-        
+
         assertTrue(jsonResponse.size() == 1);
         System.out.println((jsonResponse.get(0).getAsJsonObject().toString()));
         assertTrue(jsonResponse.get(0).getAsJsonObject().toString().equalsIgnoreCase(NexmoAvailablePhoneNumbersEndpointTestUtils.jsonResultES700));
     }
-    
+
     /*
      * Testing https://docs.nexmo.com/index.php/developer-api/number-search Example 2
      */
@@ -120,28 +120,28 @@ public class NexmoAvailablePhoneNumbersEndpointTest {
                     .withHeader("Content-Type", "text/json")
                     .withBody(NexmoAvailablePhoneNumbersEndpointTestUtils.jsonResponseUSRange)));
         // Get Account using admin email address and user email address
-        Client jerseyClient = Client.create();
-        jerseyClient.addFilter(new HTTPBasicAuthFilter(adminUsername, adminAuthToken));
+        Client jerseyClient = ClientBuilder.newClient();
+        jerseyClient.register(HttpAuthenticationFeature.basic(adminUsername, adminAuthToken));
 
         String provisioningURL = deploymentUrl + baseURL + "US/Local.json";
-        WebResource webResource = jerseyClient.resource(provisioningURL);
+        WebTarget webResource = jerseyClient.target(provisioningURL);
 
-        ClientResponse clientResponse = webResource.queryParam("RangeSize","5").queryParam("RangeIndex","2").accept("application/json")
-                .get(ClientResponse.class);
+        Response clientResponse = webResource.queryParam("RangeSize","5").queryParam("RangeIndex","2").request("application/json")
+                .get();
         assertTrue(clientResponse.getStatus() == 200);
-        String response = clientResponse.getEntity(String.class);
+        String response = clientResponse.readEntity(String.class);
         System.out.println(response);
         assertTrue(!response.trim().equalsIgnoreCase("[]"));
         JsonParser parser = new JsonParser();
         JsonArray jsonResponse = parser.parse(response).getAsJsonArray();
-        
+
         System.out.println(jsonResponse);
-        
+
         assertTrue(jsonResponse.size() == 5);
         System.out.println((jsonResponse.get(0).getAsJsonObject().toString()));
         assertTrue(jsonResponse.get(0).getAsJsonObject().toString().equalsIgnoreCase(NexmoAvailablePhoneNumbersEndpointTestUtils.jsonResultUSRange));
     }
-    
+
     /*
      * https://www.twilio.com/docs/api/rest/available-phone-numbers#local-get-basic-example-1
      * available local phone numbers in the United States in the 510 area code.
@@ -155,28 +155,28 @@ public class NexmoAvailablePhoneNumbersEndpointTest {
                     .withHeader("Content-Type", "text/json")
                     .withBody(NexmoAvailablePhoneNumbersEndpointTestUtils.body501AreaCode)));
         // Get Account using admin email address and user email address
-        Client jerseyClient = Client.create();
-        jerseyClient.addFilter(new HTTPBasicAuthFilter(adminUsername, adminAuthToken));
+        Client jerseyClient = ClientBuilder.newClient();
+        jerseyClient.register(HttpAuthenticationFeature.basic(adminUsername, adminAuthToken));
 
         String provisioningURL = deploymentUrl + baseURL + "US/Local.json";
-        WebResource webResource = jerseyClient.resource(provisioningURL);
+        WebTarget webResource = jerseyClient.target(provisioningURL);
 
-        ClientResponse clientResponse = webResource.queryParam("AreaCode","501").accept("application/json")
-                .get(ClientResponse.class);
+        Response clientResponse = webResource.queryParam("AreaCode","501").request("application/json")
+                .get();
         assertTrue(clientResponse.getStatus() == 200);
-        String response = clientResponse.getEntity(String.class);
+        String response = clientResponse.readEntity(String.class);
         System.out.println(response);
         assertTrue(!response.trim().equalsIgnoreCase("[]"));
         JsonParser parser = new JsonParser();
         JsonArray jsonResponse = parser.parse(response).getAsJsonArray();
-        
+
         System.out.println(jsonResponse);
-        
+
         assertTrue(jsonResponse.size() == 6);
         System.out.println((jsonResponse.get(0).getAsJsonObject().toString()));
         assertTrue(jsonResponse.get(0).getAsJsonObject().toString().equalsIgnoreCase(NexmoAvailablePhoneNumbersEndpointTestUtils.firstJSonResult501AreaCode));
     }
-    
+
     /*
      * https://www.twilio.com/docs/api/rest/available-phone-numbers#local-get-basic-example-1
      * available local phone numbers in the United States in the 510 area code.
@@ -190,30 +190,30 @@ public class NexmoAvailablePhoneNumbersEndpointTest {
                     .withHeader("Content-Type", "text/json")
                     .withBody(NexmoAvailablePhoneNumbersEndpointTestUtils.bodyCA450AreaCode)));
         // Get Account using admin email address and user email address
-        Client jerseyClient = Client.create();
-        jerseyClient.addFilter(new HTTPBasicAuthFilter(adminUsername, adminAuthToken));
+        Client jerseyClient = ClientBuilder.newClient();
+        jerseyClient.register(HttpAuthenticationFeature.basic(adminUsername, adminAuthToken));
 
         String provisioningURL = deploymentUrl + baseURL + "CA/Local.json";
-        WebResource webResource = jerseyClient.resource(provisioningURL);
+        WebTarget webResource = jerseyClient.target(provisioningURL);
 
-        ClientResponse clientResponse = webResource.queryParam("AreaCode","450").accept("application/json")
-                .get(ClientResponse.class);
+        Response clientResponse = webResource.queryParam("AreaCode","450").request("application/json")
+                .get();
         assertTrue(clientResponse.getStatus() == 200);
-        String response = clientResponse.getEntity(String.class);
+        String response = clientResponse.readEntity(String.class);
         System.out.println(response);
         assertTrue(!response.trim().equalsIgnoreCase("[]"));
         JsonParser parser = new JsonParser();
         JsonArray jsonResponse = parser.parse(response).getAsJsonArray();
-        
+
         System.out.println(jsonResponse);
-        
+
         assertTrue(jsonResponse.size() == 10);
         System.out.println((jsonResponse.get(0).getAsJsonObject().toString()));
         assertTrue(jsonResponse.get(0).getAsJsonObject().toString().equalsIgnoreCase(NexmoAvailablePhoneNumbersEndpointTestUtils.firstJSonResultCA450AreaCode));
     }
-    
+
     /*
-     * 
+     *
      */
     @Test
     public void testSearchCALocalPhoneNumbersWithContainsAreaCode() {
@@ -223,28 +223,28 @@ public class NexmoAvailablePhoneNumbersEndpointTest {
                     .withHeader("Content-Type", "text/json")
                     .withBody(NexmoAvailablePhoneNumbersEndpointTestUtils.bodyCA418AreaCode)));
         // Get Account using admin email address and user email address
-        Client jerseyClient = Client.create();
-        jerseyClient.addFilter(new HTTPBasicAuthFilter(adminUsername, adminAuthToken));
+        Client jerseyClient = ClientBuilder.newClient();
+        jerseyClient.register(HttpAuthenticationFeature.basic(adminUsername, adminAuthToken));
 
         String provisioningURL = deploymentUrl + baseURL + "CA/Local.json";
-        WebResource webResource = jerseyClient.resource(provisioningURL);
+        WebTarget webResource = jerseyClient.target(provisioningURL);
 
-        ClientResponse clientResponse = webResource.queryParam("Contains","418").accept("application/json")
-                .get(ClientResponse.class);
+        Response clientResponse = webResource.queryParam("Contains","418").request("application/json")
+                .get();
         assertTrue(clientResponse.getStatus() == 200);
-        String response = clientResponse.getEntity(String.class);
+        String response = clientResponse.readEntity(String.class);
         System.out.println(response);
         assertTrue(!response.trim().equalsIgnoreCase("[]"));
         JsonParser parser = new JsonParser();
         JsonArray jsonResponse = parser.parse(response).getAsJsonArray();
-        
+
         System.out.println(jsonResponse);
-        
+
         assertTrue(jsonResponse.size() == 10);
         System.out.println((jsonResponse.get(0).getAsJsonObject().toString()));
         assertTrue(jsonResponse.get(0).getAsJsonObject().toString().equalsIgnoreCase(NexmoAvailablePhoneNumbersEndpointTestUtils.firstJSonResultCA418AreaCode));
     }
-    
+
 //    @Test
 //    public void testSearchUSPhoneNumbersSMSOnly() {
 ////        stubFor(get(urlMatching("/nexmo/number/search/.*/.*/US\\?index=2&size=5"))
@@ -253,28 +253,28 @@ public class NexmoAvailablePhoneNumbersEndpointTest {
 ////                    .withHeader("Content-Type", "text/json")
 ////                    .withBody(NexmoAvailablePhoneNumbersEndpointTestUtils.jsonResponseUSRange)));
 //        // Get Account using admin email address and user email address
-//        Client jerseyClient = Client.create();
-//        jerseyClient.addFilter(new HTTPBasicAuthFilter(adminUsername, adminAuthToken));
+//        Client jerseyClient = ClientBuilder.newClient();
+//        jerseyClient.register(HttpAuthenticationFeature.basic(adminUsername, adminAuthToken));
 //
 //        String provisioningURL = deploymentUrl + baseURL + "SK/Local.json";
-//        WebResource webResource = jerseyClient.resource(provisioningURL);
+//        WebTarget webResource = jerseyClient.target(provisioningURL);
 //
-//        ClientResponse clientResponse = webResource.queryParam("SmsEnabled","true").accept("application/json")
-//                .get(ClientResponse.class);
+//        Response clientResponse = webResource.queryParam("SmsEnabled","true").request("application/json")
+//                .request().get();
 //        assertTrue(clientResponse.getStatus() == 200);
-//        String response = clientResponse.getEntity(String.class);
+//        String response = clientResponse.readEntity(String.class);
 //        System.out.println(response);
 //        assertTrue(!response.trim().equalsIgnoreCase("[]"));
 //        JsonParser parser = new JsonParser();
 //        JsonArray jsonResponse = parser.parse(response).getAsJsonArray();
-//        
+//
 //        System.out.println(jsonResponse);
-//        
+//
 //        assertTrue(jsonResponse.size() == 5);
 //        System.out.println((jsonResponse.get(0).getAsJsonObject().toString()));
 //        assertTrue(jsonResponse.get(0).getAsJsonObject().toString().equalsIgnoreCase(NexmoAvailablePhoneNumbersEndpointTestUtils.jsonResultUSRange));
 //    }
-  
+
     @Deployment(name = "NexmoAvailablePhoneNumbersEndpointTest", managed = true, testable = false)
     public static WebArchive createWebArchiveNoGw() {
         logger.info("Packaging Test App");

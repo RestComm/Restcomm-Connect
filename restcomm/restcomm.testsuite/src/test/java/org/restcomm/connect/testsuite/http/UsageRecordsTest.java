@@ -22,7 +22,6 @@ package org.restcomm.connect.testsuite.http;
 
 import static org.junit.Assert.*;
 
-import com.sun.jersey.api.client.UniformInterfaceException;
 import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
 
@@ -39,6 +38,7 @@ import org.junit.runner.RunWith;
 import org.restcomm.connect.commons.Version;
 
 import java.net.URL;
+import javax.ws.rs.WebApplicationException;
 import org.junit.experimental.categories.Category;
 import org.restcomm.connect.commons.annotations.BrokenTests;
 import org.restcomm.connect.commons.annotations.UnstableTests;
@@ -60,7 +60,7 @@ public class UsageRecordsTest {
     private String adminAccountSid = "ACae6e420f425248d6a26948c17a9e2acf";
     private String adminAuthToken = "77f8c12cc7b8f8423e5c38b035249166";
 
-    @Test(expected = UniformInterfaceException.class)
+    @Test(expected = WebApplicationException.class)
     public void getUsageRecordsList() {
         // NB: currently unimplemented
         JsonElement firstPage = RestcommUsageRecordsTool.getInstance().getUsageRecords(deploymentUrl.toString(),
@@ -68,14 +68,14 @@ public class UsageRecordsTest {
         logger.info(firstPage);
     }
 
-    @Test(expected = UniformInterfaceException.class)
+    @Test(expected = WebApplicationException.class)
     public void getUsageRecordsListCategoryCalls() {
         JsonElement firstPage = RestcommUsageRecordsTool.getInstance().getUsageRecordsDaily(deploymentUrl.toString(),
                 adminAccountSid, adminAuthToken, "calls", true);
         logger.info(firstPage);
     }
 
-    @Test(expected = UniformInterfaceException.class)
+    @Test(expected = WebApplicationException.class)
     public void getUsageRecordsListCategorySms() {
         JsonElement firstPage = RestcommUsageRecordsTool.getInstance().getUsageRecordsDaily(deploymentUrl.toString(),
                 adminAccountSid, adminAuthToken, "sms", true);
