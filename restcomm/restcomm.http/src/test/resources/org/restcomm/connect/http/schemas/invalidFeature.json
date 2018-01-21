@@ -1,0 +1,8 @@
+{
+    "featureEnablement": {
+        "DIDPurchase": {
+            "allowedCountries": ["US",
+                "CAnada"]
+        } 
+    }
+}
