@@ -49,12 +49,14 @@ import org.restcomm.connect.dao.NotificationsDao;
 import org.restcomm.connect.dao.OrganizationsDao;
 import org.restcomm.connect.dao.OutgoingCallerIdsDao;
 import org.restcomm.connect.dao.ProfilesDao;
+import org.restcomm.connect.dao.ProfileAssociationsDao;
 import org.restcomm.connect.dao.RecordingsDao;
 import org.restcomm.connect.dao.RegistrationsDao;
 import org.restcomm.connect.dao.ShortCodesDao;
 import org.restcomm.connect.dao.SmsMessagesDao;
 import org.restcomm.connect.dao.TranscriptionsDao;
 import org.restcomm.connect.dao.UsageDao;
+
 import scala.concurrent.ExecutionContext;
 
 /**
@@ -90,6 +92,7 @@ public final class MybatisDaoManager implements DaoManager {
     private MediaResourceBrokerDao mediaResourceBrokerDao;
     private ExtensionsConfigurationDao extensionsConfigurationDao;
     private GeolocationDao geolocationDao;
+    private ProfileAssociationsDao profileAssociationsDao;
     private OrganizationsDao organizationsDao;
     private ProfilesDao profilesDao;
 
@@ -223,6 +226,11 @@ public final class MybatisDaoManager implements DaoManager {
     }
 
     @Override
+    public ProfileAssociationsDao getProfileAssociationsDao() {
+        return profileAssociationsDao;
+    }
+
+    @Override
     public OrganizationsDao getOrganizationsDao() {
         return organizationsDao;
     }
@@ -305,6 +313,7 @@ public final class MybatisDaoManager implements DaoManager {
         mediaResourceBrokerDao = new MybatisMediaResourceBrokerDao(sessions);
         extensionsConfigurationDao = new MybatisExtensionsConfigurationDao(sessions);
         geolocationDao = new MybatisGeolocationDao(sessions);
+        profileAssociationsDao = new MybatisProfileAssociationsDao(sessions);
         organizationsDao = new MybatisOrganizationDao(sessions);
         profilesDao = new MybatisProfilesDao(sessions);
     }

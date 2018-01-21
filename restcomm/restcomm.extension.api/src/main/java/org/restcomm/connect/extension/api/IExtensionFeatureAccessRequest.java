@@ -20,10 +20,15 @@
  */
 package org.restcomm.connect.extension.api;
 
-/**
- * @author <a href="mailto:gvagenas@gmail.com">gvagenas</a>
- *
- */
-public enum ExtensionType {
-CallManager, SmsService, UssdCallManager,RestApi, FeatureAccessControl
+import org.restcomm.connect.commons.dao.Sid;
+
+public interface IExtensionFeatureAccessRequest extends IExtensionRequest{
+
+    void setAccountSid (Sid accountSid);
+
+    String getDestinationNumber();
+
+    void setDestinationNumber(String destinationNumber);
+
+
 }

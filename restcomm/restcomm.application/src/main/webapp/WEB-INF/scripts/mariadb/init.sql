@@ -393,6 +393,13 @@ date_updated DATETIME,
 enabled  BOOLEAN NOT NULL DEFAULT TRUE
 );
 
+CREATE TABLE restcomm_profile_associations(
+target_sid TEXT NOT NULL PRIMARY KEY,
+profile_sid TEXT NOT NULL, 
+date_created DATETIME NOT NULL, 
+date_updated DATETIME NOT NULL
+);
+
 CREATE TABLE restcomm_accounts_extensions (
 account_sid VARCHAR(34) NOT NULL,
 extension_sid VARCHAR(34) NOT NULL,

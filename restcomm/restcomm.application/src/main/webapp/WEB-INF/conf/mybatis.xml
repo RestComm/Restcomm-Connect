@@ -54,5 +54,6 @@
     <mapper url="file://${sql}/geolocation.xml"/>
     <mapper url="file://${sql}/organization.xml"/>
     <mapper url="file://${sql}/profile.xml"/>
+    <mapper url="file://${sql}/profile-association.xml"/>
   </mappers>
 </configuration>
