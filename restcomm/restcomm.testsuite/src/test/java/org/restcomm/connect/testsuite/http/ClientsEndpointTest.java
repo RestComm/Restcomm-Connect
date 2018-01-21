@@ -33,11 +33,12 @@ import org.restcomm.connect.commons.annotations.FeatureAltTests;
 import org.restcomm.connect.commons.annotations.FeatureExpTests;
 import org.restcomm.connect.commons.annotations.UnstableTests;
 
-import com.sun.jersey.api.client.Client;
-import com.sun.jersey.api.client.ClientResponse;
-import com.sun.jersey.api.client.WebResource;
-import com.sun.jersey.api.client.filter.HTTPBasicAuthFilter;
-import com.sun.jersey.core.util.MultivaluedMapImpl;
+import javax.ws.rs.client.Client;import javax.ws.rs.client.ClientBuilder;
+import javax.ws.rs.client.Entity;
+import javax.ws.rs.core.Response;
+import javax.ws.rs.client.WebTarget;
+import org.glassfish.jersey.client.authentication.HttpAuthenticationFeature;
+import javax.ws.rs.core.MultivaluedHashMap;
 
 import junit.framework.Assert;
 
@@ -144,36 +145,36 @@ public class ClientsEndpointTest {
     public void clientRemovalBehaviour() {
         // A developer account should be able to remove his own client
         Client jersey = getClient(developerUsername, developeerAuthToken);
-        WebResource resource = jersey.resource( getResourceUrl("/2012-04-24/Accounts/" + developerAccountSid + "/Clients/" + removedClientSid ) );
-        ClientResponse response = resource.delete(ClientResponse.class);
+        WebTarget resource = jersey.target( getResourceUrl("/2012-04-24/Accounts/" + developerAccountSid + "/Clients/" + removedClientSid ) );
+        Response response = resource.request().delete();
         Assert.assertEquals("Developer account could not remove his client", 200, response.getStatus());
         // re-removing the client should return a 404 (not a 200)
-        response = resource.delete(ClientResponse.class);
+        response = resource.request().delete();
         Assert.assertEquals("Removing a non-existing client did not return 404", 404, response.getStatus());
     }
 
     @Test@Category(FeatureExpTests.class)
     public void createClientWithWeakPasswordShouldFail() throws IOException {
         Client jersey = getClient(developerUsername, developeerAuthToken);
-        WebResource resource = jersey.resource( getResourceUrl("/2012-04-24/Accounts/" + developerAccountSid + "/Clients.json" ) );
-        MultivaluedMap<String, String> params = new MultivaluedMapImpl();
+        WebTarget resource = jersey.target( getResourceUrl("/2012-04-24/Accounts/" + developerAccountSid + "/Clients.json" ) );
+        MultivaluedMap<String, String> params = new MultivaluedHashMap();
         params.add("Login","weakClient");
         params.add("Password","1234"); // this is a very weak password
-        ClientResponse response = resource.accept(MediaType.APPLICATION_JSON).post(ClientResponse.class, params);
+        Response response = resource.request(MediaType.APPLICATION_JSON).post(Entity.form(params));
         Assert.assertEquals(400, response.getStatus());
-        Assert.assertTrue("Response should contain 'weak' term", response.getEntity(String.class).toLowerCase().contains("weak"));
+        Assert.assertTrue("Response should contain 'weak' term", response.readEntity(String.class).toLowerCase().contains("weak"));
     }
 
     @Test@Category(FeatureExpTests.class)
     public void updateClientWithWeakPasswordShouldFail() {
         String updateClientSid = "CL00000000000000000000000000000001";
         Client jersey = getClient(developerUsername, developeerAuthToken);
-        WebResource resource = jersey.resource( getResourceUrl("/2012-04-24/Accounts/" + developerAccountSid + "/Clients/" + updateClientSid ) );
-        MultivaluedMap<String, String> params = new MultivaluedMapImpl();
+        WebTarget resource = jersey.target( getResourceUrl("/2012-04-24/Accounts/" + developerAccountSid + "/Clients/" + updateClientSid ) );
+        MultivaluedMap<String, String> params = new MultivaluedHashMap();
         params.add("Password","1234"); // this is a very weak password
-        ClientResponse response = resource.accept(MediaType.APPLICATION_JSON).put(ClientResponse.class, params);
+        Response response = resource.request(MediaType.APPLICATION_JSON).put(Entity.form(params));
         Assert.assertEquals(400, response.getStatus());
-        Assert.assertTrue("Response should contain 'weak' term", response.getEntity(String.class).toLowerCase().contains("weak"));
+        Assert.assertTrue("Response should contain 'weak' term", response.readEntity(String.class).toLowerCase().contains("weak"));
     }
 
     /**
@@ -187,20 +188,20 @@ public class ClientsEndpointTest {
     @Test@Category(FeatureExpTests.class)
     public void createClientTestWithInvalidCharacters() throws ClientProtocolException, IOException, ParseException, InterruptedException {
     	Client jersey = getClient(developerUsername, developeerAuthToken);
-        WebResource resource = jersey.resource( getResourceUrl("/2012-04-24/Accounts/" + developerAccountSid + "/Clients.json" ) );
-        MultivaluedMap<String, String> params = new MultivaluedMapImpl();
+        WebTarget resource = jersey.target( getResourceUrl("/2012-04-24/Accounts/" + developerAccountSid + "/Clients.json" ) );
+        MultivaluedMap<String, String> params = new MultivaluedHashMap();
         params.add("Login","maria.test@telestax.com"); // login contains @ sign
         params.add("Password","RestComm1234!");
-        ClientResponse response = resource.accept(MediaType.APPLICATION_JSON).post(ClientResponse.class, params);
+        Response response = resource.request(MediaType.APPLICATION_JSON).post(Entity.form(params));
         Assert.assertEquals(400, response.getStatus());
-        Assert.assertTrue("Response should contain 'invalid' term", response.getEntity(String.class).toLowerCase().contains("invalid"));
+        Assert.assertTrue("Response should contain 'invalid' term", response.readEntity(String.class).toLowerCase().contains("invalid"));
     }
 
     /**
      * addSameClientNameInDifferentOrganizations
      * https://github.com/RestComm/Restcomm-Connect/issues/2106
      * We should be able to add same client in different organizations
-     * 
+     *
      */
     @Test
     public void addSameClientNameInDifferentOrganizations() {
@@ -208,46 +209,46 @@ public class ClientsEndpointTest {
     	 * Add client maria in Organization - default.restcomm.com
     	 */
     	Client jersey = getClient(developerUsername, developeerAuthToken);
-        WebResource resource = jersey.resource( getResourceUrl("/2012-04-24/Accounts/" + developerAccountSid + "/Clients.json" ) );
-        MultivaluedMap<String, String> params = new MultivaluedMapImpl();
+        WebTarget resource = jersey.target( getResourceUrl("/2012-04-24/Accounts/" + developerAccountSid + "/Clients.json" ) );
+        MultivaluedMap<String, String> params = new MultivaluedHashMap();
         params.add("Login","maria");
         params.add("Password","RestComm1234!");
-        ClientResponse response = resource.accept(MediaType.APPLICATION_JSON).post(ClientResponse.class, params);
+        Response response = resource.request(MediaType.APPLICATION_JSON).post(Entity.form(params));
         Assert.assertEquals(200, response.getStatus());
-        
+
         //try to add same client again in same organization - should not be allowed
         /*jersey = getClient(developerUsername, developeerAuthToken);
-        resource = jersey.resource( getResourceUrl("/2012-04-24/Accounts/" + developerAccountSid + "/Clients.json" ) );
-        params = new MultivaluedMapImpl();
+        resource = jersey.target( getResourceUrl("/2012-04-24/Accounts/" + developerAccountSid + "/Clients.json" ) );
+        params = new MultivaluedHashMap();
         params.add("Login","maria");
         params.add("Password","RestComm1234!");
-        response = resource.accept(MediaType.APPLICATION_JSON).post(ClientResponse.class, params);
+        response = resource.request(MediaType.APPLICATION_JSON).post(Entity.form(params));
         Assert.assertEquals(409, response.getStatus());*/
 
         /*
     	 * Add client maria in Organization - org2.restcomm.com
     	 */
         jersey = getClient(developerOrg2AccountSid, developeerOrg2AuthToken);
-        resource = jersey.resource( getResourceUrl("/2012-04-24/Accounts/" + developerOrg2AccountSid + "/Clients.json" ) );
-        params = new MultivaluedMapImpl();
+        resource = jersey.target( getResourceUrl("/2012-04-24/Accounts/" + developerOrg2AccountSid + "/Clients.json" ) );
+        params = new MultivaluedHashMap();
         params.add("Login","maria");
         params.add("Password","RestComm1234!");
-        response = resource.accept(MediaType.APPLICATION_JSON).post(ClientResponse.class, params);
+        response = resource.request(MediaType.APPLICATION_JSON).post(Entity.form(params));
         Assert.assertEquals(200, response.getStatus());
-    	
+
     }
 
     @Test@Category({FeatureAltTests.class, UnstableTests.class})
     public void createClientTestWithIsPushEnabled() throws IOException, ParseException, InterruptedException {
         Client jersey = getClient(developerUsername, developeerAuthToken);
-        WebResource resource = jersey.resource( getResourceUrl("/2012-04-24/Accounts/" + developerAccountSid + "/Clients.json" ) );
-        MultivaluedMap<String, String> params = new MultivaluedMapImpl();
+        WebTarget resource = jersey.target( getResourceUrl("/2012-04-24/Accounts/" + developerAccountSid + "/Clients.json" ) );
+        MultivaluedMap<String, String> params = new MultivaluedHashMap();
         params.add("Login","bob"); // login contains @ sign
         params.add("Password","RestComm1234!");
         params.add("IsPushEnabled", "true");
-        ClientResponse response = resource.accept(MediaType.APPLICATION_JSON).post(ClientResponse.class, params);
+        Response response = resource.request(MediaType.APPLICATION_JSON).post(Entity.form(params));
         Assert.assertEquals(200, response.getStatus());
-        Assert.assertTrue("Response should contain 'push_client_identity'", response.getEntity(String.class).contains("push_client_identity"));
+        Assert.assertTrue("Response should contain 'push_client_identity'", response.readEntity(String.class).contains("push_client_identity"));
     }
 
     @Test@Category(FeatureAltTests.class)
@@ -255,18 +256,18 @@ public class ClientsEndpointTest {
         String sid = CreateClientsTool.getInstance().createClient(deploymentUrl.toString(), developerAccountSid, developeerAuthToken, "agafox", "RestComm1234", null);
         // add push_client_identity
         Client jersey = getClient(developerUsername, developeerAuthToken);
-        WebResource resource = jersey.resource(getResourceUrl("/2012-04-24/Accounts/" + developerAccountSid + "/Clients/" + sid + ".json" ));
-        MultivaluedMap<String, String> params = new MultivaluedMapImpl();
+        WebTarget resource = jersey.target(getResourceUrl("/2012-04-24/Accounts/" + developerAccountSid + "/Clients/" + sid + ".json" ));
+        MultivaluedMap<String, String> params = new MultivaluedHashMap();
         params.putSingle("IsPushEnabled", "true");
-        ClientResponse response = resource.accept(MediaType.APPLICATION_JSON).put(ClientResponse.class, params);
+        Response response = resource.request(MediaType.APPLICATION_JSON).put(Entity.form(params));
         Assert.assertEquals(200, response.getStatus());
-        Assert.assertTrue("Response should contain 'push_client_identity'", response.getEntity(String.class).contains("push_client_identity"));
+        Assert.assertTrue("Response should contain 'push_client_identity'", response.readEntity(String.class).contains("push_client_identity"));
         // remove push_client_identity
-        resource = jersey.resource(getResourceUrl("/2012-04-24/Accounts/" + developerAccountSid + "/Clients/" + sid + ".json"));
+        resource = jersey.target(getResourceUrl("/2012-04-24/Accounts/" + developerAccountSid + "/Clients/" + sid + ".json"));
         params.putSingle("IsPushEnabled", "false");
-        response = resource.accept(MediaType.APPLICATION_JSON).put(ClientResponse.class, params);
+        response = resource.request(MediaType.APPLICATION_JSON).put(Entity.form(params));
         Assert.assertEquals(200, response.getStatus());
-        Assert.assertFalse("Response shouldn't contain 'push_client_identity'", response.getEntity(String.class).contains("push_client_identity"));
+        Assert.assertFalse("Response shouldn't contain 'push_client_identity'", response.readEntity(String.class).contains("push_client_identity"));
     }
 
     protected String getResourceUrl(String suffix) {
@@ -284,8 +285,8 @@ public class ClientsEndpointTest {
     }
 
     protected Client getClient(String username, String password) {
-        Client jersey = Client.create();
-        jersey.addFilter(new HTTPBasicAuthFilter(username, password));
+        Client jersey = ClientBuilder.newClient();
+        jersey.register(HttpAuthenticationFeature.basic(username, password));
         return jersey;
     }
 

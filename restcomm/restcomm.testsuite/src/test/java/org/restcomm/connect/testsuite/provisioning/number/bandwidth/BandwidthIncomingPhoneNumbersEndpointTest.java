@@ -23,11 +23,11 @@ package org.restcomm.connect.testsuite.provisioning.number.bandwidth;
 import com.github.tomakehurst.wiremock.junit.WireMockRule;
 import com.google.gson.JsonObject;
 import com.google.gson.JsonParser;
-import com.sun.jersey.api.client.Client;
-import com.sun.jersey.api.client.ClientResponse;
-import com.sun.jersey.api.client.WebResource;
-import com.sun.jersey.api.client.filter.HTTPBasicAuthFilter;
-import com.sun.jersey.core.util.MultivaluedMapImpl;
+import javax.ws.rs.client.Client;import javax.ws.rs.client.ClientBuilder;
+import javax.ws.rs.core.Response;
+import javax.ws.rs.client.WebTarget;
+import org.glassfish.jersey.client.authentication.HttpAuthenticationFeature;
+import javax.ws.rs.core.MultivaluedHashMap;
 
 import org.apache.log4j.Logger;
 import org.jboss.arquillian.container.test.api.Deployer;
@@ -48,6 +48,7 @@ import javax.ws.rs.core.MultivaluedMap;
 import java.net.URL;
 
 import static com.github.tomakehurst.wiremock.client.WireMock.*;
+import javax.ws.rs.client.Entity;
 import static junit.framework.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
 import org.junit.experimental.categories.Category;
@@ -88,22 +89,22 @@ public class BandwidthIncomingPhoneNumbersEndpointTest {
                         .withBody(BandwidthIncomingPhoneNumbersEndpointTestUtils.validOrderResponseXml)));
 
 
-        Client jerseyClient = Client.create();
-        jerseyClient.addFilter(new HTTPBasicAuthFilter(adminUsername, adminAuthToken));
+        Client jerseyClient = ClientBuilder.newClient();
+        jerseyClient.register(HttpAuthenticationFeature.basic(adminUsername, adminAuthToken));
 
         String provisioningURL = deploymentUrl + baseURL + "IncomingPhoneNumbers.json";
         System.out.println(provisioningURL);
-        WebResource webResource = jerseyClient.resource(provisioningURL);
+        WebTarget webResource = jerseyClient.target(provisioningURL);
 
-        MultivaluedMap<String, String> formData = new MultivaluedMapImpl();
+        MultivaluedMap<String, String> formData = new MultivaluedHashMap();
         formData.add("PhoneNumber", "+14156902867");
         formData.add("VoiceUrl", "http://demo.telestax.com/docs/voice.xml");
         formData.add("FriendlyName", "My Company Line");
         formData.add("VoiceMethod", "GET");
-        ClientResponse clientResponse = webResource.type(MediaType.APPLICATION_FORM_URLENCODED_TYPE).accept("application/json").post(ClientResponse.class, formData);
+        Response clientResponse = webResource.request("application/json").post(Entity.form(formData));
         assertTrue(clientResponse.getStatus() == 200);
         numberBought = true;
-        String response = clientResponse.getEntity(String.class);
+        String response = clientResponse.readEntity(String.class);
         System.out.println(response);
         assertTrue(!response.trim().equalsIgnoreCase("[]"));
         JsonParser parser = new JsonParser();
@@ -132,23 +133,23 @@ public class BandwidthIncomingPhoneNumbersEndpointTest {
                         .withHeader("Content-Type", "application/xml")
                         .withBody(BandwidthIncomingPhoneNumbersEndpointTestUtils.validDisconnectOrderResponseXml)));
 
-        Client jerseyClient = Client.create();
-        jerseyClient.addFilter(new HTTPBasicAuthFilter(adminUsername, adminAuthToken));
+        Client jerseyClient = ClientBuilder.newClient();
+        jerseyClient.register(HttpAuthenticationFeature.basic(adminUsername, adminAuthToken));
 
         String provisioningURL = deploymentUrl + baseURL + "IncomingPhoneNumbers.json";
         System.out.println(provisioningURL);
-        WebResource webResource = jerseyClient.resource(provisioningURL);
+        WebTarget webResource = jerseyClient.target(provisioningURL);
 
-        MultivaluedMap<String, String> formData = new MultivaluedMapImpl();
+        MultivaluedMap<String, String> formData = new MultivaluedHashMap();
         formData.add("PhoneNumber", "+14156902867");
         formData.add("VoiceUrl", "http://demo.telestax.com/docs/voice.xml");
         formData.add("FriendlyName", "My Company Line");
         formData.add("VoiceMethod", "GET");
-        ClientResponse clientResponse = webResource.type(MediaType.APPLICATION_FORM_URLENCODED_TYPE).accept("application/json").post(ClientResponse.class, formData);
+        Response clientResponse = webResource.request("application/json").post(Entity.form(formData));
         JsonObject jsonResponse;
         if (clientResponse.getStatus()==200) {
             assertEquals(200, clientResponse.getStatus());
-            String response = clientResponse.getEntity(String.class);
+            String response = clientResponse.readEntity(String.class);
             System.out.println(response);
             assertTrue(!response.trim().equalsIgnoreCase("[]"));
             JsonParser parser = new JsonParser();
@@ -161,8 +162,8 @@ public class BandwidthIncomingPhoneNumbersEndpointTest {
 
         String phoneNumberSid = jsonResponse.get("sid").getAsString();
         provisioningURL = deploymentUrl + baseURL + "IncomingPhoneNumbers/" + phoneNumberSid + ".json";
-        webResource = jerseyClient.resource(provisioningURL);
-        clientResponse = webResource.type(MediaType.APPLICATION_FORM_URLENCODED_TYPE).accept("application/json").delete(ClientResponse.class);
+        webResource = jerseyClient.target(provisioningURL);
+        clientResponse = webResource.request("application/json").delete();
         assertTrue(clientResponse.getStatus() == 204);
 
     }

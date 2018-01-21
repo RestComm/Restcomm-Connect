@@ -3,10 +3,10 @@ package org.restcomm.connect.testsuite.http;
 import com.icegreen.greenmail.util.GreenMail;
 import com.icegreen.greenmail.util.GreenMailUtil;
 import com.icegreen.greenmail.util.ServerSetupTest;
-import com.sun.jersey.api.client.Client;
-import com.sun.jersey.api.client.WebResource;
-import com.sun.jersey.api.client.filter.HTTPBasicAuthFilter;
-import com.sun.jersey.core.util.MultivaluedMapImpl;
+import javax.ws.rs.client.Client;import javax.ws.rs.client.ClientBuilder;
+import javax.ws.rs.client.WebTarget;
+import org.glassfish.jersey.client.authentication.HttpAuthenticationFeature;
+import javax.ws.rs.core.MultivaluedHashMap;
 import org.apache.log4j.Logger;
 import org.jboss.arquillian.container.test.api.Deployer;
 import org.jboss.arquillian.container.test.api.Deployment;
@@ -28,6 +28,7 @@ import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.MultivaluedMap;
 import java.io.IOException;
 import java.net.URL;
+import javax.ws.rs.client.Entity;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
@@ -74,24 +75,24 @@ public class EmailEndpointTest {
 
         final Mail emailMsg = new Mail("hascode@localhost", "someone@localhost.com","Testing Email Service" ,"This is the subject of the email service testing", "someone2@localhost.com, test@localhost.com, test3@localhost.com", "someone3@localhost.com, test2@localhost.com");
 
-        Client jerseyClient = Client.create();
-        jerseyClient.addFilter(new HTTPBasicAuthFilter(adminAccountSid, adminAuthToken));
+        Client jerseyClient = ClientBuilder.newClient();
+        jerseyClient.register(HttpAuthenticationFeature.basic(adminAccountSid, adminAuthToken));
 
         String url = deploymentUrl + "2012-04-24/Accounts/" + adminAccountSid + "/Email/Messages.json";
 
-        WebResource webResource = jerseyClient.resource(url);
+        WebTarget WebTarget = jerseyClient.target(url);
 
         final String subject = "Test Email Subject";
         final String body = "Test body";
 
-        MultivaluedMap<String, String> params = new MultivaluedMapImpl();
+        MultivaluedMap<String, String> params = new MultivaluedHashMap();
         params.add("From", "restcomm@company.com");
         params.add("To", "user@company.com");
         params.add("Subject", subject );
         params.add("Body", body);
 
-        // webResource = webResource.queryParams(params);
-        String response = webResource.accept(MediaType.APPLICATION_JSON).post(String.class, params);
+        // WebTarget = WebTarget.queryParams(params);
+        String response = WebTarget.request(MediaType.APPLICATION_JSON).post(Entity.form(params),String.class);
         assertNotNull(response);
         logger.info("Response: "+response);
         assertTrue(mailServer.waitForIncomingEmail(1));

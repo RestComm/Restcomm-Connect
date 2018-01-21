@@ -1,16 +1,16 @@
 package org.restcomm.connect.testsuite.http;
 
-import com.google.gson.JsonArray;
 import com.google.gson.JsonObject;
 import com.google.gson.JsonParser;
-import com.sun.jersey.api.client.Client;
-import com.sun.jersey.api.client.ClientResponse;
-import com.sun.jersey.api.client.WebResource;
-import com.sun.jersey.api.client.filter.HTTPBasicAuthFilter;
+import javax.ws.rs.client.Client;import javax.ws.rs.client.ClientBuilder;
+import javax.ws.rs.core.Response;
+import javax.ws.rs.client.WebTarget;
+import org.glassfish.jersey.client.authentication.HttpAuthenticationFeature;
 
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.MultivaluedMap;
 import java.util.logging.Logger;
+import javax.ws.rs.client.Entity;
 
 /**
  * @author <a href="mailto:gvagenas@gmail.com">gvagenas</a>
@@ -54,15 +54,15 @@ public class RestcommExtensionsConfigurationTool {
         JsonParser parser = new JsonParser();
         JsonObject jsonResponse = null;
 
-        Client jerseyClient = Client.create();
-        jerseyClient.addFilter(new HTTPBasicAuthFilter(adminUsername, adminAuthToken));
+        Client jerseyClient = ClientBuilder.newClient();
+        jerseyClient.register(HttpAuthenticationFeature.basic(adminUsername, adminAuthToken));
 
         String url = getUrl(deploymentUrl, xml);
 
-        WebResource webResource = jerseyClient.resource(url);
+        WebTarget WebTarget = jerseyClient.target(url);
 
-        ClientResponse clientResponse = webResource.accept(MediaType.APPLICATION_JSON).post(ClientResponse.class, configurationParams);
-        jsonResponse = parser.parse(clientResponse.getEntity(String.class)).getAsJsonObject();
+        Response clientResponse = WebTarget.request(MediaType.APPLICATION_JSON).post(Entity.form(configurationParams));
+        jsonResponse = parser.parse(clientResponse.readEntity(String.class)).getAsJsonObject();
         return jsonResponse;
     }
 
@@ -71,12 +71,12 @@ public class RestcommExtensionsConfigurationTool {
     }
 
     public JsonObject getConfiguration(String deploymentUrl, String adminUsername, String adminAuthToken, String extensionName, Boolean xml) {
-        Client jerseyClient = Client.create();
-        jerseyClient.addFilter(new HTTPBasicAuthFilter(adminUsername, adminAuthToken));
+        Client jerseyClient = ClientBuilder.newClient();
+        jerseyClient.register(HttpAuthenticationFeature.basic(adminUsername, adminAuthToken));
 
-        WebResource webResource = jerseyClient.resource(getUrl(deploymentUrl, xml));
+        WebTarget WebTarget = jerseyClient.target(getUrl(deploymentUrl, xml));
 
-        String response = webResource.path(extensionName).get(String.class);
+        String response = WebTarget.path(extensionName).request().get(String.class);
         JsonParser parser = new JsonParser();
         JsonObject jsonResponse = parser.parse(response).getAsJsonObject();
 
@@ -93,15 +93,15 @@ public class RestcommExtensionsConfigurationTool {
         JsonParser parser = new JsonParser();
         JsonObject jsonResponse = null;
 
-        Client jerseyClient = Client.create();
-        jerseyClient.addFilter(new HTTPBasicAuthFilter(adminUsername, adminAuthToken));
+        Client jerseyClient = ClientBuilder.newClient();
+        jerseyClient.register(HttpAuthenticationFeature.basic(adminUsername, adminAuthToken));
 
         String url = getUrl(deploymentUrl, xml)+"/"+extensionSid;
 
-        WebResource webResource = jerseyClient.resource(url);
+        WebTarget WebTarget = jerseyClient.target(url);
 
-        ClientResponse clientResponse = webResource.accept(MediaType.APPLICATION_JSON).post(ClientResponse.class, configurationParams);
-        jsonResponse = parser.parse(clientResponse.getEntity(String.class)).getAsJsonObject();
+        Response clientResponse = WebTarget.request(MediaType.APPLICATION_JSON).post(Entity.form(configurationParams));
+        jsonResponse = parser.parse(clientResponse.readEntity(String.class)).getAsJsonObject();
         return jsonResponse;
     }
 }

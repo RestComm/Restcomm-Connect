@@ -29,9 +29,10 @@ import javax.ws.rs.core.MultivaluedMap;
 import com.google.gson.JsonArray;
 import com.google.gson.JsonObject;
 import com.google.gson.JsonParser;
-import com.sun.jersey.api.client.Client;
-import com.sun.jersey.api.client.WebResource;
-import com.sun.jersey.api.client.filter.HTTPBasicAuthFilter;
+import javax.ws.rs.client.Client;import javax.ws.rs.client.ClientBuilder;
+import javax.ws.rs.client.Entity;
+import javax.ws.rs.client.WebTarget;
+import org.glassfish.jersey.client.authentication.HttpAuthenticationFeature;
 
 /**
  * @author guilherme.jansen@telestax.com
@@ -80,11 +81,11 @@ public class RestcommApplicationsTool {
 
     public JsonObject createApplication(String deploymentUrl, String adminAccountSid, String adminUsername,
             String adminAuthToken, MultivaluedMap<String, String> applicationParams) {
-        Client jerseyClient = Client.create();
-        jerseyClient.addFilter(new HTTPBasicAuthFilter(adminUsername, adminAuthToken));
+        Client jerseyClient = ClientBuilder.newClient();
+        jerseyClient.register(HttpAuthenticationFeature.basic(adminUsername, adminAuthToken));
         String url = getApplicationsUrl(deploymentUrl, adminAccountSid, false);
-        WebResource webResource = jerseyClient.resource(url);
-        String response = webResource.accept(MediaType.APPLICATION_JSON).post(String.class, applicationParams);
+        WebTarget WebTarget = jerseyClient.target(url);
+        String response = WebTarget.request(MediaType.APPLICATION_JSON).post(Entity.form(applicationParams), String.class);
         JsonParser parser = new JsonParser();
         JsonObject jsonResponse = parser.parse(response).getAsJsonObject();
         return jsonResponse;
@@ -92,14 +93,14 @@ public class RestcommApplicationsTool {
 
     public JsonObject getApplication(String deploymentUrl, String adminUsername, String adminAuthToken, String adminAccountSid,
             String applicationSid) {
-        Client jerseyClient = Client.create();
-        jerseyClient.addFilter(new HTTPBasicAuthFilter(adminUsername, adminAuthToken));
+        Client jerseyClient = ClientBuilder.newClient();
+        jerseyClient.register(HttpAuthenticationFeature.basic(adminUsername, adminAuthToken));
         String url = getApplicationUrl(deploymentUrl, adminAccountSid, applicationSid, false);
-        WebResource webResource = jerseyClient.resource(url);
+        WebTarget WebTarget = jerseyClient.target(url);
         String response = null;
         JsonObject jsonResponse = null;
         try {
-            response = webResource.accept(MediaType.APPLICATION_JSON).get(String.class);
+            response = WebTarget.request(MediaType.APPLICATION_JSON).get(String.class);
             JsonParser parser = new JsonParser();
             jsonResponse = parser.parse(response).getAsJsonObject();
         } catch (Exception e) {
@@ -113,13 +114,13 @@ public class RestcommApplicationsTool {
     }
 
     public JsonArray getApplications(String deploymentUrl, String adminUsername, String adminAuthToken, String adminAccountSid, boolean includeNumbers) {
-        Client jerseyClient = Client.create();
-        jerseyClient.addFilter(new HTTPBasicAuthFilter(adminUsername, adminAuthToken));
+        Client jerseyClient = ClientBuilder.newClient();
+        jerseyClient.register(HttpAuthenticationFeature.basic(adminUsername, adminAuthToken));
         String url = getApplicationsUrl(deploymentUrl, adminAccountSid, false);
-        WebResource webResource = jerseyClient.resource(url);
+        WebTarget WebTarget = jerseyClient.target(url);
         if (includeNumbers)
-            webResource = webResource.queryParam("includeNumbers", "true");
-        String response = webResource.accept(MediaType.APPLICATION_JSON).get(String.class);
+            WebTarget = WebTarget.queryParam("includeNumbers", "true");
+        String response = WebTarget.request(MediaType.APPLICATION_JSON).get(String.class);
         JsonParser parser = new JsonParser();
         JsonArray jsonResponse = parser.parse(response).getAsJsonArray();
         return jsonResponse;
@@ -127,15 +128,15 @@ public class RestcommApplicationsTool {
 
     public JsonObject updateApplication(String deploymentUrl, String adminUsername, String adminAuthToken,
             String adminAccountSid, String applicationSid, MultivaluedMap<String, String> applicationParams, boolean usePut) {
-        Client jerseyClient = Client.create();
-        jerseyClient.addFilter(new HTTPBasicAuthFilter(adminUsername, adminAuthToken));
+        Client jerseyClient = ClientBuilder.newClient();
+        jerseyClient.register(HttpAuthenticationFeature.basic(adminUsername, adminAuthToken));
         String url = getApplicationUrl(deploymentUrl, adminAccountSid, applicationSid, false);
-        WebResource webResource = jerseyClient.resource(url);
+        WebTarget WebTarget = jerseyClient.target(url);
         String response = "";
         if (usePut) {
-            response = webResource.accept(MediaType.APPLICATION_JSON).put(String.class, applicationParams);
+            response = WebTarget.request(MediaType.APPLICATION_JSON).put(Entity.form(applicationParams), String.class);
         } else {
-            response = webResource.accept(MediaType.APPLICATION_JSON).post(String.class, applicationParams);
+            response = WebTarget.request(MediaType.APPLICATION_JSON).post(Entity.form(applicationParams), String.class);
         }
         JsonParser parser = new JsonParser();
         JsonObject jsonResponse = parser.parse(response).getAsJsonObject();
@@ -147,9 +148,9 @@ public class RestcommApplicationsTool {
         String endpoint = getEndpoint(deploymentUrl).replaceAll("http://", "");
         String url = getApplicationUrl("http://" + adminAccountSid + ":" + adminAuthToken + "@" + endpoint, adminAccountSid,
                 applicationSid, false);
-        Client jerseyClient = Client.create();
-        jerseyClient.addFilter(new HTTPBasicAuthFilter(adminAccountSid, adminAuthToken));
-        WebResource webResource = jerseyClient.resource(url);
-        webResource.accept(MediaType.APPLICATION_JSON).delete();
+        Client jerseyClient = ClientBuilder.newClient();
+        jerseyClient.register(HttpAuthenticationFeature.basic(adminAccountSid, adminAuthToken));
+        WebTarget WebTarget = jerseyClient.target(url);
+        WebTarget.request(MediaType.APPLICATION_JSON).delete();
     }
 }

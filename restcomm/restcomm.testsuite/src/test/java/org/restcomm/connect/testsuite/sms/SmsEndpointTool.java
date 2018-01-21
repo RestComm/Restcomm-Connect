@@ -28,11 +28,12 @@ import javax.ws.rs.core.MultivaluedMap;
 import com.google.gson.JsonArray;
 import com.google.gson.JsonObject;
 import com.google.gson.JsonParser;
-import com.sun.jersey.api.client.Client;
-import com.sun.jersey.api.client.WebResource;
-import com.sun.jersey.api.client.filter.HTTPBasicAuthFilter;
-import com.sun.jersey.core.util.MultivaluedMapImpl;
+import javax.ws.rs.client.Client;import javax.ws.rs.client.ClientBuilder;
+import javax.ws.rs.client.WebTarget;
+import org.glassfish.jersey.client.authentication.HttpAuthenticationFeature;
+import javax.ws.rs.core.MultivaluedHashMap;
 import java.util.Map;
+import javax.ws.rs.client.Entity;
 
 /**
  * @author <a href="mailto:gvagenas@gmail.com">gvagenas</a>
@@ -64,14 +65,14 @@ public class SmsEndpointTool {
 
     public JsonObject createSms (String deploymentUrl, String username, String authToken, String from, String to, String body, HashMap<String, String> additionalHeaders) {
 
-        Client jerseyClient = Client.create();
-        jerseyClient.addFilter(new HTTPBasicAuthFilter(username, authToken));
+        Client jerseyClient = ClientBuilder.newClient();
+        jerseyClient.register(HttpAuthenticationFeature.basic(username, authToken));
 
         String url = getAccountsUrl(deploymentUrl, username, true);
 
-        WebResource webResource = jerseyClient.resource(url);
+        WebTarget webResource = jerseyClient.target(url);
 
-        MultivaluedMap<String, String> params = new MultivaluedMapImpl();
+        MultivaluedMap<String, String> params = new MultivaluedHashMap();
         params.add("From", from);
         params.add("To", to);
         params.add("Body", body);
@@ -85,7 +86,7 @@ public class SmsEndpointTool {
         }
 
         // webResource = webResource.queryParams(params);
-        String response = webResource.accept(MediaType.APPLICATION_JSON).post(String.class, params);
+        String response = webResource.request(MediaType.APPLICATION_JSON).post(Entity.form(params),String.class);
         JsonParser parser = new JsonParser();
         JsonObject jsonObject = parser.parse(response).getAsJsonObject();
 
@@ -94,14 +95,14 @@ public class SmsEndpointTool {
 
     public JsonObject createSms (String deploymentUrl, String username, String authToken, String from, String to, String body, HashMap<String, String> additionalHeaders, String encoding) {
 
-        Client jerseyClient = Client.create();
-        jerseyClient.addFilter(new HTTPBasicAuthFilter(username, authToken));
+        Client jerseyClient = ClientBuilder.newClient();
+        jerseyClient.register(HttpAuthenticationFeature.basic(username, authToken));
 
         String url = getAccountsUrl(deploymentUrl, username, true);
 
-        WebResource webResource = jerseyClient.resource(url);
+        WebTarget webResource = jerseyClient.target(url);
 
-        MultivaluedMap<String, String> params = new MultivaluedMapImpl();
+        MultivaluedMap<String, String> params = new MultivaluedHashMap();
         params.add("From", from);
         params.add("To", to);
         params.add("Encoding", encoding);
@@ -116,7 +117,7 @@ public class SmsEndpointTool {
         }
 
         // webResource = webResource.queryParams(params);
-        String response = webResource.accept(MediaType.APPLICATION_JSON).post(String.class, params);
+        String response = webResource.request(MediaType.APPLICATION_JSON).post(Entity.form(params),String.class);
         JsonParser parser = new JsonParser();
         JsonObject jsonObject = parser.parse(response).getAsJsonObject();
 
@@ -124,11 +125,11 @@ public class SmsEndpointTool {
     }
 
     public JsonArray getSmsList(String deploymentUrl, String username, String authToken) {
-        Client jerseyClient = Client.create();
-        jerseyClient.addFilter(new HTTPBasicAuthFilter(username, authToken));
+        Client jerseyClient = ClientBuilder.newClient();
+        jerseyClient.register(HttpAuthenticationFeature.basic(username, authToken));
         String url = getAccountsUrl(deploymentUrl, username, true);
-        WebResource webResource = jerseyClient.resource(url);
-        String response = webResource.accept(MediaType.APPLICATION_JSON).get(String.class);
+        WebTarget webResource = jerseyClient.target(url);
+        String response = webResource.request(MediaType.APPLICATION_JSON).get(String.class);
         JsonParser parser = new JsonParser();
         JsonArray jsonArray = null;
         JsonObject jsonObject = parser.parse(response).getAsJsonObject();
@@ -137,11 +138,11 @@ public class SmsEndpointTool {
     }
 
     public JsonObject getSmsMessageList (String deploymentUrl, String username, String authToken) {
-        Client jerseyClient = Client.create();
-        jerseyClient.addFilter(new HTTPBasicAuthFilter(username, authToken));
+        Client jerseyClient = ClientBuilder.newClient();
+        jerseyClient.register(HttpAuthenticationFeature.basic(username, authToken));
         String url = getAccountsUrl(deploymentUrl, username, true);
-        WebResource webResource = jerseyClient.resource(url);
-        String response = webResource.accept(MediaType.APPLICATION_JSON).get(String.class);
+        WebTarget webResource = jerseyClient.target(url);
+        String response = webResource.request(MediaType.APPLICATION_JSON).get(String.class);
         JsonParser parser = new JsonParser();
         JsonObject jsonObject = parser.parse(response).getAsJsonObject();
         return jsonObject;
@@ -149,24 +150,28 @@ public class SmsEndpointTool {
 
     public JsonObject getSmsMessageList (String deploymentUrl, String username, String authToken, Integer page, Integer pageSize, Boolean json) {
 
-        Client jerseyClient = Client.create();
-        jerseyClient.addFilter(new HTTPBasicAuthFilter(username, authToken));
+        Client jerseyClient = ClientBuilder.newClient();
+        jerseyClient.register(HttpAuthenticationFeature.basic(username, authToken));
         String url = getAccountsUrl(deploymentUrl, username, true);
-        WebResource webResource = jerseyClient.resource(url);
+        WebTarget webResource = jerseyClient.target(url);
         String response;
 
         if (page != null || pageSize != null) {
-            MultivaluedMap<String, String> params = new MultivaluedMapImpl();
+            MultivaluedMap<String, String> params = new MultivaluedHashMap();
 
-            if (page != null)
+            if (page != null) {
                 params.add("Page", String.valueOf(page));
-            if (pageSize != null)
+                webResource.queryParam("Page", String.valueOf(page));
+            }
+            if (pageSize != null) {
                 params.add("PageSize", String.valueOf(pageSize));
+                webResource.queryParam("PageSize", String.valueOf(pageSize));
+            }
 
-            response = webResource.queryParams(params).accept(MediaType.APPLICATION_JSON, MediaType.APPLICATION_XML)
+            response = webResource.request(MediaType.APPLICATION_JSON, MediaType.APPLICATION_XML)
                     .get(String.class);
         } else {
-            response = webResource.accept(MediaType.APPLICATION_JSON, MediaType.APPLICATION_XML).get(String.class);
+            response = webResource.request(MediaType.APPLICATION_JSON, MediaType.APPLICATION_XML).get(String.class);
         }
 
         JsonParser parser = new JsonParser();
@@ -176,20 +181,20 @@ public class SmsEndpointTool {
 
     public JsonObject getSmsMessageListUsingFilter(String deploymentUrl, String username, String authToken, Map<String, String> filters) {
 
-        Client jerseyClient = Client.create();
-        jerseyClient.addFilter(new HTTPBasicAuthFilter(username, authToken));
+        Client jerseyClient = ClientBuilder.newClient();
+        jerseyClient.register(HttpAuthenticationFeature.basic(username, authToken));
         String url = getAccountsUrl(deploymentUrl, username, true);
-        WebResource webResource = jerseyClient.resource(url);
+        WebTarget webResource = jerseyClient.target(url);
 
-        MultivaluedMap<String, String> params = new MultivaluedMapImpl();
+        MultivaluedMap<String, String> params = new MultivaluedHashMap();
 
         for (String filterName : filters.keySet()) {
             String filterData = filters.get(filterName);
             params.add(filterName, filterData);
+            webResource.queryParam(filterName, filterData);
         }
-        webResource = webResource.queryParams(params);
 
-        String response = webResource.accept(MediaType.APPLICATION_JSON).get(String.class);
+        String response = webResource.request(MediaType.APPLICATION_JSON).get(String.class);
         JsonParser parser = new JsonParser();
         JsonObject jsonObject = parser.parse(response).getAsJsonObject();
 

@@ -9,12 +9,12 @@ import com.google.gson.JsonArray;
 import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
 import com.google.gson.JsonParser;
-import com.sun.jersey.api.client.Client;
-import com.sun.jersey.api.client.ClientResponse;
-import com.sun.jersey.api.client.UniformInterfaceException;
-import com.sun.jersey.api.client.WebResource;
-import com.sun.jersey.api.client.filter.HTTPBasicAuthFilter;
-import com.sun.jersey.core.util.MultivaluedMapImpl;
+import javax.ws.rs.client.Client;import javax.ws.rs.client.ClientBuilder;
+import javax.ws.rs.client.Entity;
+import javax.ws.rs.core.Response;
+import javax.ws.rs.client.WebTarget;
+import org.glassfish.jersey.client.authentication.HttpAuthenticationFeature;
+import javax.ws.rs.core.MultivaluedHashMap;
 
 /**
  * @author maria farooq
@@ -54,13 +54,13 @@ public class RestcommOrganizationsTool {
 	}
 
 	public JsonObject getOrganization (String deploymentUrl, String adminUsername, String adminAuthToken, String username)
-			throws UniformInterfaceException {
-		Client jerseyClient = Client.create();
-		jerseyClient.addFilter(new HTTPBasicAuthFilter(adminUsername, adminAuthToken));
+			{
+		Client jerseyClient = ClientBuilder.newClient();
+		jerseyClient.register(HttpAuthenticationFeature.basic(adminUsername, adminAuthToken));
 
-		WebResource webResource = jerseyClient.resource(getOrganizationsUrl(deploymentUrl));
+		WebTarget WebTarget = jerseyClient.target(getOrganizationsUrl(deploymentUrl));
 
-		String response = webResource.path(username).get(String.class);
+		String response = WebTarget.path(username).request().get(String.class);
 		JsonParser parser = new JsonParser();
 		JsonObject jsonResponse = parser.parse(response).getAsJsonObject();
 
@@ -68,20 +68,21 @@ public class RestcommOrganizationsTool {
 	}
 
 	public JsonArray getOrganizationList (String deploymentUrl, String adminUsername, String adminAuthToken, String status)
-			throws UniformInterfaceException {
-		Client jerseyClient = Client.create();
-		jerseyClient.addFilter(new HTTPBasicAuthFilter(adminUsername, adminAuthToken));
+			 {
+		Client jerseyClient = ClientBuilder.newClient();
+		jerseyClient.register(HttpAuthenticationFeature.basic(adminUsername, adminAuthToken));
 
-		WebResource webResource = jerseyClient.resource(getOrganizationsUrl(deploymentUrl));
+		WebTarget webTarget = jerseyClient.target(getOrganizationsUrl(deploymentUrl));
 		String response;
 		if (status != null) {
-            MultivaluedMap<String, String> params = new MultivaluedMapImpl();
+            MultivaluedMap<String, String> params = new MultivaluedHashMap();
             params.add("Status", String.valueOf(status));
+            webTarget.queryParam("Status", String.valueOf(status));
 
-            response = webResource.queryParams(params).accept(MediaType.APPLICATION_JSON, MediaType.APPLICATION_XML)
+            response = webTarget.request(MediaType.APPLICATION_JSON, MediaType.APPLICATION_XML)
                     .get(String.class);
         } else {
-            response = webResource.accept(MediaType.APPLICATION_JSON, MediaType.APPLICATION_XML).get(String.class);
+            response = webTarget.request(MediaType.APPLICATION_JSON, MediaType.APPLICATION_XML).get(String.class);
         }
 		JsonParser parser = new JsonParser();
 		JsonArray jsonArray = null;
@@ -100,19 +101,19 @@ public class RestcommOrganizationsTool {
 		return jsonArray;
 	}
 
-	public ClientResponse getOrganizationResponse (String deploymentUrl, String username, String authtoken, String organizationSid) {
-		Client jerseyClient = Client.create();
-		jerseyClient.addFilter(new HTTPBasicAuthFilter(username, authtoken));
-		WebResource webResource = jerseyClient.resource(getOrganizationsUrl(deploymentUrl));
-		ClientResponse response = webResource.path(organizationSid).get(ClientResponse.class);
+	public Response getOrganizationResponse (String deploymentUrl, String username, String authtoken, String organizationSid) {
+		Client jerseyClient = ClientBuilder.newClient();
+		jerseyClient.register(HttpAuthenticationFeature.basic(username, authtoken));
+		WebTarget WebTarget = jerseyClient.target(getOrganizationsUrl(deploymentUrl));
+		Response response = WebTarget.path(organizationSid).request().get();
 		return response;
 	}
 
-	public ClientResponse getOrganizationsResponse (String deploymentUrl, String username, String authtoken) {
-		Client jerseyClient = Client.create();
-		jerseyClient.addFilter(new HTTPBasicAuthFilter(username, authtoken));
-		WebResource webResource = jerseyClient.resource(getOrganizationsUrl(deploymentUrl));
-		ClientResponse response = webResource.get(ClientResponse.class);
+	public Response getOrganizationsResponse (String deploymentUrl, String username, String authtoken) {
+		Client jerseyClient = ClientBuilder.newClient();
+		jerseyClient.register(HttpAuthenticationFeature.basic(username, authtoken));
+		WebTarget WebTarget = jerseyClient.target(getOrganizationsUrl(deploymentUrl));
+		Response response = WebTarget.request().get();
 		return response;
 	}
 
@@ -121,23 +122,23 @@ public class RestcommOrganizationsTool {
 		JsonParser parser = new JsonParser();
 		JsonObject jsonResponse = null;
 		try {
-			ClientResponse clientResponse = createOrganizationResponse(deploymentUrl, username, adminAuthToken, domainName);
-			jsonResponse = parser.parse(clientResponse.getEntity(String.class)).getAsJsonObject();
+			Response clientResponse = createOrganizationResponse(deploymentUrl, username, adminAuthToken, domainName);
+			jsonResponse = parser.parse(clientResponse.readEntity(String.class)).getAsJsonObject();
 		} catch (Exception e) {
 			logger.info("Exception: " + e);
 		}
 		return jsonResponse;
 	}
 
-	public ClientResponse createOrganizationResponse (String deploymentUrl, String operatorUsername, String operatorAuthtoken, String domainName) {
-		Client jerseyClient = Client.create();
-		jerseyClient.addFilter(new HTTPBasicAuthFilter(operatorUsername, operatorAuthtoken));
+	public Response createOrganizationResponse (String deploymentUrl, String operatorUsername, String operatorAuthtoken, String domainName) {
+		Client jerseyClient = ClientBuilder.newClient();
+		jerseyClient.register(HttpAuthenticationFeature.basic(operatorUsername, operatorAuthtoken));
 
 		String url = getOrganizationsUrl(deploymentUrl) + "/" + domainName;
 
-		WebResource webResource = jerseyClient.resource(url);
-		MultivaluedMap<String, String> params = new MultivaluedMapImpl();
-		ClientResponse response = webResource.accept(MediaType.APPLICATION_JSON).put(ClientResponse.class, params);
+		WebTarget WebTarget = jerseyClient.target(url);
+		MultivaluedMap<String, String> params = new MultivaluedHashMap();
+		Response response = WebTarget.request(MediaType.APPLICATION_JSON).put(Entity.form(params));
 		return response;
 	}
 }

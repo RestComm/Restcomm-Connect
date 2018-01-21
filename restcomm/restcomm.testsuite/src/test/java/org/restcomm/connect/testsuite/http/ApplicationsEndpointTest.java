@@ -49,7 +49,7 @@ import org.restcomm.connect.commons.dao.Sid;
 
 import com.google.gson.JsonArray;
 import com.google.gson.JsonObject;
-import com.sun.jersey.core.util.MultivaluedMapImpl;
+import javax.ws.rs.core.MultivaluedHashMap;
 import org.junit.experimental.categories.Category;
 import org.restcomm.connect.commons.annotations.UnstableTests;
 
@@ -84,7 +84,7 @@ public class ApplicationsEndpointTest {
         String friendlyName, voiceCallerIdLookup, rcmlUrl, kind;
 
         // Test create application via POST
-        MultivaluedMap<String, String> applicationParams = new MultivaluedMapImpl();
+        MultivaluedMap<String, String> applicationParams = new MultivaluedHashMap();
         applicationParams.add("FriendlyName", friendlyName = "APPCreateGet");
         applicationParams.add("VoiceCallerIdLookup", voiceCallerIdLookup = "true");
         applicationParams.add("RcmlUrl", rcmlUrl = "/restcomm/rcmlurl/test");
@@ -138,7 +138,7 @@ public class ApplicationsEndpointTest {
     @Test
     public void testUpdateApplication() throws ParseException, IllegalArgumentException, ClientProtocolException, IOException {
         // Create application
-        MultivaluedMap<String, String> applicationParams = new MultivaluedMapImpl();
+        MultivaluedMap<String, String> applicationParams = new MultivaluedHashMap();
         applicationParams.add("FriendlyName", "APPUpdate");
         applicationParams.add("VoiceCallerIdLookup", "true");
         applicationParams.add("RcmlUrl", "/restcomm/rcmlurl/test");
@@ -150,7 +150,7 @@ public class ApplicationsEndpointTest {
         // Define new values to the application attributes (POST test)
         String friendlyName, voiceCallerIdLookup, rcmlUrl, kind;
 
-        MultivaluedMap<String, String> applicationParamsUpdate = new MultivaluedMapImpl();
+        MultivaluedMap<String, String> applicationParamsUpdate = new MultivaluedHashMap();
         applicationParamsUpdate.add("FriendlyName", friendlyName = "APPUpdate2");
         applicationParamsUpdate.add("VoiceCallerIdLookup", voiceCallerIdLookup = "false");
         applicationParamsUpdate.add("RcmlUrl", rcmlUrl = "/restcomm/rcmlurl/test2");
@@ -175,7 +175,7 @@ public class ApplicationsEndpointTest {
         assertTrue(applicationJson.get("kind").getAsString().equals(kind));
 
         // Define new values to the application attributes (PUT test)
-        applicationParamsUpdate = new MultivaluedMapImpl();
+        applicationParamsUpdate = new MultivaluedHashMap();
         applicationParamsUpdate.add("FriendlyName", friendlyName = "APPUpdate23");
         applicationParamsUpdate.add("VoiceCallerIdLookup", voiceCallerIdLookup = "true");
         applicationParamsUpdate.add("RcmlUrl", rcmlUrl = "/restcomm/rcmlurl/test23");
@@ -202,7 +202,7 @@ public class ApplicationsEndpointTest {
     @Test
     public void testDeleteApplication() throws IllegalArgumentException, ClientProtocolException, IOException {
         // Create application
-        MultivaluedMap<String, String> applicationParams = new MultivaluedMapImpl();
+        MultivaluedMap<String, String> applicationParams = new MultivaluedHashMap();
         applicationParams.add("FriendlyName", "APPDelete");
         applicationParams.add("VoiceCallerIdLookup", "true");
         applicationParams.add("RcmlUrl", "/restcomm/rcmlurl/test");

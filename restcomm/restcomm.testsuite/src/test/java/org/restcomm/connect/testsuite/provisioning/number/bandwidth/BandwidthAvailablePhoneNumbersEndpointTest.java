@@ -23,10 +23,10 @@ package org.restcomm.connect.testsuite.provisioning.number.bandwidth;
 import com.github.tomakehurst.wiremock.junit.WireMockRule;
 import com.google.gson.JsonArray;
 import com.google.gson.JsonParser;
-import com.sun.jersey.api.client.Client;
-import com.sun.jersey.api.client.ClientResponse;
-import com.sun.jersey.api.client.WebResource;
-import com.sun.jersey.api.client.filter.HTTPBasicAuthFilter;
+import javax.ws.rs.client.Client;import javax.ws.rs.client.ClientBuilder;
+import javax.ws.rs.core.Response;
+import javax.ws.rs.client.WebTarget;
+import org.glassfish.jersey.client.authentication.HttpAuthenticationFeature;
 import org.apache.log4j.Logger;
 import org.jboss.arquillian.container.test.api.Deployer;
 import org.jboss.arquillian.container.test.api.Deployment;
@@ -80,16 +80,16 @@ public class BandwidthAvailablePhoneNumbersEndpointTest {
                         .withHeader("Content-Type", "text/json")
                         .withBody(BandwidthAvailablePhoneNumbersEndpointTestUtils.areaCode201SearchResult)));
 
-        Client jerseyClient = Client.create();
-        jerseyClient.addFilter(new HTTPBasicAuthFilter(adminUsername, adminAuthToken));
+        Client jerseyClient = ClientBuilder.newClient();
+        jerseyClient.register(HttpAuthenticationFeature.basic(adminUsername, adminAuthToken));
 
         String provisioningURL = deploymentUrl + baseURL + "US/Local.json";
-        WebResource webResource = jerseyClient.resource(provisioningURL);
+        WebTarget webResource = jerseyClient.target(provisioningURL);
 
-        ClientResponse clientResponse = webResource.queryParam("AreaCode","201").accept("application/json")
-                .get(ClientResponse.class);
+        Response clientResponse = webResource.queryParam("AreaCode","201").request("application/json")
+                .get();
         assertTrue(clientResponse.getStatus() == 200);
-        String response = clientResponse.getEntity(String.class);
+        String response = clientResponse.readEntity(String.class);
         System.out.println(response);
 
         JsonParser parser = new JsonParser();
@@ -112,16 +112,16 @@ public class BandwidthAvailablePhoneNumbersEndpointTest {
                         .withHeader("Content-Type", "text/json")
                         .withBody(BandwidthAvailablePhoneNumbersEndpointTestUtils.areaCode205SearchResult)));
 
-        Client jerseyClient = Client.create();
-        jerseyClient.addFilter(new HTTPBasicAuthFilter(adminUsername, adminAuthToken));
+        Client jerseyClient = ClientBuilder.newClient();
+        jerseyClient.register(HttpAuthenticationFeature.basic(adminUsername, adminAuthToken));
 
         String provisioningURL = deploymentUrl + baseURL + "US/Local.json";
-        WebResource webResource = jerseyClient.resource(provisioningURL);
+        WebTarget webResource = jerseyClient.target(provisioningURL);
 
-        ClientResponse clientResponse = webResource.queryParam("AreaCode","201").accept("application/json")
-                .get(ClientResponse.class);
+        Response clientResponse = webResource.queryParam("AreaCode","201").request("application/json")
+                .get();
         assertTrue(clientResponse.getStatus() == 200);
-        String response = clientResponse.getEntity(String.class);
+        String response = clientResponse.readEntity(String.class);
         System.out.println(response);
 
         JsonParser parser = new JsonParser();
@@ -139,16 +139,16 @@ public class BandwidthAvailablePhoneNumbersEndpointTest {
                         .withHeader("Content-Type", "text/json")
                         .withBody(BandwidthAvailablePhoneNumbersEndpointTestUtils.zipCode27601SearchResult)));
 
-        Client jerseyClient = Client.create();
-        jerseyClient.addFilter(new HTTPBasicAuthFilter(adminUsername, adminAuthToken));
+        Client jerseyClient = ClientBuilder.newClient();
+        jerseyClient.register(HttpAuthenticationFeature.basic(adminUsername, adminAuthToken));
 
         String provisioningURL = deploymentUrl + baseURL + "US/Local.json";
-        WebResource webResource = jerseyClient.resource(provisioningURL);
+        WebTarget webResource = jerseyClient.target(provisioningURL);
 
-        ClientResponse clientResponse = webResource.queryParam("AreaCode","201").accept("application/json")
-                .get(ClientResponse.class);
+        Response clientResponse = webResource.queryParam("AreaCode","201").request("application/json")
+                .get();
         assertTrue(clientResponse.getStatus() == 200);
-        String response = clientResponse.getEntity(String.class);
+        String response = clientResponse.readEntity(String.class);
 
         JsonParser parser = new JsonParser();
         JsonArray jsonResponse = parser.parse(response).getAsJsonArray();
@@ -166,16 +166,16 @@ public class BandwidthAvailablePhoneNumbersEndpointTest {
                         .withStatus(200)
                         .withHeader("Content-Type", "text/json")
                         .withBody(BandwidthAvailablePhoneNumbersEndpointTestUtils.emptySearchResult)));
-        Client jerseyClient = Client.create();
-        jerseyClient.addFilter(new HTTPBasicAuthFilter(adminUsername, adminAuthToken));
+        Client jerseyClient = ClientBuilder.newClient();
+        jerseyClient.register(HttpAuthenticationFeature.basic(adminUsername, adminAuthToken));
 
         String provisioningURL = deploymentUrl + baseURL + "US/Local.json";
-        WebResource webResource = jerseyClient.resource(provisioningURL);
+        WebTarget webResource = jerseyClient.target(provisioningURL);
 
-        ClientResponse clientResponse = webResource.accept("application/json")
-                .get(ClientResponse.class);
+        Response clientResponse = webResource.request("application/json")
+                .get();
         assertTrue(clientResponse.getStatus() == 200);
-        String response = clientResponse.getEntity(String.class);
+        String response = clientResponse.readEntity(String.class);
 
         JsonParser parser = new JsonParser();
         JsonArray jsonResponse = parser.parse(response).getAsJsonArray();
@@ -192,16 +192,16 @@ public class BandwidthAvailablePhoneNumbersEndpointTest {
                         .withStatus(200)
                         .withHeader("Content-Type", "text/json")
                         .withBody(BandwidthAvailablePhoneNumbersEndpointTestUtils.emptySearchResult)));
-        Client jerseyClient = Client.create();
-        jerseyClient.addFilter(new HTTPBasicAuthFilter(adminUsername, adminAuthToken));
+        Client jerseyClient = ClientBuilder.newClient();
+        jerseyClient.register(HttpAuthenticationFeature.basic(adminUsername, adminAuthToken));
 
         String provisioningURL = deploymentUrl + baseURL + "US/Local.json";
-        WebResource webResource = jerseyClient.resource(provisioningURL);
+        WebTarget webResource = jerseyClient.target(provisioningURL);
 
-        ClientResponse clientResponse = webResource.accept("application/json")
-                .get(ClientResponse.class);
+        Response clientResponse = webResource.request("application/json")
+                .get();
         assertTrue(clientResponse.getStatus() == 200);
-        String response = clientResponse.getEntity(String.class);
+        String response = clientResponse.readEntity(String.class);
 
         JsonParser parser = new JsonParser();
         JsonArray jsonResponse = parser.parse(response).getAsJsonArray();
@@ -217,16 +217,16 @@ public class BandwidthAvailablePhoneNumbersEndpointTest {
                 .withHeader("Content-Type", "text-json")
                 .withBody(BandwidthAvailablePhoneNumbersEndpointTestUtils.validTollFreeSearchResult)));
 
-        Client jerseyClient = Client.create();
-        jerseyClient.addFilter(new HTTPBasicAuthFilter(adminUsername, adminAuthToken));
+        Client jerseyClient = ClientBuilder.newClient();
+        jerseyClient.register(HttpAuthenticationFeature.basic(adminUsername, adminAuthToken));
 
         String provisioningURL = deploymentUrl + baseURL + "US/TollFree.json";
-        WebResource webResource = jerseyClient.resource(provisioningURL);
+        WebTarget webResource = jerseyClient.target(provisioningURL);
 
-        ClientResponse clientResponse = webResource.queryParam("RangeSize","2").accept("application/json")
-                .get(ClientResponse.class);
+        Response clientResponse = webResource.queryParam("RangeSize","2").request("application/json")
+                .get();
         assertTrue(clientResponse.getStatus() == 200);
-        String response = clientResponse.getEntity(String.class);
+        String response = clientResponse.readEntity(String.class);
         System.out.println(response);
 
         JsonParser parser = new JsonParser();
@@ -248,16 +248,16 @@ public class BandwidthAvailablePhoneNumbersEndpointTest {
                         .withHeader("Content-Type", "text-json")
                         .withBody(BandwidthAvailablePhoneNumbersEndpointTestUtils.invalidTollFreeSearchResult)));
 
-        Client jerseyClient = Client.create();
-        jerseyClient.addFilter(new HTTPBasicAuthFilter(adminUsername, adminAuthToken));
+        Client jerseyClient = ClientBuilder.newClient();
+        jerseyClient.register(HttpAuthenticationFeature.basic(adminUsername, adminAuthToken));
 
         String provisioningURL = deploymentUrl + baseURL + "US/TollFree.json";
-        WebResource webResource = jerseyClient.resource(provisioningURL);
+        WebTarget webResource = jerseyClient.target(provisioningURL);
 
-        ClientResponse clientResponse = webResource.queryParam("RangeSize","2").queryParam("Contains", "7**").accept("application/json")
-                .get(ClientResponse.class);
+        Response clientResponse = webResource.queryParam("RangeSize","2").queryParam("Contains", "7**").request("application/json")
+                .get();
         assertTrue(clientResponse.getStatus() == 200);
-        String response = clientResponse.getEntity(String.class);
+        String response = clientResponse.readEntity(String.class);
 
         JsonParser parser = new JsonParser();
         JsonArray jsonResponse = parser.parse(response).getAsJsonArray();

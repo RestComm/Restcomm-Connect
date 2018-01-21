@@ -34,11 +34,11 @@ import org.restcomm.connect.commons.Version;
 import com.google.gson.JsonArray;
 import com.google.gson.JsonObject;
 import com.google.gson.JsonParser;
-import com.sun.jersey.api.client.Client;
-import com.sun.jersey.api.client.ClientResponse;
-import com.sun.jersey.api.client.UniformInterfaceException;
-import com.sun.jersey.api.client.WebResource;
-import com.sun.jersey.core.util.MultivaluedMapImpl;
+import javax.ws.rs.WebApplicationException;
+import javax.ws.rs.client.Client;import javax.ws.rs.client.Entity;
+import javax.ws.rs.core.Response;
+import javax.ws.rs.client.WebTarget;
+import javax.ws.rs.core.MultivaluedHashMap;
 import org.junit.experimental.categories.Category;
 import org.restcomm.connect.commons.annotations.FeatureAltTests;
 import org.restcomm.connect.commons.annotations.FeatureExpTests;
@@ -151,7 +151,7 @@ public class AccountsEndpointTest extends EndpointTest {
     @Category(FeatureExpTests.class)
     public void testGetAccountAccess(){
         // check non-existent user receives a 401
-        ClientResponse response = RestcommAccountsTool.getInstance().getAccountResponse(deploymentUrl.toString(), "nonexisting@company.com", "badpassword", adminAccountSid);
+        Response response = RestcommAccountsTool.getInstance().getAccountResponse(deploymentUrl.toString(), "nonexisting@company.com", "badpassword", adminAccountSid);
         assertEquals("Non-existing user should get a 401", 401, response.getStatus());
         // check InsufficientPerimssion errors- 403. Try to get administrator account with unprivileged accoutn creds
         response = RestcommAccountsTool.getInstance().getAccountResponse(deploymentUrl.toString(), unprivilegedUsername, unprivilegedAuthToken, adminAccountSid);
@@ -166,7 +166,7 @@ public class AccountsEndpointTest extends EndpointTest {
         try {
             JsonObject adminAccount = RestcommAccountsTool.getInstance().getAccount(deploymentUrl.toString(),
                     adminFriendlyName, adminAuthToken, adminUsername);
-        } catch (UniformInterfaceException e) {
+        } catch (WebApplicationException e) {
             code = e.getResponse().getStatus();
         }
         // Logins using friendly name are not allowed anymore
@@ -318,7 +318,7 @@ public class AccountsEndpointTest extends EndpointTest {
     @Category(FeatureExpTests.class)
     public void testUpdateAccountRoleAccessControl() {
         // non-admins should not be able to change their role
-        ClientResponse response = RestcommAccountsTool.getInstance().updateAccountResponse(deploymentUrl.toString(),
+        Response response = RestcommAccountsTool.getInstance().updateAccountResponse(deploymentUrl.toString(),
                 updatedRoleUsername, updateRoleAuthToken, updatedRoleAccountSid, null, null, null, "Administrator", null );
         assertEquals("Should return a 403 when non-admin tries to update role", 403, response.getStatus() );
         // admin, should be able to change their sub-account role
@@ -336,7 +336,7 @@ public class AccountsEndpointTest extends EndpointTest {
     @Category(FeatureExpTests.class)
     public void testCreateAccountAccess(){
         // 'unprivilaged should not be able to create accounts and receive a 403
-        ClientResponse response = RestcommAccountsTool.getInstance().createAccountResponse(deploymentUrl.toString(),
+        Response response = RestcommAccountsTool.getInstance().createAccountResponse(deploymentUrl.toString(),
                 unprivilegedUsername, unprivilegedAuthToken, "notcreated@company.com", "not-created-password");
         assertEquals("403 not returned", 403, response.getStatus());
     }
@@ -352,10 +352,10 @@ public class AccountsEndpointTest extends EndpointTest {
     @Test
     @Category(FeatureExpTests.class)
     public void testCreateAccountTwiceFails() {
-        ClientResponse createResponse1 = RestcommAccountsTool.getInstance().createAccountResponse(deploymentUrl.toString(), adminUsername, adminAuthToken,
+        Response createResponse1 = RestcommAccountsTool.getInstance().createAccountResponse(deploymentUrl.toString(), adminUsername, adminAuthToken,
                 "twice@company.com", "RestComm12");
         assertEquals("Account twice@company.com could not be created even once", 200, createResponse1.getStatus());
-        ClientResponse createResponse2 = RestcommAccountsTool.getInstance().createAccountResponse(deploymentUrl.toString(), adminUsername, adminAuthToken,
+        Response createResponse2 = RestcommAccountsTool.getInstance().createAccountResponse(deploymentUrl.toString(), adminUsername, adminAuthToken,
                 "twice@company.com", "RestComm12");
         assertEquals("Did not retrieve a conflict HTTP status (409) while creating accounts with same email address", 409, createResponse2.getStatus());
     }
@@ -407,9 +407,9 @@ public class AccountsEndpointTest extends EndpointTest {
     @Test
     @Category(FeatureExpTests.class)
     public void testCreateAccountFourthLevelFails() {
-        ClientResponse response = RestcommAccountsTool.getInstance().createAccountResponse(deploymentUrl.toString(), "grandchild@company.com", commonAuthToken, "fourthlevelAccount@company.com", "RestComm12");
+        Response response = RestcommAccountsTool.getInstance().createAccountResponse(deploymentUrl.toString(), "grandchild@company.com", commonAuthToken, "fourthlevelAccount@company.com", "RestComm12");
         assertEquals(400, response.getStatus());
-        //Assert.assertTrue(response.getEntity(String.class).contains(""))
+        //Assert.assertTrue(response.readEntity(String.class).contains(""))
     }
 
     @Test
@@ -477,10 +477,10 @@ public class AccountsEndpointTest extends EndpointTest {
             assertTrue(thinhPhone.unregister(thinhContact, 0));
             // close the account
             Client jersey = getClient(adminUsername, adminPassword);
-            WebResource resource = jersey.resource( getResourceUrl("/2012-04-24/Accounts.json/"+subAccountEmail) );
-            MultivaluedMap<String,String> params = new MultivaluedMapImpl();
+            WebTarget resource = jersey.target( getResourceUrl("/2012-04-24/Accounts.json/"+subAccountEmail) );
+            MultivaluedMap<String,String> params = new MultivaluedHashMap();
             params.add("Status","closed");
-            ClientResponse response = resource.put(ClientResponse.class,params);
+            Response response = resource.request().put(Entity.form(params));
             assertEquals(200, response.getStatus());
             //RestcommAccountsTool.getInstance().removeAccount(deploymentUrl.toString(), adminUsername, adminAuthToken,
             //        subAccountResponse.get("sid").getAsString());
@@ -502,44 +502,44 @@ public class AccountsEndpointTest extends EndpointTest {
 
         Client jersey = getClient("removed-top@company.com", commonAuthToken);
 
-        WebResource resource = jersey.resource( getResourceUrl("/2012-04-24/Accounts.json/"+removed1Sid) );
-        MultivaluedMap<String,String> params = new MultivaluedMapImpl();
+        WebTarget resource = jersey.target( getResourceUrl("/2012-04-24/Accounts.json/"+removed1Sid) );
+        MultivaluedMap<String,String> params = new MultivaluedHashMap();
         params.add("Status","closed");
-        ClientResponse response = resource.put(ClientResponse.class,params);
+        Response response = resource.request().put(Entity.form(params));
         // the closed account should be available
         assertEquals(200, response.getStatus());
         JsonParser parser = new JsonParser();
-        JsonObject jsonObject = parser.parse(response.getEntity(String.class)).getAsJsonObject();
+        JsonObject jsonObject = parser.parse(response.readEntity(String.class)).getAsJsonObject();
         // make sure the account status is set to closed
         assertEquals("closed", jsonObject.get("status").getAsString());
         // assert removed accounts children are closed too
-        resource = jersey.resource( getResourceUrl("/2012-04-24/Accounts.json/"+removed11Sid) );
-        response = resource.get(ClientResponse.class);
+        resource = jersey.target( getResourceUrl("/2012-04-24/Accounts.json/"+removed11Sid) );
+        response = resource.request().get();
         assertEquals(200, response.getStatus());
         parser = new JsonParser();
-        jsonObject = parser.parse(response.getEntity(String.class)).getAsJsonObject();
+        jsonObject = parser.parse(response.readEntity(String.class)).getAsJsonObject();
         assertEquals("closed", jsonObject.get("status").getAsString());
         // assert the applications of the account are removed
-        resource = jersey.resource( getResourceUrl("/2012-04-24/Accounts/"+removed1Sid+"/Applications/AP00000000000000000000000000000001.json" ) );
-        assertEquals(404, resource.get(ClientResponse.class).getStatus());
+        resource = jersey.target( getResourceUrl("/2012-04-24/Accounts/"+removed1Sid+"/Applications/AP00000000000000000000000000000001.json" ) );
+        assertEquals(404, resource.request().get().getStatus());
         // assert IncomingPhoneNumbers of the account are removed
-        resource = jersey.resource( getResourceUrl("/2012-04-24/Accounts/"+removed1Sid+"/IncomingPhoneNumbers/PN00000000000000000000000000000001.json" ) );
-        assertEquals(404, resource.get(ClientResponse.class).getStatus());
+        resource = jersey.target( getResourceUrl("/2012-04-24/Accounts/"+removed1Sid+"/IncomingPhoneNumbers/PN00000000000000000000000000000001.json" ) );
+        assertEquals(404, resource.request().get().getStatus());
         // assert notification are removed
-        resource = jersey.resource( getResourceUrl("/2012-04-24/Accounts/"+removed1Sid+"/Notifications/NO00000000000000000000000000000001.json" ) );
-        assertEquals(404, resource.get(ClientResponse.class).getStatus());
+        resource = jersey.target( getResourceUrl("/2012-04-24/Accounts/"+removed1Sid+"/Notifications/NO00000000000000000000000000000001.json" ) );
+        assertEquals(404, resource.request().get().getStatus());
         // assert recordings are removed
-        resource = jersey.resource( getResourceUrl("/2012-04-24/Accounts/"+removed1Sid+"/Recordings/RE00000000000000000000000000000001.json" ) );
-        assertEquals(404, resource.get(ClientResponse.class).getStatus());
+        resource = jersey.target( getResourceUrl("/2012-04-24/Accounts/"+removed1Sid+"/Recordings/RE00000000000000000000000000000001.json" ) );
+        assertEquals(404, resource.request().get().getStatus());
         // assert transcriptions are removed
-        resource = jersey.resource( getResourceUrl("/2012-04-24/Accounts/"+removed1Sid+"/Transcriptions/TR00000000000000000000000000000001.json" ) );
-        assertEquals(404, resource.get(ClientResponse.class).getStatus());
+        resource = jersey.target( getResourceUrl("/2012-04-24/Accounts/"+removed1Sid+"/Transcriptions/TR00000000000000000000000000000001.json" ) );
+        assertEquals(404, resource.request().get().getStatus());
         // assert outgoing caller ids are removed
-        resource = jersey.resource( getResourceUrl("/2012-04-24/Accounts/"+removed1Sid+"/OutgoingCallerIds/PN00000000000000000000000000000001.json" ) );
-        assertEquals(404, resource.get(ClientResponse.class).getStatus());
+        resource = jersey.target( getResourceUrl("/2012-04-24/Accounts/"+removed1Sid+"/OutgoingCallerIds/PN00000000000000000000000000000001.json" ) );
+        assertEquals(404, resource.request().get().getStatus());
         // assert clients are removed
-        resource = jersey.resource( getResourceUrl("/2012-04-24/Accounts/"+removed1Sid+"/Clients/CL00000000000000000000000000000001.json" ) );
-        assertEquals(404, resource.get(ClientResponse.class).getStatus());
+        resource = jersey.target( getResourceUrl("/2012-04-24/Accounts/"+removed1Sid+"/Clients/CL00000000000000000000000000000001.json" ) );
+        assertEquals(404, resource.request().get().getStatus());
         // we won't test Announcements removal . There is no retrieval method yet.
     }
 
@@ -558,14 +558,14 @@ public class AccountsEndpointTest extends EndpointTest {
     @Test
     @Category(FeatureExpTests.class)
     public void testGetAccountsAccess() {
-        ClientResponse response = RestcommAccountsTool.getInstance().getAccountsResponse(deploymentUrl.toString(), guestUsername, guestAuthToken);
+        Response response = RestcommAccountsTool.getInstance().getAccountsResponse(deploymentUrl.toString(), guestUsername, guestAuthToken);
         assertEquals("Guest account should get get a 403 when retrieving accounts", 403, response.getStatus());
     }
 
     @Ignore // ignored since account removal is disables as of #1270
     @Test
     public void testRemoveAccountAccess(){
-        ClientResponse response = RestcommAccountsTool.getInstance().removeAccountResponse(deploymentUrl.toString(), unprivilegedUsername, unprivilegedAuthToken, removedSid + ".json" );
+        Response response = RestcommAccountsTool.getInstance().removeAccountResponse(deploymentUrl.toString(), unprivilegedUsername, unprivilegedAuthToken, removedSid + ".json" );
         assertEquals("Unprivileged account should receive a 403 while removing an account", 403, response.getStatus());
         response = RestcommAccountsTool.getInstance().removeAccountResponse(deploymentUrl.toString(), adminUsername, adminAuthToken, removedSid + ".json");
         assertEquals("Administrator should receive a 200 OK when removing an account", 200, response.getStatus());
@@ -576,16 +576,16 @@ public class AccountsEndpointTest extends EndpointTest {
      */
     @Test
     public void testAccountAcccessUsingRoles() {
-        ClientResponse response = RestcommAccountsTool.getInstance().getAccountResponse(deploymentUrl.toString(),unprivilegedUsername, unprivilegedAuthToken, unprivilegedSid);
+        Response response = RestcommAccountsTool.getInstance().getAccountResponse(deploymentUrl.toString(),unprivilegedUsername, unprivilegedAuthToken, unprivilegedSid);
         assertEquals(200,response.getStatus());
     }
 
     @Test
     public void testPasswordStrengthForAccountCreate() {
-        ClientResponse response = RestcommAccountsTool.getInstance().createAccountResponse(deploymentUrl.toString(),
+        Response response = RestcommAccountsTool.getInstance().createAccountResponse(deploymentUrl.toString(),
                 adminUsername, adminAuthToken, "weak@company.com", "1234");
         assertEquals("Weak password account creation should fail with 400", 400, response.getStatus());
-        Assert.assertTrue("Response error message should contain 'weak' term", response.getEntity(String.class).toLowerCase().contains("weak"));
+        Assert.assertTrue("Response error message should contain 'weak' term", response.readEntity(String.class).toLowerCase().contains("weak"));
         response = RestcommAccountsTool.getInstance().createAccountResponse(deploymentUrl.toString(),
                 adminUsername, adminAuthToken, "weak@company.com", "1234asdf!@#");
         assertEquals(200, response.getStatus());
@@ -594,9 +594,9 @@ public class AccountsEndpointTest extends EndpointTest {
     @Test
     public void testPasswordStrengthForAccountUpdate() {
         // updating an account with weak password should fail
-        ClientResponse response = RestcommAccountsTool.getInstance().updateAccountResponse(deploymentUrl.toString(), adminUsername, adminAuthToken, "updated-weak@company.com", null, "1234", null, null, null );
+        Response response = RestcommAccountsTool.getInstance().updateAccountResponse(deploymentUrl.toString(), adminUsername, adminAuthToken, "updated-weak@company.com", null, "1234", null, null, null );
         assertEquals(400, response.getStatus());
-        Assert.assertTrue("Response should contain 'weak' term", response.getEntity(String.class).toLowerCase().contains("weak"));
+        Assert.assertTrue("Response should contain 'weak' term", response.readEntity(String.class).toLowerCase().contains("weak"));
         // updating an account with strong password should succeed
         response = RestcommAccountsTool.getInstance().updateAccountResponse(deploymentUrl.toString(), adminUsername, adminAuthToken, "updated-weak@company.com", null, "RestComm12", null, null, null );
         assertEquals(200, response.getStatus());
@@ -606,7 +606,7 @@ public class AccountsEndpointTest extends EndpointTest {
     @Category(FeatureExpTests.class)
     public void createAccountInSpecificOrganizationPermissionTest() {
     	// child should not be able to create account in specified org that it does not belong to
-    	ClientResponse clientResponse = RestcommAccountsTool.getInstance().createAccountResponse(deploymentUrl.toString(),
+    	Response clientResponse = RestcommAccountsTool.getInstance().createAccountResponse(deploymentUrl.toString(),
                 childUsername, childAuthToken, createdUsernanme, createdPassword, null, organizationSid2);
     	assertEquals(403, clientResponse.getStatus());
 
@@ -615,7 +615,7 @@ public class AccountsEndpointTest extends EndpointTest {
     @Test
     public void createAccountInSpecificOrganizationRoleTest() {
     	// child should be able to create account in specified org that it belong to
-    	ClientResponse clientResponse = RestcommAccountsTool.getInstance().createAccountResponse(deploymentUrl.toString(),
+    	Response clientResponse = RestcommAccountsTool.getInstance().createAccountResponse(deploymentUrl.toString(),
                 childUsername, childAuthToken, createdUsernanme2, createdPassword, null, organizationSid1);
     	assertEquals(200, clientResponse.getStatus());
 
@@ -631,7 +631,7 @@ public class AccountsEndpointTest extends EndpointTest {
     public void createAccountInSpecificOrganizationInvalidRequestTest() {
 
     	//super admin tries to create account with invalid organization Sid
-    	ClientResponse clientResponse = RestcommAccountsTool.getInstance().createAccountResponse(deploymentUrl.toString(),
+    	Response clientResponse = RestcommAccountsTool.getInstance().createAccountResponse(deploymentUrl.toString(),
                 adminUsername, adminAuthToken, createdUsernanme3, createdPassword, null, "blabla");
     	assertEquals(400, clientResponse.getStatus());
 
@@ -645,7 +645,7 @@ public class AccountsEndpointTest extends EndpointTest {
     @Category({UnstableTests.class, FeatureAltTests.class})
     public void testGetAccountsOfASpecificOrganization() {
     	//getAccounts without any parameters
-        ClientResponse response = RestcommAccountsTool.getInstance().getAccountsResponse(deploymentUrl.toString(), adminUsername, adminAuthToken);
+        Response response = RestcommAccountsTool.getInstance().getAccountsResponse(deploymentUrl.toString(), adminUsername, adminAuthToken);
         if(logger.isDebugEnabled())
         	logger.debug("getAccounts without filter Response: "+response);
         assertEquals(200, response.getStatus());

@@ -41,9 +41,9 @@ import org.restcomm.connect.commons.Version;
 
 import com.google.gson.JsonObject;
 import com.google.gson.JsonParser;
-import com.sun.jersey.api.client.Client;
-import com.sun.jersey.api.client.WebResource;
-import com.sun.jersey.api.client.filter.HTTPBasicAuthFilter;
+import javax.ws.rs.client.Client;import javax.ws.rs.client.ClientBuilder;
+import javax.ws.rs.client.WebTarget;
+import org.glassfish.jersey.client.authentication.HttpAuthenticationFeature;
 
 /**
  * Created by gvagenas on 1/19/16.
@@ -63,14 +63,14 @@ public class VersionTest {
 
     @Test
     public void testVersionJson() {
-        Client jerseyClient = Client.create();
-        jerseyClient.addFilter(new HTTPBasicAuthFilter(adminAccountSid, adminAuthToken));
+        Client jerseyClient = ClientBuilder.newClient();
+        jerseyClient.register(HttpAuthenticationFeature.basic(adminAccountSid, adminAuthToken));
 
         String url = deploymentUrl + "2012-04-24/Accounts/" + adminAccountSid + "/Version.json";
 
-        WebResource webResource = jerseyClient.resource(url);
+        WebTarget WebTarget = jerseyClient.target(url);
 
-        String response = webResource.accept(MediaType.APPLICATION_JSON).get(String.class);
+        String response = WebTarget.request(MediaType.APPLICATION_JSON).get(String.class);
         JsonParser parser = new JsonParser();
         JsonObject json = parser.parse(response).getAsJsonObject();
         assertTrue(version.equals(json.get("Version").getAsString()));
@@ -79,14 +79,14 @@ public class VersionTest {
 
     @Test
     public void testVersionXml() {
-        Client jerseyClient = Client.create();
-        jerseyClient.addFilter(new HTTPBasicAuthFilter(adminAccountSid, adminAuthToken));
+        Client jerseyClient = ClientBuilder.newClient();
+        jerseyClient.register(HttpAuthenticationFeature.basic(adminAccountSid, adminAuthToken));
 
         String url = deploymentUrl + "2012-04-24/Accounts/" + adminAccountSid + "/Version";
 
-        WebResource webResource = jerseyClient.resource(url);
+        WebTarget WebTarget = jerseyClient.target(url);
 
-        String response = webResource.accept(MediaType.APPLICATION_XML).get(String.class);
+        String response = WebTarget.request(MediaType.APPLICATION_XML).get(String.class);
         assertNotNull(response);
         assertTrue(response.contains(version));
         assertTrue(response.contains(revision));

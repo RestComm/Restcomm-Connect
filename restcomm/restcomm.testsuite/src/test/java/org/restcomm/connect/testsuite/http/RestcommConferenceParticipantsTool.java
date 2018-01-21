@@ -30,12 +30,13 @@ import org.restcomm.connect.dao.entities.CallDetailRecordList;
 import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
 import com.google.gson.JsonParser;
-import com.sun.jersey.api.client.Client;
-import com.sun.jersey.api.client.UniformInterfaceException;
-import com.sun.jersey.api.client.WebResource;
-import com.sun.jersey.api.client.filter.HTTPBasicAuthFilter;
-import com.sun.jersey.core.util.MultivaluedMapImpl;
+import javax.ws.rs.client.Client;import javax.ws.rs.client.ClientBuilder;
+import javax.ws.rs.client.WebTarget;
+import org.glassfish.jersey.client.authentication.HttpAuthenticationFeature;
+import javax.ws.rs.core.MultivaluedHashMap;
 import com.thoughtworks.xstream.XStream;
+import javax.ws.rs.WebApplicationException;
+import javax.ws.rs.client.Entity;
 
 /**
  * @author maria
@@ -46,7 +47,7 @@ public class RestcommConferenceParticipantsTool {
     private static RestcommConferenceParticipantsTool instance;
     private static String accountsUrl;
     private static Logger logger = Logger.getLogger(RestcommConferenceParticipantsTool.class);
-    
+
     private RestcommConferenceParticipantsTool() {}
 
     public static RestcommConferenceParticipantsTool getInstance() {
@@ -73,27 +74,31 @@ public class RestcommConferenceParticipantsTool {
     public JsonObject getParticipants(String deploymentUrl, String username, String authToken, String conferenceSid, Integer page, Integer pageSize,
             Boolean json) {
 
-        Client jerseyClient = Client.create();
-        jerseyClient.addFilter(new HTTPBasicAuthFilter(username, authToken));
+        Client jerseyClient = ClientBuilder.newClient();
+        jerseyClient.register(HttpAuthenticationFeature.basic(username, authToken));
 
         String url = getAccountsUrl(deploymentUrl, username, conferenceSid, json);
 
-        WebResource webResource = jerseyClient.resource(url);
+        WebTarget webTarget = jerseyClient.target(url);
 
         String response = null;
 
         if (page != null || pageSize != null) {
-            MultivaluedMap<String, String> params = new MultivaluedMapImpl();
+            MultivaluedMap<String, String> params = new MultivaluedHashMap();
 
-            if (page != null)
+            if (page != null) {
                 params.add("Page", String.valueOf(page));
-            if (pageSize != null)
+                webTarget.queryParam("Page", String.valueOf(page));
+            }
+            if (pageSize != null) {
                 params.add("PageSize", String.valueOf(pageSize));
+                webTarget.queryParam("PageSize", String.valueOf(pageSize));
+            }
 
-            response = webResource.queryParams(params).accept(MediaType.APPLICATION_JSON, MediaType.APPLICATION_XML)
+            response = webTarget.request(MediaType.APPLICATION_JSON, MediaType.APPLICATION_XML)
                     .get(String.class);
         } else {
-            response = webResource.accept(MediaType.APPLICATION_JSON, MediaType.APPLICATION_XML).get(String.class);
+            response = webTarget.request(MediaType.APPLICATION_JSON, MediaType.APPLICATION_XML).get(String.class);
         }
 
         JsonParser parser = new JsonParser();
@@ -123,19 +128,19 @@ public class RestcommConferenceParticipantsTool {
 
     public JsonObject getParticipant(String deploymentUrl, String username, String conferenceSid, String authToken, String sid){
 
-        Client jerseyClient = Client.create();
-        jerseyClient.addFilter(new HTTPBasicAuthFilter(username, authToken));
+        Client jerseyClient = ClientBuilder.newClient();
+        jerseyClient.register(HttpAuthenticationFeature.basic(username, authToken));
 
         String url = getAccountsUrl(deploymentUrl, username, conferenceSid, false);
 
-        WebResource webResource = jerseyClient.resource(url);
+        WebTarget WebTarget = jerseyClient.target(url);
 
         String response = null;
 
-        webResource = webResource.path(String.valueOf(sid)+".json");
-        logger.info("The URI to sent: "+webResource.getURI());
-        
-        response = webResource.accept(MediaType.APPLICATION_JSON, MediaType.APPLICATION_XML)
+        WebTarget = WebTarget.path(String.valueOf(sid)+".json");
+        logger.info("The URI to sent: "+WebTarget.getUri());
+
+        response = WebTarget.request(MediaType.APPLICATION_JSON, MediaType.APPLICATION_XML)
                 .get(String.class);
 
         JsonParser parser = new JsonParser();
@@ -147,21 +152,21 @@ public class RestcommConferenceParticipantsTool {
 
     public JsonObject getParticipantsUsingFilter(String deploymentUrl, String username, String conferenceSid, String authToken, Map<String, String> filters) {
 
-        Client jerseyClient = Client.create();
-        jerseyClient.addFilter(new HTTPBasicAuthFilter(username, authToken));
+        Client jerseyClient = ClientBuilder.newClient();
+        jerseyClient.register(HttpAuthenticationFeature.basic(username, authToken));
 
         String url = getAccountsUrl(deploymentUrl, username, conferenceSid, true);
 
-        WebResource webResource = jerseyClient.resource(url);
+        WebTarget webTarget = jerseyClient.target(url);
 
-        MultivaluedMap<String, String> params = new MultivaluedMapImpl();
+        MultivaluedMap<String, String> params = new MultivaluedHashMap();
 
         for (String filterName : filters.keySet()) {
             String filterData = filters.get(filterName);
             params.add(filterName, filterData);
+            webTarget.queryParam(filterName, filterData);
         }
-        webResource = webResource.queryParams(params);
-        String response = webResource.accept(MediaType.APPLICATION_JSON).get(String.class);
+        String response = webTarget.request(MediaType.APPLICATION_JSON).get(String.class);
         JsonParser parser = new JsonParser();
         JsonObject jsonObject = parser.parse(response).getAsJsonObject();
 
@@ -170,14 +175,14 @@ public class RestcommConferenceParticipantsTool {
 
     public JsonObject modifyCall(String deploymentUrl, String username, String conferenceSid, String authToken, String callSid, Boolean muted) throws Exception {
 
-        Client jerseyClient = Client.create();
-        jerseyClient.addFilter(new HTTPBasicAuthFilter(username, authToken));
+        Client jerseyClient = ClientBuilder.newClient();
+        jerseyClient.register(HttpAuthenticationFeature.basic(username, authToken));
 
         String url = getAccountsUrl(deploymentUrl, username, conferenceSid, true);
 
-        WebResource webResource = jerseyClient.resource(url);
+        WebTarget WebTarget = jerseyClient.target(url);
 
-        MultivaluedMap<String, String> params = new MultivaluedMapImpl();
+        MultivaluedMap<String, String> params = new MultivaluedHashMap();
 
         if (muted != null)
             params.add("Mute", ""+muted);
@@ -185,12 +190,12 @@ public class RestcommConferenceParticipantsTool {
         JsonObject jsonObject = null;
 
         try {
-            String response = webResource.path(callSid).accept(MediaType.APPLICATION_JSON).post(String.class, params);
+            String response = WebTarget.path(callSid).request(MediaType.APPLICATION_JSON).post(Entity.form(params),String.class);
             JsonParser parser = new JsonParser();
             jsonObject = parser.parse(response).getAsJsonObject();
         } catch (Exception e) {
             logger.info("Exception e: "+e);
-            UniformInterfaceException exception = (UniformInterfaceException)e;
+            WebApplicationException exception = (WebApplicationException)e;
             jsonObject = new JsonObject();
             jsonObject.addProperty("Exception",exception.getResponse().getStatus());
         }

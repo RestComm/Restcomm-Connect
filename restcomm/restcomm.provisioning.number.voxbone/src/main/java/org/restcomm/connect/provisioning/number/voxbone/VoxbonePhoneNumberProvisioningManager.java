@@ -36,11 +36,12 @@ import com.google.gson.JsonArray;
 import com.google.gson.JsonNull;
 import com.google.gson.JsonObject;
 import com.google.gson.JsonParser;
-import com.sun.jersey.api.client.Client;
-import com.sun.jersey.api.client.ClientResponse;
-import com.sun.jersey.api.client.ClientResponse.Status;
-import com.sun.jersey.api.client.WebResource;
-import com.sun.jersey.api.client.filter.HTTPBasicAuthFilter;
+import javax.ws.rs.client.Client;
+import javax.ws.rs.client.ClientBuilder;
+import javax.ws.rs.client.Entity;
+import javax.ws.rs.client.WebTarget;
+import javax.ws.rs.core.Response;
+import org.glassfish.jersey.client.authentication.HttpAuthenticationFeature;
 
 /**
  * @author jean.deruelle@telestax.com
@@ -93,31 +94,32 @@ public class VoxbonePhoneNumberProvisioningManager implements PhoneNumberProvisi
         listDidsURI = uri + "/inventory/did";
 
         Configuration callbackUrlsConfiguration = phoneNumberProvisioningConfiguration.subset("callback-urls");
-        Client jerseyClient = Client.create();
-        jerseyClient.addFilter(new HTTPBasicAuthFilter(username, password));
+        HttpAuthenticationFeature feature = HttpAuthenticationFeature.basic(username, password);
+        Client jerseyClient = ClientBuilder.newClient().register(feature);
 
-        WebResource webResource = jerseyClient.resource(voiceURI);
+        WebTarget webResource = jerseyClient.target(voiceURI);
         String body = "{\"voiceUri\":{\"voiceUriProtocol\":\"SIP\",\"uri\":\"" + callbackUrlsConfiguration.getString("voice[@url]") + "\"}}";
-        ClientResponse clientResponse = webResource.accept(CONTENT_TYPE).type(CONTENT_TYPE).put(ClientResponse.class,body);
 
-        String voiceURIResponse = clientResponse.getEntity(String.class);
+        Response clientResponse = webResource.request(CONTENT_TYPE).put(Entity.entity(body,CONTENT_TYPE));
+
+        String voiceURIResponse = clientResponse.readEntity(String.class);
         if(logger.isDebugEnabled())
             logger.debug("response " + voiceURIResponse);
 
         JsonParser parser = new JsonParser();
         JsonObject jsonVoiceURIResponse = parser.parse(voiceURIResponse).getAsJsonObject();
 
-        if (clientResponse.getClientResponseStatus() == Status.OK) {
+        if (clientResponse.getStatus() == Response.Status.OK.getStatusCode()) {
             JsonObject voxVoiceURI = jsonVoiceURIResponse.get("voiceUri").getAsJsonObject();
             voiceUriId = voxVoiceURI.get("voiceUriId").getAsString();
-        } else if (clientResponse.getClientResponseStatus() == Status.UNAUTHORIZED) {
+        } else if (clientResponse.getStatus() == Response.Status.UNAUTHORIZED.getStatusCode()) {
             JsonObject error = jsonVoiceURIResponse.get("errors").getAsJsonArray().get(0).getAsJsonObject();
             throw new IllegalArgumentException(error.get("apiErrorMessage").getAsString());
         } else {
-            webResource = jerseyClient.resource(voiceURI);
-            clientResponse = webResource.queryParam(PAGE_NUMBER,"0").queryParam(PAGE_SIZE,"300").accept(CONTENT_TYPE).type(CONTENT_TYPE).get(ClientResponse.class);
+            webResource = jerseyClient.target(voiceURI);
+            clientResponse = webResource.queryParam(PAGE_NUMBER,"0").queryParam(PAGE_SIZE,"300").request(CONTENT_TYPE).get();
 
-            String listVoiceURIResponse = clientResponse.getEntity(String.class);
+            String listVoiceURIResponse = clientResponse.readEntity(String.class);
             if(logger.isDebugEnabled())
                 logger.debug("response " + listVoiceURIResponse );
 
@@ -182,10 +184,10 @@ public class VoxbonePhoneNumberProvisioningManager implements PhoneNumberProvisi
             logger.debug("searchPattern " + listFilters.getFilterPattern());
         }
 
-        Client jerseyClient = Client.create();
-        jerseyClient.addFilter(new HTTPBasicAuthFilter(username, password));
+        HttpAuthenticationFeature feature = HttpAuthenticationFeature.basic(username, password);
+        Client jerseyClient = ClientBuilder.newClient().register(feature);
 
-        WebResource webResource = jerseyClient.resource(searchURI);
+        WebTarget webResource = jerseyClient.target(searchURI);
 
         // https://developers.voxbone.com/docs/v3/inventory#path__didgroup.html
         webResource = webResource.queryParam(COUNTRY_CODE_PARAM,iso3Country);
@@ -215,10 +217,10 @@ public class VoxbonePhoneNumberProvisioningManager implements PhoneNumberProvisi
         } else {
             webResource = webResource.queryParam(PAGE_SIZE, "50");
         }
-        ClientResponse clientResponse = webResource.accept(CONTENT_TYPE).type(CONTENT_TYPE)
-                .get(ClientResponse.class);
+        Response clientResponse = webResource.request(CONTENT_TYPE)
+                .get();
 
-        String response = clientResponse.getEntity(String.class);
+        String response = clientResponse.readEntity(String.class);
         if(logger.isDebugEnabled())
             logger.debug("response " + response);
 
@@ -242,13 +244,13 @@ public class VoxbonePhoneNumberProvisioningManager implements PhoneNumberProvisi
     @Override
     public boolean buyNumber(PhoneNumber phoneNumberObject, PhoneNumberParameters phoneNumberParameters) {
         String phoneNumber = phoneNumberObject.getPhoneNumber();
-        Client jerseyClient = Client.create();
-        jerseyClient.addFilter(new HTTPBasicAuthFilter(username, password));
+        HttpAuthenticationFeature feature = HttpAuthenticationFeature.basic(username, password);
+        Client jerseyClient = ClientBuilder.newClient().register(feature);
 
-        WebResource webResource = jerseyClient.resource(createCartURI);
-        ClientResponse clientResponse = webResource.accept(CONTENT_TYPE).type(CONTENT_TYPE).put(ClientResponse.class,"{}");
+        WebTarget webResource = jerseyClient.target(createCartURI);
+        Response clientResponse = webResource.request(CONTENT_TYPE).put(Entity.entity("{}",CONTENT_TYPE));
 
-        String createCartResponse = clientResponse.getEntity(String.class);
+        String createCartResponse = clientResponse.readEntity(String.class);
         if(logger.isDebugEnabled())
             logger.debug("createCartResponse " + createCartResponse);
 
@@ -258,49 +260,46 @@ public class VoxbonePhoneNumberProvisioningManager implements PhoneNumberProvisi
         String cartIdentifier = voxCart.get("cartIdentifier").getAsString();
 
         try {
-            Client addToCartJerseyClient = Client.create();
-            addToCartJerseyClient.addFilter(new HTTPBasicAuthFilter(username, password));
+            Client addToCartJerseyClient = ClientBuilder.newClient().register(feature);
 
-            WebResource addToCartWebResource = addToCartJerseyClient.resource(createCartURI + "/" + cartIdentifier + "/product");
+
+            WebTarget addToCartWebResource = addToCartJerseyClient.target(createCartURI + "/" + cartIdentifier + "/product");
             String addToCartBody = "{\"didCartItem\":{\"didGroupId\":\"" + phoneNumber + "\",\"quantity\":\"1\"}}";
-            ClientResponse addToCartResponse = addToCartWebResource.accept(CONTENT_TYPE).type(CONTENT_TYPE).post(ClientResponse.class,addToCartBody);
+            Response addToCartResponse = addToCartWebResource.request(CONTENT_TYPE).post(Entity.entity(addToCartBody,CONTENT_TYPE));
 
-            if (addToCartResponse.getClientResponseStatus() == Status.OK) {
-                String addToCartResponseString = addToCartResponse.getEntity(String.class);
+            if (addToCartResponse.getStatus() == Response.Status.OK.getStatusCode()) {
+                String addToCartResponseString = addToCartResponse.readEntity(String.class);
                 if(logger.isDebugEnabled())
                     logger.debug("addToCartResponse " + addToCartResponseString);
 
                 JsonObject jsonAddToCartResponse = parser.parse(addToCartResponseString).getAsJsonObject();
 
                 if(jsonAddToCartResponse.get("status").getAsString().equalsIgnoreCase("SUCCESS")) {
-                    Client checkoutCartJerseyClient = Client.create();
-                    checkoutCartJerseyClient.addFilter(new HTTPBasicAuthFilter(username, password));
+                    Client checkoutCartJerseyClient = ClientBuilder.newClient().register(feature);
 
-                    WebResource checkoutCartWebResource = checkoutCartJerseyClient.resource(createCartURI + "/" + cartIdentifier + "/checkout");
-                    ClientResponse checkoutCartResponse = checkoutCartWebResource.queryParam("cartIdentifier", cartIdentifier).accept(CONTENT_TYPE).type(CONTENT_TYPE).get(ClientResponse.class);
+                    WebTarget checkoutCartWebResource= checkoutCartJerseyClient.target(createCartURI + "/" + cartIdentifier + "/checkout");
+                    Response checkoutCartResponse = checkoutCartWebResource.queryParam("cartIdentifier", cartIdentifier).request(CONTENT_TYPE).get();
 
-                    if (checkoutCartResponse.getClientResponseStatus() == Status.OK) {
-                        String checkoutCartResponseString = checkoutCartResponse.getEntity(String.class);
+                    if (checkoutCartResponse.getStatus() == Response.Status.OK.getStatusCode()) {
+                        String checkoutCartResponseString = checkoutCartResponse.readEntity(String.class);
                         if(logger.isDebugEnabled())
                             logger.debug("checkoutCartResponse " + checkoutCartResponseString);
 
                         JsonObject jsonCheckoutCartResponse = parser.parse(checkoutCartResponseString).getAsJsonObject();
                         if(jsonCheckoutCartResponse.get("status").getAsString().equalsIgnoreCase("SUCCESS")) {
                             String orderReference = jsonCheckoutCartResponse.get("productCheckoutList").getAsJsonArray().get(0).getAsJsonObject().get("orderReference").getAsString();
-                            Client listDidsJerseyClient = Client.create();
-                            listDidsJerseyClient.addFilter(new HTTPBasicAuthFilter(username, password));
+                            Client listDidsJerseyClient = ClientBuilder.newClient().register(feature);
 
-                            WebResource listDidsWebResource = listDidsJerseyClient.resource(listDidsURI);
-                            ClientResponse listDidsResponse = listDidsWebResource.
+                            WebTarget listDidsWebResource = listDidsJerseyClient.target(listDidsURI);
+                            Response listDidsResponse = listDidsWebResource.
                                     queryParam("orderReference", orderReference).
                                     queryParam(PAGE_NUMBER, "0").
                                     queryParam(PAGE_SIZE, "50").
-                                    accept(CONTENT_TYPE).
-                                    type(CONTENT_TYPE).
-                                    get(ClientResponse.class);
+                                    request(CONTENT_TYPE).
+                                    get();
 
-                            if (listDidsResponse.getClientResponseStatus() == Status.OK) {
-                                String listDidsResponseString = listDidsResponse.getEntity(String.class);
+                            if (listDidsResponse.getStatus() == Response.Status.OK.getStatusCode()) {
+                                String listDidsResponseString = listDidsResponse.readEntity(String.class);
                                 if(logger.isDebugEnabled())
                                     logger.debug("listDidsResponse " + listDidsResponseString);
 
@@ -328,7 +327,7 @@ public class VoxbonePhoneNumberProvisioningManager implements PhoneNumberProvisi
                 }
             } else {
                 if(logger.isDebugEnabled())
-                    logger.debug("Couldn't buy Phone Number " + phoneNumber + ". Response status was: "+ addToCartResponse.getClientResponseStatus());
+                    logger.debug("Couldn't buy Phone Number " + phoneNumber + ". Response status was: "+ addToCartResponse.getStatus());
             }
         } catch (final Exception e) {
             logger.warn("Couldn't reach uri for buying Phone Numbers" + uri, e);
@@ -340,21 +339,21 @@ public class VoxbonePhoneNumberProvisioningManager implements PhoneNumberProvisi
     @Override
     public boolean updateNumber(PhoneNumber phoneNumberObj, PhoneNumberParameters phoneNumberParameters) {
         String phoneNumber = phoneNumberObj.getFriendlyName();
-        Client jerseyClient = Client.create();
-        jerseyClient.addFilter(new HTTPBasicAuthFilter(username, password));
+        HttpAuthenticationFeature feature = HttpAuthenticationFeature.basic(username, password);
+        Client jerseyClient = ClientBuilder.newClient().register(feature);
 
-        WebResource webResource = jerseyClient.resource(updateURI);
+        WebTarget webResource = jerseyClient.target(updateURI);
         String body = "{\"didIds\":[\"" + phoneNumber + "\"],\"voiceUriId\":\"" + voiceUriId + "\"}";
-        ClientResponse clientResponse = webResource.accept(CONTENT_TYPE).type(CONTENT_TYPE).post(ClientResponse.class,body);
+        Response clientResponse = webResource.request(CONTENT_TYPE).post(Entity.entity(body,CONTENT_TYPE));
 
-        String voiceURIResponse = clientResponse.getEntity(String.class);
+        String voiceURIResponse = clientResponse.readEntity(String.class);
         if(logger.isDebugEnabled())
             logger.debug("response " + voiceURIResponse);
 
 //        JsonParser parser = new JsonParser();
 //        JsonObject jsonCreateCartResponse = parser.parse(voiceURIResponse).getAsJsonObject();
 
-        if (clientResponse.getClientResponseStatus() == Status.OK) {
+        if (clientResponse.getStatus() == Response.Status.OK.getStatusCode()) {
             return true;
         } else {
             return false;
@@ -364,22 +363,23 @@ public class VoxbonePhoneNumberProvisioningManager implements PhoneNumberProvisi
     @Override
     public boolean cancelNumber(PhoneNumber phoneNumberObj) {
         String phoneNumber = phoneNumberObj.getFriendlyName();
-        Client jerseyClient = Client.create();
-        jerseyClient.addFilter(new HTTPBasicAuthFilter(username, password));
 
-        WebResource webResource = jerseyClient.resource(cancelURI);
+        HttpAuthenticationFeature feature = HttpAuthenticationFeature.basic(username, password);
+        Client jerseyClient = ClientBuilder.newClient().register(feature);
+
+        WebTarget webResource = jerseyClient.target(cancelURI);
 
         String body = "{\"didIds\":[\"" + phoneNumber + "\"]}";
-        ClientResponse clientResponse = webResource.accept(CONTENT_TYPE).type(CONTENT_TYPE).post(ClientResponse.class,body);
+        Response clientResponse = webResource.request(CONTENT_TYPE).post(Entity.entity(body,CONTENT_TYPE));
 
-        String response = clientResponse.getEntity(String.class);
+        String response = clientResponse.readEntity(String.class);
         if(logger.isDebugEnabled())
             logger.debug("response " + response);
 
 //        JsonParser parser = new JsonParser();
 //        JsonObject jsonResponse = parser.parse(response).getAsJsonObject();
 
-        if (clientResponse.getClientResponseStatus() == Status.OK) {
+        if (clientResponse.getStatus() == Response.Status.OK.getStatusCode()) {
             return true;
         } else {
             return false;
@@ -388,16 +388,16 @@ public class VoxbonePhoneNumberProvisioningManager implements PhoneNumberProvisi
 
     @Override
     public List<String> getAvailableCountries() {
-        Client jerseyClient = Client.create();
-        jerseyClient.addFilter(new HTTPBasicAuthFilter(username, password));
+        HttpAuthenticationFeature feature = HttpAuthenticationFeature.basic(username, password);
+        Client jerseyClient = ClientBuilder.newClient().register(feature);
 
-        WebResource webResource = jerseyClient.resource(countriesURI);
+        WebTarget webResource = jerseyClient.target(countriesURI);
 
         // http://www.voxbone.com/apidoc/resource_InventoryServiceRest.html#path__country.html
-        ClientResponse clientResponse = webResource.queryParam(PAGE_NUMBER,"0").queryParam(PAGE_SIZE,"300").accept(CONTENT_TYPE).type(CONTENT_TYPE)
-                .get(ClientResponse.class);
+        Response clientResponse = webResource.queryParam(PAGE_NUMBER,"0").queryParam(PAGE_SIZE,"300").request(CONTENT_TYPE)
+                .get();
 
-        String response = clientResponse.getEntity(String.class);
+        String response = clientResponse.readEntity(String.class);
         if(logger.isDebugEnabled())
             logger.debug("response " + response);
 
