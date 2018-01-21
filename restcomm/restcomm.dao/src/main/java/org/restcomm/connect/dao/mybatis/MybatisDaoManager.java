@@ -48,6 +48,7 @@ import org.restcomm.connect.dao.MediaServersDao;
 import org.restcomm.connect.dao.NotificationsDao;
 import org.restcomm.connect.dao.OrganizationsDao;
 import org.restcomm.connect.dao.OutgoingCallerIdsDao;
+import org.restcomm.connect.dao.ProfilesDao;
 import org.restcomm.connect.dao.ProfileAssociationsDao;
 import org.restcomm.connect.dao.RecordingsDao;
 import org.restcomm.connect.dao.RegistrationsDao;
@@ -93,6 +94,7 @@ public final class MybatisDaoManager implements DaoManager {
     private GeolocationDao geolocationDao;
     private ProfileAssociationsDao profileAssociationsDao;
     private OrganizationsDao organizationsDao;
+    private ProfilesDao profilesDao;
 
     private ExecutionContext ec;
 
@@ -234,6 +236,11 @@ public final class MybatisDaoManager implements DaoManager {
     }
 
     @Override
+    public ProfilesDao getProfilesDao() {
+        return profilesDao;
+    }
+
+    @Override
     public void shutdown() {
         // Nothing to do.
     }
@@ -308,5 +315,6 @@ public final class MybatisDaoManager implements DaoManager {
         geolocationDao = new MybatisGeolocationDao(sessions);
         profileAssociationsDao = new MybatisProfileAssociationsDao(sessions);
         organizationsDao = new MybatisOrganizationDao(sessions);
+        profilesDao = new MybatisProfilesDao(sessions);
     }
 }
