@@ -314,7 +314,7 @@ public class ProfilesEndpointTest extends EndpointTest {
      */
     @Test
     @Category(FeatureExpTests.class)
-    public void linkUnLinkProfileToAccountPermissionTest() throws ClientProtocolException, IOException{
+    public void linkUnLinkProfilePermissionTest() throws ClientProtocolException, IOException{
     	/*
 		 * link a profile by admin account
 		 */
