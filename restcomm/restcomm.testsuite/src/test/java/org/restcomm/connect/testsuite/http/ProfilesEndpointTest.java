@@ -4,8 +4,11 @@ import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertTrue;
 
+import java.io.IOException;
 import java.net.URL;
 
+import org.apache.http.HttpResponse;
+import org.apache.http.client.ClientProtocolException;
 import org.apache.log4j.Logger;
 import org.jboss.arquillian.container.test.api.Deployer;
 import org.jboss.arquillian.container.test.api.Deployment;
@@ -166,22 +169,30 @@ public class ProfilesEndpointTest extends EndpointTest {
 
     /**
      * link a give Profile To an Account
+     * @throws IOException 
+     * @throws ClientProtocolException 
      */
     @Test
-    public void linkProfileToAccount(){
+    public void linkProfileToAccount() throws ClientProtocolException, IOException{
 		//super admin tries to update profile
-    	ClientResponse clientResponse = RestcommProfilesTool.getInstance().linkProfile(deploymentUrl.toString(), superAdminAccountSid, superAdminAuthToken, profileSid, superAdminAccountSid, RestcommProfilesTool.AssociatedResourceType.ACCOUNT);
-    	logger.info("clientResponse: "+clientResponse);
-    	assertEquals(200, clientResponse.getStatus());
+    	HttpResponse response = RestcommProfilesTool.getInstance().linkProfile(deploymentUrl.toString(), superAdminAccountSid, superAdminAuthToken, profileSid, superAdminAccountSid, RestcommProfilesTool.AssociatedResourceType.ACCOUNT);
+    	logger.info("HttpResponse: "+response);
+    	assertEquals(200, response.getStatusLine().getStatusCode());
 
     }
 
     /**
      * link a give Profile To an Organization
+     * @throws IOException 
+     * @throws ClientProtocolException 
      */
     @Test
-    public void linkProfileToOrganization(){
-    	
+    public void linkProfileToOrganization() throws ClientProtocolException, IOException{
+		//super admin tries to update profile
+    	HttpResponse response = RestcommProfilesTool.getInstance().unLinkProfile(deploymentUrl.toString(), superAdminAccountSid, superAdminAuthToken, profileSid, superAdminAccountSid, RestcommProfilesTool.AssociatedResourceType.ACCOUNT);
+    	logger.info("HttpResponse: "+response);
+    	assertEquals(200, response.getStatusLine().getStatusCode());
+
     }
     
     @Deployment(name = "ProfilesEndpointTest", managed = true, testable = false)
