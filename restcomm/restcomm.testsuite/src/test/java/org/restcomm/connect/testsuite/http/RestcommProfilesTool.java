@@ -1,8 +1,19 @@
 package org.restcomm.connect.testsuite.http;
 
+import java.io.IOException;
+import java.nio.charset.Charset;
 import java.util.logging.Logger;
 
+import javax.ws.rs.core.Link;
 import javax.ws.rs.core.MediaType;
+
+import org.apache.commons.codec.binary.Base64;
+import org.apache.http.HttpResponse;
+import org.apache.http.client.ClientProtocolException;
+import org.apache.http.impl.client.DefaultHttpClient;
+import org.apache.http.message.BasicHeader;
+import org.restcomm.connect.testsuite.http.util.HttpLink;
+import org.restcomm.connect.testsuite.http.util.HttpUnLink;
 
 import com.google.common.net.HttpHeaders;
 import com.google.gson.JsonArray;
@@ -42,9 +53,9 @@ public class RestcommProfilesTool {
 		}
 		switch (type) {
 		case ACCOUNT:
-			return deploymentUrl + "/2012-04-24/Accounts" + targetResourceSid;
+			return deploymentUrl + "/2012-04-24/Accounts/" + targetResourceSid;
 		case ORGANIZATION:
-			return deploymentUrl + "/2012-04-24/Organizations" + targetResourceSid;
+			return deploymentUrl + "/2012-04-24/Organizations/" + targetResourceSid;
 
 		default:
 			return null;
@@ -52,7 +63,7 @@ public class RestcommProfilesTool {
 	}
 
 	private String createLinkStr(String deploymentUrl, String targetResourceSid, AssociatedResourceType type){
-		return getTargetResourceUrl(deploymentUrl, targetResourceSid, type)+"rel=\"related\"";
+		return Link.fromUri(getTargetResourceUrl(deploymentUrl, targetResourceSid, type)).rel("related").build().toString();
 	}
 	
 	/**
@@ -264,20 +275,20 @@ public class RestcommProfilesTool {
 	 * @param targetResourceSid
 	 * @param associatedResourceType
 	 * @return
+	 * @throws IOException 
+	 * @throws ClientProtocolException 
 	 */
-	public ClientResponse linkProfile (String deploymentUrl, String operatorUsername, String operatorAuthtoken, String profileSid, String targetResourceSid, AssociatedResourceType type) {
-		Client jerseyClient = Client.create();
-		jerseyClient.addFilter(new HTTPBasicAuthFilter(operatorUsername, operatorAuthtoken));
-
+	public HttpResponse linkProfile (String deploymentUrl, String operatorUsername, String operatorAuthtoken, String profileSid, String targetResourceSid, AssociatedResourceType type) throws ClientProtocolException, IOException {
 		String url = getProfilesEndpointUrl(deploymentUrl) + "/" + profileSid;
 
-		WebResource webResource = jerseyClient.resource(url);
-		WebResource.Builder builder = webResource.accept(MediaType.APPLICATION_JSON);
-		builder.type(MediaType.APPLICATION_JSON);
-		builder.header(HttpHeaders.LINK, createLinkStr(deploymentUrl, targetResourceSid, type));
-
-		ClientResponse response = builder.method("LINK", ClientResponse.class);
-		return response;
+		HttpLink request = new HttpLink(url);
+		request.addHeader(getAuthHeader(deploymentUrl, operatorUsername, operatorAuthtoken));
+		request.addHeader(getjsonAcceptHeader());
+		request.addHeader(getLinkHeader(deploymentUrl, targetResourceSid, type));
+		final DefaultHttpClient client = new DefaultHttpClient();
+	    final HttpResponse response = client.execute(request);
+	    logger.info("response is here: "+response);
+	    return response;
 	}
 
 	/**
@@ -289,19 +300,42 @@ public class RestcommProfilesTool {
 	 * @param targetResourceSid
 	 * @param associatedResourceType
 	 * @return
+	 * @throws IOException 
+	 * @throws ClientProtocolException 
 	 */
-	public ClientResponse unLinkProfile (String deploymentUrl, String operatorUsername, String operatorAuthtoken, String profileSid, String targetResourceSid, AssociatedResourceType type) {
-		Client jerseyClient = Client.create();
-		jerseyClient.addFilter(new HTTPBasicAuthFilter(operatorUsername, operatorAuthtoken));
-
+	public HttpResponse unLinkProfile (String deploymentUrl, String operatorUsername, String operatorAuthtoken, String profileSid, String targetResourceSid, AssociatedResourceType type) throws ClientProtocolException, IOException {
 		String url = getProfilesEndpointUrl(deploymentUrl) + "/" + profileSid;
 
-		WebResource webResource = jerseyClient.resource(url);
-		WebResource.Builder builder = webResource.accept(MediaType.APPLICATION_JSON);
-		builder.type(MediaType.APPLICATION_JSON);
-		builder.header(HttpHeaders.LINK, createLinkStr(deploymentUrl, targetResourceSid, type));
-
-		ClientResponse response = builder.method("UNLINK", ClientResponse.class);
-		return response;
+		HttpUnLink request = new HttpUnLink(url);
+		request.addHeader(getAuthHeader(deploymentUrl, operatorUsername, operatorAuthtoken));
+		request.addHeader(getjsonAcceptHeader());
+		request.addHeader(getLinkHeader(deploymentUrl, targetResourceSid, type));
+		final DefaultHttpClient client = new DefaultHttpClient();
+	    final HttpResponse response = client.execute(request);
+	    logger.info("response is here: "+response);
+	    return response;
 	}
+	
+	private BasicHeader getLinkHeader(String deploymentUrl, String targetResourceSid, AssociatedResourceType type){
+		String targetResourceLinkstr = createLinkStr(deploymentUrl, targetResourceSid, type);
+        return new BasicHeader("Link", targetResourceLinkstr);
+	}
+
+	private BasicHeader getAuthHeader(String deploymentUrl, String operatorUsername, String operatorAuthtoken){
+		return new BasicHeader(HttpHeaders.AUTHORIZATION, getAuthenticationHeader(operatorUsername, operatorAuthtoken));
+	}
+
+	private BasicHeader getjsonAcceptHeader(){
+		return new BasicHeader("Accept", "application/json");
+	}
+
+    private String getAuthenticationHeader(String operatorUsername, String operatorAuthtoken) {
+
+        String authenticationHeader = null;
+        String auth = operatorUsername + ":" + operatorAuthtoken;
+        byte[] encodedAuth = Base64.encodeBase64(auth.getBytes(Charset.forName("ISO-8859-1")));
+        authenticationHeader = "Basic " + new String(encodedAuth);
+    
+        return authenticationHeader;
+    }
 }
