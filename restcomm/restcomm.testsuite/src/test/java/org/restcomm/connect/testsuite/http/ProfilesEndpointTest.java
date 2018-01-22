@@ -27,7 +27,6 @@ import org.restcomm.connect.commons.annotations.FeatureExpTests;
 
 import com.google.gson.JsonArray;
 import com.google.gson.JsonObject;
-import com.google.gson.JsonParser;
 import com.sun.jersey.api.client.ClientResponse;
 import com.sun.jersey.api.client.WebResourceLinkHeaders;
 import com.sun.jersey.core.header.LinkHeader;
@@ -42,8 +41,8 @@ public class ProfilesEndpointTest extends EndpointTest {
 
     private static final String version = Version.getVersion();
     
-    private static final String profileDocStr="{ \"featureEnablement\": { \"DIDPurchase\": { \"allowedCountries\": [\"US\", \"CA\"] }, \"destinations\": { \"allowedPrefixes\": [\"+1\"] }, \"outboundPSTN\": { }, \"inboundPSTN\": { }, \"outboundSMS\": { }, \"inboundSMS\": { } }, \"sessionThrottling\": { \"PSTNCallsPerTime\": { \"events\" : 300, \"time\" : 30, \"timeUnit\" : \"days\" } } }";
-    private static final String updatedProfileDocStr="{ \"featureEnablement\": { \"DIDPurchase\": { \"allowedCountries\": [\"PK\", \"CA\"] }, \"destinations\": { \"allowedPrefixes\": [\"+1\"] }, \"outboundPSTN\": { }, \"inboundPSTN\": { }, \"outboundSMS\": { }, \"inboundSMS\": { } }, \"sessionThrottling\": { \"PSTNCallsPerTime\": { \"events\" : 300, \"time\" : 30, \"timeUnit\" : \"days\" } } }";
+    private static final String profileDocument="{ \"featureEnablement\": { \"DIDPurchase\": { \"allowedCountries\": [\"US\", \"CA\"] }, \"destinations\": { \"allowedPrefixes\": [\"+1\"] }, \"outboundPSTN\": { }, \"inboundPSTN\": { }, \"outboundSMS\": { }, \"inboundSMS\": { } }, \"sessionThrottling\": { \"PSTNCallsPerTime\": { \"events\" : 300, \"time\" : 30, \"timeUnit\" : \"days\" } } }";
+    private static final String updatedProfileDocument="{ \"featureEnablement\": { \"DIDPurchase\": { \"allowedCountries\": [\"PK\", \"CA\"] }, \"destinations\": { \"allowedPrefixes\": [\"+1\"] }, \"outboundPSTN\": { }, \"inboundPSTN\": { }, \"outboundSMS\": { }, \"inboundSMS\": { } }, \"sessionThrottling\": { \"PSTNCallsPerTime\": { \"events\" : 300, \"time\" : 30, \"timeUnit\" : \"days\" } } }";
 
     @ArquillianResource
     private Deployer deployer;
@@ -61,13 +60,8 @@ public class ProfilesEndpointTest extends EndpointTest {
     private final String profileSid = "PRafbe225ad37541eba518a74248f0ac4c";
     private final String organizationSid = "ORafbe225ad37541eba518a74248f0ac4c";
 
-    private static JsonObject profileDocument;
-    private static JsonObject updatedProfileDocument;
-
     @Before
     public void before() {
-    	profileDocument = new JsonParser().parse(profileDocStr).getAsJsonObject();
-    	updatedProfileDocument = new JsonParser().parse(updatedProfileDocStr).getAsJsonObject();
     }
 
     /**
@@ -124,15 +118,14 @@ public class ProfilesEndpointTest extends EndpointTest {
     	ClientResponse clientResponse = RestcommProfilesTool.getInstance().createProfileResponse(deploymentUrl.toString(), superAdminAccountSid, authToken, profileDocument);
     	logger.info("clientResponse: "+clientResponse);
     	assertEquals(201, clientResponse.getStatus());
-
-    	// TODO Read and verify further response
+    	assertEquals(profileDocument, clientResponse.getEntity(String.class));
     }
 
     /**
      * updateProfileTest
      */
     @Test
-    public void updateProfileTest(){
+    public void updateProfileInvalidSidTest(){
     	/*
 		 * update a profile 
 		 */
