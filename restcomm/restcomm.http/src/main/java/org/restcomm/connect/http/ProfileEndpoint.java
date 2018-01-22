@@ -54,9 +54,11 @@ import org.restcomm.connect.http.exceptions.ResourceAccountMissmatch;
 public class ProfileEndpoint extends SecuredEndpoint {
 
     //TODO compose schema location
-    protected static final String PROFILE_CONTENT_TYPE = "application/instance+json;schema=";
+    protected static final String PROFILE_CONTENT_TYPE = "application/instance+json;schema=\"http://127.0.0.1\"";
     protected static final String PROFILE_SCHEMA_CONTENT_TYPE = "application/schema+json";
     protected static final String PROFILE_REL_TYPE = "related";
+    protected static final String SCHEMA_REL_TYPE = "schema";
+    protected static final String DESCRIBED_REL_TYPE = "describedby";
     protected static final String LINK_HEADER = "Link";
     protected static final String PROFILE_ENCODING = "UTF-8";
 
@@ -164,6 +166,11 @@ public class ProfileEndpoint extends SecuredEndpoint {
         }
     }
 
+    public Link composeSchemaLink(UriInfo info) throws MalformedURLException {
+        URI build = info.getBaseUriBuilder().path("rc-profile-schema").build();
+        return Link.fromUri(build).rel(DESCRIBED_REL_TYPE).build();
+    }
+
     public Link composeLink(Sid targetSid, UriInfo info) throws MalformedURLException {
         String sid = targetSid.toString();
         URI uri = null;
@@ -195,6 +202,7 @@ public class ProfileEndpoint extends SecuredEndpoint {
                 Link composeLink = composeLink(assoc.getTargetSid(), info);
                 ok.header(LINK_HEADER, composeLink.toString());
             }
+            ok.header(LINK_HEADER, composeSchemaLink(info));
             String profileStr = IOUtils.toString(profile.getProfileDocument(), PROFILE_ENCODING);
             ok.entity(profileStr);
             ok.lastModified(profile.getDateUpdated());

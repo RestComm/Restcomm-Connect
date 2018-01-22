@@ -30,6 +30,7 @@ import javax.ws.rs.PathParam;
 import javax.ws.rs.Produces;
 import javax.ws.rs.core.Context;
 import javax.ws.rs.core.HttpHeaders;
+import javax.ws.rs.core.MediaType;
 import static javax.ws.rs.core.MediaType.APPLICATION_JSON;
 import javax.ws.rs.core.Response;
 import javax.ws.rs.core.UriInfo;
@@ -62,7 +63,7 @@ public class ProfileJsonEndpoint extends ProfileEndpoint {
 
     @Path("/{profileSid}")
     @PUT
-    @Consumes(PROFILE_CONTENT_TYPE)
+    @Consumes({PROFILE_CONTENT_TYPE,MediaType.APPLICATION_JSON})
     public Response updateProfileAsJson(@PathParam("profileSid") final String profileSid,
             InputStream body) {
         return updateProfile(profileSid, body);
@@ -76,6 +77,7 @@ public class ProfileJsonEndpoint extends ProfileEndpoint {
 
     @Path("/{profileSid}")
     @LINK
+    @Produces(APPLICATION_JSON)
     public Response linkProfileAsJson(@PathParam("profileSid") final String profileSid,
             @Context HttpHeaders headers, @Context UriInfo info
     ) {
@@ -84,6 +86,7 @@ public class ProfileJsonEndpoint extends ProfileEndpoint {
 
     @Path("/{profileSid}")
     @UNLINK
+    @Produces(APPLICATION_JSON)
     public Response unlinkProfileAsJson(@PathParam("profileSid") final String profileSid,
             @Context HttpHeaders headers) {
         return unlinkProfile(profileSid, headers);
