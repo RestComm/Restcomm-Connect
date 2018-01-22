@@ -200,7 +200,7 @@ public class ProfilesEndpointTest extends EndpointTest {
     	WebResourceLinkHeaders linkHeaders = accountEndopintResponse.getLinks();
     	logger.info("accountEndopintResponse WebResourceLinkHeaders: "+linkHeaders);
     	assertNotNull(linkHeaders);
-    	LinkHeader linkHeader = linkHeaders.getLink("related");
+    	LinkHeader linkHeader = linkHeaders.getLink(RestcommProfilesTool.PROFILE_REL_TYPE);
     	logger.info("accountEndopintResponse WebResourceLinkHeaders linkHeader: "+linkHeader);
     	assertNotNull(linkHeader);
     	assertTrue(linkHeader.getUri().toString().contains(profileSid));
@@ -220,7 +220,7 @@ public class ProfilesEndpointTest extends EndpointTest {
     	accountEndopintResponse = RestcommAccountsTool.getInstance().getAccountResponse(deploymentUrl.toString(), superAdminAccountSid, superAdminAuthToken, superAdminAccountSid);
     	linkHeaders = accountEndopintResponse.getLinks();
     	logger.info("accountEndopintResponse WebResourceLinkHeaders: "+linkHeaders);
-    	linkHeader = linkHeaders.getLink("related");
+    	linkHeader = linkHeaders.getLink(RestcommProfilesTool.PROFILE_REL_TYPE);
     	logger.info("accountEndopintResponse WebResourceLinkHeaders linkHeader: "+linkHeader);
     	assertNull(linkHeader);
     }
@@ -248,7 +248,7 @@ public class ProfilesEndpointTest extends EndpointTest {
     	WebResourceLinkHeaders linkHeaders = orgEndopintResponse.getLinks();
     	logger.info("accountEndopintResponse WebResourceLinkHeaders: "+linkHeaders);
     	assertNotNull(linkHeaders);
-    	LinkHeader linkHeader = linkHeaders.getLink("related");
+    	LinkHeader linkHeader = linkHeaders.getLink(RestcommProfilesTool.PROFILE_REL_TYPE);
     	logger.info("accountEndopintResponse WebResourceLinkHeaders linkHeader: "+linkHeader);
     	assertNotNull(linkHeader);
     	assertTrue(linkHeader.getUri().toString().contains(profileSid));
@@ -268,7 +268,7 @@ public class ProfilesEndpointTest extends EndpointTest {
     	orgEndopintResponse = RestcommOrganizationsTool.getInstance().getOrganizationResponse(deploymentUrl.toString(), superAdminAccountSid, superAdminAuthToken, organizationSid);
     	linkHeaders = orgEndopintResponse.getLinks();
     	logger.info("orgEndopintResponse WebResourceLinkHeaders: "+linkHeaders);
-    	linkHeader = linkHeaders.getLink("related");
+    	linkHeader = linkHeaders.getLink(RestcommProfilesTool.PROFILE_REL_TYPE);
     	logger.info("orgEndopintResponse WebResourceLinkHeaders linkHeader: "+linkHeader);
     	assertNull(linkHeader);
     }
