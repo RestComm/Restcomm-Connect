@@ -96,26 +96,18 @@ public class ProfilesEndpointTest extends EndpointTest {
     }
 
     /**
-     * Administrators can not read profile
+     * Administrators and Developers can not read profile
      */
     @Test
     @Category(FeatureExpTests.class)
-    public void getProfileFromAdministratorAccount(){
+    public void getProfilePermissionTest(){
     	ClientResponse clientResponse = RestcommProfilesTool.getInstance().getProfileResponse(deploymentUrl.toString(), adminAccountSid, authToken, profileSid);
     	assertNotNull(clientResponse);
-    	logger.info("profile: "+clientResponse);
     	assertEquals(403, clientResponse.getStatus());
+    	
 
-    }
-    /**
-     * Developers can not read profile
-     */
-    @Test
-    @Category(FeatureExpTests.class)
-    public void getProfileFromDeveloperAccount(){
-    	ClientResponse clientResponse = RestcommProfilesTool.getInstance().getProfileResponse(deploymentUrl.toString(), devAccountSid, authToken, profileSid);
+    	clientResponse = RestcommProfilesTool.getInstance().getProfileResponse(deploymentUrl.toString(), devAccountSid, authToken, profileSid);
     	assertNotNull(clientResponse);
-    	logger.info("profile: "+clientResponse);
     	assertEquals(403, clientResponse.getStatus());
 
     }
@@ -152,6 +144,26 @@ public class ProfilesEndpointTest extends EndpointTest {
     }
 
     /**
+     * updateProfilePermissionTest
+     */
+    @Test
+    @Category(FeatureExpTests.class)
+    public void updateProfilePermissionTest(){
+    	/*
+		 * update a profile from admin account
+		 */
+    	ClientResponse clientResponse = RestcommProfilesTool.getInstance().updateProfileResponse(deploymentUrl.toString(), adminAccountSid, authToken, profileSid, updatedProfileDocument);
+    	logger.info("clientResponse: "+clientResponse);
+    	assertEquals(403, clientResponse.getStatus());
+    	/*
+		 * update a profile from dev account
+		 */
+    	clientResponse = RestcommProfilesTool.getInstance().updateProfileResponse(deploymentUrl.toString(), devAccountSid, authToken, profileSid, updatedProfileDocument);
+    	logger.info("clientResponse: "+clientResponse);
+    	assertEquals(403, clientResponse.getStatus());
+    }
+
+    /**
      * deleteProfileTest
      */
     @Test
@@ -164,6 +176,26 @@ public class ProfilesEndpointTest extends EndpointTest {
     	assertEquals(200, clientResponse.getStatus());
 
     	// TODO Read and verify further response
+    }
+
+    /**
+     * deleteProfilePermissionTest
+     */
+    @Test
+    @Category(FeatureExpTests.class)
+    public void deleteProfilePermissionTest(){
+    	/*
+		 * delete a profile from admin account
+		 */
+    	ClientResponse clientResponse = RestcommProfilesTool.getInstance().deleteProfileResponse(deploymentUrl.toString(), adminAccountSid, authToken, profileSid);
+    	logger.info("clientResponse: "+clientResponse);
+    	assertEquals(403, clientResponse.getStatus());
+    	/*
+		 * delete a profile from Dev account
+		 */
+    	clientResponse = RestcommProfilesTool.getInstance().deleteProfileResponse(deploymentUrl.toString(), devAccountSid, authToken, profileSid);
+    	logger.info("clientResponse: "+clientResponse);
+    	assertEquals(403, clientResponse.getStatus());
     }
 
     @Test 
@@ -273,6 +305,26 @@ public class ProfilesEndpointTest extends EndpointTest {
     	linkHeader = linkHeaders.getLink(RestcommProfilesTool.PROFILE_REL_TYPE);
     	logger.info("orgEndopintResponse WebResourceLinkHeaders linkHeader: "+linkHeader);
     	assertNull(linkHeader);
+    }
+    
+
+    /**
+     * @throws ClientProtocolException
+     * @throws IOException
+     */
+    @Test
+    @Category(FeatureExpTests.class)
+    public void linkUnLinkProfileToAccountPermissionTest() throws ClientProtocolException, IOException{
+    	/*
+		 * link a profile by admin account
+		 */
+    	HttpResponse response = RestcommProfilesTool.getInstance().linkProfile(deploymentUrl.toString(), adminAccountSid, authToken, profileSid, organizationSid, RestcommProfilesTool.AssociatedResourceType.ORGANIZATION);
+    	assertEquals(403, response.getStatusLine().getStatusCode());
+    	/*
+		 * link a profile by dev account
+		 */
+    	response = RestcommProfilesTool.getInstance().linkProfile(deploymentUrl.toString(), devAccountSid, authToken, profileSid, organizationSid, RestcommProfilesTool.AssociatedResourceType.ORGANIZATION);
+    	assertEquals(403, response.getStatusLine().getStatusCode());
     }
     
     @Deployment(name = "ProfilesEndpointTest", managed = true, testable = false)
