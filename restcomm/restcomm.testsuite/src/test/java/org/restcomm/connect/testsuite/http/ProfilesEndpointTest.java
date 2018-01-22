@@ -170,11 +170,11 @@ public class ProfilesEndpointTest extends EndpointTest {
     	//admin tries to create profile
     	ClientResponse  clientResponse = RestcommProfilesTool.getInstance().createProfileResponse(deploymentUrl.toString(), adminAccountSid, adminAuthToken, profileDocument);
     	logger.info("clientResponse: "+clientResponse);
-    	assertTrue(clientResponse.getStatus() == 403);
+    	assertEquals(403, clientResponse.getStatus());
     	//developer tries to create profile
     	clientResponse = RestcommProfilesTool.getInstance().createProfileResponse(deploymentUrl.toString(), devAccountSid, devAuthToken, profileDocument);
     	logger.info("clientResponse: "+clientResponse);
-    	assertTrue(clientResponse.getStatus() == 403);
+    	assertEquals(403, clientResponse.getStatus());
     }
 
     /**
