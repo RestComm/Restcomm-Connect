@@ -43,14 +43,14 @@ public class RestcommProfilesTool {
 		return profilesUrl;
 	}
 
-	public JsonObject getProfile (String deploymentUrl, String adminUsername, String adminAuthToken, String username)
+	public JsonObject getProfile (String deploymentUrl, String adminUsername, String adminAuthToken, String profileSid)
 			throws UniformInterfaceException {
 		Client jerseyClient = Client.create();
 		jerseyClient.addFilter(new HTTPBasicAuthFilter(adminUsername, adminAuthToken));
 
 		WebResource webResource = jerseyClient.resource(getProfilesUrl(deploymentUrl));
 
-		String response = webResource.path(username).get(String.class);
+		String response = webResource.path(profileSid).get(String.class);
 		JsonParser parser = new JsonParser();
 		JsonObject jsonResponse = parser.parse(response).getAsJsonObject();
 
@@ -111,7 +111,7 @@ public class RestcommProfilesTool {
 		return jsonResponse;
 	}
 
-	private ClientResponse createProfileResponse (String deploymentUrl, String operatorUsername, String operatorAuthtoken, JsonObject profileDocument) {
+	public ClientResponse createProfileResponse (String deploymentUrl, String operatorUsername, String operatorAuthtoken, JsonObject profileDocument) {
 		Client jerseyClient = Client.create();
 		jerseyClient.addFilter(new HTTPBasicAuthFilter(operatorUsername, operatorAuthtoken));
 
@@ -135,7 +135,7 @@ public class RestcommProfilesTool {
 		return jsonResponse;
 	}
 
-	private ClientResponse updateProfileResponse (String deploymentUrl, String operatorUsername, String operatorAuthtoken, String profileSid, JsonObject profileDocument) {
+	public ClientResponse updateProfileResponse (String deploymentUrl, String operatorUsername, String operatorAuthtoken, String profileSid, JsonObject profileDocument) {
 		Client jerseyClient = Client.create();
 		jerseyClient.addFilter(new HTTPBasicAuthFilter(operatorUsername, operatorAuthtoken));
 
@@ -159,7 +159,7 @@ public class RestcommProfilesTool {
 		return jsonResponse;
 	}
 
-	private ClientResponse deleteProfileResponse (String deploymentUrl, String operatorUsername, String operatorAuthtoken, String profileSid) {
+	public ClientResponse deleteProfileResponse (String deploymentUrl, String operatorUsername, String operatorAuthtoken, String profileSid) {
 		Client jerseyClient = Client.create();
 		jerseyClient.addFilter(new HTTPBasicAuthFilter(operatorUsername, operatorAuthtoken));
 
