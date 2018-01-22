@@ -19,9 +19,18 @@
  */
 package org.restcomm.connect.http;
 
+import com.fasterxml.jackson.databind.JsonNode;
+import com.github.fge.jsonschema.main.JsonSchema;
+import com.github.fge.jsonschema.main.JsonSchemaFactory;
+import com.sun.jersey.api.client.ClientResponse.Status;
 import java.io.InputStream;
 import java.net.URI;
-import java.net.URISyntaxException;
+import java.sql.SQLException;
+import java.util.Date;
+import java.util.List;
+import com.github.fge.jackson.JsonLoader;
+import com.github.fge.jsonschema.core.report.ProcessingReport;
+import java.nio.charset.Charset;
 import javax.annotation.PostConstruct;
 import javax.servlet.ServletContext;
 import javax.servlet.http.HttpServletRequest;
@@ -30,19 +39,29 @@ import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
 import javax.ws.rs.core.UriInfo;
 import org.apache.commons.configuration.Configuration;
+import org.apache.commons.io.IOUtils;
+import org.restcomm.connect.commons.dao.Sid;
 import org.restcomm.connect.dao.DaoManager;
 import org.restcomm.connect.dao.ProfileAssociationsDao;
+import org.restcomm.connect.dao.ProfilesDao;
+import org.restcomm.connect.dao.entities.Profile;
+import org.restcomm.connect.dao.entities.ProfileAssociation;
 
 public class ProfileEndpoint extends SecuredEndpoint {
+
     //TODO compose schema location
     protected static final String PROFILE_CONTENT_TYPE = "application/instance+json;schema=";
     protected static final String PROFILE_SCHEMA_CONTENT_TYPE = "application/schema+json";
     protected static final String LINK_HEADER = "Link";
+    protected static final String PROFILE_ENCODING = "UTF-8";
 
-    protected Configuration runtimeConfiguration;
-    protected Configuration rootConfiguration; // top-level configuration element
-    //protected ProfilesDAO profileDao;
-    protected ProfileAssociationsDao profileAssociationsDao;
+    private Configuration runtimeConfiguration;
+    private Configuration rootConfiguration; // top-level configuration element
+    private ProfilesDao profilesDao;
+    private ProfileAssociationsDao profileAssociationsDao;
+
+    private JsonNode schemaJson;
+    private JsonSchema profileSchema;
 
     public ProfileEndpoint() {
         super();
@@ -59,46 +78,115 @@ public class ProfileEndpoint extends SecuredEndpoint {
         runtimeConfiguration = rootConfiguration.subset("runtime-settings");
         super.init(runtimeConfiguration);
         profileAssociationsDao = ((DaoManager) context.getAttribute(DaoManager.class.getName())).getProfileAssociationsDao();
+        profilesDao = ((DaoManager) context.getAttribute(DaoManager.class.getName())).getProfilesDao();
+        try {
+            schemaJson = JsonLoader.fromResource("/org/restcomm/connect/http/schemas/rc-profile-schema.json");
+            final JsonSchemaFactory factory = JsonSchemaFactory.byDefault();
+            profileSchema = factory.getJsonSchema(schemaJson);
+        } catch (Exception e) {
+            logger.error("Error starting Profile endpoint.", e);
+        }
     }
 
     public Response getProfiles(UriInfo info) {
-
-        return Response.ok("{}", MediaType.APPLICATION_JSON).build();
+        try {
+            List<Profile> allProfiles = profilesDao.getAllProfiles();
+            return Response.ok(allProfiles, MediaType.APPLICATION_JSON).build();
+        } catch (SQLException ex) {
+            return Response.serverError().entity(ex.getMessage()).build();
+        }
     }
 
     public Response unlinkProfile(String profileSid, HttpHeaders headers) {
-        return Response.ok().build();
+        List<String> requestHeader = headers.getRequestHeader(LINK_HEADER);
+        if (requestHeader.size() == 1) {
+            //TODO parse link header
+            String targetSid = requestHeader.get(0);
+            profileAssociationsDao.deleteProfileAssociationByTargetSid(targetSid);
+            return Response.ok().build();
+        } else {
+            return Response.status(Status.BAD_REQUEST).build();
+        }
     }
 
-    public Response linkProfile(String profileSid, HttpHeaders headers) {
-        return Response.ok().build();
+    public Response linkProfile(String profileSidStr, HttpHeaders headers) {
+        List<String> requestHeader = headers.getRequestHeader(LINK_HEADER);
+        if (requestHeader.size() == 1) {
+            Sid profileSid = new Sid(profileSidStr);
+            //TODO parse link header
+            Sid targetSid = new Sid(requestHeader.get(0));
+            ProfileAssociation assoc = new ProfileAssociation(profileSid, targetSid, new Date(), new Date());
+            profileAssociationsDao.addProfileAssociation(assoc);
+            return Response.ok().build();
+        } else {
+            return Response.status(Status.BAD_REQUEST).build();
+        }
     }
 
     public Response deleteProfile(String profileSid) {
+        profilesDao.deleteProfile(profileSid);
         return Response.ok().build();
     }
 
     public Response updateProfile(String profileSid, InputStream body) {
-        return Response.ok().build();
+        try {
+            String profileStr = IOUtils.toString(body, Charset.forName(PROFILE_ENCODING));
+            final JsonNode profileJson = JsonLoader.fromString(profileStr);
+            ProcessingReport report = profileSchema.validate(profileJson);
+            if (report.isSuccess()) {
+                Profile profile = new Profile(profileSid, profileStr.getBytes(), new Date(), new Date());
+                profilesDao.updateProfile(profile);
+                return Response.ok().build();
+            } else {
+                return Response.status(Response.Status.BAD_REQUEST).entity(report.toString()).build();
+            }
+        } catch (Exception ex) {
+            return Response.serverError().entity(ex.getMessage()).build();
+        }
     }
 
     public Response getProfile(String profileSid) {
-        Response.ResponseBuilder ok = Response.ok();ok.header(LINK_HEADER, "http://cloud.restcomm.comm/Profiles/PO1234");
-        return Response.ok().build();
+        try {
+            Profile profile = profilesDao.getProfile(profileSid);
+            Response.ResponseBuilder ok = Response.ok(profile.getProfileDocument());
+            List<ProfileAssociation> profileAssociationsByProfileSid = profileAssociationsDao.getProfileAssociationsByProfileSid(profileSid);
+            for (ProfileAssociation assoc : profileAssociationsByProfileSid) {
+                //TODO compose link header
+                ok.header(LINK_HEADER, "http://cloud.restcomm.comm/Profiles/" + assoc.getTargetSid());
+            }
+            String profileStr = IOUtils.toString(profile.getProfileDocument(), PROFILE_ENCODING);
+            ok.entity(profileStr);
+            ok.lastModified(profile.getDateUpdated());
+            ok.type(PROFILE_CONTENT_TYPE);
+            return ok.build();
+        } catch (Exception ex) {
+            return Response.serverError().entity(ex.getMessage()).build();
+        }
     }
 
     public Response createProfile(InputStream body) {
-        Response response ;
+
+        Response response;
         try {
-            URI location = new URI("http://cloud.restcomm.comm/Profiles/PO1234");
-            response = Response.created(location).build();
-        } catch (URISyntaxException ex) {
-            response = Response.serverError().build();
+            Sid profileSid = Sid.generate(Sid.Type.PROFILE);
+            String profileStr = IOUtils.toString(body, Charset.forName(PROFILE_ENCODING));
+            final JsonNode profileJson = JsonLoader.fromString(profileStr);
+            ProcessingReport report = profileSchema.validate(profileJson);
+            if (report.isSuccess()) {
+                Profile profile = new Profile(profileSid.toString(), profileStr.getBytes(), new Date(), new Date());
+                profilesDao.addProfile(profile);
+                URI location = new URI("http://cloud.restcomm.comm/Profiles/" + profileSid);
+                response = Response.created(location).build();
+            } else {
+                response = Response.status(Response.Status.BAD_REQUEST).entity(report.toString()).build();
+            }
+        } catch (Exception ex) {
+            return Response.serverError().entity(ex.getMessage()).build();
         }
         return response;
     }
 
     public Response getProfileSchema() {
-        return Response.ok("{}", PROFILE_SCHEMA_CONTENT_TYPE).build();
+        return Response.ok(schemaJson.asText(), PROFILE_SCHEMA_CONTENT_TYPE).build();
     }
 }
