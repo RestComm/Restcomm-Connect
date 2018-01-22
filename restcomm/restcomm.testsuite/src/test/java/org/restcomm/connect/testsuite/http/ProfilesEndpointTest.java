@@ -52,15 +52,11 @@ public class ProfilesEndpointTest extends EndpointTest {
 
     //super admin account
     private String superAdminAccountSid = "ACae6e420f425248d6a26948c17a9e2acf";
-    private String superAdminAuthToken = "77f8c12cc7b8f8423e5c38b035249166";
-
     //admin account
     private String adminAccountSid = "AC574d775522c96f9aacacc5ca60c8c74g";
-    private String adminAuthToken = "77f8c12cc7b8f8423e5c38b035249166";
-
     //developer account
     private String devAccountSid = "AC574d775522c96f9aacacc5ca60c8c74f";
-    private String devAuthToken = "77f8c12cc7b8f8423e5c38b035249166";
+    private String authToken = "77f8c12cc7b8f8423e5c38b035249166";
 
     private final String profileSid = "PRafbe225ad37541eba518a74248f0ac4c";
     private final String organizationSid = "ORafbe225ad37541eba518a74248f0ac4c";
@@ -80,7 +76,7 @@ public class ProfilesEndpointTest extends EndpointTest {
      */
     @Test
     public void getProfile(){
-    	JsonObject profileJsonObject = RestcommProfilesTool.getInstance().getProfile(deploymentUrl.toString(), superAdminAccountSid, superAdminAuthToken, profileSid);
+    	JsonObject profileJsonObject = RestcommProfilesTool.getInstance().getProfile(deploymentUrl.toString(), superAdminAccountSid, authToken, profileSid);
     	assertNotNull(profileJsonObject);
     	logger.info("profile: "+profileJsonObject);
     	// TODO Read and verify further response
@@ -92,7 +88,7 @@ public class ProfilesEndpointTest extends EndpointTest {
     @Test
     public void getProfileList(){
     	JsonArray jsonArray = null;
-    	jsonArray = RestcommProfilesTool.getInstance().getProfileListJsonResponse(deploymentUrl.toString(), superAdminAccountSid, superAdminAuthToken);
+    	jsonArray = RestcommProfilesTool.getInstance().getProfileListJsonResponse(deploymentUrl.toString(), superAdminAccountSid, authToken);
     	logger.info("profile list: "+jsonArray);
     	assertNotNull(jsonArray);
     	assertEquals(0,jsonArray.size());
@@ -105,7 +101,7 @@ public class ProfilesEndpointTest extends EndpointTest {
     @Test
     @Category(FeatureExpTests.class)
     public void getProfileFromAdministratorAccount(){
-    	ClientResponse clientResponse = RestcommProfilesTool.getInstance().getProfileResponse(deploymentUrl.toString(), adminAccountSid, adminAuthToken, profileSid);
+    	ClientResponse clientResponse = RestcommProfilesTool.getInstance().getProfileResponse(deploymentUrl.toString(), adminAccountSid, authToken, profileSid);
     	assertNotNull(clientResponse);
     	logger.info("profile: "+clientResponse);
     	assertEquals(403, clientResponse.getStatus());
@@ -117,7 +113,7 @@ public class ProfilesEndpointTest extends EndpointTest {
     @Test
     @Category(FeatureExpTests.class)
     public void getProfileFromDeveloperAccount(){
-    	ClientResponse clientResponse = RestcommProfilesTool.getInstance().getProfileResponse(deploymentUrl.toString(), devAccountSid, devAuthToken, profileSid);
+    	ClientResponse clientResponse = RestcommProfilesTool.getInstance().getProfileResponse(deploymentUrl.toString(), devAccountSid, authToken, profileSid);
     	assertNotNull(clientResponse);
     	logger.info("profile: "+clientResponse);
     	assertEquals(403, clientResponse.getStatus());
@@ -133,7 +129,7 @@ public class ProfilesEndpointTest extends EndpointTest {
     	/*
 		 * create a profile 
 		 */
-    	ClientResponse clientResponse = RestcommProfilesTool.getInstance().createProfileResponse(deploymentUrl.toString(), superAdminAccountSid, superAdminAuthToken, profileDocument);
+    	ClientResponse clientResponse = RestcommProfilesTool.getInstance().createProfileResponse(deploymentUrl.toString(), superAdminAccountSid, authToken, profileDocument);
     	logger.info("clientResponse: "+clientResponse);
     	assertEquals(200, clientResponse.getStatus());
 
@@ -148,7 +144,7 @@ public class ProfilesEndpointTest extends EndpointTest {
     	/*
 		 * update a profile 
 		 */
-    	ClientResponse clientResponse = RestcommProfilesTool.getInstance().updateProfileResponse(deploymentUrl.toString(), superAdminAccountSid, superAdminAuthToken, profileSid, updatedProfileDocument);
+    	ClientResponse clientResponse = RestcommProfilesTool.getInstance().updateProfileResponse(deploymentUrl.toString(), superAdminAccountSid, authToken, profileSid, updatedProfileDocument);
     	logger.info("clientResponse: "+clientResponse);
     	assertEquals(200, clientResponse.getStatus());
 
@@ -163,7 +159,7 @@ public class ProfilesEndpointTest extends EndpointTest {
     	/*
 		 * delete a profile 
 		 */
-    	ClientResponse clientResponse = RestcommProfilesTool.getInstance().deleteProfileResponse(deploymentUrl.toString(), superAdminAccountSid, superAdminAuthToken, profileSid);
+    	ClientResponse clientResponse = RestcommProfilesTool.getInstance().deleteProfileResponse(deploymentUrl.toString(), superAdminAccountSid, authToken, profileSid);
     	logger.info("clientResponse: "+clientResponse);
     	assertEquals(200, clientResponse.getStatus());
 
@@ -174,11 +170,11 @@ public class ProfilesEndpointTest extends EndpointTest {
     @Category(FeatureExpTests.class)
     public void createProfilePermissionTest(){
     	//admin tries to create profile
-    	ClientResponse  clientResponse = RestcommProfilesTool.getInstance().createProfileResponse(deploymentUrl.toString(), adminAccountSid, adminAuthToken, profileDocument);
+    	ClientResponse  clientResponse = RestcommProfilesTool.getInstance().createProfileResponse(deploymentUrl.toString(), adminAccountSid, authToken, profileDocument);
     	logger.info("clientResponse: "+clientResponse);
     	assertEquals(403, clientResponse.getStatus());
     	//developer tries to create profile
-    	clientResponse = RestcommProfilesTool.getInstance().createProfileResponse(deploymentUrl.toString(), devAccountSid, devAuthToken, profileDocument);
+    	clientResponse = RestcommProfilesTool.getInstance().createProfileResponse(deploymentUrl.toString(), devAccountSid, authToken, profileDocument);
     	logger.info("clientResponse: "+clientResponse);
     	assertEquals(403, clientResponse.getStatus());
     }
@@ -193,7 +189,7 @@ public class ProfilesEndpointTest extends EndpointTest {
 		/*
 		 * link a profile to an account 
 		 */
-    	HttpResponse response = RestcommProfilesTool.getInstance().linkProfile(deploymentUrl.toString(), superAdminAccountSid, superAdminAuthToken, profileSid, superAdminAccountSid, RestcommProfilesTool.AssociatedResourceType.ACCOUNT);
+    	HttpResponse response = RestcommProfilesTool.getInstance().linkProfile(deploymentUrl.toString(), superAdminAccountSid, authToken, profileSid, superAdminAccountSid, RestcommProfilesTool.AssociatedResourceType.ACCOUNT);
     	logger.info("HttpResponse: "+response);
     	assertEquals(200, response.getStatusLine().getStatusCode());
     	
@@ -202,7 +198,7 @@ public class ProfilesEndpointTest extends EndpointTest {
     	 * from Accounts endpoint:
     	 * to verify association establishment.
     	 */
-    	ClientResponse accountEndopintResponse = RestcommAccountsTool.getInstance().getAccountResponse(deploymentUrl.toString(), superAdminAccountSid, superAdminAuthToken, superAdminAccountSid);
+    	ClientResponse accountEndopintResponse = RestcommAccountsTool.getInstance().getAccountResponse(deploymentUrl.toString(), superAdminAccountSid, authToken, superAdminAccountSid);
     	WebResourceLinkHeaders linkHeaders = accountEndopintResponse.getLinks();
     	logger.info("accountEndopintResponse WebResourceLinkHeaders: "+linkHeaders);
     	assertNotNull(linkHeaders);
@@ -214,7 +210,7 @@ public class ProfilesEndpointTest extends EndpointTest {
     	/*
 		 * unlink a profile from an account 
 		 */
-    	response = RestcommProfilesTool.getInstance().unLinkProfile(deploymentUrl.toString(), superAdminAccountSid, superAdminAuthToken, profileSid, superAdminAccountSid, RestcommProfilesTool.AssociatedResourceType.ACCOUNT);
+    	response = RestcommProfilesTool.getInstance().unLinkProfile(deploymentUrl.toString(), superAdminAccountSid, authToken, profileSid, superAdminAccountSid, RestcommProfilesTool.AssociatedResourceType.ACCOUNT);
     	logger.info("HttpResponse: "+response);
     	assertEquals(200, response.getStatusLine().getStatusCode());
     	
@@ -223,7 +219,7 @@ public class ProfilesEndpointTest extends EndpointTest {
     	 * from Accounts endpoint: 
     	 * to verify association removal
     	 */
-    	accountEndopintResponse = RestcommAccountsTool.getInstance().getAccountResponse(deploymentUrl.toString(), superAdminAccountSid, superAdminAuthToken, superAdminAccountSid);
+    	accountEndopintResponse = RestcommAccountsTool.getInstance().getAccountResponse(deploymentUrl.toString(), superAdminAccountSid, authToken, superAdminAccountSid);
     	linkHeaders = accountEndopintResponse.getLinks();
     	logger.info("accountEndopintResponse WebResourceLinkHeaders: "+linkHeaders);
     	linkHeader = linkHeaders.getLink(RestcommProfilesTool.PROFILE_REL_TYPE);
@@ -241,7 +237,7 @@ public class ProfilesEndpointTest extends EndpointTest {
     	/*
 		 * link a profile to an organizations 
 		 */
-    	HttpResponse response = RestcommProfilesTool.getInstance().linkProfile(deploymentUrl.toString(), superAdminAccountSid, superAdminAuthToken, profileSid, organizationSid, RestcommProfilesTool.AssociatedResourceType.ORGANIZATION);
+    	HttpResponse response = RestcommProfilesTool.getInstance().linkProfile(deploymentUrl.toString(), superAdminAccountSid, authToken, profileSid, organizationSid, RestcommProfilesTool.AssociatedResourceType.ORGANIZATION);
     	logger.info("HttpResponse: "+response);
     	assertEquals(200, response.getStatusLine().getStatusCode());
     	
@@ -250,7 +246,7 @@ public class ProfilesEndpointTest extends EndpointTest {
     	 * from Organizations endpoint:
     	 * to verify association establishment.
     	 */
-    	ClientResponse orgEndopintResponse = RestcommOrganizationsTool.getInstance().getOrganizationResponse(deploymentUrl.toString(), superAdminAccountSid, superAdminAuthToken, organizationSid);
+    	ClientResponse orgEndopintResponse = RestcommOrganizationsTool.getInstance().getOrganizationResponse(deploymentUrl.toString(), superAdminAccountSid, authToken, organizationSid);
     	WebResourceLinkHeaders linkHeaders = orgEndopintResponse.getLinks();
     	logger.info("accountEndopintResponse WebResourceLinkHeaders: "+linkHeaders);
     	assertNotNull(linkHeaders);
@@ -262,7 +258,7 @@ public class ProfilesEndpointTest extends EndpointTest {
     	/*
 		 * unlink a profile from an organization 
 		 */
-    	response = RestcommProfilesTool.getInstance().unLinkProfile(deploymentUrl.toString(), superAdminAccountSid, superAdminAuthToken, profileSid, organizationSid, RestcommProfilesTool.AssociatedResourceType.ORGANIZATION);
+    	response = RestcommProfilesTool.getInstance().unLinkProfile(deploymentUrl.toString(), superAdminAccountSid, authToken, profileSid, organizationSid, RestcommProfilesTool.AssociatedResourceType.ORGANIZATION);
     	logger.info("HttpResponse: "+response);
     	assertEquals(200, response.getStatusLine().getStatusCode());
     	
@@ -271,7 +267,7 @@ public class ProfilesEndpointTest extends EndpointTest {
     	 * from Organizations endpoint:
     	 * to verify association removal.
     	 */
-    	orgEndopintResponse = RestcommOrganizationsTool.getInstance().getOrganizationResponse(deploymentUrl.toString(), superAdminAccountSid, superAdminAuthToken, organizationSid);
+    	orgEndopintResponse = RestcommOrganizationsTool.getInstance().getOrganizationResponse(deploymentUrl.toString(), superAdminAccountSid, authToken, organizationSid);
     	linkHeaders = orgEndopintResponse.getLinks();
     	logger.info("orgEndopintResponse WebResourceLinkHeaders: "+linkHeaders);
     	linkHeader = linkHeaders.getLink(RestcommProfilesTool.PROFILE_REL_TYPE);
