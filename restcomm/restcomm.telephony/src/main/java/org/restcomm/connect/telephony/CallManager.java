@@ -712,12 +712,13 @@ public final class CallManager extends RestcommUntypedActor {
                             proxyUsername = er.getOutboundProxyUsername();
                         }
                         if (er.getOutboundProxyPassword() != null && !er.getOutboundProxyPassword().isEmpty()) {
-                            proxyUsername = er.getOutboundProxyPassword();
+                            proxyPassword = er.getOutboundProxyPassword();
                         }
                         // proxy DID or number if the outbound proxy fields are not empty in the restcomm.xml
                         if (proxyURI != null && !proxyURI.isEmpty()) {
                             //FIXME: not so nice to just inject headers here
-                            addHeadersToMessage(request, er.getOutboundProxyHeaders());
+                            B2BUAHelper.addHeadersToMessage(request, er.getOutboundProxyHeaders(), sipFactory);
+                            request.getSession().setAttribute(B2BUAHelper.EXTENSION_HEADERS, er.getOutboundProxyHeaders());
                             proxyOut(request, client, toUser, toHost, toHostIpAddress, toPort, outboundIntf, proxyURI, proxyUsername, proxyPassword, from, to, callToSipUri);
                         } else {
                             errMsg = "Restcomm tried to proxy this call to an outbound party but it seems the outbound proxy is not configured.";
@@ -777,72 +778,6 @@ public final class CallManager extends RestcommUntypedActor {
         sendNotification(null, errMsg, 11005, "error", true);
 
 
-    }
-
-    /**
-     * FIXME: duplicated code make into static function or something more optimized
-     * Replace headers
-     *
-     * @param message
-     * @param headers
-     */
-    private void addHeadersToMessage(SipServletRequest message, Map<String, ArrayList<String>> headers) {
-
-        if (headers != null) {
-            for (Map.Entry<String, ArrayList<String>> entry : headers.entrySet()) {
-                //check if header exists
-                String headerName = entry.getKey();
-
-                StringBuilder sb = new StringBuilder();
-                if (entry.getValue() instanceof ArrayList) {
-                    for (String pair : entry.getValue()) {
-                        sb.append(";").append(pair);
-                    }
-                }
-                if (logger.isDebugEnabled()) {
-                    logger.debug("headerName=" + headerName + " headerVal=" + message.getHeader(headerName) + " concatValue=" + sb.toString());
-                }
-                if (!headerName.equalsIgnoreCase("Request-URI")) {
-                    try {
-                        String headerVal = message.getHeader(headerName);
-                        if (headerVal != null && !headerVal.isEmpty()) {
-                            message.setHeader(headerName, headerVal + sb.toString());
-                        } else {
-                            message.addHeader(headerName, sb.toString());
-                        }
-                    } catch (IllegalArgumentException iae) {
-                        if (logger.isErrorEnabled()) {
-                            logger.error("Exception while setting message header: " + iae.getMessage());
-                        }
-                    }
-                } else {
-                    //handle Request-URI
-                    javax.servlet.sip.URI reqURI = message.getRequestURI();
-                    if (logger.isDebugEnabled()) {
-                        logger.debug("ReqURI=" + reqURI.toString() + " msgReqURI=" + message.getRequestURI());
-                    }
-                    for (String keyValPair : entry.getValue()) {
-                        String parName = "";
-                        String parVal = "";
-                        int equalsPos = keyValPair.indexOf("=");
-                        parName = keyValPair.substring(0, equalsPos);
-                        parVal = keyValPair.substring(equalsPos + 1);
-                        reqURI.setParameter(parName, parVal);
-                        if (logger.isDebugEnabled()) {
-                            logger.debug("ReqURI pars =" + parName + "=" + parVal + " equalsPos=" + equalsPos + " keyValPair=" + keyValPair);
-                        }
-                    }
-
-                    message.setRequestURI(reqURI);
-                    if (logger.isDebugEnabled()) {
-                        logger.debug("ReqURI=" + reqURI.toString() + " msgReqURI=" + message.getRequestURI());
-                    }
-                }
-                if (logger.isDebugEnabled()) {
-                    logger.debug("headerName=" + headerName + " headerVal=" + message.getHeader(headerName));
-                }
-            }
-        }
     }
 
     private boolean proxyOut(SipServletRequest request, Client client, String toUser, String toHost, String toHostIpAddress, String toPort, SipURI outboundIntf, String proxyURI, String proxyUsername, String proxyPassword, SipURI from, SipURI to, boolean callToSipUri) throws UnknownHostException {
@@ -2363,7 +2298,8 @@ public final class CallManager extends RestcommUntypedActor {
 
         // if this response is coming from a client that is in a p2p session with another registered client
         // we will just proxy the response
-        if (B2BUAHelper.isB2BUASession(response)) {
+        SipSession linkedB2BUASession = B2BUAHelper.getLinkedSession(response);
+        if (linkedB2BUASession!=null) {
             if (response.getStatus() == SipServletResponse.SC_PROXY_AUTHENTICATION_REQUIRED
                     || response.getStatus() == SipServletResponse.SC_UNAUTHORIZED) {
                 AuthInfo authInfo = sipFactory.createAuthInfo();
@@ -2380,6 +2316,9 @@ public final class CallManager extends RestcommUntypedActor {
                 SipServletRequest invite = response.getRequest();
                 challengeRequest.setContent(invite.getContent(), invite.getContentType());
                 invite = challengeRequest;
+
+                Map<String,ArrayList<String>> extensionHeaders = (Map<String,ArrayList<String>>)linkedB2BUASession.getAttribute(B2BUAHelper.EXTENSION_HEADERS);
+                B2BUAHelper.addHeadersToMessage(challengeRequest, extensionHeaders, sipFactory);
                 challengeRequest.send();
             } else {
                 B2BUAHelper.forwardResponse(response, patchForNatB2BUASessions);
