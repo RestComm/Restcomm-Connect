@@ -33,6 +33,6 @@ import javax.ws.rs.HttpMethod;
  */
 @Target({ElementType.METHOD})
 @Retention(RetentionPolicy.RUNTIME)
-@HttpMethod("PATCH")
+@HttpMethod("UNLINK")
 public @interface UNLINK {
 }
