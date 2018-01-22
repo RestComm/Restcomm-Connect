@@ -179,7 +179,7 @@ public class RestcommProfilesTool {
 	 * @param profileDocument
 	 * @return
 	 */
-	public JsonObject createProfile (String deploymentUrl, String username, String adminAuthToken, JsonObject profileDocument) {
+	public JsonObject createProfile (String deploymentUrl, String username, String adminAuthToken, String profileDocument) {
 
 		JsonParser parser = new JsonParser();
 		JsonObject jsonResponse = null;
@@ -200,14 +200,14 @@ public class RestcommProfilesTool {
 	 * @param profileDocument
 	 * @return
 	 */
-	public ClientResponse createProfileResponse (String deploymentUrl, String operatorUsername, String operatorAuthtoken, JsonObject profileDocument) {
+	public ClientResponse createProfileResponse (String deploymentUrl, String operatorUsername, String operatorAuthtoken, String profileDocument) {
 		Client jerseyClient = Client.create();
 		jerseyClient.addFilter(new HTTPBasicAuthFilter(operatorUsername, operatorAuthtoken));
 
 		String url = getProfilesEndpointUrl(deploymentUrl);
 
 		WebResource webResource = jerseyClient.resource(url);
-		ClientResponse response = webResource.type(PROFILE_SCHEMA_CONTENT_TYPE).accept(PROFILE_SCHEMA_CONTENT_TYPE).post(ClientResponse.class, profileDocument.toString());
+		ClientResponse response = webResource.type(PROFILE_SCHEMA_CONTENT_TYPE).accept(PROFILE_SCHEMA_CONTENT_TYPE).post(ClientResponse.class, profileDocument);
 		return response;
 	}
 
@@ -220,7 +220,7 @@ public class RestcommProfilesTool {
 	 * @param profileDocument
 	 * @return
 	 */
-	public JsonObject updateProfile (String deploymentUrl, String username, String adminAuthToken, String profileSid, JsonObject profileDocument) {
+	public JsonObject updateProfile (String deploymentUrl, String username, String adminAuthToken, String profileSid, String profileDocument) {
 
 		JsonParser parser = new JsonParser();
 		JsonObject jsonResponse = null;
@@ -242,14 +242,14 @@ public class RestcommProfilesTool {
 	 * @param profileDocument
 	 * @return
 	 */
-	public ClientResponse updateProfileResponse (String deploymentUrl, String operatorUsername, String operatorAuthtoken, String profileSid, JsonObject profileDocument) {
+	public ClientResponse updateProfileResponse (String deploymentUrl, String operatorUsername, String operatorAuthtoken, String profileSid, String profileDocument) {
 		Client jerseyClient = Client.create();
 		jerseyClient.addFilter(new HTTPBasicAuthFilter(operatorUsername, operatorAuthtoken));
 
 		String url = getProfilesEndpointUrl(deploymentUrl) + "/" + profileSid;
 
 		WebResource webResource = jerseyClient.resource(url);
-		ClientResponse response = webResource.type(PROFILE_SCHEMA_CONTENT_TYPE).accept(PROFILE_SCHEMA_CONTENT_TYPE).put(ClientResponse.class, profileDocument.toString());
+		ClientResponse response = webResource.type(PROFILE_SCHEMA_CONTENT_TYPE).accept(PROFILE_SCHEMA_CONTENT_TYPE).put(ClientResponse.class, profileDocument);
 		return response;
 	}
 
