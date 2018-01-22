@@ -11,6 +11,10 @@
     SELECT * FROM "restcomm_profiles" WHERE "sid"=#{sid};
   </select>
   
+  <select id="getAllProfiles" resultType="hashmap">
+    SELECT * FROM "restcomm_profiles";
+  </select>
+  
   <update id="updateProfile" parameterType="org.restcomm.connect.dao.entities.Profile">
     UPDATE "restcomm_profiles" SET "date_updated"=#{dateUpdated, jdbcType=TIMESTAMP},
     "document"=#{profileDocument, jdbcType=BLOB}

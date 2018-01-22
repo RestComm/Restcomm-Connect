@@ -26,6 +26,7 @@ import java.net.URISyntaxException;
 import java.sql.SQLException;
 import java.util.Arrays;
 import java.util.Calendar;
+import java.util.List;
 
 import org.apache.ibatis.session.SqlSessionFactory;
 import org.apache.ibatis.session.SqlSessionFactoryBuilder;
@@ -80,6 +81,11 @@ public class ProfilesDaoTest extends DaoTest {
         Assert.assertNotNull(resultantProfile);
         Assert.assertEquals(profile.getSid(), resultantProfile.getSid());
         Assert.assertTrue(Arrays.equals(profile.getProfileDocument(), resultantProfile.getProfileDocument()));
+        
+        //Read Profile List
+        List<Profile> profilelist = dao.getAllProfiles();
+        Assert.assertNotNull(profilelist);
+        Assert.assertEquals(1, profilelist.size());
 
         // Update Profile
         Profile updatedProfile = profile.setProfileDocument(jsonUpdateProfile.getBytes());
