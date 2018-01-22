@@ -55,8 +55,9 @@ public class ProfileJsonEndpoint extends ProfileEndpoint {
     @Path("/{profileSid}")
     @GET
     @Produces(PROFILE_CONTENT_TYPE)
-    public Response getProfileAsJson(@PathParam("profileSid") final String profileSid) {
-        return getProfile(profileSid);
+    public Response getProfileAsJson(@PathParam("profileSid") final String profileSid,
+            @Context UriInfo info) {
+        return getProfile(profileSid, info);
     }
 
     @Path("/{profileSid}")
@@ -76,9 +77,9 @@ public class ProfileJsonEndpoint extends ProfileEndpoint {
     @Path("/{profileSid}")
     @LINK
     public Response linkProfileAsJson(@PathParam("profileSid") final String profileSid,
-            @Context HttpHeaders headers
+            @Context HttpHeaders headers, @Context UriInfo info
     ) {
-        return linkProfile(profileSid, headers);
+        return linkProfile(profileSid, headers, info);
     }
 
     @Path("/{profileSid}")
