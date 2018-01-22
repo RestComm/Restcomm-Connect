@@ -36,6 +36,8 @@ public class RestcommProfilesTool {
 
 	private static RestcommProfilesTool instance;
 	private static String profilesEndpointUrl;
+	
+	public static final String PROFILE_REL_TYPE = "related";
 
     public enum AssociatedResourceType {
         ACCOUNT, ORGANIZATION
@@ -327,7 +329,7 @@ public class RestcommProfilesTool {
 	}
 	
 	private BasicHeader getLinkHeaderOfTargetResource(String deploymentUrl, String targetResourceSid, AssociatedResourceType type){
-		String targetResourceLinkstr = Link.fromUri(getTargetResourceUrl(deploymentUrl, targetResourceSid, type)).rel("related").build().toString();
+		String targetResourceLinkstr = Link.fromUri(getTargetResourceUrl(deploymentUrl, targetResourceSid, type)).rel(PROFILE_REL_TYPE).build().toString();
         return new BasicHeader("Link", targetResourceLinkstr);
 	}
 
