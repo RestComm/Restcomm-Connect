@@ -141,7 +141,7 @@ rcMod.config(['$stateProvider','$urlRouterProvider', function($stateProvider, $u
       controller: 'ApplicationExternalCreationCtrl'
   });
   $stateProvider.state('restcomm.application-details',{
-      url:'/applications/:applicationSid',
+      url:'/applications/:applicationSid?firstTime',
       templateUrl: 'modules/application-details.html',
       controller: 'ApplicationDetailsCtrl'
   });
