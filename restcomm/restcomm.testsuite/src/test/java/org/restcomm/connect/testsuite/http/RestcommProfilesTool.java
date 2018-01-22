@@ -38,6 +38,10 @@ public class RestcommProfilesTool {
 	private static String profilesEndpointUrl;
 	
 	public static final String PROFILE_REL_TYPE = "related";
+	
+	public static final String ACCOUNT_ENPOINT_BASE = "/2012-04-24/Accounts/";
+	public static final String ORGANIZATION_ENPOINT_BASE = "/2012-04-24/Organizations/";
+	public static final String PROFILE_ENPOINT_BASE = "/2012-04-24/Profiles";
 
     public enum AssociatedResourceType {
         ACCOUNT, ORGANIZATION
@@ -56,9 +60,9 @@ public class RestcommProfilesTool {
 		}
 		switch (type) {
 		case ACCOUNT:
-			return deploymentUrl + "/2012-04-24/Accounts/" + targetResourceSid;
+			return deploymentUrl + ACCOUNT_ENPOINT_BASE + targetResourceSid;
 		case ORGANIZATION:
-			return deploymentUrl + "/2012-04-24/Organizations/" + targetResourceSid;
+			return deploymentUrl + ORGANIZATION_ENPOINT_BASE + targetResourceSid;
 
 		default:
 			return null;
@@ -73,7 +77,7 @@ public class RestcommProfilesTool {
 		if (deploymentUrl.endsWith("/")) {
 			deploymentUrl = deploymentUrl.substring(0, deploymentUrl.length() - 1);
 		}
-		profilesEndpointUrl = deploymentUrl + "/2012-04-24/Profiles";
+		profilesEndpointUrl = deploymentUrl + PROFILE_ENPOINT_BASE;
 		return profilesEndpointUrl;
 	}
 
