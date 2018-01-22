@@ -686,13 +686,6 @@ public class AccountsEndpointTest extends EndpointTest {
         assertEquals(1, accountsArray.size());
     }
 
-    @Test
-    @Category({FeatureAltTests.class})
-    public void getAssociatedProfile() {
-    	//TODO Impl
-    	assertTrue(false);
-    }
-
     @Deployment(name = "ClientsEndpointTest", managed = true, testable = false)
     public static WebArchive createWebArchiveNoGw() {
         logger.info("Packaging Test App");

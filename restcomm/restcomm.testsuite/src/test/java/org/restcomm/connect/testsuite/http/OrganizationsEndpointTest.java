@@ -181,13 +181,6 @@ public class OrganizationsEndpointTest extends EndpointTest {
     	assertTrue(clientResponse.getStatus() == 403);
     }
 
-    @Test
-    @Category({FeatureAltTests.class})
-    public void getAssociatedProfile() {
-    	//TODO Impl
-    	assertTrue(false);
-    }
-
     @Deployment(name = "OrganizationsEndpointTest", managed = true, testable = false)
     public static WebArchive createWebArchiveNoGw() {
         logger.info("Packaging Test App");

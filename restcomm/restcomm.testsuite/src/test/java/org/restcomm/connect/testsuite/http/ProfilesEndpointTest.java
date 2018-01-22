@@ -22,6 +22,7 @@ import org.junit.Test;
 import org.junit.experimental.categories.Category;
 import org.junit.runner.RunWith;
 import org.restcomm.connect.commons.Version;
+import org.restcomm.connect.commons.annotations.FeatureAltTests;
 import org.restcomm.connect.commons.annotations.FeatureExpTests;
 
 import com.google.gson.JsonArray;
@@ -179,11 +180,15 @@ public class ProfilesEndpointTest extends EndpointTest {
     	HttpResponse response = RestcommProfilesTool.getInstance().linkProfile(deploymentUrl.toString(), superAdminAccountSid, superAdminAuthToken, profileSid, superAdminAccountSid, RestcommProfilesTool.AssociatedResourceType.ACCOUNT);
     	logger.info("HttpResponse: "+response);
     	assertEquals(200, response.getStatusLine().getStatusCode());
+    	
+    	//TODO: getAssociatedProfileFromAccountEndpoint to verify association establishment
 
 		//super admin tries to update profile
     	response = RestcommProfilesTool.getInstance().unLinkProfile(deploymentUrl.toString(), superAdminAccountSid, superAdminAuthToken, profileSid, superAdminAccountSid, RestcommProfilesTool.AssociatedResourceType.ACCOUNT);
     	logger.info("HttpResponse: "+response);
     	assertEquals(200, response.getStatusLine().getStatusCode());
+    	
+    	//TODO: getAssociatedProfileFromAccountEndpoint to verify association removal
     }
 
     /**
@@ -197,11 +202,15 @@ public class ProfilesEndpointTest extends EndpointTest {
     	HttpResponse response = RestcommProfilesTool.getInstance().linkProfile(deploymentUrl.toString(), superAdminAccountSid, superAdminAuthToken, profileSid, organizationSid, RestcommProfilesTool.AssociatedResourceType.ORGANIZATION);
     	logger.info("HttpResponse: "+response);
     	assertEquals(200, response.getStatusLine().getStatusCode());
+    	
+    	//TODO: getAssociatedProfileFromOrganizationEndpoint to verify association establishment
 
 		//super admin tries to update profile
     	response = RestcommProfilesTool.getInstance().unLinkProfile(deploymentUrl.toString(), superAdminAccountSid, superAdminAuthToken, profileSid, organizationSid, RestcommProfilesTool.AssociatedResourceType.ORGANIZATION);
     	logger.info("HttpResponse: "+response);
     	assertEquals(200, response.getStatusLine().getStatusCode());
+    	
+    	//TODO: getAssociatedProfileFromOrganizationEndpoint to verify association removal
     }
     
     @Deployment(name = "ProfilesEndpointTest", managed = true, testable = false)
