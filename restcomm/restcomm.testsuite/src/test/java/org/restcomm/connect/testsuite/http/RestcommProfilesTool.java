@@ -119,7 +119,7 @@ public class RestcommProfilesTool {
 		Client jerseyClient = Client.create();
 		jerseyClient.addFilter(new HTTPBasicAuthFilter(username, authtoken));
 		WebResource webResource = jerseyClient.resource(getProfilesEndpointUrl(deploymentUrl));
-		ClientResponse response = webResource.path(profileSid).get(ClientResponse.class);
+		ClientResponse response = webResource.path(profileSid).accept(PROFILE_SCHEMA_CONTENT_TYPE).get(ClientResponse.class);
 		return response;
 	}
 
@@ -167,7 +167,7 @@ public class RestcommProfilesTool {
 		Client jerseyClient = Client.create();
 		jerseyClient.addFilter(new HTTPBasicAuthFilter(username, authtoken));
 		WebResource webResource = jerseyClient.resource(getProfilesEndpointUrl(deploymentUrl));
-		ClientResponse response = webResource.accept(PROFILE_SCHEMA_CONTENT_TYPE).get(ClientResponse.class);
+		ClientResponse response = webResource.accept(MediaType.APPLICATION_JSON).get(ClientResponse.class);
 		return response;
 	}
 
