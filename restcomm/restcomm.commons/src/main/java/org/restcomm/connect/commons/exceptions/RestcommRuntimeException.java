@@ -17,13 +17,33 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>
  *
  */
-
 package org.restcomm.connect.commons.exceptions;
 
 /**
- * Generic type of runtime exception that is handled centrally using exceptions mappers.
+ * Generic type of runtime exception that is handled centrally using exceptions
+ * mappers.
  *
  * @author otsakir@gmail.com - Orestis Tsakiridis
  */
 public class RestcommRuntimeException extends RuntimeException {
+
+    public RestcommRuntimeException() {
+    }
+
+    public RestcommRuntimeException(String message) {
+        super(message);
+    }
+
+    public RestcommRuntimeException(String message, Throwable cause) {
+        super(message, cause);
+    }
+
+    public RestcommRuntimeException(Throwable cause) {
+        super(cause);
+    }
+
+    public RestcommRuntimeException(String message, Throwable cause, boolean enableSuppression, boolean writableStackTrace) {
+        super(message, cause, enableSuppression, writableStackTrace);
+    }
+
 }
