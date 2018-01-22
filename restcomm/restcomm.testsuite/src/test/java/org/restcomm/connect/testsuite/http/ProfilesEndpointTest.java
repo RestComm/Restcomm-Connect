@@ -2,6 +2,7 @@ package org.restcomm.connect.testsuite.http;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
+import static org.junit.Assert.assertNull;
 import static org.junit.Assert.assertTrue;
 
 import java.io.IOException;
@@ -22,12 +23,13 @@ import org.junit.Test;
 import org.junit.experimental.categories.Category;
 import org.junit.runner.RunWith;
 import org.restcomm.connect.commons.Version;
-import org.restcomm.connect.commons.annotations.FeatureAltTests;
 import org.restcomm.connect.commons.annotations.FeatureExpTests;
 
 import com.google.gson.JsonArray;
 import com.google.gson.JsonObject;
 import com.sun.jersey.api.client.ClientResponse;
+import com.sun.jersey.api.client.WebResourceLinkHeaders;
+import com.sun.jersey.core.header.LinkHeader;
 
 /**
  * @author maria
@@ -122,7 +124,9 @@ public class ProfilesEndpointTest extends EndpointTest {
      */
     @Test
     public void createProfileTest(){
-    	//super admin tries to create profile
+    	/*
+		 * create a profile 
+		 */
     	ClientResponse clientResponse = RestcommProfilesTool.getInstance().createProfileResponse(deploymentUrl.toString(), superAdminAccountSid, superAdminAuthToken, profileDocument);
     	logger.info("clientResponse: "+clientResponse);
     	assertEquals(200, clientResponse.getStatus());
@@ -135,7 +139,9 @@ public class ProfilesEndpointTest extends EndpointTest {
      */
     @Test
     public void updateProfileTest(){
-    	//super admin tries to update profile
+    	/*
+		 * update a profile 
+		 */
     	ClientResponse clientResponse = RestcommProfilesTool.getInstance().updateProfileResponse(deploymentUrl.toString(), superAdminAccountSid, superAdminAuthToken, profileSid, updatedProfileDocument);
     	logger.info("clientResponse: "+clientResponse);
     	assertEquals(200, clientResponse.getStatus());
@@ -148,7 +154,9 @@ public class ProfilesEndpointTest extends EndpointTest {
      */
     @Test
     public void deleteProfileTest(){
-    	//super admin tries to delete profile
+    	/*
+		 * delete a profile 
+		 */
     	ClientResponse clientResponse = RestcommProfilesTool.getInstance().deleteProfileResponse(deploymentUrl.toString(), superAdminAccountSid, superAdminAuthToken, profileSid);
     	logger.info("clientResponse: "+clientResponse);
     	assertEquals(200, clientResponse.getStatus());
@@ -176,19 +184,45 @@ public class ProfilesEndpointTest extends EndpointTest {
      */
     @Test
     public void linkUnLinkProfileToAccount() throws ClientProtocolException, IOException{
-		//super admin tries to update profile
+		/*
+		 * link a profile to an account 
+		 */
     	HttpResponse response = RestcommProfilesTool.getInstance().linkProfile(deploymentUrl.toString(), superAdminAccountSid, superAdminAuthToken, profileSid, superAdminAccountSid, RestcommProfilesTool.AssociatedResourceType.ACCOUNT);
     	logger.info("HttpResponse: "+response);
     	assertEquals(200, response.getStatusLine().getStatusCode());
     	
-    	//TODO: getAssociatedProfileFromAccountEndpoint to verify association establishment
+    	/* 
+    	 * Get associated profile
+    	 * from Accounts endpoint:
+    	 * to verify association establishment.
+    	 */
+    	ClientResponse accountEndopintResponse = RestcommAccountsTool.getInstance().getAccountResponse(deploymentUrl.toString(), superAdminAccountSid, superAdminAuthToken, superAdminAccountSid);
+    	WebResourceLinkHeaders linkHeaders = accountEndopintResponse.getLinks();
+    	logger.info("accountEndopintResponse WebResourceLinkHeaders: "+linkHeaders);
+    	assertNotNull(linkHeaders);
+    	LinkHeader linkHeader = linkHeaders.getLink("related");
+    	logger.info("accountEndopintResponse WebResourceLinkHeaders linkHeader: "+linkHeader);
+    	assertNotNull(linkHeader);
+    	assertTrue(linkHeader.getUri().toString().contains(profileSid));
 
-		//super admin tries to update profile
+    	/*
+		 * unlink a profile from an account 
+		 */
     	response = RestcommProfilesTool.getInstance().unLinkProfile(deploymentUrl.toString(), superAdminAccountSid, superAdminAuthToken, profileSid, superAdminAccountSid, RestcommProfilesTool.AssociatedResourceType.ACCOUNT);
     	logger.info("HttpResponse: "+response);
     	assertEquals(200, response.getStatusLine().getStatusCode());
     	
-    	//TODO: getAssociatedProfileFromAccountEndpoint to verify association removal
+    	/* 
+    	 * Get associated profile
+    	 * from Accounts endpoint: 
+    	 * to verify association removal
+    	 */
+    	accountEndopintResponse = RestcommAccountsTool.getInstance().getAccountResponse(deploymentUrl.toString(), superAdminAccountSid, superAdminAuthToken, superAdminAccountSid);
+    	linkHeaders = accountEndopintResponse.getLinks();
+    	logger.info("accountEndopintResponse WebResourceLinkHeaders: "+linkHeaders);
+    	linkHeader = linkHeaders.getLink("related");
+    	logger.info("accountEndopintResponse WebResourceLinkHeaders linkHeader: "+linkHeader);
+    	assertNull(linkHeader);
     }
 
     /**
@@ -198,19 +232,45 @@ public class ProfilesEndpointTest extends EndpointTest {
      */
     @Test
     public void linkUnLinkProfileToOrganization() throws ClientProtocolException, IOException{
-		//super admin tries to update profile
+    	/*
+		 * link a profile to an organizations 
+		 */
     	HttpResponse response = RestcommProfilesTool.getInstance().linkProfile(deploymentUrl.toString(), superAdminAccountSid, superAdminAuthToken, profileSid, organizationSid, RestcommProfilesTool.AssociatedResourceType.ORGANIZATION);
     	logger.info("HttpResponse: "+response);
     	assertEquals(200, response.getStatusLine().getStatusCode());
     	
-    	//TODO: getAssociatedProfileFromOrganizationEndpoint to verify association establishment
+    	/* 
+    	 * Get associated profile
+    	 * from Organizations endpoint:
+    	 * to verify association establishment.
+    	 */
+    	ClientResponse orgEndopintResponse = RestcommOrganizationsTool.getInstance().getOrganizationResponse(deploymentUrl.toString(), superAdminAccountSid, superAdminAuthToken, organizationSid);
+    	WebResourceLinkHeaders linkHeaders = orgEndopintResponse.getLinks();
+    	logger.info("accountEndopintResponse WebResourceLinkHeaders: "+linkHeaders);
+    	assertNotNull(linkHeaders);
+    	LinkHeader linkHeader = linkHeaders.getLink("related");
+    	logger.info("accountEndopintResponse WebResourceLinkHeaders linkHeader: "+linkHeader);
+    	assertNotNull(linkHeader);
+    	assertTrue(linkHeader.getUri().toString().contains(profileSid));
 
-		//super admin tries to update profile
+    	/*
+		 * unlink a profile from an organization 
+		 */
     	response = RestcommProfilesTool.getInstance().unLinkProfile(deploymentUrl.toString(), superAdminAccountSid, superAdminAuthToken, profileSid, organizationSid, RestcommProfilesTool.AssociatedResourceType.ORGANIZATION);
     	logger.info("HttpResponse: "+response);
     	assertEquals(200, response.getStatusLine().getStatusCode());
     	
-    	//TODO: getAssociatedProfileFromOrganizationEndpoint to verify association removal
+    	/* 
+    	 * Get associated profile
+    	 * from Organizations endpoint:
+    	 * to verify association removal.
+    	 */
+    	orgEndopintResponse = RestcommOrganizationsTool.getInstance().getOrganizationResponse(deploymentUrl.toString(), superAdminAccountSid, superAdminAuthToken, organizationSid);
+    	linkHeaders = orgEndopintResponse.getLinks();
+    	logger.info("orgEndopintResponse WebResourceLinkHeaders: "+linkHeaders);
+    	linkHeader = linkHeaders.getLink("related");
+    	logger.info("orgEndopintResponse WebResourceLinkHeaders linkHeader: "+linkHeader);
+    	assertNull(linkHeader);
     }
     
     @Deployment(name = "ProfilesEndpointTest", managed = true, testable = false)
