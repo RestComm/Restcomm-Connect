@@ -83,7 +83,7 @@ public class RestcommAccountsTool {
 
 	public Response updateAccountResponse (String deploymentUrl, String adminUsername, String adminAuthToken, String accountSid, String friendlyName, String password, String authToken, String role, String status) {
 		Client jerseyClient = ClientBuilder.newClient();
-		jerseyClient.register(HttpAuthenticationFeature.basic(adminUsername, password));
+		jerseyClient.register(HttpAuthenticationFeature.basic(adminUsername, adminAuthToken));
 
 		String url = getAccountsUrl(deploymentUrl, false) + "/" + accountSid;
 
