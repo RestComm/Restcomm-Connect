@@ -56,6 +56,7 @@ public class ProfilesEndpointTest extends EndpointTest {
     private String devAuthToken = "77f8c12cc7b8f8423e5c38b035249166";
 
     private final String profileSid = "PRafbe225ad37541eba518a74248f0ac4c";
+    private final String organizationSid = "ORafbe225ad37541eba518a74248f0ac4c";
 
     JsonObject profileDocument;
     JsonObject updatedProfileDocument;
@@ -168,31 +169,39 @@ public class ProfilesEndpointTest extends EndpointTest {
     }
 
     /**
-     * link a give Profile To an Account
+     * link/unlink a give Profile To an Account
      * @throws IOException 
      * @throws ClientProtocolException 
      */
     @Test
-    public void linkProfileToAccount() throws ClientProtocolException, IOException{
+    public void linkUnLinkProfileToAccount() throws ClientProtocolException, IOException{
 		//super admin tries to update profile
     	HttpResponse response = RestcommProfilesTool.getInstance().linkProfile(deploymentUrl.toString(), superAdminAccountSid, superAdminAuthToken, profileSid, superAdminAccountSid, RestcommProfilesTool.AssociatedResourceType.ACCOUNT);
     	logger.info("HttpResponse: "+response);
     	assertEquals(200, response.getStatusLine().getStatusCode());
 
+		//super admin tries to update profile
+    	response = RestcommProfilesTool.getInstance().unLinkProfile(deploymentUrl.toString(), superAdminAccountSid, superAdminAuthToken, profileSid, superAdminAccountSid, RestcommProfilesTool.AssociatedResourceType.ACCOUNT);
+    	logger.info("HttpResponse: "+response);
+    	assertEquals(200, response.getStatusLine().getStatusCode());
     }
 
     /**
-     * link a give Profile To an Organization
+     * link/unlink a give Profile To an Organization
      * @throws IOException 
      * @throws ClientProtocolException 
      */
     @Test
-    public void linkProfileToOrganization() throws ClientProtocolException, IOException{
+    public void linkUnLinkProfileToOrganization() throws ClientProtocolException, IOException{
 		//super admin tries to update profile
-    	HttpResponse response = RestcommProfilesTool.getInstance().unLinkProfile(deploymentUrl.toString(), superAdminAccountSid, superAdminAuthToken, profileSid, superAdminAccountSid, RestcommProfilesTool.AssociatedResourceType.ACCOUNT);
+    	HttpResponse response = RestcommProfilesTool.getInstance().linkProfile(deploymentUrl.toString(), superAdminAccountSid, superAdminAuthToken, profileSid, organizationSid, RestcommProfilesTool.AssociatedResourceType.ORGANIZATION);
     	logger.info("HttpResponse: "+response);
     	assertEquals(200, response.getStatusLine().getStatusCode());
 
+		//super admin tries to update profile
+    	response = RestcommProfilesTool.getInstance().unLinkProfile(deploymentUrl.toString(), superAdminAccountSid, superAdminAuthToken, profileSid, organizationSid, RestcommProfilesTool.AssociatedResourceType.ORGANIZATION);
+    	logger.info("HttpResponse: "+response);
+    	assertEquals(200, response.getStatusLine().getStatusCode());
     }
     
     @Deployment(name = "ProfilesEndpointTest", managed = true, testable = false)
