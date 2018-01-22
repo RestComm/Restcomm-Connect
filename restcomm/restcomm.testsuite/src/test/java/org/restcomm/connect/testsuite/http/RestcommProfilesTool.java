@@ -38,6 +38,7 @@ public class RestcommProfilesTool {
 	private static String profilesEndpointUrl;
 	
 	public static final String PROFILE_REL_TYPE = "related";
+	public static final String PROFILE_SCHEMA_CONTENT_TYPE = "application/schema+json";
 	
 	public static final String ACCOUNT_ENPOINT_BASE = "/2012-04-24/Accounts/";
 	public static final String ORGANIZATION_ENPOINT_BASE = "/2012-04-24/Organizations/";
@@ -95,11 +96,13 @@ public class RestcommProfilesTool {
 		Client jerseyClient = Client.create();
 		jerseyClient.addFilter(new HTTPBasicAuthFilter(adminUsername, adminAuthToken));
 
-		WebResource webResource = jerseyClient.resource(getProfilesEndpointUrl(deploymentUrl));
-
-		String response = webResource.path(profileSid).get(String.class);
-		JsonParser parser = new JsonParser();
-		JsonObject jsonResponse = parser.parse(response).getAsJsonObject();
+		JsonObject jsonResponse =null;
+		try {
+			ClientResponse clientResponse = getProfileResponse(deploymentUrl, adminUsername, adminAuthToken, profileSid);
+			jsonResponse = new JsonParser().parse(clientResponse.getEntity(String.class)).getAsJsonObject();
+		} catch (Exception e) {
+			logger.info("Exception: " + e);
+		}
 
 		return jsonResponse;
 	}
@@ -164,7 +167,7 @@ public class RestcommProfilesTool {
 		Client jerseyClient = Client.create();
 		jerseyClient.addFilter(new HTTPBasicAuthFilter(username, authtoken));
 		WebResource webResource = jerseyClient.resource(getProfilesEndpointUrl(deploymentUrl));
-		ClientResponse response = webResource.get(ClientResponse.class);
+		ClientResponse response = webResource.accept(PROFILE_SCHEMA_CONTENT_TYPE).get(ClientResponse.class);
 		return response;
 	}
 
@@ -204,7 +207,7 @@ public class RestcommProfilesTool {
 		String url = getProfilesEndpointUrl(deploymentUrl);
 
 		WebResource webResource = jerseyClient.resource(url);
-		ClientResponse response = webResource.accept(MediaType.APPLICATION_JSON).post(ClientResponse.class, profileDocument);
+		ClientResponse response = webResource.type(PROFILE_SCHEMA_CONTENT_TYPE).accept(PROFILE_SCHEMA_CONTENT_TYPE).post(ClientResponse.class, profileDocument.toString());
 		return response;
 	}
 
@@ -246,7 +249,7 @@ public class RestcommProfilesTool {
 		String url = getProfilesEndpointUrl(deploymentUrl) + "/" + profileSid;
 
 		WebResource webResource = jerseyClient.resource(url);
-		ClientResponse response = webResource.accept(MediaType.APPLICATION_JSON).put(ClientResponse.class, profileDocument);
+		ClientResponse response = webResource.type(PROFILE_SCHEMA_CONTENT_TYPE).accept(PROFILE_SCHEMA_CONTENT_TYPE).put(ClientResponse.class, profileDocument.toString());
 		return response;
 	}
 
