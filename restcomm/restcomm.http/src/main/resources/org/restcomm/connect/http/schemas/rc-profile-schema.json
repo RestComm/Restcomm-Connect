@@ -1,0 +1,14 @@
+{
+    "$schema": "http://json-schema.org/draft-04/schema#",
+    "id": "resource:/org/restcomm/connect/http/schemas/rc-profile-schema.json#",
+    "additionalProperties": false,
+    "type": "object",
+    "properties": {
+        "featureEnablement": {
+            "$ref": "rc-feature-enablement-schema.json#/definitions/featureEnablement"
+        },
+        "sessionThrottling": {
+            "$ref": "rc-session-throttling-schema.json#/definitions/sessionThrottling"
+        }        
+    }
+}
