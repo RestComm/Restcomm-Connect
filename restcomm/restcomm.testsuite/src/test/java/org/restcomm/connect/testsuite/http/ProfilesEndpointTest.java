@@ -65,7 +65,7 @@ public class ProfilesEndpointTest extends EndpointTest {
     private static JsonObject updatedProfileDocument;
 
     @Before
-    public static void before() {
+    public void before() {
     	profileDocument = new JsonParser().parse(profileDocStr).getAsJsonObject();
     	updatedProfileDocument = new JsonParser().parse(updatedProfileDocStr).getAsJsonObject();
     }
