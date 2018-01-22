@@ -18,7 +18,7 @@ import org.jboss.arquillian.test.api.ArquillianResource;
 import org.jboss.shrinkwrap.api.ShrinkWrap;
 import org.jboss.shrinkwrap.api.spec.WebArchive;
 import org.jboss.shrinkwrap.resolver.api.maven.archive.ShrinkWrapMaven;
-import org.junit.BeforeClass;
+import org.junit.Before;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
 import org.junit.runner.RunWith;
@@ -27,6 +27,7 @@ import org.restcomm.connect.commons.annotations.FeatureExpTests;
 
 import com.google.gson.JsonArray;
 import com.google.gson.JsonObject;
+import com.google.gson.JsonParser;
 import com.sun.jersey.api.client.ClientResponse;
 import com.sun.jersey.api.client.WebResourceLinkHeaders;
 import com.sun.jersey.core.header.LinkHeader;
@@ -40,6 +41,9 @@ public class ProfilesEndpointTest extends EndpointTest {
     private final static Logger logger = Logger.getLogger(ProfilesEndpointTest.class.getName());
 
     private static final String version = Version.getVersion();
+    
+    private static final String profileDocStr="{ \"featureEnablement\": { \"DIDPurchase\": { \"allowedCountries\": [\"US\", \"CA\"] }, \"destinations\": { \"allowedPrefixes\": [\"+1\"] }, \"outboundPSTN\": { }, \"inboundPSTN\": { }, \"outboundSMS\": { }, \"inboundSMS\": { } }, \"sessionThrottling\": { \"PSTNCallsPerTime\": { \"events\" : 300, \"time\" : 30, \"timeUnit\" : \"days\" } } }";
+    private static final String updatedProfileDocStr="{ \"featureEnablement\": { \"DIDPurchase\": { \"allowedCountries\": [\"PK\", \"CA\"] }, \"destinations\": { \"allowedPrefixes\": [\"+1\"] }, \"outboundPSTN\": { }, \"inboundPSTN\": { }, \"outboundSMS\": { }, \"inboundSMS\": { } }, \"sessionThrottling\": { \"PSTNCallsPerTime\": { \"events\" : 300, \"time\" : 30, \"timeUnit\" : \"days\" } } }";
 
     @ArquillianResource
     private Deployer deployer;
@@ -61,11 +65,13 @@ public class ProfilesEndpointTest extends EndpointTest {
     private final String profileSid = "PRafbe225ad37541eba518a74248f0ac4c";
     private final String organizationSid = "ORafbe225ad37541eba518a74248f0ac4c";
 
-    JsonObject profileDocument;
-    JsonObject updatedProfileDocument;
+    private static JsonObject profileDocument;
+    private static JsonObject updatedProfileDocument;
 
-    @BeforeClass
-    public static void beforeClass() {
+    @Before
+    public static void before() {
+    	profileDocument = new JsonParser().parse(profileDocStr).getAsJsonObject();
+    	updatedProfileDocument = new JsonParser().parse(updatedProfileDocStr).getAsJsonObject();
     }
 
     /**
