@@ -22,7 +22,6 @@ package org.restcomm.connect.http;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.github.fge.jsonschema.main.JsonSchema;
 import com.github.fge.jsonschema.main.JsonSchemaFactory;
-import com.sun.jersey.api.client.ClientResponse.Status;
 import java.io.InputStream;
 import java.net.URI;
 import java.sql.SQLException;
@@ -30,11 +29,15 @@ import java.util.Date;
 import java.util.List;
 import com.github.fge.jackson.JsonLoader;
 import com.github.fge.jsonschema.core.report.ProcessingReport;
+import java.net.MalformedURLException;
 import java.nio.charset.Charset;
+import java.nio.file.Path;
+import java.nio.file.Paths;
 import javax.annotation.PostConstruct;
 import javax.servlet.ServletContext;
 import javax.servlet.http.HttpServletRequest;
 import javax.ws.rs.core.HttpHeaders;
+import javax.ws.rs.core.Link;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
 import javax.ws.rs.core.UriInfo;
@@ -46,12 +49,14 @@ import org.restcomm.connect.dao.ProfileAssociationsDao;
 import org.restcomm.connect.dao.ProfilesDao;
 import org.restcomm.connect.dao.entities.Profile;
 import org.restcomm.connect.dao.entities.ProfileAssociation;
+import org.restcomm.connect.http.exceptions.ResourceAccountMissmatch;
 
 public class ProfileEndpoint extends SecuredEndpoint {
 
     //TODO compose schema location
     protected static final String PROFILE_CONTENT_TYPE = "application/instance+json;schema=";
     protected static final String PROFILE_SCHEMA_CONTENT_TYPE = "application/schema+json";
+    protected static final String PROFILE_REL_TYPE = "related";
     protected static final String LINK_HEADER = "Link";
     protected static final String PROFILE_ENCODING = "UTF-8";
 
@@ -97,30 +102,44 @@ public class ProfileEndpoint extends SecuredEndpoint {
         }
     }
 
-    public Response unlinkProfile(String profileSid, HttpHeaders headers) {
-        List<String> requestHeader = headers.getRequestHeader(LINK_HEADER);
-        if (requestHeader.size() == 1) {
-            //TODO parse link header
-            String targetSid = requestHeader.get(0);
-            profileAssociationsDao.deleteProfileAssociationByTargetSid(targetSid);
-            return Response.ok().build();
-        } else {
-            return Response.status(Status.BAD_REQUEST).build();
+    public Response unlinkProfile(String profileSidStr, HttpHeaders headers) {
+        List<String> requestHeader = checkLinkHeader(headers);
+        Link link = Link.valueOf(requestHeader.get(0));
+        checkRelType(link);
+        String targetSid = retrieveSid(link.getUri());
+        profileAssociationsDao.deleteProfileAssociationByTargetSid(targetSid);
+        return Response.ok().build();
+    }
+
+    private String retrieveSid(URI uri) {
+        Path paths = Paths.get(uri.getPath());
+        return paths.getName(paths.getNameCount() - 1).toString();
+    }
+
+    private void checkRelType(Link link) {
+        if (!link.getRel().equals(PROFILE_REL_TYPE)) {
+            throw new ResourceAccountMissmatch("rel type not supported");
         }
     }
 
-    public Response linkProfile(String profileSidStr, HttpHeaders headers) {
+    private List<String> checkLinkHeader(HttpHeaders headers) {
         List<String> requestHeader = headers.getRequestHeader(LINK_HEADER);
-        if (requestHeader.size() == 1) {
-            Sid profileSid = new Sid(profileSidStr);
-            //TODO parse link header
-            Sid targetSid = new Sid(requestHeader.get(0));
-            ProfileAssociation assoc = new ProfileAssociation(profileSid, targetSid, new Date(), new Date());
-            profileAssociationsDao.addProfileAssociation(assoc);
-            return Response.ok().build();
-        } else {
-            return Response.status(Status.BAD_REQUEST).build();
+        if (requestHeader.size() != 1) {
+            throw new ResourceAccountMissmatch();
         }
+        return requestHeader;
+    }
+
+    public Response linkProfile(String profileSidStr, HttpHeaders headers, UriInfo uriInfo) {
+        List<String> requestHeader = checkLinkHeader(headers);
+        Link link = Link.valueOf(requestHeader.get(0));
+        checkRelType(link);
+        Sid targetSid = new Sid(retrieveSid(link.getUri()));
+        Sid profileSid = new Sid(profileSidStr);
+        ProfileAssociation assoc = new ProfileAssociation(profileSid, targetSid, new Date(), new Date());
+        profileAssociationsDao.addProfileAssociation(assoc);
+        return Response.ok().build();
+
     }
 
     public Response deleteProfile(String profileSid) {
@@ -145,14 +164,36 @@ public class ProfileEndpoint extends SecuredEndpoint {
         }
     }
 
-    public Response getProfile(String profileSid) {
+    public Link composeLink(Sid targetSid, UriInfo info) throws MalformedURLException {
+        String sid = targetSid.toString();
+        URI uri = null;
+        Link.Builder link = null;
+        switch (sid.substring(1, 2)) {
+            case "AC":
+                uri = info.getBaseUriBuilder().path(AccountsJsonEndpoint.class).path(sid).build();
+                link = Link.fromUri(uri).title("Accounts");
+                break;
+            case "OR":
+                uri = info.getBaseUriBuilder().path(OrganizationsJsonEndpoint.class).path(sid).build();
+                link = Link.fromUri(uri).title("Organizations");
+                break;
+            default:
+        }
+        if (link != null) {
+            return link.type(PROFILE_REL_TYPE).build();
+        } else {
+            return null;
+        }
+    }
+
+    public Response getProfile(String profileSid, UriInfo info) {
         try {
             Profile profile = profilesDao.getProfile(profileSid);
             Response.ResponseBuilder ok = Response.ok(profile.getProfileDocument());
             List<ProfileAssociation> profileAssociationsByProfileSid = profileAssociationsDao.getProfileAssociationsByProfileSid(profileSid);
             for (ProfileAssociation assoc : profileAssociationsByProfileSid) {
-                //TODO compose link header
-                ok.header(LINK_HEADER, "http://cloud.restcomm.comm/Profiles/" + assoc.getTargetSid());
+                Link composeLink = composeLink(assoc.getTargetSid(), info);
+                ok.header(LINK_HEADER, composeLink.toString());
             }
             String profileStr = IOUtils.toString(profile.getProfileDocument(), PROFILE_ENCODING);
             ok.entity(profileStr);
