@@ -10,6 +10,7 @@ import javax.ws.rs.core.MediaType;
 import org.apache.commons.codec.binary.Base64;
 import org.apache.http.HttpResponse;
 import org.apache.http.client.ClientProtocolException;
+import org.apache.http.client.methods.HttpRequestBase;
 import org.apache.http.impl.client.DefaultHttpClient;
 import org.apache.http.message.BasicHeader;
 import org.restcomm.connect.testsuite.http.util.HttpLink;
@@ -60,10 +61,6 @@ public class RestcommProfilesTool {
 		default:
 			return null;
 		}
-	}
-
-	private String createLinkStr(String deploymentUrl, String targetResourceSid, AssociatedResourceType type){
-		return Link.fromUri(getTargetResourceUrl(deploymentUrl, targetResourceSid, type)).rel("related").build().toString();
 	}
 	
 	/**
@@ -282,9 +279,7 @@ public class RestcommProfilesTool {
 		String url = getProfilesEndpointUrl(deploymentUrl) + "/" + profileSid;
 
 		HttpLink request = new HttpLink(url);
-		request.addHeader(getAuthHeader(deploymentUrl, operatorUsername, operatorAuthtoken));
-		request.addHeader(getjsonAcceptHeader());
-		request.addHeader(getLinkHeader(deploymentUrl, targetResourceSid, type));
+		request = (HttpLink) addLinkUnlinkRequiredHeaders(request, deploymentUrl, operatorUsername, operatorAuthtoken, profileSid, targetResourceSid, type);
 		final DefaultHttpClient client = new DefaultHttpClient();
 	    final HttpResponse response = client.execute(request);
 	    logger.info("response is here: "+response);
@@ -307,35 +302,42 @@ public class RestcommProfilesTool {
 		String url = getProfilesEndpointUrl(deploymentUrl) + "/" + profileSid;
 
 		HttpUnLink request = new HttpUnLink(url);
-		request.addHeader(getAuthHeader(deploymentUrl, operatorUsername, operatorAuthtoken));
-		request.addHeader(getjsonAcceptHeader());
-		request.addHeader(getLinkHeader(deploymentUrl, targetResourceSid, type));
+		request = (HttpUnLink) addLinkUnlinkRequiredHeaders(request, deploymentUrl, operatorUsername, operatorAuthtoken, profileSid, targetResourceSid, type);
 		final DefaultHttpClient client = new DefaultHttpClient();
 	    final HttpResponse response = client.execute(request);
 	    logger.info("response is here: "+response);
 	    return response;
 	}
 	
-	private BasicHeader getLinkHeader(String deploymentUrl, String targetResourceSid, AssociatedResourceType type){
-		String targetResourceLinkstr = createLinkStr(deploymentUrl, targetResourceSid, type);
+	/**
+	 * @param request
+	 * @param deploymentUrl
+	 * @param operatorUsername
+	 * @param operatorAuthtoken
+	 * @param profileSid
+	 * @param targetResourceSid
+	 * @param type
+	 * @return
+	 */
+	private HttpRequestBase addLinkUnlinkRequiredHeaders(HttpRequestBase request, String deploymentUrl, String operatorUsername, String operatorAuthtoken, String profileSid, String targetResourceSid, AssociatedResourceType type){
+		request.addHeader(getAuthHeader(deploymentUrl, operatorUsername, operatorAuthtoken));
+		request.addHeader(getjsonAcceptHeader());
+		request.addHeader(getLinkHeaderOfTargetResource(deploymentUrl, targetResourceSid, type));
+		return request;
+	}
+	
+	private BasicHeader getLinkHeaderOfTargetResource(String deploymentUrl, String targetResourceSid, AssociatedResourceType type){
+		String targetResourceLinkstr = Link.fromUri(getTargetResourceUrl(deploymentUrl, targetResourceSid, type)).rel("related").build().toString();
         return new BasicHeader("Link", targetResourceLinkstr);
 	}
 
 	private BasicHeader getAuthHeader(String deploymentUrl, String operatorUsername, String operatorAuthtoken){
-		return new BasicHeader(HttpHeaders.AUTHORIZATION, getAuthenticationHeader(operatorUsername, operatorAuthtoken));
+		String auth = operatorUsername + ":" + operatorAuthtoken;
+        byte[] encodedAuth = Base64.encodeBase64(auth.getBytes(Charset.forName("ISO-8859-1")));
+		return new BasicHeader(HttpHeaders.AUTHORIZATION, "Basic " + new String(encodedAuth));
 	}
 
 	private BasicHeader getjsonAcceptHeader(){
 		return new BasicHeader("Accept", "application/json");
 	}
-
-    private String getAuthenticationHeader(String operatorUsername, String operatorAuthtoken) {
-
-        String authenticationHeader = null;
-        String auth = operatorUsername + ":" + operatorAuthtoken;
-        byte[] encodedAuth = Base64.encodeBase64(auth.getBytes(Charset.forName("ISO-8859-1")));
-        authenticationHeader = "Basic " + new String(encodedAuth);
-    
-        return authenticationHeader;
-    }
 }
