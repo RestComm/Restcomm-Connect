@@ -123,7 +123,7 @@ public class ProfilesEndpointTest extends EndpointTest {
 		 */
     	ClientResponse clientResponse = RestcommProfilesTool.getInstance().createProfileResponse(deploymentUrl.toString(), superAdminAccountSid, authToken, profileDocument);
     	logger.info("clientResponse: "+clientResponse);
-    	assertEquals(200, clientResponse.getStatus());
+    	assertEquals(201, clientResponse.getStatus());
 
     	// TODO Read and verify further response
     }
