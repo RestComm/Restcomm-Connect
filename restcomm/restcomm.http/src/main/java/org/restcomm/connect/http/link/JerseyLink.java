@@ -170,13 +170,14 @@ public final class JerseyLink extends javax.ws.rs.core.Link {
         }
 
         private URI resolveLinkUri(Object[] values) {
-            /*final URI linkUri = uriBuilder.build(values);
+            final URI linkUri = uriBuilder.build(values);
+            return linkUri;
+            /*TODO support temaplte
             if (baseUri == null || linkUri.isAbsolute()) {
                 return UriTemplate.normalize(linkUri);
             }
-            return UriTemplate.resolve(baseUri, linkUri);*/
-            throw new UnsupportedOperationException("template not supported in jaxrs2");
-
+            return UriTemplate.resolve(baseUri, linkUri);
+            */
         }
     }
 
