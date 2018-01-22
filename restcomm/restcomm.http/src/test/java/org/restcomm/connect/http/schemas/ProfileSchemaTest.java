@@ -28,6 +28,7 @@ import com.github.fge.jackson.JsonLoader;
 import com.github.fge.jsonschema.core.report.ProcessingReport;
 import com.github.fge.jsonschema.main.JsonSchema;
 import com.github.fge.jsonschema.main.JsonSchemaFactory;
+import javax.ws.rs.core.Link;
 
 import junit.framework.Assert;
 
@@ -95,5 +96,13 @@ public class ProfileSchemaTest {
 
         report = schema.validate(good);
         Assert.assertFalse(report.isSuccess());
+    }
+
+    @Test
+    public void testLink() throws Exception{
+        String linkheader ="<meta.rdf>;rel=meta";
+        Link valueOf = Link.valueOf(linkheader);
+        Assert.assertEquals("meta", valueOf.getRel());
+        Assert.assertEquals("meta.rdf", valueOf.getUri().toString());
     }
 }
