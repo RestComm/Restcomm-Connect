@@ -38,6 +38,7 @@ public class RestcommProfilesTool {
 	private static String profilesEndpointUrl;
 	
 	public static final String PROFILE_REL_TYPE = "related";
+	public static final String PROFILE_CONTENT_TYPE = "application/instance+json;schema=\"http://127.0.0.1\"";
 	public static final String PROFILE_SCHEMA_CONTENT_TYPE = "application/schema+json";
 	
 	public static final String ACCOUNT_ENPOINT_BASE = "/2012-04-24/Accounts/";
@@ -119,7 +120,7 @@ public class RestcommProfilesTool {
 		Client jerseyClient = Client.create();
 		jerseyClient.addFilter(new HTTPBasicAuthFilter(username, authtoken));
 		WebResource webResource = jerseyClient.resource(getProfilesEndpointUrl(deploymentUrl));
-		ClientResponse response = webResource.path(profileSid).accept(PROFILE_SCHEMA_CONTENT_TYPE).get(ClientResponse.class);
+		ClientResponse response = webResource.path(profileSid).accept(PROFILE_CONTENT_TYPE).get(ClientResponse.class);
 		return response;
 	}
 
@@ -207,7 +208,7 @@ public class RestcommProfilesTool {
 		String url = getProfilesEndpointUrl(deploymentUrl);
 
 		WebResource webResource = jerseyClient.resource(url);
-		ClientResponse response = webResource.type(PROFILE_SCHEMA_CONTENT_TYPE).accept(PROFILE_SCHEMA_CONTENT_TYPE).post(ClientResponse.class, profileDocument);
+		ClientResponse response = webResource.type(PROFILE_CONTENT_TYPE).accept(PROFILE_CONTENT_TYPE).post(ClientResponse.class, profileDocument);
 		return response;
 	}
 
@@ -249,7 +250,7 @@ public class RestcommProfilesTool {
 		String url = getProfilesEndpointUrl(deploymentUrl) + "/" + profileSid;
 
 		WebResource webResource = jerseyClient.resource(url);
-		ClientResponse response = webResource.type(PROFILE_SCHEMA_CONTENT_TYPE).accept(PROFILE_SCHEMA_CONTENT_TYPE).put(ClientResponse.class, profileDocument);
+		ClientResponse response = webResource.type(PROFILE_CONTENT_TYPE).accept(PROFILE_CONTENT_TYPE).put(ClientResponse.class, profileDocument);
 		return response;
 	}
 

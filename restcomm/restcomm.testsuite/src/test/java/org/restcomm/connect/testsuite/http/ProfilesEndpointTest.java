@@ -43,6 +43,7 @@ public class ProfilesEndpointTest extends EndpointTest {
     
     private static final String profileDocument="{ \"featureEnablement\": { \"DIDPurchase\": { \"allowedCountries\": [\"US\", \"CA\"] }, \"destinations\": { \"allowedPrefixes\": [\"+1\"] }, \"outboundPSTN\": { }, \"inboundPSTN\": { }, \"outboundSMS\": { }, \"inboundSMS\": { } }, \"sessionThrottling\": { \"PSTNCallsPerTime\": { \"events\" : 300, \"time\" : 30, \"timeUnit\" : \"days\" } } }";
     private static final String updatedProfileDocument="{ \"featureEnablement\": { \"DIDPurchase\": { \"allowedCountries\": [\"PK\", \"CA\"] }, \"destinations\": { \"allowedPrefixes\": [\"+1\"] }, \"outboundPSTN\": { }, \"inboundPSTN\": { }, \"outboundSMS\": { }, \"inboundSMS\": { } }, \"sessionThrottling\": { \"PSTNCallsPerTime\": { \"events\" : 300, \"time\" : 30, \"timeUnit\" : \"days\" } } }";
+    private static final String invalidProfileDocument="{ \"featureEnablement\": { \"DIDPurchase\": { \"allowedCountries\": [\"PKeuietue\", \"CA\"] }, \"destinations\": { \"allowedPrefixes\": [\"+1\"] }, \"outboundPSTN\": { }, \"inboundPSTN\": { }, \"outboundSMS\": { }, \"inboundSMS\": { } }, \"sessionThrottling\": { \"PSTNCallsPerTime\": { \"events\" : 300, \"time\" : 30, \"timeUnit\" : \"days\" } } }";
 
     @ArquillianResource
     private Deployer deployer;
@@ -107,8 +108,7 @@ public class ProfilesEndpointTest extends EndpointTest {
     }
 
     /**
-     * createProfileTest
-     * only super admin can create a new profile
+     * createAndUpdateProfileTest
      */
     @Test
     public void createProfileTest(){
@@ -119,19 +119,41 @@ public class ProfilesEndpointTest extends EndpointTest {
     	logger.info("clientResponse: "+clientResponse);
     	assertEquals(201, clientResponse.getStatus());
     	assertEquals(profileDocument, clientResponse.getEntity(String.class));
+    	/*
+		 * update the profile 
+		 */
+    	//TODO extract profileSid of newly created profile.
+    	clientResponse = RestcommProfilesTool.getInstance().updateProfileResponse(deploymentUrl.toString(), superAdminAccountSid, authToken, profileSid, updatedProfileDocument);
+    	logger.info("clientResponse: "+clientResponse);
+    	assertEquals(200, clientResponse.getStatus());
     }
 
     /**
-     * updateProfileTest
+     * createProfileTestInvalidSchema
      */
     @Test
-    public void updateProfileInvalidSidTest(){
+    @Category(FeatureExpTests.class)
+    public void createProfileTestInvalidSchema(){
+    	/*
+		 * create a profile with invalid schema
+		 */
+    	ClientResponse clientResponse = RestcommProfilesTool.getInstance().createProfileResponse(deploymentUrl.toString(), superAdminAccountSid, authToken, invalidProfileDocument);
+    	logger.info("clientResponse: "+clientResponse);
+    	assertEquals(400, clientResponse.getStatus());
+    }
+
+    /**
+     * updateProfileUnknownSidTest
+     */
+    @Test
+    @Category(FeatureExpTests.class)
+    public void updateProfileUnknownSidTest(){
     	/*
 		 * update a profile 
 		 */
     	ClientResponse clientResponse = RestcommProfilesTool.getInstance().updateProfileResponse(deploymentUrl.toString(), superAdminAccountSid, authToken, profileSid, updatedProfileDocument);
     	logger.info("clientResponse: "+clientResponse);
-    	assertEquals(200, clientResponse.getStatus());
+    	assertEquals(404, clientResponse.getStatus());
 
     	// TODO Read and verify further response
     }
