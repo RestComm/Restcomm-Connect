@@ -163,6 +163,26 @@ public class ProfilesEndpointTest extends EndpointTest {
     	logger.info("clientResponse: "+clientResponse);
     	assertTrue(clientResponse.getStatus() == 403);
     }
+
+    /**
+     * link a give Profile To an Account
+     */
+    @Test
+    public void linkProfileToAccount(){
+		//super admin tries to update profile
+    	ClientResponse clientResponse = RestcommProfilesTool.getInstance().linkProfile(deploymentUrl.toString(), superAdminAccountSid, superAdminAuthToken, profileSid, superAdminAccountSid, RestcommProfilesTool.AssociatedResourceType.ACCOUNT);
+    	logger.info("clientResponse: "+clientResponse);
+    	assertEquals(200, clientResponse.getStatus());
+
+    }
+
+    /**
+     * link a give Profile To an Organization
+     */
+    @Test
+    public void linkProfileToOrganization(){
+    	
+    }
     
     @Deployment(name = "ProfilesEndpointTest", managed = true, testable = false)
     public static WebArchive createWebArchiveNoGw() {

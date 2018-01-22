@@ -4,6 +4,7 @@ import java.util.logging.Logger;
 
 import javax.ws.rs.core.MediaType;
 
+import com.google.common.net.HttpHeaders;
 import com.google.gson.JsonArray;
 import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
@@ -24,9 +25,9 @@ public class RestcommProfilesTool {
 	private static RestcommProfilesTool instance;
 	private static String profilesEndpointUrl;
 
-	private RestcommProfilesTool () {
-
-	}
+    public enum AssociatedResourceType {
+        ACCOUNT, ORGANIZATION
+    };
 
 	public static RestcommProfilesTool getInstance () {
 		if (instance == null)
@@ -35,6 +36,25 @@ public class RestcommProfilesTool {
 		return instance;
 	}
 
+	private String getTargetResourceUrl(String deploymentUrl, String targetResourceSid, AssociatedResourceType type){
+		if (deploymentUrl.endsWith("/")) {
+			deploymentUrl = deploymentUrl.substring(0, deploymentUrl.length() - 1);
+		}
+		switch (type) {
+		case ACCOUNT:
+			return deploymentUrl + "/2012-04-24/Accounts" + targetResourceSid;
+		case ORGANIZATION:
+			return deploymentUrl + "/2012-04-24/Organizations" + targetResourceSid;
+
+		default:
+			return null;
+		}
+	}
+
+	private String createLinkStr(String deploymentUrl, String targetResourceSid, AssociatedResourceType type){
+		return getTargetResourceUrl(deploymentUrl, targetResourceSid, type)+"rel=\"related\"";
+	}
+	
 	/**
 	 * @param deploymentUrl
 	 * @return
@@ -241,18 +261,22 @@ public class RestcommProfilesTool {
 	 * @param operatorUsername
 	 * @param operatorAuthtoken
 	 * @param profileSid
-	 * @param targetResource
+	 * @param targetResourceSid
+	 * @param associatedResourceType
 	 * @return
 	 */
-	public ClientResponse linkProfile (String deploymentUrl, String operatorUsername, String operatorAuthtoken, String profileSid, String targetResource) {
+	public ClientResponse linkProfile (String deploymentUrl, String operatorUsername, String operatorAuthtoken, String profileSid, String targetResourceSid, AssociatedResourceType type) {
 		Client jerseyClient = Client.create();
 		jerseyClient.addFilter(new HTTPBasicAuthFilter(operatorUsername, operatorAuthtoken));
 
 		String url = getProfilesEndpointUrl(deploymentUrl) + "/" + profileSid;
 
 		WebResource webResource = jerseyClient.resource(url);
-		//TODO: add links to target resource(s)
-		ClientResponse response = webResource.accept(MediaType.APPLICATION_JSON).method("LINK", ClientResponse.class);
+		WebResource.Builder builder = webResource.accept(MediaType.APPLICATION_JSON);
+		builder.type(MediaType.APPLICATION_JSON);
+		builder.header(HttpHeaders.LINK, createLinkStr(deploymentUrl, targetResourceSid, type));
+
+		ClientResponse response = builder.method("LINK", ClientResponse.class);
 		return response;
 	}
 
@@ -262,18 +286,22 @@ public class RestcommProfilesTool {
 	 * @param operatorUsername
 	 * @param operatorAuthtoken
 	 * @param profileSid
-	 * @param targetResource
+	 * @param targetResourceSid
+	 * @param associatedResourceType
 	 * @return
 	 */
-	public ClientResponse unLinkProfile (String deploymentUrl, String operatorUsername, String operatorAuthtoken, String profileSid, String targetResource) {
+	public ClientResponse unLinkProfile (String deploymentUrl, String operatorUsername, String operatorAuthtoken, String profileSid, String targetResourceSid, AssociatedResourceType type) {
 		Client jerseyClient = Client.create();
 		jerseyClient.addFilter(new HTTPBasicAuthFilter(operatorUsername, operatorAuthtoken));
 
 		String url = getProfilesEndpointUrl(deploymentUrl) + "/" + profileSid;
 
 		WebResource webResource = jerseyClient.resource(url);
-		//TODO: add links to target resource(s)
-		ClientResponse response = webResource.accept(MediaType.APPLICATION_JSON).method("UNLINK", ClientResponse.class);
+		WebResource.Builder builder = webResource.accept(MediaType.APPLICATION_JSON);
+		builder.type(MediaType.APPLICATION_JSON);
+		builder.header(HttpHeaders.LINK, createLinkStr(deploymentUrl, targetResourceSid, type));
+
+		ClientResponse response = builder.method("UNLINK", ClientResponse.class);
 		return response;
 	}
 }
