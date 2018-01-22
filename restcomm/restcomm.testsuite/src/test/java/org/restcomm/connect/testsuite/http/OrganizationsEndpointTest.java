@@ -17,6 +17,7 @@ import org.junit.Test;
 import org.junit.experimental.categories.Category;
 import org.junit.runner.RunWith;
 import org.restcomm.connect.commons.Version;
+import org.restcomm.connect.commons.annotations.FeatureAltTests;
 import org.restcomm.connect.commons.annotations.FeatureExpTests;
 import org.restcomm.connect.commons.annotations.UnstableTests;
 
@@ -178,6 +179,13 @@ public class OrganizationsEndpointTest extends EndpointTest {
     	clientResponse = RestcommOrganizationsTool.getInstance().createOrganizationResponse(deploymentUrl.toString(), devAccountSid, devAuthToken, "newdomain");
     	logger.info("clientResponse: "+clientResponse);
     	assertTrue(clientResponse.getStatus() == 403);
+    }
+
+    @Test
+    @Category({FeatureAltTests.class})
+    public void getAssociatedProfile() {
+    	//TODO Impl
+    	assertTrue(false);
     }
 
     @Deployment(name = "OrganizationsEndpointTest", managed = true, testable = false)
