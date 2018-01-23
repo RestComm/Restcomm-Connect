@@ -58,8 +58,9 @@ public class ProfilesEndpointTest extends EndpointTest {
     private String devAccountSid = "AC574d775522c96f9aacacc5ca60c8c74f";
     private String authToken = "77f8c12cc7b8f8423e5c38b035249166";
 
-    private static final String DEFAULT_PROFILE_SID = "Pae6e420f425248d6a26948c17a9e2acf";
+    private static final String DEFAULT_PROFILE_SID = "PRae6e420f425248d6a26948c17a9e2acf";
     private static final String UNKNOWN_PROFILE_SID = "PRafbe225ad37541eba518a74248f0ac4d";
+    private static final String GARBAGE_PROFILE_SID = "afbe225ad37541eba518a74248f0ac4d";
     private static final String ORGANIZATION_SID = "ORafbe225ad37541eba518a74248f0ac4c";
 
     @Before
@@ -97,6 +98,17 @@ public class ProfilesEndpointTest extends EndpointTest {
     	ClientResponse clientResponse = RestcommProfilesTool.getInstance().getProfileResponse(deploymentUrl.toString(), superAdminAccountSid, authToken, UNKNOWN_PROFILE_SID);
     	assertNotNull(clientResponse);
     	assertEquals(404, clientResponse.getStatus());
+    }
+
+    /**
+     * this test will try to Read single profile with an garbage profile Sid
+     */
+    @Test
+    @Category(FeatureExpTests.class)
+    public void getProfileInvalidSid(){
+    	ClientResponse clientResponse = RestcommProfilesTool.getInstance().getProfileResponse(deploymentUrl.toString(), superAdminAccountSid, authToken, GARBAGE_PROFILE_SID);
+    	assertNotNull(clientResponse);
+    	assertEquals(400, clientResponse.getStatus());
     }
 
     /**

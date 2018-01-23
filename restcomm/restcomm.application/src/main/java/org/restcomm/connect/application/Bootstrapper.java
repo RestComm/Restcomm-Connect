@@ -1,15 +1,23 @@
 package org.restcomm.connect.application;
 
-import akka.actor.Actor;
-import akka.actor.ActorRef;
-import akka.actor.ActorSystem;
-import akka.actor.Props;
-import akka.actor.UntypedActor;
-import akka.actor.UntypedActorFactory;
+import java.io.IOException;
+import java.net.UnknownHostException;
+import java.sql.SQLException;
+import java.util.Date;
+import java.util.List;
+import java.util.Properties;
 
-import com.github.fge.jackson.JsonLoader;
-import com.typesafe.config.Config;
-import com.typesafe.config.ConfigFactory;
+import javax.media.mscontrol.MsControlException;
+import javax.media.mscontrol.MsControlFactory;
+import javax.media.mscontrol.spi.Driver;
+import javax.media.mscontrol.spi.DriverManager;
+import javax.servlet.ServletContext;
+import javax.servlet.ServletException;
+import javax.servlet.sip.SipServlet;
+import javax.servlet.sip.SipServletContextEvent;
+import javax.servlet.sip.SipServletListener;
+import javax.servlet.sip.SipURI;
+
 import org.apache.commons.configuration.Configuration;
 import org.apache.commons.configuration.ConfigurationException;
 import org.apache.commons.configuration.XMLConfiguration;
@@ -42,25 +50,19 @@ import org.restcomm.connect.mscontrol.jsr309.Jsr309ControllerFactory;
 import org.restcomm.connect.mscontrol.mms.MmsControllerFactory;
 import org.restcomm.connect.sdr.api.SdrService;
 import org.restcomm.connect.sdr.api.StartSdrService;
+
+import com.fasterxml.jackson.databind.JsonNode;
+import com.github.fge.jackson.JsonLoader;
+import com.typesafe.config.Config;
+import com.typesafe.config.ConfigFactory;
+
+import akka.actor.Actor;
+import akka.actor.ActorRef;
+import akka.actor.ActorSystem;
+import akka.actor.Props;
+import akka.actor.UntypedActor;
+import akka.actor.UntypedActorFactory;
 import scala.concurrent.ExecutionContext;
-
-import javax.media.mscontrol.MsControlException;
-import javax.media.mscontrol.MsControlFactory;
-import javax.media.mscontrol.spi.Driver;
-import javax.media.mscontrol.spi.DriverManager;
-import javax.servlet.ServletContext;
-import javax.servlet.ServletException;
-import javax.servlet.sip.SipServlet;
-import javax.servlet.sip.SipServletContextEvent;
-import javax.servlet.sip.SipServletListener;
-import javax.servlet.sip.SipURI;
-
-import java.io.IOException;
-import java.net.UnknownHostException;
-import java.sql.SQLException;
-import java.util.Date;
-import java.util.List;
-import java.util.Properties;
 
 /**
  * @author <a href="mailto:gvagenas@gmail.com">gvagenas</a>
@@ -321,14 +323,15 @@ public final class Bootstrapper extends SipServlet implements SipServletListener
         Profile profile = storage.getProfilesDao().getProfile(DEFAULT_PROFILE_SID);
 
         if (profile == null) {
-            if(logger.isInfoEnabled()) {
-                logger.info("default profile does not exist, will create one from default Plan");
+            if(logger.isDebugEnabled()) {
+                logger.debug("default profile does not exist, will create one from default Plan");
             }
-            profile = new Profile(DEFAULT_PROFILE_SID, JsonLoader.fromPath(profileSourcePath).binaryValue(), new Date(), new Date());
+            JsonNode jsonNode = JsonLoader.fromPath(profileSourcePath);
+            profile = new Profile(DEFAULT_PROFILE_SID, jsonNode.asText().getBytes(), new Date(), new Date());
             storage.getProfilesDao().addProfile(profile);
         } else {
-            if(logger.isInfoEnabled()){
-                logger.info("default profile already exists, will not override it.");
+            if(logger.isDebugEnabled()){
+                logger.debug("default profile already exists, will not override it.");
             }
         }
     }
