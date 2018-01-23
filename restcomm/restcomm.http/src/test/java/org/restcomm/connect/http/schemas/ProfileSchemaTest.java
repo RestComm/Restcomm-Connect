@@ -27,12 +27,8 @@ import com.github.fge.jackson.JsonLoader;
 import com.github.fge.jsonschema.core.report.ProcessingReport;
 import com.github.fge.jsonschema.main.JsonSchema;
 import com.github.fge.jsonschema.main.JsonSchemaFactory;
-import java.nio.file.Path;
-import java.nio.file.Paths;
-import javax.ws.rs.core.Link;
 
 import junit.framework.Assert;
-import org.restcomm.connect.commons.dao.Sid;
 
 /**
  *
@@ -98,19 +94,4 @@ public class ProfileSchemaTest {
         Assert.assertFalse(report.isSuccess());
     }
 
-    @Test
-    public void testLink() throws Exception {
-        String linkheader = "<meta.rdf>;rel=meta";
-        Link valueOf = Link.valueOf(linkheader);
-        Assert.assertEquals("meta", valueOf.getRel());
-        Assert.assertEquals("meta.rdf", valueOf.getUri().toString());
-
-        Sid pSid = Sid.generate(Sid.Type.PROFILE);
-        String profileURL = "http://cloud.restcomm.com/profiles/" + pSid;
-        Link build = Link.fromUri(profileURL).rel("related").build();
-        Assert.assertEquals("<" + profileURL + ">; rel=\"related\"", build.toString());
-
-        Path paths =  Paths.get(build.getUri().getPath());
-        Sid targetSid = new Sid (paths.getName(paths.getNameCount() - 1).toString());
-    }
 }
