@@ -150,6 +150,7 @@ public class ProfileEndpoint {
     }
 
     public Response deleteProfile(String profileSid) {
+        checkProfileExists(profileSid);
         profilesDao.deleteProfile(profileSid);
         return Response.ok().build();
     }
@@ -165,13 +166,13 @@ public class ProfileEndpoint {
                 }
                 throw new StatusException(Response.Status.NOT_FOUND.getStatusCode());
             }
-        } catch (Exception ex) {
+        } catch (SQLException ex) {
             logger.debug("issue getting profile.", ex);
             throw new StatusException(Response.Status.INTERNAL_SERVER_ERROR.getStatusCode());
         }
     }
 
-    public Response updateProfile(String profileSid, InputStream body) {
+    public Response updateProfile(String profileSid, InputStream body, UriInfo info) {
         checkProfileExists(profileSid);
         try {
             String profileStr = IOUtils.toString(body, Charset.forName(PROFILE_ENCODING));
@@ -180,7 +181,7 @@ public class ProfileEndpoint {
             if (report.isSuccess()) {
                 Profile profile = new Profile(profileSid, profileStr.getBytes(), new Date(), new Date());
                 profilesDao.updateProfile(profile);
-                return Response.ok().build();
+                return getProfile(profileSid, info);
             } else {
                 return Response.status(Response.Status.BAD_REQUEST).entity(report.toString()).build();
             }
