@@ -392,4 +392,36 @@ public class NumberSelectorServiceTest {
         inOrder.verify(numDao, times(2)).getIncomingPhoneNumbersByFilter((IncomingPhoneNumberFilter) any());
         inOrder.verify(numDao, never()).getIncomingPhoneNumbersRegex((IncomingPhoneNumberFilter) any());
     }
+
+    @Test
+    public void testSamePhoneDiffOrg() {
+        Sid srcSid = Sid.generate(Sid.Type.ORGANIZATION);
+        Sid srcSid2 = Sid.generate(Sid.Type.ORGANIZATION);
+        Sid destSid = Sid.generate(Sid.Type.ORGANIZATION);
+        String number = "1234";
+        List<IncomingPhoneNumber> numbers = new ArrayList();
+        final IncomingPhoneNumber.Builder builder = IncomingPhoneNumber.builder();
+        builder.setPhoneNumber(number);
+        builder.setOrganizationSid(srcSid);
+        numbers.add(builder.build());
+
+        builder.setPhoneNumber(number);
+        builder.setOrganizationSid(srcSid2);
+        numbers.add(builder.build());
+
+        IncomingPhoneNumbersDao numDao = Mockito.mock(IncomingPhoneNumbersDao.class);
+        when(numDao.getTotalIncomingPhoneNumbers((IncomingPhoneNumberFilter) any())).
+                thenReturn(1);
+        when(numDao.getIncomingPhoneNumbersByFilter((IncomingPhoneNumberFilter) any())).
+                thenReturn(numbers);
+        InOrder inOrder = inOrder(numDao);
+        NumberSelectorService service = new NumberSelectorService(numDao);
+
+        IncomingPhoneNumber found = service.searchNumber(number, srcSid, destSid);
+
+        Assert.assertNotNull(found);
+        Assert.assertEquals(number, found.getPhoneNumber());
+        inOrder.verify(numDao, times(1)).getIncomingPhoneNumbersByFilter((IncomingPhoneNumberFilter) any());
+        verify(numDao, never()).getIncomingPhoneNumbersRegex((IncomingPhoneNumberFilter) any());
+    }
 }
