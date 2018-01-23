@@ -21,6 +21,8 @@ package org.restcomm.connect.http;
 
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
+import com.sun.jersey.core.header.LinkHeader;
+import com.sun.jersey.core.header.LinkHeader.LinkHeaderBuilder;
 import com.sun.jersey.core.util.MultivaluedMapImpl;
 import com.thoughtworks.xstream.XStream;
 import org.apache.commons.configuration.Configuration;
@@ -65,7 +67,6 @@ import javax.ws.rs.core.UriInfo;
 import java.net.URI;
 import java.util.ArrayList;
 import java.util.List;
-import javax.ws.rs.core.Link;
 
 import static javax.ws.rs.core.MediaType.APPLICATION_JSON;
 import static javax.ws.rs.core.MediaType.APPLICATION_JSON_TYPE;
@@ -169,11 +170,11 @@ public class AccountsEndpoint extends SecuredEndpoint {
         return new Account(sid, now, now, emailAddress, friendlyName, accountSid, type, status, authToken, role, uri, organizationSid);
     }
 
-    public Link composeLink(Sid targetSid, UriInfo info) {
+    public LinkHeader composeLink(Sid targetSid, UriInfo info) {
         String sid = targetSid.toString();
         URI uri = info.getBaseUriBuilder().path(ProfileJsonEndpoint.class).path(sid).build();
-        Link.Builder link = Link.fromUri(uri).title("Profiles");
-        return link.type(PROFILE_REL_TYPE).build();
+        LinkHeaderBuilder link = LinkHeader.uri(uri).parameter("title", "Profiles");
+        return link.type(MediaType.valueOf(PROFILE_REL_TYPE)).build();
     }
 
     protected Response getAccount(final String accountSid, final MediaType responseType, UriInfo info) {
@@ -203,7 +204,7 @@ public class AccountsEndpoint extends SecuredEndpoint {
             Response.ResponseBuilder ok = Response.ok();
             ProfileAssociation profileAssociationByTargetSid = profileAssociationsDao.getProfileAssociationByTargetSid(accountSid);
             if (profileAssociationByTargetSid != null) {
-                Link profileLink = composeLink(profileAssociationByTargetSid.getProfileSid(), info);
+                LinkHeader profileLink = composeLink(profileAssociationByTargetSid.getProfileSid(), info);
                 ok.header(ProfileEndpoint.LINK_HEADER, profileLink.toString());
             }
             if (APPLICATION_XML_TYPE == responseType) {

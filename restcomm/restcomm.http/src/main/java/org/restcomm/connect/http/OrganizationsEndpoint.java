@@ -56,9 +56,9 @@ import org.restcomm.connect.http.converter.RestCommResponseConverter;
 
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
+import com.sun.jersey.core.header.LinkHeader;
 import com.thoughtworks.xstream.XStream;
 import java.net.URI;
-import javax.ws.rs.core.Link;
 import org.restcomm.connect.dao.DaoManager;
 import org.restcomm.connect.dao.ProfileAssociationsDao;
 import org.restcomm.connect.dao.entities.ProfileAssociation;
@@ -126,11 +126,11 @@ public class OrganizationsEndpoint extends SecuredEndpoint {
         xstream.registerConverter(new RestCommResponseConverter(configuration));
     }
 
-    public Link composeLink(Sid targetSid, UriInfo info) {
+    public LinkHeader composeLink(Sid targetSid, UriInfo info) {
         String sid = targetSid.toString();
         URI uri = info.getBaseUriBuilder().path(ProfileJsonEndpoint.class).path(sid).build();
-        Link.Builder link = Link.fromUri(uri).title("Profiles");
-        return link.type(PROFILE_REL_TYPE).build();
+        LinkHeader.LinkHeaderBuilder link = LinkHeader.uri(uri).parameter("title", "Profiles");
+        return link.type(MediaType.valueOf(PROFILE_REL_TYPE)).build();
     }
 
     /**
@@ -170,7 +170,7 @@ public class OrganizationsEndpoint extends SecuredEndpoint {
             Response.ResponseBuilder ok = Response.ok();
             ProfileAssociation profileAssociationByTargetSid = profileAssociationsDao.getProfileAssociationByTargetSid(organizationSid);
             if (profileAssociationByTargetSid != null) {
-                Link profileLink = composeLink(profileAssociationByTargetSid.getProfileSid(), info);
+                LinkHeader profileLink = composeLink(profileAssociationByTargetSid.getProfileSid(), info);
                 ok.header(ProfileEndpoint.LINK_HEADER, profileLink.toString());
             }
             if (APPLICATION_XML_TYPE == responseType) {
