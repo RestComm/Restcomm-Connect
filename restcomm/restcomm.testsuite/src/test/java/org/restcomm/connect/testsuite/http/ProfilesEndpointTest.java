@@ -62,6 +62,8 @@ public class ProfilesEndpointTest extends EndpointTest {
     private static final String DEFAULT_PROFILE_SID = "PRae6e420f425248d6a26948c17a9e2acf";
     private static final String UNKNOWN_PROFILE_SID = "PRafbe225ad37541eba518a74248f0ac4d";
     private static final String ORGANIZATION_SID = "ORafbe225ad37541eba518a74248f0ac4c";
+    private static final String UNKNOWN_ACCOUNT_SID = "PRafbe225ad37541eba518a74248f0ac4d";
+    private static final String UNKNOWN_ORGANIZATION_SID = "PRafbe225ad37541eba518a74248f0ac4d";
 
     @Before
     public void before() {
@@ -409,7 +411,6 @@ public class ProfilesEndpointTest extends EndpointTest {
     	assertEquals(403, response.getStatusLine().getStatusCode());
     }
     
-
     /**
      * @throws ClientProtocolException
      * @throws IOException
@@ -427,6 +428,46 @@ public class ProfilesEndpointTest extends EndpointTest {
 		 * unlink a profile with unknown profile sid
 		 */
     	response = RestcommProfilesTool.getInstance().linkProfile(deploymentUrl.toString(), superAdminAccountSid, authToken, UNKNOWN_PROFILE_SID, ORGANIZATION_SID, RestcommProfilesTool.AssociatedResourceType.ORGANIZATION);
+    	assertEquals(404, response.getStatusLine().getStatusCode());
+    }
+    
+    /**
+     * @throws ClientProtocolException
+     * @throws IOException
+     * @throws URISyntaxException
+     */
+    @Test
+    @Category(FeatureExpTests.class)
+    public void linkUnLinkProfileUnknownAccountSidTest() throws ClientProtocolException, IOException, URISyntaxException{
+    	/*
+		 * link a profile with unknown account sid
+		 */
+    	HttpResponse response = RestcommProfilesTool.getInstance().linkProfile(deploymentUrl.toString(), superAdminAccountSid, authToken, DEFAULT_PROFILE_SID, UNKNOWN_ACCOUNT_SID, RestcommProfilesTool.AssociatedResourceType.ACCOUNT);
+    	assertEquals(404, response.getStatusLine().getStatusCode());
+    	/*
+		 * unlink a profile with unknown account sid
+		 */
+    	response = RestcommProfilesTool.getInstance().linkProfile(deploymentUrl.toString(), superAdminAccountSid, authToken, DEFAULT_PROFILE_SID, UNKNOWN_ACCOUNT_SID, RestcommProfilesTool.AssociatedResourceType.ACCOUNT);
+    	assertEquals(404, response.getStatusLine().getStatusCode());
+    }
+    
+    /**
+     * @throws ClientProtocolException
+     * @throws IOException
+     * @throws URISyntaxException
+     */
+    @Test
+    @Category(FeatureExpTests.class)
+    public void linkUnLinkProfileUnknownOrganizationSidTest() throws ClientProtocolException, IOException, URISyntaxException{
+    	/*
+		 * link a profile with unknown organization sid
+		 */
+    	HttpResponse response = RestcommProfilesTool.getInstance().linkProfile(deploymentUrl.toString(), superAdminAccountSid, authToken, DEFAULT_PROFILE_SID, UNKNOWN_ORGANIZATION_SID, RestcommProfilesTool.AssociatedResourceType.ORGANIZATION);
+    	assertEquals(404, response.getStatusLine().getStatusCode());
+    	/*
+		 * unlink a profile with unknown organization sid
+		 */
+    	response = RestcommProfilesTool.getInstance().linkProfile(deploymentUrl.toString(), superAdminAccountSid, authToken, DEFAULT_PROFILE_SID, UNKNOWN_ORGANIZATION_SID, RestcommProfilesTool.AssociatedResourceType.ORGANIZATION);
     	assertEquals(404, response.getStatusLine().getStatusCode());
     }
     
