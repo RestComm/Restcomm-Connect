@@ -1,10 +1,11 @@
 package org.restcomm.connect.testsuite.http;
 
 import java.io.IOException;
+import java.net.URI;
+import java.net.URISyntaxException;
 import java.nio.charset.Charset;
 import java.util.logging.Logger;
 
-import javax.ws.rs.core.Link;
 import javax.ws.rs.core.MediaType;
 
 import org.apache.commons.codec.binary.Base64;
@@ -26,6 +27,7 @@ import com.sun.jersey.api.client.ClientResponse;
 import com.sun.jersey.api.client.UniformInterfaceException;
 import com.sun.jersey.api.client.WebResource;
 import com.sun.jersey.api.client.filter.HTTPBasicAuthFilter;
+import com.sun.jersey.core.header.LinkHeader;
 
 /**
  * @author maria farooq
@@ -307,8 +309,9 @@ public class RestcommProfilesTool {
 	 * @return
 	 * @throws IOException 
 	 * @throws ClientProtocolException 
+	 * @throws URISyntaxException 
 	 */
-	public HttpResponse unLinkProfile (String deploymentUrl, String operatorUsername, String operatorAuthtoken, String profileSid, String targetResourceSid, AssociatedResourceType type) throws ClientProtocolException, IOException {
+	public HttpResponse unLinkProfile (String deploymentUrl, String operatorUsername, String operatorAuthtoken, String profileSid, String targetResourceSid, AssociatedResourceType type) throws ClientProtocolException, IOException, URISyntaxException {
 		String url = getProfilesEndpointUrl(deploymentUrl) + "/" + profileSid;
 
 		HttpUnLink request = new HttpUnLink(url);
@@ -328,16 +331,17 @@ public class RestcommProfilesTool {
 	 * @param targetResourceSid
 	 * @param type
 	 * @return
+	 * @throws URISyntaxException 
 	 */
-	private HttpRequestBase addLinkUnlinkRequiredHeaders(HttpRequestBase request, String deploymentUrl, String operatorUsername, String operatorAuthtoken, String profileSid, String targetResourceSid, AssociatedResourceType type){
+	private HttpRequestBase addLinkUnlinkRequiredHeaders(HttpRequestBase request, String deploymentUrl, String operatorUsername, String operatorAuthtoken, String profileSid, String targetResourceSid, AssociatedResourceType type) throws URISyntaxException{
 		request.addHeader(getAuthHeader(deploymentUrl, operatorUsername, operatorAuthtoken));
 		request.addHeader(getjsonAcceptHeader());
 		request.addHeader(getLinkHeaderOfTargetResource(deploymentUrl, targetResourceSid, type));
 		return request;
 	}
 	
-	private BasicHeader getLinkHeaderOfTargetResource(String deploymentUrl, String targetResourceSid, AssociatedResourceType type){
-		String targetResourceLinkstr = Link.fromUri(getTargetResourceUrl(deploymentUrl, targetResourceSid, type)).rel(PROFILE_REL_TYPE).build().toString();
+	private BasicHeader getLinkHeaderOfTargetResource(String deploymentUrl, String targetResourceSid, AssociatedResourceType type) throws URISyntaxException{
+		String targetResourceLinkstr = LinkHeader.uri(new URI(getTargetResourceUrl(deploymentUrl, targetResourceSid, type))).rel(PROFILE_REL_TYPE).build().toString();
         return new BasicHeader("Link", targetResourceLinkstr);
 	}
 
