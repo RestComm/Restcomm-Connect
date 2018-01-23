@@ -20,6 +20,7 @@
 package org.restcomm.connect.http;
 
 import java.io.InputStream;
+import javax.annotation.security.RolesAllowed;
 import javax.ws.rs.Consumes;
 import javax.ws.rs.DELETE;
 import javax.ws.rs.GET;
@@ -35,9 +36,11 @@ import static javax.ws.rs.core.MediaType.APPLICATION_JSON;
 import javax.ws.rs.core.Response;
 import javax.ws.rs.core.UriInfo;
 import org.restcomm.connect.commons.annotations.concurrency.ThreadSafe;
+import static org.restcomm.connect.http.security.AccountPrincipal.SUPER_ADMIN_ROLE;
 
 @Path("/Profiles")
 @ThreadSafe
+@RolesAllowed(SUPER_ADMIN_ROLE)
 public class ProfileJsonEndpoint extends ProfileEndpoint {
 
     @GET
