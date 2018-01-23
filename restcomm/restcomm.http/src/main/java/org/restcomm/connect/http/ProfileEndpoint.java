@@ -58,6 +58,7 @@ import org.restcomm.connect.dao.ProfilesDao;
 import org.restcomm.connect.dao.entities.Account;
 import org.restcomm.connect.dao.entities.Organization;
 import org.restcomm.connect.dao.entities.Profile;
+import static org.restcomm.connect.dao.entities.Profile.DEFAULT_PROFILE_SID;
 import org.restcomm.connect.dao.entities.ProfileAssociation;
 import org.restcomm.connect.http.exceptions.StatusException;
 
@@ -65,19 +66,17 @@ public class ProfileEndpoint {
 
     protected Logger logger = Logger.getLogger(ProfileEndpoint.class);
 
-    protected static final String PROFILE_CONTENT_TYPE = "application/instance+json";
-    protected static final String PROFILE_SCHEMA_CONTENT_TYPE = "application/schema+json";
-    protected static final String PROFILE_REL_TYPE = "related";
-    protected static final String SCHEMA_REL_TYPE = "schema";
-    protected static final String DESCRIBED_REL_TYPE = "describedby";
-    protected static final String LINK_HEADER = "Link";
-    protected static final String PROFILE_ENCODING = "UTF-8";
-    protected static final String TITLE_PARAM = "title";
+    public static final String PROFILE_CONTENT_TYPE = "application/instance+json";
+    public static final String PROFILE_SCHEMA_CONTENT_TYPE = "application/schema+json";
+    public static final String PROFILE_REL_TYPE = "related";
+    public static final String SCHEMA_REL_TYPE = "schema";
+    public static final String DESCRIBED_REL_TYPE = "describedby";
+    public static final String LINK_HEADER = "Link";
+    public static final String PROFILE_ENCODING = "UTF-8";
+    public static final String TITLE_PARAM = "title";
 
-    private static final String DEFAULT_PROFILE_SID = "PRae6e420f425248d6a26948c17a9e2acf";
-
-    private static final String ACCOUNTS_PREFIX ="AC";
-    private static final String ORGANIZATIONS_PREFIX ="OR";
+    public static final String ACCOUNTS_PREFIX ="AC";
+    public static final String ORGANIZATIONS_PREFIX ="OR";
 
 
     @Context
