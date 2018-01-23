@@ -314,12 +314,12 @@ public final class Bootstrapper extends SipServlet implements SipServletListener
 
     /**
      * generateDefaultProfile if does not already exists
-     * @throws SQLException 
-     * @throws IOException 
+     * @throws SQLException
+     * @throws IOException
      */
     private void generateDefaultProfile(final DaoManager storage) throws SQLException, IOException{
         Profile profile = storage.getProfilesDao().getProfile(DEFAULT_PROFILE_SID);
-        
+
         if (profile == null) {
             if(logger.isInfoEnabled()) {
                 logger.info("default profile does not exist, will create one from default Plan");
