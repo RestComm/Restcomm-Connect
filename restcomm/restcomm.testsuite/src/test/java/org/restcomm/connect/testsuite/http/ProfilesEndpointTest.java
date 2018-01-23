@@ -75,7 +75,7 @@ public class ProfilesEndpointTest extends EndpointTest {
     @Test
     public void getProfile(){
     	ClientResponse clientResponse = RestcommProfilesTool.getInstance().getProfileResponse(deploymentUrl.toString(), SUPER_ADMIN_ACCOUNT_SID, AUTH_TOKEN, DEFAULT_PROFILE_SID);
-        String responseBody = clientResponse.getEntity(String.class)
+        String responseBody = clientResponse.getEntity(String.class);
     	logger.info("profile: "+responseBody);
     	assertEquals(200, clientResponse.getStatus());
 
@@ -89,7 +89,7 @@ public class ProfilesEndpointTest extends EndpointTest {
     @Test
     public void getProfileList() {
     	ClientResponse clientResponse = RestcommProfilesTool.getInstance().getProfileListClientResponse(deploymentUrl.toString(), SUPER_ADMIN_ACCOUNT_SID, AUTH_TOKEN);
-        String responseBody = clientResponse.getEntity(String.class)
+        String responseBody = clientResponse.getEntity(String.class);
     	logger.info("profile list: "+responseBody);
     	assertNotNull(clientResponse);
     	assertEquals(200, clientResponse.getStatus());
