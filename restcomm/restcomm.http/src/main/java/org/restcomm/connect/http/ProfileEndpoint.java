@@ -29,6 +29,8 @@ import java.util.Date;
 import java.util.List;
 import com.github.fge.jackson.JsonLoader;
 import com.github.fge.jsonschema.core.report.ProcessingReport;
+import com.sun.jersey.core.header.LinkHeader;
+import com.sun.jersey.core.header.LinkHeader.LinkHeaderBuilder;
 import java.net.MalformedURLException;
 import java.nio.charset.Charset;
 import java.nio.file.Path;
@@ -37,7 +39,6 @@ import javax.annotation.PostConstruct;
 import javax.servlet.ServletContext;
 import javax.ws.rs.core.Context;
 import javax.ws.rs.core.HttpHeaders;
-import javax.ws.rs.core.Link;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
 import javax.ws.rs.core.UriInfo;
@@ -108,7 +109,7 @@ public class ProfileEndpoint {
 
     public Response unlinkProfile(String profileSidStr, HttpHeaders headers) {
         List<String> requestHeader = checkLinkHeader(headers);
-        Link link = Link.valueOf(requestHeader.get(0));
+        LinkHeader link = LinkHeader.valueOf(requestHeader.get(0));
         checkRelType(link);
         String targetSid = retrieveSid(link.getUri());
         profileAssociationsDao.deleteProfileAssociationByTargetSid(targetSid);
@@ -120,7 +121,7 @@ public class ProfileEndpoint {
         return paths.getName(paths.getNameCount() - 1).toString();
     }
 
-    private void checkRelType(Link link) {
+    private void checkRelType(LinkHeader link) {
         if (!link.getRel().equals(PROFILE_REL_TYPE)) {
             throw new ResourceAccountMissmatch("rel type not supported");
         }
@@ -136,7 +137,7 @@ public class ProfileEndpoint {
 
     public Response linkProfile(String profileSidStr, HttpHeaders headers, UriInfo uriInfo) {
         List<String> requestHeader = checkLinkHeader(headers);
-        Link link = Link.valueOf(requestHeader.get(0));
+        LinkHeader link = LinkHeader.valueOf(requestHeader.get(0));
         checkRelType(link);
         Sid targetSid = new Sid(retrieveSid(link.getUri()));
         Sid profileSid = new Sid(profileSidStr);
@@ -182,28 +183,28 @@ public class ProfileEndpoint {
         }
     }
 
-    public Link composeSchemaLink(UriInfo info) throws MalformedURLException {
+    public LinkHeader composeSchemaLink(UriInfo info) throws MalformedURLException {
         URI build = info.getBaseUriBuilder().path("rc-profile-schema").build();
-        return Link.fromUri(build).rel(DESCRIBED_REL_TYPE).build();
+        return LinkHeader.uri(build).rel(DESCRIBED_REL_TYPE).build();
     }
 
-    public Link composeLink(Sid targetSid, UriInfo info) throws MalformedURLException {
+    public LinkHeader composeLink(Sid targetSid, UriInfo info) throws MalformedURLException {
         String sid = targetSid.toString();
         URI uri = null;
-        Link.Builder link = null;
+        LinkHeaderBuilder link = null;
         switch (sid.substring(1, 2)) {
             case "AC":
                 uri = info.getBaseUriBuilder().path(AccountsJsonEndpoint.class).path(sid).build();
-                link = Link.fromUri(uri).title("Accounts");
+                link = LinkHeader.uri(uri).parameter("title","Accounts");
                 break;
             case "OR":
                 uri = info.getBaseUriBuilder().path(OrganizationsJsonEndpoint.class).path(sid).build();
-                link = Link.fromUri(uri).title("Organizations");
+                link = LinkHeader.uri(uri).parameter("title","Organizations");
                 break;
             default:
         }
         if (link != null) {
-            return link.type(PROFILE_REL_TYPE).build();
+            return link.type(MediaType.valueOf(PROFILE_REL_TYPE)).build();
         } else {
             return null;
         }
@@ -215,7 +216,7 @@ public class ProfileEndpoint {
             Response.ResponseBuilder ok = Response.ok(profile.getProfileDocument());
             List<ProfileAssociation> profileAssociationsByProfileSid = profileAssociationsDao.getProfileAssociationsByProfileSid(profileSid);
             for (ProfileAssociation assoc : profileAssociationsByProfileSid) {
-                Link composeLink = composeLink(assoc.getTargetSid(), info);
+                LinkHeader composeLink = composeLink(assoc.getTargetSid(), info);
                 ok.header(LINK_HEADER, composeLink.toString());
             }
             ok.header(LINK_HEADER, composeSchemaLink(info));
