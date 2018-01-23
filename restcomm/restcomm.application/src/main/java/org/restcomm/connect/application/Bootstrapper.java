@@ -62,6 +62,7 @@ import akka.actor.ActorSystem;
 import akka.actor.Props;
 import akka.actor.UntypedActor;
 import akka.actor.UntypedActorFactory;
+import static org.restcomm.connect.dao.entities.Profile.DEFAULT_PROFILE_SID;
 import scala.concurrent.ExecutionContext;
 
 /**
@@ -72,7 +73,6 @@ import scala.concurrent.ExecutionContext;
 public final class Bootstrapper extends SipServlet implements SipServletListener {
     private static final long serialVersionUID = 1L;
     private static final Logger logger = Logger.getLogger(Bootstrapper.class);
-    private static final String DEFAULT_PROFILE_SID = "PRae6e420f425248d6a26948c17a9e2acf";
 
     private ActorSystem system;
     private ExecutionContext ec;
@@ -327,7 +327,7 @@ public final class Bootstrapper extends SipServlet implements SipServletListener
                 logger.debug("default profile does not exist, will create one from default Plan");
             }
             JsonNode jsonNode = JsonLoader.fromPath(profileSourcePath);
-            profile = new Profile(DEFAULT_PROFILE_SID, jsonNode.asText().getBytes(), new Date(), new Date());
+            profile = new Profile(DEFAULT_PROFILE_SID, jsonNode.toString().getBytes(), new Date(), new Date());
             storage.getProfilesDao().addProfile(profile);
         } else {
             if(logger.isDebugEnabled()){
