@@ -40,7 +40,6 @@ import javax.ws.rs.core.HttpHeaders;
 import javax.ws.rs.core.Link;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
-import javax.ws.rs.core.Response.Status;
 import javax.ws.rs.core.UriInfo;
 import org.apache.commons.configuration.Configuration;
 import org.apache.commons.io.IOUtils;
@@ -51,6 +50,7 @@ import org.restcomm.connect.dao.ProfileAssociationsDao;
 import org.restcomm.connect.dao.ProfilesDao;
 import org.restcomm.connect.dao.entities.Profile;
 import org.restcomm.connect.dao.entities.ProfileAssociation;
+import org.restcomm.connect.http.exceptions.OperatedAccountMissing;
 import org.restcomm.connect.http.exceptions.ResourceAccountMissmatch;
 
 public class ProfileEndpoint {
@@ -150,8 +150,18 @@ public class ProfileEndpoint {
         return Response.ok().build();
     }
 
+    private Profile checkProfileExists(String profileSid) throws SQLException {
+        Profile profile = profilesDao.getProfile(profileSid);
+        if (profile != null) {
+            return profile;
+        } else {
+            throw new OperatedAccountMissing("Profile not found:" + profileSid);
+        }
+    }
+
     public Response updateProfile(String profileSid, InputStream body) {
         try {
+            checkProfileExists(profileSid);
             String profileStr = IOUtils.toString(body, Charset.forName(PROFILE_ENCODING));
             final JsonNode profileJson = JsonLoader.fromString(profileStr);
             ProcessingReport report = profileSchema.validate(profileJson);
@@ -196,23 +206,19 @@ public class ProfileEndpoint {
 
     public Response getProfile(String profileSid, UriInfo info) {
         try {
-            Profile profile = profilesDao.getProfile(profileSid);
-            if (profile != null) {
-                Response.ResponseBuilder ok = Response.ok(profile.getProfileDocument());
-                List<ProfileAssociation> profileAssociationsByProfileSid = profileAssociationsDao.getProfileAssociationsByProfileSid(profileSid);
-                for (ProfileAssociation assoc : profileAssociationsByProfileSid) {
-                    Link composeLink = composeLink(assoc.getTargetSid(), info);
-                    ok.header(LINK_HEADER, composeLink.toString());
-                }
-                ok.header(LINK_HEADER, composeSchemaLink(info));
-                String profileStr = IOUtils.toString(profile.getProfileDocument(), PROFILE_ENCODING);
-                ok.entity(profileStr);
-                ok.lastModified(profile.getDateUpdated());
-                ok.type(PROFILE_CONTENT_TYPE);
-                return ok.build();
-            } else {
-                return Response.status(Status.NOT_FOUND.getStatusCode()).build();
+            Profile profile = checkProfileExists(profileSid);
+            Response.ResponseBuilder ok = Response.ok(profile.getProfileDocument());
+            List<ProfileAssociation> profileAssociationsByProfileSid = profileAssociationsDao.getProfileAssociationsByProfileSid(profileSid);
+            for (ProfileAssociation assoc : profileAssociationsByProfileSid) {
+                Link composeLink = composeLink(assoc.getTargetSid(), info);
+                ok.header(LINK_HEADER, composeLink.toString());
             }
+            ok.header(LINK_HEADER, composeSchemaLink(info));
+            String profileStr = IOUtils.toString(profile.getProfileDocument(), PROFILE_ENCODING);
+            ok.entity(profileStr);
+            ok.lastModified(profile.getDateUpdated());
+            ok.type(PROFILE_CONTENT_TYPE);
+            return ok.build();
         } catch (Exception ex) {
             return Response.serverError().entity(ex.getMessage()).build();
         }
@@ -230,7 +236,7 @@ public class ProfileEndpoint {
                 Profile profile = new Profile(profileSid.toString(), profileStr.getBytes(), new Date(), new Date());
                 profilesDao.addProfile(profile);
                 URI location = new URI("http://cloud.restcomm.comm/Profiles/" + profileSid);
-                response = Response.created(location).build();
+                response = Response.created(location).type(PROFILE_CONTENT_TYPE).entity(profileStr).build();
             } else {
                 response = Response.status(Response.Status.BAD_REQUEST).entity(report.toString()).build();
             }
