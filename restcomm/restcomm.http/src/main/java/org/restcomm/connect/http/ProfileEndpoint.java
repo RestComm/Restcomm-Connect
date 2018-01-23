@@ -38,6 +38,7 @@ import java.nio.file.Paths;
 import javax.annotation.PostConstruct;
 import javax.servlet.ServletContext;
 import javax.ws.rs.core.Context;
+import javax.ws.rs.core.GenericEntity;
 import javax.ws.rs.core.HttpHeaders;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
@@ -99,7 +100,8 @@ public class ProfileEndpoint {
     public Response getProfiles(UriInfo info) {
         try {
             List<Profile> allProfiles = profilesDao.getAllProfiles();
-            return Response.ok(allProfiles, MediaType.APPLICATION_JSON).build();
+            GenericEntity<List<Profile>> entity = new GenericEntity<List<Profile>>(allProfiles) {};
+            return Response.ok(entity, MediaType.APPLICATION_JSON).build();
         } catch (SQLException ex) {
             return Response.serverError().entity(ex.getMessage()).build();
         }
