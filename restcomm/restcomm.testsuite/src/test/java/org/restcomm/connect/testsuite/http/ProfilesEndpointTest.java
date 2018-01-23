@@ -25,6 +25,7 @@ import org.junit.Test;
 import org.junit.experimental.categories.Category;
 import org.junit.runner.RunWith;
 import org.restcomm.connect.commons.Version;
+import org.restcomm.connect.commons.annotations.FeatureAltTests;
 import org.restcomm.connect.commons.annotations.FeatureExpTests;
 
 import com.sun.jersey.api.client.ClientResponse;
@@ -161,6 +162,7 @@ public class ProfilesEndpointTest extends EndpointTest {
 		 */
     	clientResponse = RestcommProfilesTool.getInstance().getProfileResponse(deploymentUrl.toString(), superAdminAccountSid, authToken, newlyCreatedProfileSid);
     	assertEquals(404, clientResponse.getStatus());
+    	
     }
 
     /**
@@ -426,6 +428,54 @@ public class ProfilesEndpointTest extends EndpointTest {
 		 */
     	response = RestcommProfilesTool.getInstance().linkProfile(deploymentUrl.toString(), superAdminAccountSid, authToken, UNKNOWN_PROFILE_SID, ORGANIZATION_SID, RestcommProfilesTool.AssociatedResourceType.ORGANIZATION);
     	assertEquals(404, response.getStatusLine().getStatusCode());
+    }
+    
+    /**
+     * test removal of association onnce we delete a profile
+     * @throws URISyntaxException 
+     * @throws IOException 
+     * @throws ClientProtocolException 
+     */
+    @Test
+    @Category(FeatureAltTests.class)
+    public void testRemovalOfAssociationOnDeleteProfile() throws ClientProtocolException, IOException, URISyntaxException{
+    	/*
+		 * create a profile 
+		 */
+    	ClientResponse clientResponse = RestcommProfilesTool.getInstance().createProfileResponse(deploymentUrl.toString(), superAdminAccountSid, authToken, profileDocument);
+    	assertEquals(201, clientResponse.getStatus());
+    	assertEquals(profileDocument, clientResponse.getEntity(String.class));
+    	
+    	//extract profileSid of newly created profile Sid.
+    	URI location = clientResponse.getLocation();
+    	assertNotNull(location);
+    	String profileLocation  = location.toString();
+    	String[] profileUriElements = profileLocation.split("/");
+    	assertNotNull(profileUriElements);
+    	String newlyCreatedProfileSid = profileUriElements[profileUriElements.length-1];
+    	
+    	/*
+		 * link this profile to an account 
+		 */
+    	HttpResponse response = RestcommProfilesTool.getInstance().linkProfile(deploymentUrl.toString(), superAdminAccountSid, authToken, newlyCreatedProfileSid, adminAccountSid, RestcommProfilesTool.AssociatedResourceType.ACCOUNT);
+    	assertEquals(200, response.getStatusLine().getStatusCode());
+    	
+
+    	/*
+		 * delete the profile 
+		 */
+    	clientResponse = RestcommProfilesTool.getInstance().deleteProfileResponse(deploymentUrl.toString(), superAdminAccountSid, authToken, newlyCreatedProfileSid);
+    	assertEquals(200, clientResponse.getStatus());
+    	
+    	/* 
+    	 * Get associated profile
+    	 * from Accounts endpoint:
+    	 * to verify association was removed.
+    	 */
+    	ClientResponse accountEndopintResponse = RestcommAccountsTool.getInstance().getAccountResponse(deploymentUrl.toString(), superAdminAccountSid, authToken, superAdminAccountSid);
+    	WebResourceLinkHeaders linkHeaders = accountEndopintResponse.getLinks();
+    	LinkHeader linkHeader = linkHeaders.getLink(RestcommProfilesTool.PROFILE_REL_TYPE);
+    	assertNull(linkHeader);
     }
     
     @Deployment(name = "ProfilesEndpointTest", managed = true, testable = false)
