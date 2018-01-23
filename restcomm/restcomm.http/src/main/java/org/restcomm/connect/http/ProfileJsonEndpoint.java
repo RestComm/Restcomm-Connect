@@ -68,8 +68,8 @@ public class ProfileJsonEndpoint extends ProfileEndpoint {
     @PUT
     @Consumes({PROFILE_CONTENT_TYPE,MediaType.APPLICATION_JSON})
     public Response updateProfileAsJson(@PathParam("profileSid") final String profileSid,
-            InputStream body) {
-        return updateProfile(profileSid, body);
+            InputStream body, @Context UriInfo info) {
+        return updateProfile(profileSid, body, info);
     }
 
     @Path("/{profileSid}")
