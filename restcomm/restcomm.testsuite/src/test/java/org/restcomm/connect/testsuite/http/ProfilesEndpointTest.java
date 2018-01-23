@@ -132,12 +132,11 @@ public class ProfilesEndpointTest extends EndpointTest {
      * Create, Read And Update Profile Test
      */
     @Test
-    public void createReadAndUpdateProfileTest(){
+    public void createReadUpdateDeleteProfileTest(){
     	/*
 		 * create a profile 
 		 */
     	ClientResponse clientResponse = RestcommProfilesTool.getInstance().createProfileResponse(deploymentUrl.toString(), superAdminAccountSid, authToken, profileDocument);
-    	logger.info("clientResponse: "+clientResponse);
     	assertEquals(201, clientResponse.getStatus());
     	assertEquals(profileDocument, clientResponse.getEntity(String.class));
     	
@@ -148,13 +147,11 @@ public class ProfilesEndpointTest extends EndpointTest {
     	String[] profileUriElements = profileLocation.split("/");
     	assertNotNull(profileUriElements);
     	String newlyCreatedProfileSid = profileUriElements[profileUriElements.length-1];
-    	logger.info("newlyCreatedProfileSid: "+newlyCreatedProfileSid);
     	
     	/*
 		 * read newly created profile 
 		 */
     	clientResponse = RestcommProfilesTool.getInstance().getProfileResponse(deploymentUrl.toString(), superAdminAccountSid, authToken, newlyCreatedProfileSid);
-    	logger.info("profile: "+clientResponse);
     	assertEquals(200, clientResponse.getStatus());
     	assertEquals(profileDocument, clientResponse.getEntity(String.class));
     	
@@ -162,9 +159,20 @@ public class ProfilesEndpointTest extends EndpointTest {
 		 * update the profile 
 		 */
     	clientResponse = RestcommProfilesTool.getInstance().updateProfileResponse(deploymentUrl.toString(), superAdminAccountSid, authToken, newlyCreatedProfileSid, updatedProfileDocument);
-    	logger.info("clientResponse for update: "+clientResponse);
     	assertEquals(200, clientResponse.getStatus());
     	assertEquals(updatedProfileDocument, clientResponse.getEntity(String.class));
+    	
+    	/*
+		 * delete the profile 
+		 */
+    	clientResponse = RestcommProfilesTool.getInstance().deleteProfileResponse(deploymentUrl.toString(), superAdminAccountSid, authToken, newlyCreatedProfileSid);
+    	assertEquals(200, clientResponse.getStatus());
+    	
+    	/*
+		 * read again 
+		 */
+    	clientResponse = RestcommProfilesTool.getInstance().getProfileResponse(deploymentUrl.toString(), superAdminAccountSid, authToken, newlyCreatedProfileSid);
+    	assertEquals(404, clientResponse.getStatus());
     }
 
     /**
@@ -216,18 +224,33 @@ public class ProfilesEndpointTest extends EndpointTest {
     }
 
     /**
-     * deleteProfileTest
+     * updateDefaultProfileTest
+     * updating default profile is not allowed
      */
     @Test
-    public void deleteProfileTest(){
+    @Category(FeatureExpTests.class)
+    public void updateDefaultProfileTest(){
     	/*
-		 * delete a profile 
+		 * update default profile
+		 */
+    	ClientResponse clientResponse = RestcommProfilesTool.getInstance().updateProfileResponse(deploymentUrl.toString(), superAdminAccountSid, authToken, DEFAULT_PROFILE_SID, updatedProfileDocument);
+    	logger.info("clientResponse: "+clientResponse);
+    	assertEquals(403, clientResponse.getStatus());
+    }
+
+    /**
+     * deleteDefaultProfileTest
+     * deleteing default profile is not allowed
+     */
+    @Test
+    @Category(FeatureExpTests.class)
+    public void deleteDefaultProfileTest(){
+    	/*
+		 * delete default profile 
 		 */
     	ClientResponse clientResponse = RestcommProfilesTool.getInstance().deleteProfileResponse(deploymentUrl.toString(), superAdminAccountSid, authToken, DEFAULT_PROFILE_SID);
     	logger.info("clientResponse: "+clientResponse);
-    	assertEquals(200, clientResponse.getStatus());
-
-    	// TODO Read and verify further response
+    	assertEquals(403, clientResponse.getStatus());
     }
 
     /**
