@@ -175,7 +175,7 @@ public class AccountsEndpoint extends SecuredEndpoint {
         String sid = targetSid.toString();
         URI uri = info.getBaseUriBuilder().path(ProfileJsonEndpoint.class).path(sid).build();
         LinkHeaderBuilder link = LinkHeader.uri(uri).parameter(TITLE_PARAM, "Profiles");
-        return link.type(MediaType.valueOf(PROFILE_REL_TYPE)).build();
+        return link.rel(PROFILE_REL_TYPE).build();
     }
 
     protected Response getAccount(final String accountSid, final MediaType responseType, UriInfo info) {

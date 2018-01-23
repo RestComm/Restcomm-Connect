@@ -131,7 +131,7 @@ public class OrganizationsEndpoint extends SecuredEndpoint {
         String sid = targetSid.toString();
         URI uri = info.getBaseUriBuilder().path(ProfileJsonEndpoint.class).path(sid).build();
         LinkHeader.LinkHeaderBuilder link = LinkHeader.uri(uri).parameter(TITLE_PARAM, "Profiles");
-        return link.type(MediaType.valueOf(PROFILE_REL_TYPE)).build();
+        return link.rel(PROFILE_REL_TYPE).build();
     }
 
     /**
