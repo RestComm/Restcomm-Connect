@@ -160,8 +160,8 @@ public class ProfileEndpoint {
     }
 
     public Response updateProfile(String profileSid, InputStream body) {
+        checkProfileExists(profileSid);
         try {
-            checkProfileExists(profileSid);
             String profileStr = IOUtils.toString(body, Charset.forName(PROFILE_ENCODING));
             final JsonNode profileJson = JsonLoader.fromString(profileStr);
             ProcessingReport report = profileSchema.validate(profileJson);
