@@ -286,8 +286,9 @@ public class RestcommProfilesTool {
 	 * @return
 	 * @throws IOException 
 	 * @throws ClientProtocolException 
+	 * @throws URISyntaxException 
 	 */
-	public HttpResponse linkProfile (String deploymentUrl, String operatorUsername, String operatorAuthtoken, String profileSid, String targetResourceSid, AssociatedResourceType type) throws ClientProtocolException, IOException {
+	public HttpResponse linkProfile (String deploymentUrl, String operatorUsername, String operatorAuthtoken, String profileSid, String targetResourceSid, AssociatedResourceType type) throws ClientProtocolException, IOException, URISyntaxException {
 		String url = getProfilesEndpointUrl(deploymentUrl) + "/" + profileSid;
 
 		HttpLink request = new HttpLink(url);
