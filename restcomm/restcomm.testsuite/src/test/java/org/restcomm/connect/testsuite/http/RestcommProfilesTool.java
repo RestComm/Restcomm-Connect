@@ -38,14 +38,15 @@ public class RestcommProfilesTool {
 
 	private static RestcommProfilesTool instance;
 	private static String profilesEndpointUrl;
+	private static final String PROFILE_SCHEMA_PATH="rc-profile-schema";
 	
 	public static final String PROFILE_REL_TYPE = "related";
 	public static final String PROFILE_CONTENT_TYPE = "application/instance+json";
 	public static final String PROFILE_SCHEMA_CONTENT_TYPE = "application/schema+json";
 	
-	public static final String ACCOUNT_ENPOINT_BASE = "/2012-04-24/Accounts/";
-	public static final String ORGANIZATION_ENPOINT_BASE = "/2012-04-24/Organizations/";
-	public static final String PROFILE_ENPOINT_BASE = "/2012-04-24/Profiles";
+	private static final String ACCOUNT_ENPOINT_BASE = "/2012-04-24/Accounts/";
+	private static final String ORGANIZATION_ENPOINT_BASE = "/2012-04-24/Organizations/";
+	private static final String PROFILE_ENPOINT_BASE = "/2012-04-24/Profiles";
 
     public enum AssociatedResourceType {
         ACCOUNT, ORGANIZATION
@@ -83,6 +84,22 @@ public class RestcommProfilesTool {
 		}
 		profilesEndpointUrl = deploymentUrl + PROFILE_ENPOINT_BASE;
 		return profilesEndpointUrl;
+	}
+	
+	/**
+	 * @param deploymentUrl
+	 * @return
+	 */
+	private String getProfileSchemaUrl (String deploymentUrl){
+		return getProfilesEndpointUrl(deploymentUrl) + "/" + PROFILE_SCHEMA_PATH;
+	}
+	
+	public ClientResponse getProfileSchema (String deploymentUrl, String adminUsername, String adminAuthToken) {
+		Client jerseyClient = Client.create();
+		jerseyClient.addFilter(new HTTPBasicAuthFilter(adminUsername, adminAuthToken));
+		WebResource webResource = jerseyClient.resource(getProfileSchemaUrl(deploymentUrl));
+		ClientResponse response = webResource.accept(PROFILE_SCHEMA_CONTENT_TYPE).get(ClientResponse.class);
+		return response;
 	}
 
 	/**
