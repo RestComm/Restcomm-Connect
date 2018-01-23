@@ -176,8 +176,6 @@ public class ProfilesEndpointTest extends EndpointTest {
     	ClientResponse clientResponse = RestcommProfilesTool.getInstance().updateProfileResponse(deploymentUrl.toString(), superAdminAccountSid, authToken, profileSid, updatedProfileDocument);
     	logger.info("clientResponse: "+clientResponse);
     	assertEquals(404, clientResponse.getStatus());
-
-    	// TODO Read and verify further response
     }
 
     /**
@@ -233,6 +231,20 @@ public class ProfilesEndpointTest extends EndpointTest {
     	clientResponse = RestcommProfilesTool.getInstance().deleteProfileResponse(deploymentUrl.toString(), devAccountSid, authToken, profileSid);
     	logger.info("clientResponse: "+clientResponse);
     	assertEquals(403, clientResponse.getStatus());
+    }
+
+    /**
+     * deleteProfileUnknownSidTest
+     */
+    @Test
+    @Category(FeatureExpTests.class)
+    public void deleteProfileUnknownSidTest(){
+    	/*
+		 * delete a profile with unknown sid 
+		 */
+    	ClientResponse clientResponse = RestcommProfilesTool.getInstance().deleteProfileResponse(deploymentUrl.toString(), devAccountSid, authToken, profileSid);
+    	logger.info("clientResponse: "+clientResponse);
+    	assertEquals(404, clientResponse.getStatus());
     }
 
     @Test 
