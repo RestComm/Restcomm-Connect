@@ -1361,12 +1361,12 @@ public final class CallManager extends RestcommUntypedActor {
         } catch (Exception notANumber) {
             String errMsg;
             if (number != null) {
-                errMsg = "The number " + number.getPhoneNumber() + " does not have a Restcomm hosted application attached";
+                errMsg = String.format("The number %s does not have a Restcomm hosted application attached, exception %s",number.getPhoneNumber(), notANumber);
             } else {
-                errMsg = "The number does not exist" + notANumber;
+                errMsg = String.format("The number does not exist, exception %s",notANumber);
             }
             sendNotification(fromClientAccountSid, errMsg, 11007, "error", false);
-            logger.warning(errMsg, notANumber);
+            logger.warning(errMsg);
             isFoundHostedApp = false;
         }
         return isFoundHostedApp;
