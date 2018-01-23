@@ -35,6 +35,7 @@ import java.net.MalformedURLException;
 import java.nio.charset.Charset;
 import java.nio.file.Path;
 import java.nio.file.Paths;
+import java.util.ArrayList;
 import javax.annotation.PostConstruct;
 import javax.servlet.ServletContext;
 import javax.ws.rs.core.Context;
@@ -65,7 +66,9 @@ public class ProfileEndpoint {
     protected static final String DESCRIBED_REL_TYPE = "describedby";
     protected static final String LINK_HEADER = "Link";
     protected static final String PROFILE_ENCODING = "UTF-8";
-    protected static final String TITLE_PARAM="title";
+    protected static final String TITLE_PARAM = "title";
+
+    private static final String DEFAULT_PROFILE_SID = "PRae6e420f425248d6a26948c17a9e2acf";
 
     @Context
     protected ServletContext context;
@@ -97,10 +100,44 @@ public class ProfileEndpoint {
         }
     }
 
+    class ProfileExt {
+
+        Profile profile;
+        String uri;
+
+        public ProfileExt(Profile profile, String uri) {
+            this.profile = profile;
+            this.uri = uri;
+        }
+
+        public String getUri() {
+            return uri;
+        }
+
+        public Date getDateCreated() {
+            return profile.getDateCreated();
+        }
+
+        public Date getDateUpdated() {
+            return profile.getDateUpdated();
+        }
+
+        public String getSid() {
+            return profile.getSid();
+        }
+
+    }
+
     public Response getProfiles(UriInfo info) {
         try {
             List<Profile> allProfiles = profilesDao.getAllProfiles();
-            GenericEntity<List<Profile>> entity = new GenericEntity<List<Profile>>(allProfiles) {};
+            List<ProfileExt> extProfiles = new ArrayList(allProfiles.size());
+            for (Profile pAux : allProfiles) {
+                URI pURI = info.getBaseUriBuilder().path(pAux.getSid()).build();
+                extProfiles.add(new ProfileExt(pAux, pURI.toString()));
+            }
+            GenericEntity<List<ProfileExt>> entity = new GenericEntity<List<ProfileExt>>(extProfiles) {
+            };
             return Response.ok(entity, MediaType.APPLICATION_JSON).build();
         } catch (SQLException ex) {
             return Response.serverError().entity(ex.getMessage()).build();
@@ -123,7 +160,7 @@ public class ProfileEndpoint {
     }
 
     private void checkRelType(LinkHeader link) {
-        if (!link.getRel().equals(PROFILE_REL_TYPE)) {
+        if (!link.getRel().contains(PROFILE_REL_TYPE)) {
             logger.debug("rel type not supported");
             throw new StatusException(Response.Status.BAD_REQUEST.getStatusCode());
         }
@@ -153,10 +190,18 @@ public class ProfileEndpoint {
 
     public Response deleteProfile(String profileSid) {
         checkProfileExists(profileSid);
+        checkDefaultProfile(profileSid);
         profilesDao.deleteProfile(profileSid);
         return Response.ok().build();
     }
 
+
+    private void checkDefaultProfile(String profileSid) {
+        if (profileSid.equals(DEFAULT_PROFILE_SID)) {
+            logger.debug("modififying default profile is forbidden");
+            throw new StatusException(Response.Status.FORBIDDEN.getStatusCode());
+        }
+    }
     private Profile checkProfileExists(String profileSid) {
         try {
             Profile profile = profilesDao.getProfile(profileSid);
@@ -176,6 +221,7 @@ public class ProfileEndpoint {
 
     public Response updateProfile(String profileSid, InputStream body, UriInfo info) {
         checkProfileExists(profileSid);
+        checkDefaultProfile(profileSid);
         try {
             String profileStr = IOUtils.toString(body, Charset.forName(PROFILE_ENCODING));
             final JsonNode profileJson = JsonLoader.fromString(profileStr);
@@ -204,11 +250,11 @@ public class ProfileEndpoint {
         switch (sid.substring(1, 2)) {
             case "AC":
                 uri = info.getBaseUriBuilder().path(AccountsJsonEndpoint.class).path(sid).build();
-                link = LinkHeader.uri(uri).parameter(TITLE_PARAM,"Accounts");
+                link = LinkHeader.uri(uri).parameter(TITLE_PARAM, "Accounts");
                 break;
             case "OR":
                 uri = info.getBaseUriBuilder().path(OrganizationsJsonEndpoint.class).path(sid).build();
-                link = LinkHeader.uri(uri).parameter(TITLE_PARAM,"Organizations");
+                link = LinkHeader.uri(uri).parameter(TITLE_PARAM, "Organizations");
                 break;
             default:
         }
@@ -218,8 +264,6 @@ public class ProfileEndpoint {
             return null;
         }
     }
-
-
 
     public Response getProfile(String profileSid, UriInfo info) {
         Profile profile = checkProfileExists(profileSid);
