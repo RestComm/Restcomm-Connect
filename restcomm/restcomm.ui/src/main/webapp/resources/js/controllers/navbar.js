@@ -120,9 +120,8 @@ rcMod.controller('SubAccountsCtrl', function($scope, $resource, $stateParams, $u
   });
 
   var RegisterAccountModalCtrl = function ($scope, $uibModalInstance, RCommAccounts, Notifications, AuthService, $rootScope) {
-    var loggedUserAccount = AuthService.getAccount();
     $scope.statuses = ['ACTIVE','UNINITIALIZED','SUSPENDED','INACTIVE','CLOSED'];
-    $scope.newAccount = {role: loggedUserAccount.role};
+    $scope.newAccount = { role: 'Developer' };
     $scope.createAccount = function(account) {
       if(account.email && account.password) {
         // Numbers.register({PhoneNumber:number.number});ild
@@ -160,7 +159,6 @@ rcMod.controller('SubAccountsCtrl', function($scope, $resource, $stateParams, $u
 
 
 rcMod.controller('ProfileCtrl', function($scope, $resource, $stateParams, SessionService,AuthService, RCommAccounts, md5,Notifications, $location, $dialog) {
-  var loggedUserAccount = AuthService.getAccount();
   // retrieve the account in the URL
   $scope.urlAccountSid = $stateParams.accountSid;
   // make a copy of the urlAccount to help detect changes in the form
