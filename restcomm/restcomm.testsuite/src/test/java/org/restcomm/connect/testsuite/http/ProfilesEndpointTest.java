@@ -362,10 +362,11 @@ public class ProfilesEndpointTest extends EndpointTest {
     /**
      * @throws ClientProtocolException
      * @throws IOException
+     * @throws URISyntaxException
      */
     @Test
     @Category(FeatureExpTests.class)
-    public void linkUnLinkProfilePermissionTest() throws ClientProtocolException, IOException{
+    public void linkUnLinkProfilePermissionTest() throws ClientProtocolException, IOException, URISyntaxException{
     	/*
 		 * link a profile by admin account
 		 */
