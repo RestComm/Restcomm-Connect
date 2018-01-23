@@ -1,13 +1,23 @@
 package org.restcomm.connect.application;
 
-import akka.actor.Actor;
-import akka.actor.ActorRef;
-import akka.actor.ActorSystem;
-import akka.actor.Props;
-import akka.actor.UntypedActor;
-import akka.actor.UntypedActorFactory;
-import com.typesafe.config.Config;
-import com.typesafe.config.ConfigFactory;
+import java.io.IOException;
+import java.net.UnknownHostException;
+import java.sql.SQLException;
+import java.util.Date;
+import java.util.List;
+import java.util.Properties;
+
+import javax.media.mscontrol.MsControlException;
+import javax.media.mscontrol.MsControlFactory;
+import javax.media.mscontrol.spi.Driver;
+import javax.media.mscontrol.spi.DriverManager;
+import javax.servlet.ServletContext;
+import javax.servlet.ServletException;
+import javax.servlet.sip.SipServlet;
+import javax.servlet.sip.SipServletContextEvent;
+import javax.servlet.sip.SipServletListener;
+import javax.servlet.sip.SipURI;
+
 import org.apache.commons.configuration.Configuration;
 import org.apache.commons.configuration.ConfigurationException;
 import org.apache.commons.configuration.XMLConfiguration;
@@ -27,6 +37,7 @@ import org.restcomm.connect.commons.util.DNSUtils;
 import org.restcomm.connect.dao.DaoManager;
 import org.restcomm.connect.dao.entities.InstanceId;
 import org.restcomm.connect.dao.entities.Organization;
+import org.restcomm.connect.dao.entities.Profile;
 import org.restcomm.connect.dao.entities.shiro.ShiroResources;
 import org.restcomm.connect.extension.controller.ExtensionBootstrapper;
 import org.restcomm.connect.identity.IdentityContext;
@@ -39,21 +50,19 @@ import org.restcomm.connect.mscontrol.jsr309.Jsr309ControllerFactory;
 import org.restcomm.connect.mscontrol.mms.MmsControllerFactory;
 import org.restcomm.connect.sdr.api.SdrService;
 import org.restcomm.connect.sdr.api.StartSdrService;
-import scala.concurrent.ExecutionContext;
 
-import javax.media.mscontrol.MsControlException;
-import javax.media.mscontrol.MsControlFactory;
-import javax.media.mscontrol.spi.Driver;
-import javax.media.mscontrol.spi.DriverManager;
-import javax.servlet.ServletContext;
-import javax.servlet.ServletException;
-import javax.servlet.sip.SipServlet;
-import javax.servlet.sip.SipServletContextEvent;
-import javax.servlet.sip.SipServletListener;
-import javax.servlet.sip.SipURI;
-import java.net.UnknownHostException;
-import java.util.List;
-import java.util.Properties;
+import com.fasterxml.jackson.databind.JsonNode;
+import com.github.fge.jackson.JsonLoader;
+import com.typesafe.config.Config;
+import com.typesafe.config.ConfigFactory;
+
+import akka.actor.Actor;
+import akka.actor.ActorRef;
+import akka.actor.ActorSystem;
+import akka.actor.Props;
+import akka.actor.UntypedActor;
+import akka.actor.UntypedActorFactory;
+import scala.concurrent.ExecutionContext;
 
 /**
  * @author <a href="mailto:gvagenas@gmail.com">gvagenas</a>
@@ -63,6 +72,7 @@ import java.util.Properties;
 public final class Bootstrapper extends SipServlet implements SipServletListener {
     private static final long serialVersionUID = 1L;
     private static final Logger logger = Logger.getLogger(Bootstrapper.class);
+    private static final String DEFAULT_PROFILE_SID = "PRae6e420f425248d6a26948c17a9e2acf";
 
     private ActorSystem system;
     private ExecutionContext ec;
@@ -304,6 +314,28 @@ public final class Bootstrapper extends SipServlet implements SipServletListener
         return true;
     }
 
+    /**
+     * generateDefaultProfile if does not already exists
+     * @throws SQLException
+     * @throws IOException
+     */
+    private void generateDefaultProfile(final DaoManager storage, final String profileSourcePath) throws SQLException, IOException{
+        Profile profile = storage.getProfilesDao().getProfile(DEFAULT_PROFILE_SID);
+
+        if (profile == null) {
+            if(logger.isDebugEnabled()) {
+                logger.debug("default profile does not exist, will create one from default Plan");
+            }
+            JsonNode jsonNode = JsonLoader.fromPath(profileSourcePath);
+            profile = new Profile(DEFAULT_PROFILE_SID, jsonNode.asText().getBytes(), new Date(), new Date());
+            storage.getProfilesDao().addProfile(profile);
+        } else {
+            if(logger.isDebugEnabled()){
+                logger.debug("default profile already exists, will not override it.");
+            }
+        }
+    }
+
     @Override
     public void servletInitialized(SipServletContextEvent event) {
         if (event.getSipServlet().getClass().equals(Bootstrapper.class)) {
@@ -415,6 +447,12 @@ public final class Bootstrapper extends SipServlet implements SipServletListener
                 extensionBootstrapper.start();
             } catch (IllegalAccessException | InstantiationException | ClassNotFoundException e) {
                 logger.error("Exception during extension scanner start: " + e.getStackTrace());
+            }
+
+            try {
+                generateDefaultProfile(storage, context.getRealPath("WEB-INF/conf/defaultPlan.json"));
+            } catch (SQLException | IOException e1) {
+                logger.error("Exception during generateDefaultProfile: ", e1);
             }
 
             // Create the media server controller factory
