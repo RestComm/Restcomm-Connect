@@ -50,6 +50,7 @@ import org.restcomm.connect.dao.ProfileAssociationsDao;
 import org.restcomm.connect.dao.ProfilesDao;
 import org.restcomm.connect.dao.entities.Profile;
 import org.restcomm.connect.dao.entities.ProfileAssociation;
+import org.restcomm.connect.dao.exceptions.AccountHierarchyDepthCrossed;
 import org.restcomm.connect.http.exceptions.OperatedAccountMissing;
 import org.restcomm.connect.http.exceptions.ResourceAccountMissmatch;
 
@@ -150,12 +151,16 @@ public class ProfileEndpoint {
         return Response.ok().build();
     }
 
-    private Profile checkProfileExists(String profileSid) throws SQLException {
-        Profile profile = profilesDao.getProfile(profileSid);
-        if (profile != null) {
-            return profile;
-        } else {
-            throw new OperatedAccountMissing("Profile not found:" + profileSid);
+    private Profile checkProfileExists(String profileSid) {
+        try {
+            Profile profile = profilesDao.getProfile(profileSid);
+            if (profile != null) {
+                return profile;
+            } else {
+                throw new OperatedAccountMissing("Profile not found:" + profileSid);
+            }
+        } catch (Exception ex) {
+            throw new AccountHierarchyDepthCrossed("issue getting profile", ex);
         }
     }
 
