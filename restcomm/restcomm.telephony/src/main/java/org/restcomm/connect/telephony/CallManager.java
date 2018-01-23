@@ -1277,7 +1277,13 @@ public final class CallManager extends RestcommUntypedActor {
             IExtensionFeatureAccessRequest far = new FeatureAccessRequest(FeatureAccessRequest.Feature.INBOUND_VOICE, number.getAccountSid());
             ExtensionResponse er = ec.executePreInboundAction(far, extensions);
 
-            if (er.isAllowed()) {
+            if (er == null) {
+                if (logger.isDebugEnabled()) {
+                    logger.debug("Extension Response is null");
+                }
+            }
+
+            if (er == null || er.isAllowed()) {
                 if (logger.isDebugEnabled()) {
                     logger.debug("Extension response allowed the execution");
                 }
