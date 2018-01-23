@@ -40,7 +40,7 @@ public class RestcommProfilesTool {
 	private static String profilesEndpointUrl;
 	
 	public static final String PROFILE_REL_TYPE = "related";
-	public static final String PROFILE_CONTENT_TYPE = "application/instance+json;schema=\"http://127.0.0.1\"";
+	public static final String PROFILE_CONTENT_TYPE = "application/instance+json";
 	public static final String PROFILE_SCHEMA_CONTENT_TYPE = "application/schema+json";
 	
 	public static final String ACCOUNT_ENPOINT_BASE = "/2012-04-24/Accounts/";
