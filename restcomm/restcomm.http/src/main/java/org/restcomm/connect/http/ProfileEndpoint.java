@@ -43,14 +43,20 @@ import javax.ws.rs.core.GenericEntity;
 import javax.ws.rs.core.HttpHeaders;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
+import javax.ws.rs.core.Response.ResponseBuilder;
+import javax.ws.rs.core.Response.Status;
 import javax.ws.rs.core.UriInfo;
 import org.apache.commons.configuration.Configuration;
 import org.apache.commons.io.IOUtils;
 import org.apache.log4j.Logger;
 import org.restcomm.connect.commons.dao.Sid;
+import org.restcomm.connect.dao.AccountsDao;
 import org.restcomm.connect.dao.DaoManager;
+import org.restcomm.connect.dao.OrganizationsDao;
 import org.restcomm.connect.dao.ProfileAssociationsDao;
 import org.restcomm.connect.dao.ProfilesDao;
+import org.restcomm.connect.dao.entities.Account;
+import org.restcomm.connect.dao.entities.Organization;
 import org.restcomm.connect.dao.entities.Profile;
 import org.restcomm.connect.dao.entities.ProfileAssociation;
 import org.restcomm.connect.http.exceptions.StatusException;
@@ -70,6 +76,10 @@ public class ProfileEndpoint {
 
     private static final String DEFAULT_PROFILE_SID = "PRae6e420f425248d6a26948c17a9e2acf";
 
+    private static final String ACCOUNTS_PREFIX ="AC";
+    private static final String ORGANIZATIONS_PREFIX ="OR";
+
+
     @Context
     protected ServletContext context;
 
@@ -77,6 +87,8 @@ public class ProfileEndpoint {
     private Configuration rootConfiguration; // top-level configuration element
     private ProfilesDao profilesDao;
     private ProfileAssociationsDao profileAssociationsDao;
+    private AccountsDao accountsDao;
+    private OrganizationsDao organizationsDao;
 
     private JsonNode schemaJson;
     private JsonSchema profileSchema;
@@ -89,7 +101,10 @@ public class ProfileEndpoint {
     void init() {
         rootConfiguration = (Configuration) context.getAttribute(Configuration.class.getName());
         runtimeConfiguration = rootConfiguration.subset("runtime-settings");
-        profileAssociationsDao = ((DaoManager) context.getAttribute(DaoManager.class.getName())).getProfileAssociationsDao();
+        final DaoManager storage = (DaoManager) context.getAttribute(DaoManager.class.getName());
+        profileAssociationsDao = storage.getProfileAssociationsDao();
+        this.accountsDao = storage.getAccountsDao();
+        this.organizationsDao = storage.getOrganizationsDao();
         profilesDao = ((DaoManager) context.getAttribute(DaoManager.class.getName())).getProfilesDao();
         try {
             schemaJson = JsonLoader.fromResource("/org/restcomm/connect/http/schemas/rc-profile-schema.json");
@@ -150,6 +165,7 @@ public class ProfileEndpoint {
         LinkHeader link = LinkHeader.valueOf(requestHeader.get(0));
         checkRelType(link);
         String targetSid = retrieveSid(link.getUri());
+        checkTargetSid(new Sid(targetSid));
         profileAssociationsDao.deleteProfileAssociationByTargetSid(targetSid);
         return Response.ok().build();
     }
@@ -161,8 +177,8 @@ public class ProfileEndpoint {
 
     private void checkRelType(LinkHeader link) {
         if (!link.getRel().contains(PROFILE_REL_TYPE)) {
-            logger.debug("rel type not supported");
-            throw new StatusException(Response.Status.BAD_REQUEST.getStatusCode());
+            logger.debug("Only related rel type supported");
+            throw new StatusException(Response.Status.BAD_REQUEST, "Only related rel type supported");
         }
     }
 
@@ -170,7 +186,7 @@ public class ProfileEndpoint {
         List<String> requestHeader = headers.getRequestHeader(LINK_HEADER);
         if (requestHeader.size() != 1) {
             logger.debug("Only one Link supported");
-            throw new StatusException(Response.Status.BAD_REQUEST.getStatusCode());
+            throw new StatusException(Response.Status.BAD_REQUEST,"Only one Link supported");
         }
         return requestHeader;
     }
@@ -180,7 +196,9 @@ public class ProfileEndpoint {
         List<String> requestHeader = checkLinkHeader(headers);
         LinkHeader link = LinkHeader.valueOf(requestHeader.get(0));
         checkRelType(link);
-        Sid targetSid = new Sid(retrieveSid(link.getUri()));
+        String targetSidStr = retrieveSid(link.getUri());
+        Sid targetSid = new Sid(targetSidStr);
+        checkTargetSid(targetSid);
         Sid profileSid = new Sid(profileSidStr);
         ProfileAssociation assoc = new ProfileAssociation(profileSid, targetSid, new Date(), new Date());
         profileAssociationsDao.addProfileAssociation(assoc);
@@ -198,8 +216,8 @@ public class ProfileEndpoint {
 
     private void checkDefaultProfile(String profileSid) {
         if (profileSid.equals(DEFAULT_PROFILE_SID)) {
-            logger.debug("modififying default profile is forbidden");
-            throw new StatusException(Response.Status.FORBIDDEN.getStatusCode());
+            logger.debug("Modififying default profile is forbidden");
+            throw new StatusException(Response.Status.FORBIDDEN,"Modififying default profile is forbidden");
         }
     }
     private Profile checkProfileExists(String profileSid) {
@@ -211,11 +229,11 @@ public class ProfileEndpoint {
                 if (logger.isDebugEnabled()) {
                     logger.debug("Profile not found:" + profileSid);
                 }
-                throw new StatusException(Response.Status.NOT_FOUND.getStatusCode());
+                throw new StatusException(Response.Status.NOT_FOUND,"Profile not found");
             }
         } catch (SQLException ex) {
-            logger.debug("issue getting profile.", ex);
-            throw new StatusException(Response.Status.INTERNAL_SERVER_ERROR.getStatusCode());
+            logger.debug("SQL issue getting profile.", ex);
+            throw new StatusException(Response.Status.INTERNAL_SERVER_ERROR, "SQL issue getting profile.");
         }
     }
 
@@ -243,16 +261,26 @@ public class ProfileEndpoint {
         return LinkHeader.uri(build).rel(DESCRIBED_REL_TYPE).build();
     }
 
+    /**
+     *
+     * @param sid
+     * @return first two chars in sid
+     */
+    private String extractSidPrefix(Sid sid) {
+        return sid.toString().substring(0, 2);
+
+    }
+
     public LinkHeader composeLink(Sid targetSid, UriInfo info) throws MalformedURLException {
         String sid = targetSid.toString();
         URI uri = null;
         LinkHeaderBuilder link = null;
-        switch (sid.substring(1, 2)) {
-            case "AC":
+        switch (extractSidPrefix(targetSid)) {
+            case ACCOUNTS_PREFIX:
                 uri = info.getBaseUriBuilder().path(AccountsJsonEndpoint.class).path(sid).build();
                 link = LinkHeader.uri(uri).parameter(TITLE_PARAM, "Accounts");
                 break;
-            case "OR":
+            case ORGANIZATIONS_PREFIX:
                 uri = info.getBaseUriBuilder().path(OrganizationsJsonEndpoint.class).path(sid).build();
                 link = LinkHeader.uri(uri).parameter(TITLE_PARAM, "Organizations");
                 break;
@@ -265,7 +293,26 @@ public class ProfileEndpoint {
         }
     }
 
-    public Response getProfile(String profileSid, UriInfo info) {
+    public void checkTargetSid(Sid sid) {
+        switch (extractSidPrefix(sid)) {
+            case ACCOUNTS_PREFIX:
+                Account acc = accountsDao.getAccount(sid);
+                if (acc == null) {
+                    throw new StatusException(Status.NOT_FOUND, "Account not found");
+                }
+                break;
+            case ORGANIZATIONS_PREFIX:
+                Organization org = organizationsDao.getOrganization(sid);
+                if (org == null) {
+                    throw new StatusException(Status.NOT_FOUND, "Organization not found");
+                }
+                break;
+            default:
+                throw new StatusException(Status.NOT_FOUND, "Link not supported");
+        }
+    }
+
+    public ResponseBuilder getProfileBuilder(String profileSid, UriInfo info) {
         Profile profile = checkProfileExists(profileSid);
         try {
             Response.ResponseBuilder ok = Response.ok(profile.getProfileDocument());
@@ -279,10 +326,13 @@ public class ProfileEndpoint {
             ok.entity(profileStr);
             ok.lastModified(profile.getDateUpdated());
             ok.type(PROFILE_CONTENT_TYPE);
-            return ok.build();
+            return ok;
         } catch (Exception ex) {
-            return Response.serverError().entity(ex.getMessage()).build();
+            return Response.serverError().entity(ex.getMessage());
         }
+    }
+    public Response getProfile(String profileSid, UriInfo info) {
+        return getProfileBuilder(profileSid, info).build();
     }
 
     public Response createProfile(InputStream body, UriInfo info) {
@@ -297,7 +347,7 @@ public class ProfileEndpoint {
                 Profile profile = new Profile(profileSid.toString(), profileStr.getBytes(), new Date(), new Date());
                 profilesDao.addProfile(profile);
                 URI location = info.getBaseUriBuilder().path(profileSid.toString()).build();
-                response = Response.created(location).type(PROFILE_CONTENT_TYPE).entity(profileStr).build();
+                response = getProfileBuilder(profileSid.toString(), info).status(Status.CREATED).location(location).build();
             } else {
                 response = Response.status(Response.Status.BAD_REQUEST).entity(report.toString()).build();
             }
