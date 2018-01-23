@@ -52,8 +52,8 @@ public class ProfileJsonEndpoint extends ProfileEndpoint {
     @POST
     @Consumes(PROFILE_CONTENT_TYPE)
     @Produces(PROFILE_CONTENT_TYPE)
-    public Response createProfileAsJson(InputStream body) {
-        return createProfile(body);
+    public Response createProfileAsJson(InputStream body, @Context UriInfo info) {
+        return createProfile(body, info);
     }
 
     @Path("/{profileSid}")

@@ -63,6 +63,7 @@ import org.restcomm.connect.dao.DaoManager;
 import org.restcomm.connect.dao.ProfileAssociationsDao;
 import org.restcomm.connect.dao.entities.ProfileAssociation;
 import static org.restcomm.connect.http.ProfileEndpoint.PROFILE_REL_TYPE;
+import static org.restcomm.connect.http.ProfileEndpoint.TITLE_PARAM;
 
 /**
  * @author maria.farooq@telestax.com (Maria Farooq)
@@ -129,7 +130,7 @@ public class OrganizationsEndpoint extends SecuredEndpoint {
     public LinkHeader composeLink(Sid targetSid, UriInfo info) {
         String sid = targetSid.toString();
         URI uri = info.getBaseUriBuilder().path(ProfileJsonEndpoint.class).path(sid).build();
-        LinkHeader.LinkHeaderBuilder link = LinkHeader.uri(uri).parameter("title", "Profiles");
+        LinkHeader.LinkHeaderBuilder link = LinkHeader.uri(uri).parameter(TITLE_PARAM, "Profiles");
         return link.type(MediaType.valueOf(PROFILE_REL_TYPE)).build();
     }
 
