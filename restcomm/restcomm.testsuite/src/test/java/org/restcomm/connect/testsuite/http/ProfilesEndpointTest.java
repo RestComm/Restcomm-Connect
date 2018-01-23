@@ -186,7 +186,6 @@ public class ProfilesEndpointTest extends EndpointTest {
 		 * create a profile with invalid schema
 		 */
     	ClientResponse clientResponse = RestcommProfilesTool.getInstance().createProfileResponse(deploymentUrl.toString(), superAdminAccountSid, authToken, invalidProfileDocument);
-    	logger.info("clientResponse: "+clientResponse);
     	assertEquals(400, clientResponse.getStatus());
     }
 
@@ -200,7 +199,6 @@ public class ProfilesEndpointTest extends EndpointTest {
 		 * update a profile 
 		 */
     	ClientResponse clientResponse = RestcommProfilesTool.getInstance().updateProfileResponse(deploymentUrl.toString(), superAdminAccountSid, authToken, UNKNOWN_PROFILE_SID, updatedProfileDocument);
-    	logger.info("clientResponse: "+clientResponse);
     	assertEquals(404, clientResponse.getStatus());
     }
 
@@ -214,13 +212,11 @@ public class ProfilesEndpointTest extends EndpointTest {
 		 * update a profile from admin account
 		 */
     	ClientResponse clientResponse = RestcommProfilesTool.getInstance().updateProfileResponse(deploymentUrl.toString(), adminAccountSid, authToken, DEFAULT_PROFILE_SID, updatedProfileDocument);
-    	logger.info("clientResponse: "+clientResponse);
     	assertEquals(403, clientResponse.getStatus());
     	/*
 		 * update a profile from dev account
 		 */
     	clientResponse = RestcommProfilesTool.getInstance().updateProfileResponse(deploymentUrl.toString(), devAccountSid, authToken, DEFAULT_PROFILE_SID, updatedProfileDocument);
-    	logger.info("clientResponse: "+clientResponse);
     	assertEquals(403, clientResponse.getStatus());
     }
 
@@ -235,7 +231,6 @@ public class ProfilesEndpointTest extends EndpointTest {
 		 * update default profile
 		 */
     	ClientResponse clientResponse = RestcommProfilesTool.getInstance().updateProfileResponse(deploymentUrl.toString(), superAdminAccountSid, authToken, DEFAULT_PROFILE_SID, updatedProfileDocument);
-    	logger.info("clientResponse: "+clientResponse);
     	assertEquals(403, clientResponse.getStatus());
     }
 
@@ -250,7 +245,6 @@ public class ProfilesEndpointTest extends EndpointTest {
 		 * delete default profile 
 		 */
     	ClientResponse clientResponse = RestcommProfilesTool.getInstance().deleteProfileResponse(deploymentUrl.toString(), superAdminAccountSid, authToken, DEFAULT_PROFILE_SID);
-    	logger.info("clientResponse: "+clientResponse);
     	assertEquals(403, clientResponse.getStatus());
     }
 
@@ -264,13 +258,11 @@ public class ProfilesEndpointTest extends EndpointTest {
 		 * delete a profile from admin account
 		 */
     	ClientResponse clientResponse = RestcommProfilesTool.getInstance().deleteProfileResponse(deploymentUrl.toString(), adminAccountSid, authToken, DEFAULT_PROFILE_SID);
-    	logger.info("clientResponse: "+clientResponse);
     	assertEquals(403, clientResponse.getStatus());
     	/*
 		 * delete a profile from Dev account
 		 */
     	clientResponse = RestcommProfilesTool.getInstance().deleteProfileResponse(deploymentUrl.toString(), devAccountSid, authToken, DEFAULT_PROFILE_SID);
-    	logger.info("clientResponse: "+clientResponse);
     	assertEquals(403, clientResponse.getStatus());
     }
 
@@ -284,7 +276,6 @@ public class ProfilesEndpointTest extends EndpointTest {
 		 * delete a profile with unknown sid 
 		 */
     	ClientResponse clientResponse = RestcommProfilesTool.getInstance().deleteProfileResponse(deploymentUrl.toString(), superAdminAccountSid, authToken, UNKNOWN_PROFILE_SID);
-    	logger.info("clientResponse: "+clientResponse);
     	assertEquals(404, clientResponse.getStatus());
     }
 
@@ -293,11 +284,9 @@ public class ProfilesEndpointTest extends EndpointTest {
     public void createProfilePermissionTest(){
     	//admin tries to create profile
     	ClientResponse  clientResponse = RestcommProfilesTool.getInstance().createProfileResponse(deploymentUrl.toString(), adminAccountSid, authToken, profileDocument);
-    	logger.info("clientResponse: "+clientResponse);
     	assertEquals(403, clientResponse.getStatus());
     	//developer tries to create profile
     	clientResponse = RestcommProfilesTool.getInstance().createProfileResponse(deploymentUrl.toString(), devAccountSid, authToken, profileDocument);
-    	logger.info("clientResponse: "+clientResponse);
     	assertEquals(403, clientResponse.getStatus());
     }
 
