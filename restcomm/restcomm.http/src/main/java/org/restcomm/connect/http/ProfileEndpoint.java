@@ -147,7 +147,7 @@ public class ProfileEndpoint {
             List<Profile> allProfiles = profilesDao.getAllProfiles();
             List<ProfileExt> extProfiles = new ArrayList(allProfiles.size());
             for (Profile pAux : allProfiles) {
-                URI pURI = info.getBaseUriBuilder().path(pAux.getSid()).build();
+                URI pURI = info.getBaseUriBuilder().path(this.getClass()).path(pAux.getSid()).build();
                 extProfiles.add(new ProfileExt(pAux, pURI.toString()));
             }
             GenericEntity<List<ProfileExt>> entity = new GenericEntity<List<ProfileExt>>(extProfiles) {
