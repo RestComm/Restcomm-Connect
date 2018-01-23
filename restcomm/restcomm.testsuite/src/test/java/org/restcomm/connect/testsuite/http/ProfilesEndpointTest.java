@@ -522,7 +522,7 @@ public class ProfilesEndpointTest extends EndpointTest {
     	 * from Accounts endpoint:
     	 * to verify association was removed.
     	 */
-    	ClientResponse accountEndopintResponse = RestcommAccountsTool.getInstance().getAccountResponse(deploymentUrl.toString(), superAdminAccountSid, authToken, superAdminAccountSid);
+    	ClientResponse accountEndopintResponse = RestcommAccountsTool.getInstance().getAccountResponse(deploymentUrl.toString(), superAdminAccountSid, authToken, adminAccountSid);
     	WebResourceLinkHeaders linkHeaders = accountEndopintResponse.getLinks();
     	LinkHeader linkHeader = linkHeaders.getLink(RestcommProfilesTool.PROFILE_REL_TYPE);
     	assertNull(linkHeader);
