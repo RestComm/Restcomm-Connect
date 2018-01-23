@@ -6,6 +6,8 @@ import static org.junit.Assert.assertNull;
 import static org.junit.Assert.assertTrue;
 
 import java.io.IOException;
+import java.net.URI;
+import java.net.URISyntaxException;
 import java.net.URL;
 
 import org.apache.http.HttpResponse;
@@ -66,7 +68,6 @@ public class ProfilesEndpointTest extends EndpointTest {
     }
 
     /**
-     * SuperAdmin is allowed to read any profile
      * this test will try to Read single profile
      */
     @Test
@@ -91,6 +92,17 @@ public class ProfilesEndpointTest extends EndpointTest {
     }
 
     /**
+     * this test will try to Read single profile with an unknown profile Sid
+     */
+    @Test
+    @Category(FeatureExpTests.class)
+    public void getProfileUnknownSid(){
+    	ClientResponse clientResponse = RestcommProfilesTool.getInstance().getProfileResponse(deploymentUrl.toString(), superAdminAccountSid, authToken, profileSid);
+    	assertNotNull(clientResponse);
+    	assertEquals(404, clientResponse.getStatus());
+    }
+
+    /**
      * Administrators and Developers can not read profile
      */
     @Test
@@ -108,10 +120,10 @@ public class ProfilesEndpointTest extends EndpointTest {
     }
 
     /**
-     * createAndUpdateProfileTest
+     * Create And Update Profile Test
      */
     @Test
-    public void createProfileTest(){
+    public void createAndUpdateProfileTest(){
     	/*
 		 * create a profile 
 		 */
@@ -119,13 +131,23 @@ public class ProfilesEndpointTest extends EndpointTest {
     	logger.info("clientResponse: "+clientResponse);
     	assertEquals(201, clientResponse.getStatus());
     	assertEquals(profileDocument, clientResponse.getEntity(String.class));
+    	
+    	//extract profileSid of newly created profile Sid.
+    	URI location = clientResponse.getLocation();
+    	assertNotNull(location);
+    	String profileLocation  = location.toString();
+    	String[] profileUriElements = profileLocation.split("/");
+    	assertNotNull(profileUriElements);
+    	String newlyCreatedProfileSid = profileUriElements[profileUriElements.length-1];
+    	logger.info("newlyCreatedProfileSid: "+newlyCreatedProfileSid);
+    	
     	/*
 		 * update the profile 
 		 */
-    	//TODO extract profileSid of newly created profile.
-    	clientResponse = RestcommProfilesTool.getInstance().updateProfileResponse(deploymentUrl.toString(), superAdminAccountSid, authToken, profileSid, updatedProfileDocument);
-    	logger.info("clientResponse: "+clientResponse);
+    	clientResponse = RestcommProfilesTool.getInstance().updateProfileResponse(deploymentUrl.toString(), superAdminAccountSid, authToken, newlyCreatedProfileSid, updatedProfileDocument);
+    	logger.info("clientResponse for update: "+clientResponse);
     	assertEquals(200, clientResponse.getStatus());
+    	assertEquals(updatedProfileDocument, clientResponse.getEntity(String.class));
     }
 
     /**
@@ -230,9 +252,10 @@ public class ProfilesEndpointTest extends EndpointTest {
      * link/unlink a give Profile To an Account
      * @throws IOException 
      * @throws ClientProtocolException 
+     * @throws URISyntaxException 
      */
     @Test
-    public void linkUnLinkProfileToAccount() throws ClientProtocolException, IOException{
+    public void linkUnLinkProfileToAccount() throws ClientProtocolException, IOException, URISyntaxException{
 		/*
 		 * link a profile to an account 
 		 */
@@ -278,9 +301,10 @@ public class ProfilesEndpointTest extends EndpointTest {
      * link/unlink a give Profile To an Organization
      * @throws IOException 
      * @throws ClientProtocolException 
+     * @throws URISyntaxException 
      */
     @Test
-    public void linkUnLinkProfileToOrganization() throws ClientProtocolException, IOException{
+    public void linkUnLinkProfileToOrganization() throws ClientProtocolException, IOException, URISyntaxException{
     	/*
 		 * link a profile to an organizations 
 		 */
