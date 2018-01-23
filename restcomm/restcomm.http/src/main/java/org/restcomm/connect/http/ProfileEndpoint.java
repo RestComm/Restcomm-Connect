@@ -35,14 +35,16 @@ import java.nio.file.Path;
 import java.nio.file.Paths;
 import javax.annotation.PostConstruct;
 import javax.servlet.ServletContext;
-import javax.servlet.http.HttpServletRequest;
+import javax.ws.rs.core.Context;
 import javax.ws.rs.core.HttpHeaders;
 import javax.ws.rs.core.Link;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
+import javax.ws.rs.core.Response.Status;
 import javax.ws.rs.core.UriInfo;
 import org.apache.commons.configuration.Configuration;
 import org.apache.commons.io.IOUtils;
+import org.apache.log4j.Logger;
 import org.restcomm.connect.commons.dao.Sid;
 import org.restcomm.connect.dao.DaoManager;
 import org.restcomm.connect.dao.ProfileAssociationsDao;
@@ -51,7 +53,9 @@ import org.restcomm.connect.dao.entities.Profile;
 import org.restcomm.connect.dao.entities.ProfileAssociation;
 import org.restcomm.connect.http.exceptions.ResourceAccountMissmatch;
 
-public class ProfileEndpoint extends SecuredEndpoint {
+public class ProfileEndpoint {
+
+    protected Logger logger = Logger.getLogger(ProfileEndpoint.class);
 
     //TODO compose schema location
     protected static final String PROFILE_CONTENT_TYPE = "application/instance+json;schema=\"http://127.0.0.1\"";
@@ -61,6 +65,9 @@ public class ProfileEndpoint extends SecuredEndpoint {
     protected static final String DESCRIBED_REL_TYPE = "describedby";
     protected static final String LINK_HEADER = "Link";
     protected static final String PROFILE_ENCODING = "UTF-8";
+
+    @Context
+    protected ServletContext context;
 
     private Configuration runtimeConfiguration;
     private Configuration rootConfiguration; // top-level configuration element
@@ -74,16 +81,10 @@ public class ProfileEndpoint extends SecuredEndpoint {
         super();
     }
 
-    // used for testing
-    public ProfileEndpoint(ServletContext context, HttpServletRequest request) {
-        super(context, request);
-    }
-
     @PostConstruct
     void init() {
         rootConfiguration = (Configuration) context.getAttribute(Configuration.class.getName());
         runtimeConfiguration = rootConfiguration.subset("runtime-settings");
-        super.init(runtimeConfiguration);
         profileAssociationsDao = ((DaoManager) context.getAttribute(DaoManager.class.getName())).getProfileAssociationsDao();
         profilesDao = ((DaoManager) context.getAttribute(DaoManager.class.getName())).getProfilesDao();
         try {
@@ -196,18 +197,22 @@ public class ProfileEndpoint extends SecuredEndpoint {
     public Response getProfile(String profileSid, UriInfo info) {
         try {
             Profile profile = profilesDao.getProfile(profileSid);
-            Response.ResponseBuilder ok = Response.ok(profile.getProfileDocument());
-            List<ProfileAssociation> profileAssociationsByProfileSid = profileAssociationsDao.getProfileAssociationsByProfileSid(profileSid);
-            for (ProfileAssociation assoc : profileAssociationsByProfileSid) {
-                Link composeLink = composeLink(assoc.getTargetSid(), info);
-                ok.header(LINK_HEADER, composeLink.toString());
+            if (profile != null) {
+                Response.ResponseBuilder ok = Response.ok(profile.getProfileDocument());
+                List<ProfileAssociation> profileAssociationsByProfileSid = profileAssociationsDao.getProfileAssociationsByProfileSid(profileSid);
+                for (ProfileAssociation assoc : profileAssociationsByProfileSid) {
+                    Link composeLink = composeLink(assoc.getTargetSid(), info);
+                    ok.header(LINK_HEADER, composeLink.toString());
+                }
+                ok.header(LINK_HEADER, composeSchemaLink(info));
+                String profileStr = IOUtils.toString(profile.getProfileDocument(), PROFILE_ENCODING);
+                ok.entity(profileStr);
+                ok.lastModified(profile.getDateUpdated());
+                ok.type(PROFILE_CONTENT_TYPE);
+                return ok.build();
+            } else {
+                return Response.status(Status.NOT_FOUND.getStatusCode()).build();
             }
-            ok.header(LINK_HEADER, composeSchemaLink(info));
-            String profileStr = IOUtils.toString(profile.getProfileDocument(), PROFILE_ENCODING);
-            ok.entity(profileStr);
-            ok.lastModified(profile.getDateUpdated());
-            ok.type(PROFILE_CONTENT_TYPE);
-            return ok.build();
         } catch (Exception ex) {
             return Response.serverError().entity(ex.getMessage()).build();
         }
