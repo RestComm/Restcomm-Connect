@@ -28,6 +28,8 @@ import org.restcomm.connect.commons.Version;
 import org.restcomm.connect.commons.annotations.FeatureAltTests;
 import org.restcomm.connect.commons.annotations.FeatureExpTests;
 
+import com.google.gson.JsonObject;
+import com.google.gson.JsonParser;
 import com.sun.jersey.api.client.ClientResponse;
 import com.sun.jersey.api.client.WebResourceLinkHeaders;
 import com.sun.jersey.core.header.LinkHeader;
@@ -89,6 +91,7 @@ public class ProfilesEndpointTest extends EndpointTest {
     	logger.info("profile list: "+clientResponse.getEntity(String.class));
     	assertNotNull(clientResponse);
     	assertEquals(200, clientResponse.getStatus());
+    	// TODO Read and verify further response
     }
 
     /**
@@ -517,6 +520,17 @@ public class ProfilesEndpointTest extends EndpointTest {
     	WebResourceLinkHeaders linkHeaders = accountEndopintResponse.getLinks();
     	LinkHeader linkHeader = linkHeaders.getLink(RestcommProfilesTool.PROFILE_REL_TYPE);
     	assertNull(linkHeader);
+    }
+    
+    @Test
+    public void getProfileSchemaTest() {
+    	ClientResponse clientResponse = RestcommProfilesTool.getInstance().getProfileSchema(deploymentUrl.toString(), superAdminAccountSid, authToken);
+    	logger.info("profile schema: "+clientResponse);
+    	assertEquals(200, clientResponse.getStatus());
+
+    	JsonObject jsonResponse = new JsonParser().parse(clientResponse.getEntity(String.class)).getAsJsonObject();
+    	logger.info("jsonResponse: "+jsonResponse);
+    	assertNotNull(jsonResponse);
     }
     
     @Deployment(name = "ProfilesEndpointTest", managed = true, testable = false)
