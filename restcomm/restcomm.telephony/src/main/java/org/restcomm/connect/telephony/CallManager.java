@@ -1265,28 +1265,11 @@ public final class CallManager extends RestcommUntypedActor {
             NumberSelectionResult result = numberSelector.searchNumberWithResult(phone, sourceOrganizationSid, destOrg);
             number = result.getNumber();
 
-            if (logger.isDebugEnabled()) {
-                if (number != null) {
-                    logger.debug("Number found: "+number);
-                } else {
-                    logger.debug("Number is null !");
-                }
-            }
-
             ExtensionController ec = ExtensionController.getInstance();
             IExtensionFeatureAccessRequest far = new FeatureAccessRequest(FeatureAccessRequest.Feature.INBOUND_VOICE, number.getAccountSid());
             ExtensionResponse er = ec.executePreInboundAction(far, extensions);
 
-            if (er == null) {
-                if (logger.isDebugEnabled()) {
-                    logger.debug("Extension Response is null");
-                }
-            }
-
             if (er == null || er.isAllowed()) {
-                if (logger.isDebugEnabled()) {
-                    logger.debug("Extension response allowed the execution");
-                }
                 if (numberSelector.isFailedCall(result, sourceOrganizationSid, destOrg)) {
                     // We found the number but organization was not proper
                     if (logger.isDebugEnabled()) {
@@ -1352,12 +1335,11 @@ public final class CallManager extends RestcommUntypedActor {
                 }
             } else {
                 //Extensions didn't allowed this call
-                if (logger.isDebugEnabled()) {
-                    final String errMsg = "Inbound call is not Allowed";
-                    logger.debug(errMsg);
-                }
                 String errMsg = "Inbound call to Number: " + number.getPhoneNumber()
                         + " is not allowed";
+                if (logger.isDebugEnabled()) {
+                    logger.debug(errMsg);
+                }
                 sendNotification(number.getAccountSid(), errMsg, 11001, "warning", true);
                 final SipServletResponse resp = request.createResponse(SC_FORBIDDEN, "Call not allowed");
                 resp.send();
@@ -1367,17 +1349,12 @@ public final class CallManager extends RestcommUntypedActor {
         } catch (Exception notANumber) {
             String errMsg;
             if (number != null) {
-                errMsg = String.format("The number %s does not have a Restcomm hosted application attached, exception %s",number.getPhoneNumber(), notANumber);
+                errMsg = String.format("IncomingPhoneNumber %s does not have a Restcomm hosted application attached, exception %s",number.getPhoneNumber(), notANumber);
             } else {
-                errMsg = String.format("The number does not exist, exception %s",notANumber);
+                errMsg = String.format("IncomingPhoneNumber for %s, does not exist, exception %s",phone, notANumber);
             }
             sendNotification(fromClientAccountSid, errMsg, 11007, "error", false);
             logger.warning(errMsg);
-            if (logger.isDebugEnabled()) {
-                logger.debug("Number that caused exception: "+number.toString());
-                logger.debug("Exception stack trace: ");
-                notANumber.printStackTrace();
-            }
             isFoundHostedApp = false;
         }
         return isFoundHostedApp;
