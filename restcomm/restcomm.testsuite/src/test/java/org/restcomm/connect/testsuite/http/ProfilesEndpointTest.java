@@ -242,7 +242,7 @@ public class ProfilesEndpointTest extends EndpointTest {
     	/*
 		 * delete a profile with unknown sid 
 		 */
-    	ClientResponse clientResponse = RestcommProfilesTool.getInstance().deleteProfileResponse(deploymentUrl.toString(), devAccountSid, authToken, profileSid);
+    	ClientResponse clientResponse = RestcommProfilesTool.getInstance().deleteProfileResponse(deploymentUrl.toString(), superAdminAccountSid, authToken, profileSid);
     	logger.info("clientResponse: "+clientResponse);
     	assertEquals(404, clientResponse.getStatus());
     }
