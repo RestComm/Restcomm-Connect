@@ -57,6 +57,12 @@ import org.restcomm.connect.http.converter.RestCommResponseConverter;
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
 import com.thoughtworks.xstream.XStream;
+import java.net.URI;
+import javax.ws.rs.core.Link;
+import org.restcomm.connect.dao.DaoManager;
+import org.restcomm.connect.dao.ProfileAssociationsDao;
+import org.restcomm.connect.dao.entities.ProfileAssociation;
+import static org.restcomm.connect.http.ProfileEndpoint.PROFILE_REL_TYPE;
 
 /**
  * @author maria.farooq@telestax.com (Maria Farooq)
@@ -72,6 +78,7 @@ public class OrganizationsEndpoint extends SecuredEndpoint {
     protected final String MSG_DOMAIN_NAME_NOT_AVAILABLE = "This domain name is not available. Please, choose a different name and try again.";
     protected String SUB_DOMAIN_NAME_VALIDATION_PATTERN="[A-Za-z0-9\\-]{1,255}";
     protected Pattern pattern;
+    private ProfileAssociationsDao profileAssociationsDao;
 
     protected OrganizationListConverter listConverter;
 
@@ -90,6 +97,9 @@ public class OrganizationsEndpoint extends SecuredEndpoint {
         super.init(configuration.subset("runtime-settings"));
 
         registerConverters();
+
+        profileAssociationsDao = ((DaoManager) context.getAttribute(DaoManager.class.getName())).getProfileAssociationsDao();
+
 
         // Make sure there is an authenticated account present when this endpoint is used
         // get manager from context or create it if it does not exist
@@ -116,12 +126,20 @@ public class OrganizationsEndpoint extends SecuredEndpoint {
         xstream.registerConverter(new RestCommResponseConverter(configuration));
     }
 
+    public Link composeLink(Sid targetSid, UriInfo info) {
+        String sid = targetSid.toString();
+        URI uri = info.getBaseUriBuilder().path(ProfileJsonEndpoint.class).path(sid).build();
+        Link.Builder link = Link.fromUri(uri).title("Profiles");
+        return link.type(PROFILE_REL_TYPE).build();
+    }
+
     /**
      * @param organizationSid
      * @param responseType
      * @return
      */
-    protected Response getOrganization(final String organizationSid, final MediaType responseType) {
+    protected Response getOrganization(final String organizationSid, final MediaType responseType,
+             UriInfo info) {
         checkAuthenticatedAccount();
         //First check if the account has the required permissions in general, this way we can fail fast and avoid expensive DAO operations
         checkPermission("RestComm:Read:Organizations");
@@ -149,11 +167,17 @@ public class OrganizationsEndpoint extends SecuredEndpoint {
         if (organization == null) {
             return status(NOT_FOUND).build();
         } else {
+            Response.ResponseBuilder ok = Response.ok();
+            ProfileAssociation profileAssociationByTargetSid = profileAssociationsDao.getProfileAssociationByTargetSid(organizationSid);
+            if (profileAssociationByTargetSid != null) {
+                Link profileLink = composeLink(profileAssociationByTargetSid.getProfileSid(), info);
+                ok.header(ProfileEndpoint.LINK_HEADER, profileLink.toString());
+            }
             if (APPLICATION_XML_TYPE == responseType) {
                 final RestCommResponse response = new RestCommResponse(organization);
-                return ok(xstream.toXML(response), APPLICATION_XML).build();
+                return ok.type(APPLICATION_XML).entity(xstream.toXML(response)).build();
             } else if (APPLICATION_JSON_TYPE == responseType) {
-                return ok(gson.toJson(organization), APPLICATION_JSON).build();
+                return ok.type(APPLICATION_JSON).entity(gson.toJson(organization)).build();
             } else {
                 return null;
             }

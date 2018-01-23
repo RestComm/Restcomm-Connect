@@ -43,8 +43,9 @@ public final class OrganizationsJsonEndpoint extends OrganizationsEndpoint {
 
     @Path("/{organizationSid}")
     @GET
-    public Response getOrganizationAsJson(@PathParam("organizationSid") final String organizationSid) {
-        return getOrganization(organizationSid, APPLICATION_JSON_TYPE);
+    public Response getOrganizationAsJson(@PathParam("organizationSid") final String organizationSid,
+            @Context UriInfo info) {
+        return getOrganization(organizationSid, APPLICATION_JSON_TYPE, info);
     }
 
     @GET

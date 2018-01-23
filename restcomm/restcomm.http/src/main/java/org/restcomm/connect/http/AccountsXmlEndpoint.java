@@ -55,8 +55,9 @@ public final class AccountsXmlEndpoint extends AccountsEndpoint {
 
     @Path("/{accountSid}")
     @GET
-    public Response getAccountAsXml(@PathParam("accountSid") final String accountSid) {
-        return getAccount(accountSid, APPLICATION_XML_TYPE);
+    public Response getAccountAsXml(@PathParam("accountSid") final String accountSid,
+            @Context UriInfo info) {
+        return getAccount(accountSid, APPLICATION_XML_TYPE, info);
     }
 
     @GET
