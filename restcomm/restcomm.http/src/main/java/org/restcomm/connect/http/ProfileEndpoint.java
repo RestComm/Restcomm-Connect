@@ -51,22 +51,20 @@ import org.restcomm.connect.dao.ProfileAssociationsDao;
 import org.restcomm.connect.dao.ProfilesDao;
 import org.restcomm.connect.dao.entities.Profile;
 import org.restcomm.connect.dao.entities.ProfileAssociation;
-import org.restcomm.connect.dao.exceptions.AccountHierarchyDepthCrossed;
-import org.restcomm.connect.http.exceptions.OperatedAccountMissing;
-import org.restcomm.connect.http.exceptions.ResourceAccountMissmatch;
+import org.restcomm.connect.http.exceptions.StatusException;
 
 public class ProfileEndpoint {
 
     protected Logger logger = Logger.getLogger(ProfileEndpoint.class);
 
-    //TODO compose schema location
-    protected static final String PROFILE_CONTENT_TYPE = "application/instance+json;schema=\"http://127.0.0.1\"";
+    protected static final String PROFILE_CONTENT_TYPE = "application/instance+json";
     protected static final String PROFILE_SCHEMA_CONTENT_TYPE = "application/schema+json";
     protected static final String PROFILE_REL_TYPE = "related";
     protected static final String SCHEMA_REL_TYPE = "schema";
     protected static final String DESCRIBED_REL_TYPE = "describedby";
     protected static final String LINK_HEADER = "Link";
     protected static final String PROFILE_ENCODING = "UTF-8";
+    protected static final String TITLE_PARAM="title";
 
     @Context
     protected ServletContext context;
@@ -124,14 +122,16 @@ public class ProfileEndpoint {
 
     private void checkRelType(LinkHeader link) {
         if (!link.getRel().equals(PROFILE_REL_TYPE)) {
-            throw new ResourceAccountMissmatch("rel type not supported");
+            logger.debug("rel type not supported");
+            throw new StatusException(Response.Status.BAD_REQUEST.getStatusCode());
         }
     }
 
     private List<String> checkLinkHeader(HttpHeaders headers) {
         List<String> requestHeader = headers.getRequestHeader(LINK_HEADER);
         if (requestHeader.size() != 1) {
-            throw new ResourceAccountMissmatch();
+            logger.debug("Only one Link supported");
+            throw new StatusException(Response.Status.BAD_REQUEST.getStatusCode());
         }
         return requestHeader;
     }
@@ -160,10 +160,14 @@ public class ProfileEndpoint {
             if (profile != null) {
                 return profile;
             } else {
-                throw new OperatedAccountMissing("Profile not found:" + profileSid);
+                if (logger.isDebugEnabled()) {
+                    logger.debug("Profile not found:" + profileSid);
+                }
+                throw new StatusException(Response.Status.NOT_FOUND.getStatusCode());
             }
         } catch (Exception ex) {
-            throw new AccountHierarchyDepthCrossed("issue getting profile", ex);
+            logger.debug("issue getting profile.", ex);
+            throw new StatusException(Response.Status.INTERNAL_SERVER_ERROR.getStatusCode());
         }
     }
 
@@ -197,11 +201,11 @@ public class ProfileEndpoint {
         switch (sid.substring(1, 2)) {
             case "AC":
                 uri = info.getBaseUriBuilder().path(AccountsJsonEndpoint.class).path(sid).build();
-                link = LinkHeader.uri(uri).parameter("title","Accounts");
+                link = LinkHeader.uri(uri).parameter(TITLE_PARAM,"Accounts");
                 break;
             case "OR":
                 uri = info.getBaseUriBuilder().path(OrganizationsJsonEndpoint.class).path(sid).build();
-                link = LinkHeader.uri(uri).parameter("title","Organizations");
+                link = LinkHeader.uri(uri).parameter(TITLE_PARAM,"Organizations");
                 break;
             default:
         }
@@ -212,9 +216,11 @@ public class ProfileEndpoint {
         }
     }
 
+
+
     public Response getProfile(String profileSid, UriInfo info) {
+        Profile profile = checkProfileExists(profileSid);
         try {
-            Profile profile = checkProfileExists(profileSid);
             Response.ResponseBuilder ok = Response.ok(profile.getProfileDocument());
             List<ProfileAssociation> profileAssociationsByProfileSid = profileAssociationsDao.getProfileAssociationsByProfileSid(profileSid);
             for (ProfileAssociation assoc : profileAssociationsByProfileSid) {
@@ -232,7 +238,7 @@ public class ProfileEndpoint {
         }
     }
 
-    public Response createProfile(InputStream body) {
+    public Response createProfile(InputStream body, UriInfo info) {
 
         Response response;
         try {
@@ -243,7 +249,7 @@ public class ProfileEndpoint {
             if (report.isSuccess()) {
                 Profile profile = new Profile(profileSid.toString(), profileStr.getBytes(), new Date(), new Date());
                 profilesDao.addProfile(profile);
-                URI location = new URI("http://cloud.restcomm.comm/Profiles/" + profileSid);
+                URI location = info.getBaseUriBuilder().path(profileSid.toString()).build();
                 response = Response.created(location).type(PROFILE_CONTENT_TYPE).entity(profileStr).build();
             } else {
                 response = Response.status(Response.Status.BAD_REQUEST).entity(report.toString()).build();

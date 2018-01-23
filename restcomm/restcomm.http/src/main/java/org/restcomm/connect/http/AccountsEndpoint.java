@@ -81,6 +81,7 @@ import static javax.ws.rs.core.Response.status;
 import org.restcomm.connect.dao.ProfileAssociationsDao;
 import org.restcomm.connect.dao.entities.ProfileAssociation;
 import static org.restcomm.connect.http.ProfileEndpoint.PROFILE_REL_TYPE;
+import static org.restcomm.connect.http.ProfileEndpoint.TITLE_PARAM;
 
 /**
  * @author quintana.thomas@gmail.com (Thomas Quintana)
@@ -173,7 +174,7 @@ public class AccountsEndpoint extends SecuredEndpoint {
     public LinkHeader composeLink(Sid targetSid, UriInfo info) {
         String sid = targetSid.toString();
         URI uri = info.getBaseUriBuilder().path(ProfileJsonEndpoint.class).path(sid).build();
-        LinkHeaderBuilder link = LinkHeader.uri(uri).parameter("title", "Profiles");
+        LinkHeaderBuilder link = LinkHeader.uri(uri).parameter(TITLE_PARAM, "Profiles");
         return link.type(MediaType.valueOf(PROFILE_REL_TYPE)).build();
     }
 
