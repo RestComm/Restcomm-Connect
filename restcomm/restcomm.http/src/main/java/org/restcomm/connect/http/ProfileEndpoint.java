@@ -108,6 +108,7 @@ public class ProfileEndpoint {
     }
 
     public Response unlinkProfile(String profileSidStr, HttpHeaders headers) {
+        checkProfileExists(profileSidStr);
         List<String> requestHeader = checkLinkHeader(headers);
         LinkHeader link = LinkHeader.valueOf(requestHeader.get(0));
         checkRelType(link);
@@ -136,6 +137,7 @@ public class ProfileEndpoint {
     }
 
     public Response linkProfile(String profileSidStr, HttpHeaders headers, UriInfo uriInfo) {
+        checkProfileExists(profileSidStr);
         List<String> requestHeader = checkLinkHeader(headers);
         LinkHeader link = LinkHeader.valueOf(requestHeader.get(0));
         checkRelType(link);
