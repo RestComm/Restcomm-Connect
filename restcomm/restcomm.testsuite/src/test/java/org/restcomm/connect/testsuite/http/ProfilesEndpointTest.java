@@ -6,6 +6,8 @@ import static org.junit.Assert.assertNull;
 import static org.junit.Assert.assertTrue;
 
 import java.io.IOException;
+import java.net.URI;
+import java.net.URISyntaxException;
 import java.net.URL;
 
 import org.apache.http.HttpResponse;
@@ -59,6 +61,7 @@ public class ProfilesEndpointTest extends EndpointTest {
     private String authToken = "77f8c12cc7b8f8423e5c38b035249166";
 
     private final String profileSid = "PRafbe225ad37541eba518a74248f0ac4c";
+    private final String unknownProfileSid = "PRafbe225ad37541eba518a74248f0ac4d";
     private final String organizationSid = "ORafbe225ad37541eba518a74248f0ac4c";
 
     @Before
@@ -66,14 +69,13 @@ public class ProfilesEndpointTest extends EndpointTest {
     }
 
     /**
-     * SuperAdmin is allowed to read any profile
      * this test will try to Read single profile
      */
     @Test
     public void getProfile(){
-    	JsonObject profileJsonObject = RestcommProfilesTool.getInstance().getProfile(deploymentUrl.toString(), superAdminAccountSid, authToken, profileSid);
-    	assertNotNull(profileJsonObject);
-    	logger.info("profile: "+profileJsonObject);
+    	ClientResponse clientResponse = RestcommProfilesTool.getInstance().getProfileResponse(deploymentUrl.toString(), superAdminAccountSid, authToken, profileSid);
+    	logger.info("profile: "+clientResponse);
+    	assertEquals(200, clientResponse.getStatus());
     	// TODO Read and verify further response
     }
 
@@ -82,12 +84,21 @@ public class ProfilesEndpointTest extends EndpointTest {
      */
     @Test
     public void getProfileList(){
-    	JsonArray jsonArray = null;
-    	jsonArray = RestcommProfilesTool.getInstance().getProfileListJsonResponse(deploymentUrl.toString(), superAdminAccountSid, authToken);
-    	logger.info("profile list: "+jsonArray);
-    	assertNotNull(jsonArray);
-    	assertEquals(0,jsonArray.size());
-    	// TODO Add default list in DB script, Read and verify further response
+    	ClientResponse clientResponse = RestcommProfilesTool.getInstance().getProfileListClientResponse(deploymentUrl.toString(), superAdminAccountSid, authToken);
+    	logger.info("profile list: "+clientResponse.getEntity(String.class));
+    	assertNotNull(clientResponse);
+    	assertEquals(200, clientResponse.getStatus());
+    }
+
+    /**
+     * this test will try to Read single profile with an unknown profile Sid
+     */
+    @Test
+    @Category(FeatureExpTests.class)
+    public void getProfileUnknownSid(){
+    	ClientResponse clientResponse = RestcommProfilesTool.getInstance().getProfileResponse(deploymentUrl.toString(), superAdminAccountSid, authToken, unknownProfileSid);
+    	assertNotNull(clientResponse);
+    	assertEquals(404, clientResponse.getStatus());
     }
 
     /**
@@ -108,10 +119,10 @@ public class ProfilesEndpointTest extends EndpointTest {
     }
 
     /**
-     * createAndUpdateProfileTest
+     * Create, Read And Update Profile Test
      */
     @Test
-    public void createProfileTest(){
+    public void createReadAndUpdateProfileTest(){
     	/*
 		 * create a profile 
 		 */
@@ -119,13 +130,31 @@ public class ProfilesEndpointTest extends EndpointTest {
     	logger.info("clientResponse: "+clientResponse);
     	assertEquals(201, clientResponse.getStatus());
     	assertEquals(profileDocument, clientResponse.getEntity(String.class));
+    	
+    	//extract profileSid of newly created profile Sid.
+    	URI location = clientResponse.getLocation();
+    	assertNotNull(location);
+    	String profileLocation  = location.toString();
+    	String[] profileUriElements = profileLocation.split("/");
+    	assertNotNull(profileUriElements);
+    	String newlyCreatedProfileSid = profileUriElements[profileUriElements.length-1];
+    	logger.info("newlyCreatedProfileSid: "+newlyCreatedProfileSid);
+    	
+    	/*
+		 * read newly created profile 
+		 */
+    	clientResponse = RestcommProfilesTool.getInstance().getProfileResponse(deploymentUrl.toString(), superAdminAccountSid, authToken, newlyCreatedProfileSid);
+    	logger.info("profile: "+clientResponse);
+    	assertEquals(200, clientResponse.getStatus());
+    	assertEquals(profileDocument, clientResponse.getEntity(String.class));
+    	
     	/*
 		 * update the profile 
 		 */
-    	//TODO extract profileSid of newly created profile.
-    	clientResponse = RestcommProfilesTool.getInstance().updateProfileResponse(deploymentUrl.toString(), superAdminAccountSid, authToken, profileSid, updatedProfileDocument);
-    	logger.info("clientResponse: "+clientResponse);
+    	clientResponse = RestcommProfilesTool.getInstance().updateProfileResponse(deploymentUrl.toString(), superAdminAccountSid, authToken, newlyCreatedProfileSid, updatedProfileDocument);
+    	logger.info("clientResponse for update: "+clientResponse);
     	assertEquals(200, clientResponse.getStatus());
+    	assertEquals(updatedProfileDocument, clientResponse.getEntity(String.class));
     }
 
     /**
@@ -151,11 +180,9 @@ public class ProfilesEndpointTest extends EndpointTest {
     	/*
 		 * update a profile 
 		 */
-    	ClientResponse clientResponse = RestcommProfilesTool.getInstance().updateProfileResponse(deploymentUrl.toString(), superAdminAccountSid, authToken, profileSid, updatedProfileDocument);
+    	ClientResponse clientResponse = RestcommProfilesTool.getInstance().updateProfileResponse(deploymentUrl.toString(), superAdminAccountSid, authToken, unknownProfileSid, updatedProfileDocument);
     	logger.info("clientResponse: "+clientResponse);
     	assertEquals(404, clientResponse.getStatus());
-
-    	// TODO Read and verify further response
     }
 
     /**
@@ -213,6 +240,20 @@ public class ProfilesEndpointTest extends EndpointTest {
     	assertEquals(403, clientResponse.getStatus());
     }
 
+    /**
+     * deleteProfileUnknownSidTest
+     */
+    @Test
+    @Category(FeatureExpTests.class)
+    public void deleteProfileUnknownSidTest(){
+    	/*
+		 * delete a profile with unknown sid 
+		 */
+    	ClientResponse clientResponse = RestcommProfilesTool.getInstance().deleteProfileResponse(deploymentUrl.toString(), superAdminAccountSid, authToken, unknownProfileSid);
+    	logger.info("clientResponse: "+clientResponse);
+    	assertEquals(404, clientResponse.getStatus());
+    }
+
     @Test 
     @Category(FeatureExpTests.class)
     public void createProfilePermissionTest(){
@@ -230,9 +271,10 @@ public class ProfilesEndpointTest extends EndpointTest {
      * link/unlink a give Profile To an Account
      * @throws IOException 
      * @throws ClientProtocolException 
+     * @throws URISyntaxException 
      */
     @Test
-    public void linkUnLinkProfileToAccount() throws ClientProtocolException, IOException{
+    public void linkUnLinkProfileToAccount() throws ClientProtocolException, IOException, URISyntaxException{
 		/*
 		 * link a profile to an account 
 		 */
@@ -278,9 +320,10 @@ public class ProfilesEndpointTest extends EndpointTest {
      * link/unlink a give Profile To an Organization
      * @throws IOException 
      * @throws ClientProtocolException 
+     * @throws URISyntaxException 
      */
     @Test
-    public void linkUnLinkProfileToOrganization() throws ClientProtocolException, IOException{
+    public void linkUnLinkProfileToOrganization() throws ClientProtocolException, IOException, URISyntaxException{
     	/*
 		 * link a profile to an organizations 
 		 */
@@ -326,10 +369,11 @@ public class ProfilesEndpointTest extends EndpointTest {
     /**
      * @throws ClientProtocolException
      * @throws IOException
+     * @throws URISyntaxException
      */
     @Test
     @Category(FeatureExpTests.class)
-    public void linkUnLinkProfilePermissionTest() throws ClientProtocolException, IOException{
+    public void linkUnLinkProfilePermissionTest() throws ClientProtocolException, IOException, URISyntaxException{
     	/*
 		 * link a profile by admin account
 		 */
