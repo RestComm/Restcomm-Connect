@@ -1256,19 +1256,37 @@ public final class CallManager extends RestcommUntypedActor {
         try {
             Sid destOrg = SIPOrganizationUtil.searchOrganizationBySIPRequest(storage.getOrganizationsDao(), request);
             if (destOrg == null) {
+                if (logger.isDebugEnabled()) {
+                    logger.debug("Destination Organization is null, will return false");
+                }
                 //organization was not proper.
                 return isFoundHostedApp;
             }
             NumberSelectionResult result = numberSelector.searchNumberWithResult(phone, sourceOrganizationSid, destOrg);
             number = result.getNumber();
 
+            if (logger.isDebugEnabled()) {
+                if (number != null) {
+                    logger.debug("Number found: "+number);
+                } else {
+                    logger.debug("Number is null !");
+                }
+            }
+
             ExtensionController ec = ExtensionController.getInstance();
             IExtensionFeatureAccessRequest far = new FeatureAccessRequest(FeatureAccessRequest.Feature.INBOUND_VOICE, number.getAccountSid());
             ExtensionResponse er = ec.executePreInboundAction(far, extensions);
 
             if (er.isAllowed()) {
+                if (logger.isDebugEnabled()) {
+                    logger.debug("Extension response allowed the execution");
+                }
                 if (numberSelector.isFailedCall(result, sourceOrganizationSid, destOrg)) {
                     // We found the number but organization was not proper
+                    if (logger.isDebugEnabled()) {
+                        String msg = String.format("Number found %s, but source org %s and destination org %s are not proper", number, sourceOrganizationSid.toString(), destOrg.toString());
+                        logger.debug(msg);
+                    }
                     sendNotFound(request, sourceOrganizationSid, phone, fromClientAccountSid);
                     isFoundHostedApp = true;
                 } else {
