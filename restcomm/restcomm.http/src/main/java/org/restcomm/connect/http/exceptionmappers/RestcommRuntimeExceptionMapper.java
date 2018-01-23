@@ -76,7 +76,8 @@ public class RestcommRuntimeExceptionMapper implements ExceptionMapper<RestcommR
         } else {
             if (e instanceof StatusException) {
                 StatusException sExp = (StatusException) e;
-                res = Response.status(sExp.getStatus()).build();
+                CustomReasonPhraseType status = new CustomReasonPhraseType(sExp.getStatus(), sExp.getMessage());
+                res = Response.status(status).build();
             } else {
             // map all other types of auth errors to 403
                 res = Response.status(Response.Status.FORBIDDEN).build();

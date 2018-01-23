@@ -19,17 +19,23 @@
  */
 package org.restcomm.connect.http.exceptions;
 
+import javax.ws.rs.core.Response.Status;
 import org.restcomm.connect.commons.exceptions.RestcommRuntimeException;
 
 public class StatusException extends RestcommRuntimeException {
 
-    private int status;
+    private Status status;
 
-    public StatusException(int status) {
+    public StatusException(Status status) {
         this.status = status;
     }
 
-    public int getStatus() {
+    public StatusException(Status status,String message) {
+        super(message);
+        this.status = status;
+    }
+
+    public Status getStatus() {
         return status;
     }
 
