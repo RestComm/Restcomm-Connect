@@ -28,6 +28,7 @@ import org.restcomm.connect.commons.Version;
 import org.restcomm.connect.commons.annotations.FeatureAltTests;
 import org.restcomm.connect.commons.annotations.FeatureExpTests;
 
+import com.google.gson.JsonArray;
 import com.google.gson.JsonObject;
 import com.google.gson.JsonParser;
 import com.sun.jersey.api.client.ClientResponse;
@@ -64,8 +65,8 @@ public class ProfilesEndpointTest extends EndpointTest {
     private static final String DEFAULT_PROFILE_SID = "PRae6e420f425248d6a26948c17a9e2acf";
     private static final String UNKNOWN_PROFILE_SID = "PRafbe225ad37541eba518a74248f0ac4d";
     private static final String ORGANIZATION_SID = "ORafbe225ad37541eba518a74248f0ac4c";
-    private static final String UNKNOWN_ACCOUNT_SID = "PRafbe225ad37541eba518a74248f0ac4d";
-    private static final String UNKNOWN_ORGANIZATION_SID = "PRafbe225ad37541eba518a74248f0ac4d";
+    private static final String UNKNOWN_ACCOUNT_SID = "AC1111225ad37541eba518a74248f0ac4d";
+    private static final String UNKNOWN_ORGANIZATION_SID = "OR1111225ad37541eba518a74248f0ac4d";
 
     @Before
     public void before() {
@@ -79,19 +80,24 @@ public class ProfilesEndpointTest extends EndpointTest {
     	ClientResponse clientResponse = RestcommProfilesTool.getInstance().getProfileResponse(deploymentUrl.toString(), superAdminAccountSid, authToken, DEFAULT_PROFILE_SID);
     	logger.info("profile: "+clientResponse);
     	assertEquals(200, clientResponse.getStatus());
-    	// TODO Read and verify further response
+    	
+    	JsonObject jsonResponse = new JsonParser().parse(clientResponse.getEntity(String.class)).getAsJsonObject();
+    	assertNotNull(jsonResponse);
     }
 
     /**
      * getProfileList
      */
     @Test
-    public void getProfileList(){
+    public void getProfileList() {
     	ClientResponse clientResponse = RestcommProfilesTool.getInstance().getProfileListClientResponse(deploymentUrl.toString(), superAdminAccountSid, authToken);
     	logger.info("profile list: "+clientResponse.getEntity(String.class));
     	assertNotNull(clientResponse);
     	assertEquals(200, clientResponse.getStatus());
-    	// TODO Read and verify further response
+    	
+    	JsonArray jsonArray = new JsonParser().parse(clientResponse.getEntity(String.class)).getAsJsonArray();
+    	assertNotNull(jsonArray);
+    	assertEquals(1, jsonArray.size());
     }
 
     /**
@@ -528,7 +534,10 @@ public class ProfilesEndpointTest extends EndpointTest {
     	logger.info("profile schema: "+clientResponse);
     	assertEquals(200, clientResponse.getStatus());
 
-    	JsonObject jsonResponse = new JsonParser().parse(clientResponse.getEntity(String.class)).getAsJsonObject();
+    	String str = clientResponse.getEntity(String.class);
+    	logger.info("profile schema str: "+str);
+    	
+    	JsonObject jsonResponse = new JsonParser().parse(str).getAsJsonObject();
     	logger.info("jsonResponse: "+jsonResponse);
     	assertNotNull(jsonResponse);
     }
