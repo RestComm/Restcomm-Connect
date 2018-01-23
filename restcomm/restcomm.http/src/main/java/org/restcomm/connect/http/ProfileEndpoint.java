@@ -358,6 +358,6 @@ public class ProfileEndpoint {
     }
 
     public Response getProfileSchema() {
-        return Response.ok(schemaJson.asText(), PROFILE_SCHEMA_CONTENT_TYPE).build();
+        return Response.ok(schemaJson.toString(), PROFILE_SCHEMA_CONTENT_TYPE).build();
     }
 }
