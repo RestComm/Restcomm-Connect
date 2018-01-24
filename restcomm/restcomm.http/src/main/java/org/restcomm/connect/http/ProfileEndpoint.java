@@ -31,6 +31,7 @@ import com.github.fge.jackson.JsonLoader;
 import com.github.fge.jsonschema.core.report.ProcessingReport;
 import com.sun.jersey.core.header.LinkHeader;
 import com.sun.jersey.core.header.LinkHeader.LinkHeaderBuilder;
+import java.io.IOException;
 import java.net.MalformedURLException;
 import java.nio.charset.Charset;
 import java.nio.file.Path;
@@ -257,7 +258,7 @@ public class ProfileEndpoint {
     }
 
     public LinkHeader composeSchemaLink(UriInfo info) throws MalformedURLException {
-        URI build = info.getBaseUriBuilder().path("rc-profile-schema").build();
+        URI build = info.getBaseUriBuilder().path("/schemas/rc-profile-schema.json").build();
         return LinkHeader.uri(build).rel(DESCRIBED_REL_TYPE).build();
     }
 
@@ -357,7 +358,12 @@ public class ProfileEndpoint {
         return response;
     }
 
-    public Response getProfileSchema() {
-        return Response.ok(schemaJson.toString(), PROFILE_SCHEMA_CONTENT_TYPE).build();
+    public Response getSchema(String schemaId) {
+        try {
+            JsonNode schema = JsonLoader.fromResource("/org/restcomm/connect/http/schemas/" + schemaId);
+            return Response.ok(schema.toString(), PROFILE_SCHEMA_CONTENT_TYPE).build();
+        } catch (IOException ex) {
+            return Response.status(Status.NOT_FOUND).build();
+        }
     }
 }
