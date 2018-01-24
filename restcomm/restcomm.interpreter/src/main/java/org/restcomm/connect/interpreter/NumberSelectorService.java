@@ -156,7 +156,7 @@ public class NumberSelectorService {
             //we expect a perfect match, so first result taken
             if (matchedNumbers != null && matchedNumbers.size() > 0) {
                 if (logger.isDebugEnabled()) {
-                    logger.debug("Matched number with filter:" + matchedNumbers.get(0));
+                    logger.debug("Matched number with filter:" + matchedNumbers.get(0).toString());
                 }
 
                 matchedNumber = new NumberSelectionResult(matchedNumbers.get(0), Boolean.FALSE, ResultType.REGULAR);
