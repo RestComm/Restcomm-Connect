@@ -823,7 +823,12 @@ form[role=login] input:-webkit-autofill:focus{
 }
 
 .profile-form .row {
-    margin-bottom: 30px;
+    margin-bottom: 35px;
+}
+
+.profile-form .row + .help-block {
+    margin-top: -35px;
+    margin-right: 30px;
 }
 
 .account-logo {
