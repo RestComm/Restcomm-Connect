@@ -38,12 +38,12 @@ public class RestcommProfilesTool {
 
 	private static RestcommProfilesTool instance;
 	private static String profilesEndpointUrl;
-	private static final String PROFILE_SCHEMA_PATH="rc-profile-schema";
-	
+	private static final String PROFILE_SCHEMA_PATH="rc-profile-schema.json";
+
 	public static final String PROFILE_REL_TYPE = "related";
 	public static final String PROFILE_CONTENT_TYPE = "application/instance+json";
 	public static final String PROFILE_SCHEMA_CONTENT_TYPE = "application/schema+json";
-	
+
 	private static final String ACCOUNT_ENPOINT_BASE = "/2012-04-24/Accounts/";
 	private static final String ORGANIZATION_ENPOINT_BASE = "/2012-04-24/Organizations/";
 	private static final String PROFILE_ENPOINT_BASE = "/2012-04-24/Profiles";
@@ -73,7 +73,7 @@ public class RestcommProfilesTool {
 			return null;
 		}
 	}
-	
+
 	/**
 	 * @param deploymentUrl
 	 * @return
@@ -85,15 +85,15 @@ public class RestcommProfilesTool {
 		profilesEndpointUrl = deploymentUrl + PROFILE_ENPOINT_BASE;
 		return profilesEndpointUrl;
 	}
-	
+
 	/**
 	 * @param deploymentUrl
 	 * @return
 	 */
-	private String getProfileSchemaUrl (String deploymentUrl){
-		return getProfilesEndpointUrl(deploymentUrl) + "/" + PROFILE_SCHEMA_PATH;
+	public String getProfileSchemaUrl (String deploymentUrl){
+		return getProfilesEndpointUrl(deploymentUrl) + "/schemas/" + PROFILE_SCHEMA_PATH;
 	}
-	
+
 	public ClientResponse getProfileSchema (String deploymentUrl, String adminUsername, String adminAuthToken) {
 		Client jerseyClient = Client.create();
 		jerseyClient.addFilter(new HTTPBasicAuthFilter(adminUsername, adminAuthToken));
@@ -301,9 +301,9 @@ public class RestcommProfilesTool {
 	 * @param targetResourceSid
 	 * @param associatedResourceType
 	 * @return
-	 * @throws IOException 
-	 * @throws ClientProtocolException 
-	 * @throws URISyntaxException 
+	 * @throws IOException
+	 * @throws ClientProtocolException
+	 * @throws URISyntaxException
 	 */
 	public HttpResponse linkProfile (String deploymentUrl, String operatorUsername, String operatorAuthtoken, String profileSid, String targetResourceSid, AssociatedResourceType type) throws ClientProtocolException, IOException, URISyntaxException {
 		String url = getProfilesEndpointUrl(deploymentUrl) + "/" + profileSid;
@@ -325,9 +325,9 @@ public class RestcommProfilesTool {
 	 * @param targetResourceSid
 	 * @param associatedResourceType
 	 * @return
-	 * @throws IOException 
-	 * @throws ClientProtocolException 
-	 * @throws URISyntaxException 
+	 * @throws IOException
+	 * @throws ClientProtocolException
+	 * @throws URISyntaxException
 	 */
 	public HttpResponse unLinkProfile (String deploymentUrl, String operatorUsername, String operatorAuthtoken, String profileSid, String targetResourceSid, AssociatedResourceType type) throws ClientProtocolException, IOException, URISyntaxException {
 		String url = getProfilesEndpointUrl(deploymentUrl) + "/" + profileSid;
@@ -339,7 +339,7 @@ public class RestcommProfilesTool {
 	    logger.info("response is here: "+response);
 	    return response;
 	}
-	
+
 	/**
 	 * @param request
 	 * @param deploymentUrl
@@ -349,7 +349,7 @@ public class RestcommProfilesTool {
 	 * @param targetResourceSid
 	 * @param type
 	 * @return
-	 * @throws URISyntaxException 
+	 * @throws URISyntaxException
 	 */
 	private HttpRequestBase addLinkUnlinkRequiredHeaders(HttpRequestBase request, String deploymentUrl, String operatorUsername, String operatorAuthtoken, String profileSid, String targetResourceSid, AssociatedResourceType type) throws URISyntaxException{
 		request.addHeader(getAuthHeader(deploymentUrl, operatorUsername, operatorAuthtoken));
@@ -357,7 +357,7 @@ public class RestcommProfilesTool {
 		request.addHeader(getLinkHeaderOfTargetResource(deploymentUrl, targetResourceSid, type));
 		return request;
 	}
-	
+
 	private BasicHeader getLinkHeaderOfTargetResource(String deploymentUrl, String targetResourceSid, AssociatedResourceType type) throws URISyntaxException{
 		String targetResourceLinkstr = LinkHeader.uri(new URI(getTargetResourceUrl(deploymentUrl, targetResourceSid, type))).rel(PROFILE_REL_TYPE).build().toString();
         return new BasicHeader("Link", targetResourceLinkstr);
