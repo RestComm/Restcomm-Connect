@@ -58,6 +58,7 @@ document used as generic container.
 |==============================================================================================
 |Header |Description
 |Link | a link to the Profile schema with "rel" "describedBy"
+|Modified-Since | Date of last modification of the profile.
 |==============================================================================================
 
 
@@ -170,17 +171,26 @@ The above commands will print an output similar to the one below:
 
 **HTTP GET**. Returns the list representation of all the *Profile* resources.
 
+The response will include a JSON document in the response body with this
+format
+...
+[{
+	"uri": "http://127.0.0.1:8080/restcomm/2012-04-24/Profiles/PRae6e420f425248d6a26948c17a9e2acf",
+	"sid": "PRae6e420f425248d6a26948c17a9e2acf",
+	"dateUpdated": 1516745449949,
+	"dateCreated": 1516745449949
+}]
+...
+
 **HTTP POST**. 
 Creates a new Profile.The body of the request is expected to contain a JSON document compliant to the Profile
 schema.
-
-* Profile Resource URI. */2012-04-24/Profiles/*
 
 ==== Response Status
 [cols=",",options="header",]
 |==============================================================================================
 |Status |Description
-|201 Create | Profile created. Body contains Profile JSon document 
+|201 Created | Profile created. Body contains Profile JSon document 
 |403 Forbidden |Only Super Admin is allowed to modify/create a Profile
 |400 Bad Request | Body contains a Profile not compliant with schema
 |==============================================================================================
