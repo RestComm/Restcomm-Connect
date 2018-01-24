@@ -287,7 +287,7 @@ var confirmNumberRegister = function(phone, isSIP, $dialog, $scope, RCommNumbers
   var newCost = phone.cost || 0;
   var title = 'Register Number ' + newNumber;
   var msg = 'Are you sure you want to register incoming number ' + newNumber + ' (' + newFriendly +  ') ? ' + ((isSIP || !newCost) ? '' : 'It will cost you ' + newCost + '.');
-  var btns = [{result:'cancel', label: 'Cancel', cssClass: 'btn-default'}, {result:'confirm', label: 'Register', cssClass: 'btn-primary'}];
+  var btns = [{result:'cancel', label: 'Cancel', cssClass: 'btn-default', id: 'register-number-' + (isSIP ? 'sip' : 'provider') + '-cancel'}, {result:'confirm', label: 'Register', cssClass: 'btn-primary', id: 'register-number-' + (isSIP ? 'sip' : 'provider') + '-confirm'}];
 
   $dialog.messageBox(title, msg, btns)
     .open()

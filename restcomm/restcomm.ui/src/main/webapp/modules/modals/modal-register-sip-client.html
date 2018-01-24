@@ -79,6 +79,6 @@
     </form>
 </div>
 <div class="modal-footer">
-    <button class="btn btn-default cancel" ng-click="closeRegisterSIPClient()">Cancel</button>
-    <button class="btn btn-primary" ng-click="registerSIPClient(clientDetails)" ng-disabled="!clientDetails.password || pwdStrength < 50">Register</button>
+    <button id="btn-cancel-register-sip-client" class="btn btn-default cancel" ng-click="closeRegisterSIPClient()">Cancel</button>
+    <button id="btn-register-sip-client" class="btn btn-primary" ng-click="registerSIPClient(clientDetails)" ng-disabled="!clientDetails.password || pwdStrength < 50">Register</button>
 </div>
