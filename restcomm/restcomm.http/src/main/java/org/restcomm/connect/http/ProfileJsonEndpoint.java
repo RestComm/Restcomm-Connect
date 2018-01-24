@@ -21,6 +21,7 @@ package org.restcomm.connect.http;
 
 import com.sun.jersey.spi.resource.Singleton;
 import java.io.InputStream;
+import javax.annotation.security.PermitAll;
 import javax.annotation.security.RolesAllowed;
 import javax.ws.rs.Consumes;
 import javax.ws.rs.DELETE;
@@ -99,11 +100,12 @@ public class ProfileJsonEndpoint extends ProfileEndpoint{
         return unlinkProfile(profileSid, headers);
     }
 
-    @Path("/rc-profile-schema")
+    @Path("/schemas/{schemaId}")
     @GET
     @Produces(PROFILE_SCHEMA_CONTENT_TYPE)
-    public Response getProfileSchemaAsJson() {
-        return getProfileSchema();
+    @PermitAll
+    public Response getProfileSchemaAsJson(@PathParam("schemaId") final String schemaId) {
+        return getSchema(schemaId);
     }
 
 }

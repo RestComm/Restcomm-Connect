@@ -1,5 +1,9 @@
 package org.restcomm.connect.testsuite.http;
 
+import com.fasterxml.jackson.databind.JsonNode;
+import com.github.fge.jackson.JsonLoader;
+import com.github.fge.jsonschema.main.JsonSchema;
+import com.github.fge.jsonschema.main.JsonSchemaFactory;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertNull;
@@ -518,7 +522,12 @@ public class ProfilesEndpointTest extends EndpointTest {
     }
 
     @Test
-    public void getProfileSchemaTest() {
+    public void getProfileSchemaTest() throws Exception {
+        URL schemaURL = new URL(RestcommProfilesTool.getInstance().getProfileSchemaUrl(deploymentUrl.toString()));
+        final JsonNode schemaNode = JsonLoader.fromURL(schemaURL);
+        final JsonSchemaFactory factory = JsonSchemaFactory.byDefault();
+        final JsonSchema schema = factory.getJsonSchema(schemaNode);
+
     	ClientResponse clientResponse = RestcommProfilesTool.getInstance().getProfileSchema(deploymentUrl.toString(), SUPER_ADMIN_ACCOUNT_SID, AUTH_TOKEN);
     	assertEquals(200, clientResponse.getStatus());
     	String str = clientResponse.getEntity(String.class);
