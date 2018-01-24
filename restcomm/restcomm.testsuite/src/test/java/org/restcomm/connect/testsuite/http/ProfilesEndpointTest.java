@@ -513,20 +513,17 @@ public class ProfilesEndpointTest extends EndpointTest {
     	ClientResponse accountEndopintResponse = RestcommAccountsTool.getInstance().getAccountResponse(deploymentUrl.toString(), SUPER_ADMIN_ACCOUNT_SID, AUTH_TOKEN, ADMIN_ACCOUNT_SID);
     	WebResourceLinkHeaders linkHeaders = accountEndopintResponse.getLinks();
     	LinkHeader linkHeader = linkHeaders.getLink(RestcommProfilesTool.PROFILE_REL_TYPE);
-    	assertNotNull(linkHeader);
+    	logger.info("linkHeader after deleteing profile: "+linkHeader);
+    	assertNull(linkHeader);
     }
 
     @Test
     public void getProfileSchemaTest() {
     	ClientResponse clientResponse = RestcommProfilesTool.getInstance().getProfileSchema(deploymentUrl.toString(), SUPER_ADMIN_ACCOUNT_SID, AUTH_TOKEN);
-    	logger.info("profile schema: "+clientResponse);
     	assertEquals(200, clientResponse.getStatus());
-
     	String str = clientResponse.getEntity(String.class);
-    	logger.info("profile schema str: "+str);
-
+    	assertNotNull(str);
     	JsonObject jsonResponse = new JsonParser().parse(str).getAsJsonObject();
-    	logger.info("jsonResponse: "+jsonResponse);
     	assertNotNull(jsonResponse);
     }
 
