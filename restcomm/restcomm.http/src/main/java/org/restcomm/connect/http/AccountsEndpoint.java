@@ -301,6 +301,7 @@ public class AccountsEndpoint extends SecuredEndpoint {
         daoManager.getApplicationsDao().removeApplications(sid);
         removeIncomingPhoneNumbers(sid,daoManager.getIncomingPhoneNumbersDao());
         daoManager.getClientsDao().removeClients(sid);
+        profileAssociationsDao.deleteProfileAssociationByTargetSid(sid.toString());
     }
 
     /**
