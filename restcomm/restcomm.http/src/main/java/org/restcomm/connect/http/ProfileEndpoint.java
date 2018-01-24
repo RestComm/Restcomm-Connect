@@ -209,6 +209,7 @@ public class ProfileEndpoint {
         checkProfileExists(profileSid);
         checkDefaultProfile(profileSid);
         profilesDao.deleteProfile(profileSid);
+        profileAssociationsDao.deleteProfileAssociationByProfileSid(profileSid);
         return Response.ok().build();
     }
 

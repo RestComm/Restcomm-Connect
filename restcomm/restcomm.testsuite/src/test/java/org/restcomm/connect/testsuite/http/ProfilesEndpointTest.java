@@ -195,7 +195,7 @@ public class ProfilesEndpointTest extends EndpointTest {
     @Category(FeatureExpTests.class)
     public void updateProfileUnknownSidTest(){
     	/*
-		 * update a profile
+		 * update a profile with unknown sid
 		 */
     	ClientResponse clientResponse = RestcommProfilesTool.getInstance().updateProfileResponse(deploymentUrl.toString(), SUPER_ADMIN_ACCOUNT_SID, AUTH_TOKEN, UNKNOWN_PROFILE_SID, UPDATE_PROFILE_DOCUMENT);
     	assertEquals(404, clientResponse.getStatus());
