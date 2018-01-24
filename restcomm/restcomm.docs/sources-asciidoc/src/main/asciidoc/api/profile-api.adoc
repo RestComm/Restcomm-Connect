@@ -9,10 +9,11 @@ Entity will use the Profile configuration to tweak the service logic behavior.
 
 During session creation the service logic will try to find the associated Profile 
 based on this criteria, until a Profile is found:
-*Profile associated to current Account*
-*Profile associated to parent Account*
-*Profile associated to related Organization*
-*Default Profile*
+
+. Profile associated to current Account
+. Profile associated to parent Account
+. Profile associated to related Organization
+. Default Profile
 
 The Default Profile is pre-provisioned in the system, and can't be modified from the
 REST API. The Default Profile Sid is "PRae6e420f425248d6a26948c17a9e2acf"
@@ -128,16 +129,16 @@ curl -X GET  https://ACae6e420f425248d6a26948c17a9e2acf:77f8c12cc7b8f8423e5c38b0
 
 To update a Profile you need to provide the SID
 
-For example, update Prfoile using sid:
+For example, update Proile using sid:
 ....
-curl -X PUT https://ACae6e420f425248d6a26948c17a9e2acf:77f8c12cc7b8f8423e5c38b035249166@127.0.0.1:8080/restcomm/2012-04-24/Profiles/PRae6e420f425248d6a26948c17a9e2123
+curl -H 'Content-Type: application/instance+json' --data "@/path/to/filename" -X PUT https://ACae6e420f425248d6a26948c17a9e2acf:77f8c12cc7b8f8423e5c38b035249166@127.0.0.1:8080/restcomm/2012-04-24/Profiles/PRae6e420f425248d6a26948c17a9e2123
 ....
 
 ....
 curl -X GET  https://administrator%40company.com:77f8c12cc7b8f8423e5c38b035249166@127.0.0.1:8080/restcomm/2012-04-24/Profiles/PRae6e420f425248d6a26948c17a9e2123
 ....
 
-The above commands will print an output similar to the one below:
+The above command will print an output similar to the one below:
 
 ----
 {
@@ -173,14 +174,14 @@ The above commands will print an output similar to the one below:
 
 The response will include a JSON document in the response body with this
 format
-...
+....
 [{
 	"uri": "http://127.0.0.1:8080/restcomm/2012-04-24/Profiles/PRae6e420f425248d6a26948c17a9e2acf",
 	"sid": "PRae6e420f425248d6a26948c17a9e2acf",
 	"dateUpdated": 1516745449949,
 	"dateCreated": 1516745449949
 }]
-...
+....
 
 **HTTP POST**. 
 Creates a new Profile.The body of the request is expected to contain a JSON document compliant to the Profile
