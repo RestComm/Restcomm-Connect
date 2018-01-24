@@ -1355,6 +1355,9 @@ public final class CallManager extends RestcommUntypedActor {
             }
             sendNotification(fromClientAccountSid, errMsg, 11007, "error", false);
             logger.warning(errMsg);
+            if (logger.isDebugEnabled()) {
+                notANumber.printStackTrace();
+            }
             isFoundHostedApp = false;
         }
         return isFoundHostedApp;
