@@ -1256,6 +1256,9 @@ public final class CallManager extends RestcommUntypedActor {
         try {
             Sid destOrg = SIPOrganizationUtil.searchOrganizationBySIPRequest(storage.getOrganizationsDao(), request);
             if (destOrg == null) {
+                if (logger.isDebugEnabled()) {
+                    logger.debug("Destination Organization is null, will return false");
+                }
                 //organization was not proper.
                 return isFoundHostedApp;
             }
@@ -1266,9 +1269,13 @@ public final class CallManager extends RestcommUntypedActor {
             IExtensionFeatureAccessRequest far = new FeatureAccessRequest(FeatureAccessRequest.Feature.INBOUND_VOICE, number.getAccountSid());
             ExtensionResponse er = ec.executePreInboundAction(far, extensions);
 
-            if (er.isAllowed()) {
+            if (er == null || er.isAllowed()) {
                 if (numberSelector.isFailedCall(result, sourceOrganizationSid, destOrg)) {
                     // We found the number but organization was not proper
+                    if (logger.isDebugEnabled()) {
+                        String msg = String.format("Number found %s, but source org %s and destination org %s are not proper", number, sourceOrganizationSid.toString(), destOrg.toString());
+                        logger.debug(msg);
+                    }
                     sendNotFound(request, sourceOrganizationSid, phone, fromClientAccountSid);
                     isFoundHostedApp = true;
                 } else {
@@ -1328,12 +1335,11 @@ public final class CallManager extends RestcommUntypedActor {
                 }
             } else {
                 //Extensions didn't allowed this call
-                if (logger.isDebugEnabled()) {
-                    final String errMsg = "Inbound call is not Allowed";
-                    logger.debug(errMsg);
-                }
                 String errMsg = "Inbound call to Number: " + number.getPhoneNumber()
                         + " is not allowed";
+                if (logger.isDebugEnabled()) {
+                    logger.debug(errMsg);
+                }
                 sendNotification(number.getAccountSid(), errMsg, 11001, "warning", true);
                 final SipServletResponse resp = request.createResponse(SC_FORBIDDEN, "Call not allowed");
                 resp.send();
@@ -1343,12 +1349,12 @@ public final class CallManager extends RestcommUntypedActor {
         } catch (Exception notANumber) {
             String errMsg;
             if (number != null) {
-                errMsg = "The number " + number.getPhoneNumber() + " does not have a Restcomm hosted application attached";
+                errMsg = String.format("IncomingPhoneNumber %s does not have a Restcomm hosted application attached, exception %s",number.getPhoneNumber(), notANumber);
             } else {
-                errMsg = "The number does not exist" + notANumber;
+                errMsg = String.format("IncomingPhoneNumber for %s, does not exist, exception %s",phone, notANumber);
             }
             sendNotification(fromClientAccountSid, errMsg, 11007, "error", false);
-            logger.warning(errMsg, notANumber);
+            logger.warning(errMsg);
             isFoundHostedApp = false;
         }
         return isFoundHostedApp;
