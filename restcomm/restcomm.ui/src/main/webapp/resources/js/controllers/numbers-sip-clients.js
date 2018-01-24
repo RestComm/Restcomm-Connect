@@ -83,6 +83,8 @@ rcMod.controller('ClientDetailsCtrl', function ($scope, $stateParams, $location,
   var createSIPClientParams = function(client) {
     var params = {};
 
+    $scope.editingPass = !!client.newPassword && client.newPassword === $scope.passwordConfirmation;
+
     // Mandatory fields
     var effectivePassword = ($scope.editingPass && client.newPassword) ? client.newPassword : client.password;
     if(client.login && effectivePassword) {
@@ -155,13 +157,7 @@ rcMod.controller('ClientDetailsCtrl', function ($scope, $stateParams, $location,
 
   $scope.confirmClientDelete = function(client) {
     confirmClientDelete(client, $dialog, $scope, Notifications, RCommClients, $location);
-  }
-
-  $scope.togglePasswordEdit = function () {
-    $scope.editingPass = !$scope.editingPass;
-    if (!$scope.editingPass)
-      $scope.clientDetails.newPassword = "";
-  }
+  };
 });
 
 var confirmClientDelete = function(client, $dialog, $scope, Notifications, RCommClients, $location) {
