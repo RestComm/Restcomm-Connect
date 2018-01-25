@@ -6,8 +6,8 @@
         </form>
     </div>
     <div  class="col-md-4 col-md-offset-4 col-xs-6">
-        <button class="rc-btn btn-primary pull-right hidden-xs" ng-click="showRegisterSIPClientModal()"><b>+</b> New Client</button>
-        <button class="rc-btn btn-primary rc-btn-sm pull-right visible-xs" ng-click="showRegisterSIPClientModal()"><b>+</b> New Client</button>
+        <button id="register-client" class="rc-btn btn-primary pull-right hidden-xs" ng-click="showRegisterSIPClientModal()"><b>+</b> New Client</button>
+        <button id="register-client-mobile" class="rc-btn btn-primary rc-btn-sm pull-right visible-xs" ng-click="showRegisterSIPClientModal()"><b>+</b> New Client</button>
     </div>
 </div>
 
@@ -31,7 +31,7 @@
             <th class="clients-list-delete-icon visible-xs">&nbsp;</th>
             </thead>
             <tbody>
-            <tr class="number-row" ng-repeat="sc in filtered = (clientsList | filter:query | orderBy:predicate:reverse)">
+            <tr class="number-row mobile-clickable-row" ng-repeat="sc in filtered = (clientsList | filter:query | orderBy:predicate:reverse)" ng-click="$root.goTo('/numbers/clients/' + sc.sid)">
                 <td class="clients-list-username">
                     <div><a href="#/numbers/clients/{{sc.sid}}">{{ sc.login  }}</a></div>
                     <div class="visible-xs">{{ sc.friendly_name  }}</div>
