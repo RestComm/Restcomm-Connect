@@ -1,5 +1,6 @@
 package org.restcomm.connect.dao.mybatis;
 
+import java.io.File;
 import org.apache.ibatis.session.SqlSessionFactory;
 import org.apache.ibatis.session.SqlSessionFactoryBuilder;
 import org.joda.time.DateTime;
@@ -13,12 +14,13 @@ import org.restcomm.connect.extension.api.ConfigurationException;
 import org.restcomm.connect.extension.api.ExtensionConfiguration;
 
 import java.io.InputStream;
+import java.nio.file.Files;
+import static java.nio.file.StandardCopyOption.REPLACE_EXISTING;
 import java.util.List;
 import java.util.Properties;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
-import org.junit.Ignore;
 import org.junit.Rule;
 import org.junit.rules.TestName;
 
@@ -26,7 +28,6 @@ import org.junit.rules.TestName;
  * Created by gvagenas on 21/10/2016.
  */
 @Category(UnstableTests.class)
-@Ignore("Unstable in CI Cause: java.sql.SQLException: Database lock acquisition failure: attempt to connect while db opening /closing")
 public class ExtensionConfigurationDaoTest {
     private static MybatisDaoManager manager;
     private MybatisExtensionsConfigurationDao extensionsConfigurationDao;
@@ -126,11 +127,19 @@ public class ExtensionConfigurationDaoTest {
             "</project>";
 
     @Before
-    public void before() {
+    public void before() throws Exception{
+        //use a different data dir for each test case to provide isolation
         Properties properties = new Properties();
-        //dont use method name, is too long,makes db fails
-        properties.setProperty("data", String.valueOf(name.getMethodName().hashCode()));
-        final InputStream data = getClass().getResourceAsStream("/mybatis.xml");
+        File srcFile = new File("./target/test-classes/data/restcomm.script");
+        File theDir = new File("./target/test-classes/data" + name.getMethodName());
+        theDir.mkdir();
+        File destFile = new File("./target/test-classes/data" + name.getMethodName() + "/restcomm.script");
+
+        Files.copy(srcFile.toPath(),
+                destFile.toPath(), REPLACE_EXISTING);
+        properties.setProperty("data", name.getMethodName());
+
+        final InputStream data = getClass().getResourceAsStream("/mybatis_pertest.xml");
         final SqlSessionFactoryBuilder builder = new SqlSessionFactoryBuilder();
         final SqlSessionFactory factory = builder.build(data,properties);
         manager = new MybatisDaoManager();

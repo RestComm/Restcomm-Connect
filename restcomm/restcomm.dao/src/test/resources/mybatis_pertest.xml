@@ -1,0 +1,44 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE configuration PUBLIC "-//mybatis.org//DTD Config 3.0//EN" "http://mybatis.org/dtd/mybatis-3-config.dtd">
+<!--
+  @author thomas.quintana@telestax.com (Thomas Quintana)
+-->
+<configuration>
+  <environments default="production">
+    <environment id="production">
+      <transactionManager type="JDBC"/>
+      <dataSource type="POOLED">
+        <property name="driver" value="org.hsqldb.jdbcDriver"/>
+        <!--keep data in maven target so git ignores changes-->
+        <property name="url" value="jdbc:hsqldb:file:./target/test-classes/data${data}/restcomm;create=true;hsqldb.write_delay=false;shutdown=true"/>
+        <property name="username" value="sa"/>
+        <property name="password" value=""/>
+      </dataSource>
+    </environment>
+  </environments>
+  
+  
+  <mappers>
+    <mapper resource="org/restcomm/connect/dao/mybatis/accounts.xml"/>
+    <mapper resource="org/restcomm/connect/dao/mybatis/applications.xml"/>
+    <mapper resource="org/restcomm/connect/dao/mybatis/available-phone-numbers.xml"/>
+    <mapper resource="org/restcomm/connect/dao/mybatis/call-detail-records.xml"/>
+    <mapper resource="org/restcomm/connect/dao/mybatis/conference-detail-records.xml"/>    
+    <mapper resource="org/restcomm/connect/dao/mybatis/clients.xml"/>
+    <mapper resource="org/restcomm/connect/dao/mybatis/http-cookies.xml"/>
+    <mapper resource="org/restcomm/connect/dao/mybatis/incoming-phone-numbers.xml"/>
+    <mapper resource="org/restcomm/connect/dao/mybatis/notifications.xml"/>
+    <mapper resource="org/restcomm/connect/dao/mybatis/outgoing-caller-ids.xml"/>
+    <mapper resource="org/restcomm/connect/dao/mybatis/registrations.xml"/>
+    <mapper resource="org/restcomm/connect/dao/mybatis/recordings.xml"/>
+    <mapper resource="org/restcomm/connect/dao/mybatis/sand-boxes.xml"/>
+    <mapper resource="org/restcomm/connect/dao/mybatis/short-codes.xml"/>
+    <mapper resource="org/restcomm/connect/dao/mybatis/sms-messages.xml"/>
+    <mapper resource="org/restcomm/connect/dao/mybatis/transcriptions.xml"/>
+    <mapper resource="org/restcomm/connect/dao/mybatis/gateways.xml"/>
+    <mapper resource="org/restcomm/connect/dao/mybatis/announcements.xml"/>
+    <mapper resource="org/restcomm/connect/dao/mybatis/extensions-configuration.xml"/>
+    <mapper resource="org/restcomm/connect/dao/mybatis/geolocation.xml"/>
+    <mapper resource="org/restcomm/connect/dao/mybatis/organization.xml"/>    
+  </mappers>
+</configuration>
