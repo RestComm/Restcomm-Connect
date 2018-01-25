@@ -33,6 +33,7 @@ import org.restcomm.connect.dao.ApplicationsDao;
 import org.restcomm.connect.dao.DaoManager;
 import org.restcomm.connect.dao.entities.Account;
 import org.restcomm.connect.dao.entities.Application;
+import org.restcomm.connect.dao.entities.ApplicationFilter;
 import org.restcomm.connect.dao.entities.ApplicationList;
 import org.restcomm.connect.dao.entities.ApplicationNumberSummary;
 import org.restcomm.connect.dao.entities.RestCommResponse;
@@ -161,7 +162,10 @@ public class ApplicationsEndpoint extends SecuredEndpoint {
         if (tmp != null && tmp.equalsIgnoreCase("true"))
             includeNumbers = true;
 
-        final List<Application> applications = dao.getApplicationsWithNumbers(account.getSid());
+        String friendlyName = uriInfo.getQueryParameters().getFirst("FriendlyName");
+        ApplicationFilter applicationFilter = new ApplicationFilter(account.getSid().toString(), friendlyName);
+
+        final List<Application> applications = dao.getApplicationsWithNumbers(applicationFilter);
         if (APPLICATION_XML_TYPE == responseType) {
             final RestCommResponse response = new RestCommResponse(new ApplicationList(applications));
             return ok(xstream.toXML(response), APPLICATION_XML).build();
