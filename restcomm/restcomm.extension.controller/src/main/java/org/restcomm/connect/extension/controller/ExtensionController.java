@@ -108,10 +108,12 @@ public class ExtensionController {
                 if (extension.isEnabled()) {
                     try {
                         ExtensionResponse tempResponse = extension.preOutboundAction(ier);
-                        //fail fast
-                        if (tempResponse != null && !tempResponse.isAllowed()) {
+                        if (tempResponse != null) {
                             response = tempResponse;
-                            break;
+                            //fail fast
+                            if (!tempResponse.isAllowed()) {
+                                break;
+                            }
                         }
                     } catch (Exception e) {
                         if (logger.isDebugEnabled()) {
@@ -136,10 +138,12 @@ public class ExtensionController {
                 if (extension.isEnabled()) {
                     try {
                         ExtensionResponse tempResponse = extension.postOutboundAction(er);
-                        //fail fast
-                        if (tempResponse != null && !tempResponse.isAllowed()) {
+                        if (tempResponse != null) {
                             response = tempResponse;
-                            break;
+                            //fail fast
+                            if (!tempResponse.isAllowed()) {
+                                break;
+                            }
                         }
                     } catch (Exception e) {
                         if (logger.isDebugEnabled()) {
@@ -163,10 +167,12 @@ public class ExtensionController {
                 if (extension.isEnabled()) {
                     try {
                         ExtensionResponse tempResponse = extension.preInboundAction(er);
-                        //fail fast
-                        if (tempResponse != null && !tempResponse.isAllowed()) {
+                        if (tempResponse != null) {
                             response = tempResponse;
-                            break;
+                            //fail fast
+                            if (!tempResponse.isAllowed()) {
+                                break;
+                            }
                         }
                     } catch (Exception e) {
                         if (logger.isDebugEnabled()) {
@@ -190,10 +196,12 @@ public class ExtensionController {
                 if (extension.isEnabled()) {
                     try {
                         ExtensionResponse tempResponse = extension.postInboundAction(er);
-                        //fail fast
-                        if (tempResponse != null && !tempResponse.isAllowed()) {
+                        if (tempResponse != null) {
                             response = tempResponse;
-                            break;
+                            //fail fast
+                            if (!tempResponse.isAllowed()) {
+                                break;
+                            }
                         }
                     } catch (Exception e) {
                         if (logger.isDebugEnabled()) {
@@ -218,10 +226,12 @@ public class ExtensionController {
                 if (extension.isEnabled()) {
                     try {
                         ExtensionResponse tempResponse = extension.preApiAction(apiRequest);
-                        //fail fast
-                        if (tempResponse != null && !tempResponse.isAllowed()) {
+                        if (tempResponse != null) {
                             response = tempResponse;
-                            break;
+                            //fail fast
+                            if (!tempResponse.isAllowed()) {
+                                break;
+                            }
                         }
                     } catch (Exception e) {
                         if (logger.isDebugEnabled()) {
@@ -246,10 +256,12 @@ public class ExtensionController {
                 if (extension.isEnabled()) {
                     try {
                         ExtensionResponse tempResponse = extension.postApiAction(apiRequest);
-                        //fail fast
-                        if (tempResponse != null && !tempResponse.isAllowed()) {
+                        if (tempResponse != null) {
                             response = tempResponse;
-                            break;
+                            //fail fast
+                            if (!tempResponse.isAllowed()) {
+                                break;
+                            }
                         }
                     } catch (Exception e) {
                         if (logger.isDebugEnabled()) {
