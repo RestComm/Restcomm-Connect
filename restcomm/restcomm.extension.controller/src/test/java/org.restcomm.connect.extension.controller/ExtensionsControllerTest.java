@@ -45,7 +45,13 @@ public class ExtensionsControllerTest {
         ExtensionController extensionController = ExtensionController.getInstance();
         extensionController.registerExtension(testExtension);
 
-        Assert.assertEquals(1, extensionController.getExtensions(ExtensionType.CallManager).size());
+        List<RestcommExtensionGeneric> callManagerExts = extensionController.getExtensions(ExtensionType.CallManager);
+        logger.info("CallManagerExtensions list size: "+callManagerExts.size());
+        for (RestcommExtensionGeneric ext: callManagerExts) {
+            logger.info("ExtensionName: "+ext.getName());
+        }
+
+        Assert.assertEquals(1, callManagerExts.size());
         Assert.assertEquals(1, extensionController.getExtensions(ExtensionType.FeatureAccessControl).size());
         Assert.assertEquals(1, extensionController.getExtensions(ExtensionType.RestApi).size());
         Assert.assertEquals(1, extensionController.getExtensions(ExtensionType.SmsService).size());
@@ -184,7 +190,7 @@ public class ExtensionsControllerTest {
 
         @Override
         public String getName () {
-            return null;
+            return "TestExtension";
         }
 
         @Override
