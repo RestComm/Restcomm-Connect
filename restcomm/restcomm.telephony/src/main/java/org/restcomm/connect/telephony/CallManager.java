@@ -1265,11 +1265,6 @@ public final class CallManager extends RestcommUntypedActor {
             NumberSelectionResult result = numberSelector.searchNumberWithResult(phone, sourceOrganizationSid, destOrg);
             number = result.getNumber();
 
-            ExtensionController ec = ExtensionController.getInstance();
-            IExtensionFeatureAccessRequest far = new FeatureAccessRequest(FeatureAccessRequest.Feature.INBOUND_VOICE, number.getAccountSid());
-            ExtensionResponse er = ec.executePreInboundAction(far, extensions);
-
-            if (er == null || er.isAllowed()) {
                 if (numberSelector.isFailedCall(result, sourceOrganizationSid, destOrg)) {
                     // We found the number but organization was not proper
                     if (logger.isDebugEnabled()) {
@@ -1280,72 +1275,78 @@ public final class CallManager extends RestcommUntypedActor {
                     isFoundHostedApp = true;
                 } else {
                     if (number != null) {
-                        final VoiceInterpreterParams.Builder builder = new VoiceInterpreterParams.Builder();
-                        builder.setConfiguration(configuration);
-                        builder.setStorage(storage);
-                        builder.setCallManager(self);
-                        builder.setConferenceCenter(conferences);
-                        builder.setBridgeManager(bridges);
-                        builder.setSmsService(sms);
-                        //https://github.com/RestComm/Restcomm-Connect/issues/1939
-                        Sid accSid = fromClientAccountSid == null ? number.getAccountSid() : fromClientAccountSid;
-                        builder.setAccount(accSid);
-                        builder.setPhone(number.getAccountSid());
-                        builder.setVersion(number.getApiVersion());
-                        // notifications should go to fromClientAccountSid email if not present then to number account
-                        // https://github.com/RestComm/Restcomm-Connect/issues/2011
-                        final Account account = accounts.getAccount(accSid);
-                        builder.setEmailAddress(account.getEmailAddress());
-                        final Sid sid = number.getVoiceApplicationSid();
-                        if (sid != null) {
-                            final Application application = applications.getApplication(sid);
-                            RcmlserverConfigurationSet rcmlserverConfig = RestcommConfiguration.getInstance().getRcmlserver();
-                            RcmlserverResolver rcmlserverResolver = RcmlserverResolver.getInstance(rcmlserverConfig.getBaseUrl(), rcmlserverConfig.getApiPath());
-                            builder.setUrl(UriUtils.resolve(rcmlserverResolver.resolveRelative(application.getRcmlUrl())));
-                        } else {
-                            builder.setUrl(UriUtils.resolve(number.getVoiceUrl()));
-                        }
-                        final String voiceMethod = number.getVoiceMethod();
-                        if (voiceMethod == null || voiceMethod.isEmpty()) {
-                            builder.setMethod("POST");
-                        } else {
-                            builder.setMethod(voiceMethod);
-                        }
-                        URI uri = number.getVoiceFallbackUrl();
-                        if (uri != null)
-                            builder.setFallbackUrl(UriUtils.resolve(uri));
-                        else
-                            builder.setFallbackUrl(null);
-                        builder.setFallbackMethod(number.getVoiceFallbackMethod());
-                        builder.setStatusCallback(number.getStatusCallback());
-                        builder.setStatusCallbackMethod(number.getStatusCallbackMethod());
-                        builder.setMonitoring(monitoring);
-                        builder.setSdr(sdr);
-                        final Props props = VoiceInterpreter.props(builder.build());
-                        final ActorRef interpreter = getContext().actorOf(props);
+                        ExtensionController ec = ExtensionController.getInstance();
+                        IExtensionFeatureAccessRequest far = new FeatureAccessRequest(FeatureAccessRequest.Feature.INBOUND_VOICE, number.getAccountSid());
+                        ExtensionResponse er = ec.executePreInboundAction(far, extensions);
 
-                        final ActorRef call = call(null);
-                        final SipApplicationSession application = request.getApplicationSession();
-                        application.setAttribute(Call.class.getName(), call);
-                        call.tell(request, self);
-                        interpreter.tell(new StartInterpreter(call), self);
-                        isFoundHostedApp = true;
-                        ec.executePostOutboundAction(far, extensions);
+                        if (er == null || er.isAllowed()) {
+
+                            final VoiceInterpreterParams.Builder builder = new VoiceInterpreterParams.Builder();
+                            builder.setConfiguration(configuration);
+                            builder.setStorage(storage);
+                            builder.setCallManager(self);
+                            builder.setConferenceCenter(conferences);
+                            builder.setBridgeManager(bridges);
+                            builder.setSmsService(sms);
+                            //https://github.com/RestComm/Restcomm-Connect/issues/1939
+                            Sid accSid = fromClientAccountSid == null ? number.getAccountSid() : fromClientAccountSid;
+                            builder.setAccount(accSid);
+                            builder.setPhone(number.getAccountSid());
+                            builder.setVersion(number.getApiVersion());
+                            // notifications should go to fromClientAccountSid email if not present then to number account
+                            // https://github.com/RestComm/Restcomm-Connect/issues/2011
+                            final Account account = accounts.getAccount(accSid);
+                            builder.setEmailAddress(account.getEmailAddress());
+                            final Sid sid = number.getVoiceApplicationSid();
+                            if (sid != null) {
+                                final Application application = applications.getApplication(sid);
+                                RcmlserverConfigurationSet rcmlserverConfig = RestcommConfiguration.getInstance().getRcmlserver();
+                                RcmlserverResolver rcmlserverResolver = RcmlserverResolver.getInstance(rcmlserverConfig.getBaseUrl(), rcmlserverConfig.getApiPath());
+                                builder.setUrl(UriUtils.resolve(rcmlserverResolver.resolveRelative(application.getRcmlUrl())));
+                            } else {
+                                builder.setUrl(UriUtils.resolve(number.getVoiceUrl()));
+                            }
+                            final String voiceMethod = number.getVoiceMethod();
+                            if (voiceMethod == null || voiceMethod.isEmpty()) {
+                                builder.setMethod("POST");
+                            } else {
+                                builder.setMethod(voiceMethod);
+                            }
+                            URI uri = number.getVoiceFallbackUrl();
+                            if (uri != null)
+                                builder.setFallbackUrl(UriUtils.resolve(uri));
+                            else
+                                builder.setFallbackUrl(null);
+                            builder.setFallbackMethod(number.getVoiceFallbackMethod());
+                            builder.setStatusCallback(number.getStatusCallback());
+                            builder.setStatusCallbackMethod(number.getStatusCallbackMethod());
+                            builder.setMonitoring(monitoring);
+                            builder.setSdr(sdr);
+                            final Props props = VoiceInterpreter.props(builder.build());
+                            final ActorRef interpreter = getContext().actorOf(props);
+
+                            final ActorRef call = call(null);
+                            final SipApplicationSession application = request.getApplicationSession();
+                            application.setAttribute(Call.class.getName(), call);
+                            call.tell(request, self);
+                            interpreter.tell(new StartInterpreter(call), self);
+                            isFoundHostedApp = true;
+                            ec.executePostOutboundAction(far, extensions);
+                        } else {
+                            //Extensions didn't allowed this call
+                            String errMsg = "Inbound call to Number: " + number.getPhoneNumber()
+                                    + " is not allowed";
+                            if (logger.isDebugEnabled()) {
+                                logger.debug(errMsg);
+                            }
+                            sendNotification(number.getAccountSid(), errMsg, 11001, "warning", true);
+                            final SipServletResponse resp = request.createResponse(SC_FORBIDDEN, "Call not allowed");
+                            resp.send();
+                            ec.executePostOutboundAction(far, extensions);
+                            return false;
+                        }
                     }
                 }
-            } else {
-                //Extensions didn't allowed this call
-                String errMsg = "Inbound call to Number: " + number.getPhoneNumber()
-                        + " is not allowed";
-                if (logger.isDebugEnabled()) {
-                    logger.debug(errMsg);
-                }
-                sendNotification(number.getAccountSid(), errMsg, 11001, "warning", true);
-                final SipServletResponse resp = request.createResponse(SC_FORBIDDEN, "Call not allowed");
-                resp.send();
-                ec.executePostOutboundAction(far, extensions);
-                return false;
-            }
         } catch (Exception notANumber) {
             String errMsg;
             if (number != null) {
