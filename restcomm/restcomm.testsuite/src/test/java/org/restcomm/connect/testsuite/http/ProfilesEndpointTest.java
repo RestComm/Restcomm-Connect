@@ -1,9 +1,5 @@
 package org.restcomm.connect.testsuite.http;
 
-import com.fasterxml.jackson.databind.JsonNode;
-import com.github.fge.jackson.JsonLoader;
-import com.github.fge.jsonschema.main.JsonSchema;
-import com.github.fge.jsonschema.main.JsonSchemaFactory;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertNull;
@@ -32,6 +28,10 @@ import org.restcomm.connect.commons.Version;
 import org.restcomm.connect.commons.annotations.FeatureAltTests;
 import org.restcomm.connect.commons.annotations.FeatureExpTests;
 
+import com.fasterxml.jackson.databind.JsonNode;
+import com.github.fge.jackson.JsonLoader;
+import com.github.fge.jsonschema.main.JsonSchema;
+import com.github.fge.jsonschema.main.JsonSchemaFactory;
 import com.google.gson.JsonArray;
 import com.google.gson.JsonObject;
 import com.google.gson.JsonParser;
@@ -536,7 +536,126 @@ public class ProfilesEndpointTest extends EndpointTest {
     	assertNotNull(jsonResponse);
     }
 
-    @Deployment(name = "ProfilesEndpointTest", managed = true, testable = false)
+    /**
+	 * link a Profile To an Account which is already linked to a different profile
+	 * @throws IOException
+	 * @throws ClientProtocolException
+	 * @throws URISyntaxException
+	 */
+	@Test
+	@Category(FeatureAltTests.class)
+	public void linkAccountToNewProfile() throws ClientProtocolException, IOException, URISyntaxException{
+		/**
+		 * link default profile to dev account
+		 */
+		HttpResponse response = RestcommProfilesTool.getInstance().linkProfile(deploymentUrl.toString(), SUPER_ADMIN_ACCOUNT_SID, AUTH_TOKEN, DEFAULT_PROFILE_SID, DEVELOPER_ACCOUNT_SID, RestcommProfilesTool.AssociatedResourceType.ACCOUNT);
+		logger.info("HttpResponse: "+response);
+		assertEquals(200, response.getStatusLine().getStatusCode());
+	
+		/**
+		 * Get associated profile
+		 * from Accounts endpoint:
+		 * to verify association establishment.
+		 */
+		ClientResponse accountEndopintResponse = RestcommAccountsTool.getInstance().getAccountResponse(deploymentUrl.toString(), SUPER_ADMIN_ACCOUNT_SID, AUTH_TOKEN, DEVELOPER_ACCOUNT_SID);
+		WebResourceLinkHeaders linkHeaders = accountEndopintResponse.getLinks();
+		logger.info("accountEndopintResponse WebResourceLinkHeaders: "+linkHeaders);
+		assertNotNull(linkHeaders);
+		LinkHeader linkHeader = linkHeaders.getLink(RestcommProfilesTool.PROFILE_REL_TYPE);
+		logger.info("accountEndopintResponse WebResourceLinkHeaders linkHeader: "+linkHeader);
+		assertNotNull(linkHeader);
+		assertTrue(linkHeader.getUri().toString().contains(DEFAULT_PROFILE_SID));
+	
+		/**
+		 * Create a new profile
+		 */
+		ClientResponse clientResponse = RestcommProfilesTool.getInstance().createProfileResponse(deploymentUrl.toString(), SUPER_ADMIN_ACCOUNT_SID, AUTH_TOKEN, PROFILE_DOCUMENT);
+    	assertEquals(201, clientResponse.getStatus());
+    	assertEquals(PROFILE_DOCUMENT, clientResponse.getEntity(String.class));
+
+    	//extract profileSid of newly created profile Sid.
+    	URI location = clientResponse.getLocation();
+    	assertNotNull(location);
+    	String profileLocation  = location.toString();
+    	String[] profileUriElements = profileLocation.split("/");
+    	assertNotNull(profileUriElements);
+    	String newlyCreatedProfileSid = profileUriElements[profileUriElements.length-1];
+    	
+    	/**
+		 * link newlyCreated profile to dev account.
+		 */
+    	response = RestcommProfilesTool.getInstance().linkProfile(deploymentUrl.toString(), SUPER_ADMIN_ACCOUNT_SID, AUTH_TOKEN, newlyCreatedProfileSid, DEVELOPER_ACCOUNT_SID, RestcommProfilesTool.AssociatedResourceType.ACCOUNT);
+		logger.info("HttpResponse: "+response);
+		assertEquals(200, response.getStatusLine().getStatusCode());
+	
+		/**
+		 * Get associated profile
+		 * from Accounts endpoint:
+		 * to verify new association is establishment.
+		 */
+		accountEndopintResponse = RestcommAccountsTool.getInstance().getAccountResponse(deploymentUrl.toString(), SUPER_ADMIN_ACCOUNT_SID, AUTH_TOKEN, DEVELOPER_ACCOUNT_SID);
+		linkHeaders = accountEndopintResponse.getLinks();
+		logger.info("accountEndopintResponse WebResourceLinkHeaders: "+linkHeaders);
+		assertNotNull(linkHeaders);
+		linkHeader = linkHeaders.getLink(RestcommProfilesTool.PROFILE_REL_TYPE);
+		logger.info("accountEndopintResponse WebResourceLinkHeaders linkHeader: "+linkHeader);
+		assertNotNull(linkHeader);
+		assertTrue(linkHeader.getUri().toString().contains(newlyCreatedProfileSid));
+	}
+
+    /**
+	 * link a Profile To an Account which is already linked to the same profile.
+	 * @throws IOException
+	 * @throws ClientProtocolException
+	 * @throws URISyntaxException
+	 */
+	@Test
+	@Category(FeatureAltTests.class)
+	public void linkAccountAgainToSameProfile() throws ClientProtocolException, IOException, URISyntaxException{
+		/**
+		 * link default profile to admin account
+		 */
+		HttpResponse response = RestcommProfilesTool.getInstance().linkProfile(deploymentUrl.toString(), SUPER_ADMIN_ACCOUNT_SID, AUTH_TOKEN, DEFAULT_PROFILE_SID, ADMIN_ACCOUNT_SID, RestcommProfilesTool.AssociatedResourceType.ACCOUNT);
+		logger.info("HttpResponse: "+response);
+		assertEquals(200, response.getStatusLine().getStatusCode());
+	
+		/**
+		 * Get associated profile
+		 * from Accounts endpoint:
+		 * to verify association establishment.
+		 */
+		ClientResponse accountEndopintResponse = RestcommAccountsTool.getInstance().getAccountResponse(deploymentUrl.toString(), SUPER_ADMIN_ACCOUNT_SID, AUTH_TOKEN, ADMIN_ACCOUNT_SID);
+		WebResourceLinkHeaders linkHeaders = accountEndopintResponse.getLinks();
+		logger.info("accountEndopintResponse WebResourceLinkHeaders: "+linkHeaders);
+		assertNotNull(linkHeaders);
+		LinkHeader linkHeader = linkHeaders.getLink(RestcommProfilesTool.PROFILE_REL_TYPE);
+		logger.info("accountEndopintResponse WebResourceLinkHeaders linkHeader: "+linkHeader);
+		assertNotNull(linkHeader);
+		assertTrue(linkHeader.getUri().toString().contains(DEFAULT_PROFILE_SID));
+    	
+    	/**
+		 * link default profile to admin account again.
+		 */
+    	response = RestcommProfilesTool.getInstance().linkProfile(deploymentUrl.toString(), SUPER_ADMIN_ACCOUNT_SID, AUTH_TOKEN, DEFAULT_PROFILE_SID, ADMIN_ACCOUNT_SID, RestcommProfilesTool.AssociatedResourceType.ACCOUNT);
+		logger.info("HttpResponse: "+response);
+		assertEquals(200, response.getStatusLine().getStatusCode());
+	
+		/**
+		 * Get associated profile
+		 * from Accounts endpoint:
+		 * to verify association is still established.
+		 */
+		accountEndopintResponse = RestcommAccountsTool.getInstance().getAccountResponse(deploymentUrl.toString(), SUPER_ADMIN_ACCOUNT_SID, AUTH_TOKEN, ADMIN_ACCOUNT_SID);
+		linkHeaders = accountEndopintResponse.getLinks();
+		logger.info("accountEndopintResponse WebResourceLinkHeaders: "+linkHeaders);
+		assertNotNull(linkHeaders);
+		linkHeader = linkHeaders.getLink(RestcommProfilesTool.PROFILE_REL_TYPE);
+		logger.info("accountEndopintResponse WebResourceLinkHeaders linkHeader: "+linkHeader);
+		assertNotNull(linkHeader);
+		assertTrue(linkHeader.getUri().toString().contains(DEFAULT_PROFILE_SID));
+	}
+
+	@Deployment(name = "ProfilesEndpointTest", managed = true, testable = false)
     public static WebArchive createWebArchiveNoGw() {
         logger.info("Packaging Test App");
         logger.info("version");
