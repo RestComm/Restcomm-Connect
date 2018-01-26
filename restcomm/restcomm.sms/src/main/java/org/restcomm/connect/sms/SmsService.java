@@ -436,7 +436,7 @@ public final class SmsService extends RestcommUntypedActor {
                 final SmsServiceResponse<ActorRef> response = new SmsServiceResponse(new RestcommExtensionException("Now allowed to create SmsSession"));
                 sender.tell(response, self());
             }
-            ec.executePostOutboundAction(message, this.extensions);
+            ec.executePostOutboundAction(ier, this.extensions);
         } else if (DestroySmsSession.class.equals(klass)) {
             final DestroySmsSession request = (DestroySmsSession) message;
             final ActorRef session = request.session();
