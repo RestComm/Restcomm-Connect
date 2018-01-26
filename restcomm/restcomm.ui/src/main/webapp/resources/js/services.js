@@ -344,7 +344,7 @@ uiModalDialog.factory('$dialog', ['$rootScope', '$uibModal', function ($rootScop
  * Easily make use of Angular UI Modal as Dialogs.
  */
 uiModalDialog.run(["$templateCache", function (e) {
-  e.put("template/dialog/message.html", '<div class="modal-header">   <h3 class="no-margins">{{ title }}</h3></div><div class="modal-body">  <p>{{ message }}</p></div><div class="modal-footer">    <button ng-repeat="btn in buttons" ng-click="close(btn.result)" class=btn ng-class="btn.cssClass">{{ btn.label }}</button></div>')
+  e.put("template/dialog/message.html", '<div class="modal-header">   <h3 class="no-margins">{{ title }}</h3></div><div class="modal-body">  <p>{{ message }}</p></div><div class="modal-footer">    <button ng-repeat="btn in buttons" ng-attr-id="{{ btn.id ? btn.id : \'mod-btn-\' + $index }}" ng-click="close(btn.result)" class=btn ng-class="btn.cssClass">{{ btn.label }}</button></div>')
 }]);
 
 

@@ -134,7 +134,7 @@ public class SmppMessageHandler extends RestcommUntypedActor {
                 final SmsServiceResponse<ActorRef> response = new SmsServiceResponse(new RestcommExtensionException("Now allowed to create SmsSession"));
                 sender.tell(response, self());
             }
-            ec.executePostOutboundAction(message, this.extensions);
+            ec.executePostOutboundAction(ier, this.extensions);
         }else if (message instanceof DestroySmsSession) {
             final DestroySmsSession destroySmsSession = (DestroySmsSession) message;
             final ActorRef session = destroySmsSession.session();
