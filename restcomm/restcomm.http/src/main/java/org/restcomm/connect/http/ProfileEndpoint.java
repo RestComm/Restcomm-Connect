@@ -201,9 +201,10 @@ public class ProfileEndpoint {
         checkTargetSid(targetSid);
         Sid profileSid = new Sid(profileSidStr);
         ProfileAssociation assoc = new ProfileAssociation(profileSid, targetSid, new Date(), new Date());
+        //remove previous link if any
+        profileAssociationsDao.deleteProfileAssociationByTargetSid(targetSidStr);
         profileAssociationsDao.addProfileAssociation(assoc);
         return Response.ok().build();
-
     }
 
     public Response deleteProfile(String profileSid) {
