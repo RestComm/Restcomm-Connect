@@ -1262,17 +1262,17 @@ public final class CallManager extends RestcommUntypedActor {
             NumberSelectionResult result = numberSelector.searchNumberWithResult(phone, sourceOrganizationSid, destOrg);
             number = result.getNumber();
 
-            ExtensionController ec = ExtensionController.getInstance();
-            IExtensionFeatureAccessRequest far = new FeatureAccessRequest(FeatureAccessRequest.Feature.INBOUND_VOICE, number.getAccountSid());
-            ExtensionResponse er = ec.executePreInboundAction(far, extensions);
 
-            if (er.isAllowed()) {
-                if (numberSelector.isFailedCall(result, sourceOrganizationSid, destOrg)) {
-                    // We found the number but organization was not proper
-                    sendNotFound(request, sourceOrganizationSid, phone, fromClientAccountSid);
-                    isFoundHostedApp = true;
-                } else {
-                    if (number != null) {
+            if (numberSelector.isFailedCall(result, sourceOrganizationSid, destOrg)) {
+                // We found the number but organization was not proper
+                sendNotFound(request, sourceOrganizationSid, phone, fromClientAccountSid);
+                isFoundHostedApp = true;
+            } else {
+                if (number != null) {
+                    ExtensionController ec = ExtensionController.getInstance();
+                    IExtensionFeatureAccessRequest far = new FeatureAccessRequest(FeatureAccessRequest.Feature.INBOUND_VOICE, number.getAccountSid());
+                    ExtensionResponse er = ec.executePreInboundAction(far, extensions);
+                    if (er.isAllowed()) {
                         final VoiceInterpreterParams.Builder builder = new VoiceInterpreterParams.Builder();
                         builder.setConfiguration(configuration);
                         builder.setStorage(storage);
@@ -1324,21 +1324,21 @@ public final class CallManager extends RestcommUntypedActor {
                         interpreter.tell(new StartInterpreter(call), self);
                         isFoundHostedApp = true;
                         ec.executePostOutboundAction(far, extensions);
+                    }  else {
+                        //Extensions didn't allowed this call
+                        if (logger.isDebugEnabled()) {
+                            final String errMsg = "Inbound call is not Allowed";
+                            logger.debug(errMsg);
+                        }
+                        String errMsg = "Inbound call to Number: " + number.getPhoneNumber()
+                                + " is not allowed";
+                        sendNotification(number.getAccountSid(), errMsg, 11001, "warning", true);
+                        final SipServletResponse resp = request.createResponse(SC_FORBIDDEN, "Call not allowed");
+                        resp.send();
+                        ec.executePostOutboundAction(far, extensions);
+                        return false;
                     }
                 }
-            } else {
-                //Extensions didn't allowed this call
-                if (logger.isDebugEnabled()) {
-                    final String errMsg = "Inbound call is not Allowed";
-                    logger.debug(errMsg);
-                }
-                String errMsg = "Inbound call to Number: " + number.getPhoneNumber()
-                        + " is not allowed";
-                sendNotification(number.getAccountSid(), errMsg, 11001, "warning", true);
-                final SipServletResponse resp = request.createResponse(SC_FORBIDDEN, "Call not allowed");
-                resp.send();
-                ec.executePostOutboundAction(far, extensions);
-                return false;
             }
         } catch (Exception notANumber) {
             String errMsg;
