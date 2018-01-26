@@ -1265,21 +1265,21 @@ public final class CallManager extends RestcommUntypedActor {
             NumberSelectionResult result = numberSelector.searchNumberWithResult(phone, sourceOrganizationSid, destOrg);
             number = result.getNumber();
 
-            ExtensionController ec = ExtensionController.getInstance();
-            IExtensionFeatureAccessRequest far = new FeatureAccessRequest(FeatureAccessRequest.Feature.INBOUND_VOICE, number.getAccountSid());
-            ExtensionResponse er = ec.executePreInboundAction(far, extensions);
 
-            if (er == null || er.isAllowed()) {
-                if (numberSelector.isFailedCall(result, sourceOrganizationSid, destOrg)) {
-                    // We found the number but organization was not proper
-                    if (logger.isDebugEnabled()) {
-                        String msg = String.format("Number found %s, but source org %s and destination org %s are not proper", number, sourceOrganizationSid.toString(), destOrg.toString());
-                        logger.debug(msg);
-                    }
-                    sendNotFound(request, sourceOrganizationSid, phone, fromClientAccountSid);
-                    isFoundHostedApp = true;
-                } else {
-                    if (number != null) {
+            if (numberSelector.isFailedCall(result, sourceOrganizationSid, destOrg)) {
+                // We found the number but organization was not proper
+                if (logger.isDebugEnabled()) {
+                    String msg = String.format("Number found %s, but source org %s and destination org %s are not proper", number, sourceOrganizationSid.toString(), destOrg.toString());
+                    logger.debug(msg);
+                }
+                sendNotFound(request, sourceOrganizationSid, phone, fromClientAccountSid);
+                isFoundHostedApp = true;
+            } else {
+                if (number != null) {
+                    ExtensionController ec = ExtensionController.getInstance();
+                    IExtensionFeatureAccessRequest far = new FeatureAccessRequest(FeatureAccessRequest.Feature.INBOUND_VOICE, number.getAccountSid());
+                    ExtensionResponse er = ec.executePreInboundAction(far, extensions);
+                    if (er.isAllowed()) {
                         final VoiceInterpreterParams.Builder builder = new VoiceInterpreterParams.Builder();
                         builder.setConfiguration(configuration);
                         builder.setStorage(storage);
@@ -1331,20 +1331,20 @@ public final class CallManager extends RestcommUntypedActor {
                         interpreter.tell(new StartInterpreter(call), self);
                         isFoundHostedApp = true;
                         ec.executePostOutboundAction(far, extensions);
+                    }  else {
+                        //Extensions didn't allowed this call
+                        String errMsg = "Inbound call to Number: " + number.getPhoneNumber()
+                                + " is not allowed";
+                        if (logger.isDebugEnabled()) {
+                            logger.debug(errMsg);
+                        }
+                        sendNotification(number.getAccountSid(), errMsg, 11001, "warning", true);
+                        final SipServletResponse resp = request.createResponse(SC_FORBIDDEN, "Call not allowed");
+                        resp.send();
+                        ec.executePostOutboundAction(far, extensions);
+                        return false;
                     }
                 }
-            } else {
-                //Extensions didn't allowed this call
-                String errMsg = "Inbound call to Number: " + number.getPhoneNumber()
-                        + " is not allowed";
-                if (logger.isDebugEnabled()) {
-                    logger.debug(errMsg);
-                }
-                sendNotification(number.getAccountSid(), errMsg, 11001, "warning", true);
-                final SipServletResponse resp = request.createResponse(SC_FORBIDDEN, "Call not allowed");
-                resp.send();
-                ec.executePostOutboundAction(far, extensions);
-                return false;
             }
         } catch (Exception notANumber) {
             String errMsg;
