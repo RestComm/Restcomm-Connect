@@ -37,7 +37,6 @@ import org.jboss.arquillian.container.test.api.Deployment;
 import org.jboss.arquillian.junit.Arquillian;
 import org.jboss.arquillian.test.api.ArquillianResource;
 import org.jboss.shrinkwrap.api.spec.WebArchive;
-import org.joda.time.DateTime;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.BeforeClass;
@@ -1098,9 +1097,6 @@ public class DialForkTest {
         bobCall.sendInviteOkAck();
         assertTrue(!(bobCall.getLastReceivedResponse().getStatusCode() >= 400));
 
-        DateTime start = DateTime.now();
-        logger.info("Starting the call : "+start);
-
         assertTrue(georgeCall.waitForIncomingCall(30 * 1000));
         assertTrue(georgeCall.sendIncomingCallResponse(100, "Trying-George", 600));
         assertTrue(georgeCall.sendIncomingCallResponse(180, "Ringing-George", 600));
@@ -1122,42 +1118,19 @@ public class DialForkTest {
         assertNotNull(henriqueCancelTransaction);
         henriqueCall.respondToCancel(henriqueCancelTransaction, 200, "OK - Henrique", 600);
 
-        DateTime endHenrique = DateTime.now();
-
         SipTransaction aliceCancelTransaction = aliceCall.waitForCancel(50 * 1000);
         assertNotNull(aliceCancelTransaction);
         aliceCall.respondToCancel(aliceCancelTransaction, 200, "OK - Alice", 600);
 
-        DateTime endAlice = DateTime.now();
-
         SipTransaction georgeCancelTransaction = georgeCall.waitForCancel(50 * 1000);
         assertNotNull(georgeCancelTransaction);
-        Thread.sleep(1000);
         georgeCall.respondToCancel(georgeCancelTransaction, 200, "OK - George", 600);
 
-        DateTime endGeorge = DateTime.now();
-
-        DateTime forkingEnds = DateTime.now();
 
         assertTrue(alicePhone.unregister(aliceContact, 3600));
 
         assertTrue(bobCall.waitForDisconnect(50 * 1000));
-
-        DateTime end = DateTime.now();
-
         assertTrue(bobCall.respondToDisconnect());
-
-        double forkingDuration = (forkingEnds.getMillis() - start.getMillis())/1000;
-        double henriqueDuration = (endHenrique.getMillis() - start.getMillis())/1000;
-        double aliceDuration = (endAlice.getMillis() - start.getMillis())/1000;
-        double georgeDuration = (endGeorge.getMillis() - start.getMillis())/1000;
-        double duration = (end.getMillis() - start.getMillis())/1000;
-
-        logger.info("Duration of the call is : "+duration);
-        logger.info("Duration of forking : "+forkingDuration);
-        logger.info("Duration of Henrique : "+henriqueDuration);
-        logger.info("Duration of Alice : "+aliceDuration);
-        logger.info("Duration of Georege : "+georgeDuration);
 
         Thread.sleep(1000);
 
@@ -1187,7 +1160,6 @@ public class DialForkTest {
         JsonObject jsonObj = cdr.getAsJsonObject();
         logger.info("Status for call: "+callSid+" : "+jsonObj.get("status").getAsString());
         int callDuration = jsonObj.get("duration").getAsInt();
-        assertEquals(duration, callDuration, 1.5);
         assertEquals(timeout, callDuration, 1.5);
         assertTrue(jsonObj.get("status").getAsString().equalsIgnoreCase("completed"));
         assertTrue(MonitoringServiceTool.getInstance().getStatistics(deploymentUrl.toString(), adminAccountSid, adminAuthToken) == 0);
@@ -1211,7 +1183,8 @@ public class DialForkTest {
             "a=rtpmap:0 PCMU/8000\n";
 
     @Test //Passes only when run individually. Doesn't pass when run with the rest of the tests
-    @Category(UnstableTests.class)
+//    @Category(UnstableTests.class)
+    @Category(FeatureAltTests.class)
     public synchronized void testDialForkWithReInviteBeforeDialForkStarts_CancelCall() throws InterruptedException, ParseException, MalformedURLException {
 
         stubFor(get(urlPathEqualTo("/1111"))
@@ -1356,7 +1329,8 @@ public class DialForkTest {
 
     private String dialClientAlice = "<Response><Dial timeout=\"2\"><Client>alice</Client></Dial></Response>";
     @Test //Passes only when run individually. Doesn't pass when run with the rest of the tests
-    @Category(UnstableTests.class)
+//    @Category(UnstableTests.class)
+    @Category(FeatureAltTests.class)
     public synchronized void testDialForkWithReInviteAfterDialStarts_CancelCall() throws InterruptedException, ParseException, MalformedURLException {
 
         stubFor(get(urlPathEqualTo("/1111"))
@@ -1847,7 +1821,8 @@ public class DialForkTest {
 
     //Non regression test for https://telestax.atlassian.net/browse/RESTCOMM-585
     @Test //TODO Fails when the whole test class runs but Passes when run individually
-    @Category(UnstableTests.class)
+//    @Category(UnstableTests.class)
+    @Category(FeatureAltTests.class)
     public synchronized void testDialForkNoAnswerExecuteRCML_ReturnedFromActionURL() throws InterruptedException, ParseException, MalformedURLException {
 
         stubFor(get(urlPathEqualTo("/1111"))
@@ -2150,7 +2125,7 @@ public class DialForkTest {
     private String dialAliceRcml = "<Response><Dial><Client>alice</Client></Dial></Response>";
 
     @Test //TODO Fails when the whole test class runs but Passes when run individually
-    @Category(UnstableTests.class)
+//    @Category(UnstableTests.class)
     public void testDialClientAlice() throws ParseException, InterruptedException, MalformedURLException {
         stubFor(get(urlPathEqualTo("/1111"))
                 .willReturn(aResponse()
@@ -2489,7 +2464,8 @@ public class DialForkTest {
     }
 
     @Test
-    @Category({FeatureExpTests.class, UnstableTests.class})
+//    @Category({FeatureExpTests.class, UnstableTests.class})
+    @Category(FeatureAltTests.class)
     public synchronized void testDialForkWithServerErrorReponse() throws InterruptedException, ParseException, MalformedURLException {
         stubFor(get(urlPathEqualTo("/1111"))
                 .willReturn(aResponse()
