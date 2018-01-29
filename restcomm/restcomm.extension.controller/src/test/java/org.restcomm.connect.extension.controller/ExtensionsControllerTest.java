@@ -21,6 +21,7 @@ package org.restcomm.connect.extension.controller;
 
 import org.apache.log4j.Logger;
 import org.junit.Assert;
+import org.junit.Ignore;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
 import org.restcomm.connect.commons.annotations.UnstableTests;
@@ -42,7 +43,7 @@ public class ExtensionsControllerTest {
 
     private RestcommExtensionGeneric testExtension = new TestExtension();
 
-    @Test
+    @Test @Ignore
     @Category(UnstableTests.class)
     public void extensionRegistry() {
         ExtensionController extensionController = ExtensionController.getInstance();
