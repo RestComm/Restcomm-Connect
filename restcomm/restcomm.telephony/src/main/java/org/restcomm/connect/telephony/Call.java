@@ -99,7 +99,6 @@ import org.restcomm.connect.telephony.api.Reject;
 import org.restcomm.connect.telephony.api.RemoveParticipant;
 import org.restcomm.connect.telephony.api.StopWaiting;
 
-import scala.concurrent.duration.Deadline;
 import scala.concurrent.duration.Duration;
 
 import javax.sdp.SdpException;
@@ -204,7 +203,6 @@ public final class Call extends RestcommUntypedActor {
     private String password;
     private CreateCallType type;
     private long timeout;
-    private Deadline deadline;
     private SipServletRequest invite;
     private SipServletRequest inDialogInvite;
     private SipServletResponse lastResponse;
@@ -678,8 +676,6 @@ public final class Call extends RestcommUntypedActor {
                 + sender.path().toString());
         }
 
-//        updateReceiveTimeout(message);
-
         if (Observe.class.equals(klass)) {
             onObserve((Observe) message, self, sender);
         } else if (StopObserving.class.equals(klass)) {
@@ -748,32 +744,6 @@ public final class Call extends RestcommUntypedActor {
             onCallHoldStateChange((CallHoldStateChange)message, sender);
         } else if (StopWaiting.class.equals(klass)) {
             onStopWaiting((StopWaiting)message, sender);
-        }
-    }
-
-    private void updateReceiveTimeout (Object message) {
-        // 1. Check if ReceiveTimeout is set
-        if (!(getContext().receiveTimeout() != null && getContext().receiveTimeout() != Duration.Undefined() && deadline != null && deadline.timeLeft().toSeconds() > 0)) {
-            if (deadline != null) {
-                String msg = String.format("Deadline left %s", deadline.timeLeft().toSeconds());
-                logger.debug(msg);
-            }
-
-            if (logger.isDebugEnabled()) {
-                logger.debug("ReceiveTimeout is not set or Deadline is already done");
-            }
-            return;
-        }
-
-        if (!(message instanceof SipServletResponse && ((SipServletResponse)message).getStatus() == SipServletResponse.SC_OK)) {
-            final Duration rest = deadline.timeLeft();
-            if (logger.isDebugEnabled()) {
-                String msg = String.format("Message received is not SipServletResponse.SC_OK, going to update ReceiveTimeout to %s seconds", rest.toSeconds());
-                logger.debug(msg);
-            }
-            getContext().setReceiveTimeout(rest);
-        } else {
-            logger.debug("Message Class is "+message.getClass());
         }
     }
 
@@ -2043,7 +2013,6 @@ public final class Call extends RestcommUntypedActor {
 
     private void onReceiveTimeout(ReceiveTimeout message, ActorRef self, ActorRef sender) throws Exception {
         getContext().setReceiveTimeout(Duration.Undefined());
-        logger.info("ReceivedTimeout received, date: " + DateTime.now());
         if (is(ringing) || is(dialing)) {
             fsm.transition(message, failingNoAnswer);
         } else if(is(inProgress) && collectSipInfoDtmf) {
