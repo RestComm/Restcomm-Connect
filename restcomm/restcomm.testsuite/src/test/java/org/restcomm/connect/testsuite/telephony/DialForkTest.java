@@ -37,6 +37,7 @@ import org.jboss.arquillian.container.test.api.Deployment;
 import org.jboss.arquillian.junit.Arquillian;
 import org.jboss.arquillian.test.api.ArquillianResource;
 import org.jboss.shrinkwrap.api.spec.WebArchive;
+import org.joda.time.DateTime;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.BeforeClass;
@@ -145,7 +146,10 @@ public class DialForkTest {
     private static String restcommContact = "127.0.0.1:" + restcommPort;
     private static String dialAliceRcmlWithPlay;
     private static String dialAliceRcmlWithInvalidPlay;
-    private String dialForkWithTimeout = "<Response><Dial timeout=\"2\"><Client>alice</Client><Sip>sip:henrique@127.0.0.1:" + henriquePort + "</Sip><Number>+131313</Number></Dial></Response>";
+    private int timeout = 10;
+    private String dialForkWithTimeout = "<Response><Dial timeout=\""+timeout+"\"><Client>alice</Client><Sip>sip:henrique@127.0.0.1:" + henriquePort + "</Sip><Number>+131313</Number></Dial></Response>";
+    private int initialTotalCallSinceUptime;
+    private int initialOutgoingCallsSinceUptime;
 
 
     @BeforeClass
@@ -1094,6 +1098,9 @@ public class DialForkTest {
         bobCall.sendInviteOkAck();
         assertTrue(!(bobCall.getLastReceivedResponse().getStatusCode() >= 400));
 
+        DateTime start = DateTime.now();
+        logger.info("Starting the call : "+start);
+
         assertTrue(georgeCall.waitForIncomingCall(30 * 1000));
         assertTrue(georgeCall.sendIncomingCallResponse(100, "Trying-George", 600));
         assertTrue(georgeCall.sendIncomingCallResponse(180, "Ringing-George", 600));
@@ -1115,19 +1122,42 @@ public class DialForkTest {
         assertNotNull(henriqueCancelTransaction);
         henriqueCall.respondToCancel(henriqueCancelTransaction, 200, "OK - Henrique", 600);
 
+        DateTime endHenrique = DateTime.now();
+
         SipTransaction aliceCancelTransaction = aliceCall.waitForCancel(50 * 1000);
         assertNotNull(aliceCancelTransaction);
         aliceCall.respondToCancel(aliceCancelTransaction, 200, "OK - Alice", 600);
 
+        DateTime endAlice = DateTime.now();
+
         SipTransaction georgeCancelTransaction = georgeCall.waitForCancel(50 * 1000);
         assertNotNull(georgeCancelTransaction);
+        Thread.sleep(1000);
         georgeCall.respondToCancel(georgeCancelTransaction, 200, "OK - George", 600);
 
+        DateTime endGeorge = DateTime.now();
+
+        DateTime forkingEnds = DateTime.now();
 
         assertTrue(alicePhone.unregister(aliceContact, 3600));
 
         assertTrue(bobCall.waitForDisconnect(50 * 1000));
+
+        DateTime end = DateTime.now();
+
         assertTrue(bobCall.respondToDisconnect());
+
+        double forkingDuration = (forkingEnds.getMillis() - start.getMillis())/1000;
+        double henriqueDuration = (endHenrique.getMillis() - start.getMillis())/1000;
+        double aliceDuration = (endAlice.getMillis() - start.getMillis())/1000;
+        double georgeDuration = (endGeorge.getMillis() - start.getMillis())/1000;
+        double duration = (end.getMillis() - start.getMillis())/1000;
+
+        logger.info("Duration of the call is : "+duration);
+        logger.info("Duration of forking : "+forkingDuration);
+        logger.info("Duration of Henrique : "+henriqueDuration);
+        logger.info("Duration of Alice : "+aliceDuration);
+        logger.info("Duration of Georege : "+georgeDuration);
 
         Thread.sleep(1000);
 
@@ -1156,6 +1186,9 @@ public class DialForkTest {
         JsonObject cdr = RestcommCallsTool.getInstance().getCall(deploymentUrl.toString(), adminAccountSid, adminAuthToken, callSid);
         JsonObject jsonObj = cdr.getAsJsonObject();
         logger.info("Status for call: "+callSid+" : "+jsonObj.get("status").getAsString());
+        int callDuration = jsonObj.get("duration").getAsInt();
+        assertEquals(duration, callDuration, 1.5);
+        assertEquals(timeout, callDuration, 1.5);
         assertTrue(jsonObj.get("status").getAsString().equalsIgnoreCase("completed"));
         assertTrue(MonitoringServiceTool.getInstance().getStatistics(deploymentUrl.toString(), adminAccountSid, adminAuthToken) == 0);
         assertTrue(MonitoringServiceTool.getInstance().getLiveCallsArraySize(deploymentUrl.toString(), adminAccountSid, adminAuthToken) == 0);
@@ -1186,6 +1219,10 @@ public class DialForkTest {
                         .withStatus(200)
                         .withHeader("Content-Type", "text/xml")
                         .withBody(dialForkWithTimeout)));
+
+        JsonObject metrics = MonitoringServiceTool.getInstance().getMetrics(deploymentUrl.toString(), adminAccountSid, adminAuthToken);
+        initialTotalCallSinceUptime = metrics.getAsJsonObject("Metrics").get("TotalCallsSinceUptime").getAsInt();
+        initialOutgoingCallsSinceUptime = metrics.getAsJsonObject("Metrics").get("OutgoingCallsSinceUptime").getAsInt();
 
         // Register Alice
         SipURI uri = aliceSipStack.getAddressFactory().createSipURI(null, restcommContact);
@@ -1274,7 +1311,7 @@ public class DialForkTest {
 
         Thread.sleep(1000);
 
-        JsonObject metrics = MonitoringServiceTool.getInstance().getMetrics(deploymentUrl.toString(), adminAccountSid, adminAuthToken);
+        metrics = MonitoringServiceTool.getInstance().getMetrics(deploymentUrl.toString(), adminAccountSid, adminAuthToken);
         int liveCalls = MonitoringServiceTool.getInstance().getStatistics(deploymentUrl.toString(), adminAccountSid, adminAuthToken);
         int liveCallsArraySize = MonitoringServiceTool.getInstance().getLiveCallsArraySize(deploymentUrl.toString(), adminAccountSid, adminAuthToken);
         int totalCallSinceUptime = metrics.getAsJsonObject("Metrics").get("TotalCallsSinceUptime").getAsInt();
@@ -1284,8 +1321,8 @@ public class DialForkTest {
         logger.info("&&&&& LiveCallsArraySize: "+liveCallsArraySize);
         assertEquals(0, liveCalls);
         assertEquals(0, liveCallsArraySize);
-        assertEquals(1, totalCallSinceUptime);
-        assertEquals(0, outgoingCallsSinceUptime);
+        assertEquals(initialTotalCallSinceUptime+1, totalCallSinceUptime);
+        assertEquals(initialOutgoingCallsSinceUptime, outgoingCallsSinceUptime);
 
         Thread.sleep(10000);
 
@@ -1327,6 +1364,10 @@ public class DialForkTest {
                         .withStatus(200)
                         .withHeader("Content-Type", "text/xml")
                         .withBody(dialClientAlice)));
+
+        JsonObject metrics = MonitoringServiceTool.getInstance().getMetrics(deploymentUrl.toString(), adminAccountSid, adminAuthToken);
+        initialTotalCallSinceUptime = metrics.getAsJsonObject("Metrics").get("TotalCallsSinceUptime").getAsInt();
+        initialOutgoingCallsSinceUptime = metrics.getAsJsonObject("Metrics").get("OutgoingCallsSinceUptime").getAsInt();
 
         // Register Alice
         SipURI uri = aliceSipStack.getAddressFactory().createSipURI(null, restcommContact);
@@ -1387,7 +1428,7 @@ public class DialForkTest {
 
         Thread.sleep(1000);
 
-        JsonObject metrics = MonitoringServiceTool.getInstance().getMetrics(deploymentUrl.toString(), adminAccountSid, adminAuthToken);
+        metrics = MonitoringServiceTool.getInstance().getMetrics(deploymentUrl.toString(), adminAccountSid, adminAuthToken);
         int liveCalls = MonitoringServiceTool.getInstance().getStatistics(deploymentUrl.toString(), adminAccountSid, adminAuthToken);
         int liveCallsArraySize = MonitoringServiceTool.getInstance().getLiveCallsArraySize(deploymentUrl.toString(), adminAccountSid, adminAuthToken);
         int totalCallSinceUptime = metrics.getAsJsonObject("Metrics").get("TotalCallsSinceUptime").getAsInt();
@@ -1397,8 +1438,8 @@ public class DialForkTest {
         logger.info("&&&&& LiveCallsArraySize: "+liveCallsArraySize);
         assertEquals(0, liveCalls);
         assertEquals(0, liveCallsArraySize);
-        assertEquals(2, totalCallSinceUptime);
-        assertEquals(1, outgoingCallsSinceUptime);
+        assertEquals(initialTotalCallSinceUptime+2, totalCallSinceUptime);
+        assertEquals(initialOutgoingCallsSinceUptime+1, outgoingCallsSinceUptime);
 
         Thread.sleep(10000);
 
