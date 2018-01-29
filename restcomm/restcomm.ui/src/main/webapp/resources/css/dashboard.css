@@ -38,7 +38,8 @@
     --link-disabled-text-color: #eeeeee;
 
     --input-bg-color: #ffffff;
-    --input-text-color: #ffffff;
+    --input-text-color: var(--main-text-color);
+    --input-disabled-bg-color: #eeeeee;
 
     --placeholder-text-color: #c1c4c5;
 
@@ -47,7 +48,7 @@
     --button-hover-bg-color: #c8c7c7;
     --button-hover-text-color: #ffffff;
 
-    --button-default-bg-color: #ffffff;
+    --button-default-bg-color: transparent;
     --button-default-text-color: #9e9f9f;
     --button-default-hover-bg-color: #d0d0d0;
     --button-default-hover-text-color: #ffffff;
@@ -1125,6 +1126,10 @@ form[role=login] input:-webkit-autofill:focus{
     font-size: 1.1em;
 }
 
+.rc-list.table-hover > tbody > tr:hover {
+    background-color: var(--primary-well-bg-color);
+}
+
 .rc-list .rc-list-sort-icon {
     position: absolute;
     font-size: 0.5em;
@@ -2126,6 +2131,42 @@ input[type="date"]::-webkit-calendar-picker-indicator {
     color: var(--main-text-color);
 }
 
+/* -- Override UI Bootstrap Styles ------------------------------------------ */
+
+.form-control {
+    background-color: var(--input-bg-color);
+    color: var(--input-text-color);
+}
+
+.form-control[disabled], .form-control[readonly], fieldset[disabled] .form-control {
+    background-color: var(--input-disabled-bg-color);
+}
+
+.input-group-addon {
+    background-color: var(--primary-well-bg-color);
+    color: var(--input-text-color);
+}
+
+.dropdown-menu {
+    background-color: var(--main-bg-color);
+    border: 1px solid var(--lines-color);
+}
+
+.dropdown-menu > li > a {
+    color: var(--input-text-color);
+}
+
+.dropdown-menu > li > a:hover {
+    background-color: var(--primary-well-bg-color);
+    color: var(--main-text-color);
+}
+
+.dropdown-menu > .active > a, .dropdown-menu > .active > a:hover, .dropdown-menu > .active > a:focus {
+    background-color: var(--primary-well-bg-color);
+    color: var(--main-text-color);
+}
+
+
 /* -- Override UI Bootstrap Pagination Styles ------------------------------- */
 
 .pagination {
@@ -2137,12 +2178,14 @@ input[type="date"]::-webkit-calendar-picker-indicator {
     border: none;
     font-size: 0.8em;
     color: var(--link-muted-text-color);
+    background-color: transparent;
 }
 
 .pagination > li > a:hover, .pagination > li > span:hover,
 .pagination > li > a:focus, .pagination > li > span:focus {
     background-color: transparent;
     color: var(--link-text-hover-color);
+    background-color: transparent;
     text-decoration: none;
 }
 
@@ -2154,6 +2197,7 @@ input[type="date"]::-webkit-calendar-picker-indicator {
     border: none;
     border-bottom: 2px solid var(--primary-color);
     color: var(--main-text-color);
+    background-color: transparent;
     text-decoration: none;
 }
 
@@ -2162,6 +2206,7 @@ input[type="date"]::-webkit-calendar-picker-indicator {
 .pagination > .disabled > span:focus, .pagination > .disabled > a,
 .pagination > .disabled > a:hover, .pagination > .disabled > a:focus {
     color: var(--link-disabled-text-color);
+    background-color: transparent;
 }
 
 
@@ -2211,6 +2256,10 @@ input, button, select, textarea {
 
 .spacer60 {
     margin-top: 60px;
+}
+
+.modal-content {
+    background-color: var(--main-bg-color);
 }
 
 /* Common classes ----------------------------------------------------------- */
