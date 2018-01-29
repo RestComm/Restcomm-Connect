@@ -59,6 +59,9 @@ import org.restcomm.connect.testsuite.tools.MonitoringServiceTool;
 import com.github.tomakehurst.wiremock.junit.WireMockRule;
 import com.github.tomakehurst.wiremock.verification.LoggedRequest;
 import com.google.gson.JsonObject;
+import java.util.concurrent.Executor;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
 
 /**
  * Tests for the Dial forking
@@ -146,6 +149,8 @@ public class DialForkTest {
     private static String dialAliceRcmlWithPlay;
     private static String dialAliceRcmlWithInvalidPlay;
     private String dialForkWithTimeout = "<Response><Dial timeout=\"2\"><Client>alice</Client><Sip>sip:henrique@127.0.0.1:" + henriquePort + "</Sip><Number>+131313</Number></Dial></Response>";
+
+    private String playPlusDialFork;
 
 
     @BeforeClass
@@ -1554,6 +1559,100 @@ public class DialForkTest {
 
         assertEquals(0, mgcpEndpoints);
         assertEquals(0, mgcpConnections);
+    }
+
+    class AutoAnswer implements Runnable {
+        SipCall call;
+
+        public AutoAnswer(SipCall call) {
+            this.call = call;
+        }
+
+
+
+        public void run() {
+            call.waitForIncomingCall(15000);
+            call.sendIncomingCallResponse(Response.TRYING, "Trying", 3600);
+            call.sendIncomingCallResponse(Response.RINGING, "Ringing", 3600);
+            String receivedBody = new String(call.getLastReceivedRequest().getRawContent());
+            call.sendIncomingCallResponse(Response.OK, "OK", 3600, receivedBody, "application", "sdp",
+                    null, null);
+            call.waitForAck(15000);
+        }
+    }
+
+
+    @Test
+    @Category(FeatureExpTests.class)
+    public synchronized void testDialForkMultipleAnswer() throws InterruptedException, ParseException, MalformedURLException {
+        List<AutoAnswer> autoAnswers = new ArrayList();
+        playPlusDialFork = "<Response><Play>"+deploymentUrl.toString()+"audio/demo-prompt.wav</Play><Dial timeout=\"2\"><Client>alice</Client><Sip>sip:henrique@127.0.0.1:" + henriquePort + "</Sip><Number>+131313</Number></Dial></Response>";
+        stubFor(get(urlPathEqualTo("/1111"))
+                .willReturn(aResponse()
+                        .withStatus(200)
+                        .withHeader("Content-Type", "text/xml")
+                        .withBody(dialFork)));
+
+        // Register Alice
+        SipURI uri = aliceSipStack.getAddressFactory().createSipURI(null, restcommContact);
+        assertTrue(alicePhone.register(uri, "alice", "1234", aliceContact, 3600, 3600));
+
+        // Prepare Alice to receive call
+        final SipCall aliceCall = alicePhone.createSipCall();
+        aliceCall.listenForIncomingCall();
+        autoAnswers.add(new AutoAnswer(aliceCall));
+
+
+        // Prepare George phone to receive call
+        final SipCall georgeCall = georgePhone.createSipCall();
+        georgeCall.listenForIncomingCall();
+        autoAnswers.add(new AutoAnswer(georgeCall));
+
+        // Prepare Henrique phone to receive call
+        // henriquePhone.setLoopback(true);
+        final SipCall henriqueCall = henriquePhone.createSipCall();
+        henriqueCall.listenForIncomingCall();
+        autoAnswers.add(new AutoAnswer(henriqueCall));
+
+        //Prepare Fotini phone to receive a call
+        final SipCall fotiniCall = fotiniPhone.createSipCall();
+        fotiniCall.listenForIncomingCall();
+        autoAnswers.add(new AutoAnswer(fotiniCall));
+
+        // Initiate a call using Bob
+        final SipCall bobCall = bobPhone.createSipCall();
+
+
+        //both alice and george will answer
+        ExecutorService serv = Executors.newFixedThreadPool(10);
+        for (AutoAnswer auto : autoAnswers) {
+            serv.submit(auto);
+        }
+
+
+        bobCall.initiateOutgoingCall(bobContact, "sip:1111@" + restcommContact, null, body, "application", "sdp", null, null);
+        assertLastOperationSuccess(bobCall);
+
+        assertTrue(bobCall.waitOutgoingCallResponse(5 * 1000));
+
+        final int response = bobCall.getLastReceivedResponse().getStatusCode();
+        assertTrue(response == Response.TRYING || response == Response.RINGING);
+        if (response == Response.TRYING) {
+            assertTrue(bobCall.waitOutgoingCallResponse(5 * 1000));
+            assertEquals(Response.RINGING, bobCall.getLastReceivedResponse().getStatusCode());
+        }
+
+        assertTrue(bobCall.waitOutgoingCallResponse(5 * 1000));
+        assertEquals(Response.OK, bobCall.getLastReceivedResponse().getStatusCode());
+        bobCall.sendInviteOkAck();
+        assertTrue(!(bobCall.getLastReceivedResponse().getStatusCode() >= 400));
+
+
+        bobCall.waitForAnswer(10000);
+        bobCall.sendInviteOkAck();
+
+        aliceCall.isCallAnswered();
+        //TODO assert just one call get establlished, rest are either cancel/bye
     }
 
     @Test
