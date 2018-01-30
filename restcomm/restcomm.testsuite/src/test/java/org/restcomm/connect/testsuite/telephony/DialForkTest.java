@@ -63,6 +63,7 @@ import com.google.gson.JsonObject;
 import java.util.concurrent.Executor;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
+import java.util.logging.Level;
 
 /**
  * Tests for the Dial forking
@@ -1572,14 +1573,31 @@ public class DialForkTest {
 
 
         public void run() {
-            call.waitForIncomingCall(15000);
-            call.sendIncomingCallResponse(Response.TRYING, "Trying", 3600);
-            call.sendIncomingCallResponse(Response.RINGING, "Ringing", 3600);
-            String receivedBody = new String(call.getLastReceivedRequest().getRawContent());
-            call.sendIncomingCallResponse(Response.OK, "OK", 3600, receivedBody, "application", "sdp",
-                    null, null);
-            call.waitForAck(15000);
+            try {
+                call.waitForIncomingCall(15000);
+                call.sendIncomingCallResponse(Response.TRYING, "Trying", 3600);
+                call.sendIncomingCallResponse(Response.RINGING, "Ringing", 3600);
+                String receivedBody = new String(call.getLastReceivedRequest().getRawContent());
+                //simulate answer time
+                Thread.sleep(3000);
+                call.sendIncomingCallResponse(Response.OK, "OK", 3600, receivedBody, "application", "sdp",
+                        null, null);
+                call.waitForAck(15000);
+                call.waitForDisconnect(15000);
+            } catch (InterruptedException ex) {
+                java.util.logging.Logger.getLogger(DialForkTest.class.getName()).log(Level.SEVERE, null, ex);
+            }
         }
+    }
+
+    private void assertNoMGCPResources() {
+        JsonObject metrics = MonitoringServiceTool.getInstance().getMetrics(deploymentUrl.toString(),adminAccountSid, adminAuthToken);
+        Map<String, Integer> mgcpResources = MonitoringServiceTool.getInstance().getMgcpResources(metrics);
+        int mgcpEndpoints = mgcpResources.get("MgcpEndpoints");
+        int mgcpConnections = mgcpResources.get("MgcpConnections");
+
+        assertEquals(0, mgcpEndpoints);
+        assertEquals(0, mgcpConnections);
     }
 
 
@@ -1652,10 +1670,9 @@ public class DialForkTest {
         bobCall.waitForAnswer(10000);
         bobCall.sendInviteOkAck();
 
-        aliceCall.isCallAnswered();
         //TODO assert just one call get establlished, rest are either cancel/bye
 
-        Thread.sleep(1000);
+        Thread.sleep(10000);
 
         assertEquals(1, MonitoringServiceTool.getInstance().getLiveIncomingCallStatistics(deploymentUrl.toString(), adminAccountSid, adminAuthToken));
         JsonObject liveCalls = MonitoringServiceTool.getInstance().getLiveCalls(deploymentUrl.toString(), adminAccountSid, adminAuthToken);
@@ -1663,6 +1680,11 @@ public class DialForkTest {
         JsonArray liveCallDetails = liveCalls.getAsJsonArray("LiveCallDetails");
         assertEquals(1, MonitoringServiceTool.getInstance().getLiveOutgoingCallStatistics(deploymentUrl.toString(), adminAccountSid, adminAuthToken));
         assertEquals(2,liveCallDetails.size());
+
+        bobCall.disconnect();
+        Thread.sleep(1000);
+        assertNoMGCPResources();
+
     }
 
     @Test
