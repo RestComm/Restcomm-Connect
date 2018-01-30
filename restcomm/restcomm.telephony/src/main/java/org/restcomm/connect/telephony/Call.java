@@ -1200,7 +1200,7 @@ public final class Call extends RestcommUntypedActor {
                         }
                     } else {
                         // if sip session is already confirmed, cancel wont work so we need to send bye.
-                    	// https://telestax.atlassian.net/browse/RESTCOMM-1623
+                        // https://telestax.atlassian.net/browse/RESTCOMM-1623
                         if (logger.isInfoEnabled()) {
                             logger.info("Got Cancel request for call: "+self().path()+", state: "+fsm.state()+", direction: "+direction);
                             logger.info("Call's sip session is already confirmed so restcomm will send BYE instead of CANCEL.");
