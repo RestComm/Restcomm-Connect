@@ -22,12 +22,12 @@ Here you have three alternativess:
 
 Once you have installed the Restcomm platform (or you are using Cloud) you are ready to start taking advantage of Restcomm's features from your Android Applications. Here's what you need to do:
 
-* Grab the latest Restcomm WebRTC Android SDK release from GitHub: https://github.com/RestComm/restcomm-android-sdk/releases/tag/v1.0.5-BETA7. At the time of this writing it is v1.0.5-beta7 and the bundle you need to download is restcomm-android-sdk-1.0.5-beta7.tar.bz2
+* Grab the latest Restcomm WebRTC Android SDK release from GitHub: https://github.com/RestComm/restcomm-android-sdk/releases/tag/v1.0.6-BETA8. At the time of this writing it is v1.0.6-beta8 and the bundle you need to download is restcomm-android-sdk-1.0.6-beta8.tar.bz2
 * Extract it:
 +
 [source,theme:github,toolbar:2,lang:default,decode:true]
 ----
-$ tar -jxvf restcomm-android-sdk-1.0.0-beta7.tar.bz2
+$ tar -jxvf restcomm-android-sdk-1.0.6-beta8.tar.bz2
 ----
 
 [[use-the-existing-sample-androidapp-helloworld]]
@@ -152,12 +152,24 @@ public class MainActivity extends Activity implements RCDeviceListener, RCConnec
 [source,java,theme:github,toolbar:1,lang:default,decode:true]
 ----
 // RCDevice Listeners
-public void onStartListening(RCDevice device, RCDeviceListener.RCConnectivityStatus connectivityStatus)
+public void onInitialized(RCDevice device, RCDeviceListener.RCConnectivityStatus connectivityStatus, int statusCode, String statusText){
+
+}
+
+public void onReconfigured(RCDevice device, RCConnectivityStatus connectivityStatus, int statusCode, String statusText)
 {
 
 }
 
-public void onStopListening(RCDevice device, int errorCode, String errorText)
+public void onReleased(RCDevice device, int statusCode, String statusText){
+
+}
+
+public void onMessageSent(RCDevice device, int statusCode, String statusText, String jobId){
+
+}
+
+public void onError(RCDevice device, int statusCode, String statusText)
 {
    Log.i(TAG, errorText);
 }
@@ -182,26 +194,12 @@ public void onDisconnected(RCConnection connection)
    pendingConnection = null;
 }
 
-public void onDisconnected(RCConnection connection, int errorCode, String errorText)
+public void onDigitSent(RCConnection connection, int statusCode, String statusText)
 {
-
-   Log.i(TAG, errorText);
-   this.connection = null;
-   pendingConnection = null;
 }
 
-public void onCancelled(RCConnection connection)
-{
-   Log.i(TAG, "RCConnection cancelled");
-   this.connection = null;
-   pendingConnection = null;
-}
-
-public void onDeclined(RCConnection connection)
-{
-   Log.i(TAG, "RCConnection declined");
-   this.connection = null;
-   pendingConnection = null;
+public void onError(RCConnection connection, int errorCode, String errorText){
+    Log.i(TAG, errorText);
 }
 
 public void onLocalVideo(RCConnection connection)
@@ -212,29 +210,6 @@ public void onRemoteVideo(RCConnection connection)
 {
 }
 
-public void onError(RCConnection connection, int errorCode, String errorText)
-{
-}
-
-public void onDigitSent(RCConnection connection, int statusCode, String statusText)
-{
-}
-
-public void onMessageSent(RCDevice device, int statusCode, String statusText)
-{
-}
-
-public void onReleased(RCDevice device, int statusCode, String statusText)
-{
-}
-
-public void onInitialized(RCDevice device, RCDeviceListener.RCConnectivityStatus connectivityStatus, int statusCode, String statusText)
-{
-}
-
-public void onInitializationError(int errorCode, String errorText)
-{
-}
 ----
 * Add the needed Android SDK objects (i.e. RCDevice and RCConnection) in the Activity class as well as some convenience variables:
 +
@@ -300,17 +275,24 @@ public void onServiceConnected(ComponentName className, IBinder service)
    params.put(RCDevice.ParameterKeys.SIGNALING_USERNAME, "android-sdk");
    params.put(RCDevice.ParameterKeys.SIGNALING_PASSWORD, "1234");
    params.put(RCDevice.ParameterKeys.MEDIA_ICE_URL, "https://service.xirsys.com/ice");
+   params.put(RCDevice.ParameterKeys.MEDIA_ICE_DOMAIN, "cloud.restcomm.com");
    params.put(RCDevice.ParameterKeys.MEDIA_ICE_USERNAME, "atsakiridis");
    params.put(RCDevice.ParameterKeys.MEDIA_ICE_PASSWORD, "4e89a09e-bf6f-11e5-a15c-69ffdcc2b8a7");
    params.put(RCDevice.ParameterKeys.MEDIA_TURN_ENABLED, true);
+   params.put(RCDevice.ParameterKeys.MEDIA_ICE_SERVERS_DISCOVERY_TYPE,1);
    //params.put(RCDevice.ParameterKeys.SIGNALING_SECURE_ENABLED, prefs.getBoolean(RCDevice.ParameterKeys.SIGNALING_SECURE_ENABLED, false));
 
-   if (!device.isInitialized()) {
-      device.initialize(getApplicationContext(), params, this);
-      device.setLogLevel(Log.VERBOSE);
-   }
+    if (!device.isInitialized()) {
+         try {
+            device.initialize(getApplicationContext(), params, this);
+            device.setLogLevel(Log.VERBOSE);
+         }
+         catch (RCException e) {
+            Log.e(TAG, "RCDevice Initialization Error: " + e.errorText);
+         }
+    }
 
-   serviceBound = true;
+    serviceBound = true;
 }
 
 @Override
