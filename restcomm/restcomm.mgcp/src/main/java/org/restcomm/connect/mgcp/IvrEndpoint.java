@@ -118,7 +118,8 @@ public final class IvrEndpoint extends GenericEndpoint {
         request.setSignalRequests(signal);
         request.setNotifiedEntity(agent);
 
-//        //Ask RMS to notify for Recording Signal
+        //Ask RMS to notify for PlayRecording and PlayAnnouncement Signal.
+        //This way IVR endpoint state at RMS side, will be ready for any subsequent request
         if (se.getEvent().getName().equalsIgnoreCase("pr") || se.getEvent().getName().equalsIgnoreCase("pa") ) {
             request.setRequestedEvents(REQUESTED_EVENTS);
         }
