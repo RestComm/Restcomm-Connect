@@ -33,12 +33,21 @@ import org.restcomm.connect.extension.api.RestcommExtensionGeneric;
 
 import javax.servlet.ServletContext;
 import java.util.List;
+import org.junit.After;
 
 public class ExtensionsControllerTest {
 
     private static Logger logger = Logger.getLogger(ExtensionsControllerTest.class);
 
     private RestcommExtensionGeneric testExtension = new TestExtension();
+
+
+    @After
+    public void resteController() {
+        //reset the singleton after each test to provide isolation and
+        //predictibiltiy when full test class is executed
+        ExtensionController.getInstance().reset();
+    }
 
     @Test
     public void extensionRegistry() {
