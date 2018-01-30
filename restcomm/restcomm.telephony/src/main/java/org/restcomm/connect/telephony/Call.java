@@ -396,6 +396,7 @@ public final class Call extends RestcommUntypedActor {
         transitions.add(new Transition(this.failingNoAnswer, this.canceling));
         transitions.add(new Transition(this.updatingMediaSession, this.inProgress));
         transitions.add(new Transition(this.updatingMediaSession, this.failed));
+        transitions.add(new Transition(this.updatingMediaSession, this.stopping));
         transitions.add(new Transition(this.stopping, this.completed));
         transitions.add(new Transition(this.stopping, this.failed));
         transitions.add(new Transition(this.failed, this.completed));
