@@ -64,6 +64,7 @@
     --button-danger-hover-text-color: #ffffff;
 
     --sign-in-label-color: var(--primary-color);
+    --sign-in-logo-url: url('../img/v2/restcomm-console.svg');
 
     --primary-tabs-bg-color: #eeeeee;
     --primary-tabs-text-color: var(--main-text-color);
@@ -287,10 +288,10 @@ a:hover {
 }
 
 .btn-primary:active, .btn-primary:focus, .btn-primary:hover,
-.btn-primary.disabled, .btn-primary[disabled], fieldset[disabled] .btn-primary, .btn-primary.disabled:hover, 
-.btn-primary[disabled]:hover, fieldset[disabled] .btn-primary:hover, .btn-primary.disabled:focus, 
-.btn-primary[disabled]:focus, fieldset[disabled] .btn-primary:focus, .btn-primary.disabled:active, 
-.btn-primary[disabled]:active, fieldset[disabled] .btn-primary:active, .btn-primary.disabled.active, 
+.btn-primary.disabled, .btn-primary[disabled], fieldset[disabled] .btn-primary, .btn-primary.disabled:hover,
+.btn-primary[disabled]:hover, fieldset[disabled] .btn-primary:hover, .btn-primary.disabled:focus,
+.btn-primary[disabled]:focus, fieldset[disabled] .btn-primary:focus, .btn-primary.disabled:active,
+.btn-primary[disabled]:active, fieldset[disabled] .btn-primary:active, .btn-primary.disabled.active,
 .btn-primary[disabled].active, fieldset[disabled] .btn-primary.active {
     background: var(--button-primary-hover-bg-color);
     color: var(--button-primary-hover-text-color);
@@ -503,20 +504,28 @@ form[role=login] input:-webkit-autofill:focus{
 /* -- Top Bar --------------------------------------------------------------- */
 
 .logo-container {
-    width: 100%;
-    height: 150px;
-    padding-right: 0;
     padding-left: 130px;
     padding-top: 40px;
     margin-right: auto;
     margin-left: auto;
 }
 
+.logo-container > a {
+    background: no-repeat left var(--sign-in-logo-url);
+    background-size: contain;
+    height: 100px;
+    width: 280px;
+    display: block;
+}
+
 @media(max-width:768px) {
     .logo-container {
-        text-align: center;
-        height: 110px;
         padding-left: 0;
+        margin-left: calc(50% - 100px);
+    }
+    .logo-container > a {
+        height: 100px;
+        width: 200px;
     }
 }
 
