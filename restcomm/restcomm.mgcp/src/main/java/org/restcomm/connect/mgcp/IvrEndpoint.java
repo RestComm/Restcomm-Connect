@@ -119,7 +119,7 @@ public final class IvrEndpoint extends GenericEndpoint {
         request.setNotifiedEntity(agent);
 
 //        //Ask RMS to notify for Recording Signal
-        if (se.getEvent().getName().equalsIgnoreCase("pr")) {
+        if (se.getEvent().getName().equalsIgnoreCase("pr") || se.getEvent().getName().equalsIgnoreCase("pa") ) {
             request.setRequestedEvents(REQUESTED_EVENTS);
         }
         gateway.tell(request, self());
