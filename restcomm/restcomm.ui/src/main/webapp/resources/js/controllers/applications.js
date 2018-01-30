@@ -44,7 +44,7 @@ angular.module('rcApp.controllers').controller('ApplicationDetailsCtrl', functio
     }
 
     $scope.editInDesigner = function(app) {
-        window.open("/restcomm-rvd#/designer/" + app.sid + "=" + app.friendly_name + ($stateParams.firstTime ? "?firstTime=true" : "")); // TODO maybe escape friendly_name ???
+        window.open("/restcomm-rvd#/designer/" + app.sid + ($stateParams.firstTime ? "?firstTime=true" : ""));
     }
 
     $scope.saveExternalApp = function(app) {
@@ -133,7 +133,7 @@ angular.module('rcApp.controllers').controller('ApplicationCreationCtrl', functi
           Notifications.success("RVD application created");
           $state.go("restcomm.application-details", {applicationSid: data.sid, firstTime: true});
           //$location.path("/applications/" + data.sid + "?firstTime=true");
-          window.open("/restcomm-rvd#/designer/" + data.sid + "=" + data.name + "?firstTime=true");
+          window.open("/restcomm-rvd#/designer/" + data.sid + "?firstTime=true");
       });
     }
 
@@ -153,7 +153,7 @@ angular.module('rcApp.controllers').controller('ApplicationCreationCtrl', functi
             RvdProjectImporter.import(files[0], nameOverride).then(function (result) {
                 Notifications.success("Application '" + result.name + "' imported successfully");
                 $location.path("/applications/" + result.id);
-                window.open("/restcomm-rvd#/designer/" + result.id + "=" + result.name);
+                window.open("/restcomm-rvd#/designer/" + result.id);
             }, function (message) {
                 Notifications.error(message);
             });
