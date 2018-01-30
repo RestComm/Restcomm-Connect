@@ -386,6 +386,7 @@ public class VoiceInterpreter extends BaseVoiceInterpreter {
         transitions.add(new Transition(creatingBridge, finishDialing));
         transitions.add(new Transition(initializingBridge, bridging));
         transitions.add(new Transition(initializingBridge, hangingUp));
+        transitions.add(new Transition(initializingBridge, finished));
         transitions.add(new Transition(bridging, bridged));
         transitions.add(new Transition(bridging, finishDialing));
         transitions.add(new Transition(bridged, finishDialing));
