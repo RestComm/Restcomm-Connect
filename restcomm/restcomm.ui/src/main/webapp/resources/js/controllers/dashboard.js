@@ -70,7 +70,7 @@ rcMod.controller('DashboardCtrl', function ($scope, $resource, $rootScope, RComm
       lastDate.setDate(lastDate.getDate() + 1);
     }
 
-    $scope.callsOptions.chart.bars.yDomain = [0, Math.max(parseInt(maxCalls * 1.1), 100)];
+    $scope.callsOptions.chart.bars.yDomain = [0, Math.max(parseInt(maxCalls * 1.1), 25)];
     $scope.callsOptions.chart.lines.yDomain = [0, Math.max(parseInt(maxDuration * 1.1), 100)];
     $scope.callsAPI.updateWithOptions($scope.callsOptions);
   });
