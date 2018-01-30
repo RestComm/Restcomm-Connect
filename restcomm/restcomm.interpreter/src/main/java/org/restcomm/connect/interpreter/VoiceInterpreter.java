@@ -386,6 +386,7 @@ public class VoiceInterpreter extends BaseVoiceInterpreter {
         transitions.add(new Transition(creatingBridge, finishDialing));
         transitions.add(new Transition(initializingBridge, bridging));
         transitions.add(new Transition(initializingBridge, hangingUp));
+        transitions.add(new Transition(initializingBridge, finished));
         transitions.add(new Transition(bridging, bridged));
         transitions.add(new Transition(bridging, finishDialing));
         transitions.add(new Transition(bridged, finishDialing));
@@ -1228,7 +1229,7 @@ public class VoiceInterpreter extends BaseVoiceInterpreter {
                 outboundCallResponse = event.sipResponse();
             }
         if(logger.isInfoEnabled()){
-            logger.info("VoiceInterpreter received CallStateChanged event: "+event+ " from "+(sender == call? "call" : "outboundCall")+ ", sender path: " + sender.path() +", current VI state: "+fsm.state());
+            logger.info("VoiceInterpreter received CallStateChanged event: "+event+ " from "+(sender == call? "call" : "outboundCall")+ ", sender path: " + sender.path() +", current VI state: "+fsm.state() +" current outboundCall actor is: "+outboundCall);
         }
 
         switch (event.state()) {

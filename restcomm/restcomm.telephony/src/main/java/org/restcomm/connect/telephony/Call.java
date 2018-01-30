@@ -19,14 +19,41 @@
  */
 package org.restcomm.connect.telephony;
 
-import akka.actor.ActorRef;
-import akka.actor.Props;
-import akka.actor.ReceiveTimeout;
-import akka.actor.UntypedActor;
-import akka.actor.UntypedActorContext;
-import akka.actor.UntypedActorFactory;
-import akka.event.Logging;
-import akka.event.LoggingAdapter;
+import java.io.IOException;
+import java.math.BigDecimal;
+import java.net.InetAddress;
+import java.net.URI;
+import java.net.UnknownHostException;
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.Currency;
+import java.util.HashMap;
+import java.util.HashSet;
+import java.util.Iterator;
+import java.util.List;
+import java.util.ListIterator;
+import java.util.Map;
+import java.util.Set;
+import java.util.StringTokenizer;
+import java.util.UUID;
+import java.util.concurrent.TimeUnit;
+
+import javax.sdp.SdpException;
+import javax.servlet.sip.Address;
+import javax.servlet.sip.AuthInfo;
+import javax.servlet.sip.ServletParseException;
+import javax.servlet.sip.SipApplicationSession;
+import javax.servlet.sip.SipFactory;
+import javax.servlet.sip.SipServletMessage;
+import javax.servlet.sip.SipServletRequest;
+import javax.servlet.sip.SipServletResponse;
+import javax.servlet.sip.SipSession;
+import javax.servlet.sip.SipURI;
+import javax.servlet.sip.TelURL;
+import javax.sip.header.RecordRouteHeader;
+import javax.sip.header.RouteHeader;
+import javax.sip.message.Response;
+
 import org.apache.commons.configuration.Configuration;
 import org.apache.http.NameValuePair;
 import org.apache.http.message.BasicNameValuePair;
@@ -99,41 +126,15 @@ import org.restcomm.connect.telephony.api.Reject;
 import org.restcomm.connect.telephony.api.RemoveParticipant;
 import org.restcomm.connect.telephony.api.StopWaiting;
 
+import akka.actor.ActorRef;
+import akka.actor.Props;
+import akka.actor.ReceiveTimeout;
+import akka.actor.UntypedActor;
+import akka.actor.UntypedActorContext;
+import akka.actor.UntypedActorFactory;
+import akka.event.Logging;
+import akka.event.LoggingAdapter;
 import scala.concurrent.duration.Duration;
-
-import javax.sdp.SdpException;
-import javax.servlet.sip.Address;
-import javax.servlet.sip.AuthInfo;
-import javax.servlet.sip.ServletParseException;
-import javax.servlet.sip.SipApplicationSession;
-import javax.servlet.sip.SipFactory;
-import javax.servlet.sip.SipServletMessage;
-import javax.servlet.sip.SipServletRequest;
-import javax.servlet.sip.SipServletResponse;
-import javax.servlet.sip.SipSession;
-import javax.servlet.sip.SipURI;
-import javax.servlet.sip.TelURL;
-import javax.sip.header.RecordRouteHeader;
-import javax.sip.header.RouteHeader;
-import javax.sip.message.Response;
-import java.io.IOException;
-import java.math.BigDecimal;
-import java.net.InetAddress;
-import java.net.URI;
-import java.net.UnknownHostException;
-import java.util.ArrayList;
-import java.util.Collections;
-import java.util.Currency;
-import java.util.HashMap;
-import java.util.HashSet;
-import java.util.Iterator;
-import java.util.List;
-import java.util.ListIterator;
-import java.util.Map;
-import java.util.Set;
-import java.util.StringTokenizer;
-import java.util.UUID;
-import java.util.concurrent.TimeUnit;
 
 /**
  * @author quintana.thomas@gmail.com (Thomas Quintana)
@@ -395,6 +396,7 @@ public final class Call extends RestcommUntypedActor {
         transitions.add(new Transition(this.failingNoAnswer, this.canceling));
         transitions.add(new Transition(this.updatingMediaSession, this.inProgress));
         transitions.add(new Transition(this.updatingMediaSession, this.failed));
+        transitions.add(new Transition(this.updatingMediaSession, this.stopping));
         transitions.add(new Transition(this.stopping, this.completed));
         transitions.add(new Transition(this.stopping, this.failed));
         transitions.add(new Transition(this.failed, this.completed));
@@ -1197,13 +1199,23 @@ public final class Call extends RestcommUntypedActor {
         public void execute(final Object message) throws Exception {
             try {
                 if (isOutbound() && (invite.getSession().getState() != SipSession.State.INITIAL || invite.getSession().getState() != SipSession.State.TERMINATED)) {
-                    final UntypedActorContext context = getContext();
-                    context.setReceiveTimeout(Duration.Undefined());
-                    final SipServletRequest cancel = invite.createCancel();
-                    addCustomHeaders(cancel);
-                    cancel.send();
-                    if (logger.isInfoEnabled()) {
-                        logger.info("Sent CANCEL for Call: "+self().path()+", state: "+fsm.state()+", direction: "+direction);
+                    if(invite.getSession().getState() != SipSession.State.CONFIRMED) {
+                        final UntypedActorContext context = getContext();
+                        context.setReceiveTimeout(Duration.Undefined());
+                        final SipServletRequest cancel = invite.createCancel();
+                        addCustomHeaders(cancel);
+                        cancel.send();
+                        if (logger.isInfoEnabled()) {
+                            logger.info("Sent CANCEL for Call: "+self().path()+", state: "+fsm.state()+", direction: "+direction);
+                        }
+                    } else {
+                        // if sip session is already confirmed, cancel wont work so we need to send bye.
+                        // https://telestax.atlassian.net/browse/RESTCOMM-1623
+                        if (logger.isInfoEnabled()) {
+                            logger.info("Got Cancel request for call: "+self().path()+", state: "+fsm.state()+", direction: "+direction);
+                            logger.info("Call's sip session is already confirmed so restcomm will send BYE instead of CANCEL.");
+                            sendBye(new Hangup());
+                        }
                     }
                 }
             } catch (Exception e) {
@@ -1999,7 +2011,7 @@ public final class Call extends RestcommUntypedActor {
                 logger.info("Got CANCEL for Call with the following details, from: "+from+" to: "+to+" direction: "+direction+" state: "+fsm.state()+", will Cancel the call");
             }
             fsm.transition(message, canceling);
-        } else if (is(inProgress)) {
+        } else if (is(inProgress) || is(updatingMediaSession)) {
             if(logger.isInfoEnabled()) {
                 logger.info("Got CANCEL for Call with the following details, from: "+from+" to: "+to+" direction: "+direction+" state: "+fsm.state()+", will Hangup the call");
             }
