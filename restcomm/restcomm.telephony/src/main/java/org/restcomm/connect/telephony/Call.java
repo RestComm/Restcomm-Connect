@@ -1025,8 +1025,17 @@ public final class Call extends RestcommUntypedActor {
             // Send the invite.
             invite.send();
             // Set the timeout period.
-            final UntypedActorContext context = getContext();
-            context.setReceiveTimeout(Duration.create(timeout, TimeUnit.SECONDS));
+
+//            final UntypedActorContext context = getContext();
+//            if (logger.isDebugEnabled()) {
+//                logger.debug("About to set timeout to "+timeout);
+//            }
+//            context.setReceiveTimeout(Duration.create(timeout, TimeUnit.SECONDS));
+//            deadline = Duration.create(timeout, TimeUnit.SECONDS).fromNow();
+//            if (deadline != null) {
+//                String msg = String.format("Deadline left %s", deadline.timeLeft().toSeconds());
+//                logger.debug(msg);
+//            }
             executeStatusCallback(CallbackState.INITIATED);
         }
 

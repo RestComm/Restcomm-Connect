@@ -45,12 +45,9 @@ import org.junit.Rule;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
 import org.junit.runner.RunWith;
-import org.restcomm.connect.commons.Version;
 import org.restcomm.connect.commons.annotations.FeatureAltTests;
 import org.restcomm.connect.commons.annotations.FeatureExpTests;
 import org.restcomm.connect.commons.annotations.ParallelClassTests;
-import org.restcomm.connect.commons.annotations.UnstableTests;
-import org.restcomm.connect.commons.annotations.WithInMinsTests;
 import org.restcomm.connect.testsuite.NetworkPortAssigner;
 import org.restcomm.connect.testsuite.WebArchiveUtil;
 import org.restcomm.connect.testsuite.http.RestcommCallsTool;
@@ -60,7 +57,6 @@ import com.github.tomakehurst.wiremock.junit.WireMockRule;
 import com.github.tomakehurst.wiremock.verification.LoggedRequest;
 import com.google.gson.JsonArray;
 import com.google.gson.JsonObject;
-import java.util.concurrent.Executor;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.logging.Level;
@@ -149,7 +145,10 @@ public class DialForkTest {
     private static String restcommContact = "127.0.0.1:" + restcommPort;
     private static String dialAliceRcmlWithPlay;
     private static String dialAliceRcmlWithInvalidPlay;
-    private String dialForkWithTimeout = "<Response><Dial timeout=\"2\"><Client>alice</Client><Sip>sip:henrique@127.0.0.1:" + henriquePort + "</Sip><Number>+131313</Number></Dial></Response>";
+    private int timeout = 10;
+    private String dialForkWithTimeout = "<Response><Dial timeout=\""+timeout+"\"><Client>alice</Client><Sip>sip:henrique@127.0.0.1:" + henriquePort + "</Sip><Number>+131313</Number></Dial></Response>";
+    private int initialTotalCallSinceUptime;
+    private int initialOutgoingCallsSinceUptime;
 
     @BeforeClass
     public static void beforeClass() throws Exception {
@@ -1158,6 +1157,8 @@ public class DialForkTest {
         JsonObject cdr = RestcommCallsTool.getInstance().getCall(deploymentUrl.toString(), adminAccountSid, adminAuthToken, callSid);
         JsonObject jsonObj = cdr.getAsJsonObject();
         logger.info("Status for call: "+callSid+" : "+jsonObj.get("status").getAsString());
+        int callDuration = jsonObj.get("duration").getAsInt();
+        assertEquals(timeout, callDuration, 1.5);
         assertTrue(jsonObj.get("status").getAsString().equalsIgnoreCase("completed"));
         assertTrue(MonitoringServiceTool.getInstance().getStatistics(deploymentUrl.toString(), adminAccountSid, adminAuthToken) == 0);
         assertTrue(MonitoringServiceTool.getInstance().getLiveCallsArraySize(deploymentUrl.toString(), adminAccountSid, adminAuthToken) == 0);
@@ -1179,9 +1180,8 @@ public class DialForkTest {
             "m=audio 6000 RTP/AVP 0\n" +
             "a=rtpmap:0 PCMU/8000\n";
 
-    @Test //Passes only when run individually. Doesn't pass when run with the rest of the tests. It not only fails, it messes up the metrics and cause all following tests to fail. so ignoring it unless we fix it
-    @Category(UnstableTests.class)
-    @Ignore
+    @Test //Passes only when run individually. Doesn't pass when run with the rest of the tests
+    @Category(FeatureAltTests.class)
     public synchronized void testDialForkWithReInviteBeforeDialForkStarts_CancelCall() throws InterruptedException, ParseException, MalformedURLException {
 
         stubFor(get(urlPathEqualTo("/1111"))
@@ -1189,6 +1189,10 @@ public class DialForkTest {
                         .withStatus(200)
                         .withHeader("Content-Type", "text/xml")
                         .withBody(dialForkWithTimeout)));
+
+        JsonObject metrics = MonitoringServiceTool.getInstance().getMetrics(deploymentUrl.toString(), adminAccountSid, adminAuthToken);
+        initialTotalCallSinceUptime = metrics.getAsJsonObject("Metrics").get("TotalCallsSinceUptime").getAsInt();
+        initialOutgoingCallsSinceUptime = metrics.getAsJsonObject("Metrics").get("OutgoingCallsSinceUptime").getAsInt();
 
         // Register Alice
         SipURI uri = aliceSipStack.getAddressFactory().createSipURI(null, restcommContact);
@@ -1277,18 +1281,19 @@ public class DialForkTest {
 
         Thread.sleep(1000);
 
-        JsonObject metrics = MonitoringServiceTool.getInstance().getMetrics(deploymentUrl.toString(), adminAccountSid, adminAuthToken);
+        metrics = MonitoringServiceTool.getInstance().getMetrics(deploymentUrl.toString(), adminAccountSid, adminAuthToken);
         int liveCalls = MonitoringServiceTool.getInstance().getStatistics(deploymentUrl.toString(), adminAccountSid, adminAuthToken);
         int liveCallsArraySize = MonitoringServiceTool.getInstance().getLiveCallsArraySize(deploymentUrl.toString(), adminAccountSid, adminAuthToken);
-        //int totalCallSinceUptime = metrics.getAsJsonObject("Metrics").get("TotalCallsSinceUptime").getAsInt();
-        //int outgoingCallsSinceUptime = metrics.getAsJsonObject("Metrics").get("OutgoingCallsSinceUptime").getAsInt();
+        int totalCallSinceUptime = metrics.getAsJsonObject("Metrics").get("TotalCallsSinceUptime").getAsInt();
+        int outgoingCallsSinceUptime = metrics.getAsJsonObject("Metrics").get("OutgoingCallsSinceUptime").getAsInt();
 
         logger.info("&&&&& LiveCalls: "+liveCalls);
         logger.info("&&&&& LiveCallsArraySize: "+liveCallsArraySize);
         assertEquals(0, liveCalls);
         assertEquals(0, liveCallsArraySize);
-        //assertEquals(1, totalCallSinceUptime);
-        //assertEquals(0, outgoingCallsSinceUptime);
+
+        assertEquals(initialTotalCallSinceUptime+1, totalCallSinceUptime);
+        assertEquals(initialOutgoingCallsSinceUptime, outgoingCallsSinceUptime);
 
         Thread.sleep(10000);
 
@@ -1321,9 +1326,10 @@ public class DialForkTest {
     }
 
     private String dialClientAlice = "<Response><Dial timeout=\"2\"><Client>alice</Client></Dial></Response>";
+
     @Test //Passes only when run individually. Doesn't pass when run with the rest of the tests. It not only fails, it messes up the metrics and cause all following tests to fail. so ignoring it unless we fix it
-    @Category(UnstableTests.class)
     @Ignore
+    @Category(FeatureAltTests.class)
     public synchronized void testDialForkWithReInviteAfterDialStarts_CancelCall() throws InterruptedException, ParseException, MalformedURLException {
 
         stubFor(get(urlPathEqualTo("/1111"))
@@ -1331,6 +1337,10 @@ public class DialForkTest {
                         .withStatus(200)
                         .withHeader("Content-Type", "text/xml")
                         .withBody(dialClientAlice)));
+
+        JsonObject metrics = MonitoringServiceTool.getInstance().getMetrics(deploymentUrl.toString(), adminAccountSid, adminAuthToken);
+        initialTotalCallSinceUptime = metrics.getAsJsonObject("Metrics").get("TotalCallsSinceUptime").getAsInt();
+        initialOutgoingCallsSinceUptime = metrics.getAsJsonObject("Metrics").get("OutgoingCallsSinceUptime").getAsInt();
 
         // Register Alice
         SipURI uri = aliceSipStack.getAddressFactory().createSipURI(null, restcommContact);
@@ -1391,18 +1401,19 @@ public class DialForkTest {
 
         Thread.sleep(1000);
 
-        JsonObject metrics = MonitoringServiceTool.getInstance().getMetrics(deploymentUrl.toString(), adminAccountSid, adminAuthToken);
+        metrics = MonitoringServiceTool.getInstance().getMetrics(deploymentUrl.toString(), adminAccountSid, adminAuthToken);
         int liveCalls = MonitoringServiceTool.getInstance().getStatistics(deploymentUrl.toString(), adminAccountSid, adminAuthToken);
         int liveCallsArraySize = MonitoringServiceTool.getInstance().getLiveCallsArraySize(deploymentUrl.toString(), adminAccountSid, adminAuthToken);
-        //int totalCallSinceUptime = metrics.getAsJsonObject("Metrics").get("TotalCallsSinceUptime").getAsInt();
-        //int outgoingCallsSinceUptime = metrics.getAsJsonObject("Metrics").get("OutgoingCallsSinceUptime").getAsInt();
+        int totalCallSinceUptime = metrics.getAsJsonObject("Metrics").get("TotalCallsSinceUptime").getAsInt();
+        int outgoingCallsSinceUptime = metrics.getAsJsonObject("Metrics").get("OutgoingCallsSinceUptime").getAsInt();
 
         logger.info("&&&&& LiveCalls: "+liveCalls);
         logger.info("&&&&& LiveCallsArraySize: "+liveCallsArraySize);
         assertEquals(0, liveCalls);
         assertEquals(0, liveCallsArraySize);
-        //assertEquals(2, totalCallSinceUptime);
-        //assertEquals(1, outgoingCallsSinceUptime);
+
+        assertEquals(initialTotalCallSinceUptime+2, totalCallSinceUptime);
+        assertEquals(initialOutgoingCallsSinceUptime+1, outgoingCallsSinceUptime);
 
         Thread.sleep(10000);
 
@@ -1933,7 +1944,8 @@ public class DialForkTest {
 
     //Non regression test for https://telestax.atlassian.net/browse/RESTCOMM-585
     @Test //TODO Fails when the whole test class runs but Passes when run individually
-    @Category(UnstableTests.class)
+//    @Category(UnstableTests.class)
+    @Category(FeatureAltTests.class)
     public synchronized void testDialForkNoAnswerExecuteRCML_ReturnedFromActionURL() throws InterruptedException, ParseException, MalformedURLException {
 
         stubFor(get(urlPathEqualTo("/1111"))
@@ -2236,7 +2248,7 @@ public class DialForkTest {
     private String dialAliceRcml = "<Response><Dial><Client>alice</Client></Dial></Response>";
 
     @Test //TODO Fails when the whole test class runs but Passes when run individually
-    @Category(UnstableTests.class)
+//    @Category(UnstableTests.class)
     public void testDialClientAlice() throws ParseException, InterruptedException, MalformedURLException {
         stubFor(get(urlPathEqualTo("/1111"))
                 .willReturn(aResponse()
@@ -2575,7 +2587,8 @@ public class DialForkTest {
     }
 
     @Test
-    @Category({FeatureExpTests.class, UnstableTests.class})
+//    @Category({FeatureExpTests.class, UnstableTests.class})
+    @Category(FeatureAltTests.class)
     public synchronized void testDialForkWithServerErrorReponse() throws InterruptedException, ParseException, MalformedURLException {
         stubFor(get(urlPathEqualTo("/1111"))
                 .willReturn(aResponse()
