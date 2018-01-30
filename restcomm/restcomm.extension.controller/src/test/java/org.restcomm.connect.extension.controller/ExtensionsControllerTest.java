@@ -36,6 +36,7 @@ import org.restcomm.connect.extension.api.RestcommExtensionGeneric;
 
 import javax.servlet.ServletContext;
 import java.util.List;
+import org.junit.After;
 
 public class ExtensionsControllerTest {
 
@@ -43,8 +44,14 @@ public class ExtensionsControllerTest {
 
     private RestcommExtensionGeneric testExtension = new TestExtension();
 
-    @Test @Ignore
-    @Category(UnstableTests.class)
+    @After
+    public void resteController() {
+        //reset the singleton after each test to provide isolation and
+        //predictibiltiy when full test class is executed
+        ExtensionController.getInstance().reset();
+    }
+
+    @Test
     public void extensionRegistry() {
         ExtensionController extensionController = ExtensionController.getInstance();
         extensionController.registerExtension(testExtension);
