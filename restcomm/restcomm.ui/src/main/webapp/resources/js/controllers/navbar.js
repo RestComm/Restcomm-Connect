@@ -200,9 +200,12 @@ rcMod.controller('ProfileCtrl', function($scope, $resource, $stateParams, Sessio
   };
 
   $scope.updateProfile = function() {
-    var params = {FriendlyName: $scope.urlAccount.friendly_name, Type: $scope.urlAccount.type, Status: $scope.urlAccount.status,Role: $scope.urlAccount.role};
+    var params = {FriendlyName: $scope.urlAccount.friendly_name, Type: $scope.urlAccount.type, Status: $scope.urlAccount.status};
     if ($scope.newPassword) {
-      params['Password'] = $scope.newPassword;
+      params.Password = $scope.newPassword;
+    }
+    if ($scope.urlAccount.role !== $scope.urlAccountBackup.role) {
+      params.Role = $scope.urlAccount.role;
     }
     RCommAccounts.update({accountSid:$scope.urlAccount.sid}, $.param(params), function() {
       // update our backup model and keep editing
