@@ -34,7 +34,7 @@ if (clyKey) {
 
   var myEvents = [
     // 1. Login attempts, successful and failed ones
-    { id: 'sign-in-button', cly: { key: 'tryLogin', values:[ {'id': 'rc-email'} ] } },
+    { id: 'sign-in-button', cly: { key: 'login_attempt', values:[ {'id': 'rc-email'} ] } },
 
     // 2. Successful creation of an app / type of application / kinds of app
     { id: 'select-app-external', cly: { key: 'app_new_select', seg: { type: 'external' } } },
@@ -195,7 +195,6 @@ if (clyKey) {
 
   var clyReport = function (scope, elem) {
     elem.on('click', function() {
-      console.log('event', elem);
       angular.forEach(myEvents, function (event) {
         if (elem[0].id === event.id) {
           Countly.q.push(['add_event',{
