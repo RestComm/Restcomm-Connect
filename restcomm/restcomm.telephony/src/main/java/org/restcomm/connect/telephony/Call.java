@@ -2001,7 +2001,7 @@ public final class Call extends RestcommUntypedActor {
                 logger.info("Got CANCEL for Call with the following details, from: "+from+" to: "+to+" direction: "+direction+" state: "+fsm.state()+", will Cancel the call");
             }
             fsm.transition(message, canceling);
-        } else if (is(inProgress)) {
+        } else if (is(inProgress) || is(updatingMediaSession)) {
             if(logger.isInfoEnabled()) {
                 logger.info("Got CANCEL for Call with the following details, from: "+from+" to: "+to+" direction: "+direction+" state: "+fsm.state()+", will Hangup the call");
             }

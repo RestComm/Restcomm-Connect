@@ -58,6 +58,7 @@ import org.restcomm.connect.testsuite.tools.MonitoringServiceTool;
 
 import com.github.tomakehurst.wiremock.junit.WireMockRule;
 import com.github.tomakehurst.wiremock.verification.LoggedRequest;
+import com.google.gson.JsonArray;
 import com.google.gson.JsonObject;
 import java.util.concurrent.Executor;
 import java.util.concurrent.ExecutorService;
@@ -1653,6 +1654,15 @@ public class DialForkTest {
 
         aliceCall.isCallAnswered();
         //TODO assert just one call get establlished, rest are either cancel/bye
+
+        Thread.sleep(1000);
+
+        assertEquals(1, MonitoringServiceTool.getInstance().getLiveIncomingCallStatistics(deploymentUrl.toString(), adminAccountSid, adminAuthToken));
+        JsonObject liveCalls = MonitoringServiceTool.getInstance().getLiveCalls(deploymentUrl.toString(), adminAccountSid, adminAuthToken);
+        logger.info("&&&&& liveCalls: "+liveCalls);
+        JsonArray liveCallDetails = liveCalls.getAsJsonArray("LiveCallDetails");
+        assertEquals(1, MonitoringServiceTool.getInstance().getLiveOutgoingCallStatistics(deploymentUrl.toString(), adminAccountSid, adminAuthToken));
+        assertEquals(2,liveCallDetails.size());
     }
 
     @Test
