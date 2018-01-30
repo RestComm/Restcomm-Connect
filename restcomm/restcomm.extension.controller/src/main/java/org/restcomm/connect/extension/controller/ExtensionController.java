@@ -39,6 +39,14 @@ public class ExtensionController {
         return instance;
     }
 
+    /**
+     * allow to reset the singleton. Mainly for testing purposes.
+     * TODO should we reset the singleton if app is shutdown...?
+     */
+    public void reset() {
+        instance = null;
+    }
+
     public List<RestcommExtensionGeneric> getExtensions(final ExtensionType type) {
         //Check the sender's class and return the extensions that are supported for this class
         if (type.equals(ExtensionType.CallManager) && (callManagerExtensions != null && callManagerExtensions.size() > 0)) {

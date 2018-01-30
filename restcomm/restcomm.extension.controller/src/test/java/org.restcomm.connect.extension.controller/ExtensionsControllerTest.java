@@ -21,7 +21,10 @@ package org.restcomm.connect.extension.controller;
 
 import org.apache.log4j.Logger;
 import org.junit.Assert;
+import org.junit.Ignore;
 import org.junit.Test;
+import org.junit.experimental.categories.Category;
+import org.restcomm.connect.commons.annotations.UnstableTests;
 import org.restcomm.connect.commons.dao.Sid;
 import org.restcomm.connect.extension.api.ApiRequest;
 import org.restcomm.connect.extension.api.ExtensionRequest;
@@ -33,12 +36,20 @@ import org.restcomm.connect.extension.api.RestcommExtensionGeneric;
 
 import javax.servlet.ServletContext;
 import java.util.List;
+import org.junit.After;
 
 public class ExtensionsControllerTest {
 
     private static Logger logger = Logger.getLogger(ExtensionsControllerTest.class);
 
     private RestcommExtensionGeneric testExtension = new TestExtension();
+
+    @After
+    public void resteController() {
+        //reset the singleton after each test to provide isolation and
+        //predictibiltiy when full test class is executed
+        ExtensionController.getInstance().reset();
+    }
 
     @Test
     public void extensionRegistry() {
