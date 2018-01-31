@@ -451,7 +451,7 @@ public class CreateCallsTest {
         assertTrue(aliceCall.waitForDisconnect(5000));
         assertTrue(aliceCall.respondToDisconnect());
 
-        Thread.sleep(2000);
+        Thread.sleep(3000);
 
         JsonObject metrics = MonitoringServiceTool.getInstance().getMetrics(deploymentUrl.toString(),adminAccountSid, adminAuthToken);
         assertNotNull(metrics);
