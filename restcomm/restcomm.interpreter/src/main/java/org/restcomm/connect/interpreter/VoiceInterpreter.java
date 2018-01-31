@@ -238,6 +238,8 @@ public class VoiceInterpreter extends BaseVoiceInterpreter {
 
     private Tag callWaitingForAnswerPendingTag;
 
+    private long timeout;
+
     public VoiceInterpreter(VoiceInterpreterParams params) {
         super();
         final ActorRef source = self();
@@ -475,6 +477,7 @@ public class VoiceInterpreter extends BaseVoiceInterpreter {
         this.asImsUa = params.isAsImsUa();
         this.imsUaLogin = params.getImsUaLogin();
         this.imsUaPassword = params.getImsUaPassword();
+        this.timeout = params.getTimeout();
         this.msResponsePending = false;
         this.mediaAttributes = new MediaAttributes();
     }
@@ -551,7 +554,7 @@ public class VoiceInterpreter extends BaseVoiceInterpreter {
 
         if (logger.isInfoEnabled()) {
             logger.info(" ********** VoiceInterpreter's " + self().path() + " Current State: " + state.toString() + "\n"
-            + ", Processing Message: " + klass.getName());
+            + ", Processing Message: " + klass.getName() + " Sender is: "+sender.path());
         }
 
         if (StartInterpreter.class.equals(klass)) {
@@ -795,7 +798,7 @@ public class VoiceInterpreter extends BaseVoiceInterpreter {
             fsm.transition(message, finishDialing);
         } else if (is(bridging)) {
             fsm.transition(message, finishDialing);
-        } else if (is(playing)) {
+        } else if (is(playing) || is(initializingCall)) {
             fsm.transition(message, finished);
         }
     }
@@ -1761,6 +1764,9 @@ public class VoiceInterpreter extends BaseVoiceInterpreter {
 
                 // Start dialing.
                 call.tell(new Dial(), source);
+                // Set the timeout period.
+                final UntypedActorContext context = getContext();
+                context.setReceiveTimeout(Duration.create(timeout, TimeUnit.SECONDS));
             } else if (Tag.class.equals(klass)) {
                 // Update the interpreter state.
                 verb = (Tag) message;
