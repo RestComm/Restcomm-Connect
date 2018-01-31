@@ -965,7 +965,7 @@ public class VoiceInterpreter extends BaseVoiceInterpreter {
                 } else {
                     fsm.transition(message, initializingCall);
                 }
-            } else if (Verbs.dial.equals(verb.name())) {
+            } else if (Verbs.dial.equals(verb.name()) && callState != CallStateChanged.State.COMPLETED) {
                 action = verb.attribute(GatherAttributes.ATTRIBUTE_ACTION);
                 if (action != null && dialActionExecuted) {
                     //We have a new Dial verb that contains Dial Action URL again.
@@ -976,17 +976,17 @@ public class VoiceInterpreter extends BaseVoiceInterpreter {
                 fsm.transition(message, startDialing);
             } else if (Verbs.fax.equals(verb.name())) {
                 fsm.transition(message, caching);
-            } else if (Verbs.play.equals(verb.name())) {
+            } else if (Verbs.play.equals(verb.name()) && callState != CallStateChanged.State.COMPLETED) {
                 fsm.transition(message, caching);
-            } else if (Verbs.say.equals(verb.name())) {
+            } else if (Verbs.say.equals(verb.name()) && callState != CallStateChanged.State.COMPLETED) {
                 // fsm.transition(message, synthesizing);
                 fsm.transition(message, checkingCache);
-            } else if (Verbs.gather.equals(verb.name())) {
+            } else if (Verbs.gather.equals(verb.name()) && callState != CallStateChanged.State.COMPLETED) {
                 gatherVerb = verb;
                 fsm.transition(message, processingGatherChildren);
-            } else if (Verbs.pause.equals(verb.name())) {
+            } else if (Verbs.pause.equals(verb.name()) && callState != CallStateChanged.State.COMPLETED) {
                 fsm.transition(message, pausing);
-            } else if (Verbs.hangup.equals(verb.name())) {
+            } else if (Verbs.hangup.equals(verb.name()) && callState != CallStateChanged.State.COMPLETED) {
                 if (logger.isInfoEnabled()) {
                     String msg = String.format("Next verb is Hangup, current state is %s , callInfo state %s", fsm.state(), callInfo.state());
                     logger.info(msg);
@@ -996,9 +996,9 @@ public class VoiceInterpreter extends BaseVoiceInterpreter {
                 } else {
                     fsm.transition(message, hangingUp);
                 }
-            } else if (Verbs.redirect.equals(verb.name())) {
+            } else if (Verbs.redirect.equals(verb.name()) && callState != CallStateChanged.State.COMPLETED) {
                 fsm.transition(message, redirecting);
-            } else if (Verbs.record.equals(verb.name())) {
+            } else if (Verbs.record.equals(verb.name()) && callState != CallStateChanged.State.COMPLETED) {
                 fsm.transition(message, creatingRecording);
             } else if (Verbs.sms.equals(verb.name())) {
 
@@ -2852,31 +2852,9 @@ public class VoiceInterpreter extends BaseVoiceInterpreter {
                         removeDialBranch(message, sender);
                         return;
                     } else {
-                        // At this point !sender.equal(call)
-                        // Ask the parser for the next action to take.
-                        Attribute attribute = null;
-                        if (verb != null) {
-                            attribute = verb.attribute("action");
+                        if (callState == CallStateChanged.State.IN_PROGRESS) {
+                            call.tell(new Hangup(), self());
                         }
-                        if (attribute == null) {
-                            if (logger.isInfoEnabled()) {
-                                logger.info("At FinishDialing. Sender NOT in the dialBranches, attribute is null, will check for the next verb");
-                            }
-                            final GetNextVerb next = new GetNextVerb();
-                            if (parser != null) {
-                                parser.tell(next, source);
-                            }
-                        } else {
-                            if (logger.isInfoEnabled()) {
-                                logger.info("At FinishDialing. Sender NOT in the dialBranches, attribute is NOT null, will execute Dial Action");
-                            }
-                            executeDialAction(message, outboundCall);
-                        }
-                        dialChildren = null;
-                        if (!sender().equals(outboundCall)) {
-                            callManager.tell(new DestroyCall(sender), self());
-                        }
-                        return;
                     }
                 }
             }
