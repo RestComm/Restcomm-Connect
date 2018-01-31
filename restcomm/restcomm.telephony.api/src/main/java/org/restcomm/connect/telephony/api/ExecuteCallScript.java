@@ -16,9 +16,10 @@ public final class ExecuteCallScript {
     private final String method;
     private final URI fallbackUrl;
     private final String fallbackMethod;
+    private final long timeout;
 
     public ExecuteCallScript(final ActorRef call, final Sid account, final String version, final URI url, final String method,
-            final URI fallbackUrl, final String fallbackMethod) {
+            final URI fallbackUrl, final String fallbackMethod, final long timeout) {
         super();
         this.call = call;
         this.account = account;
@@ -27,6 +28,7 @@ public final class ExecuteCallScript {
         this.method = method;
         this.fallbackUrl = fallbackUrl;
         this.fallbackMethod = fallbackMethod;
+        this.timeout = timeout;
     }
 
     public ActorRef call() {
@@ -55,5 +57,9 @@ public final class ExecuteCallScript {
 
     public String fallbackMethod() {
         return fallbackMethod;
+    }
+
+    public long timeout() {
+        return timeout;
     }
 }
