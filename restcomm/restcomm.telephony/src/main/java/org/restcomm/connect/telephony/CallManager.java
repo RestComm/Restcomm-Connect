@@ -1658,6 +1658,7 @@ public final class CallManager extends RestcommUntypedActor {
         builder.setFallbackMethod(request.fallbackMethod());
         builder.setMonitoring(monitoring);
         builder.setSdr(sdr);
+        builder.setTimeout(request.timeout());
         final Props props = VoiceInterpreter.props(builder.build());
         final ActorRef interpreter = getContext().actorOf(props);
         interpreter.tell(new StartInterpreter(request.call()), self);
