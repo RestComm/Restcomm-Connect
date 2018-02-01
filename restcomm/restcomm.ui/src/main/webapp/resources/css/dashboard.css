@@ -23,6 +23,7 @@
     --danger-text-color: var(--red-color);
     --hot-text-color: #df3d00;
     --muted-text-color: var(--light-grey-color);
+    --contrast-text-color: #ffffff;
 
     --footer-bg-color: #eeeeee;
     --footer-sep-color: #dbdbdb;
@@ -85,7 +86,9 @@
     --account-status-inactive-color: #626262;
 
     --available-feature-color: #7eba5a;
-    --unavailable-feature-color: var(--red-color)
+    --unavailable-feature-color: var(--red-color);
+
+    --card-link-text-color: #1ea5db;
 }
 
 /* -- Font declaration ------------------------------------------------------ */
@@ -715,12 +718,53 @@ form[role=login] input:-webkit-autofill:focus{
 
 /* -- Home ------------------------------------------------------------------ */
 
+.announcement-banner {
+    background-color: var(--primary-color);
+    margin-top: -40px;
+    height: 40px;
+    margin-left: -80px;
+    margin-right: -80px;
+
+    color: var(--contrast-text-color);
+    padding: 10px;
+    text-align: center;
+    font-size: 1.2em;
+}
+
+.announcement-banner a {
+    color: var(--contrast-text-color);
+}
+
 .cards {
-    padding: 25px 50px;
+    padding: 0px 0px;
+    font-size: 1.25em;
 }
 
 .card {
-    padding: 0 50px;
+}
+
+.card .card-logo-tl {
+    position: absolute;
+}
+
+.card .inline-img {
+    vertical-align: initial;
+}
+
+.card a {
+    color: var(--card-link-text-color);
+}
+
+.card {
+    padding: 15px 30px;
+}
+
+.card-content {
+    background-color: var(--primary-well-bg-color);
+    border-radius: 5px;
+    padding: 25px 50px;
+    margin-top: 15px;
+    margin-bottom: 20px;
 }
 
 @media(max-width:768px) {
@@ -735,14 +779,23 @@ form[role=login] input:-webkit-autofill:focus{
     color: var(--hot-text-color);
 }
 
-.card-body > p > img {
-    padding-right: 15px;
+.card-body {
+    line-height: 1.35em;
+    font-weight: 300;
+    font-size: 0.9em;
+    text-align: center;
 }
 
 .card-tip {
     font-size: 2em;
     float: left;
-    margin: 7px 10px;
+    margin: -5px 2px;
+}
+
+.card a.webrtc-login {
+    padding: 10px 50px;
+    margin-left: 50px;
+    color: var(--button-text-color);
 }
 
 .carousel-dots {
@@ -754,36 +807,17 @@ form[role=login] input:-webkit-autofill:focus{
     color: var(--primary-color);
 }
 
-.briefs {
-    background-color: var(--primary-well-bg-color);
-    padding: 25px 100px;
-    margin-left: -80px;
-    margin-right: -80px;
+.analytics-summary {
+    cursor: pointer;
 }
 
-@media(max-width:768px) {
-    .briefs {
-        padding: 25px 50px;
-    }
+.analytics-summary hr {
+    margin: 3px;
 }
 
-.briefs-title {
-    color: var(--muted-text-color);
-    font-size: 2em;
-    padding-bottom: 10px;
-}
-
-.brief-card {
-    background-color: var(--main-bg-color);
-    border: 2px solid var(--lines-color);
-    border-radius: 3px;
-    padding: 20px;
-}
-
-@media(max-width:768px) {
-    .brief-card {
-        margin-top: 10px;
-    }
+.analytics-summary .analytics-title {
+    font-size: 1.1em;
+    margin: 10px 0;
 }
 
 /* -- Accounts -------------------------------------------------------------- */
