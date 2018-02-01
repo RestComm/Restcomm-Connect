@@ -199,7 +199,7 @@ rcMod.config(['$stateProvider','$urlRouterProvider', function($stateProvider, $u
     templateUrl: 'modules/logs-notifications.html',
     controller: 'LogsNotificationsCtrl'
   });
-  $urlRouterProvider.otherwise('/dashboard');
+  $urlRouterProvider.otherwise('/home');
 
 }]);
 
