@@ -32,9 +32,10 @@ import com.google.gson.JsonArray;
 import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
 import com.google.gson.JsonParser;
-import com.sun.jersey.api.client.Client;
-import com.sun.jersey.api.client.WebResource;
-import com.sun.jersey.api.client.filter.HTTPBasicAuthFilter;
+import javax.ws.rs.client.Client;import javax.ws.rs.client.ClientBuilder;
+import javax.ws.rs.client.Entity;
+import javax.ws.rs.client.WebTarget;
+import org.glassfish.jersey.client.authentication.HttpAuthenticationFeature;
 
 /**
  * @author <a href="mailto:fernando.mendioroz@telestax.com"> Fernando Mendioroz </a>
@@ -108,11 +109,11 @@ public class RestcommGeolocationsTool {
 
     public JsonObject createImmediateGeolocation(String deploymentUrl, String adminAccountSid, String adminUsername,
                                                  String adminAuthToken, MultivaluedMap<String, String> geolocationParams) {
-        Client jerseyClient = Client.create();
-        jerseyClient.addFilter(new HTTPBasicAuthFilter(adminUsername, adminAuthToken));
+        Client jerseyClient = ClientBuilder.newClient();
+        jerseyClient.register(HttpAuthenticationFeature.basic(adminUsername, adminAuthToken));
         String url = getImmediateGeolocationsUrl(deploymentUrl, adminAccountSid, false);
-        WebResource webResource = jerseyClient.resource(url);
-        String response = webResource.accept(MediaType.APPLICATION_JSON).post(String.class, geolocationParams);
+        WebTarget WebTarget = jerseyClient.target(url);
+        String response = WebTarget.request(MediaType.APPLICATION_JSON).post( Entity.form(geolocationParams),String.class);
         JsonParser parser = new JsonParser();
         JsonObject jsonObject = null;
         try {
@@ -131,11 +132,11 @@ public class RestcommGeolocationsTool {
 
     public JsonObject createNotificationGeolocation(String deploymentUrl, String adminAccountSid, String adminUsername,
                                                     String adminAuthToken, MultivaluedMap<String, String> geolocationParams) {
-        Client jerseyClient = Client.create();
-        jerseyClient.addFilter(new HTTPBasicAuthFilter(adminUsername, adminAuthToken));
+        Client jerseyClient = ClientBuilder.newClient();
+        jerseyClient.register(HttpAuthenticationFeature.basic(adminUsername, adminAuthToken));
         String url = getNotificationGeolocationsUrl(deploymentUrl, adminAccountSid, false);
-        WebResource webResource = jerseyClient.resource(url);
-        String response = webResource.accept(MediaType.APPLICATION_JSON).post(String.class, geolocationParams);
+        WebTarget WebTarget = jerseyClient.target(url);
+        String response = WebTarget.request(MediaType.APPLICATION_JSON).post(Entity.form(geolocationParams),String.class);
         JsonParser parser = new JsonParser();
         JsonObject jsonObject = null;
         try {
@@ -154,14 +155,14 @@ public class RestcommGeolocationsTool {
 
     public JsonObject getImmediateGeolocation(String deploymentUrl, String adminUsername, String adminAuthToken,
                                               String adminAccountSid, String geolocationSid) {
-        Client jerseyClient = Client.create();
-        jerseyClient.addFilter(new HTTPBasicAuthFilter(adminUsername, adminAuthToken));
+        Client jerseyClient = ClientBuilder.newClient();
+        jerseyClient.register(HttpAuthenticationFeature.basic(adminUsername, adminAuthToken));
         String url = getImmediateGeolocationUrl(deploymentUrl, adminAccountSid, geolocationSid, false);
-        WebResource webResource = jerseyClient.resource(url);
+        WebTarget WebTarget = jerseyClient.target(url);
         String response = null;
         JsonObject jsonResponse = null;
         try {
-            response = webResource.accept(MediaType.APPLICATION_JSON).get(String.class);
+            response = WebTarget.request(MediaType.APPLICATION_JSON).get(String.class);
             JsonParser parser = new JsonParser();
             jsonResponse = parser.parse(response).getAsJsonObject();
         } catch (Exception e) {
@@ -172,14 +173,14 @@ public class RestcommGeolocationsTool {
 
     public JsonObject getNotificationGeolocation(String deploymentUrl, String adminUsername, String adminAuthToken,
                                                  String adminAccountSid, String geolocationSid) {
-        Client jerseyClient = Client.create();
-        jerseyClient.addFilter(new HTTPBasicAuthFilter(adminUsername, adminAuthToken));
+        Client jerseyClient = ClientBuilder.newClient();
+        jerseyClient.register(HttpAuthenticationFeature.basic(adminUsername, adminAuthToken));
         String url = getNotificationGeolocationUrl(deploymentUrl, adminAccountSid, geolocationSid, false);
-        WebResource webResource = jerseyClient.resource(url);
+        WebTarget WebTarget = jerseyClient.target(url);
         String response = null;
         JsonObject jsonResponse = null;
         try {
-            response = webResource.accept(MediaType.APPLICATION_JSON).get(String.class);
+            response = WebTarget.request(MediaType.APPLICATION_JSON).get(String.class);
             JsonParser parser = new JsonParser();
             jsonResponse = parser.parse(response).getAsJsonObject();
         } catch (Exception e) {
@@ -190,11 +191,11 @@ public class RestcommGeolocationsTool {
 
     public JsonArray getGeolocations(String deploymentUrl, String adminUsername, String adminAuthToken,
                                      String adminAccountSid) {
-        Client jerseyClient = Client.create();
-        jerseyClient.addFilter(new HTTPBasicAuthFilter(adminUsername, adminAuthToken));
+        Client jerseyClient = ClientBuilder.newClient();
+        jerseyClient.register(HttpAuthenticationFeature.basic(adminUsername, adminAuthToken));
         String url = getGeolocationsUrl(deploymentUrl, adminAccountSid, false);
-        WebResource webResource = jerseyClient.resource(url);
-        String response = webResource.accept(MediaType.APPLICATION_JSON).get(String.class);
+        WebTarget WebTarget = jerseyClient.target(url);
+        String response = WebTarget.request(MediaType.APPLICATION_JSON).get(String.class);
         JsonParser parser = new JsonParser();
         JsonArray jsonResponse = parser.parse(response).getAsJsonArray();
         return jsonResponse;
@@ -202,15 +203,15 @@ public class RestcommGeolocationsTool {
 
     public JsonObject updateImmediateGeolocation(String deploymentUrl, String adminUsername, String adminAuthToken,
                                                  String adminAccountSid, String geolocationSid, MultivaluedMap<String, String> geolocationParams, boolean usePut) {
-        Client jerseyClient = Client.create();
-        jerseyClient.addFilter(new HTTPBasicAuthFilter(adminUsername, adminAuthToken));
+        Client jerseyClient = ClientBuilder.newClient();
+        jerseyClient.register(HttpAuthenticationFeature.basic(adminUsername, adminAuthToken));
         String url = getImmediateGeolocationUrl(deploymentUrl, adminAccountSid, geolocationSid, false);
-        WebResource webResource = jerseyClient.resource(url);
+        WebTarget WebTarget = jerseyClient.target(url);
         String response = "";
         if (usePut) {
-            response = webResource.accept(MediaType.APPLICATION_JSON).put(String.class, geolocationParams);
+            response = WebTarget.request(MediaType.APPLICATION_JSON).put(Entity.form(geolocationParams),String.class);
         } else {
-            response = webResource.accept(MediaType.APPLICATION_JSON).post(String.class, geolocationParams);
+            response = WebTarget.request(MediaType.APPLICATION_JSON).post(Entity.form(geolocationParams),String.class);
         }
         JsonParser parser = new JsonParser();
         JsonObject jsonResponse = parser.parse(response).getAsJsonObject();
@@ -219,15 +220,15 @@ public class RestcommGeolocationsTool {
 
     public JsonObject updateNotificationGeolocation(String deploymentUrl, String adminUsername, String adminAuthToken,
                                                     String adminAccountSid, String geolocationSid, MultivaluedMap<String, String> geolocationParams, boolean usePut) {
-        Client jerseyClient = Client.create();
-        jerseyClient.addFilter(new HTTPBasicAuthFilter(adminUsername, adminAuthToken));
+        Client jerseyClient = ClientBuilder.newClient();
+        jerseyClient.register(HttpAuthenticationFeature.basic(adminUsername, adminAuthToken));
         String url = getNotificationGeolocationUrl(deploymentUrl, adminAccountSid, geolocationSid, false);
-        WebResource webResource = jerseyClient.resource(url);
+        WebTarget WebTarget = jerseyClient.target(url);
         String response = "";
         if (usePut) {
-            response = webResource.accept(MediaType.APPLICATION_JSON).put(String.class, geolocationParams);
+            response = WebTarget.request(MediaType.APPLICATION_JSON).put(Entity.form(geolocationParams),String.class);
         } else {
-            response = webResource.accept(MediaType.APPLICATION_JSON).post(String.class, geolocationParams);
+            response = WebTarget.request(MediaType.APPLICATION_JSON).post(Entity.form(geolocationParams),String.class);
         }
         JsonParser parser = new JsonParser();
         JsonObject jsonResponse = parser.parse(response).getAsJsonObject();
@@ -239,10 +240,10 @@ public class RestcommGeolocationsTool {
         String endpoint = getEndpoint(deploymentUrl).replaceAll("http://", "");
         String url = getImmediateGeolocationUrl("http://" + adminAccountSid + ":" + adminAuthToken + "@" + endpoint,
             adminAccountSid, geolocationSid, false);
-        Client jerseyClient = Client.create();
-        jerseyClient.addFilter(new HTTPBasicAuthFilter(adminAccountSid, adminAuthToken));
-        WebResource webResource = jerseyClient.resource(url);
-        webResource.accept(MediaType.APPLICATION_JSON).delete();
+        Client jerseyClient = ClientBuilder.newClient();
+        jerseyClient.register(HttpAuthenticationFeature.basic(adminAccountSid, adminAuthToken));
+        WebTarget WebTarget = jerseyClient.target(url);
+        WebTarget.request(MediaType.APPLICATION_JSON).delete();
     }
 
     public void deleteNotificationGeolocation(String deploymentUrl, String adminUsername, String adminAuthToken,
@@ -250,10 +251,10 @@ public class RestcommGeolocationsTool {
         String endpoint = getEndpoint(deploymentUrl).replaceAll("http://", "");
         String url = getNotificationGeolocationUrl("http://" + adminAccountSid + ":" + adminAuthToken + "@" + endpoint,
             adminAccountSid, geolocationSid, false);
-        Client jerseyClient = Client.create();
-        jerseyClient.addFilter(new HTTPBasicAuthFilter(adminAccountSid, adminAuthToken));
-        WebResource webResource = jerseyClient.resource(url);
-        webResource.accept(MediaType.APPLICATION_JSON).delete();
+        Client jerseyClient = ClientBuilder.newClient();
+        jerseyClient.register(HttpAuthenticationFeature.basic(adminAccountSid, adminAuthToken));
+        WebTarget WebTarget = jerseyClient.target(url);
+        WebTarget.request(MediaType.APPLICATION_JSON).delete();
     }
 
     private String evaluateDeploymentUrl(String deploymentUrl) {

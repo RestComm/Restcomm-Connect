@@ -9,12 +9,14 @@ import com.google.gson.JsonArray;
 import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
 import com.google.gson.JsonParser;
-import com.sun.jersey.api.client.Client;
-import com.sun.jersey.api.client.ClientResponse;
-import com.sun.jersey.api.client.UniformInterfaceException;
-import com.sun.jersey.api.client.WebResource;
-import com.sun.jersey.api.client.filter.HTTPBasicAuthFilter;
-import com.sun.jersey.core.util.MultivaluedMapImpl;
+import javax.ws.rs.client.Client;
+import javax.ws.rs.client.ClientBuilder;
+import javax.ws.rs.client.Entity;
+import javax.ws.rs.core.Response;
+import javax.ws.rs.client.WebTarget;
+import javax.ws.rs.core.MultivaluedHashMap;
+import org.glassfish.jersey.client.authentication.HttpAuthenticationFeature;
+import org.restcomm.connect.testsuite.WebTargetUtil;
 
 /**
  * @author <a href="mailto:gvagenas@gmail.com">gvagenas</a>
@@ -58,37 +60,37 @@ public class RestcommAccountsTool {
 	}
 
 	public void removeAccount (String deploymentUrl, String adminUsername, String adminAuthToken, String accountSid) {
-		Client jerseyClient = Client.create();
-		jerseyClient.addFilter(new HTTPBasicAuthFilter(adminUsername, adminAuthToken));
+		Client jerseyClient = ClientBuilder.newClient();
+		jerseyClient.register(HttpAuthenticationFeature.basic(adminUsername, adminAuthToken));
 
 		String url = getAccountsUrl(deploymentUrl, true) + "/" + accountSid;
 
-		WebResource webResource = jerseyClient.resource(url);
-		webResource.accept(MediaType.APPLICATION_JSON).delete();
+		WebTarget WebTarget = jerseyClient.target(url);
+		WebTarget.request(MediaType.APPLICATION_JSON).delete();
 	}
 
 	public JsonObject updateAccount (String deploymentUrl, String adminUsername, String adminAuthToken, String accountSid, String friendlyName, String password, String authToken, String role, String status) {
 		JsonParser parser = new JsonParser();
 		JsonObject jsonResponse = null;
 		try {
-			ClientResponse clientResponse = updateAccountResponse(deploymentUrl, adminUsername, adminAuthToken, accountSid, friendlyName, password, authToken, role, status);
-			jsonResponse = parser.parse(clientResponse.getEntity(String.class)).getAsJsonObject();
+			Response clientResponse = updateAccountResponse(deploymentUrl, adminUsername, adminAuthToken, accountSid, friendlyName, password, authToken, role, status);
+			jsonResponse = parser.parse(clientResponse.readEntity(String.class)).getAsJsonObject();
 		} catch (Exception e) {
 			logger.info("Exception: " + e);
 		}
 		return jsonResponse;
 	}
 
-	public ClientResponse updateAccountResponse (String deploymentUrl, String adminUsername, String adminAuthToken, String accountSid, String friendlyName, String password, String authToken, String role, String status) {
-		Client jerseyClient = Client.create();
-		jerseyClient.addFilter(new HTTPBasicAuthFilter(adminUsername, adminAuthToken));
+	public Response updateAccountResponse (String deploymentUrl, String adminUsername, String adminAuthToken, String accountSid, String friendlyName, String password, String authToken, String role, String status) {
+		Client jerseyClient = ClientBuilder.newClient();
+		jerseyClient.register(HttpAuthenticationFeature.basic(adminUsername, adminAuthToken));
 
 		String url = getAccountsUrl(deploymentUrl, false) + "/" + accountSid;
 
-		WebResource webResource = jerseyClient.resource(url);
+		WebTarget WebTarget = jerseyClient.target(url);
 
 		// FriendlyName, status, password and auth_token are currently updated in AccountsEndpoint. Role remains to be added
-		MultivaluedMap<String, String> params = new MultivaluedMapImpl();
+		MultivaluedMap<String, String> params = new MultivaluedHashMap();
 		if (friendlyName != null)
 			params.add("FriendlyName", friendlyName);
 		if (password != null)
@@ -100,7 +102,7 @@ public class RestcommAccountsTool {
 		if (status != null)
 			params.add("Status", status);
 
-		ClientResponse response = webResource.accept(MediaType.APPLICATION_JSON).post(ClientResponse.class, params);
+		Response response = WebTarget.request(MediaType.APPLICATION_JSON).post(Entity.form(params));
 		return response;
 	}
 
@@ -109,21 +111,21 @@ public class RestcommAccountsTool {
 		JsonParser parser = new JsonParser();
 		JsonObject jsonResponse = null;
 
-		Client jerseyClient = Client.create();
-		jerseyClient.addFilter(new HTTPBasicAuthFilter(adminUsername, adminAuthToken));
+		Client jerseyClient = ClientBuilder.newClient();
+		jerseyClient.register(HttpAuthenticationFeature.basic(adminUsername, adminAuthToken));
 
 		String url = getAccountsUrl(deploymentUrl, false) + "/migrate/" + accountSid;
 
-		WebResource webResource = jerseyClient.resource(url);
+		WebTarget WebTarget = jerseyClient.target(url);
 
 		// FriendlyName, status, password and auth_token are currently updated in AccountsEndpoint. Role remains to be added
-		MultivaluedMap<String, String> params = new MultivaluedMapImpl();
+		MultivaluedMap<String, String> params = new MultivaluedHashMap();
 		if (newOrganizationSid != null)
 			params.add("Organization", newOrganizationSid);
 
-		ClientResponse response = webResource.accept(MediaType.APPLICATION_JSON).post(ClientResponse.class, params);
+		Response response = WebTarget.request(MediaType.APPLICATION_JSON).post(Entity.form(params));
 		if (response.getStatus() == 200) {
-			jsonResponse = parser.parse(response.getEntity(String.class)).getAsJsonObject();
+			jsonResponse = parser.parse(response.readEntity(String.class)).getAsJsonObject();
 		}
 
 		return jsonResponse;
@@ -140,29 +142,29 @@ public class RestcommAccountsTool {
 		JsonParser parser = new JsonParser();
 		JsonObject jsonResponse = null;
 		try {
-			ClientResponse clientResponse = createAccountResponse(deploymentUrl, adminUsername, adminAuthToken, emailAddress, password, friendlyName, null);
-			jsonResponse = parser.parse(clientResponse.getEntity(String.class)).getAsJsonObject();
+			Response clientResponse = createAccountResponse(deploymentUrl, adminUsername, adminAuthToken, emailAddress, password, friendlyName, null);
+			jsonResponse = parser.parse(clientResponse.readEntity(String.class)).getAsJsonObject();
 		} catch (Exception e) {
 			logger.info("Exception: " + e);
 		}
 		return jsonResponse;
 	}
 
-	public ClientResponse createAccountResponse (String deploymentUrl, String operatorUsername, String operatorAuthtoken, String emailAddress,
+	public Response createAccountResponse (String deploymentUrl, String operatorUsername, String operatorAuthtoken, String emailAddress,
 												 String password) {
 		return createAccountResponse(deploymentUrl, operatorUsername, operatorAuthtoken, emailAddress, password, null, null);
 	}
 
-	public ClientResponse createAccountResponse (String deploymentUrl, String operatorUsername, String operatorAuthtoken, String emailAddress,
+	public Response createAccountResponse (String deploymentUrl, String operatorUsername, String operatorAuthtoken, String emailAddress,
 												 String password, String friendlyName, String organizationSid) {
-		Client jerseyClient = Client.create();
-		jerseyClient.addFilter(new HTTPBasicAuthFilter(operatorUsername, operatorAuthtoken));
+		Client jerseyClient = ClientBuilder.newClient();
+		jerseyClient.register(HttpAuthenticationFeature.basic(operatorUsername, operatorAuthtoken));
 
 		String url = getAccountsUrl(deploymentUrl);
 
-		WebResource webResource = jerseyClient.resource(url);
+		WebTarget WebTarget = jerseyClient.target(url);
 
-		MultivaluedMap<String, String> params = new MultivaluedMapImpl();
+		MultivaluedMap<String, String> params = new MultivaluedHashMap();
 		params.add("EmailAddress", emailAddress);
 		params.add("Password", password);
 		params.add("Role", "Administartor");
@@ -171,18 +173,18 @@ public class RestcommAccountsTool {
 		if (organizationSid != null)
 			params.add("OrganizationSid", organizationSid);
 
-		ClientResponse response = webResource.accept(MediaType.APPLICATION_JSON).post(ClientResponse.class, params);
+		Response response = WebTarget.request(MediaType.APPLICATION_JSON).post(Entity.form(params));
 		return response;
 	}
 
 	public JsonObject getAccount (String deploymentUrl, String adminUsername, String adminAuthToken, String username)
-			throws UniformInterfaceException {
-		Client jerseyClient = Client.create();
-		jerseyClient.addFilter(new HTTPBasicAuthFilter(adminUsername, adminAuthToken));
+			 {
+		Client jerseyClient = ClientBuilder.newClient();
+		jerseyClient.register(HttpAuthenticationFeature.basic(adminUsername, adminAuthToken));
 
-		WebResource webResource = jerseyClient.resource(getAccountsUrl(deploymentUrl));
+		WebTarget WebTarget = jerseyClient.target(getAccountsUrl(deploymentUrl));
 
-		String response = webResource.path(username).get(String.class);
+		String response = WebTarget.path(username).request().get(String.class);
 		JsonParser parser = new JsonParser();
 		JsonObject jsonResponse = parser.parse(response).getAsJsonObject();
 
@@ -192,27 +194,27 @@ public class RestcommAccountsTool {
 	/*
 		Returns an account response so that the invoker can make decisions on the status code etc.
 	 */
-	public ClientResponse getAccountResponse (String deploymentUrl, String username, String authtoken, String accountSid) {
-		Client jerseyClient = Client.create();
-		jerseyClient.addFilter(new HTTPBasicAuthFilter(username, authtoken));
-		WebResource webResource = jerseyClient.resource(getAccountsUrl(deploymentUrl));
-		ClientResponse response = webResource.path(accountSid).get(ClientResponse.class);
+	public Response getAccountResponse (String deploymentUrl, String username, String authtoken, String accountSid) {
+		Client jerseyClient = ClientBuilder.newClient();
+		jerseyClient.register(HttpAuthenticationFeature.basic(username, authtoken));
+		WebTarget WebTarget = jerseyClient.target(getAccountsUrl(deploymentUrl));
+		Response response = WebTarget.path(accountSid).request().get();
 		return response;
 	}
 
-	public ClientResponse getAccountsResponse (String deploymentUrl, String username, String authtoken) {
-		Client jerseyClient = Client.create();
-		jerseyClient.addFilter(new HTTPBasicAuthFilter(username, authtoken));
-		WebResource webResource = jerseyClient.resource(getAccountsUrl(deploymentUrl));
-		ClientResponse response = webResource.get(ClientResponse.class);
+	public Response getAccountsResponse (String deploymentUrl, String username, String authtoken) {
+		Client jerseyClient = ClientBuilder.newClient();
+		jerseyClient.register(HttpAuthenticationFeature.basic(username, authtoken));
+		WebTarget WebTarget = jerseyClient.target(getAccountsUrl(deploymentUrl));
+		Response response = WebTarget.request().get();
 		return response;
 	}
 
-	public ClientResponse removeAccountResponse (String deploymentUrl, String operatingUsername, String operatingAuthToken, String removedAccountSid) {
-		Client jerseyClient = Client.create();
-		jerseyClient.addFilter(new HTTPBasicAuthFilter(operatingUsername, operatingAuthToken));
-		WebResource webResource = jerseyClient.resource(getAccountsUrl(deploymentUrl));
-		ClientResponse response = webResource.path(removedAccountSid).delete(ClientResponse.class);
+	public Response removeAccountResponse (String deploymentUrl, String operatingUsername, String operatingAuthToken, String removedAccountSid) {
+		Client jerseyClient = ClientBuilder.newClient();
+		jerseyClient.register(HttpAuthenticationFeature.basic(operatingUsername, operatingAuthToken));
+		WebTarget WebTarget = jerseyClient.target(getAccountsUrl(deploymentUrl));
+		Response response = WebTarget.path(removedAccountSid).request().delete(Response.class);
 		return response;
 	}
 
@@ -224,12 +226,12 @@ public class RestcommAccountsTool {
 	 * @param domainName
 	 * @return
 	 */
-	public ClientResponse getAccountsWithFilterClientResponse (String deploymentUrl, String username, String authtoken, String organizationSid, String domainName) {
-		WebResource webResource = prepareAccountListWebResource(deploymentUrl, username, authtoken);
-
-		ClientResponse  response = webResource.queryParams(prepareAccountListFilter(organizationSid, domainName))
-				.accept(MediaType.APPLICATION_JSON, MediaType.APPLICATION_XML)
-                .get(ClientResponse.class);
+	public Response getAccountsWithFilterClientResponse (String deploymentUrl, String username, String authtoken, String organizationSid, String domainName) {
+		WebTarget webTarget = prepareAccountListWebTarget(deploymentUrl, username, authtoken);
+                WebTargetUtil.addQueryMap(webTarget, prepareAccountListFilter(organizationSid, domainName));
+		Response  response = webTarget
+				.request(MediaType.APPLICATION_JSON, MediaType.APPLICATION_XML)
+                                .get();
 		return response;
 	}
 
@@ -242,10 +244,11 @@ public class RestcommAccountsTool {
 	 * @return JsonArray
 	 */
 	public JsonArray getAccountsWithFilterResponse (String deploymentUrl, String username, String authtoken, String organizationSid, String domainName) {
-		WebResource webResource = prepareAccountListWebResource(deploymentUrl, username, authtoken);
+		WebTarget webTarget = prepareAccountListWebTarget(deploymentUrl, username, authtoken);
 
-		String  response = webResource.queryParams(prepareAccountListFilter(organizationSid, domainName))
-				.accept(MediaType.APPLICATION_JSON, MediaType.APPLICATION_XML)
+                WebTargetUtil.addQueryMap(webTarget, prepareAccountListFilter(organizationSid, domainName));
+		String  response = webTarget
+				.request(MediaType.APPLICATION_JSON, MediaType.APPLICATION_XML)
                 .get(String.class);
 		JsonElement jsonElement = new JsonParser().parse(response);
         return jsonElement.getAsJsonArray();
@@ -257,11 +260,11 @@ public class RestcommAccountsTool {
 	 * @param authtoken
 	 * @return
 	 */
-	private WebResource prepareAccountListWebResource(String deploymentUrl, String username, String authtoken){
-		Client jerseyClient = Client.create();
-		jerseyClient.addFilter(new HTTPBasicAuthFilter(username, authtoken));
-		WebResource webResource = jerseyClient.resource(getAccountsUrl(deploymentUrl));
-		return webResource;
+	private WebTarget prepareAccountListWebTarget(String deploymentUrl, String username, String authtoken){
+		Client jerseyClient = ClientBuilder.newClient();
+		jerseyClient.register(HttpAuthenticationFeature.basic(username, authtoken));
+		WebTarget WebTarget = jerseyClient.target(getAccountsUrl(deploymentUrl));
+		return WebTarget;
 	}
 
 	/**
@@ -270,7 +273,7 @@ public class RestcommAccountsTool {
 	 * @return
 	 */
 	private MultivaluedMap<String, String> prepareAccountListFilter(String organizationSid, String domainName){
-		MultivaluedMap<String, String> params = new MultivaluedMapImpl();
+		MultivaluedMap<String, String> params = new MultivaluedHashMap();
 		if(organizationSid != null && !(organizationSid.trim().isEmpty()))
 			params.add("OrganizationSid", organizationSid);
 		if(domainName != null && !(domainName.trim().isEmpty()))

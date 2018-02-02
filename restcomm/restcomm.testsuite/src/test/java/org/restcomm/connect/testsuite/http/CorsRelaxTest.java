@@ -20,9 +20,9 @@
 
 package org.restcomm.connect.testsuite.http;
 
-import com.sun.jersey.api.client.Client;
-import com.sun.jersey.api.client.ClientResponse;
-import com.sun.jersey.api.client.WebResource;
+import javax.ws.rs.client.Client;import javax.ws.rs.client.ClientBuilder;
+import javax.ws.rs.core.Response;
+import javax.ws.rs.client.WebTarget;
 import junit.framework.Assert;
 import org.apache.log4j.Logger;
 import org.jboss.arquillian.container.test.api.Deployer;
@@ -62,21 +62,21 @@ public class CorsRelaxTest extends EndpointTest {
     // Tests cors headers existence when retrieving an account
     @Test
     public void corsHeadersAreReturnedForAccount() {
-        // Bypass jersey restriction for "Origin" header. By default it can't be added to a WebResource object.
+        // Bypass jersey restriction for "Origin" header. By default it can't be added to a WebTarget object.
         System.setProperty("sun.net.http.allowRestrictedHeaders", "true");
 
-        Client jersey = Client.create();
+        Client jersey = ClientBuilder.newClient();
         // make a preflight OPTIONS request using an origin present in restcomm.xml/rcmlserver i.e. http://testing.restcomm.com
-        WebResource resource = jersey.resource(getResourceUrl("/2012-04-24/Accounts.json/ACae6e420f425248d6a26948c17a9e2acf"));
-        ClientResponse response = resource.header("Origin", "http://testing.restcomm.com").options(ClientResponse.class);
+        WebTarget resource = jersey.target(getResourceUrl("/2012-04-24/Accounts.json/ACae6e420f425248d6a26948c17a9e2acf"));
+        Response response = resource.request().header("Origin", "http://testing.restcomm.com").options(Response.class);
         Assert.assertEquals(200, response.getStatus());
-        MultivaluedMap<String,String> headers = response.getHeaders();
+        MultivaluedMap<String,String> headers = response.getStringHeaders();
         String originHeader = headers.getFirst("Access-Control-Allow-Origin");
         Assert.assertEquals("http://testing.restcomm.com",originHeader);
         // make a preflight OPTIONS request using an origin NOT present in restcomm.xml/rcmlserver i.e. http://otherhost.restcomm.com
-        WebResource resource2 = jersey.resource(getResourceUrl("/restcomm/2012-04-24/Accounts.json/ACae6e420f425248d6a26948c17a9e2acf"));
-        ClientResponse response2 = resource2.header("Origin", "http://otherhost.restcomm.com").options(ClientResponse.class);
-        originHeader = response2.getHeaders().getFirst("Access-Control-Allow-Origin");
+        WebTarget resource2 = jersey.target(getResourceUrl("/restcomm/2012-04-24/Accounts.json/ACae6e420f425248d6a26948c17a9e2acf"));
+        Response response2 = resource2.request().header("Origin", "http://otherhost.restcomm.com").options(Response.class);
+        originHeader = response2.getStringHeaders().getFirst("Access-Control-Allow-Origin");
         Assert.assertEquals(200, response2.getStatus());
         Assert.assertNull(originHeader);
 

@@ -7,12 +7,16 @@
 
   <servlet>
     <servlet-name>Jersey</servlet-name>
-    <servlet-class>com.sun.jersey.spi.container.servlet.ServletContainer</servlet-class>
+    <servlet-class>org.glassfish.jersey.servlet.ServletContainer</servlet-class>
     <!-- Enable CORS request filter -->
     <init-param>
-      <param-name>com.sun.jersey.spi.container.ContainerResponseFilters</param-name>
-      <param-value>org.restcomm.connect.http.cors.CorsFilter</param-value>
+            <param-name>jersey.config.server.provider.packages</param-name>
+            <param-value>org.restcomm.connect.http</param-value>
     </init-param>
+    <init-param>
+        <param-name>jersey.config.server.provider.classnames</param-name>
+        <param-value>org.restcomm.connect.http.cors.CorsFilter</param-value>
+    </init-param>                    
   </servlet>
 
   <context-param>

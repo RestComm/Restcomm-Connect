@@ -4,9 +4,9 @@ import javax.ws.rs.core.MediaType;
 
 import com.google.gson.JsonObject;
 import com.google.gson.JsonParser;
-import com.sun.jersey.api.client.Client;
-import com.sun.jersey.api.client.WebResource;
-import com.sun.jersey.api.client.filter.HTTPBasicAuthFilter;
+import javax.ws.rs.client.Client;import javax.ws.rs.client.ClientBuilder;
+import javax.ws.rs.client.WebTarget;
+import org.glassfish.jersey.client.authentication.HttpAuthenticationFeature;
 
 /**
  * @author <a href="mailto:gvagenas@gmail.com">gvagenas</a>
@@ -42,16 +42,16 @@ public class OutboundProxyTool {
 
     public JsonObject getProxies(String deploymentUrl, String username, String authToken) {
 
-        Client jerseyClient = Client.create();
-        jerseyClient.addFilter(new HTTPBasicAuthFilter(username, authToken));
+        Client jerseyClient = ClientBuilder.newClient();
+        jerseyClient.register(HttpAuthenticationFeature.basic(username, authToken));
 
         String url = getAccountsUrl(deploymentUrl, username, true);
 
-        WebResource webResource = jerseyClient.resource(url);
+        WebTarget WebTarget = jerseyClient.target(url);
 
         String response = null;
 
-        response = webResource.accept(MediaType.APPLICATION_JSON, MediaType.APPLICATION_XML).get(String.class);
+        response = WebTarget.request(MediaType.APPLICATION_JSON, MediaType.APPLICATION_XML).get(String.class);
 
         JsonParser parser = new JsonParser();
 
@@ -61,17 +61,17 @@ public class OutboundProxyTool {
 
 
     public JsonObject switchProxy(String deploymentUrl, String username, String authToken) {
-        
-        Client jerseyClient = Client.create();
-        jerseyClient.addFilter(new HTTPBasicAuthFilter(username, authToken));
+
+        Client jerseyClient = ClientBuilder.newClient();
+        jerseyClient.register(HttpAuthenticationFeature.basic(username, authToken));
 
         String url = getAccountsUrl(deploymentUrl, username, true);
-        
-        WebResource webResource = jerseyClient.resource(url);
+
+        WebTarget WebTarget = jerseyClient.target(url);
 
         String response = null;
 
-        response = webResource.path("switchProxy").accept(MediaType.APPLICATION_JSON, MediaType.APPLICATION_XML).get(String.class);
+        response = WebTarget.path("switchProxy").request(MediaType.APPLICATION_JSON, MediaType.APPLICATION_XML).get(String.class);
 
         JsonParser parser = new JsonParser();
 
@@ -81,16 +81,16 @@ public class OutboundProxyTool {
 
     public JsonObject getActiveProxy(String deploymentUrl, String username, String authToken) {
 
-        Client jerseyClient = Client.create();
-        jerseyClient.addFilter(new HTTPBasicAuthFilter(username, authToken));
+        Client jerseyClient = ClientBuilder.newClient();
+        jerseyClient.register(HttpAuthenticationFeature.basic(username, authToken));
 
         String url = getAccountsUrl(deploymentUrl, username, true);
-        
-        WebResource webResource = jerseyClient.resource(url);
+
+        WebTarget WebTarget = jerseyClient.target(url);
 
         String response = null;
 
-        response = webResource.path("getActiveProxy").accept(MediaType.APPLICATION_JSON, MediaType.APPLICATION_XML).get(String.class);
+        response = WebTarget.path("getActiveProxy").request(MediaType.APPLICATION_JSON, MediaType.APPLICATION_XML).get(String.class);
 
         JsonParser parser = new JsonParser();
 

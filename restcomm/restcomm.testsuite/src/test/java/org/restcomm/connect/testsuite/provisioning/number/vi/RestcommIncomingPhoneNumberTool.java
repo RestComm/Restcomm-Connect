@@ -30,17 +30,17 @@ import org.restcomm.connect.dao.entities.IncomingPhoneNumberList;
 import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
 import com.google.gson.JsonParser;
-import com.sun.jersey.api.client.Client;
-import com.sun.jersey.api.client.WebResource;
-import com.sun.jersey.api.client.filter.HTTPBasicAuthFilter;
-import com.sun.jersey.core.util.MultivaluedMapImpl;
+import javax.ws.rs.client.Client;import javax.ws.rs.client.ClientBuilder;
+import javax.ws.rs.client.WebTarget;
+import org.glassfish.jersey.client.authentication.HttpAuthenticationFeature;
+import javax.ws.rs.core.MultivaluedHashMap;
 import com.thoughtworks.xstream.XStream;
 
 /**
  * @author muhammad.bilal19@gmail.com (Muhammad Bilal)
  */
 public class RestcommIncomingPhoneNumberTool {
-    
+
     private static RestcommIncomingPhoneNumberTool instance;
     private static String accountsUrl;
     private static Logger logger = Logger.getLogger(RestcommIncomingPhoneNumberTool.class);
@@ -53,7 +53,7 @@ public class RestcommIncomingPhoneNumberTool {
 
         return instance;
     }
-    
+
     private String getAccountsUrl(String deploymentUrl, String username, Boolean json) {
         if (deploymentUrl.endsWith("/")) {
             deploymentUrl = deploymentUrl.substring(0, deploymentUrl.length() - 1);
@@ -63,35 +63,39 @@ public class RestcommIncomingPhoneNumberTool {
 
         return accountsUrl;
     }
-    
+
     public JsonObject getIncomingPhoneNumbers(String deploymentUrl, String username, String authToken) {
         return (JsonObject) getIncomingPhoneNumbers(deploymentUrl, username, authToken, null, null, true);
     }
-    
+
     public JsonObject getIncomingPhoneNumbers(String deploymentUrl, String username, String authToken, Integer page, Integer pageSize,
             Boolean json) {
 
-        Client jerseyClient = Client.create();
-        jerseyClient.addFilter(new HTTPBasicAuthFilter(username, authToken));
+        Client jerseyClient = ClientBuilder.newClient();
+        jerseyClient.register(HttpAuthenticationFeature.basic(username, authToken));
 
         String url = getAccountsUrl(deploymentUrl, username, json);
 
-        WebResource webResource = jerseyClient.resource(url);
+        WebTarget webResource = jerseyClient.target(url);
 
         String response = null;
 
         if (page != null || pageSize != null) {
-            MultivaluedMap<String, String> params = new MultivaluedMapImpl();
+            MultivaluedMap<String, String> params = new MultivaluedHashMap();
 
-            if (page != null)
+            if (page != null) {
                 params.add("Page", String.valueOf(page));
-            if (pageSize != null)
+                webResource.queryParam("Page", String.valueOf(page));
+            }
+            if (pageSize != null) {
                 params.add("PageSize", String.valueOf(pageSize));
+                webResource.queryParam("PageSize", String.valueOf(pageSize));
+            }
 
-            response = webResource.queryParams(params).accept(MediaType.APPLICATION_JSON, MediaType.APPLICATION_XML)
+            response = webResource.request(MediaType.APPLICATION_JSON, MediaType.APPLICATION_XML)
                     .get(String.class);
         } else {
-            response = webResource.accept(MediaType.APPLICATION_JSON, MediaType.APPLICATION_XML).get(String.class);
+            response = webResource.request(MediaType.APPLICATION_JSON, MediaType.APPLICATION_XML).get(String.class);
         }
 
         JsonParser parser = new JsonParser();
@@ -118,8 +122,8 @@ public class RestcommIncomingPhoneNumberTool {
         }
 
     }
-    
-    
+
+
     /**
      * @param deploymentUrl
      * @param username
@@ -130,20 +134,21 @@ public class RestcommIncomingPhoneNumberTool {
     public JsonObject getIncomingPhoneNumbersUsingFilter(String deploymentUrl, String username, String authToken,
             Map<String, String> filters) {
 
-        Client jerseyClient = Client.create();
-        jerseyClient.addFilter(new HTTPBasicAuthFilter(username, authToken));
+        Client jerseyClient = ClientBuilder.newClient();
+        jerseyClient.register(HttpAuthenticationFeature.basic(username, authToken));
 
         String url = getAccountsUrl(deploymentUrl, username, true);
 
-        WebResource webResource = jerseyClient.resource(url);
+        WebTarget webResource = jerseyClient.target(url);
 
-        MultivaluedMap<String, String> params = new MultivaluedMapImpl();
+        MultivaluedMap<String, String> params = new MultivaluedHashMap();
 
         for (String filterName : filters.keySet()) {
             String filterData = filters.get(filterName);
             params.add(filterName, filterData);
+            webResource.queryParam(filterName, filterData);
         }
-        String response = webResource.queryParams(params).accept(MediaType.APPLICATION_JSON).get(String.class);
+        String response = webResource.request(MediaType.APPLICATION_JSON).get(String.class);
         JsonParser parser = new JsonParser();
         JsonObject jsonObject = null;
         try {
@@ -160,6 +165,6 @@ public class RestcommIncomingPhoneNumberTool {
 
         return jsonObject;
     }
-    
+
 
 }

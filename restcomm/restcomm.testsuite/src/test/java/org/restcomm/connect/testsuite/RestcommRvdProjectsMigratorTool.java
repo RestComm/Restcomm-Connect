@@ -26,9 +26,9 @@ import javax.ws.rs.core.MediaType;
 import com.google.gson.JsonArray;
 import com.google.gson.JsonObject;
 import com.google.gson.JsonParser;
-import com.sun.jersey.api.client.Client;
-import com.sun.jersey.api.client.WebResource;
-import com.sun.jersey.api.client.filter.HTTPBasicAuthFilter;
+import javax.ws.rs.client.Client;import javax.ws.rs.client.ClientBuilder;
+import javax.ws.rs.client.WebTarget;
+import org.glassfish.jersey.client.authentication.HttpAuthenticationFeature;
 
 /**
  * @author guilherme.jansen@telestax.com
@@ -69,11 +69,11 @@ public class RestcommRvdProjectsMigratorTool {
 
     public JsonArray getEntitiesList(String deploymentUrl, String adminUsername, String adminAuthToken, String adminAccountSid,
             Endpoint endpoint, String propertyName) {
-        Client jerseyClient = Client.create();
-        jerseyClient.addFilter(new HTTPBasicAuthFilter(adminUsername, adminAuthToken));
+        Client jerseyClient = ClientBuilder.newClient();
+        jerseyClient.register(HttpAuthenticationFeature.basic(adminUsername, adminAuthToken));
         String url = getEntitiesUrl(deploymentUrl, adminAccountSid, endpoint);
-        WebResource webResource = jerseyClient.resource(url);
-        String response = webResource.accept(MediaType.APPLICATION_JSON).get(String.class);
+        WebTarget webResource = jerseyClient.target(url);
+        String response = webResource.request(MediaType.APPLICATION_JSON).get(String.class);
         JsonParser parser = new JsonParser();
         JsonArray jsonResponse;
         if (propertyName == null) {
@@ -109,14 +109,14 @@ public class RestcommRvdProjectsMigratorTool {
 
     public JsonObject getEntity(String deploymentUrl, String adminUsername, String adminAuthToken, String adminAccountSid,
             String applicationSid, Endpoint endpoint) {
-        Client jerseyClient = Client.create();
-        jerseyClient.addFilter(new HTTPBasicAuthFilter(adminUsername, adminAuthToken));
+        Client jerseyClient = ClientBuilder.newClient();
+        jerseyClient.register(HttpAuthenticationFeature.basic(adminUsername, adminAuthToken));
         String url = getEntityUrl(deploymentUrl, adminAccountSid, endpoint, applicationSid);
-        WebResource webResource = jerseyClient.resource(url);
+        WebTarget webResource = jerseyClient.target(url);
         String response = null;
         JsonObject jsonResponse = null;
         try {
-            response = webResource.accept(MediaType.APPLICATION_JSON).get(String.class);
+            response = webResource.request(MediaType.APPLICATION_JSON).get(String.class);
             JsonParser parser = new JsonParser();
             jsonResponse = parser.parse(response).getAsJsonObject();
         } catch (Exception e) {

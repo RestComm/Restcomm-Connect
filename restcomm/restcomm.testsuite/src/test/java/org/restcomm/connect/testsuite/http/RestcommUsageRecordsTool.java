@@ -27,21 +27,12 @@ import javax.ws.rs.core.MultivaluedMap;
 
 import org.apache.commons.collections.map.HashedMap;
 import org.apache.log4j.Logger;
-import org.restcomm.connect.dao.entities.CallDetailRecordList;
-import org.restcomm.connect.dao.entities.UsageList;
-
-import com.google.gson.JsonArray;
 import com.google.gson.JsonElement;
-import com.google.gson.JsonNull;
-import com.google.gson.JsonObject;
 import com.google.gson.JsonParser;
-import com.google.gson.JsonPrimitive;
-import com.sun.jersey.api.client.Client;
-import com.sun.jersey.api.client.UniformInterfaceException;
-import com.sun.jersey.api.client.WebResource;
-import com.sun.jersey.api.client.filter.HTTPBasicAuthFilter;
-import com.sun.jersey.core.util.MultivaluedMapImpl;
-import com.thoughtworks.xstream.XStream;
+import javax.ws.rs.client.Client;import javax.ws.rs.client.ClientBuilder;
+import javax.ws.rs.client.WebTarget;
+import org.glassfish.jersey.client.authentication.HttpAuthenticationFeature;
+import javax.ws.rs.core.MultivaluedHashMap;
 
 /**
  * @author <a href="mailto:abdulazizali@acm.org">abdulazizali77</a>
@@ -139,22 +130,19 @@ public class RestcommUsageRecordsTool {
     public JsonElement getUsageRecordsUsingFilter(String deploymentUrl, String username, String authToken, String subresource,
             Map<String, String> filters, Boolean json) {
 
-        Client jerseyClient = Client.create();
-        jerseyClient.addFilter(new HTTPBasicAuthFilter(username, authToken));
+        Client jerseyClient = ClientBuilder.newClient();
+        jerseyClient.register(HttpAuthenticationFeature.basic(username, authToken));
         String url = getUsageRecordsUrl(deploymentUrl, username, subresource, json);
-        WebResource webResource = jerseyClient.resource(url);
+        WebTarget webTarget = jerseyClient.target(url);
 
-        MultivaluedMap<String, String> params = new MultivaluedMapImpl();
+        MultivaluedMap<String, String> params = new MultivaluedHashMap();
         for (String filterName : filters.keySet()) {
             String filterData = filters.get(filterName);
             params.add(filterName, filterData);
+            webTarget.queryParam(filterName, filterData);
         }
 
-        if (!params.isEmpty()) {
-            webResource = webResource.queryParams(params);
-        }
-
-        String response = webResource.accept(MediaType.APPLICATION_JSON, MediaType.APPLICATION_XML).get(String.class);
+        String response = webTarget.request(MediaType.APPLICATION_JSON, MediaType.APPLICATION_XML).get(String.class);
         JsonParser parser = new JsonParser();
         JsonElement jsonElement = null;
         if (json) {

@@ -45,10 +45,10 @@ import org.junit.runner.RunWith;
 import com.github.tomakehurst.wiremock.junit.WireMockRule;
 import com.google.gson.JsonArray;
 import com.google.gson.JsonParser;
-import com.sun.jersey.api.client.Client;
-import com.sun.jersey.api.client.ClientResponse;
-import com.sun.jersey.api.client.WebResource;
-import com.sun.jersey.api.client.filter.HTTPBasicAuthFilter;
+import javax.ws.rs.client.Client;import javax.ws.rs.client.ClientBuilder;
+import javax.ws.rs.core.Response;
+import javax.ws.rs.client.WebTarget;
+import org.glassfish.jersey.client.authentication.HttpAuthenticationFeature;
 import org.restcomm.connect.commons.Version;
 import org.restcomm.connect.commons.annotations.FeatureAltTests;
 
@@ -72,10 +72,10 @@ public class AvailablePhoneNumbersEndpointTest {
     private String adminAccountSid = "ACae6e420f425248d6a26948c17a9e2acf";
     private String adminAuthToken = "77f8c12cc7b8f8423e5c38b035249166";
     private String baseURL = "2012-04-24/Accounts/" + adminAccountSid + "/AvailablePhoneNumbers/";
-    
+
     @Rule
     public WireMockRule wireMockRule = new WireMockRule(8090); // No-args constructor defaults to port 8080
-    
+
     /*
      * https://www.twilio.com/docs/api/rest/available-phone-numbers#local-get-basic-example-1
      * available local phone numbers in the United States in the 510 area code.
@@ -91,23 +91,23 @@ public class AvailablePhoneNumbersEndpointTest {
                     .withHeader("Content-Type", "text/xml")
                     .withBody(AvailablePhoneNumbersEndpointTestUtils.body501AreaCode)));
         // Get Account using admin email address and user email address
-    	Client jerseyClient = Client.create();
-        jerseyClient.addFilter(new HTTPBasicAuthFilter(adminUsername, adminAuthToken));
+    	Client jerseyClient = ClientBuilder.newClient();
+        jerseyClient.register(HttpAuthenticationFeature.basic(adminUsername, adminAuthToken));
 
         String provisioningURL = deploymentUrl + baseURL + "US/Local.json";
-        WebResource webResource = jerseyClient.resource(provisioningURL);
+        WebTarget webResource = jerseyClient.target(provisioningURL);
 
-        ClientResponse clientResponse = webResource.queryParam("AreaCode","501").accept("application/json")
-                .get(ClientResponse.class);
+        Response clientResponse = webResource.queryParam("AreaCode","501").request("application/json")
+                .get();
         assertTrue(clientResponse.getStatus() == 200);
-        String response = clientResponse.getEntity(String.class);
+        String response = clientResponse.readEntity(String.class);
         System.out.println(response);
         assertTrue(!response.trim().equalsIgnoreCase("[]"));
         JsonParser parser = new JsonParser();
         JsonArray jsonResponse = parser.parse(response).getAsJsonArray();
-        
+
         System.out.println(jsonResponse);
-        
+
         assertTrue(jsonResponse.size() == 33);
         System.out.println((jsonResponse.get(0).getAsJsonObject().toString()));
         assertTrue(jsonResponse.get(0).getAsJsonObject().toString().equalsIgnoreCase(AvailablePhoneNumbersEndpointTestUtils.firstJSonResult501AreaCode));
@@ -128,28 +128,28 @@ public class AvailablePhoneNumbersEndpointTest {
                     .withHeader("Content-Type", "text/xml")
                     .withBody(AvailablePhoneNumbersEndpointTestUtils.body501AreaCode)));
         // Get Account using admin email address and user email address
-        Client jerseyClient = Client.create();
-        jerseyClient.addFilter(new HTTPBasicAuthFilter(adminUsername, adminAuthToken));
+        Client jerseyClient = ClientBuilder.newClient();
+        jerseyClient.register(HttpAuthenticationFeature.basic(adminUsername, adminAuthToken));
 
         String provisioningURL = deploymentUrl + baseURL + "US/Local.json";
-        WebResource webResource = jerseyClient.resource(provisioningURL);
+        WebTarget webResource = jerseyClient.target(provisioningURL);
 
-        ClientResponse clientResponse = webResource.queryParam("Contains","501555****").accept("application/json")
-                .get(ClientResponse.class);
+        Response clientResponse = webResource.queryParam("Contains","501555****").request("application/json")
+                .get();
         assertTrue(clientResponse.getStatus() == 200);
-        String response = clientResponse.getEntity(String.class);
+        String response = clientResponse.readEntity(String.class);
         System.out.println(response);
         assertTrue(!response.trim().equalsIgnoreCase("[]"));
         JsonParser parser = new JsonParser();
         JsonArray jsonResponse = parser.parse(response).getAsJsonArray();
-        
+
         System.out.println(jsonResponse);
-        
+
         assertTrue(jsonResponse.size() == 2);
         System.out.println((jsonResponse.get(0).getAsJsonObject().toString()));
         assertTrue(jsonResponse.get(0).getAsJsonObject().toString().equalsIgnoreCase(AvailablePhoneNumbersEndpointTestUtils.firstJSonResult501ContainsPattern));
     }
-    
+
     /*
      * https://www.twilio.com/docs/api/rest/available-phone-numbers#local-get-basic-example-3
      * Find local phone numbers that match the pattern 'STORM'.
@@ -165,23 +165,23 @@ public class AvailablePhoneNumbersEndpointTest {
                     .withHeader("Content-Type", "text/xml")
                     .withBody(AvailablePhoneNumbersEndpointTestUtils.body501AreaCode)));
         // Get Account using admin email address and user email address
-        Client jerseyClient = Client.create();
-        jerseyClient.addFilter(new HTTPBasicAuthFilter(adminUsername, adminAuthToken));
+        Client jerseyClient = ClientBuilder.newClient();
+        jerseyClient.register(HttpAuthenticationFeature.basic(adminUsername, adminAuthToken));
 
         String provisioningURL = deploymentUrl + baseURL + "US/Local.json";
-        WebResource webResource = jerseyClient.resource(provisioningURL);
+        WebTarget webResource = jerseyClient.target(provisioningURL);
 
-        ClientResponse clientResponse = webResource.queryParam("Contains","STORM").accept("application/json")
-                .get(ClientResponse.class);
+        Response clientResponse = webResource.queryParam("Contains","STORM").request("application/json")
+                .get();
         assertTrue(clientResponse.getStatus() == 200);
-        String response = clientResponse.getEntity(String.class);
+        String response = clientResponse.readEntity(String.class);
         System.out.println(response);
         assertTrue(!response.trim().equalsIgnoreCase("[]"));
         JsonParser parser = new JsonParser();
         JsonArray jsonResponse = parser.parse(response).getAsJsonArray();
-        
+
         System.out.println(jsonResponse);
-        
+
         assertTrue(jsonResponse.size() == 1);
         System.out.println((jsonResponse.get(0).getAsJsonObject().toString()));
         assertTrue(jsonResponse.get(0).getAsJsonObject().toString().equalsIgnoreCase(AvailablePhoneNumbersEndpointTestUtils.firstJSonResult501ContainsLetterPattern));
@@ -201,28 +201,28 @@ public class AvailablePhoneNumbersEndpointTest {
                     .withHeader("Content-Type", "text/xml")
                     .withBody(AvailablePhoneNumbersEndpointTestUtils.body501AreaCode)));
         // Get Account using admin email address and user email address
-        Client jerseyClient = Client.create();
-        jerseyClient.addFilter(new HTTPBasicAuthFilter(adminUsername, adminAuthToken));
+        Client jerseyClient = ClientBuilder.newClient();
+        jerseyClient.register(HttpAuthenticationFeature.basic(adminUsername, adminAuthToken));
 
         String provisioningURL = deploymentUrl + baseURL + "US/Local.json";
-        WebResource webResource = jerseyClient.resource(provisioningURL);
+        WebTarget webResource = jerseyClient.target(provisioningURL);
 
-        ClientResponse clientResponse = webResource.queryParam("AreaCode","501").queryParam("InRegion","AR").accept("application/json")
-                .get(ClientResponse.class);
+        Response clientResponse = webResource.queryParam("AreaCode","501").queryParam("InRegion","AR").request("application/json")
+                .get();
         assertTrue(clientResponse.getStatus() == 200);
-        String response = clientResponse.getEntity(String.class);
+        String response = clientResponse.readEntity(String.class);
         System.out.println(response);
         assertTrue(!response.trim().equalsIgnoreCase("[]"));
         JsonParser parser = new JsonParser();
         JsonArray jsonResponse = parser.parse(response).getAsJsonArray();
-        
+
         System.out.println(jsonResponse);
-        
+
         assertTrue(jsonResponse.size() == 1);
         System.out.println((jsonResponse.get(0).getAsJsonObject().toString()));
         assertTrue(jsonResponse.get(0).getAsJsonObject().toString().equalsIgnoreCase(AvailablePhoneNumbersEndpointTestUtils.firstJSonResult501InRegionPattern));
     }
-    
+
     /*
      * https://www.twilio.com/docs/api/rest/available-phone-numbers#local-get-basic-example-5
      * Find a phone number in the London prefix (+4420) which is Fax-enabled.
@@ -237,28 +237,28 @@ public class AvailablePhoneNumbersEndpointTest {
                     .withHeader("Content-Type", "text/xml")
                     .withBody(AvailablePhoneNumbersEndpointTestUtils.body501AreaCode)));
         // Get Account using admin email address and user email address
-        Client jerseyClient = Client.create();
-        jerseyClient.addFilter(new HTTPBasicAuthFilter(adminUsername, adminAuthToken));
+        Client jerseyClient = ClientBuilder.newClient();
+        jerseyClient.register(HttpAuthenticationFeature.basic(adminUsername, adminAuthToken));
 
         String provisioningURL = deploymentUrl + baseURL + "GB/Local.json";
-        WebResource webResource = jerseyClient.resource(provisioningURL);
+        WebTarget webResource = jerseyClient.target(provisioningURL);
 
-        ClientResponse clientResponse = webResource.queryParam("Contains","4420").queryParam("FaxEnabled","true").accept("application/json")
-                .get(ClientResponse.class);
+        Response clientResponse = webResource.queryParam("Contains","4420").queryParam("FaxEnabled","true").request("application/json")
+                .get();
         assertTrue(clientResponse.getStatus() == 200);
-        String response = clientResponse.getEntity(String.class);
+        String response = clientResponse.readEntity(String.class);
         System.out.println(response);
         assertTrue(!response.trim().equalsIgnoreCase("[]"));
         JsonParser parser = new JsonParser();
         JsonArray jsonResponse = parser.parse(response).getAsJsonArray();
-        
+
         System.out.println(jsonResponse);
-        
+
         assertTrue(jsonResponse.size() == 1);
         System.out.println((jsonResponse.get(0).getAsJsonObject().toString()));
         assertTrue(jsonResponse.get(0).getAsJsonObject().toString().equalsIgnoreCase(AvailablePhoneNumbersEndpointTestUtils.firstJSonResultUKPattern));
     }
-    
+
     /*
      * https://www.twilio.com/docs/api/rest/available-phone-numbers#local-get-basic-example-5
      * Find a phone number in the London prefix (+4420) which is Fax-enabled.
@@ -273,28 +273,28 @@ public class AvailablePhoneNumbersEndpointTest {
                     .withHeader("Content-Type", "text/xml")
                     .withBody(AvailablePhoneNumbersEndpointTestUtils.body501AreaCode)));
         // Get Account using admin email address and user email address
-        Client jerseyClient = Client.create();
-        jerseyClient.addFilter(new HTTPBasicAuthFilter(adminUsername, adminAuthToken));
+        Client jerseyClient = ClientBuilder.newClient();
+        jerseyClient.register(HttpAuthenticationFeature.basic(adminUsername, adminAuthToken));
 
         String provisioningURL = deploymentUrl + baseURL + "US/Local.json";
-        WebResource webResource = jerseyClient.resource(provisioningURL);
+        WebTarget webResource = jerseyClient.target(provisioningURL);
 
-        ClientResponse clientResponse = webResource.queryParam("NearLatLong","37.840699%2C-122.461853").queryParam("Distance","50").queryParam("Contains","501").queryParam("InRegion","CA").accept("application/json")
-                .get(ClientResponse.class);
+        Response clientResponse = webResource.queryParam("NearLatLong","37.840699%2C-122.461853").queryParam("Distance","50").queryParam("Contains","501").queryParam("InRegion","CA").request("application/json")
+                .get();
         assertTrue(clientResponse.getStatus() == 200);
-        String response = clientResponse.getEntity(String.class);
+        String response = clientResponse.readEntity(String.class);
         System.out.println(response);
         assertTrue(!response.trim().equalsIgnoreCase("[]"));
         JsonParser parser = new JsonParser();
         JsonArray jsonResponse = parser.parse(response).getAsJsonArray();
-        
+
         System.out.println(jsonResponse);
-        
+
         assertTrue(jsonResponse.size() == 2);
         System.out.println((jsonResponse.get(0).getAsJsonObject().toString()));
         assertTrue(jsonResponse.get(0).getAsJsonObject().toString().equalsIgnoreCase(AvailablePhoneNumbersEndpointTestUtils.firstJSonResultAdvancedPattern));
     }
-    
+
     /*
      * https://www.twilio.com/docs/api/rest/available-phone-numbers#toll-free-get-example-3
      * Find toll-free phone numbers in the 800 area code that contain the pattern 'STORM'.
@@ -310,28 +310,28 @@ public class AvailablePhoneNumbersEndpointTest {
                     .withHeader("Content-Type", "text/xml")
                     .withBody(AvailablePhoneNumbersEndpointTestUtils.body501AreaCode)));
         // Get Account using admin email address and user email address
-        Client jerseyClient = Client.create();
-        jerseyClient.addFilter(new HTTPBasicAuthFilter(adminUsername, adminAuthToken));
+        Client jerseyClient = ClientBuilder.newClient();
+        jerseyClient.register(HttpAuthenticationFeature.basic(adminUsername, adminAuthToken));
 
         String provisioningURL = deploymentUrl + baseURL + "US/TollFree.json";
-        WebResource webResource = jerseyClient.resource(provisioningURL);
+        WebTarget webResource = jerseyClient.target(provisioningURL);
 
-        ClientResponse clientResponse = webResource.queryParam("Contains","STORM").accept("application/json")
-                .get(ClientResponse.class);
+        Response clientResponse = webResource.queryParam("Contains","STORM").request("application/json")
+                .get();
         assertTrue(clientResponse.getStatus() == 200);
-        String response = clientResponse.getEntity(String.class);
+        String response = clientResponse.readEntity(String.class);
         System.out.println(response);
         assertTrue(!response.trim().equalsIgnoreCase("[]"));
         JsonParser parser = new JsonParser();
         JsonArray jsonResponse = parser.parse(response).getAsJsonArray();
-        
+
         System.out.println(jsonResponse);
-        
+
         assertTrue(jsonResponse.size() == 1);
         System.out.println((jsonResponse.get(0).getAsJsonObject().toString()));
         assertTrue(jsonResponse.get(0).getAsJsonObject().toString().equalsIgnoreCase(AvailablePhoneNumbersEndpointTestUtils.firstJSonResult501ContainsLetterPattern));
     }
-    
+
     /*
      * https://www.twilio.com/docs/api/rest/available-phone-numbers#mobile-get-example-1
      * Find a phone number in the London prefix (+4420) which is Fax-enabled.
@@ -347,28 +347,28 @@ public class AvailablePhoneNumbersEndpointTest {
                     .withHeader("Content-Type", "text/xml")
                     .withBody(AvailablePhoneNumbersEndpointTestUtils.body501AreaCode)));
         // Get Account using admin email address and user email address
-        Client jerseyClient = Client.create();
-        jerseyClient.addFilter(new HTTPBasicAuthFilter(adminUsername, adminAuthToken));
+        Client jerseyClient = ClientBuilder.newClient();
+        jerseyClient.register(HttpAuthenticationFeature.basic(adminUsername, adminAuthToken));
 
         String provisioningURL = deploymentUrl + baseURL + "GB/Mobile.json";
-        WebResource webResource = jerseyClient.resource(provisioningURL);
+        WebTarget webResource = jerseyClient.target(provisioningURL);
 
-        ClientResponse clientResponse = webResource.queryParam("Contains","4420").queryParam("FaxEnabled","true").accept("application/json")
-                .get(ClientResponse.class);
+        Response clientResponse = webResource.queryParam("Contains","4420").queryParam("FaxEnabled","true").request("application/json")
+                .get();
         assertTrue(clientResponse.getStatus() == 200);
-        String response = clientResponse.getEntity(String.class);
+        String response = clientResponse.readEntity(String.class);
         System.out.println(response);
         assertTrue(!response.trim().equalsIgnoreCase("[]"));
         JsonParser parser = new JsonParser();
         JsonArray jsonResponse = parser.parse(response).getAsJsonArray();
-        
+
         System.out.println(jsonResponse);
-        
+
         assertTrue(jsonResponse.size() == 1);
         System.out.println((jsonResponse.get(0).getAsJsonObject().toString()));
         assertTrue(jsonResponse.get(0).getAsJsonObject().toString().equalsIgnoreCase(AvailablePhoneNumbersEndpointTestUtils.firstJSonResultUKPattern));
     }
-    
+
     @Deployment(name = "AvailablePhoneNumbersEndpointTest", managed = true, testable = false)
     public static WebArchive createWebArchiveNoGw() {
         logger.info("Packaging Test App");

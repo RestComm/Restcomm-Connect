@@ -20,8 +20,8 @@
 
 package org.restcomm.connect.testsuite.http;
 
-import com.sun.jersey.api.client.Client;
-import com.sun.jersey.api.client.filter.HTTPBasicAuthFilter;
+import javax.ws.rs.client.Client;import javax.ws.rs.client.ClientBuilder;
+import org.glassfish.jersey.client.authentication.HttpAuthenticationFeature;
 import org.jboss.arquillian.container.test.api.Deployer;
 import org.jboss.arquillian.test.api.ArquillianResource;
 import org.junit.After;
@@ -64,8 +64,8 @@ public class EndpointTest {
     }
 
     protected Client getClient(String username, String password) {
-        Client jersey = Client.create();
-        jersey.addFilter(new HTTPBasicAuthFilter(username, password));
+        Client jersey = ClientBuilder.newClient();
+        jersey.register(HttpAuthenticationFeature.basic(username, password));
         return jersey;
     }
 

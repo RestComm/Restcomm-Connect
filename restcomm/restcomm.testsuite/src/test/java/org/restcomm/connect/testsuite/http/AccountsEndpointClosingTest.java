@@ -21,10 +21,10 @@
 package org.restcomm.connect.testsuite.http;
 
 import com.github.tomakehurst.wiremock.junit.WireMockRule;
-import com.sun.jersey.api.client.Client;
-import com.sun.jersey.api.client.ClientResponse;
-import com.sun.jersey.api.client.WebResource;
-import com.sun.jersey.core.util.MultivaluedMapImpl;
+import javax.ws.rs.client.Client;import javax.ws.rs.client.ClientBuilder;
+import javax.ws.rs.core.Response;
+import javax.ws.rs.client.WebTarget;
+import javax.ws.rs.core.MultivaluedHashMap;
 import junit.framework.Assert;
 import org.apache.log4j.Logger;
 import org.jboss.arquillian.container.test.api.Deployer;
@@ -51,6 +51,7 @@ import static com.github.tomakehurst.wiremock.client.WireMock.postRequestedFor;
 import static com.github.tomakehurst.wiremock.client.WireMock.stubFor;
 import static com.github.tomakehurst.wiremock.client.WireMock.urlMatching;
 import static com.github.tomakehurst.wiremock.client.WireMock.verify;
+import javax.ws.rs.client.Entity;
 import org.junit.experimental.categories.Category;
 import org.restcomm.connect.commons.annotations.UnstableTests;
 
@@ -84,10 +85,10 @@ public class AccountsEndpointClosingTest extends EndpointTest {
     public void removeAccountAndSendNotifications() throws InterruptedException {
         String closedParentSid = "ACA1000000000000000000000000000000";
         Client jersey = getClient(toplevelSid, toplevelKey);
-        WebResource resource = jersey.resource( getResourceUrl("/2012-04-24/Accounts.json/" + closedParentSid) );
-        MultivaluedMap<String,String> params = new MultivaluedMapImpl();
+        WebTarget resource = jersey.target( getResourceUrl("/2012-04-24/Accounts.json/" + closedParentSid) );
+        MultivaluedMap<String,String> params = new MultivaluedHashMap();
         params.add("Status","closed");
-        ClientResponse response = resource.put(ClientResponse.class,params);
+        Response response = resource.request().put(Entity.form(params));
         Assert.assertEquals(200, response.getStatus());
         // wait until all asynchronous request have been sent to RVD
         verify(6, postRequestedFor(urlMatching("/restcomm-rvd/services/notifications"))
@@ -113,17 +114,17 @@ public class AccountsEndpointClosingTest extends EndpointTest {
 
         String closedParentSid = "ACA2000000000000000000000000000000";
         Client jersey = getClient(toplevelSid, toplevelKey);
-        WebResource resource = jersey.resource( getResourceUrl("/2012-04-24/Accounts.json/" + closedParentSid) );
-        MultivaluedMap<String,String> params = new MultivaluedMapImpl();
+        WebTarget resource = jersey.target( getResourceUrl("/2012-04-24/Accounts.json/" + closedParentSid) );
+        MultivaluedMap<String,String> params = new MultivaluedHashMap();
         params.add("Status","closed");
-        ClientResponse response = resource.put(ClientResponse.class,params);
+        Response response = resource.request().put(Entity.form(params));
         Assert.assertEquals(200, response.getStatus());
         // make sure the request reached nexmo
         verify(postRequestedFor(urlMatching("/nexmo/number/cancel/.*/.*/US/12223334444")));
         verify(postRequestedFor(urlMatching("/nexmo/number/cancel/.*/.*/US/12223334445")));
         // confirm that numbers that were not successfully released, are still in the database
-        resource = jersey.resource( getResourceUrl("/2012-04-24/Accounts/" + closedParentSid + "/IncomingPhoneNumbers/PH00000000000000000000000000000002.json") );
-        response = resource.get(ClientResponse.class);
+        resource = jersey.target( getResourceUrl("/2012-04-24/Accounts/" + closedParentSid + "/IncomingPhoneNumbers/PH00000000000000000000000000000002.json") );
+        response = resource.request().get();
         Assert.assertEquals(200, response.getStatus());
     }
 

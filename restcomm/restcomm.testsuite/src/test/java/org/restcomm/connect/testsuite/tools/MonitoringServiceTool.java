@@ -4,9 +4,9 @@ import com.google.gson.JsonArray;
 import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
 import com.google.gson.JsonParser;
-import com.sun.jersey.api.client.Client;
-import com.sun.jersey.api.client.WebResource;
-import com.sun.jersey.api.client.filter.HTTPBasicAuthFilter;
+import javax.ws.rs.client.Client;import javax.ws.rs.client.ClientBuilder;
+import javax.ws.rs.client.WebTarget;
+import org.glassfish.jersey.client.authentication.HttpAuthenticationFeature;
 import org.apache.log4j.Logger;
 
 import javax.ws.rs.core.MediaType;
@@ -42,13 +42,13 @@ public class MonitoringServiceTool {
     }
 
     public JsonObject getLiveCalls(String deploymentUrl, String username, String authToken) {
-        Client jerseyClient = Client.create();
-        jerseyClient.addFilter(new HTTPBasicAuthFilter(username, authToken));
+        Client jerseyClient = ClientBuilder.newClient();
+        jerseyClient.register(HttpAuthenticationFeature.basic(username, authToken));
         String url = getAccountsUrl(deploymentUrl, username);
-        WebResource webResource = jerseyClient.resource(url).path("/livecalls");
+        WebTarget webResource = jerseyClient.target(url).path("/livecalls");
 
         String response = null;
-        response = webResource.accept(MediaType.APPLICATION_JSON, MediaType.APPLICATION_XML).get(String.class);
+        response = webResource.request(MediaType.APPLICATION_JSON, MediaType.APPLICATION_XML).get(String.class);
         JsonParser parser = new JsonParser();
         return parser.parse(response).getAsJsonObject();
     }
@@ -71,10 +71,10 @@ public class MonitoringServiceTool {
     }
 
     public JsonObject getMetrics(String deploymentUrl, String username, String authToken, boolean callDetails, boolean mgcpStats) {
-        Client jerseyClient = Client.create();
-        jerseyClient.addFilter(new HTTPBasicAuthFilter(username, authToken));
+        Client jerseyClient = ClientBuilder.newClient();
+        jerseyClient.register(HttpAuthenticationFeature.basic(username, authToken));
         String url = getAccountsUrl(deploymentUrl, username);
-        WebResource webResource = jerseyClient.resource(url).path("/metrics");
+        WebTarget webResource = jerseyClient.target(url).path("/metrics");
 
         if (callDetails) {
             webResource = webResource.queryParam("LiveCallDetails","true");
@@ -84,7 +84,7 @@ public class MonitoringServiceTool {
         }
 
         String response = null;
-        response = webResource.accept(MediaType.APPLICATION_JSON, MediaType.APPLICATION_XML).get(String.class);
+        response = webResource.request(MediaType.APPLICATION_JSON, MediaType.APPLICATION_XML).get(String.class);
         JsonParser parser = new JsonParser();
         return parser.parse(response).getAsJsonObject();
     }

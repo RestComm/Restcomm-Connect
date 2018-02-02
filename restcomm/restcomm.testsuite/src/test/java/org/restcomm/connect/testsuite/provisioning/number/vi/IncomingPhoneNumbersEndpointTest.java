@@ -51,11 +51,12 @@ import com.github.tomakehurst.wiremock.junit.WireMockRule;
 import com.google.gson.JsonArray;
 import com.google.gson.JsonObject;
 import com.google.gson.JsonParser;
-import com.sun.jersey.api.client.Client;
-import com.sun.jersey.api.client.ClientResponse;
-import com.sun.jersey.api.client.WebResource;
-import com.sun.jersey.api.client.filter.HTTPBasicAuthFilter;
-import com.sun.jersey.core.util.MultivaluedMapImpl;
+import javax.ws.rs.client.Client;import javax.ws.rs.client.ClientBuilder;
+import javax.ws.rs.client.Entity;
+import javax.ws.rs.core.Response;
+import javax.ws.rs.client.WebTarget;
+import org.glassfish.jersey.client.authentication.HttpAuthenticationFeature;
+import javax.ws.rs.core.MultivaluedHashMap;
 import org.junit.experimental.categories.Category;
 import org.restcomm.connect.commons.Version;
 import org.restcomm.connect.commons.dao.Sid;
@@ -125,16 +126,16 @@ public class IncomingPhoneNumbersEndpointTest {
                     .withHeader("Content-Type", "text/xml")
                     .withBody(IncomingPhoneNumbersEndpointTestUtils.deleteNumberSuccessResponse)));
         // Get Account using admin email address and user email address
-        Client jerseyClient = Client.create();
-        jerseyClient.addFilter(new HTTPBasicAuthFilter(adminUsername, adminAuthToken));
+        Client jerseyClient = ClientBuilder.newClient();
+        jerseyClient.register(HttpAuthenticationFeature.basic(adminUsername, adminAuthToken));
 
         String provisioningURL = deploymentUrl + baseURL + "IncomingPhoneNumbers.json";
-        WebResource webResource = jerseyClient.resource(provisioningURL);
+        WebTarget webResource = jerseyClient.target(provisioningURL);
 
         String phoneNumberSid = Sid.generate(Sid.Type.PHONE_NUMBER).toString();
         provisioningURL = deploymentUrl + baseURL + "IncomingPhoneNumbers/" + phoneNumberSid + ".json";
-        webResource = jerseyClient.resource(provisioningURL);
-        ClientResponse clientResponse = webResource.type(MediaType.APPLICATION_FORM_URLENCODED_TYPE).accept("application/json").delete(ClientResponse.class);
+        webResource = jerseyClient.target(provisioningURL);
+        Response clientResponse = webResource.request("application/json").delete();
         logger.info("clientResponse: "+clientResponse.getStatus());
         assertTrue(clientResponse.getStatus() == 404);
     }
@@ -170,22 +171,22 @@ public class IncomingPhoneNumbersEndpointTest {
                     .withHeader("Content-Type", "text/xml")
                     .withBody(IncomingPhoneNumbersEndpointTestUtils.deleteNumberSuccessResponse)));
         // Get Account using admin email address and user email address
-        Client jerseyClient = Client.create();
-        jerseyClient.addFilter(new HTTPBasicAuthFilter(adminUsername, adminAuthToken));
+        Client jerseyClient = ClientBuilder.newClient();
+        jerseyClient.register(HttpAuthenticationFeature.basic(adminUsername, adminAuthToken));
 
         String provisioningURL = deploymentUrl + baseURL + "IncomingPhoneNumbers.json";
-        WebResource webResource = jerseyClient.resource(provisioningURL);
+        WebTarget webResource = jerseyClient.target(provisioningURL);
 
-        MultivaluedMap<String, String> formData = new MultivaluedMapImpl();
+        MultivaluedMap<String, String> formData = new MultivaluedHashMap();
         String phoneNumberSid = Sid.generate(Sid.Type.PHONE_NUMBER).toString();
         provisioningURL = deploymentUrl + baseURL + "IncomingPhoneNumbers/" + phoneNumberSid + ".json";
-        webResource = jerseyClient.resource(provisioningURL);
-        formData = new MultivaluedMapImpl();
+        webResource = jerseyClient.target(provisioningURL);
+        formData = new MultivaluedHashMap();
         formData.add("VoiceUrl", "http://demo.telestax.com/docs/voice2.xml");
         formData.add("SmsUrl", "http://demo.telestax.com/docs/sms2.xml");
         formData.add("VoiceMethod", "POST");
         formData.add("SMSMethod", "GET");
-        ClientResponse clientResponse = webResource.type(MediaType.APPLICATION_FORM_URLENCODED_TYPE).accept("application/json").post(ClientResponse.class, formData);
+        Response clientResponse = webResource.request("application/json").post(Entity.form(formData));
         logger.info("clientResponse.getStatus(): "+clientResponse.getStatus());
         assertTrue(clientResponse.getStatus() == 404);
     }
@@ -257,15 +258,15 @@ public class IncomingPhoneNumbersEndpointTest {
     @Test
     public void testGetAvailableCountries() {
         // Get Account using admin email address and user email address
-        Client jerseyClient = Client.create();
-        jerseyClient.addFilter(new HTTPBasicAuthFilter(adminUsername, adminAuthToken));
+        Client jerseyClient = ClientBuilder.newClient();
+        jerseyClient.register(HttpAuthenticationFeature.basic(adminUsername, adminAuthToken));
 
         String provisioningURL = deploymentUrl + baseURL + "IncomingPhoneNumbers/AvailableCountries.json";
-        WebResource webResource = jerseyClient.resource(provisioningURL);
+        WebTarget webResource = jerseyClient.target(provisioningURL);
 
-        ClientResponse clientResponse = webResource.accept("application/json").get(ClientResponse.class);
+        Response clientResponse = webResource.request("application/json").get();
         assertTrue(clientResponse.getStatus() == 200);
-        String response = clientResponse.getEntity(String.class);
+        String response = clientResponse.readEntity(String.class);
         logger.info(response);
         assertTrue(!response.trim().equalsIgnoreCase("[]"));
         JsonParser parser = new JsonParser();
@@ -302,20 +303,20 @@ public class IncomingPhoneNumbersEndpointTest {
                     .withHeader("Content-Type", "text/xml")
                     .withBody(IncomingPhoneNumbersEndpointTestUtils.purchaseNumberSuccessResponse)));
         // Get Account using admin email address and user email address
-    	Client jerseyClient = Client.create();
-        jerseyClient.addFilter(new HTTPBasicAuthFilter(adminUsername, adminAuthToken));
+    	Client jerseyClient = ClientBuilder.newClient();
+        jerseyClient.register(HttpAuthenticationFeature.basic(adminUsername, adminAuthToken));
 
         String provisioningURL = deploymentUrl + baseURL + "IncomingPhoneNumbers.json";
-        WebResource webResource = jerseyClient.resource(provisioningURL);
+        WebTarget webResource = jerseyClient.target(provisioningURL);
 
-        MultivaluedMap<String, String> formData = new MultivaluedMapImpl();
+        MultivaluedMap<String, String> formData = new MultivaluedHashMap();
         formData.add("PhoneNumber", "+14156902867");
         formData.add("VoiceUrl", "http://demo.telestax.com/docs/voice.xml");
         formData.add("FriendlyName", "My Company Line");
         formData.add("VoiceMethod", "GET");
-        ClientResponse clientResponse = webResource.type(MediaType.APPLICATION_FORM_URLENCODED_TYPE).accept("application/json").post(ClientResponse.class, formData);
+        Response clientResponse = webResource.request("application/json").post(Entity.form(formData));
         assertTrue(clientResponse.getStatus() == 200);
-        String response = clientResponse.getEntity(String.class);
+        String response = clientResponse.readEntity(String.class);
         logger.info(response);
         assertTrue(!response.trim().equalsIgnoreCase("[]"));
         JsonParser parser = new JsonParser();
@@ -350,22 +351,22 @@ public class IncomingPhoneNumbersEndpointTest {
                     .withHeader("Content-Type", "text/xml")
                     .withBody(IncomingPhoneNumbersEndpointTestUtils.purchaseNumberSuccessResponse)));
         // Get Account using admin email address and user email address
-        Client jerseyClient = Client.create();
-        jerseyClient.addFilter(new HTTPBasicAuthFilter(adminUsername, adminAuthToken));
+        Client jerseyClient = ClientBuilder.newClient();
+        jerseyClient.register(HttpAuthenticationFeature.basic(adminUsername, adminAuthToken));
 
         String provisioningURL = deploymentUrl + baseURL + "IncomingPhoneNumbers.json";
-        WebResource webResource = jerseyClient.resource(provisioningURL);
+        WebTarget webResource = jerseyClient.target(provisioningURL);
 
-        MultivaluedMap<String, String> formData = new MultivaluedMapImpl();
+        MultivaluedMap<String, String> formData = new MultivaluedHashMap();
         formData.add("PhoneNumber", "+14156902867");
         formData.add("VoiceUrl", "http://demo.telestax.com/docs/voice.xml");
         formData.add("FriendlyName", "My Company Line");
         formData.add("VoiceMethod", "GET");
-        ClientResponse clientResponse = webResource.type(MediaType.APPLICATION_FORM_URLENCODED_TYPE).accept("application/json").post(ClientResponse.class, formData);
+        Response clientResponse = webResource.request("application/json").post(Entity.form(formData));
         if(logger.isDebugEnabled())
         	logger.debug("clientResponse for buying unavailable number: " + clientResponse);
         assertEquals(400, clientResponse.getStatus());
-        String response = clientResponse.getEntity(String.class);
+        String response = clientResponse.readEntity(String.class);
         logger.info(response);
         assertTrue(!response.trim().equalsIgnoreCase("[]"));
         JsonParser parser = new JsonParser();
@@ -396,20 +397,20 @@ public class IncomingPhoneNumbersEndpointTest {
                     .withHeader("Content-Type", "text/xml")
                     .withBody(IncomingPhoneNumbersEndpointTestUtils.purchaseNumberSuccessResponse)));
         // Get Account using admin email address and user email address
-        Client jerseyClient = Client.create();
-        jerseyClient.addFilter(new HTTPBasicAuthFilter(adminUsername, adminAuthToken));
+        Client jerseyClient = ClientBuilder.newClient();
+        jerseyClient.register(HttpAuthenticationFeature.basic(adminUsername, adminAuthToken));
 
         String provisioningURL = deploymentUrl + baseURL + "IncomingPhoneNumbers/Local.json";
-        WebResource webResource = jerseyClient.resource(provisioningURL);
+        WebTarget webResource = jerseyClient.target(provisioningURL);
 
-        MultivaluedMap<String, String> formData = new MultivaluedMapImpl();
+        MultivaluedMap<String, String> formData = new MultivaluedHashMap();
         formData.add("PhoneNumber", "+14166902867");
         formData.add("VoiceUrl", "http://demo.telestax.com/docs/voice.xml");
         formData.add("FriendlyName", "My Company Line");
         formData.add("VoiceMethod", "GET");
-        ClientResponse clientResponse = webResource.type(MediaType.APPLICATION_FORM_URLENCODED_TYPE).accept("application/json").post(ClientResponse.class, formData);
+        Response clientResponse = webResource.request("application/json").post(Entity.form(formData));
         assertTrue(clientResponse.getStatus() == 200);
-        String response = clientResponse.getEntity(String.class);
+        String response = clientResponse.readEntity(String.class);
         logger.info(response);
         assertTrue(!response.trim().equalsIgnoreCase("[]"));
         JsonParser parser = new JsonParser();
@@ -444,22 +445,22 @@ public class IncomingPhoneNumbersEndpointTest {
                     .withHeader("Content-Type", "text/xml")
                     .withBody(IncomingPhoneNumbersEndpointTestUtils.purchaseNumberSuccessResponse)));
         // Get Account using admin email address and user email address
-        Client jerseyClient = Client.create();
-        jerseyClient.addFilter(new HTTPBasicAuthFilter(adminUsername, adminAuthToken));
+        Client jerseyClient = ClientBuilder.newClient();
+        jerseyClient.register(HttpAuthenticationFeature.basic(adminUsername, adminAuthToken));
 
         String provisioningURL = deploymentUrl + baseURL + "IncomingPhoneNumbers/Local.json";
-        WebResource webResource = jerseyClient.resource(provisioningURL);
+        WebTarget webResource = jerseyClient.target(provisioningURL);
 
-        MultivaluedMap<String, String> formData = new MultivaluedMapImpl();
+        MultivaluedMap<String, String> formData = new MultivaluedHashMap();
         formData.add("PhoneNumber", "+14156902867");
         formData.add("VoiceUrl", "http://demo.telestax.com/docs/voice.xml");
         formData.add("FriendlyName", "My Company Line");
         formData.add("VoiceMethod", "GET");
-        ClientResponse clientResponse = webResource.type(MediaType.APPLICATION_FORM_URLENCODED_TYPE).accept("application/json").post(ClientResponse.class, formData);
+        Response clientResponse = webResource.request("application/json").post(Entity.form(formData));
         if(logger.isDebugEnabled())
         	logger.debug("clientResponse for buying unavailable number: " + clientResponse);
         assertEquals(400, clientResponse.getStatus());
-        String response = clientResponse.getEntity(String.class);
+        String response = clientResponse.readEntity(String.class);
         logger.info(response);
         assertTrue(!response.trim().equalsIgnoreCase("[]"));
         JsonParser parser = new JsonParser();
@@ -490,20 +491,20 @@ public class IncomingPhoneNumbersEndpointTest {
                     .withHeader("Content-Type", "text/xml")
                     .withBody(IncomingPhoneNumbersEndpointTestUtils.purchaseNumberSuccessResponse)));
         // Get Account using admin email address and user email address
-        Client jerseyClient = Client.create();
-        jerseyClient.addFilter(new HTTPBasicAuthFilter(adminUsername, adminAuthToken));
+        Client jerseyClient = ClientBuilder.newClient();
+        jerseyClient.register(HttpAuthenticationFeature.basic(adminUsername, adminAuthToken));
 
         String provisioningURL = deploymentUrl + baseURL + "IncomingPhoneNumbers/TollFree.json";
-        WebResource webResource = jerseyClient.resource(provisioningURL);
+        WebTarget webResource = jerseyClient.target(provisioningURL);
 
-        MultivaluedMap<String, String> formData = new MultivaluedMapImpl();
+        MultivaluedMap<String, String> formData = new MultivaluedHashMap();
         formData.add("PhoneNumber", "+14176902867");
         formData.add("VoiceUrl", "http://demo.telestax.com/docs/voice.xml");
         formData.add("FriendlyName", "My Company Line");
         formData.add("VoiceMethod", "GET");
-        ClientResponse clientResponse = webResource.type(MediaType.APPLICATION_FORM_URLENCODED_TYPE).accept("application/json").post(ClientResponse.class, formData);
+        Response clientResponse = webResource.request("application/json").post(Entity.form(formData));
         assertTrue(clientResponse.getStatus() == 200);
-        String response = clientResponse.getEntity(String.class);
+        String response = clientResponse.readEntity(String.class);
         logger.info(response);
         assertTrue(!response.trim().equalsIgnoreCase("[]"));
         JsonParser parser = new JsonParser();
@@ -538,22 +539,22 @@ public class IncomingPhoneNumbersEndpointTest {
                     .withHeader("Content-Type", "text/xml")
                     .withBody(IncomingPhoneNumbersEndpointTestUtils.purchaseNumberSuccessResponse)));
         // Get Account using admin email address and user email address
-        Client jerseyClient = Client.create();
-        jerseyClient.addFilter(new HTTPBasicAuthFilter(adminUsername, adminAuthToken));
+        Client jerseyClient = ClientBuilder.newClient();
+        jerseyClient.register(HttpAuthenticationFeature.basic(adminUsername, adminAuthToken));
 
         String provisioningURL = deploymentUrl + baseURL + "IncomingPhoneNumbers/TollFree.json";
-        WebResource webResource = jerseyClient.resource(provisioningURL);
+        WebTarget webResource = jerseyClient.target(provisioningURL);
 
-        MultivaluedMap<String, String> formData = new MultivaluedMapImpl();
+        MultivaluedMap<String, String> formData = new MultivaluedHashMap();
         formData.add("PhoneNumber", "+14156902867");
         formData.add("VoiceUrl", "http://demo.telestax.com/docs/voice.xml");
         formData.add("FriendlyName", "My Company Line");
         formData.add("VoiceMethod", "GET");
-        ClientResponse clientResponse = webResource.type(MediaType.APPLICATION_FORM_URLENCODED_TYPE).accept("application/json").post(ClientResponse.class, formData);
+        Response clientResponse = webResource.request("application/json").post(Entity.form(formData));
         if(logger.isDebugEnabled())
         	logger.debug("clientResponse for buying unavailable number: " + clientResponse);
         assertEquals(400, clientResponse.getStatus());
-        String response = clientResponse.getEntity(String.class);
+        String response = clientResponse.readEntity(String.class);
         logger.info(response);
         assertTrue(!response.trim().equalsIgnoreCase("[]"));
         JsonParser parser = new JsonParser();
@@ -584,20 +585,20 @@ public class IncomingPhoneNumbersEndpointTest {
                     .withHeader("Content-Type", "text/xml")
                     .withBody(IncomingPhoneNumbersEndpointTestUtils.purchaseNumberSuccessResponse)));
         // Get Account using admin email address and user email address
-        Client jerseyClient = Client.create();
-        jerseyClient.addFilter(new HTTPBasicAuthFilter(adminUsername, adminAuthToken));
+        Client jerseyClient = ClientBuilder.newClient();
+        jerseyClient.register(HttpAuthenticationFeature.basic(adminUsername, adminAuthToken));
 
         String provisioningURL = deploymentUrl + baseURL + "IncomingPhoneNumbers/Mobile.json";
-        WebResource webResource = jerseyClient.resource(provisioningURL);
+        WebTarget webResource = jerseyClient.target(provisioningURL);
 
-        MultivaluedMap<String, String> formData = new MultivaluedMapImpl();
+        MultivaluedMap<String, String> formData = new MultivaluedHashMap();
         formData.add("PhoneNumber", "+14186902867");
         formData.add("VoiceUrl", "http://demo.telestax.com/docs/voice.xml");
         formData.add("FriendlyName", "My Company Line");
         formData.add("VoiceMethod", "GET");
-        ClientResponse clientResponse = webResource.type(MediaType.APPLICATION_FORM_URLENCODED_TYPE).accept("application/json").post(ClientResponse.class, formData);
+        Response clientResponse = webResource.request("application/json").post(Entity.form(formData));
         assertTrue(clientResponse.getStatus() == 200);
-        String response = clientResponse.getEntity(String.class);
+        String response = clientResponse.readEntity(String.class);
         logger.info(response);
         assertTrue(!response.trim().equalsIgnoreCase("[]"));
         JsonParser parser = new JsonParser();
@@ -632,22 +633,22 @@ public class IncomingPhoneNumbersEndpointTest {
                     .withHeader("Content-Type", "text/xml")
                     .withBody(IncomingPhoneNumbersEndpointTestUtils.purchaseNumberSuccessResponse)));
         // Get Account using admin email address and user email address
-        Client jerseyClient = Client.create();
-        jerseyClient.addFilter(new HTTPBasicAuthFilter(adminUsername, adminAuthToken));
+        Client jerseyClient = ClientBuilder.newClient();
+        jerseyClient.register(HttpAuthenticationFeature.basic(adminUsername, adminAuthToken));
 
         String provisioningURL = deploymentUrl + baseURL + "IncomingPhoneNumbers/Mobile.json";
-        WebResource webResource = jerseyClient.resource(provisioningURL);
+        WebTarget webResource = jerseyClient.target(provisioningURL);
 
-        MultivaluedMap<String, String> formData = new MultivaluedMapImpl();
+        MultivaluedMap<String, String> formData = new MultivaluedHashMap();
         formData.add("PhoneNumber", "+14156902867");
         formData.add("VoiceUrl", "http://demo.telestax.com/docs/voice.xml");
         formData.add("FriendlyName", "My Company Line");
         formData.add("VoiceMethod", "GET");
-        ClientResponse clientResponse = webResource.type(MediaType.APPLICATION_FORM_URLENCODED_TYPE).accept("application/json").post(ClientResponse.class, formData);
+        Response clientResponse = webResource.request("application/json").post(Entity.form(formData));
         if(logger.isDebugEnabled())
         	logger.debug("clientResponse for buying unavailable number: " + clientResponse);
         assertEquals(400, clientResponse.getStatus());
-        String response = clientResponse.getEntity(String.class);
+        String response = clientResponse.readEntity(String.class);
         logger.info(response);
         assertTrue(!response.trim().equalsIgnoreCase("[]"));
         JsonParser parser = new JsonParser();
@@ -687,20 +688,20 @@ public class IncomingPhoneNumbersEndpointTest {
                     .withHeader("Content-Type", "text/xml")
                     .withBody(IncomingPhoneNumbersEndpointTestUtils.deleteNumberSuccessResponse)));
         // Get Account using admin email address and user email address
-        Client jerseyClient = Client.create();
-        jerseyClient.addFilter(new HTTPBasicAuthFilter(adminUsername, adminAuthToken));
+        Client jerseyClient = ClientBuilder.newClient();
+        jerseyClient.register(HttpAuthenticationFeature.basic(adminUsername, adminAuthToken));
 
         String provisioningURL = deploymentUrl + baseURL + "IncomingPhoneNumbers.json";
-        WebResource webResource = jerseyClient.resource(provisioningURL);
+        WebTarget webResource = jerseyClient.target(provisioningURL);
 
-        MultivaluedMap<String, String> formData = new MultivaluedMapImpl();
+        MultivaluedMap<String, String> formData = new MultivaluedHashMap();
         formData.add("PhoneNumber", "+14196902867");
         formData.add("VoiceUrl", "http://demo.telestax.com/docs/voice.xml");
         formData.add("FriendlyName", "My Company Line");
         formData.add("VoiceMethod", "GET");
-        ClientResponse clientResponse = webResource.type(MediaType.APPLICATION_FORM_URLENCODED_TYPE).accept("application/json").post(ClientResponse.class, formData);
+        Response clientResponse = webResource.request("application/json").post(Entity.form(formData));
         assertTrue(clientResponse.getStatus() == 200);
-        String response = clientResponse.getEntity(String.class);
+        String response = clientResponse.readEntity(String.class);
         logger.info(response);
         assertTrue(!response.trim().equalsIgnoreCase("[]"));
         JsonParser parser = new JsonParser();
@@ -710,8 +711,8 @@ public class IncomingPhoneNumbersEndpointTest {
 
         String phoneNumberSid = jsonResponse.get("sid").getAsString();
         provisioningURL = deploymentUrl + baseURL + "IncomingPhoneNumbers/" + phoneNumberSid + ".json";
-        webResource = jerseyClient.resource(provisioningURL);
-        clientResponse = webResource.type(MediaType.APPLICATION_FORM_URLENCODED_TYPE).accept("application/json").delete(ClientResponse.class);
+        webResource = jerseyClient.target(provisioningURL);
+        clientResponse = webResource.request("application/json").delete(Response.class);
         assertTrue(clientResponse.getStatus() == 204);
     }
 
@@ -745,20 +746,20 @@ public class IncomingPhoneNumbersEndpointTest {
                     .withHeader("Content-Type", "text/xml")
                     .withBody(IncomingPhoneNumbersEndpointTestUtils.deleteNumberSuccessResponse)));
         // Get Account using admin email address and user email address
-        Client jerseyClient = Client.create();
-        jerseyClient.addFilter(new HTTPBasicAuthFilter(adminUsername, adminAuthToken));
+        Client jerseyClient = ClientBuilder.newClient();
+        jerseyClient.register(HttpAuthenticationFeature.basic(adminUsername, adminAuthToken));
 
         String provisioningURL = deploymentUrl + baseURL + "IncomingPhoneNumbers.json";
-        WebResource webResource = jerseyClient.resource(provisioningURL);
+        WebTarget webResource = jerseyClient.target(provisioningURL);
 
-        MultivaluedMap<String, String> formData = new MultivaluedMapImpl();
+        MultivaluedMap<String, String> formData = new MultivaluedHashMap();
         formData.add("PhoneNumber", "+14206902867");
         formData.add("VoiceUrl", "http://demo.telestax.com/docs/voice.xml");
         formData.add("FriendlyName", "My Company Line");
         formData.add("VoiceMethod", "GET");
-        ClientResponse clientResponse = webResource.type(MediaType.APPLICATION_FORM_URLENCODED_TYPE).accept("application/json").post(ClientResponse.class, formData);
+        Response clientResponse = webResource.request("application/json").post(Entity.form(formData));
         assertTrue(clientResponse.getStatus() == 200);
-        String response = clientResponse.getEntity(String.class);
+        String response = clientResponse.readEntity(String.class);
         logger.info(response);
         assertTrue(!response.trim().equalsIgnoreCase("[]"));
         JsonParser parser = new JsonParser();
@@ -768,16 +769,16 @@ public class IncomingPhoneNumbersEndpointTest {
 
         String phoneNumberSid = jsonResponse.get("sid").getAsString();
         provisioningURL = deploymentUrl + baseURL + "IncomingPhoneNumbers/" + phoneNumberSid + ".json";
-        webResource = jerseyClient.resource(provisioningURL);
-        formData = new MultivaluedMapImpl();
+        webResource = jerseyClient.target(provisioningURL);
+        formData = new MultivaluedHashMap();
         formData.add("VoiceUrl", "http://demo.telestax.com/docs/voice2.xml");
         formData.add("SmsUrl", "http://demo.telestax.com/docs/sms2.xml");
         formData.add("VoiceMethod", "POST");
         formData.add("SMSMethod", "GET");
-        clientResponse = webResource.type(MediaType.APPLICATION_FORM_URLENCODED_TYPE).accept("application/json").post(ClientResponse.class, formData);
+        clientResponse = webResource.request("application/json").post(Entity.form(formData));
         logger.info(clientResponse);
         assertTrue(clientResponse.getStatus() == 200);
-        response = clientResponse.getEntity(String.class);
+        response = clientResponse.readEntity(String.class);
         logger.info(response);
         assertTrue(!response.trim().equalsIgnoreCase("[]"));
         parser = new JsonParser();
@@ -789,15 +790,15 @@ public class IncomingPhoneNumbersEndpointTest {
     @Test
     @Category(FeatureAltTests.class)
     public void testMigratePhoneNumberSuccess() {
-        Client jerseyClient = Client.create();
-        jerseyClient.addFilter(new HTTPBasicAuthFilter(adminUsername, adminAuthToken));
+        Client jerseyClient = ClientBuilder.newClient();
+        jerseyClient.register(HttpAuthenticationFeature.basic(adminUsername, adminAuthToken));
 
         String provisioningURL = deploymentUrl + migrateURL + "IncomingPhoneNumbers/migrate";
-        WebResource webResource = jerseyClient.resource(provisioningURL);
-        MultivaluedMap<String, String> formData = new MultivaluedMapImpl();
-        formData = new MultivaluedMapImpl();
+        WebTarget webResource = jerseyClient.target(provisioningURL);
+        MultivaluedMap<String, String> formData = new MultivaluedHashMap();
+        formData = new MultivaluedHashMap();
         formData.add("OrganizationSid", "ORafbe225ad37541eba518a74248f0ac4c");
-        ClientResponse clientResponse = webResource.type(MediaType.APPLICATION_FORM_URLENCODED_TYPE).accept("application/json").post(ClientResponse.class, formData);
+        Response clientResponse = webResource.request("application/json").post(Entity.form(formData));
         logger.info(clientResponse);
         assertEquals(200, clientResponse.getStatus());
     }
@@ -805,15 +806,15 @@ public class IncomingPhoneNumbersEndpointTest {
     @Test
     @Category(FeatureExpTests.class)
     public void testMigratePhoneNumberPermission() {
-        Client jerseyClient = Client.create();
-        jerseyClient.addFilter(new HTTPBasicAuthFilter(adminOrg2AccountSid, adminAuthToken));
+        Client jerseyClient = ClientBuilder.newClient();
+        jerseyClient.register(HttpAuthenticationFeature.basic(adminOrg2AccountSid, adminAuthToken));
 
         String provisioningURL = deploymentUrl + migrateURL + "IncomingPhoneNumbers/migrate";
-        WebResource webResource = jerseyClient.resource(provisioningURL);
-        MultivaluedMap<String, String> formData = new MultivaluedMapImpl();
-        formData = new MultivaluedMapImpl();
+        WebTarget webResource = jerseyClient.target(provisioningURL);
+        MultivaluedMap<String, String> formData = new MultivaluedHashMap();
+        formData = new MultivaluedHashMap();
         formData.add("OrganizationSid", "ORafbe225ad37541eba518a74248f0ac4c");
-        ClientResponse clientResponse = webResource.type(MediaType.APPLICATION_FORM_URLENCODED_TYPE).accept("application/json").post(ClientResponse.class, formData);
+        Response clientResponse = webResource.request("application/json").post(Entity.form(formData));
         logger.info(clientResponse);
         assertEquals(403, clientResponse.getStatus());
     }
@@ -824,15 +825,15 @@ public class IncomingPhoneNumbersEndpointTest {
     @Test
     @Category(FeatureExpTests.class)
     public void testMigratePhoneNumberSuperAdminMigration() {
-        Client jerseyClient = Client.create();
-        jerseyClient.addFilter(new HTTPBasicAuthFilter(adminAccountSid, adminAuthToken));
+        Client jerseyClient = ClientBuilder.newClient();
+        jerseyClient.register(HttpAuthenticationFeature.basic(adminAccountSid, adminAuthToken));
 
         String provisioningURL = deploymentUrl + baseURL + "IncomingPhoneNumbers/migrate";
-        WebResource webResource = jerseyClient.resource(provisioningURL);
-        MultivaluedMap<String, String> formData = new MultivaluedMapImpl();
-        formData = new MultivaluedMapImpl();
+        WebTarget webResource = jerseyClient.target(provisioningURL);
+        MultivaluedMap<String, String> formData = new MultivaluedHashMap();
+        formData = new MultivaluedHashMap();
         formData.add("OrganizationSid", "ORafbe225ad37541eba518a74248f0ac4c");
-        ClientResponse clientResponse = webResource.type(MediaType.APPLICATION_FORM_URLENCODED_TYPE).accept("application/json").post(ClientResponse.class, formData);
+        Response clientResponse = webResource.request("application/json").post(Entity.form(formData));
         logger.info(clientResponse);
         assertEquals(400, clientResponse.getStatus());
     }
@@ -889,20 +890,20 @@ public class IncomingPhoneNumbersEndpointTest {
                     .withHeader("Content-Type", "text/xml")
                     .withBody(IncomingPhoneNumbersEndpointTestUtils.deleteNumberSuccessResponse)));
         // Get Account using admin email address and user email address
-        Client jerseyClient = Client.create();
-        jerseyClient.addFilter(new HTTPBasicAuthFilter(adminUsername, adminAuthToken));
+        Client jerseyClient = ClientBuilder.newClient();
+        jerseyClient.register(HttpAuthenticationFeature.basic(adminUsername, adminAuthToken));
 
         String provisioningURL = deploymentUrl + baseURL + "IncomingPhoneNumbers.json";
-        WebResource webResource = jerseyClient.resource(provisioningURL);
+        WebTarget webResource = jerseyClient.target(provisioningURL);
 
-        MultivaluedMap<String, String> formData = new MultivaluedMapImpl();
+        MultivaluedMap<String, String> formData = new MultivaluedHashMap();
         formData.add("PhoneNumber", "+14216902867");
         formData.add("VoiceUrl", "http://demo.telestax.com/docs/voice.xml");
         formData.add("FriendlyName", "My Company Line");
         formData.add("VoiceMethod", "GET");
-        ClientResponse clientResponse = webResource.type(MediaType.APPLICATION_FORM_URLENCODED_TYPE).accept("application/json").post(ClientResponse.class, formData);
+        Response clientResponse = webResource.request("application/json").post(Entity.form(formData));
         assertTrue(clientResponse.getStatus() == 200);
-        String response = clientResponse.getEntity(String.class);
+        String response = clientResponse.readEntity(String.class);
         logger.info(response);
         assertTrue(!response.trim().equalsIgnoreCase("[]"));
         JsonParser parser = new JsonParser();
@@ -911,21 +912,21 @@ public class IncomingPhoneNumbersEndpointTest {
         assertTrue(IncomingPhoneNumbersEndpointTestUtils.match(jsonResponse.toString(),IncomingPhoneNumbersEndpointTestUtils.jSonResultAccountAssociatedPurchaseNumber));
         String phoneNumberSid = jsonResponse.get("sid").getAsString();
 
-        formData = new MultivaluedMapImpl();
+        formData = new MultivaluedHashMap();
         formData.add("PhoneNumber", "+15216902867");
         formData.add("VoiceUrl", "http://demo.telestax.com/docs/voice.xml");
         formData.add("FriendlyName", "My 2nd Company Line");
         formData.add("VoiceMethod", "GET");
-        clientResponse = webResource.type(MediaType.APPLICATION_FORM_URLENCODED_TYPE).accept("application/json").post(ClientResponse.class, formData);
+        clientResponse = webResource.request("application/json").post(Entity.form(formData));
         assertTrue(clientResponse.getStatus() == 200);
-        response = clientResponse.getEntity(String.class);
+        response = clientResponse.readEntity(String.class);
         logger.info(response);
         assertTrue(!response.trim().equalsIgnoreCase("[]"));
         parser = new JsonParser();
         jsonResponse = parser.parse(response).getAsJsonObject();
         String secondPhoneNumberSid = jsonResponse.get("sid").getAsString();
 
-//        formData = new MultivaluedMapImpl();
+//        formData = new MultivaluedHashMap();
 //        formData.add("VoiceUrl", "http://demo.telestax.com/docs/voice2.xml");
 
         Map<String, String> filters = new HashMap<>();
@@ -942,13 +943,13 @@ public class IncomingPhoneNumbersEndpointTest {
         assertTrue(IncomingPhoneNumbersEndpointTestUtils.match(jsonArray.get(jsonArray.size()-1).getAsJsonObject().toString(),IncomingPhoneNumbersEndpointTestUtils.jSonResultAccountAssociatedPurchaseNumberResult));
 
         provisioningURL = deploymentUrl + baseURL + "IncomingPhoneNumbers/" + phoneNumberSid + ".json";
-        webResource = jerseyClient.resource(provisioningURL);
-        clientResponse = webResource.type(MediaType.APPLICATION_FORM_URLENCODED_TYPE).accept("application/json").delete(ClientResponse.class);
+        webResource = jerseyClient.target(provisioningURL);
+        clientResponse = webResource.request("application/json").delete(Response.class);
         assertTrue(clientResponse.getStatus() == 204);
 
         provisioningURL = deploymentUrl + baseURL + "IncomingPhoneNumbers/" + secondPhoneNumberSid + ".json";
-        webResource = jerseyClient.resource(provisioningURL);
-        clientResponse = webResource.type(MediaType.APPLICATION_FORM_URLENCODED_TYPE).accept("application/json").delete(ClientResponse.class);
+        webResource = jerseyClient.target(provisioningURL);
+        clientResponse = webResource.request("application/json").delete(Response.class);
         assertTrue(clientResponse.getStatus() == 204);
     }
 
@@ -1005,20 +1006,20 @@ public class IncomingPhoneNumbersEndpointTest {
                     .withHeader("Content-Type", "text/xml")
                     .withBody(IncomingPhoneNumbersEndpointTestUtils.deleteNumberSuccessResponse)));
         // Get Account using admin email address and user email address
-        Client jerseyClient = Client.create();
-        jerseyClient.addFilter(new HTTPBasicAuthFilter(adminUsername, adminAuthToken));
+        Client jerseyClient = ClientBuilder.newClient();
+        jerseyClient.register(HttpAuthenticationFeature.basic(adminUsername, adminAuthToken));
 
         String provisioningURL = deploymentUrl + baseURL + "IncomingPhoneNumbers.json";
-        WebResource webResource = jerseyClient.resource(provisioningURL);
+        WebTarget webResource = jerseyClient.target(provisioningURL);
 
-        MultivaluedMap<String, String> formData = new MultivaluedMapImpl();
+        MultivaluedMap<String, String> formData = new MultivaluedHashMap();
         formData.add("PhoneNumber", "+14216902867");
         formData.add("VoiceUrl", "http://demo.telestax.com/docs/voice.xml");
         formData.add("FriendlyName", "My Company Line");
         formData.add("VoiceMethod", "GET");
-        ClientResponse clientResponse = webResource.type(MediaType.APPLICATION_FORM_URLENCODED_TYPE).accept("application/json").post(ClientResponse.class, formData);
+        Response clientResponse = webResource.request("application/json").post(Entity.form(formData));
         assertTrue(clientResponse.getStatus() == 200);
-        String response = clientResponse.getEntity(String.class);
+        String response = clientResponse.readEntity(String.class);
         logger.info(response);
         assertTrue(!response.trim().equalsIgnoreCase("[]"));
         JsonParser parser = new JsonParser();
@@ -1027,14 +1028,14 @@ public class IncomingPhoneNumbersEndpointTest {
         assertTrue(IncomingPhoneNumbersEndpointTestUtils.match(jsonResponse.toString(),IncomingPhoneNumbersEndpointTestUtils.jSonResultAccountAssociatedPurchaseNumber));
         String phoneNumberSid = jsonResponse.get("sid").getAsString();
 
-        formData = new MultivaluedMapImpl();
+        formData = new MultivaluedHashMap();
         formData.add("PhoneNumber", "+15216902867");
         formData.add("VoiceUrl", "http://demo.telestax.com/docs/voice.xml");
         formData.add("FriendlyName", "My 2nd Company Line");
         formData.add("VoiceMethod", "GET");
-        clientResponse = webResource.type(MediaType.APPLICATION_FORM_URLENCODED_TYPE).accept("application/json").post(ClientResponse.class, formData);
+        clientResponse = webResource.request("application/json").post(Entity.form(formData));
         assertTrue(clientResponse.getStatus() == 200);
-        response = clientResponse.getEntity(String.class);
+        response = clientResponse.readEntity(String.class);
         logger.info(response);
         assertTrue(!response.trim().equalsIgnoreCase("[]"));
         parser = new JsonParser();
@@ -1054,13 +1055,13 @@ public class IncomingPhoneNumbersEndpointTest {
         assertTrue(IncomingPhoneNumbersEndpointTestUtils.match(jsonArray.get(0).getAsJsonObject().toString(),IncomingPhoneNumbersEndpointTestUtils.jSonResultAccountAssociatedPurchaseNumberResult));
 
         provisioningURL = deploymentUrl + baseURL + "IncomingPhoneNumbers/" + phoneNumberSid + ".json";
-        webResource = jerseyClient.resource(provisioningURL);
-        clientResponse = webResource.type(MediaType.APPLICATION_FORM_URLENCODED_TYPE).accept("application/json").delete(ClientResponse.class);
+        webResource = jerseyClient.target(provisioningURL);
+        clientResponse = webResource.request("application/json").delete(Response.class);
         assertTrue(clientResponse.getStatus() == 204);
 
         provisioningURL = deploymentUrl + baseURL + "IncomingPhoneNumbers/" + secondPhoneNumberSid + ".json";
-        webResource = jerseyClient.resource(provisioningURL);
-        clientResponse = webResource.type(MediaType.APPLICATION_FORM_URLENCODED_TYPE).accept("application/json").delete(ClientResponse.class);
+        webResource = jerseyClient.target(provisioningURL);
+        clientResponse = webResource.request("application/json").delete(Response.class);
         assertTrue(clientResponse.getStatus() == 204);
     }
 
@@ -1118,20 +1119,20 @@ public class IncomingPhoneNumbersEndpointTest {
                     .withHeader("Content-Type", "text/xml")
                     .withBody(IncomingPhoneNumbersEndpointTestUtils.deleteNumberSuccessResponse)));
         // Get Account using admin email address and user email address
-        Client jerseyClient = Client.create();
-        jerseyClient.addFilter(new HTTPBasicAuthFilter(adminUsername, adminAuthToken));
+        Client jerseyClient = ClientBuilder.newClient();
+        jerseyClient.register(HttpAuthenticationFeature.basic(adminUsername, adminAuthToken));
 
         String provisioningURL = deploymentUrl + baseURL + "IncomingPhoneNumbers.json";
-        WebResource webResource = jerseyClient.resource(provisioningURL);
+        WebTarget webResource = jerseyClient.target(provisioningURL);
 
-        MultivaluedMap<String, String> formData = new MultivaluedMapImpl();
+        MultivaluedMap<String, String> formData = new MultivaluedHashMap();
         formData.add("PhoneNumber", "+14216902867");
         formData.add("VoiceUrl", "http://demo.telestax.com/docs/voice.xml");
         formData.add("FriendlyName", "My Company Line");
         formData.add("VoiceMethod", "GET");
-        ClientResponse clientResponse = webResource.type(MediaType.APPLICATION_FORM_URLENCODED_TYPE).accept("application/json").post(ClientResponse.class, formData);
+        Response clientResponse = webResource.request("application/json").post(Entity.form(formData));
         assertEquals(200, clientResponse.getStatus());
-        String response = clientResponse.getEntity(String.class);
+        String response = clientResponse.readEntity(String.class);
         logger.info(response);
         assertTrue(!response.trim().equalsIgnoreCase("[]"));
         JsonParser parser = new JsonParser();
@@ -1140,14 +1141,14 @@ public class IncomingPhoneNumbersEndpointTest {
         assertTrue(IncomingPhoneNumbersEndpointTestUtils.match(jsonResponse.toString(),IncomingPhoneNumbersEndpointTestUtils.jSonResultAccountAssociatedPurchaseNumber));
         String phoneNumberSid = jsonResponse.get("sid").getAsString();
 
-        formData = new MultivaluedMapImpl();
+        formData = new MultivaluedHashMap();
         formData.add("PhoneNumber", "+15216902867");
         formData.add("VoiceUrl", "http://demo.telestax.com/docs/voice.xml");
         formData.add("FriendlyName", "My 2nd Company Line");
         formData.add("VoiceMethod", "GET");
-        clientResponse = webResource.type(MediaType.APPLICATION_FORM_URLENCODED_TYPE).accept("application/json").post(ClientResponse.class, formData);
+        clientResponse = webResource.request("application/json").post(Entity.form(formData));
         assertTrue(clientResponse.getStatus() == 200);
-        response = clientResponse.getEntity(String.class);
+        response = clientResponse.readEntity(String.class);
         logger.info(response);
         assertTrue(!response.trim().equalsIgnoreCase("[]"));
         parser = new JsonParser();
@@ -1158,7 +1159,7 @@ public class IncomingPhoneNumbersEndpointTest {
         JsonObject jsonObject =  RestcommIncomingPhoneNumberTool.getInstance().getIncomingPhoneNumbersUsingFilter(deploymentUrl.toString(), adminAccountSid, adminAuthToken, filters);
         JsonArray jsonArray = jsonObject.get("incomingPhoneNumbers").getAsJsonArray();
 
-        webResource = jerseyClient.resource(provisioningURL);
+        webResource = jerseyClient.target(provisioningURL);
 
         logger.info(jsonArray + " \n " + jsonArray.size());
 
@@ -1167,13 +1168,13 @@ public class IncomingPhoneNumbersEndpointTest {
         assertTrue(IncomingPhoneNumbersEndpointTestUtils.match(jsonArray.get(jsonArray.size() - 1).getAsJsonObject().toString(),IncomingPhoneNumbersEndpointTestUtils.jSonResultAccountAssociatedPurchaseNumberResult));
 
         provisioningURL = deploymentUrl + baseURL + "IncomingPhoneNumbers/" + phoneNumberSid + ".json";
-        webResource = jerseyClient.resource(provisioningURL);
-        clientResponse = webResource.type(MediaType.APPLICATION_FORM_URLENCODED_TYPE).accept("application/json").delete(ClientResponse.class);
+        webResource = jerseyClient.target(provisioningURL);
+        clientResponse = webResource.request("application/json").delete(Response.class);
         assertTrue(clientResponse.getStatus() == 204);
 
         provisioningURL = deploymentUrl + baseURL + "IncomingPhoneNumbers/" + secondPhoneNumberSid + ".json";
-        webResource = jerseyClient.resource(provisioningURL);
-        clientResponse = webResource.type(MediaType.APPLICATION_FORM_URLENCODED_TYPE).accept("application/json").delete(ClientResponse.class);
+        webResource = jerseyClient.target(provisioningURL);
+        clientResponse = webResource.request("application/json").delete(Response.class);
         assertTrue(clientResponse.getStatus() == 204);
     }
 
@@ -1199,21 +1200,21 @@ public class IncomingPhoneNumbersEndpointTest {
                     .withHeader("Content-Type", "text/xml")
                     .withBody(IncomingPhoneNumbersEndpointTestUtils.purchaseNumberSuccessResponse)));
         // Get Account using admin email address and user email address
-        Client jerseyClient = Client.create();
-        jerseyClient.addFilter(new HTTPBasicAuthFilter(adminUsername, adminAuthToken));
+        Client jerseyClient = ClientBuilder.newClient();
+        jerseyClient.register(HttpAuthenticationFeature.basic(adminUsername, adminAuthToken));
 
         String provisioningURL = deploymentUrl + baseURL + "IncomingPhoneNumbers/Local.json";
-        WebResource webResource = jerseyClient.resource(provisioningURL);
+        WebTarget webResource = jerseyClient.target(provisioningURL);
 
-        MultivaluedMap<String, String> formData = new MultivaluedMapImpl();
+        MultivaluedMap<String, String> formData = new MultivaluedHashMap();
         formData.add("PhoneNumber", "11223344");
         formData.add("VoiceUrl", "http://demo.telestax.com/docs/voice.xml");
         formData.add("FriendlyName", "My Company Line");
         formData.add("VoiceMethod", "GET");
         formData.add("isSIP", "TRUE");
-        ClientResponse clientResponse = webResource.type(MediaType.APPLICATION_FORM_URLENCODED_TYPE).accept("application/json").post(ClientResponse.class, formData);
+        Response clientResponse = webResource.request("application/json").post(Entity.form(formData));
         assertTrue(clientResponse.getStatus() == 200);
-        String response = clientResponse.getEntity(String.class);
+        String response = clientResponse.readEntity(String.class);
         System.out.println(response);
         assertTrue(!response.trim().equalsIgnoreCase("[]"));
         JsonParser parser = new JsonParser();
@@ -1244,17 +1245,17 @@ public class IncomingPhoneNumbersEndpointTest {
                     .withHeader("Content-Type", "text/xml")
                     .withBody(IncomingPhoneNumbersEndpointTestUtils.purchaseNumberSuccessResponse)));
         // Get Account using admin email address and user email address
-        jerseyClient = Client.create();
-        jerseyClient.addFilter(new HTTPBasicAuthFilter(adminUsername, adminAuthToken));
+        jerseyClient = ClientBuilder.newClient();
+        jerseyClient.register(HttpAuthenticationFeature.basic(adminUsername, adminAuthToken));
         provisioningURL = deploymentUrl + baseURL + "IncomingPhoneNumbers/Local.json";
-        webResource = jerseyClient.resource(provisioningURL);
-        formData = new MultivaluedMapImpl();
+        webResource = jerseyClient.target(provisioningURL);
+        formData = new MultivaluedHashMap();
         formData.add("PhoneNumber", "11223344");
         formData.add("VoiceUrl", "http://demo.telestax.com/docs/voice.xml");
         formData.add("FriendlyName", "My Company Line");
         formData.add("VoiceMethod", "GET");
         formData.add("isSIP", "TRUE");
-        clientResponse = webResource.type(MediaType.APPLICATION_FORM_URLENCODED_TYPE).accept("application/json").post(ClientResponse.class, formData);
+        clientResponse = webResource.request("application/json").post(Entity.form(formData));
         logger.info("testCreatePureSipPhoneNumber from default org TWICE clientResponse: " + clientResponse.toString());
         assertTrue(clientResponse.getStatus() != 200);
 
@@ -1278,21 +1279,21 @@ public class IncomingPhoneNumbersEndpointTest {
                     .withStatus(200)
                     .withHeader("Content-Type", "text/xml")
                     .withBody(IncomingPhoneNumbersEndpointTestUtils.purchaseNumberSuccessResponse)));
-        jerseyClient = Client.create();
-        jerseyClient.addFilter(new HTTPBasicAuthFilter(adminOrg2Username, adminOrg2AuthToken));
+        jerseyClient = ClientBuilder.newClient();
+        jerseyClient.register(HttpAuthenticationFeature.basic(adminOrg2Username, adminOrg2AuthToken));
 
         provisioningURL = deploymentUrl + baseURLOrg2 + "IncomingPhoneNumbers/Local.json";
-        webResource = jerseyClient.resource(provisioningURL);
+        webResource = jerseyClient.target(provisioningURL);
 
-        formData = new MultivaluedMapImpl();
+        formData = new MultivaluedHashMap();
         formData.add("PhoneNumber", "11223344");
         formData.add("VoiceUrl", "http://demo.telestax.com/docs/voice.xml");
         formData.add("FriendlyName", "My Company Line");
         formData.add("VoiceMethod", "GET");
         formData.add("isSIP", "TRUE");
-        clientResponse = webResource.type(MediaType.APPLICATION_FORM_URLENCODED_TYPE).accept("application/json").post(ClientResponse.class, formData);
+        clientResponse = webResource.request("application/json").post(Entity.form(formData));
         assertTrue(clientResponse.getStatus() == 200);
-        response = clientResponse.getEntity(String.class);
+        response = clientResponse.readEntity(String.class);
         System.out.println(response);
         assertTrue(!response.trim().equalsIgnoreCase("[]"));
         parser = new JsonParser();
@@ -1327,20 +1328,20 @@ public class IncomingPhoneNumbersEndpointTest {
                     .withHeader("Content-Type", "text/xml")
                     .withBody(IncomingPhoneNumbersEndpointTestUtils.purchaseNumberSuccessResponse)));
         // Get Account using admin email address and user email address
-        Client jerseyClient = Client.create();
-        jerseyClient.addFilter(new HTTPBasicAuthFilter(adminUsername, adminAuthToken));
+        Client jerseyClient = ClientBuilder.newClient();
+        jerseyClient.register(HttpAuthenticationFeature.basic(adminUsername, adminAuthToken));
 
         String provisioningURL = deploymentUrl + baseURL + "IncomingPhoneNumbers/Local.json";
-        WebResource webResource = jerseyClient.resource(provisioningURL);
+        WebTarget webResource = jerseyClient.target(provisioningURL);
 
-        MultivaluedMap<String, String> formData = new MultivaluedMapImpl();
+        MultivaluedMap<String, String> formData = new MultivaluedHashMap();
         formData.add("PhoneNumber", "+14166902867");
         formData.add("VoiceUrl", "http://demo.telestax.com/docs/voice.xml");
         formData.add("FriendlyName", "My Company Line");
         formData.add("VoiceMethod", "GET");
-        ClientResponse clientResponse = webResource.type(MediaType.APPLICATION_FORM_URLENCODED_TYPE).accept("application/json").post(ClientResponse.class, formData);
+        Response clientResponse = webResource.request("application/json").post(Entity.form(formData));
         assertTrue(clientResponse.getStatus() == 200);
-        String response = clientResponse.getEntity(String.class);
+        String response = clientResponse.readEntity(String.class);
         System.out.println(response);
         assertTrue(!response.trim().equalsIgnoreCase("[]"));
         JsonParser parser = new JsonParser();
@@ -1370,16 +1371,16 @@ public class IncomingPhoneNumbersEndpointTest {
                     .withHeader("Content-Type", "text/xml")
                     .withBody(IncomingPhoneNumbersEndpointTestUtils.purchaseNumberSuccessResponse)));
         // Get Account using admin email address and user email address
-        jerseyClient = Client.create();
-        jerseyClient.addFilter(new HTTPBasicAuthFilter(adminUsername, adminAuthToken));
+        jerseyClient = ClientBuilder.newClient();
+        jerseyClient.register(HttpAuthenticationFeature.basic(adminUsername, adminAuthToken));
         provisioningURL = deploymentUrl + baseURL + "IncomingPhoneNumbers/Local.json";
-        webResource = jerseyClient.resource(provisioningURL);
-        formData = new MultivaluedMapImpl();
+        webResource = jerseyClient.target(provisioningURL);
+        formData = new MultivaluedHashMap();
         formData.add("PhoneNumber", "+4156902867");
         formData.add("VoiceUrl", "http://demo.telestax.com/docs/voice.xml");
         formData.add("FriendlyName", "My Company Line");
         formData.add("VoiceMethod", "GET");
-        clientResponse = webResource.type(MediaType.APPLICATION_FORM_URLENCODED_TYPE).accept("application/json").post(ClientResponse.class, formData);
+        clientResponse = webResource.request("application/json").post(Entity.form(formData));
         logger.info("testCreatePureSipPhoneNumber from default org TWICE clientResponse: " + clientResponse.toString());
         assertEquals(400, clientResponse.getStatus());
 
@@ -1388,17 +1389,17 @@ public class IncomingPhoneNumbersEndpointTest {
          * under different organization/account,
          * it should not be allowed
          * */
-        jerseyClient.addFilter(new HTTPBasicAuthFilter(adminOrg2Username, adminOrg2AuthToken));
+        jerseyClient.register(HttpAuthenticationFeature.basic(adminOrg2Username, adminOrg2AuthToken));
 
         provisioningURL = deploymentUrl + baseURLOrg2 + "IncomingPhoneNumbers/Local.json";
-        webResource = jerseyClient.resource(provisioningURL);
+        webResource = jerseyClient.target(provisioningURL);
 
-        formData = new MultivaluedMapImpl();
+        formData = new MultivaluedHashMap();
         formData.add("PhoneNumber", "+4156902867");
         formData.add("VoiceUrl", "http://demo.telestax.com/docs/voice.xml");
         formData.add("FriendlyName", "My Company Line");
         formData.add("VoiceMethod", "GET");
-        clientResponse = webResource.type(MediaType.APPLICATION_FORM_URLENCODED_TYPE).accept("application/json").post(ClientResponse.class, formData);
+        clientResponse = webResource.request("application/json").post(Entity.form(formData));
         assertEquals(400, clientResponse.getStatus());
 
     }

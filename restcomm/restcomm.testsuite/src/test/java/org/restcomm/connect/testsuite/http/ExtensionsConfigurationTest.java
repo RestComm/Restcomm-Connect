@@ -1,7 +1,7 @@
 package org.restcomm.connect.testsuite.http;
 
 import com.google.gson.JsonObject;
-import com.sun.jersey.core.util.MultivaluedMapImpl;
+import javax.ws.rs.core.MultivaluedHashMap;
 import org.apache.log4j.Logger;
 import org.jboss.arquillian.container.test.api.Deployer;
 import org.jboss.arquillian.container.test.api.Deployment;
@@ -64,7 +64,7 @@ public class ExtensionsConfigurationTest {
     @Test
     public void testCreateAndUpdateJsonConfiguration() throws UnsupportedEncodingException {
         String extensionName = "testExtension";
-        MultivaluedMap<String, String> configurationParams = new MultivaluedMapImpl();
+        MultivaluedMap<String, String> configurationParams = new MultivaluedHashMap();
         configurationParams.add("ExtensionName", extensionName);
         configurationParams.add("ConfigurationData", jsonConfiguration);
 
@@ -80,7 +80,7 @@ public class ExtensionsConfigurationTest {
 
         String extensionSid = extension.get("sid").getAsString();
 
-        MultivaluedMap<String, String> updatedConfigurationParams = new MultivaluedMapImpl();
+        MultivaluedMap<String, String> updatedConfigurationParams = new MultivaluedHashMap();
         updatedConfigurationParams.add("ExtensionName", extensionName);
         updatedConfigurationParams.add("ConfigurationData", updatedJsonConfiguration);
 
@@ -94,7 +94,7 @@ public class ExtensionsConfigurationTest {
     @Test
     public void testCreateJsonConfigurationAndGetBySid() throws UnsupportedEncodingException {
         String extensionName = "testExtension2";
-        MultivaluedMap<String, String> configurationParams = new MultivaluedMapImpl();
+        MultivaluedMap<String, String> configurationParams = new MultivaluedHashMap();
         configurationParams.add("ExtensionName", extensionName);
         configurationParams.add("ConfigurationData", jsonConfiguration);
 

@@ -35,10 +35,10 @@ import org.junit.experimental.categories.Category;
 import org.junit.runner.RunWith;
 import org.restcomm.connect.commons.annotations.FeatureExpTests;
 
-import com.sun.jersey.api.client.Client;
-import com.sun.jersey.api.client.ClientResponse;
-import com.sun.jersey.api.client.WebResource;
-import com.sun.jersey.core.util.MultivaluedMapImpl;
+import javax.ws.rs.client.Client;import javax.ws.rs.client.Entity;
+import javax.ws.rs.core.Response;
+import javax.ws.rs.client.WebTarget;
+import javax.ws.rs.core.MultivaluedHashMap;
 
 /**
  * Selective testing (relies on accounts endpoint only) that involves accounts, roles and permissions.
@@ -70,14 +70,14 @@ public class RoleSensitiveTest extends EndpointTest {
     public void testSinglePermissionAccess() {
         // user can read his account
         Client jersey = getClient(userUsername, userAuthToken);
-        WebResource resource = jersey.resource( getResourceUrl("/2012-04-24/Accounts.json/" + userSid) );
-        ClientResponse response = resource.get(ClientResponse.class);
+        WebTarget resource = jersey.target( getResourceUrl("/2012-04-24/Accounts.json/" + userSid) );
+        Response response = resource.request().get();
         Assert.assertEquals("user@company.com cannot read his account", 200, response.getStatus());
         // user is refused access when missing permission
-        resource = jersey.resource( getResourceUrl("/2012-04-24/Accounts/" + userSid + ".json") );
-        MultivaluedMap<String, String> applicationParams = new MultivaluedMapImpl();
+        resource = jersey.target( getResourceUrl("/2012-04-24/Accounts/" + userSid + ".json") );
+        MultivaluedMap<String, String> applicationParams = new MultivaluedHashMap();
         applicationParams.add("FriendlyName", "Test User UPDATED");
-        response = resource.accept(MediaType.APPLICATION_JSON).put(ClientResponse.class, applicationParams);
+        response = resource.request(MediaType.APPLICATION_JSON).put(Entity.form(applicationParams));
         Assert.assertEquals(403, response.getStatus());
     }
 
@@ -86,8 +86,8 @@ public class RoleSensitiveTest extends EndpointTest {
     public void testSiblingAccountPermissionAccess() {
         // user cannot read sibling account although he has Accounts:Read permission
         Client jersey = getClient(userUsername, userAuthToken);
-        WebResource resource = jersey.resource( getResourceUrl("/2012-04-24/Accounts.json/" + developerSid) );
-        ClientResponse response = resource.get(ClientResponse.class);
+        WebTarget resource = jersey.target( getResourceUrl("/2012-04-24/Accounts.json/" + developerSid) );
+        Response response = resource.request().get();
         Assert.assertEquals(403, response.getStatus());
     }
 
@@ -95,14 +95,14 @@ public class RoleSensitiveTest extends EndpointTest {
     public void testStarPermission() {
         // power user can read his account
         Client jersey = getClient(powerUserUsername, powerUserAuthToken);
-        WebResource resource = jersey.resource( getResourceUrl("/2012-04-24/Accounts.json/" + powerUserSid) );
-        ClientResponse response = resource.get(ClientResponse.class);
+        WebTarget resource = jersey.target( getResourceUrl("/2012-04-24/Accounts.json/" + powerUserSid) );
+        Response response = resource.request().get();
         Assert.assertEquals(200, response.getStatus());
         // power user is refused access when missing permission
-        resource = jersey.resource( getResourceUrl("/2012-04-24/Accounts.json/" + powerUserSid) );
-        MultivaluedMap<String, String> applicationParams = new MultivaluedMapImpl();
+        resource = jersey.target( getResourceUrl("/2012-04-24/Accounts.json/" + powerUserSid) );
+        MultivaluedMap<String, String> applicationParams = new MultivaluedHashMap();
         applicationParams.add("FriendlyName", "Test User UPDATED");
-        response = resource.accept(MediaType.APPLICATION_JSON).put(ClientResponse.class, applicationParams);
+        response = resource.request(MediaType.APPLICATION_JSON).put(Entity.form(applicationParams));
         Assert.assertEquals(200, response.getStatus());
     }
 
@@ -111,8 +111,8 @@ public class RoleSensitiveTest extends EndpointTest {
     public void testNoPermissions() {
         // guest cannot read his account
         Client jersey = getClient(guestUsername, guestAuthToken);
-        WebResource resource = jersey.resource( getResourceUrl("/2012-04-24/Accounts.json/" + guestSid) );
-        ClientResponse response = resource.get(ClientResponse.class);
+        WebTarget resource = jersey.target( getResourceUrl("/2012-04-24/Accounts.json/" + guestSid) );
+        Response response = resource.request().get();
         Assert.assertEquals(403, response.getStatus());
     }
 

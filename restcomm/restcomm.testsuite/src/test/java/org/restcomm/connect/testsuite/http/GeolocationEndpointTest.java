@@ -63,7 +63,7 @@ import org.restcomm.connect.commons.dao.Sid;
 
 import com.google.gson.JsonArray;
 import com.google.gson.JsonObject;
-import com.sun.jersey.core.util.MultivaluedMapImpl;
+import javax.ws.rs.core.MultivaluedHashMap;
 
 /**
  * @author <a href="mailto:fernando.mendioroz@telestax.com"> Fernando Mendioroz </a>
@@ -124,7 +124,7 @@ public class GeolocationEndpointTest {
 
         // Test create Immediate type of Geolocation via POST (only mandatory parameters)
         // Parameter values Assignment
-        MultivaluedMap<String, String> geolocationParams = new MultivaluedMapImpl();
+        MultivaluedMap<String, String> geolocationParams = new MultivaluedHashMap();
         geolocationParams.add("DeviceIdentifier", deviceIdentifier = msisdn);
         geolocationParams.add("StatusCallback", "http://192.1.0.19:8080/ACae6e420f425248d6a26948c17a9e2acf");
         // HTTP POST Geolocation creation with given parameters values and those returned via GMLC stub
@@ -231,7 +231,7 @@ public class GeolocationEndpointTest {
 
         // Test create Immediate type of Geolocation via POST with one missing mandatory parameter
         // Parameter values Assignment, StatusCallback missing
-        MultivaluedMap<String, String> geolocationParams = new MultivaluedMapImpl();
+        MultivaluedMap<String, String> geolocationParams = new MultivaluedHashMap();
         geolocationParams.add("DeviceIdentifier", deviceIdentifier = msisdn);
         Sid rejectedGeolocationSid = null;
         // HTTP POST Geolocation creation with given parameters values
@@ -301,7 +301,7 @@ public class GeolocationEndpointTest {
 
         // Create Immediate type of Geolocation via POST
         // Parameter values Assignment
-        MultivaluedMap<String, String> geolocationParams = new MultivaluedMapImpl();
+        MultivaluedMap<String, String> geolocationParams = new MultivaluedHashMap();
         geolocationParams.add("DeviceIdentifier", deviceIdentifier = msisdn);
         geolocationParams.add("StatusCallback", "http://192.1.0.19:8080/ACae6e420f425248d6a26948c17a9e2acf");
         // HTTP POST Geolocation creation with given parameters values and those returned via GMLC stub
@@ -310,7 +310,7 @@ public class GeolocationEndpointTest {
         Sid geolocationSid = new Sid(geolocationJson.get("sid").getAsString());
 
         // Define new values to the application attributes (POST test)
-        MultivaluedMap<String, String> geolocationParamsUpdate = new MultivaluedMapImpl();
+        MultivaluedMap<String, String> geolocationParamsUpdate = new MultivaluedHashMap();
         geolocationParamsUpdate.add("DeviceIdentifier", deviceIdentifier = msisdn);
         geolocationParamsUpdate.add("DesiredAccuracy", "Low");
         geolocationParamsUpdate.add("StatusCallback", "http://192.1.0.19:8080/ACae6e420f425248d6a26948c17a9e2acf");
@@ -384,7 +384,7 @@ public class GeolocationEndpointTest {
         assertTrue(geolocationJson.get("api_version").getAsString().equals("2012-04-24"));
 
         // Define new values for the Geolocation attributes (PUT test)
-        geolocationParamsUpdate = new MultivaluedMapImpl();
+        geolocationParamsUpdate = new MultivaluedHashMap();
         geolocationParamsUpdate.add("DesiredAccuracy", "Average");
         geolocationParamsUpdate.add("StatusCallback", "http://192.1.2.19:8080/ACae6e420f425248d6a26948c17a9e2acf");
         geolocationParamsUpdate.add("ResponseStatus", responseStatus = "successfull");
@@ -490,7 +490,7 @@ public class GeolocationEndpointTest {
 
         // Create Immediate type of Geolocation via POST
         // Parameter values Assignment
-        MultivaluedMap<String, String> geolocationParams = new MultivaluedMapImpl();
+        MultivaluedMap<String, String> geolocationParams = new MultivaluedHashMap();
         geolocationParams.add("DeviceIdentifier", deviceIdentifier = msisdn);
         geolocationParams.add("StatusCallback", "http://192.1.0.19:8080/ACae6e420f425248d6a26948c17a9e2acf");
         // HTTP POST Geolocation creation with given parameters values and those returned via GMLC stub
@@ -504,7 +504,7 @@ public class GeolocationEndpointTest {
         locationTimestamp = df.format(dateTime.toDate());
 
         // Define malformed values for the Geolocation attributes (PUT test to fail)
-        MultivaluedMap<String, String> geolocationParamsUpdate = new MultivaluedMapImpl();
+        MultivaluedMap<String, String> geolocationParamsUpdate = new MultivaluedHashMap();
         geolocationParamsUpdate.add("DeviceLatitude", deviceLatitude = "North 72.908134"); // WGS84 not compliant
         geolocationParamsUpdate.add("DeviceLongitude", deviceLongitude = "170.908134");
         // Update failed Geolocation via PUT
@@ -543,7 +543,7 @@ public class GeolocationEndpointTest {
         assertTrue(geolocationJson.get("api_version").getAsString().equals("2012-04-24"));
 
         // Define new values for the Geolocation attributes (PUT test)
-        geolocationParamsUpdate = new MultivaluedMapImpl();
+        geolocationParamsUpdate = new MultivaluedHashMap();
         geolocationParamsUpdate.add("DesiredAccuracy", "High");
         geolocationParamsUpdate.add("StatusCallback", "http://192.1.2.19:8080/ACae6e420f425248d6a26948c17a9e2acf");
         geolocationParamsUpdate.add("ResponseStatus", responseStatus = "successfull");
@@ -646,7 +646,7 @@ public class GeolocationEndpointTest {
 
         // Create Immediate type of Geolocation via POST
         // Parameter values Assignment
-        MultivaluedMap<String, String> geolocationParams = new MultivaluedMapImpl();
+        MultivaluedMap<String, String> geolocationParams = new MultivaluedHashMap();
         geolocationParams.add("DeviceIdentifier", deviceIdentifier = msisdn);
         geolocationParams.add("DesiredAccuracy", "High");
         geolocationParams.add("StatusCallback", "http://192.1.0.19:8080/ACae6e420f425248d6a26948c17a9e2acf");
@@ -701,7 +701,7 @@ public class GeolocationEndpointTest {
 
         // Test create Notification type of Geolocation via POST (only mandatory parameters)
         // Parameter values Assignment
-        MultivaluedMap<String, String> geolocationParams = new MultivaluedMapImpl();
+        MultivaluedMap<String, String> geolocationParams = new MultivaluedHashMap();
         geolocationParams.add("DeviceIdentifier", deviceIdentifier = msisdn);
         geolocationParams.add("EventGeofenceLatitude", eventGeofenceLatitude = "45.426280");
         geolocationParams.add("EventGeofenceLongitude", eventGeofenceLongitude = "-80.566560");
@@ -817,7 +817,7 @@ public class GeolocationEndpointTest {
 
         // Test create Notification type of Geolocation via POST with one missing mandatory parameter
         // Parameter values Assignment, GeofenceEvent missing
-        MultivaluedMap<String, String> geolocationNewParams = new MultivaluedMapImpl();
+        MultivaluedMap<String, String> geolocationNewParams = new MultivaluedHashMap();
         geolocationNewParams.add("DeviceIdentifier", deviceIdentifier = msisdn);
         geolocationNewParams.add("EventGeofenceLatitude", eventGeofenceLatitude = "-43.426280");
         geolocationNewParams.add("EventGeofenceLongitude", eventGeofenceLongitude = "170.566560");
@@ -871,7 +871,7 @@ public class GeolocationEndpointTest {
 
         // Create Notification type of Geolocation via POST
         // Parameter values Assignment
-        MultivaluedMap<String, String> geolocationParams = new MultivaluedMapImpl();
+        MultivaluedMap<String, String> geolocationParams = new MultivaluedHashMap();
         geolocationParams.add("DeviceIdentifier", deviceIdentifier = msisdn);
         geolocationParams.add("EventGeofenceLatitude", "-33.426280");
         geolocationParams.add("EventGeofenceLongitude", "-70.566560");
@@ -884,7 +884,7 @@ public class GeolocationEndpointTest {
         Sid geolocationSid = new Sid(geolocationJson.get("sid").getAsString());
 
         // Define new values to the application attributes (POST test)
-        MultivaluedMap<String, String> geolocationParamsUpdate = new MultivaluedMapImpl();
+        MultivaluedMap<String, String> geolocationParamsUpdate = new MultivaluedHashMap();
         geolocationParamsUpdate.add("DeviceIdentifier", deviceIdentifier = msisdn);
         geolocationParamsUpdate.add("EventGeofenceLatitude", eventGeofenceLatitude = "34\u00b038'19.39''N");
         geolocationParamsUpdate.add("EventGeofenceLongitude", eventGeofenceLongitude = "55\u00b028'59.33''E");
@@ -964,7 +964,7 @@ public class GeolocationEndpointTest {
         assertTrue(geolocationJson.get("api_version").getAsString().equals("2012-04-24"));
 
         // Define new values for the Geolocation attributes (PUT test)
-        geolocationParamsUpdate = new MultivaluedMapImpl();
+        geolocationParamsUpdate = new MultivaluedHashMap();
         geolocationParamsUpdate.add("EventGeofenceLatitude", eventGeofenceLatitude = "N172 42 62.80");
         geolocationParamsUpdate.add("EventGeofenceLongitude", eventGeofenceLongitude = "W170 56 65.60");
         geolocationParamsUpdate.add("GeofenceRange", "50");
@@ -1078,7 +1078,7 @@ public class GeolocationEndpointTest {
 
         // Create Notification type of Geolocation via POST
         // Parameter values Assignment
-        MultivaluedMap<String, String> geolocationParams = new MultivaluedMapImpl();
+        MultivaluedMap<String, String> geolocationParams = new MultivaluedHashMap();
         geolocationParams.add("DeviceIdentifier", deviceIdentifier = msisdn);
         geolocationParams.add("EventGeofenceLatitude", "-33.426280");
         geolocationParams.add("EventGeofenceLongitude", "-70.566560");
@@ -1097,7 +1097,7 @@ public class GeolocationEndpointTest {
 
 
         // Define malformed values for the Geolocation attributes (PUT test to fail)
-        MultivaluedMap<String, String> geolocationParamsUpdate = new MultivaluedMapImpl();
+        MultivaluedMap<String, String> geolocationParamsUpdate = new MultivaluedHashMap();
         geolocationParamsUpdate.add("DeviceLatitude", deviceLatitude = "72.908134");
         geolocationParamsUpdate.add("DeviceLongitude", deviceLongitude = "South 170.908134"); // WGS84 not compliant
         // Update failed Geolocation via PUT
@@ -1137,7 +1137,7 @@ public class GeolocationEndpointTest {
         assertTrue(geolocationJson.get("api_version").getAsString().equals("2012-04-24"));
 
         // Define new values for the Geolocation attributes (PUT test)
-        geolocationParamsUpdate = new MultivaluedMapImpl();
+        geolocationParamsUpdate = new MultivaluedHashMap();
         geolocationParamsUpdate.add("EventGeofenceLatitude", eventGeofenceLatitude = "172 42 62.80N");
         geolocationParamsUpdate.add("EventGeofenceLongitude", eventGeofenceLongitude = "170 56 65.60E");
         geolocationParamsUpdate.add("GeofenceRange", "50");
@@ -1246,7 +1246,7 @@ public class GeolocationEndpointTest {
 
         // Create Notification type of Geolocation via POST
         // Parameter values Assignment
-        MultivaluedMap<String, String> geolocationParams = new MultivaluedMapImpl();
+        MultivaluedMap<String, String> geolocationParams = new MultivaluedHashMap();
         geolocationParams.add("DeviceIdentifier", deviceIdentifier = msisdn);
         geolocationParams.add("EventGeofenceLatitude", "-33.426280");
         geolocationParams.add("EventGeofenceLongitude", "-70.566560");

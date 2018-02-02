@@ -12,12 +12,13 @@ import com.google.gson.JsonArray;
 import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
 import com.google.gson.JsonParser;
-import com.sun.jersey.api.client.Client;
-import com.sun.jersey.api.client.UniformInterfaceException;
-import com.sun.jersey.api.client.WebResource;
-import com.sun.jersey.api.client.filter.HTTPBasicAuthFilter;
-import com.sun.jersey.core.util.MultivaluedMapImpl;
+import javax.ws.rs.client.Client;import javax.ws.rs.client.ClientBuilder;
+import javax.ws.rs.client.WebTarget;
+import org.glassfish.jersey.client.authentication.HttpAuthenticationFeature;
+import javax.ws.rs.core.MultivaluedHashMap;
 import com.thoughtworks.xstream.XStream;
+import javax.ws.rs.WebApplicationException;
+import javax.ws.rs.client.Entity;
 
 /**
  * @author <a href="mailto:gvagenas@gmail.com">gvagenas</a>
@@ -79,15 +80,15 @@ public class RestcommCallsTool {
     }
 
     public JsonArray getRecordings(String deploymentUrl, String username, String authToken) {
-        Client jerseyClient = Client.create();
-        jerseyClient.addFilter(new HTTPBasicAuthFilter(username, authToken));
+        Client jerseyClient = ClientBuilder.newClient();
+        jerseyClient.register(HttpAuthenticationFeature.basic(username, authToken));
 
         String url = getRecordingsUrl(deploymentUrl, username, true);
 
-        WebResource webResource = jerseyClient.resource(url);
+        WebTarget WebTarget = jerseyClient.target(url);
 
         String response = null;
-        response = webResource.accept(MediaType.APPLICATION_JSON).get(String.class);
+        response = WebTarget.request(MediaType.APPLICATION_JSON).get(String.class);
 //        response = response.replaceAll("\\[", "").replaceAll("]", "").trim();
         JsonArray jsonArray = null;
         try {
@@ -108,27 +109,31 @@ public class RestcommCallsTool {
     public JsonObject getCalls(String deploymentUrl, String username, String authToken, Integer page, Integer pageSize,
             Boolean json) {
 
-        Client jerseyClient = Client.create();
-        jerseyClient.addFilter(new HTTPBasicAuthFilter(username, authToken));
+        Client jerseyClient = ClientBuilder.newClient();
+        jerseyClient.register(HttpAuthenticationFeature.basic(username, authToken));
 
         String url = getAccountsUrl(deploymentUrl, username, json);
 
-        WebResource webResource = jerseyClient.resource(url);
+        WebTarget webTarget = jerseyClient.target(url);
 
         String response = null;
 
         if (page != null || pageSize != null) {
-            MultivaluedMap<String, String> params = new MultivaluedMapImpl();
+            MultivaluedMap<String, String> params = new MultivaluedHashMap();
 
-            if (page != null)
+            if (page != null) {
                 params.add("Page", String.valueOf(page));
-            if (pageSize != null)
+                webTarget.queryParam("Page", String.valueOf(page));
+            }
+            if (pageSize != null) {
                 params.add("PageSize", String.valueOf(pageSize));
+                webTarget.queryParam("PageSize", String.valueOf(pageSize));
+            }
 
-            response = webResource.queryParams(params).accept(MediaType.APPLICATION_JSON, MediaType.APPLICATION_XML)
+            response = webTarget.request(MediaType.APPLICATION_JSON, MediaType.APPLICATION_XML)
                     .get(String.class);
         } else {
-            response = webResource.accept(MediaType.APPLICATION_JSON, MediaType.APPLICATION_XML).get(String.class);
+            response = webTarget.request(MediaType.APPLICATION_JSON, MediaType.APPLICATION_XML).get(String.class);
         }
 
         JsonParser parser = new JsonParser();
@@ -181,19 +186,19 @@ public class RestcommCallsTool {
      */
     public JsonObject getCall(String deploymentUrl, String username, String authToken, String resourceAccountSid, String sid){
 
-        Client jerseyClient = Client.create();
-        jerseyClient.addFilter(new HTTPBasicAuthFilter(username, authToken));
+        Client jerseyClient = ClientBuilder.newClient();
+        jerseyClient.register(HttpAuthenticationFeature.basic(username, authToken));
 
         String url = getAccountsUrl(deploymentUrl, resourceAccountSid, false);
 
-        WebResource webResource = jerseyClient.resource(url);
+        WebTarget WebTarget = jerseyClient.target(url);
 
         String response = null;
 
-        webResource = webResource.path(String.valueOf(sid)+".json");
-        logger.info("The URI to sent: "+webResource.getURI());
+        WebTarget = WebTarget.path(String.valueOf(sid)+".json");
+        logger.info("The URI to sent: "+WebTarget.getUri());
 
-        response = webResource.accept(MediaType.APPLICATION_JSON, MediaType.APPLICATION_XML)
+        response = WebTarget.request(MediaType.APPLICATION_JSON, MediaType.APPLICATION_XML)
                 .get(String.class);
 
         JsonParser parser = new JsonParser();
@@ -205,21 +210,21 @@ public class RestcommCallsTool {
 
     public JsonObject getCallsUsingFilter(String deploymentUrl, String username, String authToken, Map<String, String> filters) {
 
-        Client jerseyClient = Client.create();
-        jerseyClient.addFilter(new HTTPBasicAuthFilter(username, authToken));
+        Client jerseyClient = ClientBuilder.newClient();
+        jerseyClient.register(HttpAuthenticationFeature.basic(username, authToken));
 
         String url = getAccountsUrl(deploymentUrl, username, true);
 
-        WebResource webResource = jerseyClient.resource(url);
+        WebTarget webTarget = jerseyClient.target(url);
 
-        MultivaluedMap<String, String> params = new MultivaluedMapImpl();
+        MultivaluedMap<String, String> params = new MultivaluedHashMap();
 
         for (String filterName : filters.keySet()) {
             String filterData = filters.get(filterName);
             params.add(filterName, filterData);
+            webTarget.queryParam(filterName, filterData);
         }
-        webResource = webResource.queryParams(params);
-        String response = webResource.accept(MediaType.APPLICATION_JSON).get(String.class);
+        String response = webTarget.request(MediaType.APPLICATION_JSON).get(String.class);
         JsonParser parser = new JsonParser();
         JsonObject jsonObject = parser.parse(response).getAsJsonObject();
 
@@ -242,14 +247,14 @@ public class RestcommCallsTool {
     public JsonElement createCall(String deploymentUrl, String username, String authToken, String from, String to, String rcmlUrl,
                                   final String statusCallback, final String statusCallbackMethod, final String statusCallbackEvent, final String timeout) {
 
-        Client jerseyClient = Client.create();
-        jerseyClient.addFilter(new HTTPBasicAuthFilter(username, authToken));
+        Client jerseyClient = ClientBuilder.newClient();
+        jerseyClient.register(HttpAuthenticationFeature.basic(username, authToken));
 
         String url = getAccountsUrl(deploymentUrl, username, true);
 
-        WebResource webResource = jerseyClient.resource(url);
+        WebTarget WebTarget = jerseyClient.target(url);
 
-        MultivaluedMap<String, String> params = new MultivaluedMapImpl();
+        MultivaluedMap<String, String> params = new MultivaluedHashMap();
         params.add("From", from);
         params.add("To", to);
         params.add("Url", rcmlUrl);
@@ -264,8 +269,8 @@ public class RestcommCallsTool {
         if (timeout != null)
             params.add("Timeout", timeout);
 
-        // webResource = webResource.queryParams(params);
-        String response = webResource.accept(MediaType.APPLICATION_JSON).post(String.class, params);
+        // WebTarget = WebTarget.queryParams(params);
+        String response = WebTarget.request(MediaType.APPLICATION_JSON).post(Entity.form(params),String.class);
         JsonParser parser = new JsonParser();
         if (response.startsWith("[")) {
             return parser.parse(response).getAsJsonArray();
@@ -322,14 +327,14 @@ public class RestcommCallsTool {
     public JsonObject modifyCall(String deploymentUrl, String username, String authToken, String callSid, String status,
             String rcmlUrl, boolean moveConnectedLeg, Boolean mute) throws Exception {
 
-        Client jerseyClient = Client.create();
-        jerseyClient.addFilter(new HTTPBasicAuthFilter(username, authToken));
+        Client jerseyClient = ClientBuilder.newClient();
+        jerseyClient.register(HttpAuthenticationFeature.basic(username, authToken));
 
         String url = getAccountsUrl(deploymentUrl, username, true);
 
-        WebResource webResource = jerseyClient.resource(url);
+        WebTarget WebTarget = jerseyClient.target(url);
 
-        MultivaluedMap<String, String> params = new MultivaluedMapImpl();
+        MultivaluedMap<String, String> params = new MultivaluedHashMap();
         if (status != null && rcmlUrl != null) {
             throw new Exception(
                     "You can either redirect a call using the \"url\" attribute or terminate it using the \"status\" attribute!");
@@ -350,12 +355,12 @@ public class RestcommCallsTool {
         JsonObject jsonObject = null;
 
         try {
-            String response = webResource.path(callSid).accept(MediaType.APPLICATION_JSON).post(String.class, params);
+            String response = WebTarget.path(callSid).request(MediaType.APPLICATION_JSON).post(Entity.form(params),String.class);
             JsonParser parser = new JsonParser();
             jsonObject = parser.parse(response).getAsJsonObject();
         } catch (Exception e) {
             logger.error("Exception : ", e);
-            UniformInterfaceException exception = (UniformInterfaceException)e;
+            WebApplicationException exception = (WebApplicationException)e;
             jsonObject = new JsonObject();
             jsonObject.addProperty("Exception",exception.getResponse().getStatus());
         }
@@ -363,14 +368,14 @@ public class RestcommCallsTool {
     }
 
     public JsonArray getCallRecordings(String deploymentUrl, String username, String authToken, String callWithRecordingsSid) {
-        Client jerseyClient = Client.create();
-        jerseyClient.addFilter(new HTTPBasicAuthFilter(username, authToken));
+        Client jerseyClient = ClientBuilder.newClient();
+        jerseyClient.register(HttpAuthenticationFeature.basic(username, authToken));
 
         String url = getCallRecordingsUrl(deploymentUrl, username, callWithRecordingsSid, true);
 
-        WebResource webResource = jerseyClient.resource(url);
+        WebTarget WebTarget = jerseyClient.target(url);
 
-        String response = webResource.accept(MediaType.APPLICATION_JSON).get(String.class);
+        String response = WebTarget.request(MediaType.APPLICATION_JSON).get(String.class);
         JsonParser parser = new JsonParser();
         JsonArray jsonArray = parser.parse(response).getAsJsonArray();
 
@@ -380,14 +385,14 @@ public class RestcommCallsTool {
     public String setGateWay(String deploymentUrl, String username, String authToken, String friend, String uName, String password, String proxy,
                              boolean register, String ttl) {
 
-        Client jerseyClient = Client.create();
-        jerseyClient.addFilter(new HTTPBasicAuthFilter(username, authToken));
+        Client jerseyClient = ClientBuilder.newClient();
+        jerseyClient.register(HttpAuthenticationFeature.basic(username, authToken));
 
         String url = getGateWayUrl(deploymentUrl, username);
 
-        WebResource webResource = jerseyClient.resource(url);
+        WebTarget WebTarget = jerseyClient.target(url);
 
-        MultivaluedMap<String, String> params = new MultivaluedMapImpl();
+        MultivaluedMap<String, String> params = new MultivaluedHashMap();
         params.add("Register", String.valueOf(register));
         if (friend != null) {
             params.add("FriendlyName", friend);
@@ -407,10 +412,9 @@ public class RestcommCallsTool {
 
         String response = null;
         try {
-            response = webResource.accept(MediaType.APPLICATION_JSON).post(String.class, params);
+            response = WebTarget.request(MediaType.APPLICATION_JSON).post(Entity.form(params),String.class);
         } catch (Exception e) {
             logger.error("Exception : ", e);
-            UniformInterfaceException exception = (UniformInterfaceException)e;
         }
         return response;
     }
