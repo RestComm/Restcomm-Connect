@@ -197,4 +197,12 @@ rcMod.controller('DashboardCtrl', function ($scope, $resource, $rootScope, RComm
     }
   };
 
+  $scope.showSmallCharts = function () {
+    $scope.callsOptions.chart.height = 200;
+    $scope.callsOptions.chart.margin = {top: 10, left: 0, right: 0, bottom: 0};
+    $scope.callsOptions.chart.showLegend = false;
+    $scope.smsOptions.chart.height = 200;
+    $scope.smsOptions.chart.margin = {top: 10, left: 0, right: 0, bottom: 0};
+  }
+
 });
