@@ -126,6 +126,27 @@ public class AccountsEndpointClosingTest extends EndpointTest {
         response = resource.get(ClientResponse.class);
         Assert.assertEquals(200, response.getStatus());
     }
+    
+    @Test
+    public void accessAccountsApiWithClosedAccount(){}
+
+    @Test
+    public void accessClientsApiWithClosedAccount(){}
+
+    @Test
+    public void accessNumbersApiWithClosedAccount(){}
+
+    @Test
+    public void accessAvailableNumbersApiWithClosedAccount(){}
+
+    @Test
+    public void accessRecordingsApiWithClosedAccount(){}
+
+    @Test
+    public void accessCallsApiWithClosedAccount(){}
+
+    @Test
+    public void accessConferenceApiWithClosedAccount(){}
 
     @Deployment(name = "AccountsEndpointClosingTest", managed = true, testable = false)
     public static WebArchive createWebArchiveNoGw() {

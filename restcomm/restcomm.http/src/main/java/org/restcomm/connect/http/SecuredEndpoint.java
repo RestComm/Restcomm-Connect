@@ -30,6 +30,7 @@ import org.restcomm.connect.dao.AccountsDao;
 import org.restcomm.connect.dao.DaoManager;
 import org.restcomm.connect.dao.OrganizationsDao;
 import org.restcomm.connect.dao.entities.Account;
+import org.restcomm.connect.dao.entities.Account.Status;
 import org.restcomm.connect.dao.entities.Organization;
 import org.restcomm.connect.dao.exceptions.AccountHierarchyDepthCrossed;
 import org.restcomm.connect.extension.api.ApiRequest;
@@ -447,4 +448,16 @@ public abstract class SecuredEndpoint extends AbstractEndpoint {
         return ec.executePostApiAction(apiRequest, extensions).isAllowed();
     }
 
+    /**
+     * https://telestax.atlassian.net/browse/RESTCOMM-1645
+     * Only active account can perform REST API operations
+     * @return
+     */
+    protected boolean verifyActiveAccountStatus(){
+        Status accountStatus = userIdentityContext.getEffectiveAccount().getStatus();
+        if(accountStatus != Status.ACTIVE){
+            return false;
+        }
+        return true;
+    }
 }
