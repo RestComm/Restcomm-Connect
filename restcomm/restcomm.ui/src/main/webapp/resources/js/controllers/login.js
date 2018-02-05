@@ -22,7 +22,7 @@ rcMod.controller('LoginCtrl', function ($scope, $rootScope, $location, $timeout,
         }
         else {
             var oldUrl = urlStateTracker.recall();
-            $location.url(oldUrl ? oldUrl : "/dashboard");
+            $location.url(oldUrl ? oldUrl : "/home");
         }
     }, function (errorStatus) {
         // ERROR
@@ -65,7 +65,7 @@ rcMod.controller('UninitializedCtrl', function ($scope,AuthService,$state, urlSt
     $scope.update = function() {
         AuthService.updatePassword($scope.newPassword).then(function () {
             var oldUrl = urlStateTracker.recall();
-            $location.url(oldUrl ? oldUrl : "/dashboard");
+            $location.url(oldUrl ? oldUrl : '/home');
         }, function (error) {
             alert("Failed to update password. Please try again.");
             $state.go('public.login');
