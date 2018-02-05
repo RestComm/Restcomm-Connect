@@ -59,6 +59,7 @@ import org.restcomm.connect.dao.ClientsDao;
 import org.restcomm.connect.dao.DaoManager;
 import org.restcomm.connect.dao.RegistrationsDao;
 import org.restcomm.connect.dao.common.OrganizationUtil;
+import org.restcomm.connect.dao.entities.Account;
 import org.restcomm.connect.dao.entities.Client;
 import org.restcomm.connect.dao.entities.Registration;
 import org.restcomm.connect.monitoringservice.MonitoringService;
@@ -419,6 +420,9 @@ public final class UserAgentManager extends RestcommUntypedActor {
         final String response = map.get("response");
         final ClientsDao clients = storage.getClientsDao();
         final Client client = clients.getClient(user, OrganizationUtil.getOrganizationSidBySipURIHost(storage, sipURI));
+        if (client != null && storage.getAccountsDao().getAccount(client.getAccountSid()).getStatus() != Account.Status.ACTIVE) {
+            return false;
+        }
         if (client != null && Client.ENABLED == client.getStatus()) {
             final String password = client.getPassword();
             final String result = DigestAuthentication.response(algorithm, user, realm, password, nonce, nc, cnonce, method,
