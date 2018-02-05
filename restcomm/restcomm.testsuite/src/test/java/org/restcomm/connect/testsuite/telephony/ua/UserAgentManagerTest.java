@@ -333,7 +333,7 @@ public final class UserAgentManagerTest {
         phone = null;
         sipStack = null;
 
-        Thread.sleep(100000);
+        Thread.sleep(50000);
         assertTrue(MonitoringServiceTool.getInstance().getRegisteredUsers(deploymentUrl.toString(),adminAccountSid, adminAuthToken)==0);
     }
 
@@ -362,8 +362,8 @@ public final class UserAgentManagerTest {
         phone2 = null;
         sipStack2 = null;
 
-        Thread.sleep(1000);
-        assertTrue(MonitoringServiceTool.getInstance().getRegisteredUsers(deploymentUrl.toString(),adminAccountSid, adminAuthToken)==0);
+        Thread.sleep(50000);
+        assertEquals(0, MonitoringServiceTool.getInstance().getRegisteredUsers(deploymentUrl.toString(),adminAccountSid, adminAuthToken));
     }
 
     @Test
@@ -376,7 +376,7 @@ public final class UserAgentManagerTest {
 
         assertTrue(phone3.register(uri, "alice", "1234", aliceContact3, 3600, 3600));
         Thread.sleep(500);
-        assertTrue(MonitoringServiceTool.getInstance().getRegisteredUsers(deploymentUrl.toString(),adminAccountSid, adminAuthToken)==1);
+        assertEquals(1, MonitoringServiceTool.getInstance().getRegisteredUsers(deploymentUrl.toString(),adminAccountSid, adminAuthToken));
 
         phone3.listenRequestMessage();
         RequestEvent requestEvent = phone3.waitRequest(10000);
@@ -399,7 +399,7 @@ public final class UserAgentManagerTest {
         phone3 = null;
         sipStack3 = null;
 
-        Thread.sleep(1000);
+        Thread.sleep(50000);
         assertTrue(MonitoringServiceTool.getInstance().getRegisteredUsers(deploymentUrl.toString(),adminAccountSid, adminAuthToken)==0);
     }
 
@@ -413,7 +413,7 @@ public final class UserAgentManagerTest {
 
         assertTrue(phone3.register(uri, "alice", "1234", aliceContact3, 3600, 3600));
         Thread.sleep(500);
-        assertTrue(MonitoringServiceTool.getInstance().getRegisteredUsers(deploymentUrl.toString(),adminAccountSid, adminAuthToken)==1);
+        assertEquals(1, MonitoringServiceTool.getInstance().getRegisteredUsers(deploymentUrl.toString(),adminAccountSid, adminAuthToken));
 
         phone3.listenRequestMessage();
         RequestEvent requestEvent = phone3.waitRequest(10000);
@@ -437,7 +437,7 @@ public final class UserAgentManagerTest {
         phone3 = null;
         sipStack3 = null;
 
-        Thread.sleep(1000);
+        Thread.sleep(50000);
         assertTrue(MonitoringServiceTool.getInstance().getRegisteredUsers(deploymentUrl.toString(),adminAccountSid, adminAuthToken)==0);
     }
 
@@ -451,7 +451,7 @@ public final class UserAgentManagerTest {
 
         assertTrue(phone3.register(uri, "alice", "1234", aliceContact3, 3600, 3600));
         Thread.sleep(500);
-        assertTrue(MonitoringServiceTool.getInstance().getRegisteredUsers(deploymentUrl.toString(),adminAccountSid, adminAuthToken)==1);
+        assertEquals(1, MonitoringServiceTool.getInstance().getRegisteredUsers(deploymentUrl.toString(),adminAccountSid, adminAuthToken));
 
         phone3.listenRequestMessage();
         RequestEvent requestEvent = phone3.waitRequest(10000);
@@ -474,7 +474,7 @@ public final class UserAgentManagerTest {
         phone3 = null;
         sipStack3 = null;
 
-        Thread.sleep(1000);
+        Thread.sleep(50000);
         assertTrue(MonitoringServiceTool.getInstance().getRegisteredUsers(deploymentUrl.toString(),adminAccountSid, adminAuthToken)==0);
     }
 
@@ -504,8 +504,8 @@ public final class UserAgentManagerTest {
         phone2 = null;
         sipStack2 = null;
 
-        Thread.sleep(1000);
-        assertTrue(MonitoringServiceTool.getInstance().getRegisteredUsers(deploymentUrl.toString(),adminAccountSid, adminAuthToken)==0);
+        Thread.sleep(50000);
+        assertEquals(0,MonitoringServiceTool.getInstance().getRegisteredUsers(deploymentUrl.toString(),adminAccountSid, adminAuthToken));
     }
 
     @Test
@@ -535,11 +535,11 @@ public final class UserAgentManagerTest {
         phone2 = null;
         sipStack2 = null;
         // need a higher timeout to cope with SIP OPTIONS transaction timeout
-        Thread.sleep(65000);
+        Thread.sleep(50000);
         assertTrue(MonitoringServiceTool.getInstance().getRegisteredUsers(deploymentUrl.toString(),adminAccountSid, adminAuthToken)==0);
     }
 
-    
+
     /**
      * registerUserAgentWithAtTheRateSignInLogin
      * we should be able to register and remove registration on non-response to options
@@ -563,7 +563,7 @@ public final class UserAgentManagerTest {
         phone5 = null;
         sipStack5 = null;
 
-        Thread.sleep(100000);
+        Thread.sleep(50000);
         assertTrue(MonitoringServiceTool.getInstance().getRegisteredUsers(deploymentUrl.toString(),adminAccountSid, adminAuthToken)==0);
     }
 
@@ -605,7 +605,7 @@ public final class UserAgentManagerTest {
         sipStack7.dispose();
         phone7 = null;
         sipStack7 = null;
-        Thread.sleep(100000);
+        Thread.sleep(50000);
         assertTrue(MonitoringServiceTool.getInstance().getRegisteredUsers(deploymentUrl.toString(),adminAccountSid, adminAuthToken)==0);
     }
 
