@@ -22,12 +22,14 @@ public class ExtensionController {
     private List smsSessionExtensions;
     private List ussdCallManagerExtensions;
     private List restApiExtensions;
+    private List featureAccessControlExtensions;
 
     private ExtensionController(){
         this.callManagerExtensions = new CopyOnWriteArrayList();
         this.smsSessionExtensions = new CopyOnWriteArrayList();
         this.ussdCallManagerExtensions = new CopyOnWriteArrayList();
         this.restApiExtensions = new CopyOnWriteArrayList();
+        this.featureAccessControlExtensions = new CopyOnWriteArrayList();
     }
 
     public static ExtensionController getInstance() {
@@ -35,6 +37,14 @@ public class ExtensionController {
             instance = new ExtensionController();
         }
         return instance;
+    }
+
+    /**
+     * allow to reset the singleton. Mainly for testing purposes.
+     * TODO should we reset the singleton if app is shutdown...?
+     */
+    public void reset() {
+        instance = null;
     }
 
     public List<RestcommExtensionGeneric> getExtensions(final ExtensionType type) {
@@ -47,6 +57,8 @@ public class ExtensionController {
             return ussdCallManagerExtensions;
         } else if (type.equals(ExtensionType.RestApi) && (restApiExtensions != null && restApiExtensions.size() > 0)) {
             return restApiExtensions;
+        } else if (type.equals(ExtensionType.FeatureAccessControl) && (featureAccessControlExtensions != null && featureAccessControlExtensions.size() > 0)) {
+          return featureAccessControlExtensions;
         } else {
             return null;
         }
@@ -81,6 +93,12 @@ public class ExtensionController {
                     logger.debug("RestApi extension added: "+extensionName);
                 }
             }
+            if (type.equals(ExtensionType.FeatureAccessControl)) {
+                featureAccessControlExtensions.add(extension);
+                if (logger.isDebugEnabled()) {
+                    logger.debug("FeatureAccesControl extension added: "+extensionName);
+                }
+            }
         }
     }
 
@@ -96,10 +114,20 @@ public class ExtensionController {
                     logger.info( extension.getName()+" is enabled="+extension.isEnabled());
                 }
                 if (extension.isEnabled()) {
-                    response = extension.preOutboundAction(ier);
-                    //fail fast
-                    if (!response.isAllowed()){
-                        break;
+                    try {
+                        ExtensionResponse tempResponse = extension.preOutboundAction(ier);
+                        if (tempResponse != null) {
+                            response = tempResponse;
+                            //fail fast
+                            if (!tempResponse.isAllowed()) {
+                                break;
+                            }
+                        }
+                    } catch (Throwable t) {
+                        if (logger.isDebugEnabled()) {
+                            String msg = String.format("There was an exception while executing preInboundAction from extension %s, exception %s", extension.getName(), t);
+                            logger.debug(msg);
+                        }
                     }
                 }
             }
@@ -107,30 +135,58 @@ public class ExtensionController {
         return response;
     }
 
-    public ExtensionResponse executePostOutboundAction(Object er, List<RestcommExtensionGeneric> extensions) {
-        ExtensionResponse response = new ExtensionResponse();
-        //TODO: implement actual calls
-        return response;
-    }
     public ExtensionResponse executePostOutboundAction(final IExtensionRequest er, List<RestcommExtensionGeneric> extensions) {
         ExtensionResponse response = new ExtensionResponse();
-        //TODO: implement actual calls
+        if (extensions != null && extensions.size() > 0) {
+
+            for (RestcommExtensionGeneric extension : extensions) {
+                if(logger.isInfoEnabled()) {
+                    logger.info( extension.getName()+" is enabled="+extension.isEnabled());
+                }
+                if (extension.isEnabled()) {
+                    try {
+                        ExtensionResponse tempResponse = extension.postOutboundAction(er);
+                        if (tempResponse != null) {
+                            response = tempResponse;
+                            //fail fast
+                            if (!tempResponse.isAllowed()) {
+                                break;
+                            }
+                        }
+                    } catch (Throwable t) {
+                        if (logger.isDebugEnabled()) {
+                            String msg = String.format("There was an exception while executing preInboundAction from extension %s, exception %s", extension.getName(), t);
+                            logger.debug(msg);
+                        }
+                    }
+                }
+            }
+        }
         return response;
     }
 
     public ExtensionResponse executePreInboundAction(final IExtensionRequest er, List<RestcommExtensionGeneric> extensions) {
         ExtensionResponse response = new ExtensionResponse();
-//        response.setAllowed(true);
         if (extensions != null && extensions.size() > 0) {
             for (RestcommExtensionGeneric extension : extensions) {
                 if(logger.isInfoEnabled()) {
                     logger.info( extension.getName()+" is enabled="+extension.isEnabled());
                 }
                 if (extension.isEnabled()) {
-                    response = extension.preInboundAction(er);
-                    //fail fast
-                    if (!response.isAllowed()){
-                        break;
+                    try {
+                        ExtensionResponse tempResponse = extension.preInboundAction(er);
+                        if (tempResponse != null) {
+                            response = tempResponse;
+                            //fail fast
+                            if (!tempResponse.isAllowed()) {
+                                break;
+                            }
+                        }
+                    } catch (Throwable t) {
+                        if (logger.isDebugEnabled()) {
+                            String msg = String.format("There was an exception while executing preInboundAction from extension %s, exception %s", extension.getName(), t);
+                            logger.debug(msg);
+                        }
                     }
                 }
             }
@@ -140,7 +196,30 @@ public class ExtensionController {
 
     public ExtensionResponse executePostInboundAction(final IExtensionRequest er,  List<RestcommExtensionGeneric> extensions) {
         ExtensionResponse response = new ExtensionResponse();
-        //TODO: implement actual calls
+        if (extensions != null && extensions.size() > 0) {
+            for (RestcommExtensionGeneric extension : extensions) {
+                if(logger.isInfoEnabled()) {
+                    logger.info( extension.getName()+" is enabled="+extension.isEnabled());
+                }
+                if (extension.isEnabled()) {
+                    try {
+                        ExtensionResponse tempResponse = extension.postInboundAction(er);
+                        if (tempResponse != null) {
+                            response = tempResponse;
+                            //fail fast
+                            if (!tempResponse.isAllowed()) {
+                                break;
+                            }
+                        }
+                    } catch (Throwable t) {
+                        if (logger.isDebugEnabled()) {
+                            String msg = String.format("There was an exception while executing preInboundAction from extension %s, exception %s", extension.getName(), t);
+                            logger.debug(msg);
+                        }
+                    }
+                }
+            }
+        }
         return response;
     }
 
@@ -153,10 +232,21 @@ public class ExtensionController {
                     logger.info( extension.getName()+" is enabled="+extension.isEnabled());
                 }
                 if (extension.isEnabled()) {
-                    response = extension.preApiAction(apiRequest);
-                    //fail fast
-                    if (!response.isAllowed())
-                        break;
+                    try {
+                        ExtensionResponse tempResponse = extension.preApiAction(apiRequest);
+                        if (tempResponse != null) {
+                            response = tempResponse;
+                            //fail fast
+                            if (!tempResponse.isAllowed()) {
+                                break;
+                            }
+                        }
+                    } catch (Throwable t) {
+                        if (logger.isDebugEnabled()) {
+                            String msg = String.format("There was an exception while executing preInboundAction from extension %s, exception %s", extension.getName(), t);
+                            logger.debug(msg);
+                        }
+                    }
                 }
             }
         }
@@ -165,7 +255,31 @@ public class ExtensionController {
 
     public ExtensionResponse executePostApiAction(final ApiRequest apiRequest, List<RestcommExtensionGeneric> extensions) {
         ExtensionResponse response = new ExtensionResponse();
-        //TODO: implement actual calls
+
+        if (extensions != null && extensions.size() > 0) {
+            for (RestcommExtensionGeneric extension : extensions) {
+                if(logger.isInfoEnabled()) {
+                    logger.info( extension.getName()+" is enabled="+extension.isEnabled());
+                }
+                if (extension.isEnabled()) {
+                    try {
+                        ExtensionResponse tempResponse = extension.postApiAction(apiRequest);
+                        if (tempResponse != null) {
+                            response = tempResponse;
+                            //fail fast
+                            if (!tempResponse.isAllowed()) {
+                                break;
+                            }
+                        }
+                    } catch (Throwable t) {
+                        if (logger.isDebugEnabled()) {
+                            String msg = String.format("There was an exception while executing preInboundAction from extension %s, exception %s", extension.getName(), t);
+                            logger.debug(msg);
+                        }
+                    }
+                }
+            }
+        }
         return response;
     }
 }

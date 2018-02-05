@@ -52,6 +52,7 @@ public final class VoiceInterpreterParams {
     private ActorRef monitoring;
     private ActorRef sdr;
     private String rcml;
+    private long timeout;
 
     // IMS authentication
     private boolean asImsUa;
@@ -60,7 +61,7 @@ public final class VoiceInterpreterParams {
     private String transferor;
     private String transferee;
 
-    private VoiceInterpreterParams(Configuration configuration, DaoManager storage, ActorRef callManager, ActorRef conferences, ActorRef bridgeManager, ActorRef smsService, Sid account, Sid phone, String version, URI url, String method, URI fallbackUrl, String fallbackMethod, URI statusCallback, String statusCallbackMethod, String referTarget, String emailAddress, ActorRef monitoring, ActorRef sdr, String rcml, boolean asImsUa, String imsUaLogin, String imsUaPassword, String transferor, String transferee) {
+    private VoiceInterpreterParams(Configuration configuration, DaoManager storage, ActorRef callManager, ActorRef conferences, ActorRef bridgeManager, ActorRef smsService, Sid account, Sid phone, String version, URI url, String method, URI fallbackUrl, String fallbackMethod, URI statusCallback, String statusCallbackMethod, String referTarget, String emailAddress, ActorRef monitoring, ActorRef sdr, String rcml, boolean asImsUa, String imsUaLogin, String imsUaPassword, String transferor, String transferee, long timeout) {
         this.configuration = configuration;
         this.storage = storage;
         this.callManager = callManager;
@@ -86,6 +87,7 @@ public final class VoiceInterpreterParams {
         this.imsUaPassword = imsUaPassword;
         this.transferor = transferor;
         this.transferee = transferee;
+        this.timeout = timeout;
     }
 
     public Configuration getConfiguration() {
@@ -188,6 +190,10 @@ public final class VoiceInterpreterParams {
         return transferee;
     }
 
+    public long getTimeout() {
+        return timeout;
+    }
+
     public static final class Builder {
         private Configuration configuration;
         private DaoManager storage;
@@ -214,6 +220,7 @@ public final class VoiceInterpreterParams {
         private String imsUaPassword;
         private String transferor;
         private String transferee;
+        private long timeout;
 
         public Builder() {
         }
@@ -343,8 +350,13 @@ public final class VoiceInterpreterParams {
             return this;
         }
 
+        public Builder setTimeout(long timeout) {
+            this.timeout = timeout;
+            return this;
+        }
+
         public VoiceInterpreterParams build() {
-            return new VoiceInterpreterParams(configuration, storage, callManager, conferenceCenter, bridgeManager, smsService, account, phone, version, url, method, fallbackUrl, fallbackMethod, statusCallback, statusCallbackMethod, referTarget, emailAddress, monitoring, sdr, rcml, asImsUa, imsUaLogin, imsUaPassword, transferor, transferee);
+            return new VoiceInterpreterParams(configuration, storage, callManager, conferenceCenter, bridgeManager, smsService, account, phone, version, url, method, fallbackUrl, fallbackMethod, statusCallback, statusCallbackMethod, referTarget, emailAddress, monitoring, sdr, rcml, asImsUa, imsUaLogin, imsUaPassword, transferor, transferee, timeout);
         }
     }
 }
