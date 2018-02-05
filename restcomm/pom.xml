@@ -479,6 +479,10 @@
 						<groupId>com.telscale.licensing</groupId>
 						<artifactId>lce-core</artifactId>
 					</exclusion>
+					<exclusion>
+						<groupId>org.mobicents.sipunit</groupId>
+						<artifactId>*</artifactId>
+					</exclusion>
 				</exclusions>
 			</dependency>
 
