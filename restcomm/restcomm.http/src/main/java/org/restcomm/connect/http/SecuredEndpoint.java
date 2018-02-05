@@ -186,8 +186,15 @@ public abstract class SecuredEndpoint extends AbstractEndpoint {
         secure(operatedAccount, permission, SecuredType.SECURED_STANDARD);
     }
 
+    /**
+     * @param operatedAccount
+     * @param permission
+     * @param type
+     * @throws AuthorizationException
+     */
     protected void secure(final Account operatedAccount, final String permission, SecuredType type) throws AuthorizationException {
         checkAuthenticatedAccount();
+        checkClosedAccountStatus();
         checkPermission(permission); // check an authenticated account allowed to do "permission" is available
         checkOrganization(operatedAccount); // check if valid organization is attached with this account.
         if (operatedAccount == null) {
@@ -227,8 +234,15 @@ public abstract class SecuredEndpoint extends AbstractEndpoint {
         }
     }
 
+    /**
+     * @param operatedAccount
+     * @param resourceAccountSid
+     * @param type
+     * @throws AuthorizationException
+     */
     protected void secure(final Account operatedAccount, final Sid resourceAccountSid, SecuredType type) throws AuthorizationException {
         checkAuthenticatedAccount();
+        checkClosedAccountStatus();
         if (operatedAccount == null) {
             // if operatedAccount is NULL, we'll probably return a 404. But let's handle that in a central place.
             throw new OperatedAccountMissing();
@@ -450,14 +464,12 @@ public abstract class SecuredEndpoint extends AbstractEndpoint {
 
     /**
      * https://telestax.atlassian.net/browse/RESTCOMM-1645
-     * Only active account can perform REST API operations
-     * @return
+     * Closed account can't perform REST API operations
      */
-    protected boolean verifyActiveAccountStatus(){
+    protected void checkClosedAccountStatus(){
         Status accountStatus = userIdentityContext.getEffectiveAccount().getStatus();
-        if(accountStatus != Status.ACTIVE){
-            return false;
+        if(accountStatus == Status.CLOSED){
+            throw new InsufficientPermission();
         }
-        return true;
     }
 }
