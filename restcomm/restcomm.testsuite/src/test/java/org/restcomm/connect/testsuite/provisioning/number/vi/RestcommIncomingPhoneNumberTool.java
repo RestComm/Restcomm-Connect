@@ -31,6 +31,7 @@ import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
 import com.google.gson.JsonParser;
 import com.sun.jersey.api.client.Client;
+import com.sun.jersey.api.client.ClientResponse;
 import com.sun.jersey.api.client.WebResource;
 import com.sun.jersey.api.client.filter.HTTPBasicAuthFilter;
 import com.sun.jersey.core.util.MultivaluedMapImpl;
@@ -161,5 +162,28 @@ public class RestcommIncomingPhoneNumberTool {
         return jsonObject;
     }
     
+    public ClientResponse getIncomingPhonNumberClientResponse(String deploymentUrl, String username, String authToken){
+    	Client jerseyClient = Client.create();
+        jerseyClient.addFilter(new HTTPBasicAuthFilter(username, authToken));
+        String url = getAccountsUrl(deploymentUrl, username, true);
+        WebResource webResource = jerseyClient.resource(url);
+        return webResource.type(MediaType.APPLICATION_FORM_URLENCODED_TYPE).accept("application/json").post(ClientResponse.class);
+        
+    }
+    
+    public ClientResponse purchaseProviderNumber( String deploymentUrl, String username, String authToken, String phoneNumber, String voiceUrl, String voiceMethod, String friendlyName ){
+        Client jerseyClient = Client.create();
+        jerseyClient.addFilter(new HTTPBasicAuthFilter(username, authToken));
+
+        String provisioningURL = getAccountsUrl(deploymentUrl, username, true);
+        WebResource webResource = jerseyClient.resource(provisioningURL);
+
+        MultivaluedMap<String, String> formData = new MultivaluedMapImpl();
+        formData.add("PhoneNumber", phoneNumber);
+        formData.add("VoiceUrl", voiceUrl);
+        formData.add("FriendlyName", friendlyName);
+        formData.add("VoiceMethod", voiceMethod);
+        return webResource.type(MediaType.APPLICATION_FORM_URLENCODED_TYPE).accept("application/json").post(ClientResponse.class, formData);
+    }
 
 }

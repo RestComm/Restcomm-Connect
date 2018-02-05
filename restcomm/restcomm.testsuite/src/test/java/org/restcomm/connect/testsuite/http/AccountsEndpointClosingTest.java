@@ -21,11 +21,16 @@
 package org.restcomm.connect.testsuite.http;
 
 import com.github.tomakehurst.wiremock.junit.WireMockRule;
+import com.google.gson.JsonArray;
+import com.google.gson.JsonParser;
 import com.sun.jersey.api.client.Client;
 import com.sun.jersey.api.client.ClientResponse;
 import com.sun.jersey.api.client.WebResource;
+import com.sun.jersey.api.client.filter.HTTPBasicAuthFilter;
 import com.sun.jersey.core.util.MultivaluedMapImpl;
 import junit.framework.Assert;
+
+import org.apache.http.HttpResponse;
 import org.apache.log4j.Logger;
 import org.jboss.arquillian.container.test.api.Deployer;
 import org.jboss.arquillian.container.test.api.Deployment;
@@ -49,10 +54,16 @@ import static com.github.tomakehurst.wiremock.client.WireMock.equalToJson;
 import static com.github.tomakehurst.wiremock.client.WireMock.post;
 import static com.github.tomakehurst.wiremock.client.WireMock.postRequestedFor;
 import static com.github.tomakehurst.wiremock.client.WireMock.stubFor;
+import static com.github.tomakehurst.wiremock.client.WireMock.urlEqualTo;
 import static com.github.tomakehurst.wiremock.client.WireMock.urlMatching;
 import static com.github.tomakehurst.wiremock.client.WireMock.verify;
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertTrue;
+
 import org.junit.experimental.categories.Category;
 import org.restcomm.connect.commons.annotations.UnstableTests;
+import org.restcomm.connect.testsuite.provisioning.number.vi.AvailablePhoneNumbersEndpointTestUtils;
+import org.restcomm.connect.testsuite.provisioning.number.vi.RestcommIncomingPhoneNumberTool;
 
 /**
  * @author otsakir@gmail.com - Orestis Tsakiridis
@@ -70,6 +81,8 @@ public class AccountsEndpointClosingTest extends EndpointTest {
 
     String toplevelSid = "ACA0000000000000000000000000000000";
     String toplevelKey = "77f8c12cc7b8f8423e5c38b035249166";
+    
+    private static final String CLOSED_ACCOUNT_SID="ACA3000000000000000000000000000000";
 
     @Rule
     public WireMockRule wireMockRule = new WireMockRule(8089);
@@ -128,25 +141,85 @@ public class AccountsEndpointClosingTest extends EndpointTest {
     }
     
     @Test
-    public void accessAccountsApiWithClosedAccount(){}
+    public void accessAccountsApiWithClosedAccount() {
+    	// create account
+    	ClientResponse clientResponse = RestcommAccountsTool.getInstance().createAccountResponse(deploymentUrl.toString(), CLOSED_ACCOUNT_SID, toplevelKey, "", "");
+    	assertEquals(403, clientResponse.getStatus());
+    	
+    	//read account
+    	clientResponse = RestcommAccountsTool.getInstance().getAccountResponse(deploymentUrl.toString(), CLOSED_ACCOUNT_SID, toplevelKey, CLOSED_ACCOUNT_SID);
+    	assertEquals(403, clientResponse.getStatus());
+
+    	//update account - try to activate itself
+    	clientResponse = RestcommAccountsTool.getInstance().updateAccountResponse(deploymentUrl.toString(), CLOSED_ACCOUNT_SID, toplevelKey, CLOSED_ACCOUNT_SID, "", "", "", "", "active");
+    	assertEquals(403, clientResponse.getStatus());
+    }
 
     @Test
-    public void accessClientsApiWithClosedAccount(){}
+    public void accessClientsApiWithClosedAccount() throws IOException {
+    	HttpResponse clientResponse = CreateClientsTool.getInstance().createClientResponse(deploymentUrl.toString(), CLOSED_ACCOUNT_SID, toplevelKey, "");
+    	assertEquals(403, clientResponse.getStatusLine().getStatusCode());
+    }
 
     @Test
-    public void accessNumbersApiWithClosedAccount(){}
+    public void accessNumbersApiWithClosedAccount() {
+    	// read
+    	ClientResponse clientResponse = RestcommIncomingPhoneNumberTool.getInstance().getIncomingPhonNumberClientResponse(deploymentUrl.toString(), CLOSED_ACCOUNT_SID, toplevelKey);
+    	assertEquals(403, clientResponse.getStatus());
+    	
+    	//create/buy
+    	clientResponse = RestcommIncomingPhoneNumberTool.getInstance().purchaseProviderNumber(deploymentUrl.toString(), CLOSED_ACCOUNT_SID, toplevelKey, "+14156902867", "", "", "");
+    	assertEquals(403, clientResponse.getStatus());
+    }
 
     @Test
-    public void accessAvailableNumbersApiWithClosedAccount(){}
+    public void accessAvailableNumbersApiWithClosedAccount() {
+        Client jerseyClient = Client.create();
+        jerseyClient.addFilter(new HTTPBasicAuthFilter(CLOSED_ACCOUNT_SID, toplevelKey));
+
+        String provisioningURL = deploymentUrl + "2012-04-24/Accounts/" + CLOSED_ACCOUNT_SID + "/AvailablePhoneNumbers/" + "US/Local.json";
+        WebResource webResource = jerseyClient.resource(provisioningURL);
+
+        ClientResponse clientResponse = webResource.queryParam("Contains","501555****").accept("application/json")
+                .get(ClientResponse.class);
+        assertEquals(403, clientResponse.getStatus());
+    }
 
     @Test
-    public void accessRecordingsApiWithClosedAccount(){}
+    public void accessRecordingsApiWithClosedAccount() {
+        Client jerseyClient = Client.create();
+        jerseyClient.addFilter(new HTTPBasicAuthFilter(CLOSED_ACCOUNT_SID, toplevelKey));
+
+        String provisioningURL = deploymentUrl + "2012-04-24/Accounts/" + CLOSED_ACCOUNT_SID + "/Recordings.json";
+        WebResource webResource = jerseyClient.resource(provisioningURL);
+
+        ClientResponse clientResponse = webResource.accept(MediaType.APPLICATION_JSON).get(ClientResponse.class);
+        assertEquals(403, clientResponse.getStatus());
+    }
 
     @Test
-    public void accessCallsApiWithClosedAccount(){}
+    public void accessCallsApiWithClosedAccount() {
+        Client jerseyClient = Client.create();
+        jerseyClient.addFilter(new HTTPBasicAuthFilter(CLOSED_ACCOUNT_SID, toplevelKey));
+
+        String provisioningURL = deploymentUrl + "2012-04-24/Accounts/" + CLOSED_ACCOUNT_SID + "/Calls.json";
+        WebResource webResource = jerseyClient.resource(provisioningURL);
+
+        ClientResponse clientResponse = webResource.accept(MediaType.APPLICATION_JSON).get(ClientResponse.class);
+        assertEquals(403, clientResponse.getStatus());
+    }
 
     @Test
-    public void accessConferenceApiWithClosedAccount(){}
+    public void accessConferenceApiWithClosedAccount() {
+        Client jerseyClient = Client.create();
+        jerseyClient.addFilter(new HTTPBasicAuthFilter(CLOSED_ACCOUNT_SID, toplevelKey));
+
+        String provisioningURL = deploymentUrl + "2012-04-24/Accounts/" + CLOSED_ACCOUNT_SID + "/Conferences.json";
+        WebResource webResource = jerseyClient.resource(provisioningURL);
+
+        ClientResponse clientResponse = webResource.accept(MediaType.APPLICATION_JSON).get(ClientResponse.class);
+        assertEquals(403, clientResponse.getStatus());
+    }
 
     @Deployment(name = "AccountsEndpointClosingTest", managed = true, testable = false)
     public static WebArchive createWebArchiveNoGw() {

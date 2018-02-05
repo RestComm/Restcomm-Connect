@@ -79,6 +79,18 @@ public class RestcommAccountsTool {
 		return jsonResponse;
 	}
 
+	/**
+	 * @param deploymentUrl
+	 * @param adminUsername
+	 * @param adminAuthToken
+	 * @param accountSid
+	 * @param friendlyName
+	 * @param password
+	 * @param authToken
+	 * @param role
+	 * @param status
+	 * @return
+	 */
 	public ClientResponse updateAccountResponse (String deploymentUrl, String adminUsername, String adminAuthToken, String accountSid, String friendlyName, String password, String authToken, String role, String status) {
 		Client jerseyClient = Client.create();
 		jerseyClient.addFilter(new HTTPBasicAuthFilter(adminUsername, adminAuthToken));
