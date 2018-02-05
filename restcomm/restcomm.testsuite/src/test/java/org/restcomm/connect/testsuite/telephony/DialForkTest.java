@@ -230,7 +230,7 @@ public class DialForkTest {
         }
         Thread.sleep(1000);
         wireMockRule.resetRequests();
-        Thread.sleep(4000);
+        Thread.sleep(5000);
     }
 
     @Test
