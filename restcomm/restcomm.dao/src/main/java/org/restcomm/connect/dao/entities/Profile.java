@@ -30,6 +30,7 @@ import org.restcomm.connect.commons.annotations.concurrency.NotThreadSafe;
  */
 @Immutable
 public final class Profile{
+    public static final String DEFAULT_PROFILE_SID = "PRae6e420f425248d6a26948c17a9e2acf";
     private final String sid;
     private final byte[] profileDocument;
     private final Date dateCreated;

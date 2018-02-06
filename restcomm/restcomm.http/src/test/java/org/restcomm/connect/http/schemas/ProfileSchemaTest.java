@@ -21,7 +21,6 @@ import org.junit.Test;
  * along with this program.  If not, see <http://www.gnu.org/licenses/>
  *
  */
-
 import com.fasterxml.jackson.core.JsonPointer;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.github.fge.jackson.JsonLoader;
@@ -35,15 +34,13 @@ import junit.framework.Assert;
  *
  * @author
  */
-
-
 public class ProfileSchemaTest {
 
     public ProfileSchemaTest() {
     }
 
     @Test
-    public void testFreePlan() throws Exception{
+    public void testFreePlan() throws Exception {
         final JsonNode fstabSchema = JsonLoader.fromResource("/org/restcomm/connect/http/schemas/rc-profile-schema.json");
         final JsonNode good = JsonLoader.fromResource("/org/restcomm/connect/http/schemas/freePlan.json");
 
@@ -58,7 +55,7 @@ public class ProfileSchemaTest {
     }
 
     @Test
-    public void testEmptyProfile() throws Exception{
+    public void testEmptyProfile() throws Exception {
         final JsonNode fstabSchema = JsonLoader.fromResource("/org/restcomm/connect/http/schemas/rc-profile-schema.json");
         final JsonNode good = JsonLoader.fromResource("/org/restcomm/connect/http/schemas/emptyProfile.json");
 
@@ -73,7 +70,7 @@ public class ProfileSchemaTest {
     }
 
     @Test
-    public void testRetrieveAllowedPrefixes() throws Exception{
+    public void testRetrieveAllowedPrefixes() throws Exception {
         final JsonNode good = JsonLoader.fromResource("/org/restcomm/connect/http/schemas/freePlan.json");
         JsonPointer pointer = JsonPointer.compile("/featureEnablement/destinations/allowedPrefixes");
         JsonNode at = good.at(pointer);
@@ -83,7 +80,7 @@ public class ProfileSchemaTest {
     }
 
     @Test
-    public void testInvalidFeature() throws Exception{
+    public void testInvalidFeature() throws Exception {
         final JsonNode fstabSchema = JsonLoader.fromResource("/org/restcomm/connect/http/schemas/rc-profile-schema.json");
         final JsonNode good = JsonLoader.fromResource("/org/restcomm/connect/http/schemas/invalidFeature.json");
 
@@ -96,4 +93,5 @@ public class ProfileSchemaTest {
         report = schema.validate(good);
         Assert.assertFalse(report.isSuccess());
     }
+
 }

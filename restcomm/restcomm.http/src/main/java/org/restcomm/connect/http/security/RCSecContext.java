@@ -1,3 +1,4 @@
+
 /*
  * TeleStax, Open Source Cloud Communications
  * Copyright 2011-2014, Telestax Inc and individual contributors
@@ -17,33 +18,38 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>
  *
  */
-package org.restcomm.connect.commons.exceptions;
 
-/**
- * Generic type of runtime exception that is handled centrally using exceptions
- * mappers.
- *
- * @author otsakir@gmail.com - Orestis Tsakiridis
- */
-public class RestcommRuntimeException extends RuntimeException {
+package org.restcomm.connect.http.security;
 
-    public RestcommRuntimeException() {
+import javax.ws.rs.core.SecurityContext;
+import java.security.Principal;
+
+public class RCSecContext implements SecurityContext{
+    private AccountPrincipal user;
+    private String scheme;
+
+    public RCSecContext(AccountPrincipal user, String scheme) {
+        this.user = user;
+        this.scheme = scheme;
     }
 
-    public RestcommRuntimeException(String message) {
-        super(message);
+    @Override
+    public Principal getUserPrincipal() {return this.user;}
+
+    @Override
+    public boolean isUserInRole(String s) {
+        if (user.getRole() != null) {
+            return user.getRole().contains(s);
+        }
+        return false;
     }
 
-    public RestcommRuntimeException(String message, Throwable cause) {
-        super(message, cause);
-    }
+    @Override
+    public boolean isSecure() {return "https".equals(this.scheme);}
 
-    public RestcommRuntimeException(Throwable cause) {
-        super(cause);
+    @Override
+    public String getAuthenticationScheme() {
+        return SecurityContext.BASIC_AUTH;
     }
-
-    public RestcommRuntimeException(String message, Throwable cause, boolean enableSuppression, boolean writableStackTrace) {
-        super(message, cause, enableSuppression, writableStackTrace);
-    }
-
 }
+
