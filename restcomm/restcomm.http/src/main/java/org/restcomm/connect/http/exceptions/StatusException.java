@@ -17,40 +17,27 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>
  *
  */
-
 package org.restcomm.connect.http.exceptions;
 
+import javax.ws.rs.core.Response.Status;
 import org.restcomm.connect.commons.exceptions.RestcommRuntimeException;
 
-/**
- * Thrown when a resource (like Clients, Numbers etc.) is accessed under an account
- * that does not own them.
- *
- * @author otsakir@gmail.com - Orestis Tsakiridis
- */
-public class ResourceAccountMissmatch extends RestcommRuntimeException {
+public class StatusException extends RestcommRuntimeException {
 
-    public ResourceAccountMissmatch() {
+    private Status status;
+
+    public StatusException(Status status) {
+        this.status = status;
     }
 
-    public ResourceAccountMissmatch(String message) {
+    public StatusException(Status status,String message) {
         super(message);
+        this.status = status;
     }
 
-    public ResourceAccountMissmatch(String message, Throwable cause) {
-        super(message, cause);
+    public Status getStatus() {
+        return status;
     }
-
-    public ResourceAccountMissmatch(Throwable cause) {
-        super(cause);
-    }
-
-    public ResourceAccountMissmatch(String message, Throwable cause, boolean enableSuppression, boolean writableStackTrace) {
-        super(message, cause, enableSuppression, writableStackTrace);
-    }
-
-
-
 
 
 }

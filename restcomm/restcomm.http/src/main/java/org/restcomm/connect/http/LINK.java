@@ -1,3 +1,5 @@
+package org.restcomm.connect.http;
+
 /*
  * TeleStax, Open Source Cloud Communications
  * Copyright 2011-2014, Telestax Inc and individual contributors
@@ -17,33 +19,20 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>
  *
  */
-package org.restcomm.connect.commons.exceptions;
+
+
+import java.lang.annotation.ElementType;
+import java.lang.annotation.Retention;
+import java.lang.annotation.RetentionPolicy;
+import java.lang.annotation.Target;
+import javax.ws.rs.HttpMethod;
 
 /**
- * Generic type of runtime exception that is handled centrally using exceptions
- * mappers.
  *
- * @author otsakir@gmail.com - Orestis Tsakiridis
+ * @author
  */
-public class RestcommRuntimeException extends RuntimeException {
-
-    public RestcommRuntimeException() {
-    }
-
-    public RestcommRuntimeException(String message) {
-        super(message);
-    }
-
-    public RestcommRuntimeException(String message, Throwable cause) {
-        super(message, cause);
-    }
-
-    public RestcommRuntimeException(Throwable cause) {
-        super(cause);
-    }
-
-    public RestcommRuntimeException(String message, Throwable cause, boolean enableSuppression, boolean writableStackTrace) {
-        super(message, cause, enableSuppression, writableStackTrace);
-    }
-
+@Target({ElementType.METHOD})
+@Retention(RetentionPolicy.RUNTIME)
+@HttpMethod("LINK")
+public @interface LINK {
 }
