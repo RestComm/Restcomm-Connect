@@ -72,7 +72,7 @@ public class ProfileSchemaTest {
     @Test
     public void testRetrieveAllowedPrefixes() throws Exception {
         final JsonNode good = JsonLoader.fromResource("/org/restcomm/connect/http/schemas/freePlan.json");
-        JsonPointer pointer = JsonPointer.compile("/featureEnablement/destinations/allowedPrefixes");
+        JsonPointer pointer = JsonPointer.compile("/featureEnablement/outboundPSTN/allowedPrefixes");
         JsonNode at = good.at(pointer);
         Assert.assertNotNull(at);
         Assert.assertTrue(at.isArray());
