@@ -42,18 +42,14 @@ public class SecurityFilter implements ContainerRequestFilter {
     // We return Access-* headers only in case allowedOrigin is present and equals to the 'Origin' header.
     @Override
     public ContainerRequest filter(ContainerRequest cr) {
-        //TODO only apply to Profiles endpoint by now
-        if (cr.getPath().contains("Profiles")) {
-            final DaoManager storage = (DaoManager) servletRequest.getServletContext().getAttribute(DaoManager.class.getName());
-            AccountsDao accountsDao = storage.getAccountsDao();
-            UserIdentityContext userIdentityContext = new UserIdentityContext(servletRequest, accountsDao);
-            if(userIdentityContext.getEffectiveAccount() == null)
-                throw new WebApplicationException(Status.UNAUTHORIZED);
-            String scheme = cr.getAuthenticationScheme();
-            AccountPrincipal aPrincipal = new AccountPrincipal(userIdentityContext);
-            cr.setSecurityContext(new RCSecContext(aPrincipal, scheme));
-            return cr;
-        }
+    	final DaoManager storage = (DaoManager) servletRequest.getServletContext().getAttribute(DaoManager.class.getName());
+        AccountsDao accountsDao = storage.getAccountsDao();
+        UserIdentityContext userIdentityContext = new UserIdentityContext(servletRequest, accountsDao);
+        if(userIdentityContext.getEffectiveAccount() == null)
+            throw new WebApplicationException(Status.UNAUTHORIZED);
+        String scheme = cr.getAuthenticationScheme();
+        AccountPrincipal aPrincipal = new AccountPrincipal(userIdentityContext);
+        cr.setSecurityContext(new RCSecContext(aPrincipal, scheme));
         return cr;
     }
 
