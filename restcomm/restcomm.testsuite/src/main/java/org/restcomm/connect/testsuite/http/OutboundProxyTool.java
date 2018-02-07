@@ -1,17 +1,15 @@
 package org.restcomm.connect.testsuite.http;
 
-import javax.ws.rs.core.MediaType;
-
 import com.google.gson.JsonObject;
 import com.google.gson.JsonParser;
 import com.sun.jersey.api.client.Client;
 import com.sun.jersey.api.client.WebResource;
 import com.sun.jersey.api.client.filter.HTTPBasicAuthFilter;
+import javax.ws.rs.core.MediaType;
 
 /**
  * @author <a href="mailto:gvagenas@gmail.com">gvagenas</a>
  */
-
 public class OutboundProxyTool {
 
     private static OutboundProxyTool instance;
@@ -22,8 +20,9 @@ public class OutboundProxyTool {
     }
 
     public static OutboundProxyTool getInstance() {
-        if (instance == null)
+        if (instance == null) {
             instance = new OutboundProxyTool();
+        }
 
         return instance;
     }
@@ -59,14 +58,13 @@ public class OutboundProxyTool {
         return jsonObject;
     }
 
-
     public JsonObject switchProxy(String deploymentUrl, String username, String authToken) {
-        
+
         Client jerseyClient = Client.create();
         jerseyClient.addFilter(new HTTPBasicAuthFilter(username, authToken));
 
         String url = getAccountsUrl(deploymentUrl, username, true);
-        
+
         WebResource webResource = jerseyClient.resource(url);
 
         String response = null;
@@ -85,7 +83,7 @@ public class OutboundProxyTool {
         jerseyClient.addFilter(new HTTPBasicAuthFilter(username, authToken));
 
         String url = getAccountsUrl(deploymentUrl, username, true);
-        
+
         WebResource webResource = jerseyClient.resource(url);
 
         String response = null;

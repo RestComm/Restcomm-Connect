@@ -19,64 +19,62 @@
  */
 package org.restcomm.connect.testsuite.http;
 
-import java.util.Map;
-
-import javax.ws.rs.core.MediaType;
-import javax.ws.rs.core.MultivaluedMap;
-
-import org.apache.log4j.Logger;
-import org.restcomm.connect.dao.entities.CallDetailRecordList;
-
+import com.google.gson.JsonArray;
 import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
 import com.google.gson.JsonParser;
 import com.sun.jersey.api.client.Client;
-import com.sun.jersey.api.client.UniformInterfaceException;
 import com.sun.jersey.api.client.WebResource;
 import com.sun.jersey.api.client.filter.HTTPBasicAuthFilter;
 import com.sun.jersey.core.util.MultivaluedMapImpl;
 import com.thoughtworks.xstream.XStream;
+import java.util.Map;
+import javax.ws.rs.core.MediaType;
+import javax.ws.rs.core.MultivaluedMap;
+import org.apache.log4j.Logger;
+import org.restcomm.connect.dao.entities.ConferenceDetailRecordList;
 
 /**
- * @author maria
+ * @author Maria
  */
+public class RestcommConferenceTool {
 
-public class RestcommConferenceParticipantsTool {
-
-    private static RestcommConferenceParticipantsTool instance;
+    private static RestcommConferenceTool instance;
     private static String accountsUrl;
-    private static Logger logger = Logger.getLogger(RestcommConferenceParticipantsTool.class);
-    
-    private RestcommConferenceParticipantsTool() {}
+    private static Logger logger = Logger.getLogger(RestcommConferenceTool.class);
 
-    public static RestcommConferenceParticipantsTool getInstance() {
-        if (instance == null)
-            instance = new RestcommConferenceParticipantsTool();
+    private RestcommConferenceTool() {
+    }
+
+    public static RestcommConferenceTool getInstance() {
+        if (instance == null) {
+            instance = new RestcommConferenceTool();
+        }
 
         return instance;
     }
 
-    private String getAccountsUrl(String deploymentUrl, String username, String conferenceSid, Boolean json) {
+    private String getAccountsUrl(String deploymentUrl, String username, Boolean json) {
         if (deploymentUrl.endsWith("/")) {
             deploymentUrl = deploymentUrl.substring(0, deploymentUrl.length() - 1);
         }
 
-        accountsUrl = deploymentUrl + "/2012-04-24/Accounts/" + username + "/Conferences/" + conferenceSid + "/Participants" + ((json) ? ".json" : "");
+        accountsUrl = deploymentUrl + "/2012-04-24/Accounts/" + username + "/Conferences" + ((json) ? ".json" : "");
 
         return accountsUrl;
     }
 
-    public JsonObject getParticipants(String deploymentUrl, String username, String authToken, String conferenceSid) {
-        return (JsonObject) getParticipants(deploymentUrl, username, authToken, conferenceSid, null, null, true);
+    public JsonObject getConferences(String deploymentUrl, String username, String authToken) {
+        return (JsonObject) getConferences(deploymentUrl, username, authToken, null, null, true);
     }
 
-    public JsonObject getParticipants(String deploymentUrl, String username, String authToken, String conferenceSid, Integer page, Integer pageSize,
+    public JsonObject getConferences(String deploymentUrl, String username, String authToken, Integer page, Integer pageSize,
             Boolean json) {
 
         Client jerseyClient = Client.create();
         jerseyClient.addFilter(new HTTPBasicAuthFilter(username, authToken));
 
-        String url = getAccountsUrl(deploymentUrl, username, conferenceSid, json);
+        String url = getAccountsUrl(deploymentUrl, username, json);
 
         WebResource webResource = jerseyClient.resource(url);
 
@@ -85,10 +83,12 @@ public class RestcommConferenceParticipantsTool {
         if (page != null || pageSize != null) {
             MultivaluedMap<String, String> params = new MultivaluedMapImpl();
 
-            if (page != null)
+            if (page != null) {
                 params.add("Page", String.valueOf(page));
-            if (pageSize != null)
+            }
+            if (pageSize != null) {
                 params.add("PageSize", String.valueOf(pageSize));
+            }
 
             response = webResource.queryParams(params).accept(MediaType.APPLICATION_JSON, MediaType.APPLICATION_XML)
                     .get(String.class);
@@ -108,33 +108,33 @@ public class RestcommConferenceParticipantsTool {
                     logger.info("JsonElement: " + jsonElement.toString());
                 }
             } catch (Exception e) {
-                logger.info("Exception during JSON response parsing, exception: "+e);
-                logger.info("JSON response: "+response);
+                logger.info("Exception during JSON response parsing, exception: " + e);
+                logger.info("JSON response: " + response);
             }
             return jsonObject;
         } else {
             XStream xstream = new XStream();
-            xstream.alias("cdrlist", CallDetailRecordList.class);
+            xstream.alias("cdrlist", ConferenceDetailRecordList.class);
             JsonObject jsonObject = parser.parse(xstream.toXML(response)).getAsJsonObject();
             return jsonObject;
         }
 
     }
 
-    public JsonObject getParticipant(String deploymentUrl, String username, String conferenceSid, String authToken, String sid){
+    public JsonObject getConference(String deploymentUrl, String username, String authToken, String sid) {
 
         Client jerseyClient = Client.create();
         jerseyClient.addFilter(new HTTPBasicAuthFilter(username, authToken));
 
-        String url = getAccountsUrl(deploymentUrl, username, conferenceSid, false);
+        String url = getAccountsUrl(deploymentUrl, username, false);
 
         WebResource webResource = jerseyClient.resource(url);
 
         String response = null;
 
-        webResource = webResource.path(String.valueOf(sid)+".json");
-        logger.info("The URI to sent: "+webResource.getURI());
-        
+        webResource = webResource.path(String.valueOf(sid) + ".json");
+        logger.info("The URI to sent: " + webResource.getURI());
+
         response = webResource.accept(MediaType.APPLICATION_JSON, MediaType.APPLICATION_XML)
                 .get(String.class);
 
@@ -145,12 +145,12 @@ public class RestcommConferenceParticipantsTool {
 
     }
 
-    public JsonObject getParticipantsUsingFilter(String deploymentUrl, String username, String conferenceSid, String authToken, Map<String, String> filters) {
+    public JsonObject getConferencesUsingFilter(String deploymentUrl, String username, String authToken, Map<String, String> filters) {
 
         Client jerseyClient = Client.create();
         jerseyClient.addFilter(new HTTPBasicAuthFilter(username, authToken));
 
-        String url = getAccountsUrl(deploymentUrl, username, conferenceSid, true);
+        String url = getAccountsUrl(deploymentUrl, username, true);
 
         WebResource webResource = jerseyClient.resource(url);
 
@@ -168,32 +168,26 @@ public class RestcommConferenceParticipantsTool {
         return jsonObject;
     }
 
-    public JsonObject modifyCall(String deploymentUrl, String username, String conferenceSid, String authToken, String callSid, Boolean muted) throws Exception {
+    public int getConferencesSize(String deploymentUrl, String accountSid, String adminAuthToken) {
+        JsonObject conferences = RestcommConferenceTool.getInstance().getConferences(deploymentUrl.toString(), accountSid, adminAuthToken);
+        JsonArray conferenceArray = conferences.getAsJsonArray("conferences");
+        return conferenceArray.size();
+    }
 
-        Client jerseyClient = Client.create();
-        jerseyClient.addFilter(new HTTPBasicAuthFilter(username, authToken));
-
-        String url = getAccountsUrl(deploymentUrl, username, conferenceSid, true);
-
-        WebResource webResource = jerseyClient.resource(url);
-
-        MultivaluedMap<String, String> params = new MultivaluedMapImpl();
-
-        if (muted != null)
-            params.add("Mute", ""+muted);
-
-        JsonObject jsonObject = null;
-
-        try {
-            String response = webResource.path(callSid).accept(MediaType.APPLICATION_JSON).post(String.class, params);
-            JsonParser parser = new JsonParser();
-            jsonObject = parser.parse(response).getAsJsonObject();
-        } catch (Exception e) {
-            logger.info("Exception e: "+e);
-            UniformInterfaceException exception = (UniformInterfaceException)e;
-            jsonObject = new JsonObject();
-            jsonObject.addProperty("Exception",exception.getResponse().getStatus());
+    public int getParticipantsSize(String deploymentUrl, String accountSid, String adminAuthToken, final String name) {
+        JsonObject conferences = RestcommConferenceTool.getInstance().getConferences(deploymentUrl.toString(), accountSid, adminAuthToken);
+        JsonArray conferenceArray = conferences.getAsJsonArray("conferences");
+        String confSid = null;
+        for (int i = 0; i < conferenceArray.size(); i++) {
+            JsonObject confObj = conferenceArray.get(i).getAsJsonObject();
+            String confName = confObj.get("friendly_name").getAsString();
+            if (confName.equalsIgnoreCase(name)) {
+                confSid = confObj.get("sid").getAsString();
+                break;
+            }
         }
-        return jsonObject;
+        JsonObject participants = RestcommConferenceParticipantsTool.getInstance().getParticipants(deploymentUrl.toString(), accountSid, adminAuthToken, confSid);
+        JsonArray participantsArray = participants.getAsJsonArray("calls");
+        return participantsArray.size();
     }
 }

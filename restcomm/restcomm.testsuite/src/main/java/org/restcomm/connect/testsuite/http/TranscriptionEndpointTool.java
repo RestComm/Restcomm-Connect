@@ -34,13 +34,17 @@ import javax.ws.rs.core.MultivaluedMap;
  *
  */
 public class TranscriptionEndpointTool {
+
     private static TranscriptionEndpointTool instance;
     private static String accountsUrl;
-    private TranscriptionEndpointTool() {}
+
+    private TranscriptionEndpointTool() {
+    }
 
     public static TranscriptionEndpointTool getInstance() {
-        if (instance == null)
+        if (instance == null) {
             instance = new TranscriptionEndpointTool();
+        }
         return instance;
     }
 
@@ -56,7 +60,7 @@ public class TranscriptionEndpointTool {
         return accountsUrl;
     }
 
-    public JsonObject getTranscriptionList (String deploymentUrl, String username, String authToken) {
+    public JsonObject getTranscriptionList(String deploymentUrl, String username, String authToken) {
         Client jerseyClient = Client.create();
         jerseyClient.addFilter(new HTTPBasicAuthFilter(username, authToken));
         String url = getAccountsUrl(deploymentUrl, username, true);
@@ -67,7 +71,7 @@ public class TranscriptionEndpointTool {
         return jsonObject;
     }
 
-    public JsonObject getTranscriptionList (String deploymentUrl, String username, String authToken, Integer page, Integer pageSize, Boolean json) {
+    public JsonObject getTranscriptionList(String deploymentUrl, String username, String authToken, Integer page, Integer pageSize, Boolean json) {
 
         Client jerseyClient = Client.create();
         jerseyClient.addFilter(new HTTPBasicAuthFilter(username, authToken));
@@ -78,10 +82,12 @@ public class TranscriptionEndpointTool {
         if (page != null || pageSize != null) {
             MultivaluedMap<String, String> params = new MultivaluedMapImpl();
 
-            if (page != null)
+            if (page != null) {
                 params.add("Page", String.valueOf(page));
-            if (pageSize != null)
+            }
+            if (pageSize != null) {
                 params.add("PageSize", String.valueOf(pageSize));
+            }
 
             response = webResource.queryParams(params).accept(MediaType.APPLICATION_JSON, MediaType.APPLICATION_XML)
                     .get(String.class);

@@ -17,36 +17,23 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>
  *
  */
-
 package org.restcomm.connect.testsuite.http;
 
-import java.util.Map;
-
-import javax.ws.rs.core.MediaType;
-import javax.ws.rs.core.MultivaluedMap;
-
-import org.apache.commons.collections.map.HashedMap;
-import org.apache.log4j.Logger;
-import org.restcomm.connect.dao.entities.CallDetailRecordList;
-import org.restcomm.connect.dao.entities.UsageList;
-
-import com.google.gson.JsonArray;
 import com.google.gson.JsonElement;
-import com.google.gson.JsonNull;
-import com.google.gson.JsonObject;
 import com.google.gson.JsonParser;
-import com.google.gson.JsonPrimitive;
 import com.sun.jersey.api.client.Client;
-import com.sun.jersey.api.client.UniformInterfaceException;
 import com.sun.jersey.api.client.WebResource;
 import com.sun.jersey.api.client.filter.HTTPBasicAuthFilter;
 import com.sun.jersey.core.util.MultivaluedMapImpl;
-import com.thoughtworks.xstream.XStream;
+import java.util.Map;
+import javax.ws.rs.core.MediaType;
+import javax.ws.rs.core.MultivaluedMap;
+import org.apache.commons.collections.map.HashedMap;
+import org.apache.log4j.Logger;
 
 /**
  * @author <a href="mailto:abdulazizali@acm.org">abdulazizali77</a>
  */
-
 public class RestcommUsageRecordsTool {
 
     private static RestcommUsageRecordsTool instance;
@@ -57,8 +44,9 @@ public class RestcommUsageRecordsTool {
     }
 
     public static RestcommUsageRecordsTool getInstance() {
-        if (instance == null)
+        if (instance == null) {
             instance = new RestcommUsageRecordsTool();
+        }
 
         return instance;
     }
@@ -122,16 +110,21 @@ public class RestcommUsageRecordsTool {
             String categoryStr, String startDate, String endDate, Integer page, Integer pageSize, Boolean json) {
 
         Map<String, String> map = new HashedMap();
-        if (!categoryStr.isEmpty())
+        if (!categoryStr.isEmpty()) {
             map.put("Category", categoryStr);
-        if (!startDate.isEmpty())
+        }
+        if (!startDate.isEmpty()) {
             map.put("StartDate", startDate);
-        if (!endDate.isEmpty())
+        }
+        if (!endDate.isEmpty()) {
             map.put("EndDate", endDate);
-        if (page != null)
+        }
+        if (page != null) {
             map.put("Page", String.valueOf(page));
-        if (pageSize != null)
+        }
+        if (pageSize != null) {
             map.put("PageSize", String.valueOf(pageSize));
+        }
 
         return getUsageRecordsUsingFilter(deploymentUrl, username, authToken, subresource, map, json);
     }

@@ -18,13 +18,7 @@
  * Software Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA
  * 02110-1301 USA, or see the FSF site: http://www.fsf.org.
  */
-
 package org.restcomm.connect.testsuite.http;
-
-import java.io.IOException;
-
-import javax.ws.rs.core.MediaType;
-import javax.ws.rs.core.MultivaluedMap;
 
 import com.google.gson.JsonArray;
 import com.google.gson.JsonObject;
@@ -32,6 +26,9 @@ import com.google.gson.JsonParser;
 import com.sun.jersey.api.client.Client;
 import com.sun.jersey.api.client.WebResource;
 import com.sun.jersey.api.client.filter.HTTPBasicAuthFilter;
+import java.io.IOException;
+import javax.ws.rs.core.MediaType;
+import javax.ws.rs.core.MultivaluedMap;
 
 /**
  * @author guilherme.jansen@telestax.com
@@ -117,8 +114,9 @@ public class RestcommApplicationsTool {
         jerseyClient.addFilter(new HTTPBasicAuthFilter(adminUsername, adminAuthToken));
         String url = getApplicationsUrl(deploymentUrl, adminAccountSid, false);
         WebResource webResource = jerseyClient.resource(url);
-        if (includeNumbers)
+        if (includeNumbers) {
             webResource = webResource.queryParam("includeNumbers", "true");
+        }
         String response = webResource.accept(MediaType.APPLICATION_JSON).get(String.class);
         JsonParser parser = new JsonParser();
         JsonArray jsonResponse = parser.parse(response).getAsJsonArray();
