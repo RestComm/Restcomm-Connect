@@ -1,0 +1,204 @@
+= Restcomm API – Profile
+
+[[Profiles]]
+== Profiles
+
+Profiles allow to associate behavior configuration  to specific Accounts or Organizations. Once a Profile
+is associated with such Entity, the next session (USSD/Voice/SMS) attempt related to that
+Entity will use the Profile configuration to tweak the service logic behavior.
+
+During session creation the service logic will try to find the associated Profile 
+based on this criteria, until a Profile is found:
+
+. Profile associated to current Account
+. Profile associated to parent Account
+. Profile associated to related Organization
+. Default Profile
+
+The Default Profile is pre-provisioned in the system, and can't be modified from the
+REST API. The Default Profile Sid is "PRae6e420f425248d6a26948c17a9e2acf"
+
+Since the Profile configuration is expected to grow as required, the Profile entity
+is defined by a JSON schema, rather than regular properties, representing a 
+document used as generic container.
+
+=== Profile Resource URI
+
+*/2012-04-24/Profiles/\{ProfileSid}*
+
+=== Resource Schema
+....
+{
+    "$schema": "http://json-schema.org/draft-04/schema#",
+    "id": "resource:/org/restcomm/connect/http/schemas/rc-profile-schema.json#",
+    "additionalProperties": false,
+    "type": "object",
+    "properties": {
+        "featureEnablement": {
+            "$ref": "rc-feature-enablement-schema.json#/definitions/featureEnablement"
+        }       
+    }
+}
+....
+
+=== Supported Operations
+
+*HTTP GET.* Returns the representation of a Profile resource.
+
+==== Response Status
+[cols=",",options="header",]
+|==============================================================================================
+|Status |Description
+|200 OK | Body contains Profile JSon document
+|403 Forbidden |Only Super Admin is allowed to query Profiles
+|404 Not Found |Target Profile SID is missing
+|==============================================================================================
+
+==== Response Headers
+[cols=",",options="header",]
+|==============================================================================================
+|Header |Description
+|Link | a link to the Profile schema with "rel" "describedBy"
+|Modified-Since | Date of last modification of the profile.
+|==============================================================================================
+
+
+
+**HTTP PUT**. 
+Modifies a Profile resource and returns the representation. 
+The body of the request is expected to contain a JSON document compliant to the Profile
+schema.
+
+==== Response Status
+[cols=",",options="header",]
+|==============================================================================================
+|Status |Description
+|200 OK | Modification performed. Body contains Profile JSon document 
+|403 Forbidden |Only Super Admin is allowed to modify a Profile. DefaultProfile can't be modified
+|404 Not Found |Target Profile SID is missing
+|400 Bad Request | Body contains a Profile not compliant with schema
+|==============================================================================================
+
+**HTTP DELETE**
+
+Removes an existing Profile, removing any existing association with Accounts/Organizations.
+
+==== Response Status
+[cols=",",options="header",]
+|==============================================================================================
+|Status |Description
+|200 OK | Profile removed
+|403 Forbidden |Only Super Admin is allowed to remove. DefaultProfile can't be deleted
+|404 Not Found |Target Profile SID is missing or Link is not found
+|==============================================================================================
+
+**HTTP LINK/UNLINK**
+
+Profile association operation maybe performed against a particular Account or Organization.
+This operation will use HTTP 1.1 LINK/UNLINK methods, and target resource should be populated
+in a Link header, using "related" as "rel" attribute. Only one Link header is supported. 
+To associate a single Profile with multiple Accounts/Organizations, multiple requests will be required.
+
+
+==== Request Headers
+[cols=",",options="header",]
+|==============================================================================================
+|Header |Description
+|Link |Contains an full URL to the Account/Organization that should be associated to the Profile
+|==============================================================================================
+
+==== Response Status
+[cols=",",options="header",]
+|==============================================================================================
+|Status |Description
+|200 OK | Association established
+|403 Forbidden |Only Super Admin is allowed for the association operation
+|404 Not Found |Target Profile SID is missing or Link is not found
+|400 Bad Request | None or multiple Link header provided. Link with unsupported "rel".
+|==============================================================================================
+
+
+**Get information about the default profile.**
+
+....
+curl -X GET  https://ACae6e420f425248d6a26948c17a9e2acf:77f8c12cc7b8f8423e5c38b035249166@127.0.0.1:8080/restcomm/2012-04-24/Profiles/PRae6e420f425248d6a26948c17a9e2acf
+....
+
+
+**Modify a Profile.**
+
+To update a Profile you need to provide the SID
+
+For example, update Proile using sid:
+....
+curl -H 'Content-Type: application/instance+json' --data "@/path/to/filename" -X PUT https://ACae6e420f425248d6a26948c17a9e2acf:77f8c12cc7b8f8423e5c38b035249166@127.0.0.1:8080/restcomm/2012-04-24/Profiles/PRae6e420f425248d6a26948c17a9e2123
+....
+
+....
+curl -X GET  https://administrator%40company.com:77f8c12cc7b8f8423e5c38b035249166@127.0.0.1:8080/restcomm/2012-04-24/Profiles/PRae6e420f425248d6a26948c17a9e2123
+....
+
+The above command will print an output similar to the one below:
+
+----
+{
+    "featureEnablement": {
+        "DIDPurchase": {
+            "allowedCountries": ["US",
+                "CA"]
+        },        
+        "destinations": {
+            "allowedPrefixes": ["+1"]
+        },
+        "outboundPSTN": {
+        },
+        "inboundPSTN": {
+        },
+        "outboundSMS": {
+        },
+        "inboundSMS": {
+        }
+
+    }   
+}
+----
+
+[[Profiles_List]]
+== Profile List Resource
+
+* Profile List Resource URI. */2012-04-24/Profiles*
+
+=== Supported Operations
+
+**HTTP GET**. Returns the list representation of all the *Profile* resources.
+
+The response will include a JSON document in the response body with this
+format
+....
+[{
+	"uri": "http://127.0.0.1:8080/restcomm/2012-04-24/Profiles/PRae6e420f425248d6a26948c17a9e2acf",
+	"sid": "PRae6e420f425248d6a26948c17a9e2acf",
+	"dateUpdated": 1516745449949,
+	"dateCreated": 1516745449949
+}]
+....
+
+**HTTP POST**. 
+Creates a new Profile.The body of the request is expected to contain a JSON document compliant to the Profile
+schema.
+
+==== Response Status
+[cols=",",options="header",]
+|==============================================================================================
+|Status |Description
+|201 Created | Profile created. Body contains Profile JSon document 
+|403 Forbidden |Only Super Admin is allowed to modify/create a Profile
+|400 Bad Request | Body contains a Profile not compliant with schema
+|==============================================================================================
+
+==== Response Headers
+[cols=",",options="header",]
+|==============================================================================================
+|Header |Description
+|Location | URL to new Profile created
+|==============================================================================================
