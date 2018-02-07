@@ -101,9 +101,7 @@ public class ProfilesEndpointTest extends EndpointTest {
     	Client jerseyClient = Client.create();
 		WebResource webResource = jerseyClient.resource(deploymentUrl.toString()+"/2012-04-24/Profiles");
 		ClientResponse clientResponse = webResource.path(DEFAULT_PROFILE_SID).accept(RestcommProfilesTool.PROFILE_CONTENT_TYPE).get(ClientResponse.class);
-        String responseBody = clientResponse.getEntity(String.class);
-    	logger.info("profile: "+responseBody);
-    	assertEquals(401, clientResponse.getStatus());
+        assertEquals(401, clientResponse.getStatus());
     	
     	jerseyClient = Client.create();
 		webResource = jerseyClient.resource(deploymentUrl.toString()+"/2012-04-24/Profiles");

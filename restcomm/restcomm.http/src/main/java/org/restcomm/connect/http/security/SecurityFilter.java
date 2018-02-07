@@ -23,12 +23,12 @@ import com.sun.jersey.spi.container.ContainerRequest;
 import com.sun.jersey.spi.container.ContainerRequestFilter;
 import org.apache.log4j.Logger;
 import javax.servlet.http.HttpServletRequest;
+import javax.ws.rs.WebApplicationException;
 import javax.ws.rs.core.Context;
+import javax.ws.rs.core.Response.Status;
 import javax.ws.rs.ext.Provider;
 import org.restcomm.connect.dao.AccountsDao;
 import org.restcomm.connect.dao.DaoManager;
-import org.restcomm.connect.dao.OrganizationsDao;
-import org.restcomm.connect.identity.IdentityContext;
 import org.restcomm.connect.identity.UserIdentityContext;
 
 @Provider
@@ -46,9 +46,9 @@ public class SecurityFilter implements ContainerRequestFilter {
         if (cr.getPath().contains("Profiles")) {
             final DaoManager storage = (DaoManager) servletRequest.getServletContext().getAttribute(DaoManager.class.getName());
             AccountsDao accountsDao = storage.getAccountsDao();
-            OrganizationsDao organizationsDao = storage.getOrganizationsDao();
-            IdentityContext identityContext = (IdentityContext) servletRequest.getServletContext().getAttribute(IdentityContext.class.getName());
             UserIdentityContext userIdentityContext = new UserIdentityContext(servletRequest, accountsDao);
+            if(userIdentityContext.getEffectiveAccount() == null)
+                throw new WebApplicationException(Status.UNAUTHORIZED);
             String scheme = cr.getAuthenticationScheme();
             AccountPrincipal aPrincipal = new AccountPrincipal(userIdentityContext);
             cr.setSecurityContext(new RCSecContext(aPrincipal, scheme));
