@@ -78,8 +78,6 @@ public class ExtensionsConfigurationEndpoint extends SecuredEndpoint {
         xstream.registerConverter(converter);
         xstream.registerConverter(new ExtensionConfigurationConverter(configuration));
         xstream.registerConverter(new RestCommResponseConverter(configuration));
-        // Make sure there is an authenticated account present when this endpoint is used
-        checkAuthenticatedAccount();
     }
 
     /**

@@ -109,7 +109,6 @@ public class SupervisorEndpoint extends SecuredEndpoint{
 
     protected Response pong(final String accountSid, final MediaType responseType) {
         //following 2 things are enough to grant access: 1. a valid authentication token is present. 2 it is a super admin.
-        checkAuthenticatedAccount();
         allowOnlySuperAdmin();
         CallDetailRecordFilter filterForTotal;
         try {
@@ -131,7 +130,6 @@ public class SupervisorEndpoint extends SecuredEndpoint{
 
     protected Response getMetrics(final String accountSid, final UriInfo info, final MediaType responseType) {
         //following 2 things are enough to grant access: 1. a valid authentication token is present. 2 it is a super admin.
-        checkAuthenticatedAccount();
         allowOnlySuperAdmin();
         boolean withLiveCallDetails = false;
         boolean withMgcpStats = false;
@@ -172,7 +170,6 @@ public class SupervisorEndpoint extends SecuredEndpoint{
 
     protected Response getLiveCalls(final String accountSid, final MediaType responseType) {
         //following 2 things are enough to grant access: 1. a valid authentication token is present. 2 it is a super admin.
-        checkAuthenticatedAccount();
         allowOnlySuperAdmin();
         LiveCallsDetails callDetails;
         try {
@@ -204,7 +201,6 @@ public class SupervisorEndpoint extends SecuredEndpoint{
     //Register a remote location where Restcomm will send monitoring updates
     protected Response registerForUpdates(final String accountSid, final UriInfo info, MediaType responseType) {
         //following 2 things are enough to grant access: 1. a valid authentication token is present. 2 it is a super admin.
-        checkAuthenticatedAccount();
         allowOnlySuperAdmin();
         boolean withLiveCallDetails = false;
         boolean withMgcpStats = false;
@@ -243,7 +239,6 @@ public class SupervisorEndpoint extends SecuredEndpoint{
     //Register a remote location where Restcomm will send monitoring updates for a specific Call
     protected Response registerForCallUpdates(final String accountSid, final String callSid, final MultivaluedMap<String, String> data, MediaType responseType) {
         //following 2 things are enough to grant access: 1. a valid authentication token is present. 2 it is a super admin.
-        checkAuthenticatedAccount();
         allowOnlySuperAdmin();
         final String url = data.getFirst("Url");
         final String refresh = data.getFirst("Refresh");

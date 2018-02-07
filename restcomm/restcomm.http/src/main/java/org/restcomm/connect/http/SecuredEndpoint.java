@@ -38,7 +38,6 @@ import org.restcomm.connect.extension.api.RestcommExtensionGeneric;
 import org.restcomm.connect.extension.controller.ExtensionController;
 import org.restcomm.connect.http.exceptions.AuthorizationException;
 import org.restcomm.connect.http.exceptions.InsufficientPermission;
-import org.restcomm.connect.http.exceptions.NotAuthenticated;
 import org.restcomm.connect.http.exceptions.OperatedAccountMissing;
 import org.restcomm.connect.identity.AuthOutcome;
 import org.restcomm.connect.identity.IdentityContext;
@@ -112,15 +111,6 @@ public abstract class SecuredEndpoint extends AbstractEndpoint {
     }
 
     /**
-     * Grants general purpose access if any valid token exists in the request
-     */
-    protected void checkAuthenticatedAccount() {
-        if (userIdentityContext.getEffectiveAccount() == null) {
-            throw new NotAuthenticated();
-        }
-    }
-
-    /**
      * Checks if the effective account is a super account (top level account)
      * @return
      */
@@ -186,7 +176,6 @@ public abstract class SecuredEndpoint extends AbstractEndpoint {
     }
 
     protected void secure(final Account operatedAccount, final String permission, SecuredType type) throws AuthorizationException {
-        checkAuthenticatedAccount();
         checkPermission(permission); // check an authenticated account allowed to do "permission" is available
         checkOrganization(operatedAccount); // check if valid organization is attached with this account.
         if (operatedAccount == null) {
@@ -227,7 +216,6 @@ public abstract class SecuredEndpoint extends AbstractEndpoint {
     }
 
     protected void secure(final Account operatedAccount, final Sid resourceAccountSid, SecuredType type) throws AuthorizationException {
-        checkAuthenticatedAccount();
         if (operatedAccount == null) {
             // if operatedAccount is NULL, we'll probably return a 404. But let's handle that in a central place.
             throw new OperatedAccountMissing();
