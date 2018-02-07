@@ -1,10 +1,12 @@
 package org.restcomm.connect.testsuite.http;
 
+import com.google.gson.JsonArray;
+import com.google.gson.JsonObject;
+import com.google.gson.JsonParser;
 import java.io.IOException;
 import java.nio.charset.Charset;
 import java.util.ArrayList;
 import java.util.List;
-
 import org.apache.commons.codec.binary.Base64;
 import org.apache.http.HttpEntity;
 import org.apache.http.HttpResponse;
@@ -22,15 +24,10 @@ import org.apache.http.impl.client.HttpClientBuilder;
 import org.apache.http.message.BasicNameValuePair;
 import org.apache.http.util.EntityUtils;
 
-import com.google.gson.JsonArray;
-import com.google.gson.JsonObject;
-import com.google.gson.JsonParser;
-
 /**
  * @author <a href="mailto:gvagenas@gmail.com">gvagenas</a>
  * @author <a href="mailto:lyhungthinh@gmail.com">Thinh Ly</a>
  */
-
 public class CreateClientsTool {
 
     private static CreateClientsTool instance;
@@ -40,8 +37,9 @@ public class CreateClientsTool {
     }
 
     public static CreateClientsTool getInstance() {
-        if (instance == null)
+        if (instance == null) {
             instance = new CreateClientsTool();
+        }
 
         return instance;
     }
@@ -101,7 +99,9 @@ public class CreateClientsTool {
                 JsonParser parser = new JsonParser();
                 JsonArray jArray = parser.parse(res).getAsJsonArray();
                 if (jArray.size() > 0) // handle also empty arrays i.e. return null in such a case
+                {
                     jsonResponse = jArray.get(0).getAsJsonObject();
+                }
             }
 
             httpGet.releaseConnection();
@@ -114,7 +114,7 @@ public class CreateClientsTool {
     }
 
     public void updateClientVoiceUrl(String deploymentUrl, JsonObject account, String clientSid, String voiceUrl,
-            String credentialUsername, String credentialPassword) throws ClientProtocolException, IOException {
+            String credentialUsername, String credentialPassword) throws IOException {
         String url = getClientUrl(deploymentUrl, account);
         String clientUrl = url.replace("Clients.json", "Clients/" + clientSid);
 
@@ -123,8 +123,9 @@ public class CreateClientsTool {
         HttpPost httpPost = new HttpPost(clientUrl);
         httpPost.addHeader("Authorization", "Basic " + authToken);
         List<NameValuePair> nvps = new ArrayList<NameValuePair>();
-        if (voiceUrl != null)
+        if (voiceUrl != null) {
             nvps.add(new BasicNameValuePair("VoiceUrl", voiceUrl));
+        }
 
         httpPost.setEntity(new UrlEncodedFormEntity(nvps));
         HttpResponse response = httpclient.execute(httpPost);
@@ -144,8 +145,9 @@ public class CreateClientsTool {
         nvps.add(new BasicNameValuePair("Login", username));
         nvps.add(new BasicNameValuePair("Password", password));
 
-        if (voiceUrl != null)
+        if (voiceUrl != null) {
             nvps.add(new BasicNameValuePair("VoiceUrl", voiceUrl));
+        }
 
         httpPost.setEntity(new UrlEncodedFormEntity(nvps));
         HttpResponse response = httpclient.execute(httpPost);
@@ -154,7 +156,7 @@ public class CreateClientsTool {
     }
 
     public String createClient(String deploymentUrl, String username, String password, String voiceUrl) throws IOException {
-    	return createClient(deploymentUrl, "ACae6e420f425248d6a26948c17a9e2acf", "77f8c12cc7b8f8423e5c38b035249166", username, password, voiceUrl);
+        return createClient(deploymentUrl, "ACae6e420f425248d6a26948c17a9e2acf", "77f8c12cc7b8f8423e5c38b035249166", username, password, voiceUrl);
     }
 
     public String createClient(String deploymentUrl, String accountSid, String authToken, String username, String password, String voiceUrl) throws IOException {
@@ -162,8 +164,8 @@ public class CreateClientsTool {
 
         String endpoint = getEndpoint(deploymentUrl).replaceAll("http://", "");
 
-        String url = "http://"+accountSid+":"+authToken+"@" + endpoint
-                + "/2012-04-24/Accounts/"+accountSid+"/Clients.json";
+        String url = "http://" + accountSid + ":" + authToken + "@" + endpoint
+                + "/2012-04-24/Accounts/" + accountSid + "/Clients.json";
 
         RequestConfig requestConfig = RequestConfig.custom().setConnectTimeout(10 * 1000).build();
         CloseableHttpClient httpClient = HttpClientBuilder.create().setDefaultRequestConfig(requestConfig).build();
@@ -171,8 +173,9 @@ public class CreateClientsTool {
         List<NameValuePair> nvps = new ArrayList<NameValuePair>();
         nvps.add(new BasicNameValuePair("Login", username));
         nvps.add(new BasicNameValuePair("Password", password));
-        if (voiceUrl != null)
+        if (voiceUrl != null) {
             nvps.add(new BasicNameValuePair("VoiceUrl", voiceUrl));
+        }
         httpPost.setEntity(new UrlEncodedFormEntity(nvps));
         CloseableHttpResponse response = httpClient.execute(httpPost);
         HttpEntity entity = response.getEntity();
@@ -182,7 +185,7 @@ public class CreateClientsTool {
 
         res = res.replaceAll("\\{", "").replaceAll("\\}", "");
         String[] components = res.split(",");
-        System.out.println("createClient res: "+res+" components: "+components);
+        System.out.println("createClient res: " + res + " components: " + components);
         clientSid = (components[0].split(":")[1]).replaceAll("\"", "").trim();
 
         return clientSid;

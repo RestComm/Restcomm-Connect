@@ -7,11 +7,10 @@ import com.google.gson.JsonParser;
 import com.sun.jersey.api.client.Client;
 import com.sun.jersey.api.client.WebResource;
 import com.sun.jersey.api.client.filter.HTTPBasicAuthFilter;
-import org.apache.log4j.Logger;
-
-import javax.ws.rs.core.MediaType;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
+import javax.ws.rs.core.MediaType;
+import org.apache.log4j.Logger;
 
 /**
  * Created by gvagenas on 11/25/15.

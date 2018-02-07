@@ -33,14 +33,18 @@ import javax.ws.rs.core.MultivaluedMap;
  * @author <a href="mailto:n.congvu@gmail.com">vunguyen</a>
  *
  */
-public class RecordingEndpointTool {
-    private static RecordingEndpointTool instance;
-    private static String accountsUrl;
-    private RecordingEndpointTool() {}
+public class TranscriptionEndpointTool {
 
-    public static RecordingEndpointTool getInstance() {
-        if (instance == null)
-            instance = new RecordingEndpointTool();
+    private static TranscriptionEndpointTool instance;
+    private static String accountsUrl;
+
+    private TranscriptionEndpointTool() {
+    }
+
+    public static TranscriptionEndpointTool getInstance() {
+        if (instance == null) {
+            instance = new TranscriptionEndpointTool();
+        }
         return instance;
     }
 
@@ -50,13 +54,13 @@ public class RecordingEndpointTool {
                 deploymentUrl = deploymentUrl.substring(0, deploymentUrl.length() - 1);
             }
 
-            accountsUrl = deploymentUrl + "/2012-04-24/Accounts/" + username + "/Recordings" + ((json) ? ".json" : "");
+            accountsUrl = deploymentUrl + "/2012-04-24/Accounts/" + username + "/Transcriptions" + ((json) ? ".json" : "");
         }
 
         return accountsUrl;
     }
 
-    public JsonObject getRecordingList (String deploymentUrl, String username, String authToken) {
+    public JsonObject getTranscriptionList(String deploymentUrl, String username, String authToken) {
         Client jerseyClient = Client.create();
         jerseyClient.addFilter(new HTTPBasicAuthFilter(username, authToken));
         String url = getAccountsUrl(deploymentUrl, username, true);
@@ -67,7 +71,7 @@ public class RecordingEndpointTool {
         return jsonObject;
     }
 
-    public JsonObject getRecordingList (String deploymentUrl, String username, String authToken, Integer page, Integer pageSize, Boolean json) {
+    public JsonObject getTranscriptionList(String deploymentUrl, String username, String authToken, Integer page, Integer pageSize, Boolean json) {
 
         Client jerseyClient = Client.create();
         jerseyClient.addFilter(new HTTPBasicAuthFilter(username, authToken));
@@ -78,10 +82,12 @@ public class RecordingEndpointTool {
         if (page != null || pageSize != null) {
             MultivaluedMap<String, String> params = new MultivaluedMapImpl();
 
-            if (page != null)
+            if (page != null) {
                 params.add("Page", String.valueOf(page));
-            if (pageSize != null)
+            }
+            if (pageSize != null) {
                 params.add("PageSize", String.valueOf(pageSize));
+            }
 
             response = webResource.queryParams(params).accept(MediaType.APPLICATION_JSON, MediaType.APPLICATION_XML)
                     .get(String.class);
@@ -94,7 +100,7 @@ public class RecordingEndpointTool {
         return jsonObject;
     }
 
-    public JsonObject getRecordingListUsingFilter(String deploymentUrl, String username, String authToken, Map<String, String> filters) {
+    public JsonObject getTranscriptionListUsingFilter(String deploymentUrl, String username, String authToken, Map<String, String> filters) {
 
         Client jerseyClient = Client.create();
         jerseyClient.addFilter(new HTTPBasicAuthFilter(username, authToken));

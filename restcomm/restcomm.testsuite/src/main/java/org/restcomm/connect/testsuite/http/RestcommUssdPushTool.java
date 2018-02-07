@@ -1,19 +1,17 @@
 package org.restcomm.connect.testsuite.http;
 
-import javax.ws.rs.core.MediaType;
-import javax.ws.rs.core.MultivaluedMap;
-
 import com.google.gson.JsonObject;
 import com.google.gson.JsonParser;
 import com.sun.jersey.api.client.Client;
 import com.sun.jersey.api.client.WebResource;
 import com.sun.jersey.api.client.filter.HTTPBasicAuthFilter;
 import com.sun.jersey.core.util.MultivaluedMapImpl;
+import javax.ws.rs.core.MediaType;
+import javax.ws.rs.core.MultivaluedMap;
 
 /**
  * @author <a href="mailto:gvagenas@gmail.com">gvagenas</a>
  */
-
 public class RestcommUssdPushTool {
 
     private static RestcommUssdPushTool instance;
@@ -24,8 +22,9 @@ public class RestcommUssdPushTool {
     }
 
     public static RestcommUssdPushTool getInstance() {
-        if (instance == null)
+        if (instance == null) {
             instance = new RestcommUssdPushTool();
+        }
 
         return instance;
     }

@@ -21,14 +21,13 @@
 
 package org.restcomm.connect.testsuite;
 
-import javax.ws.rs.core.MediaType;
-
 import com.google.gson.JsonArray;
 import com.google.gson.JsonObject;
 import com.google.gson.JsonParser;
 import com.sun.jersey.api.client.Client;
 import com.sun.jersey.api.client.WebResource;
 import com.sun.jersey.api.client.filter.HTTPBasicAuthFilter;
+import javax.ws.rs.core.MediaType;
 
 /**
  * @author guilherme.jansen@telestax.com
