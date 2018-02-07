@@ -18,15 +18,7 @@
  * Software Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA
  * 02110-1301 USA, or see the FSF site: http://www.fsf.org.
  */
-
 package org.restcomm.connect.testsuite.http;
-
-import java.io.IOException;
-
-import javax.ws.rs.core.MediaType;
-import javax.ws.rs.core.MultivaluedMap;
-
-import org.apache.log4j.Logger;
 
 import com.google.gson.JsonArray;
 import com.google.gson.JsonElement;
@@ -35,9 +27,14 @@ import com.google.gson.JsonParser;
 import com.sun.jersey.api.client.Client;
 import com.sun.jersey.api.client.WebResource;
 import com.sun.jersey.api.client.filter.HTTPBasicAuthFilter;
+import java.io.IOException;
+import javax.ws.rs.core.MediaType;
+import javax.ws.rs.core.MultivaluedMap;
+import org.apache.log4j.Logger;
 
 /**
- * @author <a href="mailto:fernando.mendioroz@telestax.com"> Fernando Mendioroz </a>
+ * @author <a href="mailto:fernando.mendioroz@telestax.com"> Fernando Mendioroz
+ * </a>
  *
  */
 public class RestcommGeolocationsTool {
@@ -107,7 +104,7 @@ public class RestcommGeolocationsTool {
     }
 
     public JsonObject createImmediateGeolocation(String deploymentUrl, String adminAccountSid, String adminUsername,
-                                                 String adminAuthToken, MultivaluedMap<String, String> geolocationParams) {
+            String adminAuthToken, MultivaluedMap<String, String> geolocationParams) {
         Client jerseyClient = Client.create();
         jerseyClient.addFilter(new HTTPBasicAuthFilter(adminUsername, adminAuthToken));
         String url = getImmediateGeolocationsUrl(deploymentUrl, adminAccountSid, false);
@@ -130,7 +127,7 @@ public class RestcommGeolocationsTool {
     }
 
     public JsonObject createNotificationGeolocation(String deploymentUrl, String adminAccountSid, String adminUsername,
-                                                    String adminAuthToken, MultivaluedMap<String, String> geolocationParams) {
+            String adminAuthToken, MultivaluedMap<String, String> geolocationParams) {
         Client jerseyClient = Client.create();
         jerseyClient.addFilter(new HTTPBasicAuthFilter(adminUsername, adminAuthToken));
         String url = getNotificationGeolocationsUrl(deploymentUrl, adminAccountSid, false);
@@ -153,7 +150,7 @@ public class RestcommGeolocationsTool {
     }
 
     public JsonObject getImmediateGeolocation(String deploymentUrl, String adminUsername, String adminAuthToken,
-                                              String adminAccountSid, String geolocationSid) {
+            String adminAccountSid, String geolocationSid) {
         Client jerseyClient = Client.create();
         jerseyClient.addFilter(new HTTPBasicAuthFilter(adminUsername, adminAuthToken));
         String url = getImmediateGeolocationUrl(deploymentUrl, adminAccountSid, geolocationSid, false);
@@ -171,7 +168,7 @@ public class RestcommGeolocationsTool {
     }
 
     public JsonObject getNotificationGeolocation(String deploymentUrl, String adminUsername, String adminAuthToken,
-                                                 String adminAccountSid, String geolocationSid) {
+            String adminAccountSid, String geolocationSid) {
         Client jerseyClient = Client.create();
         jerseyClient.addFilter(new HTTPBasicAuthFilter(adminUsername, adminAuthToken));
         String url = getNotificationGeolocationUrl(deploymentUrl, adminAccountSid, geolocationSid, false);
@@ -189,7 +186,7 @@ public class RestcommGeolocationsTool {
     }
 
     public JsonArray getGeolocations(String deploymentUrl, String adminUsername, String adminAuthToken,
-                                     String adminAccountSid) {
+            String adminAccountSid) {
         Client jerseyClient = Client.create();
         jerseyClient.addFilter(new HTTPBasicAuthFilter(adminUsername, adminAuthToken));
         String url = getGeolocationsUrl(deploymentUrl, adminAccountSid, false);
@@ -201,7 +198,7 @@ public class RestcommGeolocationsTool {
     }
 
     public JsonObject updateImmediateGeolocation(String deploymentUrl, String adminUsername, String adminAuthToken,
-                                                 String adminAccountSid, String geolocationSid, MultivaluedMap<String, String> geolocationParams, boolean usePut) {
+            String adminAccountSid, String geolocationSid, MultivaluedMap<String, String> geolocationParams, boolean usePut) {
         Client jerseyClient = Client.create();
         jerseyClient.addFilter(new HTTPBasicAuthFilter(adminUsername, adminAuthToken));
         String url = getImmediateGeolocationUrl(deploymentUrl, adminAccountSid, geolocationSid, false);
@@ -218,7 +215,7 @@ public class RestcommGeolocationsTool {
     }
 
     public JsonObject updateNotificationGeolocation(String deploymentUrl, String adminUsername, String adminAuthToken,
-                                                    String adminAccountSid, String geolocationSid, MultivaluedMap<String, String> geolocationParams, boolean usePut) {
+            String adminAccountSid, String geolocationSid, MultivaluedMap<String, String> geolocationParams, boolean usePut) {
         Client jerseyClient = Client.create();
         jerseyClient.addFilter(new HTTPBasicAuthFilter(adminUsername, adminAuthToken));
         String url = getNotificationGeolocationUrl(deploymentUrl, adminAccountSid, geolocationSid, false);
@@ -235,10 +232,10 @@ public class RestcommGeolocationsTool {
     }
 
     public void deleteImmediateGeolocation(String deploymentUrl, String adminUsername, String adminAuthToken,
-                                           String adminAccountSid, String geolocationSid) throws IOException {
+            String adminAccountSid, String geolocationSid) throws IOException {
         String endpoint = getEndpoint(deploymentUrl).replaceAll("http://", "");
         String url = getImmediateGeolocationUrl("http://" + adminAccountSid + ":" + adminAuthToken + "@" + endpoint,
-            adminAccountSid, geolocationSid, false);
+                adminAccountSid, geolocationSid, false);
         Client jerseyClient = Client.create();
         jerseyClient.addFilter(new HTTPBasicAuthFilter(adminAccountSid, adminAuthToken));
         WebResource webResource = jerseyClient.resource(url);
@@ -246,10 +243,10 @@ public class RestcommGeolocationsTool {
     }
 
     public void deleteNotificationGeolocation(String deploymentUrl, String adminUsername, String adminAuthToken,
-                                              String adminAccountSid, String geolocationSid) throws IOException {
+            String adminAccountSid, String geolocationSid) throws IOException {
         String endpoint = getEndpoint(deploymentUrl).replaceAll("http://", "");
         String url = getNotificationGeolocationUrl("http://" + adminAccountSid + ":" + adminAuthToken + "@" + endpoint,
-            adminAccountSid, geolocationSid, false);
+                adminAccountSid, geolocationSid, false);
         Client jerseyClient = Client.create();
         jerseyClient.addFilter(new HTTPBasicAuthFilter(adminAccountSid, adminAuthToken));
         WebResource webResource = jerseyClient.resource(url);

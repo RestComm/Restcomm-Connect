@@ -1,13 +1,5 @@
 package org.restcomm.connect.testsuite.http;
 
-import java.util.Map;
-
-import javax.ws.rs.core.MediaType;
-import javax.ws.rs.core.MultivaluedMap;
-
-import org.apache.log4j.Logger;
-import org.restcomm.connect.dao.entities.CallDetailRecordList;
-
 import com.google.gson.JsonArray;
 import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
@@ -18,22 +10,28 @@ import com.sun.jersey.api.client.WebResource;
 import com.sun.jersey.api.client.filter.HTTPBasicAuthFilter;
 import com.sun.jersey.core.util.MultivaluedMapImpl;
 import com.thoughtworks.xstream.XStream;
+import java.util.Map;
+import javax.ws.rs.core.MediaType;
+import javax.ws.rs.core.MultivaluedMap;
+import org.apache.log4j.Logger;
+import org.restcomm.connect.dao.entities.CallDetailRecordList;
 
 /**
  * @author <a href="mailto:gvagenas@gmail.com">gvagenas</a>
  */
-
 public class RestcommCallsTool {
 
     private static RestcommCallsTool instance;
     private static String accountsUrl;
     private static Logger logger = Logger.getLogger(RestcommCallsTool.class);
 
-    private RestcommCallsTool() {}
+    private RestcommCallsTool() {
+    }
 
     public static RestcommCallsTool getInstance() {
-        if (instance == null)
+        if (instance == null) {
             instance = new RestcommCallsTool();
+        }
 
         return instance;
     }
@@ -95,8 +93,8 @@ public class RestcommCallsTool {
             JsonObject jsonObject = parser.parse(response).getAsJsonObject();
             jsonArray = jsonObject.get("recordings").getAsJsonArray();
         } catch (Exception e) {
-            logger.info("Exception during getRecordings for url: "+url+" exception: "+e);
-            logger.info("Response object: "+response);
+            logger.info("Exception during getRecordings for url: " + url + " exception: " + e);
+            logger.info("Response object: " + response);
         }
         return jsonArray;
     }
@@ -120,10 +118,12 @@ public class RestcommCallsTool {
         if (page != null || pageSize != null) {
             MultivaluedMap<String, String> params = new MultivaluedMapImpl();
 
-            if (page != null)
+            if (page != null) {
                 params.add("Page", String.valueOf(page));
-            if (pageSize != null)
+            }
+            if (pageSize != null) {
                 params.add("PageSize", String.valueOf(pageSize));
+            }
 
             response = webResource.queryParams(params).accept(MediaType.APPLICATION_JSON, MediaType.APPLICATION_XML)
                     .get(String.class);
@@ -143,8 +143,8 @@ public class RestcommCallsTool {
                     logger.info("JsonElement: " + jsonElement.toString());
                 }
             } catch (Exception e) {
-                logger.info("Exception during JSON response parsing, exception: "+e);
-                logger.info("JSON response: "+response);
+                logger.info("Exception during JSON response parsing, exception: " + e);
+                logger.info("JSON response: " + response);
             }
             return jsonObject;
         } else {
@@ -165,13 +165,14 @@ public class RestcommCallsTool {
      * @param sid
      * @return
      */
-    public JsonObject getCall(String deploymentUrl, String username, String authToken, String sid){
+    public JsonObject getCall(String deploymentUrl, String username, String authToken, String sid) {
         return getCall(deploymentUrl, username, authToken, username, sid);
     }
 
     /**
      * getCall from another account's resource
      * https://github.com/RestComm/Restcomm-Connect/issues/1939
+     *
      * @param deploymentUrl
      * @param username
      * @param authToken
@@ -179,7 +180,7 @@ public class RestcommCallsTool {
      * @param sid
      * @return
      */
-    public JsonObject getCall(String deploymentUrl, String username, String authToken, String resourceAccountSid, String sid){
+    public JsonObject getCall(String deploymentUrl, String username, String authToken, String resourceAccountSid, String sid) {
 
         Client jerseyClient = Client.create();
         jerseyClient.addFilter(new HTTPBasicAuthFilter(username, authToken));
@@ -190,8 +191,8 @@ public class RestcommCallsTool {
 
         String response = null;
 
-        webResource = webResource.path(String.valueOf(sid)+".json");
-        logger.info("The URI to sent: "+webResource.getURI());
+        webResource = webResource.path(String.valueOf(sid) + ".json");
+        logger.info("The URI to sent: " + webResource.getURI());
 
         response = webResource.accept(MediaType.APPLICATION_JSON, MediaType.APPLICATION_XML)
                 .get(String.class);
@@ -235,12 +236,12 @@ public class RestcommCallsTool {
     }
 
     public JsonElement createCall(String deploymentUrl, String username, String authToken, String from, String to, String rcmlUrl,
-                                  final String statusCallback, final String statusCallbackMethod, final String statusCallbackEvent) {
+            final String statusCallback, final String statusCallbackMethod, final String statusCallbackEvent) {
         return createCall(deploymentUrl, username, authToken, from, to, rcmlUrl, statusCallback, statusCallbackMethod, statusCallbackEvent, null);
     }
 
     public JsonElement createCall(String deploymentUrl, String username, String authToken, String from, String to, String rcmlUrl,
-                                  final String statusCallback, final String statusCallbackMethod, final String statusCallbackEvent, final String timeout) {
+            final String statusCallback, final String statusCallbackMethod, final String statusCallbackEvent, final String timeout) {
 
         Client jerseyClient = Client.create();
         jerseyClient.addFilter(new HTTPBasicAuthFilter(username, authToken));
@@ -254,15 +255,19 @@ public class RestcommCallsTool {
         params.add("To", to);
         params.add("Url", rcmlUrl);
 
-        if (statusCallback != null)
+        if (statusCallback != null) {
             params.add("StatusCallback", statusCallback);
-        if (statusCallbackMethod != null)
+        }
+        if (statusCallbackMethod != null) {
             params.add("StatusCallbackMethod", statusCallbackMethod);
-        if (statusCallbackEvent != null)
+        }
+        if (statusCallbackEvent != null) {
             params.add("StatusCallbackEvent", statusCallbackEvent);
+        }
 
-        if (timeout != null)
+        if (timeout != null) {
             params.add("Timeout", timeout);
+        }
 
         // webResource = webResource.queryParams(params);
         String response = webResource.accept(MediaType.APPLICATION_JSON).post(String.class, params);
@@ -298,12 +303,12 @@ public class RestcommCallsTool {
      * @throws Exception
      */
     public JsonObject modifyCall(String deploymentUrl, String username, String authToken, String callSid, String status,
-                                 String rcmlUrl) throws Exception {
+            String rcmlUrl) throws Exception {
         return modifyCall(deploymentUrl, username, authToken, callSid.trim(), status, rcmlUrl, false, null);
     }
 
     public JsonObject modifyCall(String deploymentUrl, String username, String authToken, String callSid, String status,
-                                 String rcmlUrl, boolean moveConnectedLeg) throws Exception {
+            String rcmlUrl, boolean moveConnectedLeg) throws Exception {
         return modifyCall(deploymentUrl, username, authToken, callSid, status, rcmlUrl, moveConnectedLeg, null);
     }
 
@@ -334,17 +339,21 @@ public class RestcommCallsTool {
             throw new Exception(
                     "You can either redirect a call using the \"url\" attribute or terminate it using the \"status\" attribute!");
         }
-        if (status != null)
+        if (status != null) {
             params.add("Status", status);
-        if (rcmlUrl != null)
+        }
+        if (rcmlUrl != null) {
             params.add("Url", rcmlUrl);
-        if (moveConnectedLeg)
+        }
+        if (moveConnectedLeg) {
             params.add("MoveConnectedCallLeg", "true");
-        if (mute != null){
-        	if(mute)
-        		params.add("Mute", "true");
-        	else
-        		params.add("Mute", "false");
+        }
+        if (mute != null) {
+            if (mute) {
+                params.add("Mute", "true");
+            } else {
+                params.add("Mute", "false");
+            }
         }
 
         JsonObject jsonObject = null;
@@ -355,9 +364,9 @@ public class RestcommCallsTool {
             jsonObject = parser.parse(response).getAsJsonObject();
         } catch (Exception e) {
             logger.error("Exception : ", e);
-            UniformInterfaceException exception = (UniformInterfaceException)e;
+            UniformInterfaceException exception = (UniformInterfaceException) e;
             jsonObject = new JsonObject();
-            jsonObject.addProperty("Exception",exception.getResponse().getStatus());
+            jsonObject.addProperty("Exception", exception.getResponse().getStatus());
         }
         return jsonObject;
     }
@@ -378,7 +387,7 @@ public class RestcommCallsTool {
     }
 
     public String setGateWay(String deploymentUrl, String username, String authToken, String friend, String uName, String password, String proxy,
-                             boolean register, String ttl) {
+            boolean register, String ttl) {
 
         Client jerseyClient = Client.create();
         jerseyClient.addFilter(new HTTPBasicAuthFilter(username, authToken));
@@ -410,7 +419,7 @@ public class RestcommCallsTool {
             response = webResource.accept(MediaType.APPLICATION_JSON).post(String.class, params);
         } catch (Exception e) {
             logger.error("Exception : ", e);
-            UniformInterfaceException exception = (UniformInterfaceException)e;
+            UniformInterfaceException exception = (UniformInterfaceException) e;
         }
         return response;
     }

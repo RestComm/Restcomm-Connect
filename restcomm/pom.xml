@@ -621,36 +621,6 @@
                         <scope>test</scope>
 		</dependency>
 
-		<!--
-		<dependency>
-			<groupId>org.mobicents.arquillian.container</groupId>
-			<artifactId>mss-tomcat-embedded-7</artifactId>
-			<version>${mss.arquillian.version}</version>
-			<scope>test</scope>
-		</dependency>
-		-->
-
-		<dependency>
-			<groupId>org.jboss.arquillian.junit</groupId>
-			<artifactId>arquillian-junit-container</artifactId>
-			<version>${arquillian.version}</version>
-			<scope>test</scope>
-		</dependency>
-
-		<dependency>
-			<groupId>org.jboss.shrinkwrap.resolver</groupId>
-			<artifactId>shrinkwrap-resolver-impl-maven</artifactId>
-			<version>${shrinkwrap.resolver.version}</version>
-			<scope>test</scope>
-		</dependency>
-
-		<dependency>
-			<groupId>org.jboss.shrinkwrap.resolver</groupId>
-			<artifactId>shrinkwrap-resolver-impl-maven-archive</artifactId>
-			<version>${shrinkwrap.resolver.version}</version>
-			<scope>test</scope>
-		</dependency>
-
 		<dependency>
 			<groupId>org.mobicents.sipunit</groupId>
 			<artifactId>sipunit</artifactId>
