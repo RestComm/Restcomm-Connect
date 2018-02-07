@@ -26,6 +26,13 @@
             <scope>provided</scope>
         </dependency>
 
+        <dependency>
+            <groupId>org.restcomm</groupId>
+            <artifactId>restcomm-connect.http</artifactId>
+            <version>${project.version}</version>
+            <scope>provided</scope>
+        </dependency>
+
         <!-- <dependency> <groupId>org.restcomm</groupId> <artifactId>restcomm-connect.application</artifactId>
         <version>${project.version}</version> <type>war</type> <scope>test</scope>
         </dependency> <dependency> <groupId>org.restcomm</groupId> <artifactId>restcomm-connect.commons</artifactId>
