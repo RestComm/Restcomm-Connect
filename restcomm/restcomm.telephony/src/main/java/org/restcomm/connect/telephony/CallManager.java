@@ -24,6 +24,7 @@ import static javax.servlet.sip.SipServlet.OUTBOUND_INTERFACES;
 import static javax.servlet.sip.SipServletResponse.SC_ACCEPTED;
 import static javax.servlet.sip.SipServletResponse.SC_BAD_REQUEST;
 import static javax.servlet.sip.SipServletResponse.SC_FORBIDDEN;
+import static javax.servlet.sip.SipServletResponse.SC_NOT_ACCEPTABLE;
 import static javax.servlet.sip.SipServletResponse.SC_NOT_FOUND;
 import static javax.servlet.sip.SipServletResponse.SC_OK;
 import static javax.servlet.sip.SipServletResponse.SC_SERVER_INTERNAL_ERROR;
@@ -449,6 +450,7 @@ public final class CallManager extends RestcommUntypedActor {
     private void invite(final Object message) throws IOException, NumberParseException, ServletParseException {
         final ActorRef self = self();
         final SipServletRequest request = (SipServletRequest) message;
+
         // Make sure we handle re-invites properly.
         if (!request.isInitial()) {
             SipApplicationSession appSession = request.getApplicationSession();
@@ -471,6 +473,7 @@ public final class CallManager extends RestcommUntypedActor {
             okay.send();
             return;
         }
+
         if (actAsImsUa) {
             boolean isFromIms = isFromIms(request);
             if (!isFromIms) {
@@ -487,27 +490,78 @@ public final class CallManager extends RestcommUntypedActor {
                 return;
             }
         }
+
         //Run proInboundAction Extensions here
         // If it's a new invite lets try to handle it.
         final AccountsDao accounts = storage.getAccountsDao();
         final ApplicationsDao applications = storage.getApplicationsDao();
+        final ClientsDao clients = storage.getClientsDao();
+
         // Try to find an application defined for the client.
         final SipURI fromUri = (SipURI) request.getFrom().getURI();
+        final String fromUser = fromUri.getUser();
+        final SipURI toUri = (SipURI) request.getTo().getURI();
+        final String toUser = CallControlHelper.getUserSipId(request, useTo);
+        final String ruri = ((SipURI) request.getRequestURI()).getHost();
+        final String toHost = toUri.getHost();
+        final String toHostIpAddress = DNSUtils.getByName(toHost).getHostAddress();
+        final String toPort = String.valueOf(((SipURI) request.getTo().getURI()).getPort()).equalsIgnoreCase("-1") ? "5060"
+                : String.valueOf(((SipURI) request.getTo().getURI()).getHost());
+        final String transport = ((SipURI) request.getTo().getURI()).getTransportParam() == null ? "udp" : ((SipURI) request
+                .getTo().getURI()).getTransportParam();
+        SipURI outboundIntf = outboundInterface(transport);
+
+
         Sid sourceOrganizationSid = OrganizationUtil.getOrganizationSidBySipURIHost(storage, fromUri);
+        Sid toOrganizationSid = OrganizationUtil.getOrganizationSidBySipURIHost(storage, toUri);
+
         if(logger.isDebugEnabled()) {
             logger.debug("sourceOrganizationSid: " + sourceOrganizationSid +" fromUri: "+fromUri);
+            logger.debug("toOrganizationSid: " + toOrganizationSid +" toUri: "+(SipURI) request.getTo().getURI());
         }
+
         if(sourceOrganizationSid == null){
             if(logger.isInfoEnabled())
                 logger.info("Null Organization, call is probably coming from a provider: fromUri: "+fromUri);
         }
-        final String fromUser = fromUri.getUser();
-        final ClientsDao clients = storage.getClientsDao();
+
+        //Fail fast
+        if (sourceOrganizationSid == null && toOrganizationSid == null) {
+            //sourceOrganization is null which means we got a call from external provider or unregistered client
+            // AND toOrganization is null which means there will be no client or number for this INVITE
+            // THUS we should fail fast
+            final SipServletResponse response = request.createResponse(SC_NOT_FOUND);
+            response.send();
+            // We didn't find anyway to handle the call.
+            String msg = String.format("Restcomm cannot process this call to %s from %s. Source and To organizations are null", toUser, fromUser);
+            if (logger.isInfoEnabled()) {
+                logger.info(msg);
+            }
+            sendNotification(null, msg, 11005, "error", true);
+        }
+
         final Client client = clients.getClient(fromUser,sourceOrganizationSid);
+        final Client toClient = clients.getClient(toUser, toOrganizationSid);
+
         if (client != null) {
             // Make sure we force clients to authenticate.
             if (!authenticateUsers // https://github.com/Mobicents/RestComm/issues/29 Allow disabling of SIP authentication
                     || CallControlHelper.checkAuthentication(request, storage, sourceOrganizationSid)) {
+
+                Account fromAccount = accounts.getAccount(client.getAccountSid());
+                if (!fromAccount.getStatus().equals(Account.Status.ACTIVE)) {
+                    //reject call since the Client belongs to an an account which is not ACTIVE
+                    final SipServletResponse response = request.createResponse(SC_NOT_ACCEPTABLE);
+                    response.send();
+
+                    String msg = String.format("Restcomm rejects this call because client %s account %s is not ACTIVE, current state %s", client.getFriendlyName(), fromAccount.getSid(), fromAccount.getStatus());
+                    if (logger.isDebugEnabled()) {
+                        logger.debug(msg);
+                    }
+                    sendNotification(null, msg, 11005, "error", true);
+                    return;
+                }
+
                 // if the client has authenticated, try to redirect to the Client VoiceURL app
                 // otherwise continue trying to process the Client invite
                 if (redirectToClientVoiceApp(self, request, accounts, applications, client)) {
@@ -518,18 +572,46 @@ public final class CallManager extends RestcommUntypedActor {
                 return;
             }
         }
-        // TODO Enforce some kind of security check for requests coming from outside SIP UAs such as ITSPs that are not
-        // registered
 
-        final String toUser = CallControlHelper.getUserSipId(request, useTo);
-        final String ruri = ((SipURI) request.getRequestURI()).getHost();
-        final String toHost = ((SipURI) request.getTo().getURI()).getHost();
-        final String toHostIpAddress = DNSUtils.getByName(toHost).getHostAddress();
-        final String toPort = String.valueOf(((SipURI) request.getTo().getURI()).getPort()).equalsIgnoreCase("-1") ? "5060"
-                : String.valueOf(((SipURI) request.getTo().getURI()).getHost());
-        final String transport = ((SipURI) request.getTo().getURI()).getTransportParam() == null ? "udp" : ((SipURI) request
-                .getTo().getURI()).getTransportParam();
-        SipURI outboundIntf = outboundInterface(transport);
+        if (toClient != null) {
+            Account toAccount = accounts.getAccount(toClient.getAccountSid());
+
+            if (!toAccount.getStatus().equals(Account.Status.ACTIVE)) {
+                //reject call since the toClient belongs to an an account which is not ACTIVE
+                final SipServletResponse response = request.createResponse(SC_NOT_ACCEPTABLE);
+                response.send();
+
+                String msg = String.format("Restcomm rejects this call because client %s account %s is not ACTIVE, current state %s", toClient.getFriendlyName(), toAccount.getSid(), toAccount.getStatus());
+                if (logger.isDebugEnabled()) {
+                    logger.debug(msg);
+                }
+                sendNotification(null, msg, 11005, "error", true);
+                return;
+            }
+        }
+
+        IncomingPhoneNumber number = null;
+        if (toClient == null && toOrganizationSid != null) {
+
+            number = getIncomingPhoneNumber(request, toUser, (client != null ? client.getSid() : null),
+                    sourceOrganizationSid, toOrganizationSid);
+
+            if (number != null) {
+                Account numAccount = accounts.getAccount(number.getAccountSid());
+                if (!numAccount.getStatus().equals(Account.Status.ACTIVE)) {
+                    //reject call since the number belongs to an an account which is not ACTIVE
+                    final SipServletResponse response = request.createResponse(SC_NOT_ACCEPTABLE);
+                    response.send();
+
+                    String msg = String.format("Restcomm rejects this call because number's %s account %s is not ACTIVE, current state %s", number.getPhoneNumber(), numAccount.getSid(), numAccount.getStatus());
+                    if (logger.isDebugEnabled()) {
+                        logger.debug(msg);
+                    }
+                    sendNotification(null, msg, 11005, "error", true);
+                    return;
+                }
+            }
+        }
 
         if (logger.isInfoEnabled()) {
             logger.info("ToUser: " + toUser);
@@ -539,11 +621,6 @@ public final class CallManager extends RestcommUntypedActor {
             logger.info("mediaExternalIp: " + mediaExternalIp);
             logger.info("proxyIp: " + proxyIp);
         }
-        Sid toOrganizationSid = OrganizationUtil.getOrganizationSidBySipURIHost(storage, (SipURI) request.getTo().getURI());
-        if(logger.isDebugEnabled()) {
-            logger.debug("toOrganizationSid: " + toOrganizationSid +" toUri: "+(SipURI) request.getTo().getURI());
-        }
-        final Client toClient = clients.getClient(toUser, toOrganizationSid);
 
         if (client != null) { // make sure the caller is a registered client and not some external SIP agent that we have little control over
             if (toClient != null) { // looks like its a p2p attempt between two valid registered clients, lets redirect to the b2bua
@@ -599,7 +676,7 @@ public final class CallManager extends RestcommUntypedActor {
             } else {
                 // toClient is null or we couldn't make the b2bua call to another client. check if this call is for a registered
                 // DID (application)
-                if (redirectToHostedVoiceApp(self, request, accounts, applications, toUser, client.getAccountSid(), sourceOrganizationSid)) {
+                if (redirectToHostedVoiceApp(request, accounts, applications, toUser, client.getAccountSid(), number)) {
                     // This is a call to a registered DID (application)
                     return;
                 }
@@ -683,7 +760,7 @@ public final class CallManager extends RestcommUntypedActor {
                 ec.executePostInboundAction(cc, extensions);
                 return;
             }
-            if (redirectToHostedVoiceApp(self, request, accounts, applications, toUser, null, sourceOrganizationSid)) {
+            if (redirectToHostedVoiceApp(request, accounts, applications, toUser, null,number)) {
                 // This is a call to a registered DID (application)
                 return;
             }
@@ -1239,119 +1316,126 @@ public final class CallManager extends RestcommUntypedActor {
         sendNotification(fromClientAccountSid, errMsg, 11005, "error", true);
     }
 
+    private IncomingPhoneNumber getIncomingPhoneNumber (final SipServletRequest request, String phone, Sid fromClientAccountSid,
+                                                        Sid sourceOrganizationSid, Sid toOrganization) {
+        IncomingPhoneNumber number = null;
+
+        try {
+            NumberSelectionResult result = numberSelector.searchNumberWithResult(phone, sourceOrganizationSid, toOrganization);
+            if (numberSelector.isFailedCall(result, sourceOrganizationSid, toOrganization)) {
+                // We found the number but organization was not proper
+                if (logger.isDebugEnabled()) {
+                    String msg = String.format("Number found %s, but source org %s and destination org %s are not proper", number, sourceOrganizationSid.toString(), toOrganization.toString());
+                    logger.debug(msg);
+                }
+                sendNotFound(request, sourceOrganizationSid, phone, fromClientAccountSid);
+                return null;
+            }
+            number = result.getNumber();
+        } catch (Exception notANumber) {
+            String errMsg;
+            if (number != null) {
+                errMsg = String.format("IncomingPhoneNumber %s does not have a Restcomm hosted application attached, exception %s", number.getPhoneNumber(), notANumber);
+            } else {
+                errMsg = String.format("IncomingPhoneNumber for %s, does not exist, exception %s", phone, notANumber);
+            }
+            sendNotification(fromClientAccountSid, errMsg, 11007, "error", false);
+            logger.warning(errMsg);
+        }
+
+        return number;
+    }
+
     /**
      * Try to locate a hosted voice app corresponding to the callee/To address. If one is found, begin execution, otherwise
      * return false;
      *
-     * @param self
      * @param request
      * @param accounts
      * @param applications
      * @param phone
      */
-    private boolean redirectToHostedVoiceApp (final ActorRef self, final SipServletRequest request, final AccountsDao accounts,
-                                              final ApplicationsDao applications, String phone, Sid fromClientAccountSid, Sid sourceOrganizationSid) throws IOException {
+    private boolean redirectToHostedVoiceApp (final SipServletRequest request, final AccountsDao accounts,
+                                              final ApplicationsDao applications, String phone, Sid fromClientAccountSid,
+                                              IncomingPhoneNumber number) {
         boolean isFoundHostedApp = false;
-        IncomingPhoneNumber number = null;
         try {
-            Sid destOrg = SIPOrganizationUtil.searchOrganizationBySIPRequest(storage.getOrganizationsDao(), request);
-            if (destOrg == null) {
-                if (logger.isDebugEnabled()) {
-                    logger.debug("Destination Organization is null, will return false");
-                }
-                //organization was not proper.
-                return isFoundHostedApp;
-            }
-            NumberSelectionResult result = numberSelector.searchNumberWithResult(phone, sourceOrganizationSid, destOrg);
-            number = result.getNumber();
-
-
-            if (numberSelector.isFailedCall(result, sourceOrganizationSid, destOrg)) {
-                // We found the number but organization was not proper
-                if (logger.isDebugEnabled()) {
-                    String msg = String.format("Number found %s, but source org %s and destination org %s are not proper", number, sourceOrganizationSid.toString(), destOrg.toString());
-                    logger.debug(msg);
-                }
-                sendNotFound(request, sourceOrganizationSid, phone, fromClientAccountSid);
-                isFoundHostedApp = true;
-            } else {
-                if (number != null) {
-                    ExtensionController ec = ExtensionController.getInstance();
-                    IExtensionFeatureAccessRequest far = new FeatureAccessRequest(FeatureAccessRequest.Feature.INBOUND_VOICE, number.getAccountSid());
-                    ExtensionResponse er = ec.executePreInboundAction(far, extensions);
-                    if (er.isAllowed()) {
-                        final VoiceInterpreterParams.Builder builder = new VoiceInterpreterParams.Builder();
-                        builder.setConfiguration(configuration);
-                        builder.setStorage(storage);
-                        builder.setCallManager(self);
-                        builder.setConferenceCenter(conferences);
-                        builder.setBridgeManager(bridges);
-                        builder.setSmsService(sms);
-                        //https://github.com/RestComm/Restcomm-Connect/issues/1939
-                        Sid accSid = fromClientAccountSid == null ? number.getAccountSid() : fromClientAccountSid;
-                        builder.setAccount(accSid);
-                        builder.setPhone(number.getAccountSid());
-                        builder.setVersion(number.getApiVersion());
-                        // notifications should go to fromClientAccountSid email if not present then to number account
-                        // https://github.com/RestComm/Restcomm-Connect/issues/2011
-                        final Account account = accounts.getAccount(accSid);
-                        builder.setEmailAddress(account.getEmailAddress());
-                        final Sid sid = number.getVoiceApplicationSid();
-                        if (sid != null) {
-                            final Application application = applications.getApplication(sid);
-                            RcmlserverConfigurationSet rcmlserverConfig = RestcommConfiguration.getInstance().getRcmlserver();
-                            RcmlserverResolver rcmlserverResolver = RcmlserverResolver.getInstance(rcmlserverConfig.getBaseUrl(), rcmlserverConfig.getApiPath());
-                            builder.setUrl(UriUtils.resolve(rcmlserverResolver.resolveRelative(application.getRcmlUrl())));
-                        } else {
-                            builder.setUrl(UriUtils.resolve(number.getVoiceUrl()));
-                        }
-                        final String voiceMethod = number.getVoiceMethod();
-                        if (voiceMethod == null || voiceMethod.isEmpty()) {
-                            builder.setMethod("POST");
-                        } else {
-                            builder.setMethod(voiceMethod);
-                        }
-                        URI uri = number.getVoiceFallbackUrl();
-                        if (uri != null)
-                            builder.setFallbackUrl(UriUtils.resolve(uri));
-                        else
-                            builder.setFallbackUrl(null);
-                        builder.setFallbackMethod(number.getVoiceFallbackMethod());
-                        builder.setStatusCallback(number.getStatusCallback());
-                        builder.setStatusCallbackMethod(number.getStatusCallbackMethod());
-                        builder.setMonitoring(monitoring);
-                        builder.setSdr(sdr);
-                        final Props props = VoiceInterpreter.props(builder.build());
-                        final ActorRef interpreter = getContext().actorOf(props);
-
-                        final ActorRef call = call(null);
-                        final SipApplicationSession application = request.getApplicationSession();
-                        application.setAttribute(Call.class.getName(), call);
-                        call.tell(request, self);
-                        interpreter.tell(new StartInterpreter(call), self);
-                        isFoundHostedApp = true;
-                        ec.executePostOutboundAction(far, extensions);
-                    }  else {
-                        //Extensions didn't allowed this call
-                        String errMsg = "Inbound call to Number: " + number.getPhoneNumber()
-                                + " is not allowed";
-                        if (logger.isDebugEnabled()) {
-                            logger.debug(errMsg);
-                        }
-                        sendNotification(number.getAccountSid(), errMsg, 11001, "warning", true);
-                        final SipServletResponse resp = request.createResponse(SC_FORBIDDEN, "Call not allowed");
-                        resp.send();
-                        ec.executePostOutboundAction(far, extensions);
-                        return false;
+            if (number != null) {
+                ExtensionController ec = ExtensionController.getInstance();
+                IExtensionFeatureAccessRequest far = new FeatureAccessRequest(FeatureAccessRequest.Feature.INBOUND_VOICE, number.getAccountSid());
+                ExtensionResponse er = ec.executePreInboundAction(far, extensions);
+                if (er.isAllowed()) {
+                    final VoiceInterpreterParams.Builder builder = new VoiceInterpreterParams.Builder();
+                    builder.setConfiguration(configuration);
+                    builder.setStorage(storage);
+                    builder.setCallManager(self());
+                    builder.setConferenceCenter(conferences);
+                    builder.setBridgeManager(bridges);
+                    builder.setSmsService(sms);
+                    //https://github.com/RestComm/Restcomm-Connect/issues/1939
+                    Sid accSid = fromClientAccountSid == null ? number.getAccountSid() : fromClientAccountSid;
+                    builder.setAccount(accSid);
+                    builder.setPhone(number.getAccountSid());
+                    builder.setVersion(number.getApiVersion());
+                    // notifications should go to fromClientAccountSid email if not present then to number account
+                    // https://github.com/RestComm/Restcomm-Connect/issues/2011
+                    final Account account = accounts.getAccount(accSid);
+                    builder.setEmailAddress(account.getEmailAddress());
+                    final Sid sid = number.getVoiceApplicationSid();
+                    if (sid != null) {
+                        final Application application = applications.getApplication(sid);
+                        RcmlserverConfigurationSet rcmlserverConfig = RestcommConfiguration.getInstance().getRcmlserver();
+                        RcmlserverResolver rcmlserverResolver = RcmlserverResolver.getInstance(rcmlserverConfig.getBaseUrl(), rcmlserverConfig.getApiPath());
+                        builder.setUrl(UriUtils.resolve(rcmlserverResolver.resolveRelative(application.getRcmlUrl())));
+                    } else {
+                        builder.setUrl(UriUtils.resolve(number.getVoiceUrl()));
                     }
+                    final String voiceMethod = number.getVoiceMethod();
+                    if (voiceMethod == null || voiceMethod.isEmpty()) {
+                        builder.setMethod("POST");
+                    } else {
+                        builder.setMethod(voiceMethod);
+                    }
+                    URI uri = number.getVoiceFallbackUrl();
+                    if (uri != null)
+                        builder.setFallbackUrl(UriUtils.resolve(uri));
+                    else
+                        builder.setFallbackUrl(null);
+                    builder.setFallbackMethod(number.getVoiceFallbackMethod());
+                    builder.setStatusCallback(number.getStatusCallback());
+                    builder.setStatusCallbackMethod(number.getStatusCallbackMethod());
+                    builder.setMonitoring(monitoring);
+                    builder.setSdr(sdr);
+                    final Props props = VoiceInterpreter.props(builder.build());
+                    final ActorRef interpreter = getContext().actorOf(props);
+
+                    final ActorRef call = call(null);
+                    final SipApplicationSession application = request.getApplicationSession();
+                    application.setAttribute(Call.class.getName(), call);
+                    call.tell(request, self());
+                    interpreter.tell(new StartInterpreter(call), self());
+                    isFoundHostedApp = true;
+                    ec.executePostOutboundAction(far, extensions);
+                } else {
+                    //Extensions didn't allowed this call
+                    String errMsg = "Inbound call to Number: " + number.getPhoneNumber()
+                            + " is not allowed";
+                    if (logger.isDebugEnabled()) {
+                        logger.debug(errMsg);
+                    }
+                    sendNotification(number.getAccountSid(), errMsg, 11001, "warning", true);
+                    final SipServletResponse resp = request.createResponse(SC_FORBIDDEN, "Call not allowed");
+                    resp.send();
+                    ec.executePostOutboundAction(far, extensions);
+                    return false;
                 }
             }
         } catch (Exception notANumber) {
             String errMsg;
             if (number != null) {
-                errMsg = String.format("IncomingPhoneNumber %s does not have a Restcomm hosted application attached, exception %s",number.getPhoneNumber(), notANumber);
+                errMsg = String.format("IncomingPhoneNumber %s does not have a Restcomm hosted application attached, exception %s", number.getPhoneNumber(), notANumber);
             } else {
-                errMsg = String.format("IncomingPhoneNumber for %s, does not exist, exception %s",phone, notANumber);
+                errMsg = String.format("IncomingPhoneNumber for %s, does not exist, exception %s", phone, notANumber);
             }
             sendNotification(fromClientAccountSid, errMsg, 11007, "error", false);
             logger.warning(errMsg);
