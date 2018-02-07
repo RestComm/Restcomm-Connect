@@ -18,7 +18,6 @@
  * Software Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA
  * 02110-1301 USA, or see the FSF site: http://www.fsf.org.
  */
-	
 package org.restcomm.connect.testsuite.http;
 
 import java.io.IOException;
@@ -28,11 +27,8 @@ import java.util.HashMap;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
-
 import org.apache.commons.codec.binary.Base64;
-
 import wiremock.org.apache.http.NameValuePair;
-import wiremock.org.apache.http.client.ClientProtocolException;
 import wiremock.org.apache.http.client.entity.UrlEncodedFormEntity;
 import wiremock.org.apache.http.client.methods.CloseableHttpResponse;
 import wiremock.org.apache.http.client.methods.HttpDelete;
@@ -57,7 +53,7 @@ public class RestcommMultitenancyTool {
         return instance;
     }
 
-    public int get(String url, String credentialUsername, String credentialPassword) throws ClientProtocolException,
+    public int get(String url, String credentialUsername, String credentialPassword) throws
             IOException {
         CloseableHttpClient client = HttpClients.createDefault();
         CloseableHttpResponse apiResponse = null;
@@ -68,7 +64,7 @@ public class RestcommMultitenancyTool {
     }
 
     public int post(String url, String credentialUsername, String credentialPassword, HashMap<String, String> params)
-            throws ClientProtocolException,
+            throws
             IOException {
         CloseableHttpClient client = HttpClients.createDefault();
         CloseableHttpResponse apiResponse = null;
@@ -85,7 +81,7 @@ public class RestcommMultitenancyTool {
         return apiResponse.getStatusLine().getStatusCode();
     }
 
-    public int delete(String url, String credentialUsername, String credentialPassword) throws ClientProtocolException,
+    public int delete(String url, String credentialUsername, String credentialPassword) throws
             IOException {
         CloseableHttpClient client = HttpClients.createDefault();
         CloseableHttpResponse apiResponse = null;
@@ -95,7 +91,7 @@ public class RestcommMultitenancyTool {
         return apiResponse.getStatusLine().getStatusCode();
     }
 
-    public int update(String url, String credentialUsername, String credentialPassword, Map<String, String> params) throws ClientProtocolException,
+    public int update(String url, String credentialUsername, String credentialPassword, Map<String, String> params) throws
             IOException {
         CloseableHttpClient client = HttpClients.createDefault();
         CloseableHttpResponse apiResponse = null;

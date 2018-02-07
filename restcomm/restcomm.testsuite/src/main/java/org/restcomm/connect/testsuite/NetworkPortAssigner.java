@@ -24,7 +24,7 @@ public class NetworkPortAssigner {
     private static final Logger LOGGER = Logger.getLogger(NetworkPortAssigner.class);
     private static final int PORT_RANGE = 150;
 
-    //provide ports above system reserved range 
+    //provide ports above system reserved range
     private static final int PORT_MAX_BASE = 65534;
 
     private static final int INITIAL_PORT_VALUE;
@@ -49,7 +49,7 @@ public class NetworkPortAssigner {
         LOGGER.info("PID:" + PID + ",INITIAL_PORT_VALUE:" + INITIAL_PORT_VALUE);
     }
 
-    public synchronized static int retrieveNextPort() {
+    public static synchronized int retrieveNextPort() {
         int nextPort = PORT_MAX_BASE;
         nextPort = retrieveNextPortByFile();
         LOGGER.info("PID:" + PID + ",nextPort:" + nextPort);

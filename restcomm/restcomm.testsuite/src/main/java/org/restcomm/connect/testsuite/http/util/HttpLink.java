@@ -1,18 +1,17 @@
 package org.restcomm.connect.testsuite.http.util;
 
 import java.net.URI;
-
 import org.apache.http.client.methods.HttpRequestBase;
 
-public class HttpUnLink extends HttpRequestBase {
+public class HttpLink extends HttpRequestBase {
 
-    public final static String METHOD_NAME = "UNLINK";
+    public static final String METHOD_NAME = "LINK";
 
-    public HttpUnLink() {
+    public HttpLink() {
         super();
     }
 
-    public HttpUnLink(final URI uri) {
+    public HttpLink(final URI uri) {
         super();
         setURI(uri);
     }
@@ -20,7 +19,7 @@ public class HttpUnLink extends HttpRequestBase {
     /**
      * @throws IllegalArgumentException if the uri is invalid.
      */
-    public HttpUnLink(final String uri) {
+    public HttpLink(final String uri) {
         super();
         setURI(URI.create(uri));
     }
