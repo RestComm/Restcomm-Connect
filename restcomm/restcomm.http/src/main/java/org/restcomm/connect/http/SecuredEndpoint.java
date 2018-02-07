@@ -25,15 +25,14 @@ import org.apache.log4j.Logger;
 import org.apache.shiro.authz.Permission;
 import org.apache.shiro.authz.SimpleRole;
 import org.apache.shiro.authz.permission.WildcardPermissionResolver;
-import org.restcomm.connect.dao.exceptions.AccountHierarchyDepthCrossed;
+import org.restcomm.connect.commons.dao.Sid;
 import org.restcomm.connect.dao.AccountsDao;
 import org.restcomm.connect.dao.DaoManager;
 import org.restcomm.connect.dao.OrganizationsDao;
 import org.restcomm.connect.dao.entities.Account;
 import org.restcomm.connect.dao.entities.Organization;
-import org.restcomm.connect.commons.dao.Sid;
+import org.restcomm.connect.dao.exceptions.AccountHierarchyDepthCrossed;
 import org.restcomm.connect.extension.api.ApiRequest;
-import org.restcomm.connect.extension.api.ExtensionResponse;
 import org.restcomm.connect.extension.api.ExtensionType;
 import org.restcomm.connect.extension.api.RestcommExtensionGeneric;
 import org.restcomm.connect.extension.controller.ExtensionController;
@@ -439,20 +438,13 @@ public abstract class SecuredEndpoint extends AbstractEndpoint {
     }
 
     protected boolean executePreApiAction(final ApiRequest apiRequest) {
-        if (extensions != null && extensions.size() > 0) {
-            for (RestcommExtensionGeneric extension : extensions) {
-                if (extension.isEnabled()) {
-                    ExtensionResponse response = extension.preApiAction(apiRequest);
-                    if (!response.isAllowed())
-                        return false;
-                }
-            }
-        }
-        return true;
+        ExtensionController ec = ExtensionController.getInstance();
+        return ec.executePreApiAction(apiRequest, extensions).isAllowed();
     }
 
     protected boolean executePostApiAction(final ApiRequest apiRequest) {
-        return false;
+        ExtensionController ec = ExtensionController.getInstance();
+        return ec.executePostApiAction(apiRequest, extensions).isAllowed();
     }
 
 }

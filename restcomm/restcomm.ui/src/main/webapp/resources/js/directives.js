@@ -28,6 +28,24 @@ rcDirectives.directive('passwordMatch', [function () {
   };
 }]);
 
+rcDirectives.directive('autofocus', function ($timeout) {
+  return {
+    restrict: 'A',
+    link: function (scope, element, attrs) {
+      scope.$watch(attrs.autofocus, function (newValue) {
+        $timeout(function () {
+          if (attrs.autofocus === '' || newValue) {
+            element[0].focus();
+            if (element[0].select) {
+              element[0].select();
+            }
+          }
+        }, 25);
+      });
+    }
+  };
+});
+
 rcDirectives.directive('rcListSort', function ($timeout) {
   return {
     restrict: 'A',

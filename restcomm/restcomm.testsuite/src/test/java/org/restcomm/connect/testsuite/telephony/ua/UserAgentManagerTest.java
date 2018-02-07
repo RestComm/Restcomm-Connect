@@ -508,6 +508,38 @@ public final class UserAgentManagerTest {
         assertTrue(MonitoringServiceTool.getInstance().getRegisteredUsers(deploymentUrl.toString(),adminAccountSid, adminAuthToken)==0);
     }
 
+    @Test
+    public void registerUserAgentWith486BusyErrorResponse() throws ParseException, InterruptedException, InvalidArgumentException {
+//        deployer.deploy("UserAgentTest");
+        // Register the phone so we can get OPTIONS pings from RestComm.
+        SipURI uri = sipStack2.getAddressFactory().createSipURI(null, restcommContact);
+        Credential c = new Credential("127.0.0.1","bob", "1234");
+        phone2.addUpdateCredential(c);
+        assertTrue(phone2.register(uri, "bob", "1234", bobContact, 3600, 3600));
+        Thread.sleep(2000);
+        assertTrue(MonitoringServiceTool.getInstance().getRegisteredUsers(deploymentUrl.toString(),adminAccountSid, adminAuthToken)==1);
+
+        phone2.listenRequestMessage();
+        RequestEvent request = phone2.waitRequest(10000);
+        assertEquals(request.getRequest().getMethod(), SipRequest.OPTIONS);
+
+        ArrayList<Header> additionalHeader = new ArrayList<Header>();
+        Header reason = sipStack2.getHeaderFactory().createReasonHeader("udp", 486, "Busy Here");
+        additionalHeader.add(reason);
+
+        phone2.sendReply(request, 486, "Busy Here", null, null, 3600);
+        Thread.sleep(1000);
+        assertTrue(MonitoringServiceTool.getInstance().getRegisteredUsers(deploymentUrl.toString(),adminAccountSid, adminAuthToken)==1);
+        //Dispose phone. Restcomm will fail to send the OPTIONS message and should remove the registration
+        sipStack2.dispose();
+        phone2 = null;
+        sipStack2 = null;
+        // need a higher timeout to cope with SIP OPTIONS transaction timeout
+        Thread.sleep(65000);
+        assertTrue(MonitoringServiceTool.getInstance().getRegisteredUsers(deploymentUrl.toString(),adminAccountSid, adminAuthToken)==0);
+    }
+
+    
     /**
      * registerUserAgentWithAtTheRateSignInLogin
      * we should be able to register and remove registration on non-response to options

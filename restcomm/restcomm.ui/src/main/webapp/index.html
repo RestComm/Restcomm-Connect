@@ -1,14 +1,14 @@
 <!DOCTYPE html>
 <html>
     <head>
-        <meta name="viewport" content="width=device-width, initial-scale=1.0">
         <meta charset="utf-8">
+        <meta http-equiv="expires" content="0">
+        <meta name="viewport" content="width=device-width, initial-scale=1.0">
         <title>RestComm</title>
 
         <link rel="icon" type="image/png" href="resources/img/favicon.png">
         <link rel="stylesheet" href="lib/font-awesome/css/font-awesome.min.css" />
         <link rel="stylesheet" href="lib/bootstrap/css/bootstrap.css" />
-        <link rel="stylesheet" href="lib/bootstrap-multiselect/css/bootstrap-multiselect.css" />
         <link rel="stylesheet" href="lib/animate/animate.css" />
         <link rel="stylesheet" href="lib/world-flags/stylesheets/flags16.css" />
         <link rel="stylesheet" href="lib/nvd3/nv.d3.css">
@@ -17,30 +17,26 @@
 
         <!-- Angular does some things with CSS so it's good to load this in the head -->
         <script type="text/javascript" src="lib/jquery/jquery.js"></script>
-        <script type="text/javascript" src="lib/filesaver/Blob.js"></script>
-        <script type="text/javascript" src="lib/filesaver/FileSaver.min.js"></script>
         <script type="text/javascript" src="lib/angular/angular.min.js"></script>
+        <script type="text/javascript" src="lib/angular-resource/angular-resource.min.js"></script>
+        <script type="text/javascript" src="lib/angular-sanitize/angular-sanitize.min.js"></script>
+        <script type="text/javascript" src="lib/angular-ui-router/angular-ui-router.js"></script>
+        <script type="text/javascript" src="lib/bootstrap/js/bootstrap.min.js"></script>
+        <script type="text/javascript" src="lib/angular-bootstrap/ui-bootstrap-tpls.js"></script>
+        <script type="text/javascript" src="lib/angular-filesaver/angular-file-saver.bundle.min.js"></script>
         <script type="text/javascript" src="lib/file-upload/ng-file-upload-shim.min.js"></script>
         <script type="text/javascript" src="lib/file-upload/ng-file-upload.min.js"></script>
-        <script type="text/javascript" src="lib/angular-ui-router/angular-ui-router.js"></script>
-        <script type="text/javascript" src="lib/angular-resource/angular-resource.min.js"></script>
-        <script type="text/javascript" src="lib/angular/angular-datepicker.js"></script>
         <script type="text/javascript" src="lib/underscore/underscore.js"></script>
         <script type="text/javascript" src="lib/underscore/underscore.string.js"></script>
-        <script type="text/javascript" src="lib/bootstrap/js/bootstrap.min.js"></script>
-        <script type="text/javascript" src="lib/bootstrap-multiselect/js/bootstrap-multiselect.js"></script>
-        <script type="text/javascript" src="lib/angular-bootstrap/ui-bootstrap-tpls.js"></script>
         <script type="text/javascript" src="lib/ng-password-strength/js/ng-password-strength.js"></script>
-        <script type="text/javascript" src="lib/http-auth-interceptor/http-auth-interceptor.js"></script>
-        <script type="text/javascript" src="lib/angular-sanitize/angular-sanitize.min.js"></script>
         <script type="text/javascript" src="lib/d3/d3.min.js"></script>
         <script type="text/javascript" src="lib/nvd3/nv.d3.js"></script>
         <script type="text/javascript" src="lib/angular-nvd3/angular-nvd3.js"></script>
         <script type="text/javascript" src="lib/ui-carousel/ui-carousel.js"></script>
-        <script type="text/javascript" src="lib/filesaver/angular-file-saver.min.js"></script>
 
         <script type="text/javascript" src="resources/js/restcomm.js"></script>
         <script type="text/javascript" src="resources/js/controllers.js"></script>
+        <script type="text/javascript" src="resources/js/directives.js"></script>
         <script type="text/javascript" src="resources/js/controllers/global.js"></script>
         <script type="text/javascript" src="resources/js/controllers/navbar.js"></script>
         <script type="text/javascript" src="resources/js/controllers/login.js"></script>
@@ -56,8 +52,9 @@
         <script type="text/javascript" src="resources/js/controllers/events.js"></script>
         <script type="text/javascript" src="resources/js/services.js"></script>
         <script type="text/javascript" src="resources/js/filters.js"></script>
-        <script type="text/javascript" src="resources/js/directives.js"></script>
+        <script type="text/javascript" src="resources/js/controllers/application-templates.js"></script> <!-- this should be under directives.js since it uses rcApp.directives module TODO remove this comment -->
 
+        <script type="text/javascript" src="resources/js/countly.js"></script>
     </head>
     <body>
         <div id="wrap">

@@ -1,0 +1,134 @@
+{
+    "type": "object",
+    "id": "#rc-fac-extension-schema.json",
+    "definitions": {
+        "featureEnablement": {
+            "type": "object",
+            "additionalProperties": false,
+            "properties": {
+                "DIDPurchase": {
+                    "type": "object",
+                    "additionalProperties": false,
+                    "properties": {
+                        "allowedCountries": {
+                            "type": "array",
+                            "additionalItems": false,
+                            "description": "ISO_3166-1 alpha2 country codes",
+                            "items": {
+                                "type": "string",
+                                "pattern": "^[A-Z][A-Z]$"
+
+                            }
+                        }
+                    }
+
+                },
+                "subaccountsCreation": {
+                    "type": "object",
+                    "additionalProperties": false,
+                    "properties": {
+                        "limit": {
+                            "type": "integer"
+
+                        }
+                    }
+                },
+                "outboundPSTN": {
+                    "type": "object",
+                    "additionalProperties": false,
+                    "properties": {
+                        "allowedPrefixes": {
+                            "type": "array",
+                            "additionalItems": false,
+                            "items": {
+                                "type": "string"
+
+                            }
+                        },
+                        "blockedPrefixes": {
+                            "type": "array",
+                            "additionalItems": false,
+                            "items": {
+                                "type": "string"
+
+                            }
+                        }
+                    }                    
+                },
+                "inboundPSTN": {
+                    "type": "object",
+                    "additionalProperties": false
+                },
+                "outboundSMS": {
+                    "type": "object",
+                    "additionalProperties": false,
+                    "properties": {
+                        "allowedPrefixes": {
+                            "type": "array",
+                            "additionalItems": false,
+                            "items": {
+                                "type": "string"
+
+                            }
+                        },
+                        "blockedPrefixes": {
+                            "type": "array",
+                            "additionalItems": false,
+                            "items": {
+                                "type": "string"
+
+                            }
+                        }
+                    }
+                },
+                "inboundSMS": {
+                    "type": "object",
+                    "additionalProperties": false
+                },
+                "asr": {
+                    "type": "object",
+                    "additionalProperties": false
+                },
+                "USSD": {
+                    "type": "object",
+                    "additionalProperties": false,
+                    "properties": {
+                        "provider": {
+                            "type": "string",
+                            "enum": ["default", "virgin", "somos"]
+                        }
+                    }
+                },
+                "inboundUSSD": {
+                    "type": "object",
+                    "additionalProperties": false
+                },
+                "outboundUSSD": {
+                    "type": "object",
+                    "additionalProperties": false,
+                    "properties": {
+                        "allowedPrefixes": {
+                            "type": "array",
+                            "additionalItems": false,
+                            "items": {
+                                "type": "string"
+
+                            }
+                        },
+                        "blockedPrefixes": {
+                            "type": "array",
+                            "additionalItems": false,
+                            "items": {
+                                "type": "string"
+
+                            }
+                        }                        
+                    }
+                }
+            }
+        }
+
+    },
+    "$schema": "http://json-schema.org/draft-04/schema#",
+    "additionalProperties": false
+}
