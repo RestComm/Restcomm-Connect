@@ -1,0 +1,24 @@
+{
+    "featureEnablement": {
+        "DIDPurchase": {
+            "allowedCountries": ["US",
+                "CA"]
+        },
+        "outboundPSTN": {
+        },
+        "inboundPSTN": {
+        },
+        "outboundSMS": {
+        },
+        "inboundSMS": {
+        }
+
+    },
+    "sessionThrottling": {
+        "PSTNCallsPerTime": {
+            "events" : 300,
+            "time" : 30,
+            "timeUnit" : "days"
+        }
+    }    
+}

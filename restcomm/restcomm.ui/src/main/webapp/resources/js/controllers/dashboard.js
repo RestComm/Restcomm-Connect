@@ -33,12 +33,12 @@ rcMod.controller('DashboardCtrl', function ($scope, $resource, $rootScope, RComm
       {
         key : 'Calls' ,
         bar: true,
-        color: '#44A5AB',
+        color: 'var(--primary-color)',
         values : []
       },
       {
         key : 'Minutes' ,
-        color: '#DD4730',
+        color: 'var(--red-color)',
         'stroke-width': '5px',
         values : []
       }
@@ -70,7 +70,7 @@ rcMod.controller('DashboardCtrl', function ($scope, $resource, $rootScope, RComm
       lastDate.setDate(lastDate.getDate() + 1);
     }
 
-    $scope.callsOptions.chart.bars.yDomain = [0, Math.max(parseInt(maxCalls * 1.1), 100)];
+    $scope.callsOptions.chart.bars.yDomain = [0, Math.max(parseInt(maxCalls * 1.1), 25)];
     $scope.callsOptions.chart.lines.yDomain = [0, Math.max(parseInt(maxDuration * 1.1), 100)];
     $scope.callsAPI.updateWithOptions($scope.callsOptions);
   });
@@ -118,7 +118,7 @@ rcMod.controller('DashboardCtrl', function ($scope, $resource, $rootScope, RComm
       useInteractiveGuideline: true,
       height: 400,
       margin: {
-        top: 15,
+        top: 30,
         right: 50,
         bottom: 100,
         left: 50
@@ -196,5 +196,13 @@ rcMod.controller('DashboardCtrl', function ($scope, $resource, $rootScope, RComm
       }
     }
   };
+
+  $scope.showSmallCharts = function () {
+    $scope.callsOptions.chart.height = 200;
+    $scope.callsOptions.chart.margin = {top: 10, left: 0, right: 0, bottom: 0};
+    $scope.callsOptions.chart.showLegend = false;
+    $scope.smsOptions.chart.height = 200;
+    $scope.smsOptions.chart.margin = {top: 10, left: 0, right: 0, bottom: 0};
+  }
 
 });

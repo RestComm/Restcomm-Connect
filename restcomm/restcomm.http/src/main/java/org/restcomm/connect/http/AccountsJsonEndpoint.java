@@ -48,8 +48,9 @@ public final class AccountsJsonEndpoint extends AccountsEndpoint {
 
     @Path("/{accountSid}")
     @GET
-    public Response getAccountAsJson(@PathParam("accountSid") final String accountSid) {
-        return getAccount(accountSid, APPLICATION_JSON_TYPE);
+    public Response getAccountAsJson(@PathParam("accountSid") final String accountSid,
+            @Context UriInfo info) {
+        return getAccount(accountSid, APPLICATION_JSON_TYPE, info);
     }
 
     @Path("/{accountSid}")

@@ -43,7 +43,7 @@
                 <td class="numbers-list-friendly-name hidden-xs">
                     <div ng-hide="editingFriendlyName === pn.phone_number">{{ pn.friendly_name  }} </div>
                     <div ng-show="editingFriendlyName === pn.phone_number">
-                        <input type="text" class="form-control rc-list-inplace-edit" onkeyup="if(event.keyCode === 13) {this.blur()}" ng-model="pn.friendly_name" ng-blur="editingFriendlyName = undefined; setFriendlyName(pn)" autofocus />
+                        <input type="text" class="form-control rc-list-inplace-edit" onkeyup="if(event.keyCode === 13) {this.blur()}" ng-model="pn.friendly_name" ng-blur="editingFriendlyName = undefined; setFriendlyName(pn)" autofocus="editingFriendlyName === pn.phone_number" />
                     </div>
                 </td>
 
@@ -82,7 +82,7 @@
                             </form>
                         </div>
                         <div class="col-md-4">
-                            <uib-pagination class="pagination pagination-sm pull-right" ng-change="pageChanged()" total-items="totalNumbers" items-per-page="entryLimit" ng-model="currentPage" data-boundary-links="true" data-current-page="currentPage" max-size="maxSize" previous-text="<" next-text=">" first-text="<<" last-text=">>"></uib-pagination>
+                            <ul uib-pagination class="pagination pagination-sm pull-right" ng-change="pageChanged()" total-items="totalNumbers" items-per-page="entryLimit" ng-model="currentPage" data-boundary-links="true" data-current-page="currentPage" max-size="maxSize" previous-text="<" next-text=">" first-text="<<" last-text=">>"></ul>
                         </div>
                     </div>
                 </td>

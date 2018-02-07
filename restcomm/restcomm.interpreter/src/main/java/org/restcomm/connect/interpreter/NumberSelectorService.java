@@ -156,7 +156,7 @@ public class NumberSelectorService {
             //we expect a perfect match, so first result taken
             if (matchedNumbers != null && matchedNumbers.size() > 0) {
                 if (logger.isDebugEnabled()) {
-                    logger.debug("Matched number with filter:" + matchedNumbers.get(0));
+                    logger.debug("Matched number with filter:" + matchedNumbers.get(0).toString());
                 }
 
                 matchedNumber = new NumberSelectionResult(matchedNumbers.get(0), Boolean.FALSE, ResultType.REGULAR);
@@ -279,7 +279,7 @@ public class NumberSelectorService {
         if (numberfound.number == null) {
             //only use regex if perfect match didnt worked
             if (destinationOrganizationSid != null
-                    && destinationOrganizationSid.equals(sourceOrganizationSid)
+                    &&  (sourceOrganizationSid == null || destinationOrganizationSid.equals(sourceOrganizationSid))
                     && phone.matches("[\\d,*,#,+]+")) {
                 //check regex if source and dest orgs are the same
                 //only use regex if org available
@@ -296,7 +296,26 @@ public class NumberSelectorService {
                     }
                 }
             }
+        }
+        if (numberfound.number == null) {
+            if (logger.isDebugEnabled()) {
+                StringBuffer stringBuffer = new StringBuffer();
 
+                stringBuffer.append("NumberSelectionService didn't match a number because: ");
+
+                if (destinationOrganizationSid == null) {
+                    stringBuffer.append(" - Destination Org is null - ");
+                } else if (sourceOrganizationSid != null && !destinationOrganizationSid.equals(sourceOrganizationSid)) {
+                    stringBuffer.append(" - Source Org is NOT null and DOESN'T match the Destination Org - ");
+                } else if (!phone.matches("[\\d,*,#,+]+")) {
+                    String msg = String.format(" - Phone %s doesn't match regex \"[\\\\d,*,#,+]+\" - ", phone);
+                    stringBuffer.append(msg);
+                } else {
+                    String msg = String.format(" - Phone %s didn't match any of the Regex - ",phone);
+                    stringBuffer.append(msg);
+                }
+                logger.debug(stringBuffer.toString());
+            }
         }
         return numberfound;
     }
@@ -309,7 +328,8 @@ public class NumberSelectorService {
         @Override
         public int compare(IncomingPhoneNumber o1, IncomingPhoneNumber o2) {
             //put o2 first to make longest first in coll
-            return Integer.compare(o2.getPhoneNumber().length(), o1.getPhoneNumber().length());
+            int comparison = Integer.compare(o2.getPhoneNumber().length(), o1.getPhoneNumber().length());
+            return comparison == 0 ? -1 : comparison;
         }
 
     }
@@ -340,6 +360,7 @@ public class NumberSelectorService {
             logger.debug(String.format("Found %d Regex IncomingPhone numbers.", regexList.size()));
         }
         //order by regex length
+
         Set<IncomingPhoneNumber> regexSet = new TreeSet<IncomingPhoneNumber>(new NumberLengthComparator());
         regexSet.addAll(regexList);
         if (regexList != null && regexList.size() > 0) {

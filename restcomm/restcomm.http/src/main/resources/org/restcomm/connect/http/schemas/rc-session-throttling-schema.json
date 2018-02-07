@@ -1,0 +1,70 @@
+{
+    "type": "object",
+    "id": "#rc-session-throttling-schema.json",
+    "definitions": {
+        "timeUnit":{
+            "type": "string",
+            "enum": ["nanoseconds","milliseconds","seconds","minutes","hours","days","weeks","months","years"],
+            "description" :"TODO investigate time types RFC3339"
+        },
+        "eventsPerTimeRule": {
+            "type": "object",
+            "additionalProperties": false,
+            "properties": {
+                "events": {
+                    "type": "integer"
+
+                },
+                "time": {
+                    "type": "integer"
+
+                },
+                "timeUnit": {
+                    "$ref": "#/definitions/timeUnit"
+                }
+            },
+            "required": ["events", "time", "timeUnit"]
+        },
+        "maxEventsPerTimeRule": {
+            "type": "object",
+            "additionalProperties": false,
+            "properties": {
+                "events": {
+                    "type": "integer"
+
+                },
+                "time": {
+                    "type": "integer"
+
+                },
+                "timeUnit": {
+                    "$ref": "#/definitions/timeUnit"
+                }
+            },
+            "required": ["events", "time", "timeUnit"]
+        },
+        "maxEventsSimultaneouslyRule": {
+            "type": "object",
+            "additionalProperties": false,
+            "properties": {
+                "events": {
+                    "type": "integer"
+                }
+            }
+            ,
+            "required": ["events"]
+        },
+        "sessionThrottling": {
+            "type": "object",
+            "additionalProperties": false,
+            "properties": {
+                "PSTNCallsPerTime": {
+                    "$ref": "#/definitions/maxEventsPerTimeRule"
+                }
+            }
+        }
+
+    },
+    "$schema": "http://json-schema.org/draft-04/schema#",
+    "additionalProperties": false
+}

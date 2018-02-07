@@ -8,14 +8,14 @@
 
         <div class="col-sm-4 pick-area">
             <div class="hidden-xs spacer60"></div>
-            <div><a href="#/applications/new-external"> <img src="resources/img/v2/app-wizard-url-app.png"/></a></div>
+            <div><a href="#/applications/new-external" id="select-app-external"> <img src="resources/img/v2/app-wizard-url-app.png"/></a></div>
             <h4>Create a URL Application</h4>
             <div class="hidden-xs spacer60"></div>
         </div>
 
         <div class="col-sm-4 pick-area">
             <div class="hidden-xs spacer60"></div>
-            <div><a href="#/applications/new"> <img src="resources/img/v2/app-wizard-vd-app.png"/></a></div>
+            <div><a href="#/application-templates" id="select-app-template"> <img src="resources/img/v2/app-wizard-vd-app.png"/></a></div>
             <h4>Create a Visual Designer Application</h4>
             <div class="hidden-xs spacer60"></div>
             <!--
@@ -33,7 +33,7 @@
         <div class="col-sm-4 pick-area">
             <div class="hidden-xs spacer60"></div>
             <div ngf-drop="onFileDropped($files)" ngf-multiple="false">
-                <div><a href="" ngf-select="onFileDropped($files)" ngf-pattern="'application/zip'" ngf-accept="'application/zip'"> <img src="resources/img/v2/app-wizard-zip-app.png"/></a></div>
+                <div><a href="" ngf-select="onFileDropped($files)" id="select-app-import" ngf-pattern="'application/zip'" ngf-accept="'application/zip'"> <img src="resources/img/v2/app-wizard-zip-app.png"/></a></div>
                 <h4>Import a Visual Designer Application</h4>
             </div>
             <div class="hidden-xs spacer60"></div>

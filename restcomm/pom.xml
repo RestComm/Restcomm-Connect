@@ -136,7 +136,9 @@
 		<maven-artifact.version>3.1.0</maven-artifact.version>
 		<smpp-extensions.version>7.1.0-79</smpp-extensions.version>
 		<mockito-core.version>2.8.9</mockito-core.version>
-
+                <!-- IDEs has a problem when we use late binding with @ in the surefire arg line.
+                    Therefore we set this empty property here-->
+                <jacocoArgLine />   
 	</properties>
 	<modules>
 		<!-- <module>restcomm.docs</module> -->
@@ -343,6 +345,12 @@
 				<artifactId>jersey-client</artifactId>
 				<version>${jersey.version}</version>
 			</dependency>
+                        
+			<dependency>
+				<groupId>com.sun.jersey</groupId>
+				<artifactId>jersey-json</artifactId>
+				<version>${jersey.version}</version>
+			</dependency>                        
 
 			<dependency>
 				<groupId>stax</groupId>
@@ -705,7 +713,7 @@
 				<artifactId>maven-surefire-plugin</artifactId>
 				<configuration>
                                     <!-- Sets the VM argument line used when unit tests are run. -->
-                                    <argLine>${jacocoArgLine}</argLine>
+                                    <argLine>@{jacocoArgLine}</argLine>
 				</configuration>
 			</plugin>
 			<!-- Checkstyle -->
