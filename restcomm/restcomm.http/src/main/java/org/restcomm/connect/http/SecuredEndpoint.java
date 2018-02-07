@@ -30,7 +30,6 @@ import org.restcomm.connect.dao.AccountsDao;
 import org.restcomm.connect.dao.DaoManager;
 import org.restcomm.connect.dao.OrganizationsDao;
 import org.restcomm.connect.dao.entities.Account;
-import org.restcomm.connect.dao.entities.Account.Status;
 import org.restcomm.connect.dao.entities.Organization;
 import org.restcomm.connect.dao.exceptions.AccountHierarchyDepthCrossed;
 import org.restcomm.connect.extension.api.ApiRequest;
@@ -39,7 +38,6 @@ import org.restcomm.connect.extension.api.RestcommExtensionGeneric;
 import org.restcomm.connect.extension.controller.ExtensionController;
 import org.restcomm.connect.http.exceptions.AuthorizationException;
 import org.restcomm.connect.http.exceptions.InsufficientPermission;
-import org.restcomm.connect.http.exceptions.NotAuthenticated;
 import org.restcomm.connect.http.exceptions.OperatedAccountMissing;
 import org.restcomm.connect.identity.AuthOutcome;
 import org.restcomm.connect.identity.IdentityContext;
@@ -109,15 +107,6 @@ public abstract class SecuredEndpoint extends AbstractEndpoint {
             if (extensions != null) {
                 logger.info("RestAPI extensions: "+(extensions != null ? extensions.size() : "0"));
             }
-        }
-    }
-
-    /**
-     * Grants general purpose access if any valid token exists in the request
-     */
-    protected void checkAuthenticatedAccount() {
-        if (userIdentityContext.getEffectiveAccount() == null) {
-            throw new NotAuthenticated();
         }
     }
 
@@ -193,8 +182,6 @@ public abstract class SecuredEndpoint extends AbstractEndpoint {
      * @throws AuthorizationException
      */
     protected void secure(final Account operatedAccount, final String permission, SecuredType type) throws AuthorizationException {
-        checkAuthenticatedAccount();
-        checkClosedAccountStatus();
         checkPermission(permission); // check an authenticated account allowed to do "permission" is available
         checkOrganization(operatedAccount); // check if valid organization is attached with this account.
         if (operatedAccount == null) {
@@ -241,8 +228,6 @@ public abstract class SecuredEndpoint extends AbstractEndpoint {
      * @throws AuthorizationException
      */
     protected void secure(final Account operatedAccount, final Sid resourceAccountSid, SecuredType type) throws AuthorizationException {
-        checkAuthenticatedAccount();
-        checkClosedAccountStatus();
         if (operatedAccount == null) {
             // if operatedAccount is NULL, we'll probably return a 404. But let's handle that in a central place.
             throw new OperatedAccountMissing();
@@ -460,16 +445,5 @@ public abstract class SecuredEndpoint extends AbstractEndpoint {
     protected boolean executePostApiAction(final ApiRequest apiRequest) {
         ExtensionController ec = ExtensionController.getInstance();
         return ec.executePostApiAction(apiRequest, extensions).isAllowed();
-    }
-
-    /**
-     * https://telestax.atlassian.net/browse/RESTCOMM-1645
-     * Closed account can't perform REST API operations
-     */
-    protected void checkClosedAccountStatus(){
-        Status accountStatus = userIdentityContext.getEffectiveAccount().getStatus();
-        if(accountStatus == Status.CLOSED){
-            throw new InsufficientPermission();
-        }
     }
 }
