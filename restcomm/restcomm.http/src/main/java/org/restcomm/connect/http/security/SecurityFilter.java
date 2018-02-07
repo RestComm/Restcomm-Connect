@@ -20,9 +20,7 @@
 package org.restcomm.connect.http.security;
 
 import javax.servlet.http.HttpServletRequest;
-import javax.ws.rs.WebApplicationException;
 import javax.ws.rs.core.Context;
-import javax.ws.rs.core.Response.Status;
 import javax.ws.rs.ext.Provider;
 
 import org.apache.log4j.Logger;
@@ -47,19 +45,10 @@ public class SecurityFilter implements ContainerRequestFilter {
         final DaoManager storage = (DaoManager) servletRequest.getServletContext().getAttribute(DaoManager.class.getName());
         AccountsDao accountsDao = storage.getAccountsDao();
         UserIdentityContext userIdentityContext = new UserIdentityContext(servletRequest, accountsDao);
-        checkAuthenticatedAccount(userIdentityContext);
+        //checkAuthenticatedAccount(userIdentityContext);
         String scheme = cr.getAuthenticationScheme();
         AccountPrincipal aPrincipal = new AccountPrincipal(userIdentityContext);
         cr.setSecurityContext(new RCSecContext(aPrincipal, scheme));
         return cr;
-    }
-
-    /**
-     * Grants general purpose access if any valid token exists in the request
-     */
-    protected void checkAuthenticatedAccount(UserIdentityContext userIdentityContext) {
-        if (userIdentityContext.getEffectiveAccount() == null) {
-            throw new WebApplicationException(Status.UNAUTHORIZED);
-        }
     }
 }

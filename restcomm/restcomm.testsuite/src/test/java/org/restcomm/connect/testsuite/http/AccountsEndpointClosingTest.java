@@ -45,7 +45,10 @@ import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.restcomm.connect.commons.Version;
 
+import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.MultivaluedMap;
+
+import java.io.IOException;
 import java.net.URL;
 
 import static com.github.tomakehurst.wiremock.client.WireMock.aResponse;
