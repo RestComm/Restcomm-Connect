@@ -13,6 +13,7 @@ import com.cloudhopper.smpp.pdu.DeliverSm;
 import com.cloudhopper.smpp.pdu.DeliverSmResp;
 import com.cloudhopper.smpp.type.Address;
 import com.cloudhopper.smpp.type.SmppInvalidArgumentException;
+
 import org.apache.log4j.Logger;
 
 import com.cloudhopper.commons.charset.Charset;
@@ -31,6 +32,8 @@ import com.cloudhopper.smpp.pdu.PduResponse;
 import com.cloudhopper.smpp.pdu.SubmitSm;
 import com.cloudhopper.smpp.type.SmppChannelException;
 import com.cloudhopper.smpp.type.SmppProcessingException;
+import com.cloudhopper.smpp.util.SmppUtil;
+
 import org.restcomm.connect.sms.smpp.SmppInboundMessageEntity;
 import org.restcomm.connect.sms.smpp.DataCoding;
 
@@ -206,6 +209,7 @@ public class MockSmppServer {
             String decodedPduMessage = null;
             String destSmppAddress = null;
             String sourceSmppAddress = null;
+            boolean isDeliveryReceipt = false;
 
             if (pduRequest.toString().toLowerCase().contains("enquire_link")) {
                 //logger.info("This is a response to the enquire_link, therefore, do NOTHING ");
@@ -219,13 +223,16 @@ public class MockSmppServer {
                     decodedPduMessage = CharsetUtil.CHARSET_MODIFIED_UTF8.decode(deliverSm.getShortMessage());
                     destSmppAddress = deliverSm.getDestAddress().getAddress();
                     sourceSmppAddress = deliverSm.getSourceAddress().getAddress();
+                    if (deliverSm.getRegisteredDelivery() == (byte) 0x01) {
+                        isDeliveryReceipt = true;
+                    }
                     logger.info("getDataCoding: " + deliverSm.getDataCoding());
                     //send received SMPP PDU message to restcomm
                 } catch (Exception e) {
                     logger.info("********DeliverSm Exception******* " + e);
                 }
 
-                smppInboundMessageEntity = new SmppInboundMessageEntity(destSmppAddress, sourceSmppAddress, decodedPduMessage, CharsetUtil.CHARSET_GSM);
+                smppInboundMessageEntity = new SmppInboundMessageEntity(destSmppAddress, sourceSmppAddress, decodedPduMessage, CharsetUtil.CHARSET_GSM, isDeliveryReceipt);
                 messageReceived = true;
             }
             return pduRequest.createResponse();
