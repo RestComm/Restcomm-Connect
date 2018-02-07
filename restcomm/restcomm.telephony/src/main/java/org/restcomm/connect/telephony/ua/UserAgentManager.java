@@ -88,6 +88,7 @@ public final class UserAgentManager extends RestcommUntypedActor {
     private ActorRef monitoringService;
     private final int pingInterval;
     private final String instanceId;
+    private boolean useSbc;
 
     // IMS authentication
     private boolean actAsImsUa;
@@ -126,6 +127,7 @@ public final class UserAgentManager extends RestcommUntypedActor {
                         && imsDomain != null && !imsDomain.isEmpty();
             }
         }
+        useSbc = runtime.getBoolean("use-sbc", false);
 
         firstTimeCleanup();
     }
@@ -257,7 +259,7 @@ public final class UserAgentManager extends RestcommUntypedActor {
                 try{
                     ping(location,aor);
                 }catch(ServletParseException spe){
-                    logger.warning("Bad Parameters: "+aor);
+                    logger.warning("Bad Parameters: aor:" + aor + ", location:"+ location);
                     registrations.removeRegistration(result);
                 }
             }
@@ -335,9 +337,19 @@ public final class UserAgentManager extends RestcommUntypedActor {
     }
 
     private void removeRegistration(final SipServletMessage sipServletMessage, boolean locationInContact) throws ServletParseException{
-        String user = ((SipURI)sipServletMessage.getTo().getURI()).getUser();
-        SipURI location = locationInContact ? ((SipURI)sipServletMessage.getAddressHeader("Contact").getURI()) :
-            ((SipURI)sipServletMessage.getAddressHeader("Request-URI").getURI());
+        Address toAddress = sipServletMessage.getTo();
+        SipURI toURI = (SipURI) toAddress.getURI();
+        String user = toURI.getUser();
+        SipURI location = null;
+        if(locationInContact || sipServletMessage instanceof SipServletResponse) {
+            if((SipURI)sipServletMessage.getAddressHeader("Contact") == null) {
+                location = ((SipURI)sipServletMessage.getTo().getURI());
+            } else {
+                location = ((SipURI)sipServletMessage.getAddressHeader("Contact").getURI());
+            }
+        } else {
+            location = (SipURI)((SipServletRequest)sipServletMessage).getRequestURI();
+        }
         if(logger.isDebugEnabled()) {
             logger.debug("Error response for the OPTIONS to: "+location+" will remove registration");
         }
@@ -446,10 +458,13 @@ public final class UserAgentManager extends RestcommUntypedActor {
         StringBuilder buffer = new StringBuilder();
         buffer.append("sip:restcomm").append("@").append(outboundInterface.getHost());
         final String from = buffer.toString();
-        final SipServletRequest ping = factory.createRequest(application, "OPTIONS", from, aor);
-        final SipURI uri = (SipURI) factory.createURI(location);
+        SipServletRequest ping = null;
+        SipURI uri = null;
+
+        ping = factory.createRequest(application, "OPTIONS", from, location);
+        uri = (SipURI) factory.createURI(location);
         ping.pushRoute(uri);
-        ping.setRequestURI(uri);
+
         final SipSession session = ping.getSession();
         session.setHandler("UserAgentManager");
         if(logger.isDebugEnabled()) {
@@ -545,20 +560,22 @@ public final class UserAgentManager extends RestcommUntypedActor {
         }
 
         boolean isLBPresent = false;
-        //Issue 306: https://telestax.atlassian.net/browse/RESTCOMM-306
-        final String initialIpBeforeLB = request.getHeader("X-Sip-Balancer-InitialRemoteAddr");
-        final String initialPortBeforeLB = request.getHeader("X-Sip-Balancer-InitialRemotePort");
-        if(initialIpBeforeLB != null && !initialIpBeforeLB.isEmpty() && initialPortBeforeLB != null && !initialPortBeforeLB.isEmpty()) {
-            if(logger.isInfoEnabled()) {
-                logger.info("Client in front of LB. Patching URI: "+uri.toString()+" with IP: "+initialIpBeforeLB+" and PORT: "+initialPortBeforeLB+" for USER: "+user);
+        if(!useSbc) {
+            //Issue 306: https://telestax.atlassian.net/browse/RESTCOMM-306
+            final String initialIpBeforeLB = request.getHeader("X-Sip-Balancer-InitialRemoteAddr");
+            final String initialPortBeforeLB = request.getHeader("X-Sip-Balancer-InitialRemotePort");
+            if(initialIpBeforeLB != null && !initialIpBeforeLB.isEmpty() && initialPortBeforeLB != null && !initialPortBeforeLB.isEmpty()) {
+                if(logger.isInfoEnabled()) {
+                    logger.info("Client in front of LB. Patching URI: "+uri.toString()+" with IP: "+initialIpBeforeLB+" and PORT: "+initialPortBeforeLB+" for USER: "+user);
+                }
+                patch(uri, initialIpBeforeLB, Integer.valueOf(initialPortBeforeLB));
+                isLBPresent = true;
+            } else {
+                if(logger.isInfoEnabled()) {
+                    logger.info("Patching URI: " + uri.toString() + " with IP: " + ip + " and PORT: " + port + " for USER: " + user);
+                }
+                patch(uri, ip, port);
             }
-            patch(uri, initialIpBeforeLB, Integer.valueOf(initialPortBeforeLB));
-            isLBPresent = true;
-        } else {
-            if(logger.isInfoEnabled()) {
-                logger.info("Patching URI: " + uri.toString() + " with IP: " + ip + " and PORT: " + port + " for USER: " + user);
-            }
-            patch(uri, ip, port);
         }
 
         final String address = createAddress(request);
@@ -639,13 +656,13 @@ public final class UserAgentManager extends RestcommUntypedActor {
     }
 
     private String createAddress(SipServletRequest request) throws ServletParseException {
-
         final Address contact = request.getAddressHeader("Contact");
-        final SipURI uri = (SipURI) contact.getURI();
-        final SipURI to = (SipURI) request.getTo().getURI();
-        final String user = to.getUser().trim();
 
-        String transport = (uri.getTransportParam()==null?request.getParameter("transport"):uri.getTransportParam()); //Issue #935, take transport of initial request-uri if contact-uri has no transport parameter
+        final SipURI contactUri = (SipURI) contact.getURI();
+        final SipURI to = (SipURI) request.getTo().getURI();
+        final String user = useSbc ? contactUri.getUser().trim() : to.getUser().trim();
+
+        String transport = (contactUri.getTransportParam()==null?request.getParameter("transport"):contactUri.getTransportParam()); //Issue #935, take transport of initial request-uri if contact-uri has no transport parameter
         //If RURI is secure (SIPS) then pick TLS for transport - https://github.com/RestComm/Restcomm-Connect/issues/1956
         if (((SipURI)request.getRequestURI()).isSecure()) {
             transport = "tls";
@@ -661,17 +678,17 @@ public final class UserAgentManager extends RestcommUntypedActor {
         } else {
             buffer.append("sip:");
         }
-        buffer.append(normalize(user)).append("@").append(uri.getHost()).append(":").append(uri.getPort());
+        buffer.append(normalize(user)).append("@").append(contactUri.getHost()).append(":").append(contactUri.getPort());
         // https://bitbucket.org/telestax/telscale-restcomm/issue/142/restcomm-support-for-other-transports-than
         if (transport != null) {
             buffer.append(";transport=").append(transport);
         }
 
-        Iterator<String> extraParameterNames = uri.getParameterNames();
+        Iterator<String> extraParameterNames = contactUri.getParameterNames();
         while (extraParameterNames.hasNext()) {
             String paramName = extraParameterNames.next();
             if (!paramName.equalsIgnoreCase("transport")) {
-                String paramValue = uri.getParameter(paramName);
+                String paramValue = contactUri.getParameter(paramName);
                 buffer.append(";");
                 buffer.append(paramName);
                 buffer.append("=");
@@ -699,7 +716,7 @@ public final class UserAgentManager extends RestcommUntypedActor {
         return "ws".equalsIgnoreCase(transport) || "wss".equalsIgnoreCase(transport) || userAgent.toLowerCase().contains("restcomm");
     }
 
-    private String contact(final SipURI uri, final int expires) {
+    private String contact(final SipURI uri, final int expires) throws ServletParseException {
         final Address contact = factory.createAddress(uri);
         contact.setExpires(expires);
         return contact.toString();

@@ -317,6 +317,13 @@ public final class CallManager extends RestcommUntypedActor {
         allowFallbackToPrimary = outboundProxyConfig.getBoolean("allow-fallback-to-primary", false);
 
         patchForNatB2BUASessions = runtime.getBoolean("patch-for-nat-b2bua-sessions", true);
+        boolean useSbc = runtime.getBoolean("use-sbc", false);
+        if(useSbc) {
+            if (logger.isDebugEnabled()) {
+                logger.debug("CallManager: use-sbc is true, overriding patch-for-nat-b2bua-sessions to false");
+            }
+            patchForNatB2BUASessions = false;
+        }
 
         //Monitoring Service
         this.monitoring = (ActorRef) context.getAttribute(MonitoringService.class.getName());
