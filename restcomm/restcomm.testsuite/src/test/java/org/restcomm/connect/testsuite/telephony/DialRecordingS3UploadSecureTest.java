@@ -4,6 +4,7 @@ import com.github.tomakehurst.wiremock.junit.WireMockRule;
 import com.github.tomakehurst.wiremock.verification.LoggedRequest;
 import com.google.gson.JsonArray;
 import com.google.gson.JsonObject;
+
 import org.apache.log4j.Logger;
 import org.cafesip.sipunit.SipCall;
 import org.cafesip.sipunit.SipPhone;
@@ -22,13 +23,16 @@ import org.junit.Before;
 import org.junit.BeforeClass;
 import org.junit.Rule;
 import org.junit.Test;
+import org.junit.experimental.categories.Category;
 import org.junit.runner.RunWith;
 import org.restcomm.connect.commons.Version;
+import org.restcomm.connect.commons.annotations.UnstableTests;
 import org.restcomm.connect.testsuite.http.RestcommCallsTool;
 import org.restcomm.connect.testsuite.tools.MonitoringServiceTool;
 
 import javax.sip.address.SipURI;
 import javax.sip.message.Response;
+
 import java.io.IOException;
 import java.net.HttpURLConnection;
 import java.net.URL;
@@ -437,6 +441,7 @@ public class DialRecordingS3UploadSecureTest {
 	final String recordCallWithAction = "<Response><Record timeout=\"15\" maxLength=\"60\" action=\"http://127.0.0.1:8090/record-action\"/></Response>";
 	final String hangupRcml = "<Response><Hangup/></Response>";
 	@Test
+    @Category(UnstableTests.class)
 	public synchronized void testRecordCallWithAction() throws InterruptedException, ParseException {
 		stubFor(get(urlPathEqualTo("/1111"))
 				.willReturn(aResponse()
