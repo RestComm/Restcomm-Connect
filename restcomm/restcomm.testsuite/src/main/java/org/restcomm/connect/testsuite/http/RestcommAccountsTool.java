@@ -202,7 +202,8 @@ public class RestcommAccountsTool {
      * @param username
      * @param authtoken
      * @param accountSid
-     * @return an account response so that the invoker can make decisions on the status code etc.
+     * @return an account response so that the invoker can make decisions on the
+     * status code etc.
      */
     public ClientResponse getAccountResponse(String deploymentUrl, String username, String authtoken, String accountSid) {
         Client jerseyClient = Client.create();
