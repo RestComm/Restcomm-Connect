@@ -17,16 +17,35 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>
  *
  */
-
 package org.restcomm.connect.dao.exceptions;
 
 import org.restcomm.connect.commons.exceptions.RestcommRuntimeException;
 
 /**
- * Thrown when an operation needs to process account hierarchies with greater depth
- * then the one allowed.
+ * Thrown when an operation needs to process account hierarchies with greater
+ * depth then the one allowed.
  *
  * @author orestis.tsakiridis@telestax.com - Orestis Tsakiridis
  */
 public class AccountHierarchyDepthCrossed extends RestcommRuntimeException {
+
+    public AccountHierarchyDepthCrossed() {
+    }
+
+    public AccountHierarchyDepthCrossed(String message) {
+        super(message);
+    }
+
+    public AccountHierarchyDepthCrossed(String message, Throwable cause) {
+        super(message, cause);
+    }
+
+    public AccountHierarchyDepthCrossed(Throwable cause) {
+        super(cause);
+    }
+
+    public AccountHierarchyDepthCrossed(String message, Throwable cause, boolean enableSuppression, boolean writableStackTrace) {
+        super(message, cause, enableSuppression, writableStackTrace);
+    }
+
 }

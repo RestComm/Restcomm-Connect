@@ -43,8 +43,9 @@ public final class OrganizationsXmlEndpoint extends OrganizationsEndpoint {
 
     @Path("/{organizationSid}")
     @GET
-    public Response getOrganizationAsXml(@PathParam("organizationSid") final String organizationSid) {
-        return getOrganization(organizationSid, APPLICATION_XML_TYPE);
+    public Response getOrganizationAsXml(@PathParam("organizationSid") final String organizationSid,
+            @Context UriInfo info) {
+        return getOrganization(organizationSid, APPLICATION_XML_TYPE, info);
     }
 
     @GET
