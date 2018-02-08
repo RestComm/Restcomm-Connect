@@ -42,6 +42,7 @@ import org.restcomm.connect.dao.DaoManager;
 import org.restcomm.connect.dao.NotificationsDao;
 import org.restcomm.connect.dao.SmsMessagesDao;
 import org.restcomm.connect.dao.common.OrganizationUtil;
+import org.restcomm.connect.dao.entities.Account;
 import org.restcomm.connect.dao.entities.Application;
 import org.restcomm.connect.dao.entities.Client;
 import org.restcomm.connect.dao.entities.IncomingPhoneNumber;
@@ -92,6 +93,7 @@ import java.util.List;
 import java.util.concurrent.TimeUnit;
 
 import static javax.servlet.sip.SipServletResponse.SC_FORBIDDEN;
+import static javax.servlet.sip.SipServletResponse.SC_NOT_ACCEPTABLE;
 import static javax.servlet.sip.SipServletResponse.SC_NOT_FOUND;
 
 /**
@@ -169,19 +171,64 @@ public final class SmsService extends RestcommUntypedActor {
         final SipURI fromURI = (SipURI) request.getFrom().getURI();
         final String fromUser = fromURI.getUser();
         final ClientsDao clients = storage.getClientsDao();
+
+        final SipURI ruri = (SipURI) request.getRequestURI();
+        final String to = ruri.getUser();
+
+        Sid destinationOrganizationSid = SIPOrganizationUtil.searchOrganizationBySIPRequest(storage.getOrganizationsDao(), request);
+
         final Sid sourceOrganizationSid = OrganizationUtil.getOrganizationSidBySipURIHost(storage, fromURI);
+
         if(logger.isDebugEnabled()) {
             logger.debug("sourceOrganizationSid: " + sourceOrganizationSid);
+            logger.debug("destinationOrganizationSid: "+destinationOrganizationSid);
         }
         if(sourceOrganizationSid == null){
             logger.error("Null Organization: fromUri: "+fromURI);
         }
+
         final Client client = clients.getClient(fromUser, sourceOrganizationSid);
+        final String toUser = CallControlHelper.getUserSipId(request, useTo);
+        final Client toClient = clients.getClient(toUser, destinationOrganizationSid);
         final AccountsDao accounts = storage.getAccountsDao();
         final ApplicationsDao applications = storage.getApplicationsDao();
 
+        IncomingPhoneNumber number = getIncomingPhoneNumber(to, sourceOrganizationSid, destinationOrganizationSid);
+
+        if (number != null) {
+            Account numAccount = accounts.getAccount(number.getAccountSid());
+
+            if (!numAccount.getStatus().equals(Account.Status.ACTIVE)) {
+                //reject SMS since the Number belongs to an an account which is not ACTIVE
+                final SipServletResponse response = request.createResponse(SC_NOT_ACCEPTABLE);
+                response.send();
+
+                String msg = String.format("Restcomm rejects this SMS because number's %s account %s is not ACTIVE, current state %s", number.getPhoneNumber(), numAccount.getSid(), numAccount.getStatus());
+                if (logger.isDebugEnabled()) {
+                    logger.debug(msg);
+                }
+                sendNotification(msg, 11005, "error", true);
+                return;
+            }
+        }
+
         // Make sure we force clients to authenticate.
         if (client != null) {
+
+            Account clientAccount = accounts.getAccount(client.getAccountSid());
+            if (!clientAccount.getStatus().equals(Account.Status.ACTIVE)) {
+                //reject SMS since the Number belongs to an an account which is not ACTIVE
+                final SipServletResponse response = request.createResponse(SC_NOT_ACCEPTABLE);
+                response.send();
+
+                String msg = String.format("Restcomm rejects this SMS because client's %s account %s is not ACTIVE, current state %s", client.getFriendlyName(), clientAccount.getSid(), clientAccount.getStatus());
+                if (logger.isDebugEnabled()) {
+                    logger.debug(msg);
+                }
+                sendNotification(msg, 11005, "error", true);
+                return;
+            }
+
             // Make sure we force clients to authenticate.
             if (authenticateUsers // https://github.com/Mobicents/RestComm/issues/29 Allow disabling of SIP authentication
                     && !CallControlHelper.checkAuthentication(request, storage, sourceOrganizationSid)) {
@@ -192,11 +239,25 @@ public final class SmsService extends RestcommUntypedActor {
                 return;
             }
         }
-        // TODO Enforce some kind of security check for requests coming from outside SIP UAs such as ITSPs that are not
-        // registered
-        final String toUser = CallControlHelper.getUserSipId(request, useTo);
+
+        if (toClient != null) {
+            Account toAccount = accounts.getAccount(toClient.getAccountSid());
+            if (!toAccount.getStatus().equals(Account.Status.ACTIVE)) {
+                //reject SMS since the Number belongs to an an account which is not ACTIVE
+                final SipServletResponse response = request.createResponse(SC_NOT_ACCEPTABLE);
+                response.send();
+
+                String msg = String.format("Restcomm rejects this SMS because client's %s account %s is not ACTIVE, current state %s", client.getFriendlyName(), toAccount.getSid(), toAccount.getStatus());
+                if (logger.isDebugEnabled()) {
+                    logger.debug(msg);
+                }
+                sendNotification(msg, 11005, "error", true);
+                return;
+            }
+        }
+
         // Try to see if the request is destined for an application we are hosting.
-        if (redirectToHostedSmsApp(self, request, accounts, applications, toUser, sourceOrganizationSid)) {
+        if (redirectToHostedSmsApp(request, applications, number)) {
             // Tell the sender we received the message okay.
             if(logger.isInfoEnabled()) {
                 logger.info("Message to :" + toUser + " matched to one of the hosted applications");
@@ -215,11 +276,6 @@ public final class SmsService extends RestcommUntypedActor {
             // try to see if the request is destined to another registered client
             // if (client != null) { // make sure the caller is a registered client and not some external SIP agent that we
             // have little control over
-            final Sid toOrganizationSid = OrganizationUtil.getOrganizationSidBySipURIHost(storage, (SipURI) request.getTo().getURI());
-            if(logger.isDebugEnabled()) {
-                logger.debug("toOrganizationSid" + toOrganizationSid);
-            }
-            final Client toClient = clients.getClient(toUser, toOrganizationSid);
             if (toClient != null) { // looks like its a p2p attempt between two valid registered clients, lets redirect
                 long delay = pushNotificationServerHelper.sendPushNotificationIfNeeded(toClient.getPushClientIdentity());
                 // workaround for only clients with push_client_identity after long discussion about current SIP Message flow processing
@@ -323,27 +379,30 @@ public final class SmsService extends RestcommUntypedActor {
         }}
 
 
+    private IncomingPhoneNumber getIncomingPhoneNumber(String phone, Sid sourceOrganizationSid, Sid destinationOrganization) {
+        IncomingPhoneNumber number = numberSelector.searchNumber(phone, sourceOrganizationSid, destinationOrganization);
+
+        return number;
+    }
+
     /**
      *
      * Try to locate a hosted sms app corresponding to the callee/To address. If one is found, begin execution, otherwise return
      * false;
      *
-     * @param self
      * @param request
-     * @param accounts
      * @param applications
-     * @param id
-     * @throws IOException
+     * @param number
      */
-    private boolean redirectToHostedSmsApp(final ActorRef self, final SipServletRequest request, final AccountsDao accounts,
-            final ApplicationsDao applications, String id, Sid sourceOrganizationSid) throws IOException {
+    private boolean redirectToHostedSmsApp(final SipServletRequest request,
+            final ApplicationsDao applications, IncomingPhoneNumber number) {
         boolean isFoundHostedApp = false;
 
         // Handle the SMS message.
-        final SipURI uri = (SipURI) request.getRequestURI();
-        final String to = uri.getUser();
-        Sid destOrg = SIPOrganizationUtil.searchOrganizationBySIPRequest(storage.getOrganizationsDao(), request);
-        IncomingPhoneNumber number = numberSelector.searchNumber(to, sourceOrganizationSid, destOrg);
+//        final SipURI uri = (SipURI) request.getRequestURI();
+//        final String to = uri.getUser();
+//        Sid destOrg = SIPOrganizationUtil.searchOrganizationBySIPRequest(storage.getOrganizationsDao(), request);
+//        IncomingPhoneNumber number = numberSelector.searchNumber(to, sourceOrganizationSid, destOrg);
         try {
             if (number != null) {
 
@@ -356,7 +415,7 @@ public final class SmsService extends RestcommUntypedActor {
                     ActorRef interpreter = null;
                     if (appUri != null || number.getSmsApplicationSid() != null) {
                         final SmsInterpreterParams.Builder builder = new SmsInterpreterParams.Builder();
-                        builder.setSmsService(self);
+                        builder.setSmsService(self());
                         builder.setConfiguration(configuration);
                         builder.setStorage(storage);
                         builder.setAccountId(number.getAccountSid());
@@ -390,9 +449,9 @@ public final class SmsService extends RestcommUntypedActor {
                     //TODO:do extensions check here too?
                     final ActorRef session = session(this.configuration, organizationSid);
 
-                    session.tell(request, self);
+                    session.tell(request, self());
                     final StartInterpreter start = new StartInterpreter(session);
-                    interpreter.tell(start, self);
+                    interpreter.tell(start, self());
                     isFoundHostedApp = true;
                     ec.executePostOutboundAction(far, extensions);
                 } else {
@@ -410,8 +469,8 @@ public final class SmsService extends RestcommUntypedActor {
                 }
             }
         } catch (Exception e) {
-            String errMsg = "There is no valid Restcomm SMS Request URL configured for this number : " + to;
-            sendNotification(errMsg, 12003, "warning", true);
+            String msg = String.format("There is no valid Restcomm SMS Request URL configured for this number : %s", ((SipURI) request.getRequestURI()).getUser());
+            sendNotification(msg, 12003, "warning", true);
         }
         return isFoundHostedApp;
     }
