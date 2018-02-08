@@ -28,6 +28,7 @@ import javax.ws.rs.ext.Provider;
 import org.apache.log4j.Logger;
 import org.restcomm.connect.dao.AccountsDao;
 import org.restcomm.connect.dao.DaoManager;
+import org.restcomm.connect.dao.entities.Account;
 import org.restcomm.connect.identity.UserIdentityContext;
 
 import com.sun.jersey.spi.container.ContainerRequest;
@@ -61,5 +62,15 @@ public class SecurityFilter implements ContainerRequestFilter {
         if (userIdentityContext.getEffectiveAccount() == null) {
             throw new WebApplicationException(Status.UNAUTHORIZED);
         }
+    }
+
+    /**
+     * filter out closed account
+     * @param userIdentityContext
+     */
+    protected void filterClosedAccounts(UserIdentityContext userIdentityContext){
+    	if(userIdentityContext.getEffectiveAccount() != null && userIdentityContext.getEffectiveAccount().getStatus().equals(Account.Status.CLOSED)){
+    		throw new WebApplicationException(Status.FORBIDDEN);
+    	}
     }
 }
