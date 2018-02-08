@@ -49,6 +49,7 @@ public class SecurityFilter implements ContainerRequestFilter {
         AccountsDao accountsDao = storage.getAccountsDao();
         UserIdentityContext userIdentityContext = new UserIdentityContext(servletRequest, accountsDao);
         checkAuthenticatedAccount(userIdentityContext);
+        filterClosedAccounts(userIdentityContext);
         String scheme = cr.getAuthenticationScheme();
         AccountPrincipal aPrincipal = new AccountPrincipal(userIdentityContext);
         cr.setSecurityContext(new RCSecContext(aPrincipal, scheme));
