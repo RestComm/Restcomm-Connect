@@ -544,23 +544,24 @@ public final class CallManager extends RestcommUntypedActor {
         final Client toClient = clients.getClient(toUser, toOrganizationSid);
 
         if (client != null) {
+
+            Account fromAccount = accounts.getAccount(client.getAccountSid());
+            if (!fromAccount.getStatus().equals(Account.Status.ACTIVE)) {
+                //reject call since the Client belongs to an an account which is not ACTIVE
+                final SipServletResponse response = request.createResponse(SC_NOT_ACCEPTABLE);
+                response.send();
+
+                String msg = String.format("Restcomm rejects this call because client %s account %s is not ACTIVE, current state %s", client.getFriendlyName(), fromAccount.getSid(), fromAccount.getStatus());
+                if (logger.isDebugEnabled()) {
+                    logger.debug(msg);
+                }
+                sendNotification(null, msg, 11005, "error", true);
+                return;
+            }
+
             // Make sure we force clients to authenticate.
             if (!authenticateUsers // https://github.com/Mobicents/RestComm/issues/29 Allow disabling of SIP authentication
                     || CallControlHelper.checkAuthentication(request, storage, sourceOrganizationSid)) {
-
-                Account fromAccount = accounts.getAccount(client.getAccountSid());
-                if (!fromAccount.getStatus().equals(Account.Status.ACTIVE)) {
-                    //reject call since the Client belongs to an an account which is not ACTIVE
-                    final SipServletResponse response = request.createResponse(SC_NOT_ACCEPTABLE);
-                    response.send();
-
-                    String msg = String.format("Restcomm rejects this call because client %s account %s is not ACTIVE, current state %s", client.getFriendlyName(), fromAccount.getSid(), fromAccount.getStatus());
-                    if (logger.isDebugEnabled()) {
-                        logger.debug(msg);
-                    }
-                    sendNotification(null, msg, 11005, "error", true);
-                    return;
-                }
 
                 // if the client has authenticated, try to redirect to the Client VoiceURL app
                 // otherwise continue trying to process the Client invite
