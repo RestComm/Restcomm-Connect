@@ -190,8 +190,6 @@ public class OrganizationsEndpoint extends SecuredEndpoint {
      * @return
      */
     protected Response getOrganizations(UriInfo info, final MediaType responseType) {
-        allowOnlySuperAdmin();
-
         List<Organization> organizations = null;
 
         String status = info.getQueryParameters().getFirst("Status");
@@ -226,7 +224,6 @@ public class OrganizationsEndpoint extends SecuredEndpoint {
         if(domainName == null){
             return status(BAD_REQUEST).entity(MSG_EMPTY_DOMAIN_NAME ).build();
         }else{
-            allowOnlySuperAdmin();
 
             //Character verification
             if(!pattern.matcher(domainName).matches()){
