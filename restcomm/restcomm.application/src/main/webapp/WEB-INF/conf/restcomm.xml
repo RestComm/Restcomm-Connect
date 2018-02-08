@@ -175,7 +175,7 @@
 
 		<!-- if this flag is set to true, it will disable all patching done for NAT
 		 even if they are enabled in the configuration file-->
-		<use-sbc>true</use-sbc>
+		<use-sbc>false</use-sbc>
 
 		<!-- If set to true Restcomm will use the Local Address (or external address
 			if available) in the host part of the From header for calls to the outbound
@@ -239,7 +239,7 @@
 		<!-- Control whether Restcomm will try to patch the Request-URI and SDP
 			for B2BUA sessions with the discovered external IP Address of the peer -->
 		<!-- Default value: true -->
-		<patch-for-nat-b2bua-sessions>false</patch-for-nat-b2bua-sessions>
+		<patch-for-nat-b2bua-sessions>true</patch-for-nat-b2bua-sessions>
 
 		<!-- If set to true, when calling clients Restcomm will bypass LB or Proxy if set.
 		     Default value false so call are routed through LB-->
