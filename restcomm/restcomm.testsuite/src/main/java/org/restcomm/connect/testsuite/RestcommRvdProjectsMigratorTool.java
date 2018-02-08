@@ -18,7 +18,6 @@
  * Software Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA
  * 02110-1301 USA, or see the FSF site: http://www.fsf.org.
  */
-
 package org.restcomm.connect.testsuite;
 
 import com.google.gson.JsonArray;
@@ -40,21 +39,20 @@ public class RestcommRvdProjectsMigratorTool {
         APPLICATIONS("Applications", ".json"),
         INCOMING_PHONE_NUMBERS("IncomingPhoneNumbers", ".json"),
         CLIENTS("Clients", ".json"),
-        NOTIFICATIONS("Notifications", ".json"),
-        ;
+        NOTIFICATIONS("Notifications", ".json"),;
         private String name;
         private String extension;
 
-        Endpoint(String name, String extension){
+        Endpoint(String name, String extension) {
             this.name = name;
             this.extension = extension;
         }
 
-        public String getName(){
+        public String getName() {
             return this.name;
         }
 
-        public String getExtension(){
+        public String getExtension() {
             return this.extension;
         }
     }

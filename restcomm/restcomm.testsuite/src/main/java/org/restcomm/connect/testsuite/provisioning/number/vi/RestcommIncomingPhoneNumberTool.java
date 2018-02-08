@@ -19,14 +19,6 @@
  */
 package org.restcomm.connect.testsuite.provisioning.number.vi;
 
-import java.util.Map;
-
-import javax.ws.rs.core.MediaType;
-import javax.ws.rs.core.MultivaluedMap;
-
-import org.apache.log4j.Logger;
-import org.restcomm.connect.dao.entities.IncomingPhoneNumberList;
-
 import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
 import com.google.gson.JsonParser;
@@ -35,25 +27,32 @@ import com.sun.jersey.api.client.WebResource;
 import com.sun.jersey.api.client.filter.HTTPBasicAuthFilter;
 import com.sun.jersey.core.util.MultivaluedMapImpl;
 import com.thoughtworks.xstream.XStream;
+import java.util.Map;
+import javax.ws.rs.core.MediaType;
+import javax.ws.rs.core.MultivaluedMap;
+import org.apache.log4j.Logger;
+import org.restcomm.connect.dao.entities.IncomingPhoneNumberList;
 
 /**
  * @author muhammad.bilal19@gmail.com (Muhammad Bilal)
  */
 public class RestcommIncomingPhoneNumberTool {
-    
+
     private static RestcommIncomingPhoneNumberTool instance;
     private static String accountsUrl;
     private static Logger logger = Logger.getLogger(RestcommIncomingPhoneNumberTool.class);
 
-    private RestcommIncomingPhoneNumberTool() {}
+    private RestcommIncomingPhoneNumberTool() {
+    }
 
     public static RestcommIncomingPhoneNumberTool getInstance() {
-        if (instance == null)
+        if (instance == null) {
             instance = new RestcommIncomingPhoneNumberTool();
+        }
 
         return instance;
     }
-    
+
     private String getAccountsUrl(String deploymentUrl, String username, Boolean json) {
         if (deploymentUrl.endsWith("/")) {
             deploymentUrl = deploymentUrl.substring(0, deploymentUrl.length() - 1);
@@ -63,11 +62,11 @@ public class RestcommIncomingPhoneNumberTool {
 
         return accountsUrl;
     }
-    
+
     public JsonObject getIncomingPhoneNumbers(String deploymentUrl, String username, String authToken) {
         return (JsonObject) getIncomingPhoneNumbers(deploymentUrl, username, authToken, null, null, true);
     }
-    
+
     public JsonObject getIncomingPhoneNumbers(String deploymentUrl, String username, String authToken, Integer page, Integer pageSize,
             Boolean json) {
 
@@ -83,10 +82,12 @@ public class RestcommIncomingPhoneNumberTool {
         if (page != null || pageSize != null) {
             MultivaluedMap<String, String> params = new MultivaluedMapImpl();
 
-            if (page != null)
+            if (page != null) {
                 params.add("Page", String.valueOf(page));
-            if (pageSize != null)
+            }
+            if (pageSize != null) {
                 params.add("PageSize", String.valueOf(pageSize));
+            }
 
             response = webResource.queryParams(params).accept(MediaType.APPLICATION_JSON, MediaType.APPLICATION_XML)
                     .get(String.class);
@@ -106,8 +107,8 @@ public class RestcommIncomingPhoneNumberTool {
                     logger.info("JsonElement: " + jsonElement.toString());
                 }
             } catch (Exception e) {
-                logger.info("Exception during JSON response parsing, exception: "+e);
-                logger.info("JSON response: "+response);
+                logger.info("Exception during JSON response parsing, exception: " + e);
+                logger.info("JSON response: " + response);
             }
             return jsonObject;
         } else {
@@ -118,8 +119,7 @@ public class RestcommIncomingPhoneNumberTool {
         }
 
     }
-    
-    
+
     /**
      * @param deploymentUrl
      * @param username
@@ -154,12 +154,11 @@ public class RestcommIncomingPhoneNumberTool {
                 logger.info("JsonElement: " + jsonElement.toString());
             }
         } catch (Exception e) {
-            logger.info("Exception during JSON response parsing, exception: "+e);
-            logger.info("JSON response: "+response);
+            logger.info("Exception during JSON response parsing, exception: " + e);
+            logger.info("JSON response: " + response);
         }
 
         return jsonObject;
     }
-    
 
 }
