@@ -70,8 +70,8 @@ public class SecurityFilter implements ContainerRequestFilter {
      * @param userIdentityContext
      */
     protected void filterClosedAccounts(UserIdentityContext userIdentityContext){
-    	if(userIdentityContext.getEffectiveAccount() != null && userIdentityContext.getEffectiveAccount().getStatus().equals(Account.Status.CLOSED)){
-    		throw new WebApplicationException(Status.FORBIDDEN);
-    	}
+        if(userIdentityContext.getEffectiveAccount() != null && userIdentityContext.getEffectiveAccount().getStatus().equals(Account.Status.CLOSED)){
+            throw new WebApplicationException(Status.FORBIDDEN);
+        }
     }
 }
