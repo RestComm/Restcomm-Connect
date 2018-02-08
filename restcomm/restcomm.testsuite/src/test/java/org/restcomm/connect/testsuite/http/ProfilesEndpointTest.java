@@ -93,31 +93,6 @@ public class ProfilesEndpointTest extends EndpointTest {
     }
 
     /**
-     * this test will try to access profile EP Without Authentication
-     */
-    @Test
-    @Category(FeatureExpTests.class)
-    public void getProfileWithoutAuthentication(){
-    	Client jerseyClient = Client.create();
-		WebResource webResource = jerseyClient.resource(deploymentUrl.toString()+"/2012-04-24/Profiles");
-		ClientResponse clientResponse = webResource.path(DEFAULT_PROFILE_SID).accept(RestcommProfilesTool.PROFILE_CONTENT_TYPE).get(ClientResponse.class);
-        String responseBody = clientResponse.getEntity(String.class);
-    	logger.info("profile: "+responseBody);
-    	assertEquals(401, clientResponse.getStatus());
-    	
-    	jerseyClient.addFilter(new HTTPBasicAuthFilter(ADMIN_ACCOUNT_SID, "wrongauthtoken"));
-		webResource = jerseyClient.resource(deploymentUrl.toString()+"/2012-04-24/Profiles");
-		clientResponse = webResource.path(DEFAULT_PROFILE_SID).accept(RestcommProfilesTool.PROFILE_CONTENT_TYPE).get(ClientResponse.class);
-        logger.info("profile: "+responseBody);
-    	assertEquals(401, clientResponse.getStatus());
-    	
-    	jerseyClient = Client.create();
-		webResource = jerseyClient.resource(deploymentUrl.toString()+"/2012-04-24/Profiles");
-		clientResponse = webResource.accept(MediaType.APPLICATION_JSON).get(ClientResponse.class);
-    	assertEquals(401, clientResponse.getStatus());
-    }
-
-    /**
      * getProfileList
      */
     @Test
