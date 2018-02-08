@@ -23,13 +23,10 @@ import javax.ws.rs.GET;
 import javax.ws.rs.Path;
 import javax.ws.rs.PathParam;
 import javax.ws.rs.QueryParam;
-
-import static javax.ws.rs.core.MediaType.*;
+import javax.ws.rs.core.MediaType;
+import javax.ws.rs.core.Response;
 import static javax.ws.rs.core.Response.*;
 import static javax.ws.rs.core.Response.Status.*;
-
-import javax.ws.rs.core.Response;
-
 import org.restcomm.connect.commons.annotations.concurrency.ThreadSafe;
 import org.restcomm.connect.provisioning.number.api.PhoneNumberSearchFilters;
 import org.restcomm.connect.provisioning.number.api.PhoneNumberType;
@@ -92,7 +89,7 @@ public final class AvailablePhoneNumbersXmlEndpoint extends AvailablePhoneNumber
             PhoneNumberSearchFilters listFilters = new PhoneNumberSearchFilters(areaCode, null, smsEnabledBool,
                     mmsEnabledBool, voiceEnabledBool, faxEnabledBool, ussdEnabledBool, nearNumber, nearLatLong, distance, inPostalCode, inRegion,
                     inRateCenter, inLata, rangeSizeInt, rangeIndexInt, phoneNumberType);
-            return getAvailablePhoneNumbers(accountSid, isoCountryCode, listFilters, filterPattern, APPLICATION_XML_TYPE);
+            return getAvailablePhoneNumbers(accountSid, isoCountryCode, listFilters, filterPattern, MediaType.valueOf(accept));
         } else {
             return status(BAD_REQUEST).build();
         }
