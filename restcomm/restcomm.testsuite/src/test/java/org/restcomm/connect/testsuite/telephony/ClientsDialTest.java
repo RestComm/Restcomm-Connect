@@ -1463,9 +1463,7 @@ public class ClientsDialTest {
 
         closedCall.initiateOutgoingCall(closedContact, "sip:+151212344566@"+restcommContact, null, body, "application", "sdp", null, null);
         assertLastOperationSuccess(closedCall);
-        closedCall.waitForAuthorisation(5000);
         assertTrue(closedCall.waitOutgoingCallResponse(10000));
-
         final int response = closedCall.getLastReceivedResponse().getStatusCode();
         assertTrue(response == Response.TRYING || response == Response.NOT_ACCEPTABLE);
 
