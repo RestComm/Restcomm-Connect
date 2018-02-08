@@ -19,24 +19,22 @@
  */
 package org.restcomm.connect.http;
 
-import static javax.ws.rs.core.MediaType.APPLICATION_JSON_TYPE;
-import static javax.ws.rs.core.MediaType.APPLICATION_XML_TYPE;
-import static javax.ws.rs.core.Response.ok;
-import static javax.ws.rs.core.Response.status;
-
 import javax.ws.rs.DELETE;
 import javax.ws.rs.GET;
 import javax.ws.rs.POST;
 import javax.ws.rs.PUT;
 import javax.ws.rs.Path;
 import javax.ws.rs.PathParam;
+import javax.ws.rs.core.MediaType;
+import static javax.ws.rs.core.MediaType.APPLICATION_JSON_TYPE;
 import javax.ws.rs.core.MultivaluedMap;
 import javax.ws.rs.core.Response;
-
+import static javax.ws.rs.core.Response.ok;
+import static javax.ws.rs.core.Response.status;
 import org.restcomm.connect.commons.annotations.concurrency.ThreadSafe;
+import org.restcomm.connect.commons.dao.Sid;
 import org.restcomm.connect.dao.entities.Account;
 import org.restcomm.connect.dao.entities.Client;
-import org.restcomm.connect.commons.dao.Sid;
 
 /**
  * @author quintana.thomas@gmail.com (Thomas Quintana)
@@ -82,17 +80,17 @@ public final class ClientsXmlEndpoint extends ClientsEndpoint {
     @Path("/{sid}")
     @GET
     public Response getClientAsXml(@PathParam("accountSid") final String accountSid, @PathParam("sid") final String sid) {
-        return getClient(accountSid, sid, APPLICATION_XML_TYPE);
+        return getClient(accountSid, sid, MediaType.valueOf(accept));
     }
 
     @GET
     public Response getClients(@PathParam("accountSid") final String accountSid) {
-        return getClients(accountSid, APPLICATION_XML_TYPE);
+        return getClients(accountSid, MediaType.valueOf(accept));
     }
 
     @POST
     public Response putClient(@PathParam("accountSid") final String accountSid, final MultivaluedMap<String, String> data) {
-        return putClient(accountSid, data, APPLICATION_XML_TYPE);
+        return putClient(accountSid, data, MediaType.valueOf(accept));
     }
 
     @Path("/{sid}.json")
@@ -113,13 +111,13 @@ public final class ClientsXmlEndpoint extends ClientsEndpoint {
     @POST
     public Response updateClientAsXmlPost(@PathParam("accountSid") final String accountSid, @PathParam("sid") final String sid,
             final MultivaluedMap<String, String> data) {
-        return updateClient(accountSid, sid, data, APPLICATION_XML_TYPE);
+        return updateClient(accountSid, sid, data, MediaType.valueOf(accept));
     }
 
     @Path("/{sid}")
     @PUT
     public Response updateClientAsXmlPut(@PathParam("accountSid") final String accountSid, @PathParam("sid") final String sid,
             final MultivaluedMap<String, String> data) {
-        return updateClient(accountSid, sid, data, APPLICATION_XML_TYPE);
+        return updateClient(accountSid, sid, data, MediaType.valueOf(accept));
     }
 }

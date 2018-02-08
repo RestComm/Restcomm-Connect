@@ -19,17 +19,15 @@
  */
 package org.restcomm.connect.http;
 
-import org.restcomm.connect.commons.annotations.concurrency.ThreadSafe;
-
 import javax.ws.rs.GET;
 import javax.ws.rs.Path;
 import javax.ws.rs.PathParam;
 import javax.ws.rs.core.Context;
+import javax.ws.rs.core.MediaType;
+import static javax.ws.rs.core.MediaType.APPLICATION_JSON_TYPE;
 import javax.ws.rs.core.Response;
 import javax.ws.rs.core.UriInfo;
-
-import static javax.ws.rs.core.MediaType.APPLICATION_JSON_TYPE;
-import static javax.ws.rs.core.MediaType.APPLICATION_XML_TYPE;
+import org.restcomm.connect.commons.annotations.concurrency.ThreadSafe;
 
 /**
  * @author brainslog@gmail.com (Alexandre Mendonca)
@@ -50,7 +48,7 @@ public final class UsageXmlEndpoint extends UsageEndpoint {
     @Path("/{subresource}")
     @GET
     public Response getUsageAsXml(@PathParam("accountSid") final String accountSid, @PathParam("subresource") final String subresource, @Context UriInfo info) {
-      return getUsage(accountSid, subresource, info, APPLICATION_XML_TYPE);
+      return getUsage(accountSid, subresource, info, MediaType.valueOf(accept));
     }
 
   }

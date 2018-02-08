@@ -20,13 +20,13 @@
 package org.restcomm.connect.http;
 
 import javax.ws.rs.GET;
-import static javax.ws.rs.core.MediaType.*;
 import javax.ws.rs.Path;
 import javax.ws.rs.PathParam;
 import javax.ws.rs.core.Context;
+import javax.ws.rs.core.MediaType;
+import static javax.ws.rs.core.MediaType.*;
 import javax.ws.rs.core.Response;
 import javax.ws.rs.core.UriInfo;
-
 import org.restcomm.connect.commons.annotations.concurrency.ThreadSafe;
 
 /**
@@ -48,11 +48,11 @@ public final class NotificationsXmlEndpoint extends NotificationsEndpoint {
     @Path("/{sid}")
     @GET
     public Response getNotificationAsXml(@PathParam("accountSid") final String accountSid, @PathParam("sid") final String sid) {
-        return getNotification(accountSid, sid, APPLICATION_XML_TYPE);
+        return getNotification(accountSid, sid, MediaType.valueOf(accept));
     }
 
     @GET
     public Response getNotifications(@PathParam("accountSid") final String accountSid, @Context UriInfo info) {
-        return getNotifications(accountSid, info, APPLICATION_XML_TYPE);
+        return getNotifications(accountSid, info, MediaType.valueOf(accept));
     }
 }

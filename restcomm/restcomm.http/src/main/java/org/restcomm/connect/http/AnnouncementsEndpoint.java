@@ -6,10 +6,25 @@ import akka.actor.ActorSystem;
 import akka.actor.Props;
 import akka.actor.UntypedActor;
 import akka.actor.UntypedActorFactory;
+import static akka.pattern.Patterns.ask;
 import akka.util.Timeout;
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
 import com.thoughtworks.xstream.XStream;
+import java.net.URI;
+import java.util.concurrent.TimeUnit;
+import javax.annotation.PostConstruct;
+import javax.annotation.PreDestroy;
+import javax.servlet.ServletContext;
+import javax.ws.rs.core.Context;
+import javax.ws.rs.core.MediaType;
+import static javax.ws.rs.core.MediaType.APPLICATION_JSON;
+import static javax.ws.rs.core.MediaType.APPLICATION_JSON_TYPE;
+import static javax.ws.rs.core.MediaType.APPLICATION_XML;
+import static javax.ws.rs.core.MediaType.APPLICATION_XML_TYPE;
+import javax.ws.rs.core.MultivaluedMap;
+import javax.ws.rs.core.Response;
+import static javax.ws.rs.core.Response.ok;
 import org.apache.commons.configuration.Configuration;
 import org.apache.log4j.Logger;
 import org.restcomm.connect.commons.cache.DiskCacheFactory;
@@ -25,23 +40,6 @@ import org.restcomm.connect.tts.api.SpeechSynthesizerResponse;
 import scala.concurrent.Await;
 import scala.concurrent.Future;
 import scala.concurrent.duration.Duration;
-
-import javax.annotation.PostConstruct;
-import javax.annotation.PreDestroy;
-import javax.servlet.ServletContext;
-import javax.ws.rs.core.Context;
-import javax.ws.rs.core.MediaType;
-import javax.ws.rs.core.MultivaluedMap;
-import javax.ws.rs.core.Response;
-import java.net.URI;
-import java.util.concurrent.TimeUnit;
-
-import static akka.pattern.Patterns.ask;
-import static javax.ws.rs.core.MediaType.APPLICATION_JSON;
-import static javax.ws.rs.core.MediaType.APPLICATION_JSON_TYPE;
-import static javax.ws.rs.core.MediaType.APPLICATION_XML;
-import static javax.ws.rs.core.MediaType.APPLICATION_XML_TYPE;
-import static javax.ws.rs.core.Response.ok;
 
 /**
  * @author <a href="mailto:gvagenas@gmail.com">George Vagenas</a>
@@ -91,9 +89,9 @@ public abstract class AnnouncementsEndpoint extends SecuredEndpoint {
             createCacheActor(accountSid);
 
         Announcement announcement = createFrom(accountSid, data);
-        if (APPLICATION_JSON_TYPE == responseType) {
+        if (APPLICATION_JSON_TYPE.equals(responseType)) {
             return ok(gson.toJson(announcement), APPLICATION_JSON).build();
-        } else if (APPLICATION_XML_TYPE == responseType) {
+        } else if (APPLICATION_XML_TYPE.equals(responseType)) {
             final RestCommResponse response = new RestCommResponse(announcement);
             return ok(xstream.toXML(response), APPLICATION_XML).build();
         } else {
