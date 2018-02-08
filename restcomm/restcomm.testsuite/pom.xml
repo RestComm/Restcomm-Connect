@@ -360,12 +360,17 @@
             <scope>test</scope>
         </dependency>
 
-        <dependency>
-        <groupId>org.restcomm</groupId>
-        <artifactId>restcomm-connect.monitoring.service</artifactId>
-        <version>${project.version}</version>
-        <scope>test</scope>
-    </dependency>
+		<dependency>
+			<groupId>org.restcomm</groupId>
+			<artifactId>restcomm-connect.monitoring.service</artifactId>
+			<version>${project.version}</version>
+			<scope>test</scope>
+		</dependency>
+	
+		<dependency>
+			<groupId>org.restcomm.smpp</groupId>
+			<artifactId>smpp-extensions</artifactId>
+		</dependency>
 
     </dependencies>
 
