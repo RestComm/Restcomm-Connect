@@ -10,6 +10,8 @@ import java.net.URI;
 import java.net.URISyntaxException;
 import java.net.URL;
 
+import javax.ws.rs.core.MediaType;
+
 import org.apache.http.HttpResponse;
 import org.apache.http.client.ClientProtocolException;
 import org.apache.log4j.Logger;
@@ -35,8 +37,11 @@ import com.github.fge.jsonschema.main.JsonSchemaFactory;
 import com.google.gson.JsonArray;
 import com.google.gson.JsonObject;
 import com.google.gson.JsonParser;
+import com.sun.jersey.api.client.Client;
 import com.sun.jersey.api.client.ClientResponse;
+import com.sun.jersey.api.client.WebResource;
 import com.sun.jersey.api.client.WebResourceLinkHeaders;
+import com.sun.jersey.api.client.filter.HTTPBasicAuthFilter;
 import com.sun.jersey.core.header.LinkHeader;
 
 /**
@@ -85,6 +90,23 @@ public class ProfilesEndpointTest extends EndpointTest {
 
     	JsonObject jsonResponse = new JsonParser().parse(responseBody).getAsJsonObject();
     	assertNotNull(jsonResponse);
+    }
+
+    /**
+     * this test will try to access profile EP Without Authentication
+     */
+    @Test
+    @Category(FeatureExpTests.class)
+    public void getProfileWithoutAuthentication(){
+    	Client jerseyClient = Client.create();
+		WebResource webResource = jerseyClient.resource(deploymentUrl.toString()+"/2012-04-24/Profiles");
+		ClientResponse clientResponse = webResource.path(DEFAULT_PROFILE_SID).accept(RestcommProfilesTool.PROFILE_CONTENT_TYPE).get(ClientResponse.class);
+        assertEquals(401, clientResponse.getStatus());
+    	
+    	jerseyClient = Client.create();
+		webResource = jerseyClient.resource(deploymentUrl.toString()+"/2012-04-24/Profiles");
+		clientResponse = webResource.accept(MediaType.APPLICATION_JSON).get(ClientResponse.class);
+    	assertEquals(401, clientResponse.getStatus());
     }
 
     /**
