@@ -84,8 +84,6 @@ public class AccountsEndpointClosingTest extends EndpointTest {
 
     String toplevelSid = "ACA0000000000000000000000000000000";
     String toplevelKey = "77f8c12cc7b8f8423e5c38b035249166";
-    
-    private static final String CLOSED_ACCOUNT_SID="ACA3000000000000000000000000000000";
 
     @Rule
     public WireMockRule wireMockRule = new WireMockRule(8089);
@@ -141,87 +139,6 @@ public class AccountsEndpointClosingTest extends EndpointTest {
         resource = jersey.resource( getResourceUrl("/2012-04-24/Accounts/" + closedParentSid + "/IncomingPhoneNumbers/PH00000000000000000000000000000002.json") );
         response = resource.get(ClientResponse.class);
         Assert.assertEquals(200, response.getStatus());
-    }
-    
-    @Test
-    public void accessAccountsApiWithClosedAccount() {
-    	// create account
-    	ClientResponse clientResponse = RestcommAccountsTool.getInstance().createAccountResponse(deploymentUrl.toString(), CLOSED_ACCOUNT_SID, toplevelKey, "", "");
-    	assertEquals(403, clientResponse.getStatus());
-    	
-    	//read account
-    	clientResponse = RestcommAccountsTool.getInstance().getAccountResponse(deploymentUrl.toString(), CLOSED_ACCOUNT_SID, toplevelKey, CLOSED_ACCOUNT_SID);
-    	assertEquals(403, clientResponse.getStatus());
-
-    	//update account - try to activate itself
-    	clientResponse = RestcommAccountsTool.getInstance().updateAccountResponse(deploymentUrl.toString(), CLOSED_ACCOUNT_SID, toplevelKey, CLOSED_ACCOUNT_SID, "", "", "", "", "active");
-    	assertEquals(403, clientResponse.getStatus());
-    }
-
-    @Test
-    public void accessClientsApiWithClosedAccount() throws IOException {
-    	HttpResponse clientResponse = CreateClientsTool.getInstance().createClientResponse(deploymentUrl.toString(), CLOSED_ACCOUNT_SID, toplevelKey, "");
-    	assertEquals(403, clientResponse.getStatusLine().getStatusCode());
-    }
-
-    @Test
-    public void accessNumbersApiWithClosedAccount() {
-    	// read
-    	ClientResponse clientResponse = RestcommIncomingPhoneNumberTool.getInstance().getIncomingPhonNumberClientResponse(deploymentUrl.toString(), CLOSED_ACCOUNT_SID, toplevelKey);
-    	assertEquals(403, clientResponse.getStatus());
-    	
-    	//create/buy
-    	clientResponse = RestcommIncomingPhoneNumberTool.getInstance().purchaseProviderNumber(deploymentUrl.toString(), CLOSED_ACCOUNT_SID, toplevelKey, "+14156902867", "", "", "");
-    	assertEquals(403, clientResponse.getStatus());
-    }
-
-    @Test
-    public void accessAvailableNumbersApiWithClosedAccount() {
-        Client jerseyClient = Client.create();
-        jerseyClient.addFilter(new HTTPBasicAuthFilter(CLOSED_ACCOUNT_SID, toplevelKey));
-
-        String provisioningURL = deploymentUrl + "2012-04-24/Accounts/" + CLOSED_ACCOUNT_SID + "/AvailablePhoneNumbers/" + "US/Local.json";
-        WebResource webResource = jerseyClient.resource(provisioningURL);
-
-        ClientResponse clientResponse = webResource.queryParam("Contains","501555****").accept("application/json")
-                .get(ClientResponse.class);
-        assertEquals(403, clientResponse.getStatus());
-    }
-
-    @Test
-    public void accessRecordingsApiWithClosedAccount() {
-        Client jerseyClient = Client.create();
-        jerseyClient.addFilter(new HTTPBasicAuthFilter(CLOSED_ACCOUNT_SID, toplevelKey));
-
-        String provisioningURL = deploymentUrl + "2012-04-24/Accounts/" + CLOSED_ACCOUNT_SID + "/Recordings.json";
-        WebResource webResource = jerseyClient.resource(provisioningURL);
-
-        ClientResponse clientResponse = webResource.accept(MediaType.APPLICATION_JSON).get(ClientResponse.class);
-        assertEquals(403, clientResponse.getStatus());
-    }
-
-    @Test
-    public void accessCallsApiWithClosedAccount() {
-        Client jerseyClient = Client.create();
-        jerseyClient.addFilter(new HTTPBasicAuthFilter(CLOSED_ACCOUNT_SID, toplevelKey));
-
-        String provisioningURL = deploymentUrl + "2012-04-24/Accounts/" + CLOSED_ACCOUNT_SID + "/Calls.json";
-        WebResource webResource = jerseyClient.resource(provisioningURL);
-
-        ClientResponse clientResponse = webResource.accept(MediaType.APPLICATION_JSON).get(ClientResponse.class);
-        assertEquals(403, clientResponse.getStatus());
-    }
-
-    @Test
-    public void accessConferenceApiWithClosedAccount() {
-        Client jerseyClient = Client.create();
-        jerseyClient.addFilter(new HTTPBasicAuthFilter(CLOSED_ACCOUNT_SID, toplevelKey));
-
-        String provisioningURL = deploymentUrl + "2012-04-24/Accounts/" + CLOSED_ACCOUNT_SID + "/Conferences.json";
-        WebResource webResource = jerseyClient.resource(provisioningURL);
-
-        ClientResponse clientResponse = webResource.accept(MediaType.APPLICATION_JSON).get(ClientResponse.class);
-        assertEquals(403, clientResponse.getStatus());
     }
 
     @Deployment(name = "AccountsEndpointClosingTest", managed = true, testable = false)

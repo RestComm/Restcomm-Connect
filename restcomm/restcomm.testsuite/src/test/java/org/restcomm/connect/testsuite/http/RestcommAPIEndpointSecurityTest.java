@@ -2,10 +2,12 @@ package org.restcomm.connect.testsuite.http;
 
 import static org.junit.Assert.assertEquals;
 
+import java.io.IOException;
 import java.net.URL;
 
 import javax.ws.rs.core.MediaType;
 
+import org.apache.http.HttpResponse;
 import org.apache.log4j.Logger;
 import org.jboss.arquillian.container.test.api.Deployer;
 import org.jboss.arquillian.container.test.api.Deployment;
@@ -19,6 +21,7 @@ import org.junit.experimental.categories.Category;
 import org.junit.runner.RunWith;
 import org.restcomm.connect.commons.Version;
 import org.restcomm.connect.commons.annotations.FeatureExpTests;
+import org.restcomm.connect.testsuite.provisioning.number.vi.RestcommIncomingPhoneNumberTool;
 
 import com.sun.jersey.api.client.Client;
 import com.sun.jersey.api.client.ClientResponse;
@@ -37,6 +40,8 @@ public class RestcommAPIEndpointSecurityTest {
     URL deploymentUrl;
 
     private static final String SUPER_ADMIN_ACCOUNT_SID = "ACae6e420f425248d6a26948c17a9e2acf";
+    private static final String CLOSED_ACCOUNT_SID="ACA3000000000000000000000000000000";
+    private static final String AUTH_TOKEN = "77f8c12cc7b8f8423e5c38b035249166";
     private static final String RESOURCE_SID = "PRae6e420f425248d6a26948c17a9e2acf";
     private static final String GENERIC_ENDPOINT = "/2012-04-24/";
     private static final String PROFILE_ENDPOINT = "/2012-04-24/Profiles";
@@ -51,6 +56,7 @@ public class RestcommAPIEndpointSecurityTest {
     public void genericSecurityTest(){
     	assertEquals(401, performUnautherizedRequest(deploymentUrl.toString()+GENERIC_ENDPOINT));
     	assertEquals(401, performRequestWithInvalidToken(deploymentUrl.toString()+GENERIC_ENDPOINT));
+    	assertEquals(403, performApiRequestWithClosedAccount(deploymentUrl.toString()+GENERIC_ENDPOINT));
     }
     /**
      * this test will try to access org EP Without Authentication or invalid token
@@ -61,6 +67,7 @@ public class RestcommAPIEndpointSecurityTest {
     	assertEquals(401, performUnautherizedRequest(deploymentUrl.toString()+ORGANIZATION_ENDPOINT+"/"+RESOURCE_SID));
     	assertEquals(401, performUnautherizedRequest(deploymentUrl.toString()+ORGANIZATION_ENDPOINT));
     	assertEquals(401, performRequestWithInvalidToken(deploymentUrl.toString()+ORGANIZATION_ENDPOINT));
+    	assertEquals(403, performApiRequestWithClosedAccount(deploymentUrl.toString()+ORGANIZATION_ENDPOINT));
     }
 
     /**
@@ -72,6 +79,7 @@ public class RestcommAPIEndpointSecurityTest {
     	assertEquals(401, performUnautherizedRequest(deploymentUrl.toString()+ACCOUNT_ENDPOINT+"/"+RESOURCE_SID));
     	assertEquals(401, performUnautherizedRequest(deploymentUrl.toString()+ACCOUNT_ENDPOINT));
     	assertEquals(401, performRequestWithInvalidToken(deploymentUrl.toString()+ACCOUNT_ENDPOINT));
+    	assertEquals(403, performApiRequestWithClosedAccount(deploymentUrl.toString()+ACCOUNT_ENDPOINT));
     }
     
 
@@ -84,6 +92,7 @@ public class RestcommAPIEndpointSecurityTest {
     	assertEquals(401, performUnautherizedRequest(deploymentUrl.toString()+PROFILE_ENDPOINT+"/"+RESOURCE_SID));
     	assertEquals(401, performUnautherizedRequest(deploymentUrl.toString()+PROFILE_ENDPOINT));
     	assertEquals(401, performRequestWithInvalidToken(deploymentUrl.toString()+PROFILE_ENDPOINT));
+    	assertEquals(403, performApiRequestWithClosedAccount(deploymentUrl.toString()+PROFILE_ENDPOINT));
     }
     
     /**
@@ -95,6 +104,21 @@ public class RestcommAPIEndpointSecurityTest {
     	assertEquals(401, performUnautherizedRequest(deploymentUrl.toString()+CLIENTS_ENDPOINT+"/"+RESOURCE_SID));
     	assertEquals(401, performUnautherizedRequest(deploymentUrl.toString()+CLIENTS_ENDPOINT));
     	assertEquals(401, performRequestWithInvalidToken(deploymentUrl.toString()+CLIENTS_ENDPOINT));
+    	assertEquals(403, performApiRequestWithClosedAccount(deploymentUrl.toString()+CLIENTS_ENDPOINT));
+    }
+
+    /**
+     * perform api Request with closed account
+     * 
+     * @param endpointUrl
+     * @return
+     */
+    private int performApiRequestWithClosedAccount(String endpointUrl){
+    	Client jerseyClient = Client.create();
+        jerseyClient.addFilter(new HTTPBasicAuthFilter(CLOSED_ACCOUNT_SID, AUTH_TOKEN));
+        WebResource webResource = jerseyClient.resource(endpointUrl);
+        ClientResponse clientResponse = webResource.accept(MediaType.APPLICATION_JSON, MediaType.APPLICATION_XML).get(ClientResponse.class);
+        return clientResponse.getStatus();
     }
 
     /**
