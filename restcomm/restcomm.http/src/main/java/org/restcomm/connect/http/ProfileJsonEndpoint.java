@@ -19,6 +19,7 @@
  */
 package org.restcomm.connect.http;
 
+import com.sun.jersey.spi.container.ResourceFilters;
 import com.sun.jersey.spi.resource.Singleton;
 import java.io.InputStream;
 import javax.annotation.security.PermitAll;
@@ -40,6 +41,7 @@ import javax.ws.rs.core.UriInfo;
 import org.restcomm.connect.commons.annotations.concurrency.ThreadSafe;
 import static org.restcomm.connect.http.ProfileEndpoint.PROFILE_CONTENT_TYPE;
 import static org.restcomm.connect.http.ProfileEndpoint.PROFILE_SCHEMA_CONTENT_TYPE;
+import org.restcomm.connect.http.filters.MethodOverrideFilter;
 import static org.restcomm.connect.http.security.AccountPrincipal.SUPER_ADMIN_ROLE;
 
 @Path("/Profiles")
@@ -86,6 +88,7 @@ public class ProfileJsonEndpoint extends ProfileEndpoint{
     @Path("/{profileSid}")
     @LINK
     @Produces(APPLICATION_JSON)
+    @ResourceFilters({ MethodOverrideFilter.class })
     public Response linkProfileAsJson(@PathParam("profileSid") final String profileSid,
             @Context HttpHeaders headers, @Context UriInfo info
     ) {
@@ -95,6 +98,7 @@ public class ProfileJsonEndpoint extends ProfileEndpoint{
     @Path("/{profileSid}")
     @UNLINK
     @Produces(APPLICATION_JSON)
+    @ResourceFilters({ MethodOverrideFilter.class })
     public Response unlinkProfileAsJson(@PathParam("profileSid") final String profileSid,
             @Context HttpHeaders headers) {
         return unlinkProfile(profileSid, headers);

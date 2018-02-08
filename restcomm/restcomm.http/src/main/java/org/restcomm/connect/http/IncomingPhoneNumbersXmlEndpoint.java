@@ -19,21 +19,22 @@
  */
 package org.restcomm.connect.http;
 
-import static javax.ws.rs.core.MediaType.APPLICATION_JSON_TYPE;
-import static javax.ws.rs.core.MediaType.APPLICATION_XML_TYPE;
 
+import com.sun.jersey.spi.container.ResourceFilters;
 import javax.ws.rs.DELETE;
 import javax.ws.rs.GET;
+import javax.ws.rs.HeaderParam;
 import javax.ws.rs.POST;
 import javax.ws.rs.PUT;
 import javax.ws.rs.Path;
 import javax.ws.rs.PathParam;
 import javax.ws.rs.core.Context;
+import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.MultivaluedMap;
 import javax.ws.rs.core.Response;
 import javax.ws.rs.core.UriInfo;
-
 import org.restcomm.connect.commons.annotations.concurrency.ThreadSafe;
+import org.restcomm.connect.http.filters.ExtensionFilter;
 import org.restcomm.connect.provisioning.number.api.PhoneNumberType;
 
 /**
@@ -47,12 +48,6 @@ public final class IncomingPhoneNumbersXmlEndpoint extends IncomingPhoneNumbersE
         super();
     }
 
-    @Path("/{sid}.json")
-    @DELETE
-    public Response deleteIncomingPhoneNumberAsJson(@PathParam("accountSid") final String accountSid,
-            @PathParam("sid") final String sid) {
-        return super.deleteIncomingPhoneNumber(accountSid, sid);
-    }
 
     @Path("/{sid}")
     @DELETE
@@ -61,166 +56,134 @@ public final class IncomingPhoneNumbersXmlEndpoint extends IncomingPhoneNumbersE
         return super.deleteIncomingPhoneNumber(accountSid, sid);
     }
 
-    @Path("/{sid}.json")
-    @GET
-    public Response getIncomingPhoneNumberAsJson(@PathParam("accountSid") final String accountSid,
-            @PathParam("sid") final String sid) {
-        return getIncomingPhoneNumber(accountSid, sid, APPLICATION_JSON_TYPE);
-    }
-
     @Path("/{sid}")
     @GET
     public Response getIncomingPhoneNumberAsXml(@PathParam("accountSid") final String accountSid,
-            @PathParam("sid") final String sid) {
-        return getIncomingPhoneNumber(accountSid, sid, APPLICATION_XML_TYPE);
+            @PathParam("sid") final String sid,
+            @HeaderParam("Accept") String accept) {
+        MediaType acceptType = MediaType.valueOf(accept);
+        return getIncomingPhoneNumber(accountSid, sid, acceptType);
     }
 
-    @Path("/AvailableCountries.json")
-    @GET
-    public Response getAvailableCountriesAsJson(@PathParam("accountSid") final String accountSid) {
-        return getAvailableCountries(accountSid, APPLICATION_JSON_TYPE);
-    }
 
     @Path("/AvailableCountries")
     @GET
-    public Response getAvailableCountriesAsXml(@PathParam("accountSid") final String accountSid) {
-        return getAvailableCountries(accountSid, APPLICATION_XML_TYPE);
+    public Response getAvailableCountriesAsXml(@PathParam("accountSid") final String accountSid,
+            @HeaderParam("Accept") String accept) {
+        MediaType acceptType = MediaType.valueOf(accept);
+        return getAvailableCountries(accountSid, acceptType);
     }
 
     @GET
-    public Response getIncomingPhoneNumbers(@PathParam("accountSid") final String accountSid,@Context UriInfo info) {
-        return getIncomingPhoneNumbers(accountSid, PhoneNumberType.Global,info, APPLICATION_XML_TYPE);
+    public Response getIncomingPhoneNumbers(@PathParam("accountSid") final String accountSid,@Context UriInfo info,
+            @HeaderParam("Accept") String accept) {
+        MediaType acceptType = MediaType.valueOf(accept);
+        return getIncomingPhoneNumbers(accountSid, PhoneNumberType.Global,info, acceptType);
     }
 
     @POST
+    @ResourceFilters({ ExtensionFilter.class })
     public Response putIncomingPhoneNumber(@PathParam("accountSid") final String accountSid,
-            final MultivaluedMap<String, String> data) {
-        return putIncomingPhoneNumber(accountSid, data, PhoneNumberType.Global, APPLICATION_XML_TYPE);
-    }
-
-    @Path("/{sid}.json")
-    @PUT
-    public Response updateIncomingPhoneNumberAsJson(@PathParam("accountSid") final String accountSid,
-            @PathParam("sid") final String sid, final MultivaluedMap<String, String> data) {
-        return updateIncomingPhoneNumber(accountSid, sid, data, APPLICATION_JSON_TYPE);
-    }
-
-    @Path("/{sid}.json")
-    @POST
-    public Response updateIncomingPhoneNumberAsJsonPost(@PathParam("accountSid") final String accountSid,
-            @PathParam("sid") final String sid, final MultivaluedMap<String, String> data) {
-        return updateIncomingPhoneNumber(accountSid, sid, data, APPLICATION_JSON_TYPE);
+            final MultivaluedMap<String, String> data,
+            @HeaderParam("Accept") String accept) {
+        MediaType acceptType = MediaType.valueOf(accept);
+        return putIncomingPhoneNumber(accountSid, data, PhoneNumberType.Global, acceptType);
     }
 
     @Path("/{sid}")
     @PUT
     public Response updateIncomingPhoneNumberAsXml(@PathParam("accountSid") final String accountSid,
-            @PathParam("sid") final String sid, final MultivaluedMap<String, String> data) {
-        return updateIncomingPhoneNumber(accountSid, sid, data, APPLICATION_XML_TYPE);
+            @PathParam("sid") final String sid, final MultivaluedMap<String, String> data,
+            @HeaderParam("Accept") String accept) {
+        MediaType acceptType = MediaType.valueOf(accept);
+        return updateIncomingPhoneNumber(accountSid, sid, data, acceptType);
     }
 
     @Path("/{sid}")
     @POST
     public Response updateIncomingPhoneNumberAsXmlPost(@PathParam("accountSid") final String accountSid,
-            @PathParam("sid") final String sid, final MultivaluedMap<String, String> data) {
-        return updateIncomingPhoneNumber(accountSid, sid, data, APPLICATION_XML_TYPE);
+            @PathParam("sid") final String sid, final MultivaluedMap<String, String> data,
+            @HeaderParam("Accept") String accept) {
+        MediaType acceptType = MediaType.valueOf(accept);
+        return updateIncomingPhoneNumber(accountSid, sid, data, acceptType);
     }
 
     // Local Numbers
 
     @Path("/Local")
     @GET
-    public Response getIncomingLocalPhoneNumbersAsXml(@PathParam("accountSid") final String accountSid,@Context UriInfo info) {
-        return getIncomingPhoneNumbers(accountSid,PhoneNumberType.Local,info, APPLICATION_XML_TYPE);
+    public Response getIncomingLocalPhoneNumbersAsXml(@PathParam("accountSid") final String accountSid,@Context UriInfo info,
+            @HeaderParam("Accept") String accept) {
+        MediaType acceptType = MediaType.valueOf(accept);
+        return getIncomingPhoneNumbers(accountSid,PhoneNumberType.Local,info, acceptType);
     }
 
     @Path("/Local")
     @POST
+    @ResourceFilters({ ExtensionFilter.class })
     public Response putIncomingLocalPhoneNumberAsXml(@PathParam("accountSid") final String accountSid,
-            final MultivaluedMap<String, String> data) {
-        return putIncomingPhoneNumber(accountSid, data, PhoneNumberType.Local, APPLICATION_XML_TYPE);
-    }
-
-    @Path("/Local.json")
-    @GET
-    public Response getIncomingLocalPhoneNumbersAsJSon(@PathParam("accountSid") final String accountSid,@Context UriInfo info) {
-        return getIncomingPhoneNumbers(accountSid,PhoneNumberType.Local,info, APPLICATION_JSON_TYPE);
-    }
-
-    @Path("/Local.json")
-    @POST
-    public Response putIncomingLocalPhoneNumberAsJSon(@PathParam("accountSid") final String accountSid,
-            final MultivaluedMap<String, String> data) {
-        return putIncomingPhoneNumber(accountSid, data, PhoneNumberType.Local, APPLICATION_JSON_TYPE);
+            final MultivaluedMap<String, String> data,
+            @HeaderParam("Accept") String accept) {
+        MediaType acceptType = MediaType.valueOf(accept);
+        return putIncomingPhoneNumber(accountSid, data, PhoneNumberType.Local, acceptType);
     }
 
     // Toll Free Numbers
 
     @Path("/TollFree")
     @GET
-    public Response getIncomingTollFreePhoneNumbersAsXml(@PathParam("accountSid") final String accountSid,@Context UriInfo info) {
-        return getIncomingPhoneNumbers(accountSid,PhoneNumberType.TollFree,info, APPLICATION_XML_TYPE);
+    public Response getIncomingTollFreePhoneNumbersAsXml(@PathParam("accountSid") final String accountSid,@Context UriInfo info,
+            @HeaderParam("Accept") String accept) {
+        MediaType acceptType = MediaType.valueOf(accept);
+        return getIncomingPhoneNumbers(accountSid,PhoneNumberType.TollFree,info, acceptType);
     }
 
     @Path("/TollFree")
     @POST
+    @ResourceFilters({ ExtensionFilter.class })
     public Response putIncomingTollFreePhoneNumberAsXml(@PathParam("accountSid") final String accountSid,
-            final MultivaluedMap<String, String> data) {
-        return putIncomingPhoneNumber(accountSid, data, PhoneNumberType.TollFree, APPLICATION_XML_TYPE);
-    }
-
-    @Path("/TollFree.json")
-    @GET
-    public Response getIncomingTollFreePhoneNumbersAsJSon(@PathParam("accountSid") final String accountSid,@Context UriInfo info) {
-        return getIncomingPhoneNumbers(accountSid,PhoneNumberType.TollFree,info, APPLICATION_JSON_TYPE);
-    }
-
-    @Path("/TollFree.json")
-    @POST
-    public Response putIncomingTollFreePhoneNumberAsJSon(@PathParam("accountSid") final String accountSid,
-            final MultivaluedMap<String, String> data) {
-        return putIncomingPhoneNumber(accountSid, data, PhoneNumberType.TollFree, APPLICATION_JSON_TYPE);
+            final MultivaluedMap<String, String> data,
+            @HeaderParam("Accept") String accept) {
+        MediaType acceptType = MediaType.valueOf(accept);
+        return putIncomingPhoneNumber(accountSid, data, PhoneNumberType.TollFree, acceptType);
     }
 
     // Mobile Numbers
 
     @Path("/Mobile")
     @GET
-    public Response getIncomingMobilePhoneNumbersAsXml(@PathParam("accountSid") final String accountSid,@Context UriInfo info) {
-        return getIncomingPhoneNumbers(accountSid,PhoneNumberType.Mobile,info, APPLICATION_XML_TYPE);
+    public Response getIncomingMobilePhoneNumbersAsXml(@PathParam("accountSid") final String accountSid,@Context UriInfo info,
+            @HeaderParam("Accept") String accept) {
+        MediaType acceptType = MediaType.valueOf(accept);
+        return getIncomingPhoneNumbers(accountSid,PhoneNumberType.Mobile,info, acceptType);
     }
 
     @Path("/Mobile")
     @POST
+    @ResourceFilters({ ExtensionFilter.class })
     public Response putIncomingMobilePhoneNumberAsXml(@PathParam("accountSid") final String accountSid,
-            final MultivaluedMap<String, String> data) {
-        return putIncomingPhoneNumber(accountSid, data, PhoneNumberType.Mobile, APPLICATION_XML_TYPE);
+            final MultivaluedMap<String, String> data,
+            @HeaderParam("Accept") String accept) {
+        MediaType acceptType = MediaType.valueOf(accept);
+        return putIncomingPhoneNumber(accountSid, data, PhoneNumberType.Mobile, acceptType);
     }
 
-    @Path("/Mobile.json")
-    @GET
-    public Response getIncomingMobilePhoneNumbersAsJSon(@PathParam("accountSid") final String accountSid,@Context UriInfo info) {
-        return getIncomingPhoneNumbers(accountSid,PhoneNumberType.Mobile,info, APPLICATION_JSON_TYPE);
-    }
-
-    @Path("/Mobile.json")
-    @POST
-    public Response putIncomingMobilePhoneNumberAsJSon(@PathParam("accountSid") final String accountSid,
-            final MultivaluedMap<String, String> data) {
-        return putIncomingPhoneNumber(accountSid, data, PhoneNumberType.Mobile, APPLICATION_JSON_TYPE);
-    }
 
     @Path("/migrate")
     @POST
     public Response migrateIncomingPhoneNumbersAsXml(@PathParam("accountSid") final String accountSid,
-            final MultivaluedMap<String, String> data) {
-        return migrateIncomingPhoneNumbers(accountSid, data, APPLICATION_XML_TYPE);
+            final MultivaluedMap<String, String> data,
+            @HeaderParam("Accept") String accept) {
+        MediaType acceptType = MediaType.valueOf(accept);
+        return migrateIncomingPhoneNumbers(accountSid, data, acceptType);
     }
 
     @Path("/migrate.json")
     @POST
     public Response migrateIncomingPhoneNumbersAsJson(@PathParam("accountSid") final String accountSid,
-            final MultivaluedMap<String, String> data) {
-        return migrateIncomingPhoneNumbers(accountSid, data, APPLICATION_JSON_TYPE);
+            final MultivaluedMap<String, String> data,
+            @HeaderParam("Accept") String accept) {
+        MediaType acceptType = MediaType.valueOf(accept);
+        return migrateIncomingPhoneNumbers(accountSid, data, acceptType);
     }
 }

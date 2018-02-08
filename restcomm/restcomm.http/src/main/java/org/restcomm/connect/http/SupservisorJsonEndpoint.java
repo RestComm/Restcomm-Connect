@@ -20,18 +20,16 @@
  */
 package org.restcomm.connect.http;
 
-import org.restcomm.connect.commons.annotations.concurrency.ThreadSafe;
-
 import javax.ws.rs.GET;
 import javax.ws.rs.POST;
 import javax.ws.rs.Path;
 import javax.ws.rs.PathParam;
 import javax.ws.rs.core.Context;
+import static javax.ws.rs.core.MediaType.APPLICATION_JSON_TYPE;
 import javax.ws.rs.core.MultivaluedMap;
 import javax.ws.rs.core.Response;
 import javax.ws.rs.core.UriInfo;
-
-import static javax.ws.rs.core.MediaType.APPLICATION_JSON_TYPE;
+import org.restcomm.connect.commons.annotations.concurrency.ThreadSafe;
 
 /**
  * @author <a href="mailto:gvagenas@gmail.com">gvagenas</a>

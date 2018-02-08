@@ -19,16 +19,15 @@
  */
 package org.restcomm.connect.http;
 
-import static javax.ws.rs.core.MediaType.APPLICATION_XML_TYPE;
-
 import javax.ws.rs.GET;
 import javax.ws.rs.PUT;
 import javax.ws.rs.Path;
 import javax.ws.rs.PathParam;
 import javax.ws.rs.core.Context;
+import javax.ws.rs.core.MediaType;
+import static javax.ws.rs.core.MediaType.APPLICATION_XML_TYPE;
 import javax.ws.rs.core.Response;
 import javax.ws.rs.core.UriInfo;
-
 import org.restcomm.connect.commons.annotations.concurrency.ThreadSafe;
 
 /**
@@ -50,12 +49,12 @@ public final class OrganizationsXmlEndpoint extends OrganizationsEndpoint {
 
     @GET
     public Response getOrganizations(@Context UriInfo info) {
-        return getOrganizations(info, APPLICATION_XML_TYPE);
+        return getOrganizations(info, MediaType.valueOf(accept));
     }
 
     @Path("/{domainName}")
     @PUT
     public Response putOrganizationPut(@PathParam("domainName") final String domainName, @Context UriInfo info) {
-        return putOrganization(domainName, info, APPLICATION_XML_TYPE);
+        return putOrganization(domainName, info, MediaType.valueOf(accept));
     }
 }

@@ -20,15 +20,15 @@
 package org.restcomm.connect.http;
 
 import javax.ws.rs.GET;
-import static javax.ws.rs.core.MediaType.*;
 import javax.ws.rs.POST;
 import javax.ws.rs.Path;
 import javax.ws.rs.PathParam;
 import javax.ws.rs.core.Context;
+import javax.ws.rs.core.MediaType;
+import static javax.ws.rs.core.MediaType.*;
 import javax.ws.rs.core.MultivaluedMap;
 import javax.ws.rs.core.Response;
 import javax.ws.rs.core.UriInfo;
-
 import org.restcomm.connect.commons.annotations.concurrency.ThreadSafe;
 
 /**
@@ -50,16 +50,16 @@ public final class SmsMessagesXmlEndpoint extends SmsMessagesEndpoint {
     @Path("/{sid}")
     @GET
     public Response getSmsMessageAsXml(@PathParam("accountSid") final String accountSid, @PathParam("sid") final String sid) {
-        return getSmsMessage(accountSid, sid, APPLICATION_XML_TYPE);
+        return getSmsMessage(accountSid, sid, MediaType.valueOf(accept));
     }
 
     @GET
     public Response getSmsMessages(@PathParam("accountSid") final String accountSid, @Context UriInfo info) {
-        return getSmsMessages(accountSid, info, APPLICATION_XML_TYPE);
+        return getSmsMessages(accountSid, info, MediaType.valueOf(accept));
     }
 
     @POST
     public Response putSmsMessage(@PathParam("accountSid") final String accountSid, final MultivaluedMap<String, String> data) {
-        return putSmsMessage(accountSid, data, APPLICATION_XML_TYPE);
+        return putSmsMessage(accountSid, data, MediaType.valueOf(accept));
     }
 }

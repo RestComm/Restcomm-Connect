@@ -21,10 +21,27 @@
 package org.restcomm.connect.http;
 
 import akka.actor.ActorRef;
+import static akka.pattern.Patterns.ask;
 import akka.util.Timeout;
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
 import com.thoughtworks.xstream.XStream;
+import java.text.ParseException;
+import java.util.concurrent.TimeUnit;
+import javax.annotation.PostConstruct;
+import javax.servlet.ServletContext;
+import javax.ws.rs.core.Context;
+import javax.ws.rs.core.MediaType;
+import static javax.ws.rs.core.MediaType.APPLICATION_JSON;
+import static javax.ws.rs.core.MediaType.APPLICATION_JSON_TYPE;
+import static javax.ws.rs.core.MediaType.APPLICATION_XML;
+import static javax.ws.rs.core.MediaType.APPLICATION_XML_TYPE;
+import javax.ws.rs.core.MultivaluedMap;
+import javax.ws.rs.core.Response;
+import static javax.ws.rs.core.Response.Status.BAD_REQUEST;
+import static javax.ws.rs.core.Response.ok;
+import static javax.ws.rs.core.Response.status;
+import javax.ws.rs.core.UriInfo;
 import org.apache.commons.configuration.Configuration;
 import org.apache.log4j.Logger;
 import org.restcomm.connect.dao.DaoManager;
@@ -43,25 +60,6 @@ import org.restcomm.connect.telephony.api.MonitoringServiceResponse;
 import scala.concurrent.Await;
 import scala.concurrent.Future;
 import scala.concurrent.duration.Duration;
-
-import javax.annotation.PostConstruct;
-import javax.servlet.ServletContext;
-import javax.ws.rs.core.Context;
-import javax.ws.rs.core.MediaType;
-import javax.ws.rs.core.MultivaluedMap;
-import javax.ws.rs.core.Response;
-import javax.ws.rs.core.UriInfo;
-import java.text.ParseException;
-import java.util.concurrent.TimeUnit;
-
-import static akka.pattern.Patterns.ask;
-import static javax.ws.rs.core.MediaType.APPLICATION_JSON;
-import static javax.ws.rs.core.MediaType.APPLICATION_JSON_TYPE;
-import static javax.ws.rs.core.MediaType.APPLICATION_XML;
-import static javax.ws.rs.core.MediaType.APPLICATION_XML_TYPE;
-import static javax.ws.rs.core.Response.Status.BAD_REQUEST;
-import static javax.ws.rs.core.Response.ok;
-import static javax.ws.rs.core.Response.status;
 
 /**
  * @author <a href="mailto:gvagenas@gmail.com">gvagenas</a>
@@ -119,10 +117,10 @@ public class SupervisorEndpoint extends SecuredEndpoint{
             return status(BAD_REQUEST).build();
         }
         int totalCalls = daos.getCallDetailRecordsDao().getTotalCallDetailRecords(filterForTotal);
-        if (APPLICATION_XML_TYPE == responseType) {
+        if (APPLICATION_XML_TYPE.equals(responseType)) {
             final RestCommResponse response = new RestCommResponse("TotalCalls: "+totalCalls);
             return ok(xstream.toXML(response), APPLICATION_XML).build();
-        } else if (APPLICATION_JSON_TYPE == responseType) {
+        } else if (APPLICATION_JSON_TYPE.equals(responseType)) {
             return ok(gson.toJson("TotalCalls: "+totalCalls), APPLICATION_JSON).build();
         } else {
             return null;
@@ -153,10 +151,10 @@ public class SupervisorEndpoint extends SecuredEndpoint{
             return status(BAD_REQUEST).entity(exception.getMessage()).build();
         }
         if (monitoringServiceResponse != null) {
-            if (APPLICATION_XML_TYPE == responseType) {
+            if (APPLICATION_XML_TYPE.equals(responseType)) {
                 final RestCommResponse response = new RestCommResponse(monitoringServiceResponse);
                 return ok(xstream.toXML(response), APPLICATION_XML).build();
-            } else if (APPLICATION_JSON_TYPE == responseType) {
+            } else if (APPLICATION_JSON_TYPE.equals(responseType)) {
                Response response = ok(gson.toJson(monitoringServiceResponse), APPLICATION_JSON).build();
                if(logger.isDebugEnabled()){
                    logger.debug("Supervisor endpoint response: "+gson.toJson(monitoringServiceResponse));
@@ -184,10 +182,10 @@ public class SupervisorEndpoint extends SecuredEndpoint{
             return status(BAD_REQUEST).entity(exception.getMessage()).build();
         }
         if (callDetails != null) {
-            if (APPLICATION_XML_TYPE == responseType) {
+            if (APPLICATION_XML_TYPE.equals(responseType)) {
                 final RestCommResponse response = new RestCommResponse(callDetails);
                 return ok(xstream.toXML(response), APPLICATION_XML).build();
-            } else if (APPLICATION_JSON_TYPE == responseType) {
+            } else if (APPLICATION_JSON_TYPE.equals(responseType)) {
                 Response response = ok(gson.toJson(callDetails), APPLICATION_JSON).build();
                 if(logger.isDebugEnabled()){
                     logger.debug("Supervisor endpoint response: "+gson.toJson(callDetails));
@@ -226,10 +224,10 @@ public class SupervisorEndpoint extends SecuredEndpoint{
             return status(BAD_REQUEST).entity(exception.getMessage()).build();
         }
         if (monitoringServiceResponse != null) {
-            if (APPLICATION_XML_TYPE == responseType) {
+            if (APPLICATION_XML_TYPE.equals(responseType)) {
                 final RestCommResponse response = new RestCommResponse(monitoringServiceResponse);
                 return ok(xstream.toXML(response), APPLICATION_XML).build();
-            } else if (APPLICATION_JSON_TYPE == responseType) {
+            } else if (APPLICATION_JSON_TYPE.equals(responseType)) {
                Response response = ok(gson.toJson(monitoringServiceResponse), APPLICATION_JSON).build();
                 return response;
             } else {
@@ -267,10 +265,10 @@ public class SupervisorEndpoint extends SecuredEndpoint{
             return status(BAD_REQUEST).entity(exception.getMessage()).build();
         }
         if (monitoringServiceResponse != null) {
-            if (APPLICATION_XML_TYPE == responseType) {
+            if (APPLICATION_XML_TYPE.equals(responseType)) {
                 final RestCommResponse response = new RestCommResponse(monitoringServiceResponse);
                 return ok(xstream.toXML(response), APPLICATION_XML).build();
-            } else if (APPLICATION_JSON_TYPE == responseType) {
+            } else if (APPLICATION_JSON_TYPE.equals(responseType)) {
                Response response = ok(gson.toJson(monitoringServiceResponse), APPLICATION_JSON).build();
                 return response;
             } else {

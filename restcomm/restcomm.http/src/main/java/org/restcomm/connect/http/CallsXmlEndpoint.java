@@ -24,15 +24,12 @@ import javax.ws.rs.POST;
 import javax.ws.rs.Path;
 import javax.ws.rs.PathParam;
 import javax.ws.rs.Produces;
-
-import static javax.ws.rs.core.MediaType.*;
-
 import javax.ws.rs.core.Context;
+import javax.ws.rs.core.MediaType;
+import static javax.ws.rs.core.MediaType.*;
 import javax.ws.rs.core.MultivaluedMap;
 import javax.ws.rs.core.Response;
 import javax.ws.rs.core.UriInfo;
-import javax.ws.rs.core.MediaType;
-
 import org.restcomm.connect.commons.annotations.concurrency.ThreadSafe;
 
 /**
@@ -54,19 +51,19 @@ public final class CallsXmlEndpoint extends CallsEndpoint {
     @Path("/{sid}")
     @GET
     public Response getCallAsXml(@PathParam("accountSid") final String accountSid, @PathParam("sid") final String sid) {
-        return getCall(accountSid, sid, APPLICATION_XML_TYPE);
+        return getCall(accountSid, sid, MediaType.valueOf(accept));
     }
 
     // Issue 153: https://bitbucket.org/telestax/telscale-restcomm/issue/153
     // Issue 110: https://bitbucket.org/telestax/telscale-restcomm/issue/110
     @GET
     public Response getCalls(@PathParam("accountSid") final String accountSid, @Context UriInfo info) {
-        return getCalls(accountSid, info, APPLICATION_XML_TYPE);
+        return getCalls(accountSid, info, MediaType.valueOf(accept));
     }
 
     @POST
     public Response putCall(@PathParam("accountSid") final String accountSid, final MultivaluedMap<String, String> data) {
-        return putCall(accountSid, data, APPLICATION_XML_TYPE);
+        return putCall(accountSid, data, MediaType.valueOf(accept));
     }
 
     // Issue 139: https://bitbucket.org/telestax/telscale-restcomm/issue/139
@@ -74,7 +71,7 @@ public final class CallsXmlEndpoint extends CallsEndpoint {
     @POST
     public Response modifyCall(@PathParam("accountSid") final String accountSid, @PathParam("sid") final String sid,
             final MultivaluedMap<String, String> data) {
-        return updateCall(accountSid, sid, data, APPLICATION_XML_TYPE);
+        return updateCall(accountSid, sid, data, MediaType.valueOf(accept));
     }
 
     @GET
