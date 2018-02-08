@@ -105,6 +105,12 @@ public class ProfilesEndpointTest extends EndpointTest {
     	logger.info("profile: "+responseBody);
     	assertEquals(401, clientResponse.getStatus());
     	
+    	jerseyClient.addFilter(new HTTPBasicAuthFilter(ADMIN_ACCOUNT_SID, "wrongauthtoken"));
+		webResource = jerseyClient.resource(deploymentUrl.toString()+"/2012-04-24/Profiles");
+		clientResponse = webResource.path(DEFAULT_PROFILE_SID).accept(RestcommProfilesTool.PROFILE_CONTENT_TYPE).get(ClientResponse.class);
+        logger.info("profile: "+responseBody);
+    	assertEquals(401, clientResponse.getStatus());
+    	
     	jerseyClient = Client.create();
 		webResource = jerseyClient.resource(deploymentUrl.toString()+"/2012-04-24/Profiles");
 		clientResponse = webResource.accept(MediaType.APPLICATION_JSON).get(ClientResponse.class);
