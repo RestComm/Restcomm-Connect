@@ -161,16 +161,16 @@ public class RestcommIncomingPhoneNumberTool {
 
         return jsonObject;
     }
-    
+
     public ClientResponse getIncomingPhonNumberClientResponse(String deploymentUrl, String username, String authToken){
     	Client jerseyClient = Client.create();
         jerseyClient.addFilter(new HTTPBasicAuthFilter(username, authToken));
         String url = getAccountsUrl(deploymentUrl, username, true);
         WebResource webResource = jerseyClient.resource(url);
         return webResource.type(MediaType.APPLICATION_FORM_URLENCODED_TYPE).accept("application/json").post(ClientResponse.class);
-        
+
     }
-    
+
     public ClientResponse purchaseProviderNumber( String deploymentUrl, String username, String authToken, String phoneNumber, String voiceUrl, String voiceMethod, String friendlyName ){
         Client jerseyClient = Client.create();
         jerseyClient.addFilter(new HTTPBasicAuthFilter(username, authToken));
