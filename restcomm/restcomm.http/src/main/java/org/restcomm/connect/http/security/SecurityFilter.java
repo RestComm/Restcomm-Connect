@@ -41,7 +41,7 @@ import com.sun.jersey.spi.container.ContainerRequestFilter;
 public class SecurityFilter implements ContainerRequestFilter {
 
     private final Logger logger = Logger.getLogger(SecurityFilter.class);
-    private static final String PATTERN_FOR_RECORDING_FILE_PATH=".*/restcomm/2012-04-24/Accounts/.*/Recordings/RE.*[.mp4|.wav]";
+    private static final String PATTERN_FOR_RECORDING_FILE_PATH="/Accounts/.*/Recordings/RE.*[.mp4|.wav]";
 
     @Context
     private HttpServletRequest servletRequest;

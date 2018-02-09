@@ -46,6 +46,8 @@ public class RestcommAPIEndpointSecurityTest {
     private static final String ACCOUNT_ENDPOINT = "/2012-04-24/Accounts";
     private static final String ORGANIZATION_ENDPOINT = "/2012-04-24/Organizations";
     private static final String CLIENTS_ENDPOINT = "/2012-04-24/Accounts/"+SUPER_ADMIN_ACCOUNT_SID+"/Clients";
+    private static final String RECORDINGS_ENDPOINT_FILE_PATH = "/2012-04-24/Accounts/"+SUPER_ADMIN_ACCOUNT_SID+"/Recordings/REc267d9cdcd0f4623a54abedf8e3d8835";
+    private static final String RECORDINGS_ENDPOINT = "/2012-04-24/Accounts/"+SUPER_ADMIN_ACCOUNT_SID+"/Recordings";
 
     /**
      * this test will try to access generic EP Without Authentication or invalid token
@@ -56,6 +58,38 @@ public class RestcommAPIEndpointSecurityTest {
     	assertEquals(401, performRequestWithInvalidToken(deploymentUrl.toString()+GENERIC_ENDPOINT));
     	assertEquals(403, performApiRequest(deploymentUrl.toString()+GENERIC_ENDPOINT, CLOSED_ACCOUNT_SID, AUTH_TOKEN));
     	assertEquals(403, performApiRequest(deploymentUrl.toString()+GENERIC_ENDPOINT, SUSPENDED_ACCOUNT_SID, AUTH_TOKEN));
+    }
+
+    /**
+     * this test will try to access recording endpoint
+     * https://telestax.atlassian.net/browse/RESTCOMM-1736
+     * we will need to change this test once 1736 is implemented
+     */
+    @Test
+    public void recordingSecurityTest(){
+    	//recording list is protected
+    	assertEquals(401, performUnautherizedRequest(deploymentUrl.toString()+RECORDINGS_ENDPOINT));
+    	assertEquals(401, performRequestWithInvalidToken(deploymentUrl.toString()+RECORDINGS_ENDPOINT));
+    	assertEquals(403, performApiRequest(deploymentUrl.toString()+RECORDINGS_ENDPOINT, CLOSED_ACCOUNT_SID, AUTH_TOKEN));
+    	assertEquals(403, performApiRequest(deploymentUrl.toString()+RECORDINGS_ENDPOINT, SUSPENDED_ACCOUNT_SID, AUTH_TOKEN));
+
+    	//recording resource is protected    	
+    	assertEquals(401, performUnautherizedRequest(deploymentUrl.toString()+RECORDINGS_ENDPOINT_FILE_PATH));
+    	assertEquals(401, performRequestWithInvalidToken(deploymentUrl.toString()+RECORDINGS_ENDPOINT_FILE_PATH));
+    	assertEquals(403, performApiRequest(deploymentUrl.toString()+RECORDINGS_ENDPOINT_FILE_PATH, CLOSED_ACCOUNT_SID, AUTH_TOKEN));
+    	assertEquals(403, performApiRequest(deploymentUrl.toString()+RECORDINGS_ENDPOINT_FILE_PATH, SUSPENDED_ACCOUNT_SID, AUTH_TOKEN));
+    	
+    	//recording audio file is not protected, we consider 404 equivalent to 200 as that means we already bypassed 401
+    	assertEquals(404, performUnautherizedRequest(deploymentUrl.toString()+RECORDINGS_ENDPOINT_FILE_PATH+".wav"));
+    	assertEquals(404, performRequestWithInvalidToken(deploymentUrl.toString()+RECORDINGS_ENDPOINT_FILE_PATH+".wav"));
+    	assertEquals(403, performApiRequest(deploymentUrl.toString()+RECORDINGS_ENDPOINT_FILE_PATH+".wav", CLOSED_ACCOUNT_SID, AUTH_TOKEN));
+    	assertEquals(403, performApiRequest(deploymentUrl.toString()+RECORDINGS_ENDPOINT_FILE_PATH+".wav", SUSPENDED_ACCOUNT_SID, AUTH_TOKEN));
+
+    	//recording video file is not protected, we consider 404 equivalent to 200 as that means we already bypassed 401    	
+    	assertEquals(404, performUnautherizedRequest(deploymentUrl.toString()+RECORDINGS_ENDPOINT_FILE_PATH+".mp4"));
+    	assertEquals(404, performRequestWithInvalidToken(deploymentUrl.toString()+RECORDINGS_ENDPOINT_FILE_PATH+".mp4"));
+    	assertEquals(403, performApiRequest(deploymentUrl.toString()+RECORDINGS_ENDPOINT_FILE_PATH+".mp4", CLOSED_ACCOUNT_SID, AUTH_TOKEN));
+    	assertEquals(403, performApiRequest(deploymentUrl.toString()+RECORDINGS_ENDPOINT_FILE_PATH+".mp4", SUSPENDED_ACCOUNT_SID, AUTH_TOKEN));
     }
     /**
      * this test will try to access org EP Without Authentication or invalid token
