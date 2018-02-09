@@ -1334,25 +1334,6 @@ public final class CallManager extends RestcommUntypedActor {
                         ec.executePostOutboundAction(far, extensions);
                         return false;
                     }
-
-                    URI uri = number.getVoiceFallbackUrl();
-                    if (uri != null)
-                        builder.setFallbackUrl(UriUtils.resolve(uri));
-                    else
-                        builder.setFallbackUrl(null);
-                    builder.setFallbackMethod(number.getVoiceFallbackMethod());
-                    builder.setStatusCallback(number.getStatusCallback());
-                    builder.setStatusCallbackMethod(number.getStatusCallbackMethod());
-                    builder.setMonitoring(monitoring);
-                    final Props props = VoiceInterpreter.props(builder.build());
-                    final ActorRef interpreter = getContext().actorOf(props);
-
-                    final ActorRef call = call(accSid, null);
-                    final SipApplicationSession application = request.getApplicationSession();
-                    application.setAttribute(Call.class.getName(), call);
-                    call.tell(request, self);
-                    interpreter.tell(new StartInterpreter(call), self);
-                    isFoundHostedApp = true;
                 }
             }
         } catch (Exception notANumber) {
