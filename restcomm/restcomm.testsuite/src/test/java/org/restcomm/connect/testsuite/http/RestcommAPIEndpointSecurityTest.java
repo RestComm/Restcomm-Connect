@@ -2,6 +2,9 @@ package org.restcomm.connect.testsuite.http;
 
 import static org.junit.Assert.assertEquals;
 
+import java.io.IOException;
+import java.net.HttpURLConnection;
+import java.net.MalformedURLException;
 import java.net.URL;
 
 import javax.ws.rs.core.MediaType;
@@ -64,9 +67,10 @@ public class RestcommAPIEndpointSecurityTest {
      * this test will try to access recording endpoint
      * https://telestax.atlassian.net/browse/RESTCOMM-1736
      * we will need to change this test once 1736 is implemented
+     * @throws IOException 
      */
     @Test
-    public void recordingSecurityTest(){
+    public void recordingSecurityTest() throws IOException{
     	//recording list is protected
     	assertEquals(401, performUnautherizedRequest(deploymentUrl.toString()+RECORDINGS_ENDPOINT));
     	assertEquals(401, performRequestWithInvalidToken(deploymentUrl.toString()+RECORDINGS_ENDPOINT));
@@ -90,6 +94,13 @@ public class RestcommAPIEndpointSecurityTest {
     	assertEquals(404, performRequestWithInvalidToken(deploymentUrl.toString()+RECORDINGS_ENDPOINT_FILE_PATH+".mp4"));
     	assertEquals(404, performApiRequest(deploymentUrl.toString()+RECORDINGS_ENDPOINT_FILE_PATH+".mp4", CLOSED_ACCOUNT_SID, AUTH_TOKEN));
     	assertEquals(404, performApiRequest(deploymentUrl.toString()+RECORDINGS_ENDPOINT_FILE_PATH+".mp4", SUSPENDED_ACCOUNT_SID, AUTH_TOKEN));
+
+    	//access by simple http url connection
+		URL url = new URL(deploymentUrl.toString()+RECORDINGS_ENDPOINT_FILE_PATH+".wav");
+		HttpURLConnection connection = (HttpURLConnection)url.openConnection();
+		connection.setRequestMethod("GET");
+		connection.connect();
+		assertEquals(404, connection.getResponseCode());
     }
     /**
      * this test will try to access org EP Without Authentication or invalid token
