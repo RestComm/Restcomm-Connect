@@ -19,9 +19,12 @@
  */
 package org.restcomm.connect.http.security;
 
+import static javax.ws.rs.core.Response.status;
+
 import javax.servlet.http.HttpServletRequest;
 import javax.ws.rs.WebApplicationException;
 import javax.ws.rs.core.Context;
+import javax.ws.rs.core.Response;
 import javax.ws.rs.core.Response.Status;
 import javax.ws.rs.ext.Provider;
 
@@ -61,7 +64,7 @@ public class SecurityFilter implements ContainerRequestFilter {
      */
     protected void checkAuthenticatedAccount(UserIdentityContext userIdentityContext) {
         if (userIdentityContext.getEffectiveAccount() == null) {
-            throw new WebApplicationException(Status.UNAUTHORIZED);
+            throw new WebApplicationException(Response.status(Response.Status.UNAUTHORIZED).header("WWW-Authenticate", "Basic realm=\"Restcomm realm\"").build());
         }
     }
 
@@ -71,7 +74,7 @@ public class SecurityFilter implements ContainerRequestFilter {
      */
     protected void filterClosedAccounts(UserIdentityContext userIdentityContext){
         if(userIdentityContext.getEffectiveAccount() != null && !userIdentityContext.getEffectiveAccount().getStatus().equals(Account.Status.ACTIVE)){
-            throw new WebApplicationException(Status.FORBIDDEN);
+            throw new WebApplicationException(status(Status.FORBIDDEN).entity("Provided Account is not active").build());
         }
     }
 }
