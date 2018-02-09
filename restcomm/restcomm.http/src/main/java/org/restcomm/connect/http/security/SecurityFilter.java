@@ -55,8 +55,8 @@ public class SecurityFilter implements ContainerRequestFilter {
         // exclude recording file https://telestax.atlassian.net/browse/RESTCOMM-1736
         if (!cr.getPath().matches(PATTERN_FOR_RECORDING_FILE_PATH)) {
             checkAuthenticatedAccount(userIdentityContext);
+            filterClosedAccounts(userIdentityContext);
         }
-        filterClosedAccounts(userIdentityContext);
         String scheme = cr.getAuthenticationScheme();
         AccountPrincipal aPrincipal = new AccountPrincipal(userIdentityContext);
         cr.setSecurityContext(new RCSecContext(aPrincipal, scheme));

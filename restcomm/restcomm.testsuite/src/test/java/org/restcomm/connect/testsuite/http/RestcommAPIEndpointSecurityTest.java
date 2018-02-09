@@ -79,17 +79,17 @@ public class RestcommAPIEndpointSecurityTest {
     	assertEquals(403, performApiRequest(deploymentUrl.toString()+RECORDINGS_ENDPOINT_FILE_PATH, CLOSED_ACCOUNT_SID, AUTH_TOKEN));
     	assertEquals(403, performApiRequest(deploymentUrl.toString()+RECORDINGS_ENDPOINT_FILE_PATH, SUSPENDED_ACCOUNT_SID, AUTH_TOKEN));
     	
-    	//recording audio file is not protected, we consider 404 equivalent to 200 as that means we already bypassed 401
+    	//recording audio file is not protected, we consider 404 equivalent to 200 as that means we already bypassed 401 and 403 and the fact that file does not exists
     	assertEquals(404, performUnautherizedRequest(deploymentUrl.toString()+RECORDINGS_ENDPOINT_FILE_PATH+".wav"));
     	assertEquals(404, performRequestWithInvalidToken(deploymentUrl.toString()+RECORDINGS_ENDPOINT_FILE_PATH+".wav"));
-    	assertEquals(403, performApiRequest(deploymentUrl.toString()+RECORDINGS_ENDPOINT_FILE_PATH+".wav", CLOSED_ACCOUNT_SID, AUTH_TOKEN));
-    	assertEquals(403, performApiRequest(deploymentUrl.toString()+RECORDINGS_ENDPOINT_FILE_PATH+".wav", SUSPENDED_ACCOUNT_SID, AUTH_TOKEN));
+    	assertEquals(404, performApiRequest(deploymentUrl.toString()+RECORDINGS_ENDPOINT_FILE_PATH+".wav", CLOSED_ACCOUNT_SID, AUTH_TOKEN));
+    	assertEquals(404, performApiRequest(deploymentUrl.toString()+RECORDINGS_ENDPOINT_FILE_PATH+".wav", SUSPENDED_ACCOUNT_SID, AUTH_TOKEN));
 
-    	//recording video file is not protected, we consider 404 equivalent to 200 as that means we already bypassed 401    	
+    	//recording video file is not protected, we consider 404 equivalent to 200 as that means we already bypassed 401 and 403 and the fact that file does not exists
     	assertEquals(404, performUnautherizedRequest(deploymentUrl.toString()+RECORDINGS_ENDPOINT_FILE_PATH+".mp4"));
     	assertEquals(404, performRequestWithInvalidToken(deploymentUrl.toString()+RECORDINGS_ENDPOINT_FILE_PATH+".mp4"));
-    	assertEquals(403, performApiRequest(deploymentUrl.toString()+RECORDINGS_ENDPOINT_FILE_PATH+".mp4", CLOSED_ACCOUNT_SID, AUTH_TOKEN));
-    	assertEquals(403, performApiRequest(deploymentUrl.toString()+RECORDINGS_ENDPOINT_FILE_PATH+".mp4", SUSPENDED_ACCOUNT_SID, AUTH_TOKEN));
+    	assertEquals(404, performApiRequest(deploymentUrl.toString()+RECORDINGS_ENDPOINT_FILE_PATH+".mp4", CLOSED_ACCOUNT_SID, AUTH_TOKEN));
+    	assertEquals(404, performApiRequest(deploymentUrl.toString()+RECORDINGS_ENDPOINT_FILE_PATH+".mp4", SUSPENDED_ACCOUNT_SID, AUTH_TOKEN));
     }
     /**
      * this test will try to access org EP Without Authentication or invalid token
