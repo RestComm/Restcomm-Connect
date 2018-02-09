@@ -11,7 +11,7 @@ def buildRC() {
             //do sonar just in master
             sh "mvn -f restcomm/pom.xml -pl \\!restcomm.testsuite -Dmaven.test.redirectTestOutputToFile=true -Dsonar.host.url=https://sonarqube.com -Dsonar.login=dd43f79a4bd32b1f2c484362e8a4de676a8388c4 -Dsonar.organization=jaimecasero-github -Dsonar.branch=master install sonar:sonar"
         } else {
-            sh "mvn -f restcomm/pom.xml -pl \\!restcomm.testsuite -Dmaven.test.redirectTestOutputToFile=true install"
+            sh "mvn -f restcomm/pom.xml -pl \\!restcomm.testsuite -Dmaven.test.redirectTestOutputToFile=true install -DexcludedGroups=\"org.restcomm.connect.commons.annotations.UnstableTests or org.restcomm.connect.commons.annotations.BrokenTests\""
         }
     } catch(err) {
         publishRCResults()
