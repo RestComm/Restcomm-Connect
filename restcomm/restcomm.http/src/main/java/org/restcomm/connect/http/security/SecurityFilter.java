@@ -41,6 +41,7 @@ import com.sun.jersey.spi.container.ContainerRequestFilter;
 public class SecurityFilter implements ContainerRequestFilter {
 
     private final Logger logger = Logger.getLogger(SecurityFilter.class);
+    private static final String PATTERN_FOR_RECORDING_FILE_PATH=".*/restcomm/2012-04-24/Accounts/.*/Recordings/RE.*[.mp4|.wav]";
 
     @Context
     private HttpServletRequest servletRequest;
@@ -51,7 +52,10 @@ public class SecurityFilter implements ContainerRequestFilter {
         final DaoManager storage = (DaoManager) servletRequest.getServletContext().getAttribute(DaoManager.class.getName());
         AccountsDao accountsDao = storage.getAccountsDao();
         UserIdentityContext userIdentityContext = new UserIdentityContext(servletRequest, accountsDao);
-        checkAuthenticatedAccount(userIdentityContext);
+        // exclude recording file https://telestax.atlassian.net/browse/RESTCOMM-1736
+        if (!cr.getPath().matches(PATTERN_FOR_RECORDING_FILE_PATH)) {
+            checkAuthenticatedAccount(userIdentityContext);
+        }
         filterClosedAccounts(userIdentityContext);
         String scheme = cr.getAuthenticationScheme();
         AccountPrincipal aPrincipal = new AccountPrincipal(userIdentityContext);
