@@ -394,8 +394,8 @@ enabled  BOOLEAN NOT NULL DEFAULT TRUE
 );
 
 CREATE TABLE restcomm_profile_associations(
-target_sid TEXT NOT NULL PRIMARY KEY,
-profile_sid TEXT NOT NULL, 
+target_sid VARCHAR(34) NOT NULL PRIMARY KEY,
+profile_sid VARCHAR(34) NOT NULL, 
 date_created DATETIME NOT NULL, 
 date_updated DATETIME NOT NULL
 );
@@ -408,7 +408,7 @@ PRIMARY KEY (account_sid, extension_sid)
 );
 
 CREATE TABLE restcomm_profiles (
-sid TEXT NOT NULL PRIMARY KEY,
+sid VARCHAR(34) NOT NULL PRIMARY KEY,
 document LONGBLOB NOT NULL,
 date_created DATETIME NOT NULL,
 date_updated DATETIME NOT NULL
