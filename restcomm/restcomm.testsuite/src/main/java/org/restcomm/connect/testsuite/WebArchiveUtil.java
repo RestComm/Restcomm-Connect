@@ -52,11 +52,15 @@ public class WebArchiveUtil {
         return createWebArchiveNoGw(webInfResources, resources, replacements);
     }
 
-    public static WebArchive createWebArchiveNoGw(Map<String, String> webInfResources, List<String> resources, Map<String, String> replacements) {
+    public static WebArchive createWebArchiveNoGw(Map<String, String> webInfResources,
+            List<String> resources,
+            Map<String, String> replacements,
+            String mavenApp
+    ) {
 
         WebArchive archive = ShrinkWrap.create(WebArchive.class, "restcomm.war");
         final WebArchive restcommArchive = ShrinkWrapMaven.resolver()
-                .resolve("org.restcomm:restcomm-connect.application:war:" + Version.getVersion()).withoutTransitivity()
+                .resolve(mavenApp).withoutTransitivity()
                 .asSingle(WebArchive.class);
         archive = archive.merge(restcommArchive);
         for (String webdInfFile : webInfResources.keySet()) {
@@ -71,5 +75,12 @@ public class WebArchiveUtil {
             archive.addAsWebResource(rFile, rFile.getName());
         }
         return archive;
+    }
+
+    public static WebArchive createWebArchiveNoGw(Map<String, String> webInfResources,
+            List<String> resources, Map<String, String> replacements) {
+        return createWebArchiveNoGw(
+                webInfResources, resources, replacements,
+                "org.restcomm:restcomm-connect.application:war:" + Version.getVersion());
     }
 }

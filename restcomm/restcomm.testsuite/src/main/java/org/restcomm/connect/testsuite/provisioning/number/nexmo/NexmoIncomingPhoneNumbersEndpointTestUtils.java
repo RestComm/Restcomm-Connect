@@ -17,15 +17,14 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>
  *
  */
-
 package org.restcomm.connect.testsuite.provisioning.number.nexmo;
-
 
 /**
  * @author jean.deruelle@telestax.com
  *
  */
 public class NexmoIncomingPhoneNumbersEndpointTestUtils {
+
     public static String purchaseNumberSuccessResponse = "";
     public static String deleteNumberSuccessResponse = "";
 
@@ -36,22 +35,19 @@ public class NexmoIncomingPhoneNumbersEndpointTestUtils {
     public static String jSonResultAccountAssociatedPurchaseNumber = "{\"sid\":\"PN*\",\"account_sid\":\"ACae6e420f425248d6a26948c17a9e2acf\",\"friendly_name\":\"My Company Line\",\"phone_number\":\"+14216902867\",\"voice_url\":\"http://demo.telestax.com/docs/voice.xml\",\"voice_method\":\"GET\",\"voice_fallback_url\":null,\"voice_fallback_method\":\"POST\",\"status_callback\":null,\"status_callback_method\":\"POST\",\"voice_caller_id_lookup\":false,\"voice_application_sid\":null,\"date_created\":\"*\",\"date_updated\":\"*\",\"sms_url\":null,\"sms_method\":\"POST\",\"sms_fallback_url\":null,\"sms_fallback_method\":\"POST\",\"sms_application_sid\":null,\"capabilities\":{\"voice_capable\":false,\"sms_capable\":false,\"mms_capable\":false,\"fax_capable\":false},\"api_version\":\"2012-04-24\",\"uri\":\"/2012-04-24/Accounts/ACae6e420f425248d6a26948c17a9e2acf/IncomingPhoneNumbers/PN*.json\"}";
     public static String jSonResultAccountAssociatedPurchaseNumberResult = "{\"sid\":\"PN*\",\"account_sid\":\"ACae6e420f425248d6a26948c17a9e2acf\",\"friendly_name\":\"My*Company Line\",\"phone_number\":\"+1*6902867\",\"voice_url\":\"http://demo.telestax.com/docs/voice*.xml\",\"voice_method\":\"*\",\"voice_fallback_url\":null,\"voice_fallback_method\":\"POST\",\"status_callback\":null,\"status_callback_method\":\"POST\",\"voice_caller_id_lookup\":false,\"voice_application_sid\":null,\"date_created\":\"*\",\"date_updated\":\"*\",\"sms_url\":*,\"sms_method\":\"POST\",\"sms_fallback_url\":null,\"sms_fallback_method\":\"POST\",\"sms_application_sid\":null,\"capabilities\":{\"voice_capable\":false,\"sms_capable\":false,\"mms_capable\":false,\"fax_capable\":false},\"api_version\":\"2012-04-24\",\"uri\":\"/2012-04-24/Accounts/ACae6e420f425248d6a26948c17a9e2acf/IncomingPhoneNumbers/PN*.json\"}";
 
-    public static boolean match(String text, String pattern)
-    {
+    public static boolean match(String text, String pattern) {
         text = text.trim();
         pattern = pattern.trim();
         // Create the cards by splitting using a RegEx. If more speed
         // is desired, a simpler character based splitting can be done.
-        String [] cards = pattern.split("\\*");
+        String[] cards = pattern.split("\\*");
 
         // Iterate over the cards.
-        for (String card : cards)
-        {
+        for (String card : cards) {
             int idx = text.indexOf(card);
 
             // Card not detected in the text.
-            if(idx == -1)
-            {
+            if (idx == -1) {
                 return false;
             }
 
