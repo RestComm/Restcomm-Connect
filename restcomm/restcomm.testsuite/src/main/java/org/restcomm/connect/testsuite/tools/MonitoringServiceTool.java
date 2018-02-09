@@ -16,6 +16,7 @@ import org.apache.log4j.Logger;
  * Created by gvagenas on 11/25/15.
  */
 public class MonitoringServiceTool {
+
     private static MonitoringServiceTool instance;
     private static Logger logger = Logger.getLogger(MonitoringServiceTool.class);
 
@@ -23,8 +24,9 @@ public class MonitoringServiceTool {
     }
 
     public static MonitoringServiceTool getInstance() {
-        if (instance == null)
+        if (instance == null) {
             instance = new MonitoringServiceTool();
+        }
 
         return instance;
     }
@@ -61,7 +63,6 @@ public class MonitoringServiceTool {
         mgcpResources.put("MgcpEndpoints", mgcpEndpoints);
         mgcpResources.put("MgcpConnections", mgcpConnections);
 
-
         return mgcpResources;
     }
 
@@ -76,7 +77,7 @@ public class MonitoringServiceTool {
         WebResource webResource = jerseyClient.resource(url).path("/metrics");
 
         if (callDetails) {
-            webResource = webResource.queryParam("LiveCallDetails","true");
+            webResource = webResource.queryParam("LiveCallDetails", "true");
         }
         if (mgcpStats) {
             webResource = webResource.queryParam("MgcpStats", "true");
@@ -93,7 +94,6 @@ public class MonitoringServiceTool {
         JsonObject jsonObject = getMetrics(deploymentUrl, username, authToken);
 
 //        {"InstanceId":"IDbe78ada9dc864b558774ce4432cac866","Version":"7.5.0-SNAPSHOT","Revision":"r35cf44c0589a0aeabd6ae8d1bfab0a9edcd24c1a","Metrics":{"TotalCallsSinceUptime":0,"NoAnswerCalls":0,"LiveOutgoingCalls":0,"OutgoingCallsSinceUptime":0,"IncomingCallsSinceUptime":0,"RegisteredUsers":1,"CompletedCalls":0,"TextMessageOutbound":0,"NotFoundCalls":0,"CanceledCalls":0,"FailedCalls":0,"TextMessageNotFound":0,"TextMessageInboundToApp":0,"LiveCalls":0,"BusyCalls":0,"LiveIncomingCalls":0,"TextMessageInboundToProxyOut":0,"TextMessageInboundToClient":0},"LiveCallDetails":[]}
-
         JsonObject metrics = jsonObject.getAsJsonObject("Metrics");
 
         JsonElement elem = metrics.get("RegisteredUsers");
@@ -104,12 +104,11 @@ public class MonitoringServiceTool {
 
     }
 
-    public int getStatistics (String deploymentUrl, String username, String authToken) {
+    public int getStatistics(String deploymentUrl, String username, String authToken) {
         int liveCalls = 0;
         JsonObject jsonObject = getMetrics(deploymentUrl, username, authToken);
 
 //        {"InstanceId":"IDbe78ada9dc864b558774ce4432cac866","Version":"7.5.0-SNAPSHOT","Revision":"r35cf44c0589a0aeabd6ae8d1bfab0a9edcd24c1a","Metrics":{"TotalCallsSinceUptime":0,"NoAnswerCalls":0,"LiveOutgoingCalls":0,"OutgoingCallsSinceUptime":0,"IncomingCallsSinceUptime":0,"RegisteredUsers":1,"CompletedCalls":0,"TextMessageOutbound":0,"NotFoundCalls":0,"CanceledCalls":0,"FailedCalls":0,"TextMessageNotFound":0,"TextMessageInboundToApp":0,"LiveCalls":0,"BusyCalls":0,"LiveIncomingCalls":0,"TextMessageInboundToProxyOut":0,"TextMessageInboundToClient":0},"LiveCallDetails":[]}
-
         JsonObject metrics = jsonObject.getAsJsonObject("Metrics");
 
         JsonElement elem = metrics.get("LiveCalls");
@@ -119,12 +118,11 @@ public class MonitoringServiceTool {
         return liveCalls;
     }
 
-    public int getLiveIncomingCallStatistics (String deploymentUrl, String username, String authToken) {
+    public int getLiveIncomingCallStatistics(String deploymentUrl, String username, String authToken) {
         int liveIncomingCalls = 0;
         JsonObject jsonObject = getMetrics(deploymentUrl, username, authToken);
 
 //        {"InstanceId":"IDbe78ada9dc864b558774ce4432cac866","Version":"7.5.0-SNAPSHOT","Revision":"r35cf44c0589a0aeabd6ae8d1bfab0a9edcd24c1a","Metrics":{"TotalCallsSinceUptime":0,"NoAnswerCalls":0,"LiveOutgoingCalls":0,"OutgoingCallsSinceUptime":0,"IncomingCallsSinceUptime":0,"RegisteredUsers":1,"CompletedCalls":0,"TextMessageOutbound":0,"NotFoundCalls":0,"CanceledCalls":0,"FailedCalls":0,"TextMessageNotFound":0,"TextMessageInboundToApp":0,"LiveCalls":0,"BusyCalls":0,"LiveIncomingCalls":0,"TextMessageInboundToProxyOut":0,"TextMessageInboundToClient":0},"LiveCallDetails":[]}
-
         JsonObject metrics = jsonObject.getAsJsonObject("Metrics");
 
         JsonElement elem = metrics.get("LiveIncomingCalls");
@@ -134,12 +132,11 @@ public class MonitoringServiceTool {
         return liveIncomingCalls;
     }
 
-    public int getLiveOutgoingCallStatistics (String deploymentUrl, String username, String authToken) {
+    public int getLiveOutgoingCallStatistics(String deploymentUrl, String username, String authToken) {
         int liveOutgoingCalls = 0;
         JsonObject jsonObject = getMetrics(deploymentUrl, username, authToken);
 
 //        {"InstanceId":"IDbe78ada9dc864b558774ce4432cac866","Version":"7.5.0-SNAPSHOT","Revision":"r35cf44c0589a0aeabd6ae8d1bfab0a9edcd24c1a","Metrics":{"TotalCallsSinceUptime":0,"NoAnswerCalls":0,"LiveOutgoingCalls":0,"OutgoingCallsSinceUptime":0,"IncomingCallsSinceUptime":0,"RegisteredUsers":1,"CompletedCalls":0,"TextMessageOutbound":0,"NotFoundCalls":0,"CanceledCalls":0,"FailedCalls":0,"TextMessageNotFound":0,"TextMessageInboundToApp":0,"LiveCalls":0,"BusyCalls":0,"LiveIncomingCalls":0,"TextMessageInboundToProxyOut":0,"TextMessageInboundToClient":0},"LiveCallDetails":[]}
-
         JsonObject metrics = jsonObject.getAsJsonObject("Metrics");
 
         JsonElement elem = metrics.get("LiveOutgoingCalls");
@@ -154,7 +151,6 @@ public class MonitoringServiceTool {
         JsonObject jsonObject = getLiveCalls(deploymentUrl, username, authToken);
 
 //        {"InstanceId":"IDbe78ada9dc864b558774ce4432cac866","Version":"7.5.0-SNAPSHOT","Revision":"r35cf44c0589a0aeabd6ae8d1bfab0a9edcd24c1a","Metrics":{"TotalCallsSinceUptime":0,"NoAnswerCalls":0,"LiveOutgoingCalls":0,"OutgoingCallsSinceUptime":0,"IncomingCallsSinceUptime":0,"RegisteredUsers":1,"CompletedCalls":0,"TextMessageOutbound":0,"NotFoundCalls":0,"CanceledCalls":0,"FailedCalls":0,"TextMessageNotFound":0,"TextMessageInboundToApp":0,"LiveCalls":0,"BusyCalls":0,"LiveIncomingCalls":0,"TextMessageInboundToProxyOut":0,"TextMessageInboundToClient":0},"LiveCallDetails":[]}
-
         JsonArray liveCallDetails = jsonObject.getAsJsonArray("LiveCallDetails");
 
         liveCallsArraySize = liveCallDetails.size();
@@ -162,7 +158,6 @@ public class MonitoringServiceTool {
 //        JsonElement elem = metrics.get("LiveCalls");
 //
 //        liveCallsArraySize = elem.getAsInt();
-
         return liveCallsArraySize;
     }
 

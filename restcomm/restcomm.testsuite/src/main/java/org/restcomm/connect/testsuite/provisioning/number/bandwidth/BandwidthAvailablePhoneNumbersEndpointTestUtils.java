@@ -17,13 +17,13 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>
  *
  */
-
 package org.restcomm.connect.testsuite.provisioning.number.bandwidth;
 
 /**
  * Created by sbarstow on 10/7/14.
  */
 public class BandwidthAvailablePhoneNumbersEndpointTestUtils {
+
     public static String areaCode201SearchResult = "<SearchResult><ResultCount>1</ResultCount><TelephoneNumberDetailList><TelephoneNumberDetail><City>JERSEY CITY</City><LATA>224</LATA><RateCenter>JERSEYCITY</RateCenter><State>NJ</State><FullNumber>2012001555</FullNumber></TelephoneNumberDetail></TelephoneNumberDetailList></SearchResult>";
     public static String firstJSonResult201AreaCode = "{\"friendlyName\":\"+12012001555\",\"phoneNumber\":\"+12012001555\",\"LATA\":224,\"rateCenter\":\"JERSEYCITY\",\"region\":\"NJ\",\"isoCountry\":\"US\",\"voiceCapable\":true,\"smsCapable\":true,\"mmsCapable\":false,\"faxCapable\":false,\"ussdCapable\":false}";
     public static String emptySearchResult = "<SearchResult><ResultCount>0</ResultCount></SearchResult>";
