@@ -23,20 +23,6 @@
                     }
 
                 },
-                "destinations": {
-                    "type": "object",
-                    "additionalProperties": false,
-                    "properties": {
-                        "allowedPrefixes": {
-                            "type": "array",
-                            "additionalItems": false,
-                            "items": {
-                                "type": "string"
-
-                            }
-                        }
-                    }
-                },
                 "subaccountsCreation": {
                     "type": "object",
                     "additionalProperties": false,
@@ -49,7 +35,25 @@
                 },
                 "outboundPSTN": {
                     "type": "object",
-                    "additionalProperties": false
+                    "additionalProperties": false,
+                    "properties": {
+                        "allowedPrefixes": {
+                            "type": "array",
+                            "additionalItems": false,
+                            "items": {
+                                "type": "string"
+
+                            }
+                        },
+                        "blockedPrefixes": {
+                            "type": "array",
+                            "additionalItems": false,
+                            "items": {
+                                "type": "string"
+
+                            }
+                        }
+                    }                    
                 },
                 "inboundPSTN": {
                     "type": "object",
@@ -57,7 +61,25 @@
                 },
                 "outboundSMS": {
                     "type": "object",
-                    "additionalProperties": false
+                    "additionalProperties": false,
+                    "properties": {
+                        "allowedPrefixes": {
+                            "type": "array",
+                            "additionalItems": false,
+                            "items": {
+                                "type": "string"
+
+                            }
+                        },
+                        "blockedPrefixes": {
+                            "type": "array",
+                            "additionalItems": false,
+                            "items": {
+                                "type": "string"
+
+                            }
+                        }
+                    }
                 },
                 "inboundSMS": {
                     "type": "object",
@@ -83,7 +105,25 @@
                 },
                 "outboundUSSD": {
                     "type": "object",
-                    "additionalProperties": false
+                    "additionalProperties": false,
+                    "properties": {
+                        "allowedPrefixes": {
+                            "type": "array",
+                            "additionalItems": false,
+                            "items": {
+                                "type": "string"
+
+                            }
+                        },
+                        "blockedPrefixes": {
+                            "type": "array",
+                            "additionalItems": false,
+                            "items": {
+                                "type": "string"
+
+                            }
+                        }                        
+                    }
                 }
             }
         }

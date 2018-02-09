@@ -4,9 +4,6 @@
             "allowedCountries": ["US",
                 "CA"]
         },        
-        "destinations": {
-            "allowedPrefixes": ["+1"]
-        },
         "outboundPSTN": {
         },
         "inboundPSTN": {

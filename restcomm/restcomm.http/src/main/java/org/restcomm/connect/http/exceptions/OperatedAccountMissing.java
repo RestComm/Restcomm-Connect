@@ -17,7 +17,6 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>
  *
  */
-
 package org.restcomm.connect.http.exceptions;
 
 import org.restcomm.connect.commons.exceptions.RestcommRuntimeException;
@@ -26,4 +25,24 @@ import org.restcomm.connect.commons.exceptions.RestcommRuntimeException;
  * @author otsakir@gmail.com - Orestis Tsakiridis
  */
 public class OperatedAccountMissing extends RestcommRuntimeException {
+
+    public OperatedAccountMissing() {
+    }
+
+    public OperatedAccountMissing(String message) {
+        super(message);
+    }
+
+    public OperatedAccountMissing(String message, Throwable cause) {
+        super(message, cause);
+    }
+
+    public OperatedAccountMissing(Throwable cause) {
+        super(cause);
+    }
+
+    public OperatedAccountMissing(String message, Throwable cause, boolean enableSuppression, boolean writableStackTrace) {
+        super(message, cause, enableSuppression, writableStackTrace);
+    }
+
 }
