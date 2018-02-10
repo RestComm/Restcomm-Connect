@@ -51,6 +51,7 @@ public class RestcommAPIEndpointSecurityTest {
     private static final String CLIENTS_ENDPOINT = "/2012-04-24/Accounts/"+SUPER_ADMIN_ACCOUNT_SID+"/Clients";
     private static final String RECORDINGS_ENDPOINT_FILE_PATH = "/2012-04-24/Accounts/"+SUPER_ADMIN_ACCOUNT_SID+"/Recordings/REc267d9cdcd0f4623a54abedf8e3d8835";
     private static final String RECORDINGS_ENDPOINT = "/2012-04-24/Accounts/"+SUPER_ADMIN_ACCOUNT_SID+"/Recordings";
+    private static final String RECORDINGS_ENDPOINT_FILE_FULL_PATH = "http://127.0.0.1:8080/restcomm/2012-04-24/Accounts/"+SUPER_ADMIN_ACCOUNT_SID+"/Recordings/REc267d9cdcd0f4623a54abedf8e3d8835";
 
     /**
      * this test will try to access generic EP Without Authentication or invalid token
@@ -148,7 +149,7 @@ public class RestcommAPIEndpointSecurityTest {
     	assertEquals(404, performApiRequest(deploymentUrl.toString()+RECORDINGS_ENDPOINT_FILE_PATH+".mp4", SUSPENDED_ACCOUNT_SID, AUTH_TOKEN));
 
     	//access by simple http url connection
-		URL url = new URL(deploymentUrl.toString()+RECORDINGS_ENDPOINT_FILE_PATH+".wav");
+		URL url = new URL(RECORDINGS_ENDPOINT_FILE_FULL_PATH+".wav");
 		HttpURLConnection connection = (HttpURLConnection)url.openConnection();
 		connection.setRequestMethod("GET");
 		connection.connect();
