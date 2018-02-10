@@ -89,10 +89,6 @@ public class OutboundProxyEndpoint extends SecuredEndpoint {
     }
 
     protected Response getProxies(final String accountSid, final MediaType responseType) {
-        //following 2 things are enough to grant access: 1. a valid authentication token is present. 2 it is a super admin.
-        checkAuthenticatedAccount();
-        allowOnlySuperAdmin();
-//        secure(accountsDao.getAccount(accountSid), "RestComm:Read:OutboundProxies");
 
         Map<String, String> proxies;
 
@@ -115,10 +111,6 @@ public class OutboundProxyEndpoint extends SecuredEndpoint {
     }
 
     protected Response switchProxy(final String accountSid, final MediaType responseType) {
-        //following 2 things are enough to grant access: 1. a valid authentication token is present. 2 it is a super admin.
-        checkAuthenticatedAccount();
-        allowOnlySuperAdmin();
-//        secure(accountsDao.getAccount(accountSid), "RestComm:Read:OutboundProxies");
 
         Map<String, String> proxyAfterSwitch;
 
@@ -141,10 +133,6 @@ public class OutboundProxyEndpoint extends SecuredEndpoint {
     }
 
     protected Response getActiveProxy(final String accountSid, final MediaType responseType) {
-        //following 2 things are enough to grant access: 1. a valid authentication token is present. 2 it is a super admin.
-        checkAuthenticatedAccount();
-        allowOnlySuperAdmin();
-//        secure(accountsDao.getAccount(accountSid), "RestComm:Read:OutboundProxies");
 
         Map<String, String> activeProxy;
 
