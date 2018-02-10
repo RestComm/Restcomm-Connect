@@ -21,7 +21,9 @@ package org.restcomm.connect.http;
 
 import static javax.ws.rs.core.MediaType.APPLICATION_FORM_URLENCODED;
 import static javax.ws.rs.core.MediaType.APPLICATION_JSON_TYPE;
+import static org.restcomm.connect.http.security.AccountPrincipal.SUPER_ADMIN_ROLE;
 
+import javax.annotation.security.RolesAllowed;
 import javax.ws.rs.Consumes;
 import javax.ws.rs.GET;
 import javax.ws.rs.OPTIONS;
@@ -101,6 +103,7 @@ public final class AccountsJsonEndpoint extends AccountsEndpoint {
     @Path("/migrate/{accountSid}")
     @Consumes(APPLICATION_FORM_URLENCODED)
     @POST
+    @RolesAllowed(SUPER_ADMIN_ROLE)
     public Response migrateAccount(@PathParam("accountSid") final String accountSid, final MultivaluedMap<String, String> data) {
         return migrateAccountOrganization(accountSid, data, APPLICATION_JSON_TYPE);
     }

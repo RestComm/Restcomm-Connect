@@ -33,7 +33,6 @@ import org.restcomm.connect.extension.api.ConfigurationException;
 import org.restcomm.connect.extension.api.ExtensionConfiguration;
 import org.restcomm.connect.http.converter.ExtensionConfigurationConverter;
 import org.restcomm.connect.http.converter.RestCommResponseConverter;
-import org.restcomm.connect.http.exceptions.InsufficientPermission;
 
 import javax.annotation.PostConstruct;
 import javax.ws.rs.core.MediaType;
@@ -78,8 +77,6 @@ public class ExtensionsConfigurationEndpoint extends SecuredEndpoint {
         xstream.registerConverter(converter);
         xstream.registerConverter(new ExtensionConfigurationConverter(configuration));
         xstream.registerConverter(new RestCommResponseConverter(configuration));
-        // Make sure there is an authenticated account present when this endpoint is used
-        checkAuthenticatedAccount();
     }
 
     /**
@@ -90,9 +87,6 @@ public class ExtensionsConfigurationEndpoint extends SecuredEndpoint {
      */
     protected Response getConfiguration(final String extensionId, final Sid accountSid, final MediaType responseType) {
         //Parameter "extensionId" could be the extension Sid or extension name.
-        if (!isSuperAdmin()) {
-            throw new InsufficientPermission();
-        }
 
         ExtensionConfiguration extensionConfiguration = null;
         ExtensionConfiguration extensionAccountConfiguration = null;
@@ -173,9 +167,6 @@ public class ExtensionsConfigurationEndpoint extends SecuredEndpoint {
     }
 
     protected Response postConfiguration(final MultivaluedMap<String, String> data, final MediaType responseType) {
-        if (!isSuperAdmin()) {
-            throw new InsufficientPermission();
-        }
 
         Sid accountSid = null;
 
@@ -221,9 +212,6 @@ public class ExtensionsConfigurationEndpoint extends SecuredEndpoint {
     }
 
     protected Response updateConfiguration(String extensionSid, MultivaluedMap<String, String> data, MediaType responseType) {
-        if (!isSuperAdmin()) {
-            throw new InsufficientPermission();
-        }
 
         if (!Sid.pattern.matcher(extensionSid).matches()) {
             return status(BAD_REQUEST).build();
