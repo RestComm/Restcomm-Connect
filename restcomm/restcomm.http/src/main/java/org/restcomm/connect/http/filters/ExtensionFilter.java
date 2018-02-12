@@ -56,6 +56,8 @@ public class ExtensionFilter implements ResourceFilter, ContainerRequestFilter, 
     static {
         TYPE_MAP.put("AvailablePhoneNumbers", ApiRequest.Type.AVAILABLEPHONENUMBER);
         TYPE_MAP.put("IncomingPhoneNumbers", ApiRequest.Type.INCOMINGPHONENUMBER);
+        TYPE_MAP.put("AvailablePhoneNumbers.json", ApiRequest.Type.AVAILABLEPHONENUMBER);
+        TYPE_MAP.put("IncomingPhoneNumbers.json", ApiRequest.Type.INCOMINGPHONENUMBER);
     }
 
 
