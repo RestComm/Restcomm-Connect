@@ -660,7 +660,6 @@ public abstract class IncomingPhoneNumbersEndpoint extends SecuredEndpoint {
     protected Response migrateIncomingPhoneNumbers(String targetAccountSid, MultivaluedMap<String, String> data, MediaType responseType) {
         Account effectiveAccount = userIdentityContext.getEffectiveAccount();
         secure(effectiveAccount, "RestComm:Modify:IncomingPhoneNumbers");
-        allowOnlySuperAdmin();
         try{
             Account targetAccount = accountsDao.getAccount(targetAccountSid);
             // this is to avoid if mistakenly provided super admin account as targetAccountSid
