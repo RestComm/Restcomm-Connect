@@ -678,7 +678,20 @@ public final class UserAgentManager extends RestcommUntypedActor {
         } else {
             buffer.append("sip:");
         }
-        buffer.append(normalize(user)).append("@").append(contactUri.getHost()).append(":").append(contactUri.getPort());
+        int contactPort = contactUri.getPort();
+        if(contactPort < 0) {
+            if(transport == null || transport.equalsIgnoreCase("udp") || transport.equalsIgnoreCase("tcp")) {
+                contactPort = 5060;
+            } else if(transport.equalsIgnoreCase("tls")) {
+                contactPort = 5061;
+            } else if (transport.equalsIgnoreCase("ws")) {
+                contactPort = 5081;
+            } else if (transport.equalsIgnoreCase("wss")) {
+                contactPort = 5082;
+            }
+        }
+
+        buffer.append(normalize(user)).append("@").append(contactUri.getHost()).append(":").append(contactPort);
         // https://bitbucket.org/telestax/telscale-restcomm/issue/142/restcomm-support-for-other-transports-than
         if (transport != null) {
             buffer.append(";transport=").append(transport);
