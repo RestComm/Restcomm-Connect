@@ -434,9 +434,9 @@ public final class Call extends RestcommUntypedActor {
         boolean useSbc = runtime.getBoolean("use-sbc", false);
         if(useSbc) {
             if (logger.isDebugEnabled()) {
-                logger.debug("Call: use-sbc is true, overriding patch-for-nat-b2bua-sessions to false");
+                logger.debug("Call: use-sbc is true, disable-sdp-patching-on-updating-mediasession to true");
             }
-            disableSdpPatchingOnUpdatingMediaSession = false;
+            disableSdpPatchingOnUpdatingMediaSession = true;
         }
 
         this.enable200OkDelay = runtime.getBoolean("enable-200-ok-delay",false);
