@@ -40,14 +40,4 @@ public class AccountsEndpointMockedTest extends EndpointMockedTest {
         endpoint.init();
     }
 
-    @Test(expected=NotAuthenticated.class)
-    public void requestMissingAuthorizationIsRejected()  {
-        init(); // setup default mocking values
-        when(request.getHeader("Authorization")).thenReturn(null); // override Authorization header to null
-        AccountsEndpoint endpoint = new AccountsEndpoint(servletContext,request);
-        endpoint.init();
-        //use endpoint to cause the exception
-        endpoint.getAccounts(null, MediaType.TEXT_XML_TYPE);
-    }
-
 }

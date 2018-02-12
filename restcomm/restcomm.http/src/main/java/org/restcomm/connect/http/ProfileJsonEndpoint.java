@@ -38,15 +38,13 @@ import static javax.ws.rs.core.MediaType.APPLICATION_JSON;
 import javax.ws.rs.core.Response;
 import javax.ws.rs.core.UriInfo;
 import org.restcomm.connect.commons.annotations.concurrency.ThreadSafe;
-import static org.restcomm.connect.http.ProfileEndpoint.PROFILE_CONTENT_TYPE;
-import static org.restcomm.connect.http.ProfileEndpoint.PROFILE_SCHEMA_CONTENT_TYPE;
 import static org.restcomm.connect.http.security.AccountPrincipal.SUPER_ADMIN_ROLE;
 
 @Path("/Profiles")
 @ThreadSafe
 @RolesAllowed(SUPER_ADMIN_ROLE)
 @Singleton
-public class ProfileJsonEndpoint extends ProfileEndpoint{
+public class ProfileJsonEndpoint extends ProfileEndpoint {
 
     @GET
     @Produces(APPLICATION_JSON)
