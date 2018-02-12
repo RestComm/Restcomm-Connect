@@ -19,22 +19,29 @@
  */
 package org.restcomm.connect.http.security;
 
-import com.sun.jersey.spi.container.ContainerRequest;
-import com.sun.jersey.spi.container.ContainerRequestFilter;
-import org.apache.log4j.Logger;
+import static javax.ws.rs.core.Response.status;
+
 import javax.servlet.http.HttpServletRequest;
+import javax.ws.rs.WebApplicationException;
 import javax.ws.rs.core.Context;
+import javax.ws.rs.core.Response;
+import javax.ws.rs.core.Response.Status;
 import javax.ws.rs.ext.Provider;
+
+import org.apache.log4j.Logger;
 import org.restcomm.connect.dao.AccountsDao;
 import org.restcomm.connect.dao.DaoManager;
-import org.restcomm.connect.dao.OrganizationsDao;
-import org.restcomm.connect.identity.IdentityContext;
+import org.restcomm.connect.dao.entities.Account;
 import org.restcomm.connect.identity.UserIdentityContext;
+
+import com.sun.jersey.spi.container.ContainerRequest;
+import com.sun.jersey.spi.container.ContainerRequestFilter;
 
 @Provider
 public class SecurityFilter implements ContainerRequestFilter {
 
     private final Logger logger = Logger.getLogger(SecurityFilter.class);
+    private static final String PATTERN_FOR_RECORDING_FILE_PATH=".*Accounts/.*/Recordings/RE.*[.mp4|.wav]";
 
     @Context
     private HttpServletRequest servletRequest;
@@ -42,19 +49,37 @@ public class SecurityFilter implements ContainerRequestFilter {
     // We return Access-* headers only in case allowedOrigin is present and equals to the 'Origin' header.
     @Override
     public ContainerRequest filter(ContainerRequest cr) {
-        //TODO only apply to Profiles endpoint by now
-        if (cr.getPath().contains("Profiles")) {
-            final DaoManager storage = (DaoManager) servletRequest.getServletContext().getAttribute(DaoManager.class.getName());
-            AccountsDao accountsDao = storage.getAccountsDao();
-            OrganizationsDao organizationsDao = storage.getOrganizationsDao();
-            IdentityContext identityContext = (IdentityContext) servletRequest.getServletContext().getAttribute(IdentityContext.class.getName());
-            UserIdentityContext userIdentityContext = new UserIdentityContext(servletRequest, accountsDao);
-            String scheme = cr.getAuthenticationScheme();
-            AccountPrincipal aPrincipal = new AccountPrincipal(userIdentityContext);
-            cr.setSecurityContext(new RCSecContext(aPrincipal, scheme));
-            return cr;
+        final DaoManager storage = (DaoManager) servletRequest.getServletContext().getAttribute(DaoManager.class.getName());
+        AccountsDao accountsDao = storage.getAccountsDao();
+        UserIdentityContext userIdentityContext = new UserIdentityContext(servletRequest, accountsDao);
+        // exclude recording file https://telestax.atlassian.net/browse/RESTCOMM-1736
+        logger.info("cr.getPath(): "+cr.getPath());
+        if (!cr.getPath().matches(PATTERN_FOR_RECORDING_FILE_PATH)) {
+            checkAuthenticatedAccount(userIdentityContext);
+            filterClosedAccounts(userIdentityContext);
         }
+        String scheme = cr.getAuthenticationScheme();
+        AccountPrincipal aPrincipal = new AccountPrincipal(userIdentityContext);
+        cr.setSecurityContext(new RCSecContext(aPrincipal, scheme));
         return cr;
     }
 
+    /**
+     * Grants general purpose access if any valid token exists in the request
+     */
+    protected void checkAuthenticatedAccount(UserIdentityContext userIdentityContext) {
+        if (userIdentityContext.getEffectiveAccount() == null) {
+            throw new WebApplicationException(Response.status(Response.Status.UNAUTHORIZED).header("WWW-Authenticate", "Basic realm=\"Restcomm realm\"").build());
+        }
+    }
+
+    /**
+     * filter out accounts that are not active
+     * @param userIdentityContext
+     */
+    protected void filterClosedAccounts(UserIdentityContext userIdentityContext){
+        if(userIdentityContext.getEffectiveAccount() != null && !userIdentityContext.getEffectiveAccount().getStatus().equals(Account.Status.ACTIVE)){
+            throw new WebApplicationException(status(Status.FORBIDDEN).entity("Provided Account is not active").build());
+        }
+    }
 }

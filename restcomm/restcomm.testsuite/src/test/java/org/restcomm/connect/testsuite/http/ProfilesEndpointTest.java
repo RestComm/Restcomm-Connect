@@ -10,6 +10,8 @@ import java.net.URI;
 import java.net.URISyntaxException;
 import java.net.URL;
 
+import javax.ws.rs.core.MediaType;
+
 import org.apache.http.HttpResponse;
 import org.apache.http.client.ClientProtocolException;
 import org.apache.log4j.Logger;
@@ -35,8 +37,11 @@ import com.github.fge.jsonschema.main.JsonSchemaFactory;
 import com.google.gson.JsonArray;
 import com.google.gson.JsonObject;
 import com.google.gson.JsonParser;
+import com.sun.jersey.api.client.Client;
 import com.sun.jersey.api.client.ClientResponse;
+import com.sun.jersey.api.client.WebResource;
 import com.sun.jersey.api.client.WebResourceLinkHeaders;
+import com.sun.jersey.api.client.filter.HTTPBasicAuthFilter;
 import com.sun.jersey.core.header.LinkHeader;
 
 /**
@@ -523,12 +528,7 @@ public class ProfilesEndpointTest extends EndpointTest {
 
     @Test
     public void getProfileSchemaTest() throws Exception {
-        URL schemaURL = new URL(RestcommProfilesTool.getInstance().getProfileSchemaUrl(deploymentUrl.toString()));
-        final JsonNode schemaNode = JsonLoader.fromURL(schemaURL);
-        final JsonSchemaFactory factory = JsonSchemaFactory.byDefault();
-        final JsonSchema schema = factory.getJsonSchema(schemaNode);
-
-    	ClientResponse clientResponse = RestcommProfilesTool.getInstance().getProfileSchema(deploymentUrl.toString(), SUPER_ADMIN_ACCOUNT_SID, AUTH_TOKEN);
+        ClientResponse clientResponse = RestcommProfilesTool.getInstance().getProfileSchema(deploymentUrl.toString(), SUPER_ADMIN_ACCOUNT_SID, AUTH_TOKEN);
     	assertEquals(200, clientResponse.getStatus());
     	String str = clientResponse.getEntity(String.class);
     	assertNotNull(str);

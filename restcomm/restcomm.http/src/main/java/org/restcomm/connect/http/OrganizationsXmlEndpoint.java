@@ -20,7 +20,9 @@
 package org.restcomm.connect.http;
 
 import static javax.ws.rs.core.MediaType.APPLICATION_XML_TYPE;
+import static org.restcomm.connect.http.security.AccountPrincipal.SUPER_ADMIN_ROLE;
 
+import javax.annotation.security.RolesAllowed;
 import javax.ws.rs.GET;
 import javax.ws.rs.PUT;
 import javax.ws.rs.Path;
@@ -36,6 +38,7 @@ import org.restcomm.connect.commons.annotations.concurrency.ThreadSafe;
  */
 @Path("/Organizations")
 @ThreadSafe
+@RolesAllowed(SUPER_ADMIN_ROLE)
 public final class OrganizationsXmlEndpoint extends OrganizationsEndpoint {
     public OrganizationsXmlEndpoint() {
         super();
@@ -49,12 +52,14 @@ public final class OrganizationsXmlEndpoint extends OrganizationsEndpoint {
     }
 
     @GET
+    @RolesAllowed(SUPER_ADMIN_ROLE)
     public Response getOrganizations(@Context UriInfo info) {
         return getOrganizations(info, APPLICATION_XML_TYPE);
     }
 
     @Path("/{domainName}")
     @PUT
+    @RolesAllowed(SUPER_ADMIN_ROLE)
     public Response putOrganizationPut(@PathParam("domainName") final String domainName, @Context UriInfo info) {
         return putOrganization(domainName, info, APPLICATION_XML_TYPE);
     }
