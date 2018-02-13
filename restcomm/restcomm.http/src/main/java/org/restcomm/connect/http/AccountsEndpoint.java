@@ -47,11 +47,8 @@ import org.restcomm.connect.http.client.rcmlserver.RcmlserverNotifications;
 import org.restcomm.connect.http.converter.AccountConverter;
 import org.restcomm.connect.http.converter.AccountListConverter;
 import org.restcomm.connect.http.converter.RestCommResponseConverter;
-import org.restcomm.connect.http.exceptions.AccountAlreadyClosed;
-import org.restcomm.connect.http.exceptions.AuthorizationException;
 import org.restcomm.connect.http.exceptions.InsufficientPermission;
 import org.restcomm.connect.http.exceptions.PasswordTooWeak;
-import org.restcomm.connect.http.exceptions.RcmlserverNotifyError;
 import org.restcomm.connect.identity.passwords.PasswordValidator;
 import org.restcomm.connect.identity.passwords.PasswordValidatorFactory;
 import org.restcomm.connect.provisioning.number.api.PhoneNumberProvisioningManager;
@@ -67,6 +64,8 @@ import javax.ws.rs.core.UriInfo;
 import java.net.URI;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
+import javax.ws.rs.WebApplicationException;
 
 import static javax.ws.rs.core.MediaType.APPLICATION_JSON;
 import static javax.ws.rs.core.MediaType.APPLICATION_JSON_TYPE;
@@ -79,9 +78,11 @@ import static javax.ws.rs.core.Response.Status.PRECONDITION_FAILED;
 import static javax.ws.rs.core.Response.ok;
 import static javax.ws.rs.core.Response.status;
 import org.restcomm.connect.dao.ProfileAssociationsDao;
+import org.restcomm.connect.dao.entities.Account.Status;
 import org.restcomm.connect.dao.entities.ProfileAssociation;
 import static org.restcomm.connect.http.ProfileEndpoint.PROFILE_REL_TYPE;
 import static org.restcomm.connect.http.ProfileEndpoint.TITLE_PARAM;
+import org.restcomm.connect.http.exceptionmappers.CustomReasonPhraseType;
 
 /**
  * @author quintana.thomas@gmail.com (Thomas Quintana)
@@ -95,6 +96,8 @@ public class AccountsEndpoint extends SecuredEndpoint {
     protected ClientsDao clientDao;
     protected IncomingPhoneNumbersDao incomingPhoneNumbersDao;
     private ProfileAssociationsDao profileAssociationsDao;
+
+    private Map<Status,Runnable> statusActionMap;
 
 
     public AccountsEndpoint() {
@@ -498,61 +501,53 @@ public class AccountsEndpoint extends SecuredEndpoint {
      * @param account
      * @param data
      * @return
-     * @throws AccountAlreadyClosed
      */
-    private Account prepareAccountForUpdate(final Account account, final MultivaluedMap<String, String> data) throws AccountAlreadyClosed, PasswordTooWeak {
+    private Account prepareAccountForUpdate(final Account account, final MultivaluedMap<String, String> data) {
         Account result = account;
         boolean isPasswordReset = false;
         Account.Status newStatus = null;
-        try {
-            // if the account is already CLOSED, no updates are allowed
-            if (account.getStatus() == Account.Status.CLOSED) {
-                throw new AccountAlreadyClosed();
-            }
-            if (data.containsKey("Status")) {
-                newStatus = Account.Status.getValueOf(data.getFirst("Status").toLowerCase());
-                if (newStatus == Account.Status.CLOSED)
-                    return account.setStatus(Account.Status.CLOSED);
-                // if the status is switched to CLOSED, the rest of the updates are ignored.
-            }
-            if (data.containsKey("FriendlyName")) {
-                result = result.setFriendlyName(data.getFirst("FriendlyName"));
-            }
-            if (data.containsKey("Password")) {
-                // if this is a reset-password operation, we also need to set the account status to active
-                if (account.getStatus() == Account.Status.UNINITIALIZED)
-                    isPasswordReset = true;
 
-                String password = data.getFirst("Password");
-                PasswordValidator validator = PasswordValidatorFactory.createDefault();
-                if (!validator.isStrongEnough(password))
-                    throw new PasswordTooWeak();
-                final String hash = new Md5Hash(data.getFirst("Password")).toString();
-                result = result.setAuthToken(hash);
+
+        if (data.containsKey("Status")) {
+            // if the status is switched , the rest of the updates are ignored.
+            newStatus = Account.Status.getValueOf(data.getFirst("Status").toLowerCase());
+            return account.setStatus(newStatus);
+        }
+        if (data.containsKey("FriendlyName")) {
+            result = result.setFriendlyName(data.getFirst("FriendlyName"));
+        }
+        if (data.containsKey("Password")) {
+            // if this is a reset-password operation, we also need to set the account status to active
+            if (account.getStatus() == Account.Status.UNINITIALIZED)
+                isPasswordReset = true;
+
+            String password = data.getFirst("Password");
+            PasswordValidator validator = PasswordValidatorFactory.createDefault();
+            if (!validator.isStrongEnough(password)) {
+                CustomReasonPhraseType stat = new CustomReasonPhraseType(Response.Status.BAD_REQUEST, "Password too weak");
+                throw new WebApplicationException(status(stat).build());
             }
-            if (newStatus != null) {
-                result = result.setStatus(newStatus);
-            } else {
-                // if this is a password reset operation we need to activate the account (in case there is no explicity Status passed of course)
-                if (isPasswordReset)
-                    result = result.setStatus(Account.Status.ACTIVE);
-            }
-            if (data.containsKey("Role")) {
-                Account operatingAccount = userIdentityContext.getEffectiveAccount();
-                // Only allow role change for administrators. Multitenancy checks will take care of restricting the modification scope to sub-accounts.
-                if (userIdentityContext.getEffectiveAccountRoles().contains(getAdministratorRole())) {
-                    result = result.setRole(data.getFirst("Role"));
-                } else
-                    throw new AuthorizationException();
-            }
-        } catch (AuthorizationException | AccountAlreadyClosed | PasswordTooWeak e) {
-            // some exceptions should reach outer layers and result in 403
-            throw e;
-        } catch (Exception e) {
-            if (logger.isInfoEnabled()) {
-                logger.info("Exception during Account update: "+e.getStackTrace());
+            final String hash = new Md5Hash(data.getFirst("Password")).toString();
+            result = result.setAuthToken(hash);
+        }
+        if (newStatus != null) {
+            result = result.setStatus(newStatus);
+        } else {
+            // if this is a password reset operation we need to activate the account (in case there is no explicity Status passed of course)
+            if (isPasswordReset) {
+                result = result.setStatus(Account.Status.ACTIVE);
             }
         }
+        if (data.containsKey("Role")) {
+            // Only allow role change for administrators. Multitenancy checks will take care of restricting the modification scope to sub-accounts.
+            if (userIdentityContext.getEffectiveAccountRoles().contains(getAdministratorRole())) {
+                result = result.setRole(data.getFirst("Role"));
+            } else {
+                CustomReasonPhraseType stat = new CustomReasonPhraseType(Response.Status.FORBIDDEN, "Only Administrator allowed");
+                throw new WebApplicationException(status(stat).build());
+            }
+        }
+
         return result;
     }
 
@@ -568,20 +563,20 @@ public class AccountsEndpoint extends SecuredEndpoint {
         } else {
             // since the operated account exists, first thing to do is make sure we have access
             secure(account, "RestComm:Modify:Accounts", SecuredType.SECURED_ACCOUNT);
-            // If the account is CLOSED, no updates are allowed. Return a BAD_REQUEST status code.
-            Account modifiedAccount;
-            try {
-                modifiedAccount = prepareAccountForUpdate(account, data);
-            } catch (AccountAlreadyClosed accountAlreadyClosed) {
-                return status(BAD_REQUEST).build();
-            } catch (PasswordTooWeak passwordTooWeak) {
-                return status(BAD_REQUEST).entity(buildErrorResponseBody("Password too weak",responseType)).type(responseType).build();
+
+            // if the account is already CLOSED, no updates are allowed
+            if (account.getStatus() == Account.Status.CLOSED) {
+                CustomReasonPhraseType stat = new CustomReasonPhraseType(Response.Status.BAD_REQUEST, "Account is closed");
+                throw new WebApplicationException(status(stat).build());
             }
 
-            // are we closing the account ?
-            if (account.getStatus() != Account.Status.CLOSED && modifiedAccount.getStatus() == Account.Status.CLOSED) {
-                closeAccountTree(modifiedAccount);
-                accountsDao.updateAccount(modifiedAccount);
+            // If the account is CLOSED, no updates are allowed. Return a BAD_REQUEST status code.
+            Account modifiedAccount;
+            modifiedAccount = prepareAccountForUpdate(account, data);
+
+            // we are modifying status
+            if (account.getStatus() != modifiedAccount.getStatus()) {
+                switchAccountStatusTree(modifiedAccount);
             } else {
                 // if we're not closing the account, update SIP client of the corresponding Account.
                 // Password and FriendlyName fields are synched.
@@ -639,7 +634,6 @@ public class AccountsEndpoint extends SecuredEndpoint {
 
     private Organization getOrganization(final MultivaluedMap<String, String> data) {
         Organization organization = null;
-        Sid organizationSid = null;
         String organizationId = null;
 
         if (data.containsKey("Organization")) {
@@ -717,65 +711,72 @@ public class AccountsEndpoint extends SecuredEndpoint {
         }
     }
 
-
-    /**
-     * Removes all resources belonging to an account and sets its status to CLOSED. If rcmlServerApi is not null it will
-     * also send account-removal notifications to the rcmlserver
-     *
-     * @param closedAccount
-     */
-    private void closeSingleAccount(Account closedAccount, RcmlserverApi rcmlServerApi) {
-        // first send account removal notification to RVD now that the applications of the account still exist
-        if (rcmlServerApi != null) {
-            RcmlserverNotifications notifications = new RcmlserverNotifications();
-            notifications.add(rcmlServerApi.buildAccountClosingNotification(closedAccount));
-            Account notifier = userIdentityContext.getEffectiveAccount();
-            try {
-                rcmlServerApi.transmitNotifications(notifications, notifier.getSid().toString(), notifier.getAuthToken());
-            } catch (RcmlserverNotifyError e) {
-                logger.error(e.getMessage(),e); // just report
-            }
-        }
-        // then proceed to dependency removal
-        removeAccoundDependencies(closedAccount.getSid());
-        // finally, set account status to closed.
-        closedAccount = closedAccount.setStatus(Account.Status.CLOSED);
-        accountsDao.updateAccount(closedAccount);
-    }
-
-    /**
-     * Closes an account along with all its children (the whole tree). Dependent entities are removed and,
-     * if configured, notification are sent to the rcml server (RVD) as well.
-     *
-     * @param parentAccount
-     */
-    private void closeAccountTree(Account parentAccount) {
+    private void sendRVDStatusNotification(Account updatedAccount) {
         // set rcmlserverApi in case we need to also notify the application sever (RVD)
         RestcommConfiguration rcommConfiguration = RestcommConfiguration.getInstance();
         RcmlserverConfigurationSet config = rcommConfiguration.getRcmlserver();
-        RcmlserverApi rcmlserverApi = null;
-        if (config != null && config.getNotify())
-            rcmlserverApi = new RcmlserverApi(rcommConfiguration.getMain(), rcommConfiguration.getRcmlserver());
+        if (config != null && config.getNotify()) {
+            // first send account removal notification to RVD now that the applications of the account still exist
+            RcmlserverApi rcmlServerApi = new RcmlserverApi(rcommConfiguration.getMain(), rcommConfiguration.getRcmlserver());
+            RcmlserverNotifications notifications = new RcmlserverNotifications();
+            notifications.add(rcmlServerApi.buildAccountStatusNotification(updatedAccount));
+            Account notifier = userIdentityContext.getEffectiveAccount();
+            rcmlServerApi.transmitNotifications(notifications, notifier.getSid().toString(), notifier.getAuthToken());
+        }
+    }
 
-        // close child accounts
-        List<String> subAccountsToClose = accountsDao.getSubAccountSidsRecursive(parentAccount.getSid());
-        if (subAccountsToClose != null && !subAccountsToClose.isEmpty()) {
-            int i = subAccountsToClose.size(); // is is the count of accounts left to process
+
+    /**
+     * Switches an account status at dao level.
+     *
+     * If status is CLSOED, Removes all resources belonging to an account.
+     *
+     * If rcmlServerApi is not null it will
+     * also send account-removal notifications to the rcmlserver
+     *
+     * @param account
+     */
+    private void switchAccountStatus(Account account) {
+        switch (account.getStatus()) {
+            case CLOSED:
+                sendRVDStatusNotification(account);
+                // then proceed to dependency removal
+                removeAccoundDependencies(account.getSid());
+                break;
+            default:
+                break;
+
+        }
+        // finally, set account status to closed.
+        account = account.setStatus(Account.Status.CLOSED);
+        accountsDao.updateAccount(account);
+    }
+
+    /**
+     * Switches status of account along with all its children (the whole tree).
+     *
+     * @param parentAccount
+     */
+    private void switchAccountStatusTree(Account parentAccount) {
+        // transition child accounts
+        List<String> subAccountsToSwitch = accountsDao.getSubAccountSidsRecursive(parentAccount.getSid());
+        if (subAccountsToSwitch != null && !subAccountsToSwitch.isEmpty()) {
+            int i = subAccountsToSwitch.size(); // is is the count of accounts left to process
             // we iterate backwards to handle child accounts first, parent accounts next
             while (i > 0) {
                 i --;
-                String removedSid = subAccountsToClose.get(i);
+                String removedSid = subAccountsToSwitch.get(i);
                 try {
                     Account subAccount = accountsDao.getAccount(new Sid(removedSid));
-                    closeSingleAccount(subAccount,rcmlserverApi);
+                    switchAccountStatus(subAccount);
                 } catch (Exception e) {
                     // if anything bad happens, log the error and continue removing the rest of the accounts.
-                    logger.error("Failed removing (child) account '" + removedSid + "'");
+                    logger.error("Failed switching status (child) account '" + removedSid + "'");
                 }
             }
         }
         // close parent account too
-        closeSingleAccount(parentAccount,rcmlserverApi);
+        switchAccountStatus(parentAccount);
     }
 
     private void validate(final MultivaluedMap<String, String> data) throws NullPointerException {
