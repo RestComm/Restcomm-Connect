@@ -10,7 +10,6 @@ import java.net.URI;
 import java.net.URISyntaxException;
 import java.net.URL;
 
-import javax.ws.rs.core.MediaType;
 
 import org.apache.http.HttpResponse;
 import org.apache.http.client.ClientProtocolException;
@@ -30,18 +29,11 @@ import org.restcomm.connect.commons.Version;
 import org.restcomm.connect.commons.annotations.FeatureAltTests;
 import org.restcomm.connect.commons.annotations.FeatureExpTests;
 
-import com.fasterxml.jackson.databind.JsonNode;
-import com.github.fge.jackson.JsonLoader;
-import com.github.fge.jsonschema.main.JsonSchema;
-import com.github.fge.jsonschema.main.JsonSchemaFactory;
 import com.google.gson.JsonArray;
 import com.google.gson.JsonObject;
 import com.google.gson.JsonParser;
-import com.sun.jersey.api.client.Client;
 import com.sun.jersey.api.client.ClientResponse;
-import com.sun.jersey.api.client.WebResource;
 import com.sun.jersey.api.client.WebResourceLinkHeaders;
-import com.sun.jersey.api.client.filter.HTTPBasicAuthFilter;
 import com.sun.jersey.core.header.LinkHeader;
 
 /**
@@ -285,6 +277,15 @@ public class ProfilesEndpointTest extends EndpointTest {
 		 */
     	ClientResponse clientResponse = RestcommProfilesTool.getInstance().deleteProfileResponse(deploymentUrl.toString(), SUPER_ADMIN_ACCOUNT_SID, AUTH_TOKEN, UNKNOWN_PROFILE_SID);
     	assertEquals(404, clientResponse.getStatus());
+    }
+
+    @Test
+    @Category(FeatureExpTests.class)
+    public void createExceedingProfileTest(){
+        String longProfile = new String(new char[10000001]);
+    	//admin tries to create profile
+    	ClientResponse  clientResponse = RestcommProfilesTool.getInstance().createProfileResponse(deploymentUrl.toString(), ADMIN_ACCOUNT_SID, AUTH_TOKEN, longProfile);
+    	assertEquals(413, clientResponse.getStatus());
     }
 
     @Test
