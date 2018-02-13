@@ -1478,6 +1478,7 @@ public class CallLifecycleTest {
         assertTrue(MonitoringServiceTool.getInstance().getLiveOutgoingCallStatistics(deploymentUrl.toString(),adminAccountSid, adminAuthToken)==1);
         assertTrue(MonitoringServiceTool.getInstance().getLiveCallsArraySize(deploymentUrl.toString(),adminAccountSid, adminAuthToken)==2);
 
+        alicePhone.setAutoResponseOptionsRequests(false);
         aliceCall.disposeNoBye();
         georgeCall.listenForDisconnect();
 
@@ -1511,6 +1512,7 @@ public class CallLifecycleTest {
 
         assertEquals(0, mgcpEndpoints);
         assertEquals(0, mgcpConnections);
+        alicePhone.setAutoResponseOptionsRequests(true);
     }
 
     @Test

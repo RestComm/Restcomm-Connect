@@ -10,6 +10,8 @@ import java.net.URI;
 import java.net.URISyntaxException;
 import java.net.URL;
 
+import javax.ws.rs.core.MediaType;
+
 import org.apache.http.HttpResponse;
 import org.apache.http.client.ClientProtocolException;
 import org.apache.log4j.Logger;
@@ -35,8 +37,11 @@ import com.github.fge.jsonschema.main.JsonSchemaFactory;
 import com.google.gson.JsonArray;
 import com.google.gson.JsonObject;
 import com.google.gson.JsonParser;
+import com.sun.jersey.api.client.Client;
 import com.sun.jersey.api.client.ClientResponse;
+import com.sun.jersey.api.client.WebResource;
 import com.sun.jersey.api.client.WebResourceLinkHeaders;
+import com.sun.jersey.api.client.filter.HTTPBasicAuthFilter;
 import com.sun.jersey.core.header.LinkHeader;
 
 /**
@@ -65,9 +70,9 @@ public class ProfilesEndpointTest extends EndpointTest {
     private static final String UNKNOWN_ACCOUNT_SID = "AC1111225ad37541eba518a74248f0ac4d";
     private static final String UNKNOWN_ORGANIZATION_SID = "OR1111225ad37541eba518a74248f0ac4d";
 
-    private static final String PROFILE_DOCUMENT="{ \"featureEnablement\": { \"DIDPurchase\": { \"allowedCountries\": [\"US\", \"CA\"] }, \"destinations\": { \"allowedPrefixes\": [\"+1\"] }, \"outboundPSTN\": { }, \"inboundPSTN\": { }, \"outboundSMS\": { }, \"inboundSMS\": { } }, \"sessionThrottling\": { \"PSTNCallsPerTime\": { \"events\" : 300, \"time\" : 30, \"timeUnit\" : \"days\" } } }";
-    private static final String UPDATE_PROFILE_DOCUMENT="{ \"featureEnablement\": { \"DIDPurchase\": { \"allowedCountries\": [\"PK\", \"CA\"] }, \"destinations\": { \"allowedPrefixes\": [\"+1\"] }, \"outboundPSTN\": { }, \"inboundPSTN\": { }, \"outboundSMS\": { }, \"inboundSMS\": { } }, \"sessionThrottling\": { \"PSTNCallsPerTime\": { \"events\" : 300, \"time\" : 30, \"timeUnit\" : \"days\" } } }";
-    private static final String INVALID_PROFILE_DOCUMENT="{ \"featureEnablement\": { \"DIDPurchase\": { \"allowedCountries\": [\"PKeuietue\", \"CA\"] }, \"destinations\": { \"allowedPrefixes\": [\"+1\"] }, \"outboundPSTN\": { }, \"inboundPSTN\": { }, \"outboundSMS\": { }, \"inboundSMS\": { } }, \"sessionThrottling\": { \"PSTNCallsPerTime\": { \"events\" : 300, \"time\" : 30, \"timeUnit\" : \"days\" } } }";
+    private static final String PROFILE_DOCUMENT="{ \"featureEnablement\": { \"DIDPurchase\": { \"allowedCountries\": [\"US\", \"CA\"] },  \"outboundPSTN\": { }, \"inboundPSTN\": { }, \"outboundSMS\": { }, \"inboundSMS\": { } }, \"sessionThrottling\": { \"PSTNCallsPerTime\": { \"events\" : 300, \"time\" : 30, \"timeUnit\" : \"days\" } } }";
+    private static final String UPDATE_PROFILE_DOCUMENT="{ \"featureEnablement\": { \"DIDPurchase\": { \"allowedCountries\": [\"PK\", \"CA\"] },  \"outboundPSTN\": { }, \"inboundPSTN\": { }, \"outboundSMS\": { }, \"inboundSMS\": { } }, \"sessionThrottling\": { \"PSTNCallsPerTime\": { \"events\" : 300, \"time\" : 30, \"timeUnit\" : \"days\" } } }";
+    private static final String INVALID_PROFILE_DOCUMENT="{ \"featureEnablement\": { \"DIDPurchase\": { \"allowedCountries\": [\"PKeuietue\", \"CA\"] },  \"outboundPSTN\": { }, \"inboundPSTN\": { }, \"outboundSMS\": { }, \"inboundSMS\": { } }, \"sessionThrottling\": { \"PSTNCallsPerTime\": { \"events\" : 300, \"time\" : 30, \"timeUnit\" : \"days\" } } }";
 
     @Before
     public void before() {
@@ -523,12 +528,7 @@ public class ProfilesEndpointTest extends EndpointTest {
 
     @Test
     public void getProfileSchemaTest() throws Exception {
-        URL schemaURL = new URL(RestcommProfilesTool.getInstance().getProfileSchemaUrl(deploymentUrl.toString()));
-        final JsonNode schemaNode = JsonLoader.fromURL(schemaURL);
-        final JsonSchemaFactory factory = JsonSchemaFactory.byDefault();
-        final JsonSchema schema = factory.getJsonSchema(schemaNode);
-
-    	ClientResponse clientResponse = RestcommProfilesTool.getInstance().getProfileSchema(deploymentUrl.toString(), SUPER_ADMIN_ACCOUNT_SID, AUTH_TOKEN);
+        ClientResponse clientResponse = RestcommProfilesTool.getInstance().getProfileSchema(deploymentUrl.toString(), SUPER_ADMIN_ACCOUNT_SID, AUTH_TOKEN);
     	assertEquals(200, clientResponse.getStatus());
     	String str = clientResponse.getEntity(String.class);
     	assertNotNull(str);
@@ -551,7 +551,7 @@ public class ProfilesEndpointTest extends EndpointTest {
 		HttpResponse response = RestcommProfilesTool.getInstance().linkProfile(deploymentUrl.toString(), SUPER_ADMIN_ACCOUNT_SID, AUTH_TOKEN, DEFAULT_PROFILE_SID, DEVELOPER_ACCOUNT_SID, RestcommProfilesTool.AssociatedResourceType.ACCOUNT);
 		logger.info("HttpResponse: "+response);
 		assertEquals(200, response.getStatusLine().getStatusCode());
-	
+
 		/**
 		 * Get associated profile
 		 * from Accounts endpoint:
@@ -565,7 +565,7 @@ public class ProfilesEndpointTest extends EndpointTest {
 		logger.info("accountEndopintResponse WebResourceLinkHeaders linkHeader: "+linkHeader);
 		assertNotNull(linkHeader);
 		assertTrue(linkHeader.getUri().toString().contains(DEFAULT_PROFILE_SID));
-	
+
 		/**
 		 * Create a new profile
 		 */
@@ -580,14 +580,14 @@ public class ProfilesEndpointTest extends EndpointTest {
     	String[] profileUriElements = profileLocation.split("/");
     	assertNotNull(profileUriElements);
     	String newlyCreatedProfileSid = profileUriElements[profileUriElements.length-1];
-    	
+
     	/**
 		 * link newlyCreated profile to dev account.
 		 */
     	response = RestcommProfilesTool.getInstance().linkProfile(deploymentUrl.toString(), SUPER_ADMIN_ACCOUNT_SID, AUTH_TOKEN, newlyCreatedProfileSid, DEVELOPER_ACCOUNT_SID, RestcommProfilesTool.AssociatedResourceType.ACCOUNT);
 		logger.info("HttpResponse: "+response);
 		assertEquals(200, response.getStatusLine().getStatusCode());
-	
+
 		/**
 		 * Get associated profile
 		 * from Accounts endpoint:
@@ -618,7 +618,7 @@ public class ProfilesEndpointTest extends EndpointTest {
 		HttpResponse response = RestcommProfilesTool.getInstance().linkProfile(deploymentUrl.toString(), SUPER_ADMIN_ACCOUNT_SID, AUTH_TOKEN, DEFAULT_PROFILE_SID, ADMIN_ACCOUNT_SID, RestcommProfilesTool.AssociatedResourceType.ACCOUNT);
 		logger.info("HttpResponse: "+response);
 		assertEquals(200, response.getStatusLine().getStatusCode());
-	
+
 		/**
 		 * Get associated profile
 		 * from Accounts endpoint:
@@ -632,14 +632,14 @@ public class ProfilesEndpointTest extends EndpointTest {
 		logger.info("accountEndopintResponse WebResourceLinkHeaders linkHeader: "+linkHeader);
 		assertNotNull(linkHeader);
 		assertTrue(linkHeader.getUri().toString().contains(DEFAULT_PROFILE_SID));
-    	
+
     	/**
 		 * link default profile to admin account again.
 		 */
     	response = RestcommProfilesTool.getInstance().linkProfile(deploymentUrl.toString(), SUPER_ADMIN_ACCOUNT_SID, AUTH_TOKEN, DEFAULT_PROFILE_SID, ADMIN_ACCOUNT_SID, RestcommProfilesTool.AssociatedResourceType.ACCOUNT);
 		logger.info("HttpResponse: "+response);
 		assertEquals(200, response.getStatusLine().getStatusCode());
-	
+
 		/**
 		 * Get associated profile
 		 * from Accounts endpoint:
