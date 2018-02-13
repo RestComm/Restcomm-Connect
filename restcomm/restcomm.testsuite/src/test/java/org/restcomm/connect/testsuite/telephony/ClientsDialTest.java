@@ -575,6 +575,7 @@ public class ClientsDialTest {
     }
 
     @Test
+    @Category(UnstableTests.class)
     public void testClientDialOutPstn() throws ParseException, InterruptedException {
 
         assertNotNull(mariaRestcommClientSid);

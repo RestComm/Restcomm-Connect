@@ -553,9 +553,8 @@ public final class CallManager extends RestcommUntypedActor {
 
                 ExtensionController ec = ExtensionController.getInstance();
                 final IExtensionCreateCallRequest er = new CreateCall(fromUser, toUser, "", "", false, 0, CreateCallType.CLIENT, client.getAccountSid(), null, null, null, null);
-                ec.executePreOutboundAction(er, extensions);
-
-                if (er.isAllowed()) {
+                ExtensionResponse extRes = ec.executePreOutboundAction(er, extensions);
+                if (extRes.isAllowed()) {
                     long delay = pushNotificationServerHelper.sendPushNotificationIfNeeded(toClient.getPushClientIdentity());
                     system.scheduler().scheduleOnce(Duration.create(delay, TimeUnit.MILLISECONDS), new Runnable() {
                         @Override
@@ -611,8 +610,8 @@ public final class CallManager extends RestcommUntypedActor {
 
                 ExtensionController ec = ExtensionController.getInstance();
                 IExtensionCreateCallRequest er = new CreateCall(fromUser, toUser, "", "", false, 0, CreateCallType.PSTN, client.getAccountSid(), null, null, null, null);
-                ec.executePreOutboundAction(er, this.extensions);
-                if (er.isAllowed()) {
+                ExtensionResponse extRes = ec.executePreOutboundAction(er, this.extensions);
+                if (extRes.isAllowed()) {
                     if (actAsProxyOut) {
                         processRequestAndProxyOut(request, client, toUser);
                     } else if (isWebRTC(request)) {
@@ -664,9 +663,9 @@ public final class CallManager extends RestcommUntypedActor {
             if (toClient != null) {
                 ExtensionController ec = ExtensionController.getInstance();
                 final IExtensionCreateCallRequest cc = new CreateCall(fromUser, toUser, "", "", false, 0, CreateCallType.CLIENT, toClient.getAccountSid(), null, null, null, null);
-                ExtensionResponse er = ec.executePreInboundAction(cc, this.extensions);
+                ExtensionResponse extRes = ec.executePreInboundAction(cc, this.extensions);
 
-                if (er.isAllowed()) {
+                if (extRes.isAllowed()) {
                     proxyDialClientThroughMediaServer(request, toClient, toClient.getLogin());
                     return;
                 } else {
@@ -1792,10 +1791,10 @@ public final class CallManager extends RestcommUntypedActor {
     private void outbound(final Object message, final ActorRef sender) throws ServletParseException {
         final CreateCall request = (CreateCall) message;
         ExtensionController ec = ExtensionController.getInstance();
-        ec.executePreOutboundAction(request, this.extensions);
+        ExtensionResponse extRes = ec.executePreOutboundAction(request, this.extensions);
         switch (request.type()) {
             case CLIENT: {
-                if (request.isAllowed()) {
+                if (extRes.isAllowed()) {
                     ClientsDao clients = storage.getClientsDao();
                     Client client = clients.getClient(request.to().replaceFirst("client:", ""), storage.getAccountsDao().getAccount(request.accountId()).getOrganizationSid());
                     if (client != null) {
@@ -1828,7 +1827,7 @@ public final class CallManager extends RestcommUntypedActor {
                 break;
             }
             case PSTN: {
-                if (request.isAllowed()) {
+                if (extRes.isAllowed()) {
                     outboundToPstn(request, sender);
                 } else {
                     //Extensions didn't allowed this call
