@@ -21,6 +21,8 @@ package org.restcomm.connect.http;
 
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
+import com.sun.jersey.core.header.LinkHeader;
+import com.sun.jersey.core.header.LinkHeader.LinkHeaderBuilder;
 import com.sun.jersey.core.util.MultivaluedMapImpl;
 import com.thoughtworks.xstream.XStream;
 import org.apache.commons.configuration.Configuration;
@@ -76,6 +78,10 @@ import static javax.ws.rs.core.Response.Status.NOT_FOUND;
 import static javax.ws.rs.core.Response.Status.PRECONDITION_FAILED;
 import static javax.ws.rs.core.Response.ok;
 import static javax.ws.rs.core.Response.status;
+import org.restcomm.connect.dao.ProfileAssociationsDao;
+import org.restcomm.connect.dao.entities.ProfileAssociation;
+import static org.restcomm.connect.http.ProfileEndpoint.PROFILE_REL_TYPE;
+import static org.restcomm.connect.http.ProfileEndpoint.TITLE_PARAM;
 
 /**
  * @author quintana.thomas@gmail.com (Thomas Quintana)
@@ -88,6 +94,8 @@ public class AccountsEndpoint extends SecuredEndpoint {
     protected XStream xstream;
     protected ClientsDao clientDao;
     protected IncomingPhoneNumbersDao incomingPhoneNumbersDao;
+    private ProfileAssociationsDao profileAssociationsDao;
+
 
     public AccountsEndpoint() {
         super();
@@ -105,6 +113,7 @@ public class AccountsEndpoint extends SecuredEndpoint {
         super.init(runtimeConfiguration);
         clientDao = ((DaoManager) context.getAttribute(DaoManager.class.getName())).getClientsDao();
         incomingPhoneNumbersDao = ((DaoManager) context.getAttribute(DaoManager.class.getName())).getIncomingPhoneNumbersDao();
+        profileAssociationsDao = ((DaoManager) context.getAttribute(DaoManager.class.getName())).getProfileAssociationsDao();
         final AccountConverter converter = new AccountConverter(runtimeConfiguration);
         final GsonBuilder builder = new GsonBuilder();
         builder.registerTypeAdapter(Account.class, converter);
@@ -162,8 +171,14 @@ public class AccountsEndpoint extends SecuredEndpoint {
         return new Account(sid, now, now, emailAddress, friendlyName, accountSid, type, status, authToken, role, uri, organizationSid);
     }
 
-    protected Response getAccount(final String accountSid, final MediaType responseType) {
-        checkAuthenticatedAccount();
+    public LinkHeader composeLink(Sid targetSid, UriInfo info) {
+        String sid = targetSid.toString();
+        URI uri = info.getBaseUriBuilder().path(ProfileJsonEndpoint.class).path(sid).build();
+        LinkHeaderBuilder link = LinkHeader.uri(uri).parameter(TITLE_PARAM, "Profiles");
+        return link.rel(PROFILE_REL_TYPE).build();
+    }
+
+    protected Response getAccount(final String accountSid, final MediaType responseType, UriInfo info) {
         //First check if the account has the required permissions in general, this way we can fail fast and avoid expensive DAO operations
         Account account = null;
         checkPermission("RestComm:Read:Accounts");
@@ -186,11 +201,17 @@ public class AccountsEndpoint extends SecuredEndpoint {
         if (account == null) {
             return status(NOT_FOUND).build();
         } else {
+            Response.ResponseBuilder ok = Response.ok();
+            ProfileAssociation profileAssociationByTargetSid = profileAssociationsDao.getProfileAssociationByTargetSid(accountSid);
+            if (profileAssociationByTargetSid != null) {
+                LinkHeader profileLink = composeLink(profileAssociationByTargetSid.getProfileSid(), info);
+                ok.header(ProfileEndpoint.LINK_HEADER, profileLink.toString());
+            }
             if (APPLICATION_XML_TYPE == responseType) {
                 final RestCommResponse response = new RestCommResponse(account);
-                return ok(xstream.toXML(response), APPLICATION_XML).build();
+                return ok.type(APPLICATION_XML).entity(xstream.toXML(response)).build();
             } else if (APPLICATION_JSON_TYPE == responseType) {
-                return ok(gson.toJson(account), APPLICATION_JSON).build();
+                return ok.type(APPLICATION_JSON).entity(gson.toJson(account)).build();
             } else {
                 return null;
             }
@@ -279,6 +300,7 @@ public class AccountsEndpoint extends SecuredEndpoint {
         daoManager.getApplicationsDao().removeApplications(sid);
         removeIncomingPhoneNumbers(sid,daoManager.getIncomingPhoneNumbersDao());
         daoManager.getClientsDao().removeClients(sid);
+        profileAssociationsDao.deleteProfileAssociationByTargetSid(sid.toString());
     }
 
     /**
@@ -324,7 +346,6 @@ public class AccountsEndpoint extends SecuredEndpoint {
 
 
     protected Response getAccounts(final UriInfo info, final MediaType responseType) {
-        checkAuthenticatedAccount();
         //First check if the account has the required permissions in general, this way we can fail fast and avoid expensive DAO operations
         checkPermission("RestComm:Read:Accounts");
         final Account account = userIdentityContext.getEffectiveAccount();
@@ -366,7 +387,6 @@ public class AccountsEndpoint extends SecuredEndpoint {
     }
 
     protected Response putAccount(final MultivaluedMap<String, String> data, final MediaType responseType) {
-        checkAuthenticatedAccount();
         //First check if the account has the required permissions in general, this way we can fail fast and avoid expensive DAO operations
         checkPermission("RestComm:Create:Accounts");
         // check account level depth. If we're already at third level no sub-accounts are allowed to be created
@@ -538,7 +558,6 @@ public class AccountsEndpoint extends SecuredEndpoint {
 
     protected Response updateAccount(final String identifier, final MultivaluedMap<String, String> data,
             final MediaType responseType) {
-        checkAuthenticatedAccount();
         // First check if the account has the required permissions in general, this way we can fail fast and avoid expensive DAO
         // operations
         checkPermission("RestComm:Modify:Accounts");
@@ -642,11 +661,6 @@ public class AccountsEndpoint extends SecuredEndpoint {
 
     protected Response migrateAccountOrganization(final String identifier, final MultivaluedMap<String, String> data,
                                               final MediaType responseType) {
-
-        //Validation 1 - Only SuperAdmin is allowed to migrate organization for an Account
-        if (!isSuperAdmin()) {
-            throw new InsufficientPermission();
-        }
 
         Organization organization = getOrganization(data);
         //Validation 2 - Check if data contains Organization (either SID or domain name)

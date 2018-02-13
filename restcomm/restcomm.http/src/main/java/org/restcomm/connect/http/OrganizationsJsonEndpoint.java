@@ -20,7 +20,9 @@
 package org.restcomm.connect.http;
 
 import static javax.ws.rs.core.MediaType.APPLICATION_JSON_TYPE;
+import static org.restcomm.connect.http.security.AccountPrincipal.SUPER_ADMIN_ROLE;
 
+import javax.annotation.security.RolesAllowed;
 import javax.ws.rs.GET;
 import javax.ws.rs.PUT;
 import javax.ws.rs.Path;
@@ -43,17 +45,20 @@ public final class OrganizationsJsonEndpoint extends OrganizationsEndpoint {
 
     @Path("/{organizationSid}")
     @GET
-    public Response getOrganizationAsJson(@PathParam("organizationSid") final String organizationSid) {
-        return getOrganization(organizationSid, APPLICATION_JSON_TYPE);
+    public Response getOrganizationAsJson(@PathParam("organizationSid") final String organizationSid,
+            @Context UriInfo info) {
+        return getOrganization(organizationSid, APPLICATION_JSON_TYPE, info);
     }
 
     @GET
+    @RolesAllowed(SUPER_ADMIN_ROLE)
     public Response getOrganizations(@Context UriInfo info) {
         return getOrganizations(info, APPLICATION_JSON_TYPE);
     }
 
     @Path("/{domainName}")
     @PUT
+    @RolesAllowed(SUPER_ADMIN_ROLE)
     public Response putOrganizationPut(@PathParam("domainName") final String domainName, @Context UriInfo info) {
         return putOrganization(domainName, info, APPLICATION_JSON_TYPE);
     }

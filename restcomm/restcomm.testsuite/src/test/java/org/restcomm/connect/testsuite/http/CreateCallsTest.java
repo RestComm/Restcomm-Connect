@@ -277,6 +277,7 @@ public class CreateCallsTest {
     }
 
     @Test
+    @Category(UnstableTests.class)
     // Create a call to a Restcomm Client. Non-regression test for issue
     // https://bitbucket.org/telestax/telscale-restcomm/issue/175
     // Use Calls Rest API to dial Alice Restcomm client and connect him to the RCML app dial-number-entry.xml.
@@ -451,7 +452,7 @@ public class CreateCallsTest {
         assertTrue(aliceCall.waitForDisconnect(5000));
         assertTrue(aliceCall.respondToDisconnect());
 
-        Thread.sleep(2000);
+        Thread.sleep(3000);
 
         JsonObject metrics = MonitoringServiceTool.getInstance().getMetrics(deploymentUrl.toString(),adminAccountSid, adminAuthToken);
         assertNotNull(metrics);

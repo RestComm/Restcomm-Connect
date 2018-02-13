@@ -30,11 +30,15 @@ import javax.ws.rs.core.Response;
 import org.restcomm.connect.commons.dao.Sid;
 
 import static javax.ws.rs.core.MediaType.APPLICATION_JSON_TYPE;
+import static org.restcomm.connect.http.security.AccountPrincipal.SUPER_ADMIN_ROLE;
+
+import javax.annotation.security.RolesAllowed;
 
 /**
  * Created by gvagenas on 12/10/2016.
  */
 @Path("/ExtensionsConfiguration.json")
+@RolesAllowed(SUPER_ADMIN_ROLE)
 public class ExtensionsConfigurationJsonEndpoint extends ExtensionsConfigurationEndpoint {
 
     @Path("/{extensionId}")

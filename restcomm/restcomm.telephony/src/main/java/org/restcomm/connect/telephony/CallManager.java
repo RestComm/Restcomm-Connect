@@ -553,9 +553,8 @@ public final class CallManager extends RestcommUntypedActor {
 
                 ExtensionController ec = ExtensionController.getInstance();
                 final IExtensionCreateCallRequest er = new CreateCall(fromUser, toUser, "", "", false, 0, CreateCallType.CLIENT, client.getAccountSid(), null, null, null, null);
-                ec.executePreOutboundAction(er, extensions);
-
-                if (er.isAllowed()) {
+                ExtensionResponse extRes = ec.executePreOutboundAction(er, extensions);
+                if (extRes.isAllowed()) {
                     long delay = pushNotificationServerHelper.sendPushNotificationIfNeeded(toClient.getPushClientIdentity());
                     system.scheduler().scheduleOnce(Duration.create(delay, TimeUnit.MILLISECONDS), new Runnable() {
                         @Override
@@ -611,8 +610,8 @@ public final class CallManager extends RestcommUntypedActor {
 
                 ExtensionController ec = ExtensionController.getInstance();
                 IExtensionCreateCallRequest er = new CreateCall(fromUser, toUser, "", "", false, 0, CreateCallType.PSTN, client.getAccountSid(), null, null, null, null);
-                ec.executePreOutboundAction(er, this.extensions);
-                if (er.isAllowed()) {
+                ExtensionResponse extRes = ec.executePreOutboundAction(er, this.extensions);
+                if (extRes.isAllowed()) {
                     if (actAsProxyOut) {
                         processRequestAndProxyOut(request, client, toUser);
                     } else if (isWebRTC(request)) {
@@ -664,9 +663,9 @@ public final class CallManager extends RestcommUntypedActor {
             if (toClient != null) {
                 ExtensionController ec = ExtensionController.getInstance();
                 final IExtensionCreateCallRequest cc = new CreateCall(fromUser, toUser, "", "", false, 0, CreateCallType.CLIENT, toClient.getAccountSid(), null, null, null, null);
-                ExtensionResponse er = ec.executePreInboundAction(cc, this.extensions);
+                ExtensionResponse extRes = ec.executePreInboundAction(cc, this.extensions);
 
-                if (er.isAllowed()) {
+                if (extRes.isAllowed()) {
                     proxyDialClientThroughMediaServer(request, toClient, toClient.getLogin());
                     return;
                 } else {
@@ -1256,23 +1255,30 @@ public final class CallManager extends RestcommUntypedActor {
         try {
             Sid destOrg = SIPOrganizationUtil.searchOrganizationBySIPRequest(storage.getOrganizationsDao(), request);
             if (destOrg == null) {
+                if (logger.isDebugEnabled()) {
+                    logger.debug("Destination Organization is null, will return false");
+                }
                 //organization was not proper.
                 return isFoundHostedApp;
             }
             NumberSelectionResult result = numberSelector.searchNumberWithResult(phone, sourceOrganizationSid, destOrg);
             number = result.getNumber();
 
-            ExtensionController ec = ExtensionController.getInstance();
-            IExtensionFeatureAccessRequest far = new FeatureAccessRequest(FeatureAccessRequest.Feature.INBOUND_VOICE, number.getAccountSid());
-            ExtensionResponse er = ec.executePreInboundAction(far, extensions);
 
-            if (er.isAllowed()) {
-                if (numberSelector.isFailedCall(result, sourceOrganizationSid, destOrg)) {
-                    // We found the number but organization was not proper
-                    sendNotFound(request, sourceOrganizationSid, phone, fromClientAccountSid);
-                    isFoundHostedApp = true;
-                } else {
-                    if (number != null) {
+            if (numberSelector.isFailedCall(result, sourceOrganizationSid, destOrg)) {
+                // We found the number but organization was not proper
+                if (logger.isDebugEnabled()) {
+                    String msg = String.format("Number found %s, but source org %s and destination org %s are not proper", number, sourceOrganizationSid.toString(), destOrg.toString());
+                    logger.debug(msg);
+                }
+                sendNotFound(request, sourceOrganizationSid, phone, fromClientAccountSid);
+                isFoundHostedApp = true;
+            } else {
+                if (number != null) {
+                    ExtensionController ec = ExtensionController.getInstance();
+                    IExtensionFeatureAccessRequest far = new FeatureAccessRequest(FeatureAccessRequest.Feature.INBOUND_VOICE, number.getAccountSid());
+                    ExtensionResponse er = ec.executePreInboundAction(far, extensions);
+                    if (er.isAllowed()) {
                         final VoiceInterpreterParams.Builder builder = new VoiceInterpreterParams.Builder();
                         builder.setConfiguration(configuration);
                         builder.setStorage(storage);
@@ -1324,31 +1330,30 @@ public final class CallManager extends RestcommUntypedActor {
                         interpreter.tell(new StartInterpreter(call), self);
                         isFoundHostedApp = true;
                         ec.executePostOutboundAction(far, extensions);
+                    }  else {
+                        //Extensions didn't allowed this call
+                        String errMsg = "Inbound call to Number: " + number.getPhoneNumber()
+                                + " is not allowed";
+                        if (logger.isDebugEnabled()) {
+                            logger.debug(errMsg);
+                        }
+                        sendNotification(number.getAccountSid(), errMsg, 11001, "warning", true);
+                        final SipServletResponse resp = request.createResponse(SC_FORBIDDEN, "Call not allowed");
+                        resp.send();
+                        ec.executePostOutboundAction(far, extensions);
+                        return false;
                     }
                 }
-            } else {
-                //Extensions didn't allowed this call
-                if (logger.isDebugEnabled()) {
-                    final String errMsg = "Inbound call is not Allowed";
-                    logger.debug(errMsg);
-                }
-                String errMsg = "Inbound call to Number: " + number.getPhoneNumber()
-                        + " is not allowed";
-                sendNotification(number.getAccountSid(), errMsg, 11001, "warning", true);
-                final SipServletResponse resp = request.createResponse(SC_FORBIDDEN, "Call not allowed");
-                resp.send();
-                ec.executePostOutboundAction(far, extensions);
-                return false;
             }
         } catch (Exception notANumber) {
             String errMsg;
             if (number != null) {
-                errMsg = "The number " + number.getPhoneNumber() + " does not have a Restcomm hosted application attached";
+                errMsg = String.format("IncomingPhoneNumber %s does not have a Restcomm hosted application attached, exception %s",number.getPhoneNumber(), notANumber);
             } else {
-                errMsg = "The number does not exist" + notANumber;
+                errMsg = String.format("IncomingPhoneNumber for %s, does not exist, exception %s",phone, notANumber);
             }
             sendNotification(fromClientAccountSid, errMsg, 11007, "error", false);
-            logger.warning(errMsg, notANumber);
+            logger.warning(errMsg);
             isFoundHostedApp = false;
         }
         return isFoundHostedApp;
@@ -1652,6 +1657,7 @@ public final class CallManager extends RestcommUntypedActor {
         builder.setFallbackMethod(request.fallbackMethod());
         builder.setMonitoring(monitoring);
         builder.setSdr(sdr);
+        builder.setTimeout(request.timeout());
         final Props props = VoiceInterpreter.props(builder.build());
         final ActorRef interpreter = getContext().actorOf(props);
         interpreter.tell(new StartInterpreter(request.call()), self);
@@ -1785,10 +1791,10 @@ public final class CallManager extends RestcommUntypedActor {
     private void outbound(final Object message, final ActorRef sender) throws ServletParseException {
         final CreateCall request = (CreateCall) message;
         ExtensionController ec = ExtensionController.getInstance();
-        ec.executePreOutboundAction(request, this.extensions);
+        ExtensionResponse extRes = ec.executePreOutboundAction(request, this.extensions);
         switch (request.type()) {
             case CLIENT: {
-                if (request.isAllowed()) {
+                if (extRes.isAllowed()) {
                     ClientsDao clients = storage.getClientsDao();
                     Client client = clients.getClient(request.to().replaceFirst("client:", ""), storage.getAccountsDao().getAccount(request.accountId()).getOrganizationSid());
                     if (client != null) {
@@ -1821,7 +1827,7 @@ public final class CallManager extends RestcommUntypedActor {
                 break;
             }
             case PSTN: {
-                if (request.isAllowed()) {
+                if (extRes.isAllowed()) {
                     outboundToPstn(request, sender);
                 } else {
                     //Extensions didn't allowed this call

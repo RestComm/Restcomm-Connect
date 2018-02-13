@@ -29,4 +29,28 @@ import org.restcomm.connect.commons.exceptions.RestcommRuntimeException;
  * @author otsakir@gmail.com - Orestis Tsakiridis
  */
 public class ResourceAccountMissmatch extends RestcommRuntimeException {
+
+    public ResourceAccountMissmatch() {
+    }
+
+    public ResourceAccountMissmatch(String message) {
+        super(message);
+    }
+
+    public ResourceAccountMissmatch(String message, Throwable cause) {
+        super(message, cause);
+    }
+
+    public ResourceAccountMissmatch(Throwable cause) {
+        super(cause);
+    }
+
+    public ResourceAccountMissmatch(String message, Throwable cause, boolean enableSuppression, boolean writableStackTrace) {
+        super(message, cause, enableSuppression, writableStackTrace);
+    }
+
+
+
+
+
 }

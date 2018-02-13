@@ -26,6 +26,13 @@
             <scope>provided</scope>
         </dependency>
 
+        <dependency>
+            <groupId>org.restcomm</groupId>
+            <artifactId>restcomm-connect.http</artifactId>
+            <version>${project.version}</version>
+            <scope>provided</scope>
+        </dependency>
+
         <!-- <dependency> <groupId>org.restcomm</groupId> <artifactId>restcomm-connect.application</artifactId>
         <version>${project.version}</version> <type>war</type> <scope>test</scope>
         </dependency> <dependency> <groupId>org.restcomm</groupId> <artifactId>restcomm-connect.commons</artifactId>
@@ -48,25 +55,21 @@
         <dependency>
             <groupId>org.scala-lang</groupId>
             <artifactId>scala-library</artifactId>
-            <version>${scala-lang.version}</version>
         </dependency>
 
         <dependency>
             <groupId>com.typesafe.akka</groupId>
             <artifactId>akka-actor_2.10</artifactId>
-            <version>${akka.version}</version>
         </dependency>
         <dependency>
             <groupId>com.typesafe.akka</groupId>
             <artifactId>akka-slf4j_2.10</artifactId>
-            <version>${akka.version}</version>
         </dependency>
 
 
         <dependency>
             <groupId>log4j</groupId>
             <artifactId>log4j</artifactId>
-            <version>${log4j.version}</version>
             <scope>provided</scope>
         </dependency>
 
@@ -83,77 +86,89 @@
         <dependency>
             <groupId>org.apache.shiro</groupId>
             <artifactId>shiro-core</artifactId>
-            <version>${shirocore.version}</version>
         </dependency>
 
         <dependency>
             <groupId>org.apache.shiro</groupId>
             <artifactId>shiro-web</artifactId>
-            <version>${shiroweb.version}</version>
         </dependency>
 
         <dependency>
             <groupId>com.sun.jersey</groupId>
             <artifactId>jersey-server</artifactId>
-            <version>${jersey.version}</version>
         </dependency>
 
         <dependency>
             <groupId>com.sun.jersey</groupId>
             <artifactId>jersey-client</artifactId>
-            <version>${jersey.version}</version>
         </dependency>
 
         <dependency>
             <groupId>stax</groupId>
             <artifactId>stax-api</artifactId>
-            <version>${staxapi.version}</version>
             <scope>provided</scope>
         </dependency>
 
         <dependency>
             <groupId>stax</groupId>
             <artifactId>stax</artifactId>
-            <version>${staximpl.version}</version>
             <scope>provided</scope>
         </dependency>
 
         <dependency>
             <groupId>com.thoughtworks.xstream</groupId>
             <artifactId>xstream</artifactId>
-            <version>${xstream.version}</version>
         </dependency>
 
         <dependency>
             <groupId>com.google.code.gson</groupId>
             <artifactId>gson</artifactId>
-            <scope>test</scope>
         </dependency>
 
         <dependency>
             <groupId>javax.sip</groupId>
             <artifactId>jain-sip-ri</artifactId>
-            <scope>test</scope>
         </dependency>
+        
+        <dependency>
+                <groupId>org.jboss.arquillian.junit</groupId>
+                <artifactId>arquillian-junit-container</artifactId>
+                <version>${arquillian.version}</version>
+                <scope>compile</scope>
+        </dependency>
+
+        <dependency>
+                <groupId>org.jboss.shrinkwrap.resolver</groupId>
+                <artifactId>shrinkwrap-resolver-impl-maven</artifactId>
+                <version>${shrinkwrap.resolver.version}</version>
+                <scope>compile</scope>
+        </dependency>
+
+        <dependency>
+                <groupId>org.jboss.shrinkwrap.resolver</groupId>
+                <artifactId>shrinkwrap-resolver-impl-maven-archive</artifactId>
+                <version>${shrinkwrap.resolver.version}</version>
+                <scope>compile</scope>
+        </dependency>        
 
         <!--Dependencies for Tomcat-7 -->
         <dependency>
             <groupId>org.mobicents.servlet.sip.containers</groupId>
             <artifactId>sip-servlets-catalina-7</artifactId>
             <version>${sipservletapi.version}</version>
-            <scope>test</scope>
+            <scope>compile</scope>
         </dependency>
         <dependency>
             <groupId>org.mobicents.servlet.sip.containers</groupId>
             <artifactId>sip-servlets-tomcat-7</artifactId>
             <version>${sipservletapi.version}</version>
-            <scope>test</scope>
+            <scope>compile</scope>            
         </dependency>
         <dependency>
             <groupId>org.mobicents.arquillian.container</groupId>
             <artifactId>mss-tomcat-embedded-7</artifactId>
             <version>${mss.arquillian.version}</version>
-            <scope>test</scope>
+            <scope>compile</scope>            
         </dependency>
 
         <!--Dependencies for Tomcat-7 -->
@@ -237,19 +252,16 @@
         <dependency>
             <groupId>org.apache.httpcomponents</groupId>
             <artifactId>httpclient</artifactId>
-            <scope>test</scope>
         </dependency>
 
         <dependency>
             <groupId>commons-configuration</groupId>
             <artifactId>commons-configuration</artifactId>
-            <scope>test</scope>
         </dependency>
 
         <dependency>
             <groupId>commons-io</groupId>
             <artifactId>commons-io</artifactId>
-            <scope>test</scope>
         </dependency>
 
         <dependency>
@@ -293,7 +305,6 @@
             <!-- Include this if you have dependency conflicts for Guava, Jetty, Jackson
             or Apache HTTP Client -->
             <classifier>standalone</classifier>
-            <scope>test</scope>
         </dependency>
 
         <dependency>
@@ -312,6 +323,7 @@
             <groupId>org.mobicents.arquillian.container</groupId>
             <artifactId>mss-arquillian-mediaserver-api</artifactId>
             <version>${mss.arquillian.version}</version>
+            <scope>compile</scope>
         </dependency>
         <dependency>
             <groupId>javax.servlet</groupId>
@@ -322,6 +334,7 @@
             <groupId>org.mobicents.arquillian.container</groupId>
             <artifactId>mss-arquillian-mediaserver-extension</artifactId>
             <version>${mss.arquillian.version}</version>
+            <scope>compile</scope>
         </dependency>
         <dependency>
             <groupId>com.icegreen</groupId>
@@ -360,12 +373,17 @@
             <scope>test</scope>
         </dependency>
 
-        <dependency>
-        <groupId>org.restcomm</groupId>
-        <artifactId>restcomm-connect.monitoring.service</artifactId>
-        <version>${project.version}</version>
-        <scope>test</scope>
-    </dependency>
+		<dependency>
+			<groupId>org.restcomm</groupId>
+			<artifactId>restcomm-connect.monitoring.service</artifactId>
+			<version>${project.version}</version>
+			<scope>test</scope>
+		</dependency>
+	
+		<dependency>
+			<groupId>org.restcomm.smpp</groupId>
+			<artifactId>smpp-extensions</artifactId>
+		</dependency>
 
     </dependencies>
 

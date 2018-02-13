@@ -44,7 +44,7 @@ angular.module('rcApp.controllers').controller('ApplicationDetailsCtrl', functio
     }
 
     $scope.editInDesigner = function(app) {
-        window.open("/restcomm-rvd#/designer/" + app.sid + "=" + app.friendly_name); // TODO maybe escape friendly_name ???
+        window.open("/restcomm-rvd#/designer/" + app.sid + ($stateParams.firstTime ? "?firstTime=true" : ""));
     }
 
     $scope.saveExternalApp = function(app) {
@@ -79,7 +79,7 @@ angular.module('rcApp.controllers').controller('ApplicationCreationWizardCtrl', 
     }
 });
 
-angular.module('rcApp.controllers').controller('ApplicationCreationCtrl', function ($scope, $rootScope, $location, Notifications, RvdProjectImporter, RvdProjects, $stateParams, RvdProjectTemplates, $timeout) {
+angular.module('rcApp.controllers').controller('ApplicationCreationCtrl', function ($scope, $rootScope, $location, Notifications, RvdProjectImporter, RvdProjects, $state, $stateParams, RvdProjectTemplates, $timeout) {
     // the following variables are used as flags from the templates on the type of application creation: isExternalApp / droppedFiles / templateId
     $scope.templateId = $stateParams.templateId;
     var appOptions = {}, droppedFiles; // all options the application needs to be created like name, kind ... anything else ?
@@ -131,8 +131,9 @@ angular.module('rcApp.controllers').controller('ApplicationCreationCtrl', functi
       }
       RvdProjects.save(params, null, function (data) { // RVD does not have an intuitive API :-( // NOTE 'null' is VERY IMPORTANT here as it makes $resource and the kind as a query parameter
           Notifications.success("RVD application created");
-          $location.path("/applications/" + data.sid);
-          window.open("/restcomm-rvd#/designer/" + data.sid + "=" + data.name);
+          $state.go("restcomm.application-details", {applicationSid: data.sid, firstTime: true});
+          //$location.path("/applications/" + data.sid + "?firstTime=true");
+          window.open("/restcomm-rvd#/designer/" + data.sid + "?firstTime=true");
       });
     }
 
@@ -152,7 +153,7 @@ angular.module('rcApp.controllers').controller('ApplicationCreationCtrl', functi
             RvdProjectImporter.import(files[0], nameOverride).then(function (result) {
                 Notifications.success("Application '" + result.name + "' imported successfully");
                 $location.path("/applications/" + result.id);
-                window.open("/restcomm-rvd#/designer/" + result.id + "=" + result.name);
+                window.open("/restcomm-rvd#/designer/" + result.id);
             }, function (message) {
                 Notifications.error(message);
             });

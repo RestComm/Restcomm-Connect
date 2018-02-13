@@ -24,7 +24,7 @@
                                 </div>
                                 <div class="col-sm-10">
                                     <div class="btn-group kind-selection">
-                                        <button type="button" class="btn btn-selection dropdown-toggle" ng-class="{disabled: !!template && template.id != 'BLANK'}" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
+                                        <button type="button" id="app-kind-select" class="btn btn-selection dropdown-toggle" ng-class="{disabled: !!template && template.id != 'BLANK'}" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
                                             {{appOptions.kind}} <span class="caret"></span>
                                         </button>
                                         <!--<span class="dropdown-toggle kind-selection" data-toggle="dropdown">{{appOptions.kind}}</span>-->
@@ -66,15 +66,15 @@
                     <span class="hidden-xs">Close</span>
                     <span class="visible-xs"><i class="fa fa-times"></i></span>
                 </button>
-                <button ng-if="!droppedFiles && !isExternalApp" class="rc-btn btn-primary save-btn" ng-click="createRvdApplication(appOptions, template.id)">
-                    <span class="hidden-xs">Next</span>
+                <button id="create-app-template" ng-if="!droppedFiles && !isExternalApp" class="rc-btn btn-primary save-btn" ng-click="createRvdApplication(appOptions, template.id)">
+                    <span class="hidden-xs">Create</span>
                     <span class="visible-xs"><i class="fa fa-chevron-right"></i></span>
                 </button>
-                <button ng-if="!droppedFiles && isExternalApp" class="rc-btn btn-primary save-btn" ng-click="createExternalApplication(appOptions)">
-                    <span class="hidden-xs">Next</span>
+                <button id="create-app-external" ng-if="!droppedFiles && isExternalApp" class="rc-btn btn-primary save-btn" ng-click="createExternalApplication(appOptions)">
+                    <span class="hidden-xs">Create</span>
                     <span class="visible-xs"><i class="fa fa-chevron-right"></i></span>
                 </button>
-                <button ng-if="droppedFiles" class="rc-btn btn-primary save-btn" ng-click="importProjectFromFile(droppedFiles, appOptions.name)">
+                <button id="create-app-import" ng-if="droppedFiles" class="rc-btn btn-primary save-btn" ng-click="importProjectFromFile(droppedFiles, appOptions.name)">
                     <span class="hidden-xs">Import</span>
                     <span class="visible-xs"><i class="fa fa-chevron-right"></i></span>
                 </button>
