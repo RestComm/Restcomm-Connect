@@ -1792,10 +1792,10 @@ public final class CallManager extends RestcommUntypedActor {
     private void outbound(final Object message, final ActorRef sender) throws ServletParseException {
         final CreateCall request = (CreateCall) message;
         ExtensionController ec = ExtensionController.getInstance();
-        ec.executePreOutboundAction(request, this.extensions);
+        ExtensionResponse extRes = ec.executePreOutboundAction(request, this.extensions);
         switch (request.type()) {
             case CLIENT: {
-                if (request.isAllowed()) {
+                if (extRes.isAllowed()) {
                     ClientsDao clients = storage.getClientsDao();
                     Client client = clients.getClient(request.to().replaceFirst("client:", ""), storage.getAccountsDao().getAccount(request.accountId()).getOrganizationSid());
                     if (client != null) {
@@ -1828,7 +1828,7 @@ public final class CallManager extends RestcommUntypedActor {
                 break;
             }
             case PSTN: {
-                if (request.isAllowed()) {
+                if (extRes.isAllowed()) {
                     outboundToPstn(request, sender);
                 } else {
                     //Extensions didn't allowed this call
