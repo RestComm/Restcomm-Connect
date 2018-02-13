@@ -50,7 +50,7 @@ public class ProfilesDaoTest extends DaoTest {
 
     @Before
     public void before() throws Exception {
-        sandboxRoot = createTempDir("organizationsTest");
+        sandboxRoot = createTempDir("profilesDaoTest");
         String mybatisFilesPath = getClass().getResource("/organizationsDao").getFile();
         setupSandbox(mybatisFilesPath, sandboxRoot);
 
@@ -81,7 +81,7 @@ public class ProfilesDaoTest extends DaoTest {
         Assert.assertNotNull(resultantProfile);
         Assert.assertEquals(profile.getSid(), resultantProfile.getSid());
         Assert.assertTrue(Arrays.equals(profile.getProfileDocument(), resultantProfile.getProfileDocument()));
-        
+
         //Read Profile List
         List<Profile> profilelist = dao.getAllProfiles();
         Assert.assertNotNull(profilelist);
@@ -90,7 +90,7 @@ public class ProfilesDaoTest extends DaoTest {
         // Update Profile
         Profile updatedProfile = profile.setProfileDocument(jsonUpdateProfile.getBytes());
         dao.updateProfile(updatedProfile);
-        
+
 
         resultantProfile = dao.getProfile(updatedProfile.getSid());
         Assert.assertNotNull(resultantProfile);
@@ -99,7 +99,7 @@ public class ProfilesDaoTest extends DaoTest {
 
         // Delete Profile
         dao.deleteProfile(updatedProfile.getSid().toString());
-       
+
         resultantProfile = dao.getProfile(profile.getSid());
         Assert.assertNull(resultantProfile);
     }

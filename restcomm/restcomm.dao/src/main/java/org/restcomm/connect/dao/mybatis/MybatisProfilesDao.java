@@ -19,12 +19,6 @@
  */
 package org.restcomm.connect.dao.mybatis;
 
-import java.sql.Blob;
-import java.sql.SQLException;
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Map;
-
 import org.apache.ibatis.session.SqlSession;
 import org.apache.ibatis.session.SqlSessionFactory;
 import org.joda.time.DateTime;
@@ -32,6 +26,12 @@ import org.restcomm.connect.commons.annotations.concurrency.ThreadSafe;
 import org.restcomm.connect.dao.DaoUtils;
 import org.restcomm.connect.dao.ProfilesDao;
 import org.restcomm.connect.dao.entities.Profile;
+
+import java.sql.Blob;
+import java.sql.SQLException;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Map;
 
 /**
  * @author maria-farooq@live.com (Maria Farooq)
@@ -119,9 +119,13 @@ public final class MybatisProfilesDao implements ProfilesDao {
         final String sid = DaoUtils.readString(map.get("sid"));
         final DateTime dateCreated = DaoUtils.readDateTime(map.get("date_created"));
         final DateTime dateUpdated = DaoUtils.readDateTime(map.get("date_updated"));
-        final Blob document = (Blob) map.get("document");
-        byte[] documentArr;
-        documentArr = document.getBytes(1, (int) document.length());
+        byte[] documentArr = null;
+        if (map.get("document") instanceof Blob) {
+            final Blob document = (Blob) map.get("document");
+            documentArr = document.getBytes(1, (int) document.length());
+        } else {
+            documentArr = (byte[]) map.get("document");
+        }
         return new Profile(sid, documentArr, dateCreated.toDate(), dateUpdated.toDate());
     }
 }
