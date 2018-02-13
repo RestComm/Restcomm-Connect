@@ -92,7 +92,7 @@ public final class AvailablePhoneNumbersXmlEndpoint extends AvailablePhoneNumber
             PhoneNumberSearchFilters listFilters = new PhoneNumberSearchFilters(areaCode, null, smsEnabledBool,
                     mmsEnabledBool, voiceEnabledBool, faxEnabledBool, ussdEnabledBool, nearNumber, nearLatLong, distance, inPostalCode, inRegion,
                     inRateCenter, inLata, rangeSizeInt, rangeIndexInt, phoneNumberType);
-            return getAvailablePhoneNumbers(accountSid, isoCountryCode, listFilters, filterPattern, MediaType.valueOf(accept));
+            return getAvailablePhoneNumbers(accountSid, isoCountryCode, listFilters, filterPattern, MediaType.APPLICATION_XML_TYPE);
         } else {
             return status(BAD_REQUEST).build();
         }
