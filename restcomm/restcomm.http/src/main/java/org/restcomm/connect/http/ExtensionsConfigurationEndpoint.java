@@ -52,7 +52,7 @@ import static javax.ws.rs.core.Response.status;
 /**
  * Created by gvagenas on 12/10/2016.
  */
-public class ExtensionsConfigurationEndpoint extends SecuredEndpoint {
+public class  ExtensionsConfigurationEndpoint extends SecuredEndpoint {
     protected Configuration allConfiguration;
     protected Configuration configuration;
     protected Gson gson;
