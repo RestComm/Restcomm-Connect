@@ -271,6 +271,9 @@ public class SmppMessageHandler extends RestcommUntypedActor {
             textBytes = CharsetUtil.encode(request.getSmppContent(), request.getSmppEncoding());
         }
 
+        //set the delivery flag to true
+        submit0.setRegisteredDelivery((byte)1);
+
         submit0.setShortMessage(textBytes);
 
         TlvSet tlvSet = request.getTlvSet();
