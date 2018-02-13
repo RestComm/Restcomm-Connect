@@ -566,11 +566,11 @@ public class AccountsEndpoint extends SecuredEndpoint {
 
             // if the account is already CLOSED, no updates are allowed
             if (account.getStatus() == Account.Status.CLOSED) {
+                // If the account is CLOSED, no updates are allowed. Return a BAD_REQUEST status code.
                 CustomReasonPhraseType stat = new CustomReasonPhraseType(Response.Status.BAD_REQUEST, "Account is closed");
                 throw new WebApplicationException(status(stat).build());
             }
 
-            // If the account is CLOSED, no updates are allowed. Return a BAD_REQUEST status code.
             Account modifiedAccount;
             modifiedAccount = prepareAccountForUpdate(account, data);
 
