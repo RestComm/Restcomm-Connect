@@ -20,7 +20,9 @@
 package org.restcomm.connect.http;
 
 import static javax.ws.rs.core.MediaType.*;
+import static org.restcomm.connect.http.security.AccountPrincipal.SUPER_ADMIN_ROLE;
 
+import javax.annotation.security.RolesAllowed;
 import javax.ws.rs.GET;
 import javax.ws.rs.POST;
 import javax.ws.rs.Path;
@@ -35,6 +37,7 @@ import org.restcomm.connect.commons.annotations.concurrency.ThreadSafe;
  */
 @Path("/Accounts/{accountSid}/Management/Gateways.json")
 @ThreadSafe
+@RolesAllowed(SUPER_ADMIN_ROLE)
 public class GatewaysJsonEndpoint extends GatewaysEndpoint {
     public GatewaysJsonEndpoint() {
         super();

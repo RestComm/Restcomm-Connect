@@ -179,7 +179,6 @@ public class AccountsEndpoint extends SecuredEndpoint {
     }
 
     protected Response getAccount(final String accountSid, final MediaType responseType, UriInfo info) {
-        checkAuthenticatedAccount();
         //First check if the account has the required permissions in general, this way we can fail fast and avoid expensive DAO operations
         Account account = null;
         checkPermission("RestComm:Read:Accounts");
@@ -347,7 +346,6 @@ public class AccountsEndpoint extends SecuredEndpoint {
 
 
     protected Response getAccounts(final UriInfo info, final MediaType responseType) {
-        checkAuthenticatedAccount();
         //First check if the account has the required permissions in general, this way we can fail fast and avoid expensive DAO operations
         checkPermission("RestComm:Read:Accounts");
         final Account account = userIdentityContext.getEffectiveAccount();
@@ -389,7 +387,6 @@ public class AccountsEndpoint extends SecuredEndpoint {
     }
 
     protected Response putAccount(final MultivaluedMap<String, String> data, final MediaType responseType) {
-        checkAuthenticatedAccount();
         //First check if the account has the required permissions in general, this way we can fail fast and avoid expensive DAO operations
         checkPermission("RestComm:Create:Accounts");
         // check account level depth. If we're already at third level no sub-accounts are allowed to be created
@@ -561,7 +558,6 @@ public class AccountsEndpoint extends SecuredEndpoint {
 
     protected Response updateAccount(final String identifier, final MultivaluedMap<String, String> data,
             final MediaType responseType) {
-        checkAuthenticatedAccount();
         // First check if the account has the required permissions in general, this way we can fail fast and avoid expensive DAO
         // operations
         checkPermission("RestComm:Modify:Accounts");
@@ -665,11 +661,6 @@ public class AccountsEndpoint extends SecuredEndpoint {
 
     protected Response migrateAccountOrganization(final String identifier, final MultivaluedMap<String, String> data,
                                               final MediaType responseType) {
-
-        //Validation 1 - Only SuperAdmin is allowed to migrate organization for an Account
-        if (!isSuperAdmin()) {
-            throw new InsufficientPermission();
-        }
 
         Organization organization = getOrganization(data);
         //Validation 2 - Check if data contains Organization (either SID or domain name)

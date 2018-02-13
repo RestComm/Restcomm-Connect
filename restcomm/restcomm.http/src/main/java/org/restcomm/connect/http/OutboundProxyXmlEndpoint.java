@@ -21,7 +21,9 @@
 package org.restcomm.connect.http;
 
 import static javax.ws.rs.core.MediaType.*;
+import static org.restcomm.connect.http.security.AccountPrincipal.SUPER_ADMIN_ROLE;
 
+import javax.annotation.security.RolesAllowed;
 import javax.ws.rs.GET;
 import javax.ws.rs.Path;
 import javax.ws.rs.PathParam;
@@ -35,6 +37,7 @@ import org.restcomm.connect.commons.annotations.concurrency.ThreadSafe;
  */
 @Path("/Accounts/{accountSid}/OutboundProxy")
 @ThreadSafe
+@RolesAllowed(SUPER_ADMIN_ROLE)
 public class OutboundProxyXmlEndpoint extends OutboundProxyEndpoint {
     public OutboundProxyXmlEndpoint() {
         super();
