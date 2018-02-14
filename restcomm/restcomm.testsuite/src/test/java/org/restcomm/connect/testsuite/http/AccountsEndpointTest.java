@@ -686,6 +686,75 @@ public class AccountsEndpointTest extends EndpointTest {
         assertEquals(1, accountsArray.size());
     }
 
+    @Test
+    public void testUpdateAccountStatusSuspended() {
+        final String sidMaster = "ACbdf00000000000000000000000000000";
+        final String sidChild1 = "ACbdf00000000000000000000000000001";
+        final String sidChild2 = "ACbdf00000000000000000000000000002";
+        final String sidGrandchild1 = "ACbdf00000000000000000000000000011";
+        final String sidGrandchild2 = "ACbdf00000000000000000000000000012";
+        //final String sidGreatGrandchild1 = "ACbdf00000000000000000000000000111";
+        //final String sidGreatGrandchild2 = "ACbdf00000000000000000000000000112";
+
+        //change master account status to suspended
+        JsonObject updateAccountResponse = RestcommAccountsTool.getInstance().updateAccount(deploymentUrl.toString(),
+                adminUsername, adminAuthToken, sidMaster, null, null, null, null, "suspended" );
+
+        //collect data from account tree to check status replication
+        JsonObject getAccountResponse1 = RestcommAccountsTool.getInstance().getAccount(deploymentUrl.toString(),
+                adminUsername, adminAuthToken, sidChild1);
+        JsonObject getAccountResponse2 = RestcommAccountsTool.getInstance().getAccount(deploymentUrl.toString(),
+                adminUsername, adminAuthToken, sidChild2);
+        JsonObject getAccountResponse3 = RestcommAccountsTool.getInstance().getAccount(deploymentUrl.toString(),
+                adminUsername, adminAuthToken, sidGrandchild1);
+        JsonObject getAccountResponse4 = RestcommAccountsTool.getInstance().getAccount(deploymentUrl.toString(),
+                adminUsername, adminAuthToken, sidGrandchild2);
+        //JsonObject getAccountResponse5 = RestcommAccountsTool.getInstance().getAccount(deploymentUrl.toString(),
+        //        adminUsername, adminAuthToken, sidGreatGrandchild1);
+        //JsonObject getAccountResponse6 = RestcommAccountsTool.getInstance().getAccount(deploymentUrl.toString(),
+        //        adminUsername, adminAuthToken, sidGreatGrandchild2);
+
+        //check master account status
+        assertEquals("Master account status is not updated",  "suspended", updateAccountResponse.get("status").getAsString());
+
+        //check account tree status
+        assertEquals("Child 1 account status is not updated",  "suspended", getAccountResponse1.get("status").getAsString());
+        assertEquals("Child 2 account status is not updated",  "suspended", getAccountResponse2.get("status").getAsString());
+        assertEquals("Grandchild 1 account status is not updated",  "suspended", getAccountResponse3.get("status").getAsString());
+        assertEquals("Grandchild 2 account status is not updated",  "suspended", getAccountResponse4.get("status").getAsString());
+        //assertEquals("Great-grandchild 1 account status is not updated",  "suspended", getAccountResponse5.get("status").getAsString());
+        //assertEquals("Great-grandchild 2 account status is not updated",  "suspended", getAccountResponse6.get("status").getAsString());
+
+        //revert master account status to active
+        updateAccountResponse = RestcommAccountsTool.getInstance().updateAccount(deploymentUrl.toString(),
+                adminUsername, adminAuthToken, sidMaster, null, null, null, null, "active" );
+
+        //collect data from account tree to check status replication
+        getAccountResponse1 = RestcommAccountsTool.getInstance().getAccount(deploymentUrl.toString(),
+                adminUsername, adminAuthToken, sidChild1);
+        getAccountResponse2 = RestcommAccountsTool.getInstance().getAccount(deploymentUrl.toString(),
+                adminUsername, adminAuthToken, sidChild2);
+        getAccountResponse3 = RestcommAccountsTool.getInstance().getAccount(deploymentUrl.toString(),
+                adminUsername, adminAuthToken, sidGrandchild1);
+        getAccountResponse4 = RestcommAccountsTool.getInstance().getAccount(deploymentUrl.toString(),
+                adminUsername, adminAuthToken, sidGrandchild2);
+        //getAccountResponse5 = RestcommAccountsTool.getInstance().getAccount(deploymentUrl.toString(),
+        //        adminUsername, adminAuthToken, sidGreatGrandchild1);
+        //getAccountResponse6 = RestcommAccountsTool.getInstance().getAccount(deploymentUrl.toString(),
+        //        adminUsername, adminAuthToken, sidGreatGrandchild2);
+
+        //check master account status
+        assertEquals("Master account status is not updated",  "active", updateAccountResponse.get("status").getAsString());
+
+        //check account tree status
+        assertEquals("Child 1 account status is not updated",  "active", getAccountResponse1.get("status").getAsString());
+        assertEquals("Child 2 account status is not updated",  "active", getAccountResponse2.get("status").getAsString());
+        assertEquals("Grandchild 1 account status is not updated",  "active", getAccountResponse3.get("status").getAsString());
+        assertEquals("Grandchild 2 account status is not updated",  "active", getAccountResponse4.get("status").getAsString());
+        //assertEquals("Great-grandchild 1 account status is not updated",  "active", getAccountResponse5.get("status").getAsString());
+        //assertEquals("Great-grandchild 2 account status is not updated",  "active", getAccountResponse6.get("status").getAsString());
+    }
+
     @Deployment(name = "ClientsEndpointTest", managed = true, testable = false)
     public static WebArchive createWebArchiveNoGw() {
         logger.info("Packaging Test App");
