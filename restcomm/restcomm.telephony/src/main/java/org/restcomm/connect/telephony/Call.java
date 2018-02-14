@@ -2303,7 +2303,8 @@ public final class Call extends RestcommUntypedActor {
 
     private void onHangup(Hangup message, ActorRef self, ActorRef sender) throws Exception {
         if(logger.isDebugEnabled()) {
-            logger.debug("Got Hangup: "+message+" for Call, from: "+from+", to: "+to+", state: "+fsm.state()+", conferencing: "+conferencing +", conference: "+conference);
+            String msg = String.format("Got Hangup %s for call %s, from %s, to %s, fsm state $s, conferencing %s, conference %s ", message, self(), from, to, fsm.state(), conferencing, conference);
+            logger.debug(msg);
         }
 
         if (is(completed)) {
