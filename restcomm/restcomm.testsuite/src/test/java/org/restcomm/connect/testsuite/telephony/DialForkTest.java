@@ -1688,9 +1688,9 @@ public class DialForkTest {
         henriqueCall.listenForDisconnect();
 
 
-        assertTrue(georgeCall.waitForDisconnect(10000));
+        assertTrue(georgeCall.waitForDisconnect(15000));
         georgeCall.respondToDisconnect();
-        assertTrue(henriqueCall.waitForDisconnect(10000));
+        assertTrue(henriqueCall.waitForDisconnect(15000));
         henriqueCall.respondToDisconnect();
 
 
