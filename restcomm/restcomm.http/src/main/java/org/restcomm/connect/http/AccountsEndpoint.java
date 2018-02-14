@@ -736,8 +736,8 @@ public class AccountsEndpoint extends SecuredEndpoint {
      *
      * @param account
      */
-    private void switchAccountStatus(Account account) {
-        switch (account.getStatus()) {
+    private void switchAccountStatus(Account account, Account.Status status) {
+        switch (status) {
             case CLOSED:
                 sendRVDStatusNotification(account);
                 // then proceed to dependency removal
@@ -747,8 +747,8 @@ public class AccountsEndpoint extends SecuredEndpoint {
                 break;
 
         }
-        // finally, set account status to closed.
-        account = account.setStatus(Account.Status.CLOSED);
+        // finally, set and persist account status
+        account = account.setStatus(status);
         accountsDao.updateAccount(account);
     }
 
@@ -768,15 +768,15 @@ public class AccountsEndpoint extends SecuredEndpoint {
                 String removedSid = subAccountsToSwitch.get(i);
                 try {
                     Account subAccount = accountsDao.getAccount(new Sid(removedSid));
-                    switchAccountStatus(subAccount);
+                    switchAccountStatus(subAccount, parentAccount.getStatus());
                 } catch (Exception e) {
                     // if anything bad happens, log the error and continue removing the rest of the accounts.
                     logger.error("Failed switching status (child) account '" + removedSid + "'");
                 }
             }
         }
-        // close parent account too
-        switchAccountStatus(parentAccount);
+        // switch parent account too
+        switchAccountStatus(parentAccount, parentAccount.getStatus());
     }
 
     private void validate(final MultivaluedMap<String, String> data) throws NullPointerException {
