@@ -1,16 +1,10 @@
 
 def runTestsuite(exludedGroups = "org.restcomm.connect.commons.annotations.BrokenTests",groups = "", forkCount=1, profile="") {
-    configFileProvider(
-        [configFile(fileId: '37cb206e-6498-4d8a-9b3d-379cd0ccd99b', variable: 'MAVEN_SETTINGS')]) {     
         sh "mvn -s $MAVEN_SETTINGS -f restcomm/restcomm.testsuite/pom.xml  install -DskipUTs=false  -Dmaven.test.failure.ignore=true -Dmaven.test.redirectTestOutputToFile=true -Dfailsafe.rerunFailingTestsCount=1 -Dgroups=\"$groups\" -DexcludedGroups=\"$exludedGroups\""
-    }
 }
 
 
 def buildRC() {
-    configFileProvider(
-        [configFile(fileId: '37cb206e-6498-4d8a-9b3d-379cd0ccd99b', variable: 'MAVEN_SETTINGS')]) {    
-
         // Run the maven build with in-module unit testing and sonar
         try {
             if (env.BRANCH_NAME == 'master') {
@@ -23,7 +17,6 @@ def buildRC() {
             publishRCResults()
             throw err
         }
-    }
 }
 
 def publishRCResults() {
@@ -39,6 +32,11 @@ node("cxs-ups-testsuites_large") {
 
     echo sh(returnStdout: true, script: 'env')
 
+    configFileProvider(
+        [configFile(fileId: '37cb206e-6498-4d8a-9b3d-379cd0ccd99b',  targetLocation: 'settings.xml')]) {
+	    sh 'mkdir -p ~/.m2 && sed -i "s|@LOCAL_REPO_PATH@|$WORKSPACE/M2_REPO|g" $WORKSPACE/settings.xml && cp $WORKSPACE/settings.xml -f ~/.m2/settings.xml'
+    }    
+    
     stage ('Checkout') {
         checkout scm
     }
