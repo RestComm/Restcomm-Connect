@@ -19,36 +19,10 @@
  */
 package org.restcomm.connect.telephony.ua;
 
-import static java.lang.Integer.parseInt;
-import static javax.servlet.sip.SipServlet.OUTBOUND_INTERFACES;
-import static javax.servlet.sip.SipServletResponse.SC_OK;
-import static javax.servlet.sip.SipServletResponse.SC_PROXY_AUTHENTICATION_REQUIRED;
-import static javax.servlet.sip.SipServletResponse.SC_UNAUTHORIZED;
-import static javax.servlet.sip.SipServletResponse.SC_BUSY_EVERYWHERE;
-import static javax.servlet.sip.SipServletResponse.SC_BUSY_HERE;
-import static org.restcomm.connect.commons.util.HexadecimalUtils.toHex;
-
-import java.io.IOException;
-import java.net.UnknownHostException;
-import java.util.HashMap;
-import java.util.Iterator;
-import java.util.List;
-import java.util.Map;
-import java.util.UUID;
-
-import javax.servlet.ServletContext;
-import javax.servlet.ServletException;
-import javax.servlet.sip.Address;
-import javax.servlet.sip.Parameterable;
-import javax.servlet.sip.ServletParseException;
-import javax.servlet.sip.SipApplicationSession;
-import javax.servlet.sip.SipFactory;
-import javax.servlet.sip.SipServletMessage;
-import javax.servlet.sip.SipServletRequest;
-import javax.servlet.sip.SipServletResponse;
-import javax.servlet.sip.SipSession;
-import javax.servlet.sip.SipURI;
-
+import akka.actor.ActorRef;
+import akka.actor.ReceiveTimeout;
+import akka.event.Logging;
+import akka.event.LoggingAdapter;
 import org.apache.commons.configuration.Configuration;
 import org.joda.time.DateTime;
 import org.restcomm.connect.commons.configuration.RestcommConfiguration;
@@ -67,10 +41,34 @@ import org.restcomm.connect.telephony.api.GetCall;
 import org.restcomm.connect.telephony.api.Hangup;
 import org.restcomm.connect.telephony.api.UserRegistration;
 
-import akka.actor.ActorRef;
-import akka.actor.ReceiveTimeout;
-import akka.event.Logging;
-import akka.event.LoggingAdapter;
+import javax.servlet.ServletContext;
+import javax.servlet.ServletException;
+import javax.servlet.sip.Address;
+import javax.servlet.sip.Parameterable;
+import javax.servlet.sip.ServletParseException;
+import javax.servlet.sip.SipApplicationSession;
+import javax.servlet.sip.SipFactory;
+import javax.servlet.sip.SipServletMessage;
+import javax.servlet.sip.SipServletRequest;
+import javax.servlet.sip.SipServletResponse;
+import javax.servlet.sip.SipSession;
+import javax.servlet.sip.SipURI;
+import java.io.IOException;
+import java.net.UnknownHostException;
+import java.util.HashMap;
+import java.util.Iterator;
+import java.util.List;
+import java.util.Map;
+import java.util.UUID;
+
+import static java.lang.Integer.parseInt;
+import static javax.servlet.sip.SipServlet.OUTBOUND_INTERFACES;
+import static javax.servlet.sip.SipServletResponse.SC_BUSY_EVERYWHERE;
+import static javax.servlet.sip.SipServletResponse.SC_BUSY_HERE;
+import static javax.servlet.sip.SipServletResponse.SC_OK;
+import static javax.servlet.sip.SipServletResponse.SC_PROXY_AUTHENTICATION_REQUIRED;
+import static javax.servlet.sip.SipServletResponse.SC_UNAUTHORIZED;
+import static org.restcomm.connect.commons.util.HexadecimalUtils.toHex;
 
 /**
  * @author quintana.thomas@gmail.com (Thomas Quintana)

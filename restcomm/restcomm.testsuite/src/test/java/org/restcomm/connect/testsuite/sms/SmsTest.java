@@ -56,6 +56,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
+import static javax.servlet.sip.SipServletResponse.SC_FORBIDDEN;
 import static org.cafesip.sipunit.SipAssert.assertLastOperationSuccess;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
@@ -623,7 +624,7 @@ public class SmsTest {
         assertLastOperationSuccess(bobCall);
         assertTrue(bobCall.waitOutgoingCallResponse(5 * 1000));
         final int response = bobCall.getLastReceivedResponse().getStatusCode();
-        assertEquals(Response.NOT_ACCEPTABLE, response);
+        assertEquals(SC_FORBIDDEN, response);
     }
 
     @Test
@@ -634,7 +635,7 @@ public class SmsTest {
         assertLastOperationSuccess(bobCall);
         assertTrue(bobCall.waitOutgoingCallResponse(5 * 1000));
         final int response = bobCall.getLastReceivedResponse().getStatusCode();
-        assertEquals(Response.NOT_ACCEPTABLE, response);
+        assertEquals(SC_FORBIDDEN, response);
     }
 
     @Deployment(name = "SmsTest", managed = true, testable = false)

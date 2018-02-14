@@ -19,8 +19,6 @@
  */
 package org.restcomm.connect.testsuite.telephony.ua;
 
-import gov.nist.javax.sip.address.SipUri;
-import gov.nist.javax.sip.message.SIPResponse;
 import org.cafesip.sipunit.Credential;
 import org.cafesip.sipunit.SipPhone;
 import org.cafesip.sipunit.SipRequest;
@@ -36,9 +34,14 @@ import org.junit.Before;
 import org.junit.BeforeClass;
 import org.junit.Ignore;
 import org.junit.Test;
+import org.junit.experimental.categories.Category;
 import org.junit.runner.RunWith;
 import org.restcomm.connect.commons.Version;
+import org.restcomm.connect.commons.annotations.ParallelClassTests;
 import org.restcomm.connect.commons.annotations.UnstableTests;
+import org.restcomm.connect.commons.annotations.WithInMinsTests;
+import org.restcomm.connect.testsuite.NetworkPortAssigner;
+import org.restcomm.connect.testsuite.WebArchiveUtil;
 import org.restcomm.connect.testsuite.tools.MonitoringServiceTool;
 
 import javax.servlet.sip.SipServletResponse;
@@ -56,13 +59,7 @@ import java.util.logging.Logger;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
-import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertTrue;
-import org.junit.experimental.categories.Category;
-import org.restcomm.connect.commons.annotations.ParallelClassTests;
-import org.restcomm.connect.commons.annotations.WithInMinsTests;
-import org.restcomm.connect.testsuite.NetworkPortAssigner;
-import org.restcomm.connect.testsuite.WebArchiveUtil;
 //import org.restcomm.connect.telephony.Version;
 
 /**

@@ -19,49 +19,19 @@
  */
 package org.restcomm.connect.telephony;
 
-import static akka.pattern.Patterns.ask;
-import static javax.servlet.sip.SipServlet.OUTBOUND_INTERFACES;
-import static javax.servlet.sip.SipServletResponse.SC_ACCEPTED;
-import static javax.servlet.sip.SipServletResponse.SC_BAD_REQUEST;
-import static javax.servlet.sip.SipServletResponse.SC_FORBIDDEN;
-import static javax.servlet.sip.SipServletResponse.SC_NOT_ACCEPTABLE;
-import static javax.servlet.sip.SipServletResponse.SC_NOT_FOUND;
-import static javax.servlet.sip.SipServletResponse.SC_OK;
-import static javax.servlet.sip.SipServletResponse.SC_SERVER_INTERNAL_ERROR;
-
-import java.io.IOException;
-import java.net.InetAddress;
-import java.net.URI;
-import java.net.URISyntaxException;
-import java.net.UnknownHostException;
-import java.util.ArrayList;
-import java.util.Iterator;
-import java.util.List;
-import java.util.ListIterator;
-import java.util.Map;
-import java.util.concurrent.ConcurrentHashMap;
-import java.util.concurrent.CopyOnWriteArrayList;
-import java.util.concurrent.TimeUnit;
-import java.util.concurrent.atomic.AtomicBoolean;
-import java.util.concurrent.atomic.AtomicInteger;
-import java.util.regex.Pattern;
-
-import javax.sdp.SdpParseException;
-import javax.servlet.ServletContext;
-import javax.servlet.sip.Address;
-import javax.servlet.sip.AuthInfo;
-import javax.servlet.sip.ServletParseException;
-import javax.servlet.sip.SipApplicationSession;
-import javax.servlet.sip.SipApplicationSessionEvent;
-import javax.servlet.sip.SipFactory;
-import javax.servlet.sip.SipServletRequest;
-import javax.servlet.sip.SipServletResponse;
-import javax.servlet.sip.SipSession;
-import javax.servlet.sip.SipURI;
-import javax.servlet.sip.TelURL;
-import javax.sip.header.RouteHeader;
-import javax.sip.message.Response;
-
+import akka.actor.ActorContext;
+import akka.actor.ActorRef;
+import akka.actor.ActorSystem;
+import akka.actor.Props;
+import akka.actor.ReceiveTimeout;
+import akka.actor.UntypedActor;
+import akka.actor.UntypedActorContext;
+import akka.actor.UntypedActorFactory;
+import akka.event.Logging;
+import akka.event.LoggingAdapter;
+import akka.util.Timeout;
+import com.google.i18n.phonenumbers.NumberParseException;
+import gov.nist.javax.sip.header.UserAgent;
 import org.apache.commons.configuration.Configuration;
 import org.apache.commons.configuration.HierarchicalConfiguration;
 import org.joda.time.DateTime;
@@ -100,6 +70,9 @@ import org.restcomm.connect.extension.api.RestcommExtensionException;
 import org.restcomm.connect.extension.api.RestcommExtensionGeneric;
 import org.restcomm.connect.extension.controller.ExtensionController;
 import org.restcomm.connect.http.client.rcmlserver.resolver.RcmlserverResolver;
+import org.restcomm.connect.interpreter.NumberSelectionResult;
+import org.restcomm.connect.interpreter.NumberSelectorService;
+import org.restcomm.connect.interpreter.SIPOrganizationUtil;
 import org.restcomm.connect.interpreter.StartInterpreter;
 import org.restcomm.connect.interpreter.StopInterpreter;
 import org.restcomm.connect.interpreter.VoiceInterpreter;
@@ -127,27 +100,50 @@ import org.restcomm.connect.telephony.api.SwitchProxy;
 import org.restcomm.connect.telephony.api.UpdateCallScript;
 import org.restcomm.connect.telephony.api.util.B2BUAHelper;
 import org.restcomm.connect.telephony.api.util.CallControlHelper;
-
-import com.google.i18n.phonenumbers.NumberParseException;
-
-import akka.actor.ActorContext;
-import akka.actor.ActorRef;
-import akka.actor.ActorSystem;
-import akka.actor.Props;
-import akka.actor.ReceiveTimeout;
-import akka.actor.UntypedActor;
-import akka.actor.UntypedActorContext;
-import akka.actor.UntypedActorFactory;
-import akka.event.Logging;
-import akka.event.LoggingAdapter;
-import akka.util.Timeout;
-import gov.nist.javax.sip.header.UserAgent;
-import org.restcomm.connect.interpreter.NumberSelectionResult;
-import org.restcomm.connect.interpreter.NumberSelectorService;
-import org.restcomm.connect.interpreter.SIPOrganizationUtil;
 import scala.concurrent.Await;
 import scala.concurrent.Future;
 import scala.concurrent.duration.Duration;
+
+import javax.sdp.SdpParseException;
+import javax.servlet.ServletContext;
+import javax.servlet.sip.Address;
+import javax.servlet.sip.AuthInfo;
+import javax.servlet.sip.ServletParseException;
+import javax.servlet.sip.SipApplicationSession;
+import javax.servlet.sip.SipApplicationSessionEvent;
+import javax.servlet.sip.SipFactory;
+import javax.servlet.sip.SipServletRequest;
+import javax.servlet.sip.SipServletResponse;
+import javax.servlet.sip.SipSession;
+import javax.servlet.sip.SipURI;
+import javax.servlet.sip.TelURL;
+import javax.sip.header.RouteHeader;
+import javax.sip.message.Response;
+import java.io.IOException;
+import java.net.InetAddress;
+import java.net.URI;
+import java.net.URISyntaxException;
+import java.net.UnknownHostException;
+import java.util.ArrayList;
+import java.util.Iterator;
+import java.util.List;
+import java.util.ListIterator;
+import java.util.Map;
+import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.CopyOnWriteArrayList;
+import java.util.concurrent.TimeUnit;
+import java.util.concurrent.atomic.AtomicBoolean;
+import java.util.concurrent.atomic.AtomicInteger;
+import java.util.regex.Pattern;
+
+import static akka.pattern.Patterns.ask;
+import static javax.servlet.sip.SipServlet.OUTBOUND_INTERFACES;
+import static javax.servlet.sip.SipServletResponse.SC_ACCEPTED;
+import static javax.servlet.sip.SipServletResponse.SC_BAD_REQUEST;
+import static javax.servlet.sip.SipServletResponse.SC_FORBIDDEN;
+import static javax.servlet.sip.SipServletResponse.SC_NOT_FOUND;
+import static javax.servlet.sip.SipServletResponse.SC_OK;
+import static javax.servlet.sip.SipServletResponse.SC_SERVER_INTERNAL_ERROR;
 
 /**
  * @author quintana.thomas@gmail.com (Thomas Quintana)
@@ -164,6 +160,8 @@ public final class CallManager extends RestcommUntypedActor {
     static final String EMAIL_SENDER = "restcomm@restcomm.org";
     static final String EMAIL_SUBJECT = "RestComm Error Notification - Attention Required";
     static final int DEFAUL_IMS_PROXY_PORT = -1;
+
+    static final int ACCOUNT_NOT_ACTIVE_FAILURE_RESPONSE_CODE = SC_FORBIDDEN;
 
     private final ActorSystem system;
     private final Configuration configuration;
@@ -447,6 +445,12 @@ public final class CallManager extends RestcommUntypedActor {
         }
     }
 
+    private void rejectInvite(final SipServletRequest request) throws IOException {
+        final SipServletResponse response = request.createResponse(ACCOUNT_NOT_ACTIVE_FAILURE_RESPONSE_CODE,
+                "Account is not ACTIVE");
+        response.send();
+    }
+
     private void invite(final Object message) throws IOException, NumberParseException, ServletParseException {
         final ActorRef self = self();
         final SipServletRequest request = (SipServletRequest) message;
@@ -544,12 +548,10 @@ public final class CallManager extends RestcommUntypedActor {
         final Client toClient = clients.getClient(toUser, toOrganizationSid);
 
         if (client != null) {
-
             Account fromAccount = accounts.getAccount(client.getAccountSid());
             if (!fromAccount.getStatus().equals(Account.Status.ACTIVE)) {
                 //reject call since the Client belongs to an an account which is not ACTIVE
-                final SipServletResponse response = request.createResponse(SC_NOT_ACCEPTABLE);
-                response.send();
+                rejectInvite(request);
 
                 String msg = String.format("Restcomm rejects this call because client %s account %s is not ACTIVE, current state %s", client.getFriendlyName(), fromAccount.getSid(), fromAccount.getStatus());
                 if (logger.isDebugEnabled()) {
@@ -579,8 +581,7 @@ public final class CallManager extends RestcommUntypedActor {
 
             if (!toAccount.getStatus().equals(Account.Status.ACTIVE)) {
                 //reject call since the toClient belongs to an an account which is not ACTIVE
-                final SipServletResponse response = request.createResponse(SC_NOT_ACCEPTABLE);
-                response.send();
+                rejectInvite(request);
 
                 String msg = String.format("Restcomm rejects this call because client %s account %s is not ACTIVE, current state %s", toClient.getFriendlyName(), toAccount.getSid(), toAccount.getStatus());
                 if (logger.isDebugEnabled()) {
@@ -601,8 +602,7 @@ public final class CallManager extends RestcommUntypedActor {
                 Account numAccount = accounts.getAccount(number.getAccountSid());
                 if (!numAccount.getStatus().equals(Account.Status.ACTIVE)) {
                     //reject call since the number belongs to an an account which is not ACTIVE
-                    final SipServletResponse response = request.createResponse(SC_NOT_ACCEPTABLE);
-                    response.send();
+                    rejectInvite(request);
 
                     String msg = String.format("Restcomm rejects this call because number's %s account %s is not ACTIVE, current state %s", number.getPhoneNumber(), numAccount.getSid(), numAccount.getStatus());
                     if (logger.isDebugEnabled()) {
@@ -784,8 +784,8 @@ public final class CallManager extends RestcommUntypedActor {
      * FIXME: duplicated code make into static function or something more optimized
      * Replace headers
      *
-     * @param SipServletRequest message
-     * @param Map<String,       ArrayList<String> > headers
+     * @param message
+     * @param headers
      */
     private void addHeadersToMessage(SipServletRequest message, Map<String, ArrayList<String>> headers) {
 
