@@ -93,7 +93,6 @@ import java.util.List;
 import java.util.concurrent.TimeUnit;
 
 import static javax.servlet.sip.SipServletResponse.SC_FORBIDDEN;
-import static javax.servlet.sip.SipServletResponse.SC_NOT_ACCEPTABLE;
 import static javax.servlet.sip.SipServletResponse.SC_NOT_FOUND;
 
 /**
@@ -103,6 +102,8 @@ import static javax.servlet.sip.SipServletResponse.SC_NOT_FOUND;
  */
 public final class SmsService extends RestcommUntypedActor {
     private final LoggingAdapter logger = Logging.getLogger(getContext().system(), this);
+
+    static final int ACCOUNT_NOT_ACTIVE_FAILURE_RESPONSE_CODE = SC_FORBIDDEN;
 
     private final ActorSystem system;
     private final Configuration configuration;
@@ -200,7 +201,7 @@ public final class SmsService extends RestcommUntypedActor {
 
             if (!numAccount.getStatus().equals(Account.Status.ACTIVE)) {
                 //reject SMS since the Number belongs to an an account which is not ACTIVE
-                final SipServletResponse response = request.createResponse(SC_NOT_ACCEPTABLE);
+                final SipServletResponse response = request.createResponse(ACCOUNT_NOT_ACTIVE_FAILURE_RESPONSE_CODE, "Account is not ACTIVE");
                 response.send();
 
                 String msg = String.format("Restcomm rejects this SMS because number's %s account %s is not ACTIVE, current state %s", number.getPhoneNumber(), numAccount.getSid(), numAccount.getStatus());
@@ -218,7 +219,7 @@ public final class SmsService extends RestcommUntypedActor {
             Account clientAccount = accounts.getAccount(client.getAccountSid());
             if (!clientAccount.getStatus().equals(Account.Status.ACTIVE)) {
                 //reject SMS since the Number belongs to an an account which is not ACTIVE
-                final SipServletResponse response = request.createResponse(SC_NOT_ACCEPTABLE);
+                final SipServletResponse response = request.createResponse(ACCOUNT_NOT_ACTIVE_FAILURE_RESPONSE_CODE, "Account is not ACTIVE");
                 response.send();
 
                 String msg = String.format("Restcomm rejects this SMS because client's %s account %s is not ACTIVE, current state %s", client.getFriendlyName(), clientAccount.getSid(), clientAccount.getStatus());
@@ -244,7 +245,7 @@ public final class SmsService extends RestcommUntypedActor {
             Account toAccount = accounts.getAccount(toClient.getAccountSid());
             if (!toAccount.getStatus().equals(Account.Status.ACTIVE)) {
                 //reject SMS since the Number belongs to an an account which is not ACTIVE
-                final SipServletResponse response = request.createResponse(SC_NOT_ACCEPTABLE);
+                final SipServletResponse response = request.createResponse(ACCOUNT_NOT_ACTIVE_FAILURE_RESPONSE_CODE, "Account is not ACTIVE");
                 response.send();
 
                 String msg = String.format("Restcomm rejects this SMS because client's %s account %s is not ACTIVE, current state %s", client.getFriendlyName(), toAccount.getSid(), toAccount.getStatus());

@@ -75,7 +75,6 @@ import java.util.regex.Pattern;
 import static javax.servlet.sip.SipServlet.OUTBOUND_INTERFACES;
 import static javax.servlet.sip.SipServletResponse.SC_BAD_REQUEST;
 import static javax.servlet.sip.SipServletResponse.SC_FORBIDDEN;
-import static javax.servlet.sip.SipServletResponse.SC_NOT_ACCEPTABLE;
 import static javax.servlet.sip.SipServletResponse.SC_NOT_FOUND;
 import static javax.servlet.sip.SipServletResponse.SC_OK;
 
@@ -87,6 +86,8 @@ public class UssdCallManager extends RestcommUntypedActor {
     static final int ERROR_NOTIFICATION = 0;
     static final int WARNING_NOTIFICATION = 1;
     static final Pattern PATTERN = Pattern.compile("[\\*#0-9]{1,12}");
+
+    static final int ACCOUNT_NOT_ACTIVE_FAILURE_RESPONSE_CODE = SC_FORBIDDEN;
 
     private final Configuration configuration;
     private final ServletContext context;
@@ -160,13 +161,7 @@ public class UssdCallManager extends RestcommUntypedActor {
             final String method = request.getMethod();
             if ("INVITE".equalsIgnoreCase(method)) {
                 check(request);
-                if (request.getContentType().equals("application/vnd.3gpp.ussd+xml")) {
-                    invite(request);
-                } else {
-                    // We didn't find anyway to handle the call.
-                    final SipServletResponse response = request.createResponse(SC_NOT_FOUND);
-                    response.send();
-                }
+                invite(request);
             } else if ("INFO".equalsIgnoreCase(method)) {
                 processRequest(request);
             } else if ("ACK".equalsIgnoreCase(method)) {
@@ -214,7 +209,7 @@ public class UssdCallManager extends RestcommUntypedActor {
             Account numAccount = accounts.getAccount(number.getAccountSid());
             if (!numAccount.getStatus().equals(Account.Status.ACTIVE)) {
                 //reject call since the number belongs to an an account which is not ACTIVE
-                final SipServletResponse response = request.createResponse(SC_NOT_ACCEPTABLE);
+                final SipServletResponse response = request.createResponse(ACCOUNT_NOT_ACTIVE_FAILURE_RESPONSE_CODE, "Account is not Active");
                 response.send();
 
                 String msg = String.format("Restcomm rejects this USSD Session because number's %s account %s is not ACTIVE, current state %s", number.getPhoneNumber(), numAccount.getSid(), numAccount.getStatus());

@@ -1442,15 +1442,14 @@ public class ClientsDialTest {
 
         suspendedCall.initiateOutgoingCall(suspendedContact, "sip:+151212344566@"+restcommContact, null, body, "application", "sdp", null, null);
         assertLastOperationSuccess(suspendedCall);
-        suspendedCall.waitForAuthorisation(5000);
         assertTrue(suspendedCall.waitOutgoingCallResponse(10000));
 
         final int response = suspendedCall.getLastReceivedResponse().getStatusCode();
-        assertTrue(response == Response.TRYING || response == Response.NOT_ACCEPTABLE);
+        assertTrue(response == Response.TRYING || response == Response.FORBIDDEN);
 
         if (response == Response.TRYING) {
             assertTrue(suspendedCall.waitOutgoingCallResponse(5 * 1000));
-            assertEquals(Response.NOT_ACCEPTABLE, suspendedCall.getLastReceivedResponse().getStatusCode());
+            assertEquals(Response.FORBIDDEN, suspendedCall.getLastReceivedResponse().getStatusCode());
         }
     }
 
@@ -1465,11 +1464,11 @@ public class ClientsDialTest {
         assertLastOperationSuccess(closedCall);
         assertTrue(closedCall.waitOutgoingCallResponse(10000));
         final int response = closedCall.getLastReceivedResponse().getStatusCode();
-        assertTrue(response == Response.TRYING || response == Response.NOT_ACCEPTABLE);
+        assertTrue(response == Response.TRYING || response == Response.FORBIDDEN);
 
         if (response == Response.TRYING) {
             assertTrue(closedCall.waitOutgoingCallResponse(5 * 1000));
-            assertEquals(Response.NOT_ACCEPTABLE, closedCall.getLastReceivedResponse().getStatusCode());
+            assertEquals(Response.FORBIDDEN, closedCall.getLastReceivedResponse().getStatusCode());
         }
     }
 

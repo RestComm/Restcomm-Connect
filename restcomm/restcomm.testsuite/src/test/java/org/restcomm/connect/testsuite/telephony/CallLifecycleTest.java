@@ -548,7 +548,7 @@ public class CallLifecycleTest {
 
         if (response == Response.TRYING) {
             assertTrue(bobCall.waitOutgoingCallResponse(5 * 1000));
-            assertEquals(Response.NOT_ACCEPTABLE, bobCall.getLastReceivedResponse().getStatusCode());
+            assertEquals(Response.FORBIDDEN, bobCall.getLastReceivedResponse().getStatusCode());
             logger.info("Last response: "+bobCall.getLastReceivedResponse().getStatusCode());
         }
 
@@ -598,12 +598,12 @@ public class CallLifecycleTest {
         assertLastOperationSuccess(bobCall);
         assertTrue(bobCall.waitOutgoingCallResponse(5 * 1000));
         final int response = bobCall.getLastReceivedResponse().getStatusCode();
-        assertTrue(response == Response.TRYING || response == Response.NOT_ACCEPTABLE);
+        assertTrue(response == Response.TRYING || response == Response.FORBIDDEN);
         logger.info("Last response: "+response);
 
         if (response == Response.TRYING) {
             assertTrue(bobCall.waitOutgoingCallResponse(5 * 1000));
-            assertEquals(Response.NOT_ACCEPTABLE, bobCall.getLastReceivedResponse().getStatusCode());
+            assertEquals(Response.FORBIDDEN, bobCall.getLastReceivedResponse().getStatusCode());
             logger.info("Last response: "+bobCall.getLastReceivedResponse().getStatusCode());
         }
 
@@ -641,12 +641,12 @@ public class CallLifecycleTest {
         assertLastOperationSuccess(georgeCall);
         assertTrue(georgeCall.waitOutgoingCallResponse(5 * 1000));
         final int response = georgeCall.getLastReceivedResponse().getStatusCode();
-        assertTrue(response == Response.TRYING || response == Response.NOT_ACCEPTABLE);
+        assertTrue(response == Response.TRYING || response == Response.FORBIDDEN);
         logger.info("Last response: "+response);
 
         if (response == Response.TRYING) {
             assertTrue(georgeCall.waitOutgoingCallResponse(5 * 1000));
-            assertEquals(Response.NOT_ACCEPTABLE, georgeCall.getLastReceivedResponse().getStatusCode());
+            assertEquals(Response.FORBIDDEN, georgeCall.getLastReceivedResponse().getStatusCode());
             logger.info("Last response: "+georgeCall.getLastReceivedResponse().getStatusCode());
         }
 
@@ -682,12 +682,12 @@ public class CallLifecycleTest {
         assertLastOperationSuccess(georgeCall);
         assertTrue(georgeCall.waitOutgoingCallResponse(5 * 1000));
         final int response = georgeCall.getLastReceivedResponse().getStatusCode();
-        assertTrue(response == Response.TRYING || response == Response.NOT_ACCEPTABLE);
+        assertTrue(response == Response.TRYING || response == Response.FORBIDDEN);
         logger.info("Last response: "+response);
 
         if (response == Response.TRYING) {
             assertTrue(georgeCall.waitOutgoingCallResponse(5 * 1000));
-            assertEquals(Response.NOT_ACCEPTABLE, georgeCall.getLastReceivedResponse().getStatusCode());
+            assertEquals(Response.FORBIDDEN, georgeCall.getLastReceivedResponse().getStatusCode());
             logger.info("Last response: "+georgeCall.getLastReceivedResponse().getStatusCode());
         }
 
