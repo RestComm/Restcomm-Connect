@@ -1678,13 +1678,13 @@ public class DialForkTest {
         henriqueCall.sendIncomingCallResponse(Response.OK, "OK", 3600, receivedBody, "application", "sdp",
                 null, null);
 
-        aliceCall.waitForAck(15000);
+        assertTrue(aliceCall.waitForAck(20000));
         aliceCall.listenForDisconnect();
 
-        georgeCall.waitForAck(15000);
+        assertTrue(georgeCall.waitForAck(20000));
         georgeCall.listenForDisconnect();
 
-        henriqueCall.waitForAck(15000);
+        assertTrue(henriqueCall.waitForAck(20000));
         henriqueCall.listenForDisconnect();
 
 
