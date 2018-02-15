@@ -20,6 +20,8 @@ import org.junit.Before;
 import org.junit.BeforeClass;
 import org.junit.Rule;
 import org.junit.Test;
+import org.junit.FixMethodOrder;
+import org.junit.runners.MethodSorters;
 import org.junit.runner.RunWith;
 import org.restcomm.connect.commons.Version;
 
@@ -53,6 +55,7 @@ import org.restcomm.connect.commons.annotations.WithInMinsTests;
  * @author <a href="mailto:hoan.h.luu@telestax.com">Hoan HL</a>
  */
 @RunWith(Arquillian.class)
+@FixMethodOrder(MethodSorters.NAME_ASCENDING)
 @Category(SequentialClassTests.class)
 public class TestGatherVerb {
     private final static Logger logger = Logger.getLogger(TestDialVerbPartTwo.class.getName());

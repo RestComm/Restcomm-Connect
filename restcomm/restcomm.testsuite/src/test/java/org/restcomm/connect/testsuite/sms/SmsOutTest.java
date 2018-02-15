@@ -43,6 +43,8 @@ import org.junit.After;
 import org.junit.Before;
 import org.junit.BeforeClass;
 import org.junit.Test;
+import org.junit.FixMethodOrder;
+import org.junit.runners.MethodSorters;
 import org.junit.experimental.categories.Category;
 import org.junit.runner.RunWith;
 import org.restcomm.connect.commons.Version;
@@ -57,6 +59,7 @@ import org.restcomm.connect.testsuite.WebArchiveUtil;
  *
  */
 @RunWith(Arquillian.class)
+@FixMethodOrder(MethodSorters.NAME_ASCENDING)
 @Category(value={WithInSecsTests.class, ParallelClassTests.class})
 public class SmsOutTest {
 
