@@ -327,7 +327,7 @@ public final class Bootstrapper extends SipServlet implements SipServletListener
                 logger.debug("default profile does not exist, will create one from default Plan");
             }
             JsonNode jsonNode = JsonLoader.fromPath(profileSourcePath);
-            profile = new Profile(DEFAULT_PROFILE_SID, jsonNode.toString().getBytes(), new Date(), new Date());
+            profile = new Profile(DEFAULT_PROFILE_SID, jsonNode.toString(), new Date(), new Date());
             storage.getProfilesDao().addProfile(profile);
         } else {
             if(logger.isDebugEnabled()){
