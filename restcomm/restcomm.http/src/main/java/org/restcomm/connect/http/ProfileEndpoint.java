@@ -247,7 +247,7 @@ public class ProfileEndpoint {
             final JsonNode profileJson = JsonLoader.fromString(profileStr);
             ProcessingReport report = profileSchema.validate(profileJson);
             if (report.isSuccess()) {
-                Profile profile = new Profile(profileSid, profileStr.getBytes(), new Date(), new Date());
+                Profile profile = new Profile(profileSid, profileStr, new Date(), new Date());
                 profilesDao.updateProfile(profile);
                 return getProfile(profileSid, info);
             } else {
@@ -324,7 +324,7 @@ public class ProfileEndpoint {
                 ok.header(LINK_HEADER, composeLink.toString());
             }
             ok.header(LINK_HEADER, composeSchemaLink(info));
-            String profileStr = IOUtils.toString(profile.getProfileDocument(), PROFILE_ENCODING);
+            String profileStr = profile.getProfileDocument();// IOUtils.toString(profile.getProfileDocument(), PROFILE_ENCODING);
             ok.entity(profileStr);
             ok.lastModified(profile.getDateUpdated());
             ok.type(PROFILE_CONTENT_TYPE);
@@ -346,7 +346,7 @@ public class ProfileEndpoint {
             final JsonNode profileJson = JsonLoader.fromString(profileStr);
             ProcessingReport report = profileSchema.validate(profileJson);
             if (report.isSuccess()) {
-                Profile profile = new Profile(profileSid.toString(), profileStr.getBytes(), new Date(), new Date());
+                Profile profile = new Profile(profileSid.toString(), profileStr, new Date(), new Date());
                 profilesDao.addProfile(profile);
                 URI location = info.getBaseUriBuilder().path(profileSid.toString()).build();
                 response = getProfileBuilder(profileSid.toString(), info).status(Status.CREATED).location(location).build();
