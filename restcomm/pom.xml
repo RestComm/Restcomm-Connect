@@ -111,7 +111,7 @@
 		<mybatis.version>3.2.2</mybatis.version>
 		<jodatime.version>2.9.7</jodatime.version>
 		<libphonenumber.version>4.3</libphonenumber.version>
-		<junit.version>4.10</junit.version>
+		<junit.version>4.11</junit.version>
 		<scalatest.version>1.9.1</scalatest.version>
 		<hsqldb.version>2.3.2</hsqldb.version>
     <sip-ri.version>1.2.293</sip-ri.version>
@@ -119,7 +119,7 @@
 		<mss.arquillian.version>1.0.3</mss.arquillian.version>
 		<mss.shrinkwrap.version>1.0.2</mss.shrinkwrap.version>
 		<shrinkwrap.resolver.version>2.0.0-alpha-4</shrinkwrap.resolver.version>
-		<sipunit.version>2.0.3</sipunit.version>
+		<sipunit.version>2.0.4</sipunit.version>
 		<!--tomcat.version>6.0.35</tomcat.version -->
 		<tomcat7.version>7.0.64</tomcat7.version>
 		<mobicents.checkstyle.version>1.0.0.FINAL</mobicents.checkstyle.version>
@@ -138,7 +138,7 @@
 		<mockito-core.version>2.8.9</mockito-core.version>
                 <!-- IDEs has a problem when we use late binding with @ in the surefire arg line.
                     Therefore we set this empty property here-->
-                <jacocoArgLine />   
+                <jacocoArgLine />
 	</properties>
 	<modules>
 		<!-- <module>restcomm.docs</module> -->
@@ -345,12 +345,12 @@
 				<artifactId>jersey-client</artifactId>
 				<version>${jersey.version}</version>
 			</dependency>
-                        
+
 			<dependency>
 				<groupId>com.sun.jersey</groupId>
 				<artifactId>jersey-json</artifactId>
 				<version>${jersey.version}</version>
-			</dependency>                        
+			</dependency>
 
 			<dependency>
 				<groupId>stax</groupId>

@@ -32,11 +32,11 @@ import org.restcomm.connect.commons.annotations.concurrency.NotThreadSafe;
 public final class Profile{
     public static final String DEFAULT_PROFILE_SID = "PRae6e420f425248d6a26948c17a9e2acf";
     private final String sid;
-    private final byte[] profileDocument;
+    private final String profileDocument;
     private final Date dateCreated;
     private final Date dateUpdated;
 
-    public Profile(final String sid, final byte[] profileDocument, final Date dateCreated, final Date dateUpdated) {
+    public Profile(final String sid, final String profileDocument, final Date dateCreated, final Date dateUpdated) {
         super();
         this.sid = sid;
         this.profileDocument = profileDocument;
@@ -52,7 +52,7 @@ public final class Profile{
         return sid;
     }
 
-    public byte[] getProfileDocument() {
+    public String getProfileDocument() {
         return profileDocument;
     }
 
@@ -64,14 +64,14 @@ public final class Profile{
         return dateUpdated;
     }
 
-    public Profile setProfileDocument(byte[] updatedProfileDocument){
+    public Profile setProfileDocument(String updatedProfileDocument){
         return new Profile(this.sid, updatedProfileDocument, this.dateCreated, this.dateUpdated);
     }
 
     @NotThreadSafe
     public static final class Builder {
         private String sid;
-        private byte[] profileDocument;
+        private String profileDocument;
         private Date dateCreated;
 
         private Builder() {
@@ -85,7 +85,7 @@ public final class Profile{
             return new Profile(sid, profileDocument, dateCreated, Calendar.getInstance().getTime());
         }
 
-        public void setProfileDocument(final byte[] profileDocument) {
+        public void setProfileDocument(final String profileDocument) {
             this.profileDocument = profileDocument;
         }
 

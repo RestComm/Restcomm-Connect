@@ -32,7 +32,6 @@ import org.restcomm.connect.commons.exceptions.RestcommRuntimeException;
 import javax.ws.rs.core.Response;
 import javax.ws.rs.ext.ExceptionMapper;
 import javax.ws.rs.ext.Provider;
-import org.restcomm.connect.http.exceptions.StatusException;
 
 /**
  * Generates 401 for AuthorizationException instead of a 500 (and an exception
@@ -74,14 +73,8 @@ public class RestcommRuntimeExceptionMapper implements ExceptionMapper<RestcommR
         if (exceptionMap.containsKey(e.getClass())) {
             res = exceptionMap.get(e.getClass());
         } else {
-            if (e instanceof StatusException) {
-                StatusException sExp = (StatusException) e;
-                CustomReasonPhraseType status = new CustomReasonPhraseType(sExp.getStatus(), sExp.getMessage());
-                res = Response.status(status).build();
-            } else {
             // map all other types of auth errors to 403
-                res = Response.status(Response.Status.FORBIDDEN).build();
-            }
+            res = Response.status(Response.Status.FORBIDDEN).build();
         }
         return res;
     }
