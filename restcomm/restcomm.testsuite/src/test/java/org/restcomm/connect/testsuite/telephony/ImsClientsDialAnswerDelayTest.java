@@ -162,13 +162,16 @@ public class ImsClientsDialAnswerDelayTest {
         augustPhone = augustSipStack.createSipPhone("127.0.0.1", SipStack.PROTOCOL_UDP, restcommPort, augustContact);
         imsAugustPhone = imsSipStack.createSipPhone("127.0.0.1", SipStack.PROTOCOL_UDP, restcommPort, augustContact);
         imsAugustPhone.setLoopback(true);
+        imsAugustPhone.setPassThroughRegisterRequests(true);
 
         juliusSipStack = tool3.initializeSipStack(SipStack.PROTOCOL_UDP, "127.0.0.1", juliusPort, restcommContact);
         juliusPhone = juliusSipStack.createSipPhone("127.0.0.1", SipStack.PROTOCOL_UDP, restcommPort, juliusContact);
         imsJuliusPhone = imsSipStack.createSipPhone("127.0.0.1", SipStack.PROTOCOL_UDP, restcommPort, juliusContact);
         imsJuliusPhone.setLoopback(true);
+        imsJuliusPhone.setPassThroughRegisterRequests(true);
 
         pstnPhone = imsSipStack.createSipPhone("127.0.0.1", SipStack.PROTOCOL_UDP, restcommPort, pstnContact);
+        pstnPhone.setPassThroughRegisterRequests(true);
 
         if (isAugustRegistered) {
             unregisterAugust();
