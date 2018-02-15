@@ -395,8 +395,8 @@ enabled  BOOLEAN NOT NULL DEFAULT TRUE
 
 CREATE TABLE restcomm_profile_associations(
 target_sid VARCHAR(34) NOT NULL PRIMARY KEY,
-profile_sid VARCHAR(34) NOT NULL, 
-date_created DATETIME NOT NULL, 
+profile_sid VARCHAR(34) NOT NULL,
+date_created DATETIME NOT NULL,
 date_updated DATETIME NOT NULL
 );
 
@@ -409,14 +409,14 @@ PRIMARY KEY (account_sid, extension_sid)
 
 CREATE TABLE restcomm_profiles (
 sid VARCHAR(34) NOT NULL PRIMARY KEY,
-document LONGBLOB NOT NULL,
+document LONGTEXT NOT NULL,
 date_created DATETIME NOT NULL,
 date_updated DATETIME NOT NULL
 );
 
 INSERT INTO restcomm_organizations VALUES(
-"ORafbe225ad37541eba518a74248f0ac4c", 
-"default.restcomm.com", 
+"ORafbe225ad37541eba518a74248f0ac4c",
+"default.restcomm.com",
 Date("2017-04-19"),
 Date("2017-04-19"),
 "active"
@@ -506,16 +506,16 @@ BEGIN
 
 START TRANSACTION;
 	SET completed=FALSE;
-	IF(amIMaster) THEN 
+	IF(amIMaster) THEN
 		UPDATE restcomm_conference_detail_records SET restcomm_conference_detail_records.master_present=FALSE,restcomm_conference_detail_records.date_updated=in_date_updated WHERE restcomm_conference_detail_records.sid=in_sid;
-		IF NOT EXISTS (SELECT restcomm_media_resource_broker_entity.conference_sid,restcomm_media_resource_broker_entity.slave_ms_id,restcomm_media_resource_broker_entity.slave_ms_bridge_ep_id,restcomm_media_resource_broker_entity.slave_ms_cnf_ep_id,restcomm_media_resource_broker_entity.is_bridged_together FROM restcomm_media_resource_broker_entity WHERE conference_sid=in_sid ) THEN 
+		IF NOT EXISTS (SELECT restcomm_media_resource_broker_entity.conference_sid,restcomm_media_resource_broker_entity.slave_ms_id,restcomm_media_resource_broker_entity.slave_ms_bridge_ep_id,restcomm_media_resource_broker_entity.slave_ms_cnf_ep_id,restcomm_media_resource_broker_entity.is_bridged_together FROM restcomm_media_resource_broker_entity WHERE conference_sid=in_sid ) THEN
 			UPDATE restcomm_conference_detail_records SET status=in_status,date_updated=in_date_updated WHERE sid=in_sid;
 			SET completed=TRUE;
 		END IF;
-	ELSE 
+	ELSE
 		DELETE FROM restcomm_media_resource_broker_entity WHERE conference_sid=in_sid AND slave_ms_id=in_slave_ms_id;
-		IF NOT(SELECT master_present FROM restcomm_conference_detail_records WHERE sid=in_sid) THEN 
-			IF NOT EXISTS(SELECT restcomm_media_resource_broker_entity.conference_sid,restcomm_media_resource_broker_entity.slave_ms_id,restcomm_media_resource_broker_entity.slave_ms_bridge_ep_id,restcomm_media_resource_broker_entity.slave_ms_cnf_ep_id,restcomm_media_resource_broker_entity.is_bridged_together FROM restcomm_media_resource_broker_entity WHERE conference_sid=in_sid ) THEN 
+		IF NOT(SELECT master_present FROM restcomm_conference_detail_records WHERE sid=in_sid) THEN
+			IF NOT EXISTS(SELECT restcomm_media_resource_broker_entity.conference_sid,restcomm_media_resource_broker_entity.slave_ms_id,restcomm_media_resource_broker_entity.slave_ms_bridge_ep_id,restcomm_media_resource_broker_entity.slave_ms_cnf_ep_id,restcomm_media_resource_broker_entity.is_bridged_together FROM restcomm_media_resource_broker_entity WHERE conference_sid=in_sid ) THEN
 				UPDATE restcomm_conference_detail_records SET status=in_status,date_updated=in_date_updated WHERE sid=in_sid;
 				SET completed=TRUE;
 			END IF;
