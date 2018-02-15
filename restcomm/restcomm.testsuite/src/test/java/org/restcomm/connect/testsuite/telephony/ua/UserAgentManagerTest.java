@@ -19,8 +19,6 @@
  */
 package org.restcomm.connect.testsuite.telephony.ua;
 
-import gov.nist.javax.sip.address.SipUri;
-import gov.nist.javax.sip.message.SIPResponse;
 import org.cafesip.sipunit.Credential;
 import org.cafesip.sipunit.SipPhone;
 import org.cafesip.sipunit.SipRequest;
@@ -36,9 +34,14 @@ import org.junit.Before;
 import org.junit.BeforeClass;
 import org.junit.Ignore;
 import org.junit.Test;
+import org.junit.experimental.categories.Category;
 import org.junit.runner.RunWith;
 import org.restcomm.connect.commons.Version;
+import org.restcomm.connect.commons.annotations.ParallelClassTests;
 import org.restcomm.connect.commons.annotations.UnstableTests;
+import org.restcomm.connect.commons.annotations.WithInMinsTests;
+import org.restcomm.connect.testsuite.NetworkPortAssigner;
+import org.restcomm.connect.testsuite.WebArchiveUtil;
 import org.restcomm.connect.testsuite.tools.MonitoringServiceTool;
 
 import javax.servlet.sip.SipServletResponse;
@@ -55,13 +58,8 @@ import java.util.Map;
 import java.util.logging.Logger;
 
 import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertNotNull;
+import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertTrue;
-import org.junit.experimental.categories.Category;
-import org.restcomm.connect.commons.annotations.ParallelClassTests;
-import org.restcomm.connect.commons.annotations.WithInMinsTests;
-import org.restcomm.connect.testsuite.NetworkPortAssigner;
-import org.restcomm.connect.testsuite.WebArchiveUtil;
 //import org.restcomm.connect.telephony.Version;
 
 /**
@@ -128,6 +126,19 @@ public final class UserAgentManagerTest {
     private static String alicePort7 = String.valueOf(NetworkPortAssigner.retrieveNextPortByFile());
     private String aliceContact7 = "sip:alice@127.0.0.1:" + alicePort7;
 
+    private static SipStackTool tool8;
+    private SipStack sipStack8;
+    private SipPhone closedPhone;
+    private static String closedPort = String.valueOf(NetworkPortAssigner.retrieveNextPortByFile());
+    private String closedContact = "sip:closed@127.0.0.1:" + closedPort;
+
+    private static SipStackTool tool9;
+    private SipStack sipStack9;
+    private SipPhone suspendedPhone;
+    private static String suspendedPort = String.valueOf(NetworkPortAssigner.retrieveNextPortByFile());
+    private String suspendedContact = "sip:suspended@127.0.0.1:" + suspendedPort;
+
+
     private static int restcommPort = 5080;
     private static int restcommHTTPPort = 8080;
     private static String restcommContact = "127.0.0.1:" + restcommPort;
@@ -145,6 +156,8 @@ public final class UserAgentManagerTest {
         tool5 = new SipStackTool("UserAgentTest5");
         tool6 = new SipStackTool("UserAgentTest6");
         tool7 = new SipStackTool("UserAgentTest7");
+        tool8 = new SipStackTool("UserAgentTest8");
+        tool9 = new SipStackTool("UserAgentTest9");
     }
 
     public static void reconfigurePorts() {
@@ -179,6 +192,12 @@ public final class UserAgentManagerTest {
 
         sipStack7 = tool7.initializeSipStack(SipStack.PROTOCOL_TCP, "127.0.0.1", alicePort7, restcommContact);
         phone7 = sipStack7.createSipPhone("127.0.0.1", SipStack.PROTOCOL_TCP, restcommPort, aliceContact7);
+
+        sipStack8 = tool8.initializeSipStack(SipStack.PROTOCOL_UDP, "127.0.0.1", closedPort, restcommContact);
+        closedPhone = sipStack8.createSipPhone("127.0.0.1", SipStack.PROTOCOL_UDP, restcommPort, closedContact);
+
+        sipStack9 = tool9.initializeSipStack(SipStack.PROTOCOL_UDP, "127.0.0.1", suspendedPort, restcommContact);
+        suspendedPhone = sipStack9.createSipPhone("127.0.0.1", SipStack.PROTOCOL_UDP, restcommPort, suspendedContact);
     }
 
     @After
@@ -210,6 +229,14 @@ public final class UserAgentManagerTest {
         if (sipStack5 != null) {
             sipStack5.dispose();
         }
+
+        if (sipStack8 != null) {
+            sipStack8.dispose();
+        }
+
+        if (sipStack9 != null) {
+            sipStack9.dispose();
+        }
 //        deployer.undeploy("UserAgentTest");
     }
 
@@ -224,6 +251,34 @@ public final class UserAgentManagerTest {
         assertTrue(phone.unregister("sip:127.0.0.1:" + alicePort, 0));
         Thread.sleep(500);
         assertEquals(0, MonitoringServiceTool.getInstance().getRegisteredUsers(deploymentUrl.toString(),adminAccountSid, adminAuthToken));
+    }
+
+    @Test
+    public void registerClosedClient() throws Exception {
+        SipURI uri = sipStack8.getAddressFactory().createSipURI(null, restcommContact);
+        Credential c = new Credential("127.0.0.1","closed", "1234");
+        closedPhone.addUpdateCredential(c);
+        assertFalse(closedPhone.register(uri, "closed", "1234", "sip:127.0.0.1:" + closedPort, 3600, 3600));
+        Thread.sleep(500);
+        assertEquals(Response.FORBIDDEN, closedPhone.getReturnCode());
+        assertEquals(0, MonitoringServiceTool.getInstance().getRegisteredUsers(deploymentUrl.toString(),adminAccountSid, adminAuthToken));
+//        assertTrue(closedPhone.unregister("sip:127.0.0.1:" + closedPort, 0));
+//        Thread.sleep(500);
+//        assertEquals(0, MonitoringServiceTool.getInstance().getRegisteredUsers(deploymentUrl.toString(),adminAccountSid, adminAuthToken));
+    }
+
+    @Test
+    public void registerSuspendedClient() throws Exception {
+        SipURI uri = sipStack9.getAddressFactory().createSipURI(null, restcommContact);
+        Credential c = new Credential("127.0.0.1","suspended", "1234");
+        suspendedPhone.addUpdateCredential(c);
+        assertFalse(suspendedPhone.register(uri, "suspended", "1234", "sip:127.0.0.1:" + suspendedPort, 3600, 3600));
+        Thread.sleep(500);
+        assertEquals(Response.FORBIDDEN, suspendedPhone.getReturnCode());
+        assertEquals(0, MonitoringServiceTool.getInstance().getRegisteredUsers(deploymentUrl.toString(),adminAccountSid, adminAuthToken));
+//        assertTrue(suspendedPhone.unregister("sip:127.0.0.1:" + closedPort, 0));
+//        Thread.sleep(500);
+//        assertEquals(0, MonitoringServiceTool.getInstance().getRegisteredUsers(deploymentUrl.toString(),adminAccountSid, adminAuthToken));
     }
 
     @Test
