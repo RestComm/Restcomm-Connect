@@ -33,7 +33,7 @@ public class CustomReasonPhraseType implements StatusType {
         this.reasonPhrase = reasonPhrase;
     }
 
-    protected CustomReasonPhraseType(final Status status,
+    public CustomReasonPhraseType(final Status status,
             final String reasonPhrase) {
         this(status.getFamily(), status.getStatusCode(), reasonPhrase);
     }

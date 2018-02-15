@@ -39,6 +39,7 @@ import java.nio.file.Paths;
 import java.util.ArrayList;
 import javax.annotation.PostConstruct;
 import javax.servlet.ServletContext;
+import javax.ws.rs.WebApplicationException;
 import javax.ws.rs.core.Context;
 import javax.ws.rs.core.GenericEntity;
 import javax.ws.rs.core.HttpHeaders;
@@ -46,6 +47,7 @@ import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
 import javax.ws.rs.core.Response.ResponseBuilder;
 import javax.ws.rs.core.Response.Status;
+import static javax.ws.rs.core.Response.status;
 import javax.ws.rs.core.UriInfo;
 import org.apache.commons.configuration.Configuration;
 import org.apache.commons.io.IOUtils;
@@ -61,7 +63,7 @@ import org.restcomm.connect.dao.entities.Organization;
 import org.restcomm.connect.dao.entities.Profile;
 import static org.restcomm.connect.dao.entities.Profile.DEFAULT_PROFILE_SID;
 import org.restcomm.connect.dao.entities.ProfileAssociation;
-import org.restcomm.connect.http.exceptions.StatusException;
+import org.restcomm.connect.http.exceptionmappers.CustomReasonPhraseType;
 
 public class ProfileEndpoint {
 
@@ -76,9 +78,8 @@ public class ProfileEndpoint {
     public static final String PROFILE_ENCODING = "UTF-8";
     public static final String TITLE_PARAM = "title";
 
-    public static final String ACCOUNTS_PREFIX ="AC";
-    public static final String ORGANIZATIONS_PREFIX ="OR";
-
+    public static final String ACCOUNTS_PREFIX = "AC";
+    public static final String ORGANIZATIONS_PREFIX = "OR";
 
     @Context
     protected ServletContext context;
@@ -178,7 +179,8 @@ public class ProfileEndpoint {
     private void checkRelType(LinkHeader link) {
         if (!link.getRel().contains(PROFILE_REL_TYPE)) {
             logger.debug("Only related rel type supported");
-            throw new StatusException(Response.Status.BAD_REQUEST, "Only related rel type supported");
+            CustomReasonPhraseType stat = new CustomReasonPhraseType(Response.Status.BAD_REQUEST, "Only related rel type supported");
+            throw new WebApplicationException(status(stat).build());
         }
     }
 
@@ -186,7 +188,8 @@ public class ProfileEndpoint {
         List<String> requestHeader = headers.getRequestHeader(LINK_HEADER);
         if (requestHeader.size() != 1) {
             logger.debug("Only one Link supported");
-            throw new StatusException(Response.Status.BAD_REQUEST,"Only one Link supported");
+            CustomReasonPhraseType stat = new CustomReasonPhraseType(Response.Status.BAD_REQUEST, "Only one Link supported");
+            throw new WebApplicationException(status(stat).build());
         }
         return requestHeader;
     }
@@ -215,13 +218,14 @@ public class ProfileEndpoint {
         return Response.ok().build();
     }
 
-
     private void checkDefaultProfile(String profileSid) {
         if (profileSid.equals(DEFAULT_PROFILE_SID)) {
             logger.debug("Modififying default profile is forbidden");
-            throw new StatusException(Response.Status.FORBIDDEN,"Modififying default profile is forbidden");
+            CustomReasonPhraseType stat = new CustomReasonPhraseType(Response.Status.FORBIDDEN, "Modififying default profile is forbidden");
+            throw new WebApplicationException(status(stat).build());
         }
     }
+
     private Profile checkProfileExists(String profileSid) {
         try {
             Profile profile = profilesDao.getProfile(profileSid);
@@ -231,11 +235,13 @@ public class ProfileEndpoint {
                 if (logger.isDebugEnabled()) {
                     logger.debug("Profile not found:" + profileSid);
                 }
-                throw new StatusException(Response.Status.NOT_FOUND,"Profile not found");
+                CustomReasonPhraseType stat = new CustomReasonPhraseType(Response.Status.NOT_FOUND, "Profile not found");
+                throw new WebApplicationException(status(stat).build());
             }
         } catch (SQLException ex) {
             logger.debug("SQL issue getting profile.", ex);
-            throw new StatusException(Response.Status.INTERNAL_SERVER_ERROR, "SQL issue getting profile.");
+            CustomReasonPhraseType stat = new CustomReasonPhraseType(Response.Status.INTERNAL_SERVER_ERROR, "SQL issue getting profile.");
+            throw new WebApplicationException(status(stat).build());
         }
     }
 
@@ -300,17 +306,23 @@ public class ProfileEndpoint {
             case ACCOUNTS_PREFIX:
                 Account acc = accountsDao.getAccount(sid);
                 if (acc == null) {
-                    throw new StatusException(Status.NOT_FOUND, "Account not found");
+                    CustomReasonPhraseType stat = new CustomReasonPhraseType(Response.Status.NOT_FOUND, "Account not found");
+                    throw new WebApplicationException(status(stat).build());
+
                 }
                 break;
             case ORGANIZATIONS_PREFIX:
                 Organization org = organizationsDao.getOrganization(sid);
                 if (org == null) {
-                    throw new StatusException(Status.NOT_FOUND, "Organization not found");
+                    CustomReasonPhraseType stat = new CustomReasonPhraseType(Response.Status.NOT_FOUND, "Organization not found");
+                    throw new WebApplicationException(status(stat).build());
+
                 }
                 break;
             default:
-                throw new StatusException(Status.NOT_FOUND, "Link not supported");
+                CustomReasonPhraseType stat = new CustomReasonPhraseType(Response.Status.NOT_FOUND, "Link not supported");
+                throw new WebApplicationException(status(stat).build());
+
         }
     }
 
@@ -333,6 +345,7 @@ public class ProfileEndpoint {
             return Response.serverError().entity(ex.getMessage());
         }
     }
+
     public Response getProfile(String profileSid, UriInfo info) {
         return getProfileBuilder(profileSid, info).build();
     }
