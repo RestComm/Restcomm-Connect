@@ -450,9 +450,9 @@ public class UssdPullTest {
         int responseBob = bobCall.getLastReceivedResponse().getStatusCode();
         if (responseBob == Response.TRYING) {
             assertTrue(bobCall.waitOutgoingCallResponse(5 * 1000));
-            assertTrue(bobCall.getLastReceivedResponse().getStatusCode() == Response.NOT_ACCEPTABLE);
+            assertEquals(Response.FORBIDDEN, bobCall.getLastReceivedResponse().getStatusCode());
         } else {
-            assertTrue(bobCall.getLastReceivedResponse().getStatusCode() == Response.NOT_ACCEPTABLE);
+            assertEquals(Response.FORBIDDEN, bobCall.getLastReceivedResponse().getStatusCode());
         }
         bobCall.dispose();
     }
@@ -467,9 +467,9 @@ public class UssdPullTest {
         int responseBob = bobCall.getLastReceivedResponse().getStatusCode();
         if (responseBob == Response.TRYING) {
             assertTrue(bobCall.waitOutgoingCallResponse(5 * 1000));
-            assertTrue(bobCall.getLastReceivedResponse().getStatusCode() == Response.NOT_ACCEPTABLE);
+            assertEquals(Response.FORBIDDEN, bobCall.getLastReceivedResponse().getStatusCode());
         } else {
-            assertTrue(bobCall.getLastReceivedResponse().getStatusCode() == Response.NOT_ACCEPTABLE);
+            assertEquals(Response.FORBIDDEN, bobCall.getLastReceivedResponse().getStatusCode());
         }
         bobCall.dispose();
     }
