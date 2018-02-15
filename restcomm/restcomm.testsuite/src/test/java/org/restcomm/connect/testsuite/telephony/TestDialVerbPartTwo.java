@@ -21,6 +21,8 @@ import org.junit.Before;
 import org.junit.BeforeClass;
 import org.junit.Rule;
 import org.junit.Test;
+import org.junit.FixMethodOrder;
+import org.junit.runners.MethodSorters;
 import org.junit.runner.RunWith;
 import org.restcomm.connect.commons.Version;
 import org.restcomm.connect.commons.annotations.FeatureAltTests;
@@ -67,6 +69,7 @@ import org.restcomm.connect.testsuite.WebArchiveUtil;
  * @author jean.deruelle@telestax.com
  */
 @RunWith(Arquillian.class)
+@FixMethodOrder(MethodSorters.NAME_ASCENDING)
 @Category(ParallelClassTests.class)
 public class TestDialVerbPartTwo {
     private final static Logger logger = Logger.getLogger(TestDialVerbPartTwo.class.getName());

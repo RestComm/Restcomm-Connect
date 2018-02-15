@@ -34,6 +34,8 @@ import org.junit.Before;
 import org.junit.BeforeClass;
 import org.junit.Ignore;
 import org.junit.Test;
+import org.junit.FixMethodOrder;
+import org.junit.runners.MethodSorters;
 import org.junit.experimental.categories.Category;
 import org.junit.runner.RunWith;
 import org.restcomm.connect.commons.Version;
@@ -68,6 +70,7 @@ import static org.junit.Assert.assertTrue;
  */
 
 @RunWith(Arquillian.class)
+@FixMethodOrder(MethodSorters.NAME_ASCENDING)
 @Category(value={WithInMinsTests.class, ParallelClassTests.class})
 public final class UserAgentManagerTest {
     private static Logger logger = Logger.getLogger(UserAgentManagerTest.class.getName());

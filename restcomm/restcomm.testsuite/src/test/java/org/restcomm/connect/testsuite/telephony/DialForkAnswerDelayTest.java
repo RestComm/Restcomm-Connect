@@ -38,7 +38,9 @@ import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
 import static org.junit.Assert.assertNotNull;
 import org.junit.experimental.categories.Category;
+import org.junit.runners.MethodSorters;
 import org.restcomm.connect.commons.annotations.ParallelClassTests;
+import org.restcomm.connect.commons.annotations.SequentialClassTests;
 import org.restcomm.connect.commons.annotations.WithInMinsTests;
 import org.restcomm.connect.testsuite.NetworkPortAssigner;
 import org.restcomm.connect.commons.annotations.UnstableTests;
@@ -49,7 +51,8 @@ import org.restcomm.connect.testsuite.WebArchiveUtil;
  * Created by gvagenas on 12/19/15.
  */
 @RunWith(Arquillian.class)
-@Category(value={FeatureAltTests.class, ParallelClassTests.class})
+@FixMethodOrder(MethodSorters.NAME_ASCENDING)
+@Category(value={FeatureAltTests.class, SequentialClassTests.class})
 public class DialForkAnswerDelayTest {
 
     private final static Logger logger = Logger.getLogger(CallLifecycleTest.class.getName());

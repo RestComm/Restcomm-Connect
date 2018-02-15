@@ -35,6 +35,8 @@ import org.jboss.shrinkwrap.api.spec.WebArchive;
 import org.jboss.shrinkwrap.resolver.api.maven.archive.ShrinkWrapMaven;
 
 import org.junit.Test;
+import org.junit.FixMethodOrder;
+import org.junit.runners.MethodSorters;
 import org.junit.runner.RunWith;
 import org.restcomm.connect.commons.Version;
 
@@ -48,6 +50,7 @@ import org.restcomm.connect.commons.annotations.UnstableTests;
  */
 
 @RunWith(Arquillian.class)
+@FixMethodOrder(MethodSorters.NAME_ASCENDING)
 public class UsageRecordsTest {
     private static Logger logger = Logger.getLogger(UsageRecordsTest.class);
 

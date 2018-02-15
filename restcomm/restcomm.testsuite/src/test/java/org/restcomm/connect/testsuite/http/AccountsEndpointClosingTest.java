@@ -42,6 +42,8 @@ import org.jboss.shrinkwrap.resolver.api.maven.archive.ShrinkWrapMaven;
 import org.junit.Before;
 import org.junit.Rule;
 import org.junit.Test;
+import org.junit.FixMethodOrder;
+import org.junit.runners.MethodSorters;
 import org.junit.runner.RunWith;
 import org.restcomm.connect.commons.Version;
 
@@ -72,6 +74,7 @@ import org.restcomm.connect.testsuite.provisioning.number.vi.RestcommIncomingPho
  * @author otsakir@gmail.com - Orestis Tsakiridis
  */
 @RunWith(Arquillian.class)
+@FixMethodOrder(MethodSorters.NAME_ASCENDING)
 public class AccountsEndpointClosingTest extends EndpointTest {
     private final static Logger logger = Logger.getLogger(AccountsEndpointClosingTest.class.getName());
 
