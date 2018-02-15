@@ -38,6 +38,8 @@ import org.jboss.shrinkwrap.api.ShrinkWrap;
 import org.jboss.shrinkwrap.api.spec.WebArchive;
 import org.jboss.shrinkwrap.resolver.api.maven.archive.ShrinkWrapMaven;
 import org.junit.Test;
+import org.junit.FixMethodOrder;
+import org.junit.runners.MethodSorters;
 import org.junit.experimental.categories.Category;
 import org.junit.runner.RunWith;
 
@@ -53,6 +55,7 @@ import wiremock.org.apache.http.client.ClientProtocolException;
  * @author guilherme.jansen@telestax.com
  */
 @RunWith(Arquillian.class)
+@FixMethodOrder(MethodSorters.NAME_ASCENDING)
 public class MultitenancyAllowAccessApiTest {
 
     private final static Logger logger = Logger.getLogger(MultitenancyAllowAccessApiTest.class);

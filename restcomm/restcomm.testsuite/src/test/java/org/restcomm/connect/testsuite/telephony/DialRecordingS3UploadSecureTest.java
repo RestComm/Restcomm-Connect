@@ -23,6 +23,8 @@ import org.junit.Before;
 import org.junit.BeforeClass;
 import org.junit.Rule;
 import org.junit.Test;
+import org.junit.FixMethodOrder;
+import org.junit.runners.MethodSorters;
 import org.junit.experimental.categories.Category;
 import org.junit.runner.RunWith;
 import org.restcomm.connect.commons.Version;
@@ -59,6 +61,7 @@ import static org.junit.Assert.assertTrue;
  * Created by gvagenas on 08/01/2017.
  */
 @RunWith(Arquillian.class)
+@FixMethodOrder(MethodSorters.NAME_ASCENDING)
 public class DialRecordingS3UploadSecureTest {
 
 	private final static Logger logger = Logger.getLogger(DialRecordingS3UploadSecureTest.class.getName());

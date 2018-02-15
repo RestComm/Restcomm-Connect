@@ -31,6 +31,8 @@ import org.junit.BeforeClass;
 import org.junit.Ignore;
 import org.junit.Rule;
 import org.junit.Test;
+import org.junit.FixMethodOrder;
+import org.junit.runners.MethodSorters;
 import org.junit.experimental.categories.Category;
 import org.junit.runner.RunWith;
 import org.restcomm.connect.commons.Version;
@@ -49,6 +51,7 @@ import com.google.gson.JsonObject;
  * Created by gvagenas on 5/19/16.
  */
 @RunWith(Arquillian.class)
+@FixMethodOrder(MethodSorters.NAME_ASCENDING)
 @Category(value={SequentialClassTests.class})
 public class DialConferenceTest {
     private final static Logger logger = Logger.getLogger(DialConferenceTest.class.getName());

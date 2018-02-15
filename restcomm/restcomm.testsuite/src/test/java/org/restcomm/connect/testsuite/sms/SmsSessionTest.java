@@ -35,6 +35,8 @@ import org.junit.Before;
 import org.junit.BeforeClass;
 import org.junit.Rule;
 import org.junit.Test;
+import org.junit.FixMethodOrder;
+import org.junit.runners.MethodSorters;
 import org.junit.experimental.categories.Category;
 import org.junit.runner.RunWith;
 //import org.restcomm.connect.sms.Version;
@@ -55,6 +57,7 @@ import com.google.gson.JsonObject;
  * @author gvagenas@gmail.com (George Vagenas)
  */
 @RunWith(Arquillian.class)
+@FixMethodOrder(MethodSorters.NAME_ASCENDING)
 @Category(value={WithInSecsTests.class, ParallelClassTests.class})
 public final class SmsSessionTest {
     private static final String version = Version.getVersion();

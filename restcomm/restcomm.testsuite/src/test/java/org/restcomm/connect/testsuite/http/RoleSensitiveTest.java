@@ -31,6 +31,8 @@ import org.jboss.shrinkwrap.api.spec.WebArchive;
 import org.jboss.shrinkwrap.resolver.api.maven.archive.ShrinkWrapMaven;
 import org.junit.Assert;
 import org.junit.Test;
+import org.junit.FixMethodOrder;
+import org.junit.runners.MethodSorters;
 import org.junit.experimental.categories.Category;
 import org.junit.runner.RunWith;
 import org.restcomm.connect.commons.annotations.FeatureExpTests;
@@ -46,6 +48,7 @@ import com.sun.jersey.core.util.MultivaluedMapImpl;
  * @author Orestis Tsakiridis
  */
 @RunWith(Arquillian.class)
+@FixMethodOrder(MethodSorters.NAME_ASCENDING)
 public class RoleSensitiveTest extends EndpointTest {
     protected final static Logger logger = Logger.getLogger(RoleSensitiveTest.class);
 
