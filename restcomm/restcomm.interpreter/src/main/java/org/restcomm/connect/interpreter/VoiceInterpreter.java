@@ -1363,9 +1363,6 @@ public class VoiceInterpreter extends BaseVoiceInterpreter {
                     }
                     return;
                 }
-//                else if (is(bridged) && (sender.equals(outboundCall))) {// || outboundCall != null)) {
-//                    fsm.transition(message, finishDialing);
-//                }
                 else
                     // changed for https://bitbucket.org/telestax/telscale-restcomm/issue/132/ so that we can do Dial SIP Screening
                     if (is(forking) && ((dialBranches != null && dialBranches.contains(sender)) || outboundCall == null)) {
@@ -1420,7 +1417,7 @@ public class VoiceInterpreter extends BaseVoiceInterpreter {
                 } else if (is(forking)) {
                     if (outboundCall == null || !sender.equals(call)) {
                         if (logger.isInfoEnabled()) {
-                            String msg = String.format("Got CallStateChanged.InProgress from outbound call %s, will proceed to cancel other branches", sender());
+                            String msg = String.format("Got CallStateChanged.InProgress while forking, from outbound call %s, will proceed to cancel other branches", sender());
                             logger.info(msg);
                         }
                         outboundCall = sender;

@@ -1611,7 +1611,6 @@ public class DialForkTest {
     }
 
 
-    private String dialForkMultipleAnswers = "<Response><Dial><Client>alice</Client><Sip>sip:henrique@127.0.0.1:" + henriquePort + "</Sip><Number>+131313</Number></Dial></Response>";
     @Test
     @Category({FeatureExpTests.class, UnstableTests.class})
     public synchronized void testDialForkMultipleAnswer() throws InterruptedException, ParseException, MalformedURLException {
@@ -1661,37 +1660,37 @@ public class DialForkTest {
         aliceCall.sendIncomingCallResponse(Response.TRYING, "Trying", 3600);
         aliceCall.sendIncomingCallResponse(Response.RINGING, "Ringing", 3600);
 
-        georgeCall.waitForIncomingCall(15000);
-        georgeCall.sendIncomingCallResponse(Response.TRYING, "Trying", 3600);
-        georgeCall.sendIncomingCallResponse(Response.RINGING, "Ringing", 3600);
-
         henriqueCall.waitForIncomingCall(15000);
         henriqueCall.sendIncomingCallResponse(Response.TRYING, "Trying", 3600);
         henriqueCall.sendIncomingCallResponse(Response.RINGING, "Ringing", 3600);
+
+        georgeCall.waitForIncomingCall(15000);
+        georgeCall.sendIncomingCallResponse(Response.TRYING, "Trying", 3600);
+        georgeCall.sendIncomingCallResponse(Response.RINGING, "Ringing", 3600);
 
         Thread.sleep(3000);
         String receivedBody = new String(aliceCall.getLastReceivedRequest().getRawContent());
         aliceCall.sendIncomingCallResponse(Response.OK, "OK", 3600, receivedBody, "application", "sdp",
                 null, null);
-        georgeCall.sendIncomingCallResponse(Response.OK, "OK", 3600, receivedBody, "application", "sdp",
-                null, null);
         henriqueCall.sendIncomingCallResponse(Response.OK, "OK", 3600, receivedBody, "application", "sdp",
+                null, null);
+        georgeCall.sendIncomingCallResponse(Response.OK, "OK", 3600, receivedBody, "application", "sdp",
                 null, null);
 
         assertTrue(aliceCall.waitForAck(20000));
         aliceCall.listenForDisconnect();
 
-        assertTrue(georgeCall.waitForAck(20000));
-        georgeCall.listenForDisconnect();
-
         assertTrue(henriqueCall.waitForAck(20000));
         henriqueCall.listenForDisconnect();
 
+        assertTrue(georgeCall.waitForAck(20000));
+        georgeCall.listenForDisconnect();
+
+        assertTrue(henriqueCall.waitForDisconnect(15000));
+        henriqueCall.respondToDisconnect();
 
         assertTrue(georgeCall.waitForDisconnect(15000));
         georgeCall.respondToDisconnect();
-        assertTrue(henriqueCall.waitForDisconnect(15000));
-        henriqueCall.respondToDisconnect();
 
 
         //TODO assert just one call get establlished, rest are either cancel/bye
