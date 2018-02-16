@@ -1610,7 +1610,7 @@ public class DialForkTest {
     }
 
 
-    @Test @Ignore
+    @Test
     @Category({FeatureExpTests.class, UnstableTests.class})
     public synchronized void testDialForkMultipleAnswer() throws InterruptedException, ParseException, MalformedURLException {
         List<AutoAnswer> autoAnswers = new ArrayList<AutoAnswer>();
@@ -1627,35 +1627,17 @@ public class DialForkTest {
         // Prepare Alice to receive call
         final SipCall aliceCall = alicePhone.createSipCall();
         aliceCall.listenForIncomingCall();
-        autoAnswers.add(new AutoAnswer(aliceCall));
-
 
         // Prepare George phone to receive call
         final SipCall georgeCall = georgePhone.createSipCall();
         georgeCall.listenForIncomingCall();
-        autoAnswers.add(new AutoAnswer(georgeCall));
 
         // Prepare Henrique phone to receive call
-        // henriquePhone.setLoopback(true);
         final SipCall henriqueCall = henriquePhone.createSipCall();
         henriqueCall.listenForIncomingCall();
-        autoAnswers.add(new AutoAnswer(henriqueCall));
-
-        //Prepare Fotini phone to receive a call
-        final SipCall fotiniCall = fotiniPhone.createSipCall();
-        fotiniCall.listenForIncomingCall();
-        autoAnswers.add(new AutoAnswer(fotiniCall));
 
         // Initiate a call using Bob
         final SipCall bobCall = bobPhone.createSipCall();
-
-
-        //both alice and george will answer
-        ExecutorService serv = Executors.newFixedThreadPool(10);
-        for (AutoAnswer auto : autoAnswers) {
-            serv.submit(auto);
-        }
-
 
         bobCall.initiateOutgoingCall(bobContact, "sip:1111@" + restcommContact, null, body, "application", "sdp", null, null);
         assertLastOperationSuccess(bobCall);
@@ -1669,20 +1651,50 @@ public class DialForkTest {
             assertEquals(Response.RINGING, bobCall.getLastReceivedResponse().getStatusCode());
         }
 
-//        assertTrue(bobCall.waitOutgoingCallResponse(5 * 1000));
-//        assertEquals(Response.OK, bobCall.getLastReceivedResponse().getStatusCode());
-//        bobCall.sendInviteOkAck();
         assertTrue(bobCall.waitForAnswer(10000));
         bobCall.sendInviteOkAck();
         assertTrue(!(bobCall.getLastReceivedResponse().getStatusCode() >= 400));
 
+        aliceCall.waitForIncomingCall(15000);
+        aliceCall.sendIncomingCallResponse(Response.TRYING, "Trying", 3600);
+        aliceCall.sendIncomingCallResponse(Response.RINGING, "Ringing", 3600);
 
-//        assertTrue(bobCall.waitForAnswer(10000));
-//        bobCall.sendInviteOkAck();
+        henriqueCall.waitForIncomingCall(15000);
+        henriqueCall.sendIncomingCallResponse(Response.TRYING, "Trying", 3600);
+        henriqueCall.sendIncomingCallResponse(Response.RINGING, "Ringing", 3600);
+
+        georgeCall.waitForIncomingCall(15000);
+        georgeCall.sendIncomingCallResponse(Response.TRYING, "Trying", 3600);
+        georgeCall.sendIncomingCallResponse(Response.RINGING, "Ringing", 3600);
+
+        Thread.sleep(3000);
+        String receivedBody = new String(aliceCall.getLastReceivedRequest().getRawContent());
+        aliceCall.sendIncomingCallResponse(Response.OK, "OK", 3600, receivedBody, "application", "sdp",
+                null, null);
+        henriqueCall.sendIncomingCallResponse(Response.OK, "OK", 3600, receivedBody, "application", "sdp",
+                null, null);
+        georgeCall.sendIncomingCallResponse(Response.OK, "OK", 3600, receivedBody, "application", "sdp",
+                null, null);
+
+        assertTrue(aliceCall.waitForAck(20000));
+        aliceCall.listenForDisconnect();
+
+        assertTrue(henriqueCall.waitForAck(20000));
+        henriqueCall.listenForDisconnect();
+
+        assertTrue(georgeCall.waitForAck(20000));
+        georgeCall.listenForDisconnect();
+
+        assertTrue(henriqueCall.waitForDisconnect(15000));
+        henriqueCall.respondToDisconnect();
+
+        assertTrue(georgeCall.waitForDisconnect(15000));
+        georgeCall.respondToDisconnect();
+
 
         //TODO assert just one call get establlished, rest are either cancel/bye
 
-        Thread.sleep(10000);
+        Thread.sleep(5000);
 
         assertEquals(1, MonitoringServiceTool.getInstance().getLiveIncomingCallStatistics(deploymentUrl.toString(), adminAccountSid, adminAuthToken));
         JsonObject liveCalls = MonitoringServiceTool.getInstance().getLiveCalls(deploymentUrl.toString(), adminAccountSid, adminAuthToken);
@@ -1692,9 +1704,11 @@ public class DialForkTest {
         assertEquals(2,liveCallDetails.size());
 
         bobCall.disconnect();
+        assertTrue(aliceCall.waitForDisconnect(5000));
+        aliceCall.respondToDisconnect();
+
         Thread.sleep(1000);
         assertNoMGCPResources();
-
     }
 
     @Test
