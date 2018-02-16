@@ -1248,9 +1248,6 @@ public class VoiceInterpreter extends BaseVoiceInterpreter {
                     String msg = String.format("Got 180 Ringing from outbound call %s",sender);
                     logger.info(msg);
                 }
-//                if (is(forking)) {
-//                    outboundCall = sender;
-//                }
                 break;
             case CANCELED:
                 if (is(initializingBridge) || is(acquiringOutboundCallInfo) || is(bridging) || is(bridged)) {
