@@ -26,7 +26,6 @@ import javax.ws.rs.PathParam;
 import javax.ws.rs.Produces;
 import javax.ws.rs.core.Context;
 import javax.ws.rs.core.MediaType;
-import static javax.ws.rs.core.MediaType.*;
 import javax.ws.rs.core.MultivaluedMap;
 import javax.ws.rs.core.Response;
 import javax.ws.rs.core.UriInfo;
@@ -40,12 +39,6 @@ import org.restcomm.connect.commons.annotations.concurrency.ThreadSafe;
 public final class CallsXmlEndpoint extends CallsEndpoint {
     public CallsXmlEndpoint() {
         super();
-    }
-
-    @Path("/{sid}.json")
-    @GET
-    public Response getCallAsJson(@PathParam("accountSid") final String accountSid, @PathParam("sid") final String sid) {
-        return getCall(accountSid, sid, APPLICATION_JSON_TYPE);
     }
 
     @Path("/{sid}")
@@ -75,17 +68,10 @@ public final class CallsXmlEndpoint extends CallsEndpoint {
     }
 
     @GET
-    @Path("/{callSid}/Recordings.json")
-    @Produces(MediaType.APPLICATION_JSON)
-    public Response getRecordingsByCallJson(@PathParam("accountSid") String accountSid, @PathParam("callSid") String callSid) {
-        return getRecordingsByCall(accountSid, callSid, MediaType.APPLICATION_JSON_TYPE);
-    }
-
-    @GET
     @Path("/{callSid}/Recordings")
     @Produces(MediaType.APPLICATION_XML)
     public Response getRecordingsByCallXml(@PathParam("accountSid") String accountSid, @PathParam("callSid") String callSid) {
-        return getRecordingsByCall(accountSid, callSid, MediaType.APPLICATION_XML_TYPE);
+        return getRecordingsByCall(accountSid, callSid, retrieveMediaType());
     }
 
 }

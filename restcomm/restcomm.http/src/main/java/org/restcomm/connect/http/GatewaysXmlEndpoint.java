@@ -19,7 +19,6 @@
  */
 package org.restcomm.connect.http;
 
-import static javax.ws.rs.core.MediaType.*;
 import static javax.ws.rs.core.Response.*;
 import static org.restcomm.connect.http.security.AccountPrincipal.SUPER_ADMIN_ROLE;
 
@@ -52,22 +51,10 @@ public final class GatewaysXmlEndpoint extends GatewaysEndpoint {
         return ok().build();
     }
 
-    @Path("/{sid}.json")
-    @DELETE
-    public Response deleteGatewayAsJson(@PathParam("accountSid") final String accountSid, @PathParam("sid") final String sid) {
-        return deleteGateway(accountSid, sid);
-    }
-
     @Path("/{sid}")
     @DELETE
     public Response deleteGatewayAsXml(@PathParam("accountSid") final String accountSid, @PathParam("sid") final String sid) {
         return deleteGateway(accountSid, sid);
-    }
-
-    @Path("/{sid}.json")
-    @GET
-    public Response getGatewayAsJson(@PathParam("accountSid") final String accountSid, @PathParam("sid") final String sid) {
-        return getGateway(accountSid, sid, APPLICATION_JSON_TYPE);
     }
 
     @Path("/{sid}")
@@ -84,18 +71,6 @@ public final class GatewaysXmlEndpoint extends GatewaysEndpoint {
     @POST
     public Response createGateway(@PathParam("accountSid") final String accountSid, final MultivaluedMap<String, String> data) {
         return putGateway(accountSid, data, retrieveMediaType());
-    }
-
-    @Path("/{sid}.json")
-    @POST
-    public Response updateGatewayAsJsonPost(@PathParam("accountSid") final String accountSid, @PathParam("sid") final String sid, final MultivaluedMap<String, String> data) {
-        return updateGateway(accountSid, sid, data, APPLICATION_JSON_TYPE);
-    }
-
-    @Path("/{sid}.json")
-    @PUT
-    public Response updateGatewayAsJsonPut(@PathParam("accountSid") final String accountSid, @PathParam("sid") final String sid, final MultivaluedMap<String, String> data) {
-        return updateGateway(accountSid, sid, data, APPLICATION_JSON_TYPE);
     }
 
     @Path("/{sid}")

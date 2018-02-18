@@ -24,7 +24,6 @@ import javax.ws.rs.GET;
 import javax.ws.rs.Path;
 import javax.ws.rs.PathParam;
 import javax.ws.rs.QueryParam;
-import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
 import static javax.ws.rs.core.Response.*;
 import static javax.ws.rs.core.Response.Status.*;
@@ -62,7 +61,7 @@ public final class AvailablePhoneNumbersTollFreeXmlEndpoint extends AvailablePho
             PhoneNumberSearchFilters listFilters = new PhoneNumberSearchFilters(areaCode, null, null,
                     Boolean.TRUE, null, null, null, null, null, null, null, null,
                     null, null, rangeSizeInt, rangeIndexInt, PhoneNumberType.TollFree);
-            return getAvailablePhoneNumbers(accountSid, isoCountryCode, listFilters, filterPattern, MediaType.APPLICATION_XML_TYPE);
+            return getAvailablePhoneNumbers(accountSid, isoCountryCode, listFilters, filterPattern, retrieveMediaType());
         } else {
             return status(BAD_REQUEST).build();
         }

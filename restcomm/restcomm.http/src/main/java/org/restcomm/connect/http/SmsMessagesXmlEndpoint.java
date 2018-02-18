@@ -24,7 +24,6 @@ import javax.ws.rs.POST;
 import javax.ws.rs.Path;
 import javax.ws.rs.PathParam;
 import javax.ws.rs.core.Context;
-import static javax.ws.rs.core.MediaType.*;
 import javax.ws.rs.core.MultivaluedMap;
 import javax.ws.rs.core.Response;
 import javax.ws.rs.core.UriInfo;
@@ -38,12 +37,6 @@ import org.restcomm.connect.commons.annotations.concurrency.ThreadSafe;
 public final class SmsMessagesXmlEndpoint extends SmsMessagesEndpoint {
     public SmsMessagesXmlEndpoint() {
         super();
-    }
-
-    @Path("/{sid}.json")
-    @GET
-    public Response getSmsMessageAsJson(@PathParam("accountSid") final String accountSid, @PathParam("sid") final String sid) {
-        return getSmsMessage(accountSid, sid, APPLICATION_JSON_TYPE);
     }
 
     @Path("/{sid}")

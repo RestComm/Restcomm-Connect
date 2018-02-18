@@ -23,7 +23,6 @@ import javax.ws.rs.GET;
 import javax.ws.rs.Path;
 import javax.ws.rs.PathParam;
 import javax.ws.rs.core.Context;
-import static javax.ws.rs.core.MediaType.APPLICATION_JSON_TYPE;
 import javax.ws.rs.core.Response;
 import javax.ws.rs.core.UriInfo;
 import org.restcomm.connect.commons.annotations.concurrency.ThreadSafe;
@@ -36,12 +35,6 @@ import org.restcomm.connect.commons.annotations.concurrency.ThreadSafe;
 public final class RecordingsXmlEndpoint extends RecordingsEndpoint {
     public RecordingsXmlEndpoint() {
         super();
-    }
-
-    @Path("/{sid}.json")
-    @GET
-    public Response getRecordingAsJson(@PathParam("accountSid") final String accountSid, @PathParam("sid") final String sid) {
-        return getRecording(accountSid, sid, APPLICATION_JSON_TYPE);
     }
 
     @Path("/{sid}.wav")

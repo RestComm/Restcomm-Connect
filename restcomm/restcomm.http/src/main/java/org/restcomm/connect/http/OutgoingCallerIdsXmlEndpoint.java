@@ -25,7 +25,6 @@ import javax.ws.rs.POST;
 import javax.ws.rs.PUT;
 import javax.ws.rs.Path;
 import javax.ws.rs.PathParam;
-import static javax.ws.rs.core.MediaType.*;
 import javax.ws.rs.core.MultivaluedMap;
 import javax.ws.rs.core.Response;
 import static javax.ws.rs.core.Response.*;
@@ -55,22 +54,10 @@ public final class OutgoingCallerIdsXmlEndpoint extends OutgoingCallerIdsEndpoin
         return ok().build();
     }
 
-    @Path("/{sid}.json")
-    @DELETE
-    public Response deleteOutgoingCallerIdAsJson(@PathParam("accountSid") String accountSid, @PathParam("sid") String sid) {
-        return deleteOutgoingCallerId(accountSid, sid);
-    }
-
     @Path("/{sid}")
     @DELETE
     public Response deleteOutgoingCallerIdAsXml(@PathParam("accountSid") String accountSid, @PathParam("sid") String sid) {
         return deleteOutgoingCallerId(accountSid, sid);
-    }
-
-    @Path("/{sid}.json")
-    @GET
-    public Response getCallerIdAsJson(@PathParam("accountSid") final String accountSid, @PathParam("sid") final String sid) {
-        return getCallerId(accountSid, sid, APPLICATION_JSON_TYPE);
     }
 
     @Path("/{sid}")
@@ -88,13 +75,6 @@ public final class OutgoingCallerIdsXmlEndpoint extends OutgoingCallerIdsEndpoin
     public Response putOutgoingCallerId(@PathParam("accountSid") final String accountSid,
             final MultivaluedMap<String, String> data) {
         return putOutgoingCallerId(accountSid, data, retrieveMediaType());
-    }
-
-    @Path("/{sid}.json")
-    @PUT
-    public Response updateOutgoingCallerIdAsJson(@PathParam("accountSid") final String accountSid,
-            @PathParam("sid") final String sid, final MultivaluedMap<String, String> data) {
-        return updateOutgoingCallerId(accountSid, sid, data, APPLICATION_JSON_TYPE);
     }
 
     @Path("/{sid}")

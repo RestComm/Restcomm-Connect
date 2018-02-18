@@ -25,7 +25,6 @@ import javax.ws.rs.POST;
 import javax.ws.rs.PUT;
 import javax.ws.rs.Path;
 import javax.ws.rs.PathParam;
-import static javax.ws.rs.core.MediaType.APPLICATION_JSON_TYPE;
 import javax.ws.rs.core.MultivaluedMap;
 import javax.ws.rs.core.Response;
 import static javax.ws.rs.core.Response.ok;
@@ -58,22 +57,10 @@ public final class ClientsXmlEndpoint extends ClientsEndpoint {
         }
     }
 
-    @Path("/{sid}.json")
-    @DELETE
-    public Response deleteClientAsJson(@PathParam("accountSid") final String accountSid, @PathParam("sid") final String sid) {
-        return deleteClient(accountSid, sid);
-    }
-
     @Path("/{sid}")
     @DELETE
     public Response deleteClientAsXml(@PathParam("accountSid") final String accountSid, @PathParam("sid") final String sid) {
         return deleteClient(accountSid, sid);
-    }
-
-    @Path("/{sid}.json")
-    @GET
-    public Response getClientAsJson(@PathParam("accountSid") final String accountSid, @PathParam("sid") final String sid) {
-        return getClient(accountSid, sid, APPLICATION_JSON_TYPE);
     }
 
     @Path("/{sid}")
@@ -90,20 +77,6 @@ public final class ClientsXmlEndpoint extends ClientsEndpoint {
     @POST
     public Response putClient(@PathParam("accountSid") final String accountSid, final MultivaluedMap<String, String> data) {
         return putClient(accountSid, data, retrieveMediaType());
-    }
-
-    @Path("/{sid}.json")
-    @POST
-    public Response updateClientAsJsonPost(@PathParam("accountSid") final String accountSid,
-            @PathParam("sid") final String sid, final MultivaluedMap<String, String> data) {
-        return updateClient(accountSid, sid, data, APPLICATION_JSON_TYPE);
-    }
-
-    @Path("/{sid}.json")
-    @PUT
-    public Response updateClientAsJsonPut(@PathParam("accountSid") final String accountSid, @PathParam("sid") final String sid,
-            final MultivaluedMap<String, String> data) {
-        return updateClient(accountSid, sid, data, APPLICATION_JSON_TYPE);
     }
 
     @Path("/{sid}")
