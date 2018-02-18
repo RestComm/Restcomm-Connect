@@ -23,16 +23,6 @@ import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
 import com.thoughtworks.xstream.XStream;
 
-import org.apache.commons.configuration.Configuration;
-import org.joda.time.DateTime;
-import org.restcomm.connect.commons.dao.Sid;
-import org.restcomm.connect.dao.DaoManager;
-import org.restcomm.connect.dao.ExtensionsConfigurationDao;
-import org.restcomm.connect.dao.entities.RestCommResponse;
-import org.restcomm.connect.extension.api.ConfigurationException;
-import org.restcomm.connect.extension.api.ExtensionConfiguration;
-import org.restcomm.connect.http.converter.ExtensionConfigurationConverter;
-import org.restcomm.connect.http.converter.RestCommResponseConverter;
 
 import javax.annotation.PostConstruct;
 import javax.ws.rs.core.MediaType;
@@ -57,7 +47,6 @@ import org.restcomm.connect.extension.api.ConfigurationException;
 import org.restcomm.connect.extension.api.ExtensionConfiguration;
 import org.restcomm.connect.http.converter.ExtensionConfigurationConverter;
 import org.restcomm.connect.http.converter.RestCommResponseConverter;
-import org.restcomm.connect.http.exceptions.InsufficientPermission;
 
 /**
  * Created by gvagenas on 12/10/2016.

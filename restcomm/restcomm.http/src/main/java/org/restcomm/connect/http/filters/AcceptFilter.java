@@ -26,6 +26,7 @@ import com.sun.jersey.spi.container.ResourceFilter;
 import java.net.URI;
 import java.util.List;
 import javax.ws.rs.core.MediaType;
+import javax.ws.rs.core.MultivaluedMap;
 import javax.ws.rs.core.PathSegment;
 import javax.ws.rs.core.UriBuilder;
 import javax.ws.rs.ext.Provider;
@@ -55,6 +56,10 @@ public class AcceptFilter implements ResourceFilter, ContainerRequestFilter {
             }
             baseUriBuilder.path(newSeg);
 
+        }
+        MultivaluedMap<String, String> queryParameters = cr.getQueryParameters();
+        for (String qParam : queryParameters.keySet()) {
+            baseUriBuilder.queryParam(qParam, queryParameters.getFirst(qParam));
         }
         return baseUriBuilder.build();
     }
