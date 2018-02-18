@@ -180,14 +180,4 @@ public final class IncomingPhoneNumbersXmlEndpoint extends IncomingPhoneNumbersE
         MediaType acceptType = retrieveMediaType();
         return migrateIncomingPhoneNumbers(accountSid, data, acceptType);
     }
-
-    @Path("/migrate.json")
-    @POST
-    @RolesAllowed(SUPER_ADMIN_ROLE)
-    public Response migrateIncomingPhoneNumbersAsJson(@PathParam("accountSid") final String accountSid,
-            final MultivaluedMap<String, String> data,
-            @HeaderParam("Accept") String accept) {
-        MediaType acceptType = retrieveMediaType();
-        return migrateIncomingPhoneNumbers(accountSid, data, acceptType);
-    }
 }

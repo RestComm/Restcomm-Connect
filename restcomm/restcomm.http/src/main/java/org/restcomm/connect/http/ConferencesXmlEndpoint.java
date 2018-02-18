@@ -23,7 +23,6 @@ import javax.ws.rs.GET;
 import javax.ws.rs.Path;
 import javax.ws.rs.PathParam;
 import javax.ws.rs.core.Context;
-import static javax.ws.rs.core.MediaType.APPLICATION_JSON_TYPE;
 import javax.ws.rs.core.Response;
 import javax.ws.rs.core.UriInfo;
 import org.restcomm.connect.commons.annotations.concurrency.ThreadSafe;
@@ -37,12 +36,6 @@ import org.restcomm.connect.commons.annotations.concurrency.ThreadSafe;
 public final class ConferencesXmlEndpoint extends ConferencesEndpoint {
     public ConferencesXmlEndpoint() {
         super();
-    }
-
-    @Path("/{sid}.json")
-    @GET
-    public Response getConferenceAsJson(@PathParam("accountSid") final String accountSid, @PathParam("sid") final String sid) {
-        return getConference(accountSid, sid, APPLICATION_JSON_TYPE);
     }
 
     @Path("/{sid}")

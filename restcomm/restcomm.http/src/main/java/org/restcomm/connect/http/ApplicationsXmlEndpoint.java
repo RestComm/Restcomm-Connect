@@ -28,8 +28,6 @@ import javax.ws.rs.PUT;
 import javax.ws.rs.Path;
 import javax.ws.rs.PathParam;
 import javax.ws.rs.core.Context;
-import static javax.ws.rs.core.MediaType.APPLICATION_JSON_TYPE;
-import static javax.ws.rs.core.MediaType.APPLICATION_XML_TYPE;
 import javax.ws.rs.core.MultivaluedMap;
 import javax.ws.rs.core.Response;
 import static javax.ws.rs.core.Response.ok;
@@ -62,7 +60,7 @@ public class ApplicationsXmlEndpoint extends ApplicationsEndpoint {
 
     @GET
     public Response getApplications(@PathParam("accountSid") final String accountSid, @Context UriInfo uriInfo) {
-        return getApplications(accountSid, APPLICATION_XML_TYPE, uriInfo );
+        return getApplications(accountSid, retrieveMediaType(), uriInfo );
     }
 
     @Path("/{sid}")
@@ -71,22 +69,9 @@ public class ApplicationsXmlEndpoint extends ApplicationsEndpoint {
         return getApplication(accountSid, sid, retrieveMediaType());
     }
 
-    @Path("/{sid}.json")
-    @GET
-    public Response getApplicationAsJson(@PathParam("accountSid") final String accountSid, @PathParam("sid") final String sid) {
-        return getApplication(accountSid, sid, APPLICATION_JSON_TYPE);
-    }
-
     @POST
     public Response putApplication(@PathParam("accountSid") String accountSid, final MultivaluedMap<String, String> data) {
         return putApplication(accountSid, data, retrieveMediaType());
-    }
-
-    @Path("/{sid}.json")
-    @POST
-    public Response updateApplicationAsJsonPost(@PathParam("accountSid") final String accountSid,
-            @PathParam("sid") final String sid, final MultivaluedMap<String, String> data) {
-        return updateApplication(accountSid, sid, data, APPLICATION_JSON_TYPE);
     }
 
     @Path("/{sid}")
@@ -96,24 +81,11 @@ public class ApplicationsXmlEndpoint extends ApplicationsEndpoint {
         return updateApplication(accountSid, sid, data, retrieveMediaType());
     }
 
-    @Path("/{sid}.json")
-    @PUT
-    public Response updateApplicationAsJsonPut(@PathParam("accountSid") final String accountSid,
-            @PathParam("sid") final String sid, final MultivaluedMap<String, String> data) {
-        return updateApplication(accountSid, sid, data, APPLICATION_JSON_TYPE);
-    }
-
     @Path("/{sid}")
     @PUT
     public Response updateApplicationAsXmlPut(@PathParam("accountSid") final String accountSid,
             @PathParam("sid") final String sid, final MultivaluedMap<String, String> data) {
         return updateApplication(accountSid, sid, data, retrieveMediaType());
-    }
-
-    @Path("/{sid}.json")
-    @DELETE
-    public Response deleteApplicationAsJson(@PathParam("accountSid") final String accountSid, @PathParam("sid") final String sid) {
-        return deleteApplication(accountSid, sid);
     }
 
     @Path("/{sid}")

@@ -24,7 +24,6 @@ import javax.ws.rs.GET;
 import javax.ws.rs.Path;
 import javax.ws.rs.PathParam;
 import javax.ws.rs.core.Context;
-import static javax.ws.rs.core.MediaType.*;
 import javax.ws.rs.core.Response;
 import static javax.ws.rs.core.Response.*;
 import javax.ws.rs.core.UriInfo;
@@ -53,12 +52,6 @@ public final class TranscriptionsXmlEndpoint extends TranscriptionsEndpoint {
         // TODO return NOT_FOUND if transcrtiption==null
         dao.removeTranscription(new Sid(sid));
         return ok().build();
-    }
-
-    @Path("/{sid}.json")
-    @GET
-    public Response getTranscriptionAsJson(@PathParam("accountSid") final String accountSid, @PathParam("sid") final String sid) {
-        return getTranscription(accountSid, sid, APPLICATION_JSON_TYPE);
     }
 
     @Path("/{sid}")
