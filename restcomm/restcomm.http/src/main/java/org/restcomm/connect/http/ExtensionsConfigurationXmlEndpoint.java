@@ -33,7 +33,6 @@ import javax.ws.rs.core.MultivaluedMap;
 import javax.ws.rs.core.Response;
 import org.restcomm.connect.commons.dao.Sid;
 
-import static javax.ws.rs.core.MediaType.APPLICATION_XML_TYPE;
 import static org.restcomm.connect.http.security.AccountPrincipal.SUPER_ADMIN_ROLE;
 
 import javax.annotation.security.RolesAllowed;

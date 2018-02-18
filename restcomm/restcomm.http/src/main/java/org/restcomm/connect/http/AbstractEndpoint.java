@@ -24,6 +24,7 @@ import com.google.i18n.phonenumbers.PhoneNumberUtil;
 import com.google.i18n.phonenumbers.Phonenumber.PhoneNumber;
 import java.math.BigInteger;
 import java.net.URI;
+import javax.ws.rs.HeaderParam;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.MultivaluedMap;
 import org.apache.commons.configuration.Configuration;
@@ -42,6 +43,9 @@ public abstract class AbstractEndpoint {
     private String defaultApiVersion;
     protected Configuration configuration;
     protected String baseRecordingsPath;
+
+    @HeaderParam("Accept")
+    String accept;
 
     public AbstractEndpoint() {
         super();
