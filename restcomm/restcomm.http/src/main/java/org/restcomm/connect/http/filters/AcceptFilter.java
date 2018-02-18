@@ -76,6 +76,8 @@ public class AcceptFilter implements ResourceFilter, ContainerRequestFilter {
         }
 
         if (cr.getPath().contains(JSON_EXTENSION)) {
+            cr.getRequestHeaders().remove(ACCEPT_HDR);
+            cr.getRequestHeaders().add(ACCEPT_HDR, MediaType.APPLICATION_JSON);
             URI reworkedUri = reworkJSONPath(cr);
             cr.setUris(cr.getBaseUri(), reworkedUri);
         }
