@@ -24,7 +24,6 @@ import javax.ws.rs.POST;
 import javax.ws.rs.Path;
 import javax.ws.rs.PathParam;
 import javax.ws.rs.core.Context;
-import javax.ws.rs.core.MediaType;
 import static javax.ws.rs.core.MediaType.*;
 import javax.ws.rs.core.MultivaluedMap;
 import javax.ws.rs.core.Response;
@@ -50,16 +49,16 @@ public final class SmsMessagesXmlEndpoint extends SmsMessagesEndpoint {
     @Path("/{sid}")
     @GET
     public Response getSmsMessageAsXml(@PathParam("accountSid") final String accountSid, @PathParam("sid") final String sid) {
-        return getSmsMessage(accountSid, sid, MediaType.valueOf(accept));
+        return getSmsMessage(accountSid, sid, retrieveMediaType());
     }
 
     @GET
     public Response getSmsMessages(@PathParam("accountSid") final String accountSid, @Context UriInfo info) {
-        return getSmsMessages(accountSid, info, MediaType.valueOf(accept));
+        return getSmsMessages(accountSid, info, retrieveMediaType());
     }
 
     @POST
     public Response putSmsMessage(@PathParam("accountSid") final String accountSid, final MultivaluedMap<String, String> data) {
-        return putSmsMessage(accountSid, data, MediaType.valueOf(accept));
+        return putSmsMessage(accountSid, data, retrieveMediaType());
     }
 }

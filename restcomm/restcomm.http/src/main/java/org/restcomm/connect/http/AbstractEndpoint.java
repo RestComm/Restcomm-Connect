@@ -51,6 +51,13 @@ public abstract class AbstractEndpoint {
         super();
     }
 
+    protected MediaType retrieveMediaType() {
+        if (accept.contains("json")) {
+             return MediaType.APPLICATION_JSON_TYPE;
+        }
+        return MediaType.APPLICATION_XML_TYPE;
+    }
+
     protected void init(final Configuration configuration) {
         final String path = configuration.getString("recordings-path");
         baseRecordingsPath = StringUtils.addSuffixIfNotPresent(path, "/");

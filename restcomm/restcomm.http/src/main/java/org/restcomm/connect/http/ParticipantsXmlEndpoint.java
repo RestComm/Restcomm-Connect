@@ -24,7 +24,6 @@ import javax.ws.rs.POST;
 import javax.ws.rs.Path;
 import javax.ws.rs.PathParam;
 import javax.ws.rs.core.Context;
-import javax.ws.rs.core.MediaType;
 import static javax.ws.rs.core.MediaType.APPLICATION_JSON_TYPE;
 import javax.ws.rs.core.MultivaluedMap;
 import javax.ws.rs.core.Response;
@@ -50,19 +49,19 @@ public final class ParticipantsXmlEndpoint extends ParticipantsEndpoint {
     @Path("/{callSid}")
     @GET
     public Response getParticipantAsXml(@PathParam("accountSid") final String accountSid, @PathParam("conferenceSid") final String conferenceSid, @PathParam("callSid") final String callSid) {
-        return getCall(accountSid, callSid, MediaType.valueOf(accept));
+        return getCall(accountSid, callSid, retrieveMediaType());
     }
 
     @GET
     public Response getParticipants(@PathParam("accountSid") final String accountSid, @PathParam("conferenceSid") final String conferenceSid, @Context UriInfo info) {
-        return getCalls(accountSid, conferenceSid, info, MediaType.valueOf(accept));
+        return getCalls(accountSid, conferenceSid, info, retrieveMediaType());
     }
 
     @Path("/{callSid}")
     @POST
     public Response modifyCall(@PathParam("accountSid") final String accountSid, @PathParam("conferenceSid") final String conferenceSid, @PathParam("callSid") final String callSid,
             final MultivaluedMap<String, String> data) {
-        return updateCall(accountSid, callSid, data, MediaType.valueOf(accept));
+        return updateCall(accountSid, callSid, data, retrieveMediaType());
     }
 
 }

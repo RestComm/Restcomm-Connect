@@ -25,7 +25,6 @@ import javax.ws.rs.POST;
 import javax.ws.rs.PUT;
 import javax.ws.rs.Path;
 import javax.ws.rs.PathParam;
-import javax.ws.rs.core.MediaType;
 import static javax.ws.rs.core.MediaType.APPLICATION_JSON_TYPE;
 import javax.ws.rs.core.MultivaluedMap;
 import javax.ws.rs.core.Response;
@@ -80,17 +79,17 @@ public final class ClientsXmlEndpoint extends ClientsEndpoint {
     @Path("/{sid}")
     @GET
     public Response getClientAsXml(@PathParam("accountSid") final String accountSid, @PathParam("sid") final String sid) {
-        return getClient(accountSid, sid, MediaType.valueOf(accept));
+        return getClient(accountSid, sid, retrieveMediaType());
     }
 
     @GET
     public Response getClients(@PathParam("accountSid") final String accountSid) {
-        return getClients(accountSid, MediaType.valueOf(accept));
+        return getClients(accountSid, retrieveMediaType());
     }
 
     @POST
     public Response putClient(@PathParam("accountSid") final String accountSid, final MultivaluedMap<String, String> data) {
-        return putClient(accountSid, data, MediaType.valueOf(accept));
+        return putClient(accountSid, data, retrieveMediaType());
     }
 
     @Path("/{sid}.json")
@@ -111,13 +110,13 @@ public final class ClientsXmlEndpoint extends ClientsEndpoint {
     @POST
     public Response updateClientAsXmlPost(@PathParam("accountSid") final String accountSid, @PathParam("sid") final String sid,
             final MultivaluedMap<String, String> data) {
-        return updateClient(accountSid, sid, data, MediaType.valueOf(accept));
+        return updateClient(accountSid, sid, data, retrieveMediaType());
     }
 
     @Path("/{sid}")
     @PUT
     public Response updateClientAsXmlPut(@PathParam("accountSid") final String accountSid, @PathParam("sid") final String sid,
             final MultivaluedMap<String, String> data) {
-        return updateClient(accountSid, sid, data, MediaType.valueOf(accept));
+        return updateClient(accountSid, sid, data, retrieveMediaType());
     }
 }

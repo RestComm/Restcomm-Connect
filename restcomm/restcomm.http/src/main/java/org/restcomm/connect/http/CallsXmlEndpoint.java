@@ -51,19 +51,19 @@ public final class CallsXmlEndpoint extends CallsEndpoint {
     @Path("/{sid}")
     @GET
     public Response getCallAsXml(@PathParam("accountSid") final String accountSid, @PathParam("sid") final String sid) {
-        return getCall(accountSid, sid, MediaType.valueOf(accept));
+        return getCall(accountSid, sid, retrieveMediaType());
     }
 
     // Issue 153: https://bitbucket.org/telestax/telscale-restcomm/issue/153
     // Issue 110: https://bitbucket.org/telestax/telscale-restcomm/issue/110
     @GET
     public Response getCalls(@PathParam("accountSid") final String accountSid, @Context UriInfo info) {
-        return getCalls(accountSid, info, MediaType.valueOf(accept));
+        return getCalls(accountSid, info, retrieveMediaType());
     }
 
     @POST
     public Response putCall(@PathParam("accountSid") final String accountSid, final MultivaluedMap<String, String> data) {
-        return putCall(accountSid, data, MediaType.valueOf(accept));
+        return putCall(accountSid, data, retrieveMediaType());
     }
 
     // Issue 139: https://bitbucket.org/telestax/telscale-restcomm/issue/139
@@ -71,7 +71,7 @@ public final class CallsXmlEndpoint extends CallsEndpoint {
     @POST
     public Response modifyCall(@PathParam("accountSid") final String accountSid, @PathParam("sid") final String sid,
             final MultivaluedMap<String, String> data) {
-        return updateCall(accountSid, sid, data, MediaType.valueOf(accept));
+        return updateCall(accountSid, sid, data, retrieveMediaType());
     }
 
     @GET

@@ -63,7 +63,7 @@ public final class IncomingPhoneNumbersXmlEndpoint extends IncomingPhoneNumbersE
     public Response getIncomingPhoneNumberAsXml(@PathParam("accountSid") final String accountSid,
             @PathParam("sid") final String sid,
             @HeaderParam("Accept") String accept) {
-        MediaType acceptType = MediaType.valueOf(accept);
+        MediaType acceptType = retrieveMediaType();
         return getIncomingPhoneNumber(accountSid, sid, acceptType);
     }
 
@@ -72,14 +72,14 @@ public final class IncomingPhoneNumbersXmlEndpoint extends IncomingPhoneNumbersE
     @GET
     public Response getAvailableCountriesAsXml(@PathParam("accountSid") final String accountSid,
             @HeaderParam("Accept") String accept) {
-        MediaType acceptType = MediaType.valueOf(accept);
+        MediaType acceptType = retrieveMediaType();
         return getAvailableCountries(accountSid, acceptType);
     }
 
     @GET
     public Response getIncomingPhoneNumbers(@PathParam("accountSid") final String accountSid,@Context UriInfo info,
             @HeaderParam("Accept") String accept) {
-        MediaType acceptType = MediaType.valueOf(accept);
+        MediaType acceptType = retrieveMediaType();
         return getIncomingPhoneNumbers(accountSid, PhoneNumberType.Global,info, acceptType);
     }
 
@@ -88,7 +88,7 @@ public final class IncomingPhoneNumbersXmlEndpoint extends IncomingPhoneNumbersE
     public Response putIncomingPhoneNumber(@PathParam("accountSid") final String accountSid,
             final MultivaluedMap<String, String> data,
             @HeaderParam("Accept") String accept) {
-        MediaType acceptType = MediaType.valueOf(accept);
+        MediaType acceptType = retrieveMediaType();
         return putIncomingPhoneNumber(accountSid, data, PhoneNumberType.Global, acceptType);
     }
 
@@ -97,7 +97,7 @@ public final class IncomingPhoneNumbersXmlEndpoint extends IncomingPhoneNumbersE
     public Response updateIncomingPhoneNumberAsXml(@PathParam("accountSid") final String accountSid,
             @PathParam("sid") final String sid, final MultivaluedMap<String, String> data,
             @HeaderParam("Accept") String accept) {
-        MediaType acceptType = MediaType.valueOf(accept);
+        MediaType acceptType = retrieveMediaType();
         return updateIncomingPhoneNumber(accountSid, sid, data, acceptType);
     }
 
@@ -106,7 +106,7 @@ public final class IncomingPhoneNumbersXmlEndpoint extends IncomingPhoneNumbersE
     public Response updateIncomingPhoneNumberAsXmlPost(@PathParam("accountSid") final String accountSid,
             @PathParam("sid") final String sid, final MultivaluedMap<String, String> data,
             @HeaderParam("Accept") String accept) {
-        MediaType acceptType = MediaType.valueOf(accept);
+        MediaType acceptType = retrieveMediaType();
         return updateIncomingPhoneNumber(accountSid, sid, data, acceptType);
     }
 
@@ -116,7 +116,7 @@ public final class IncomingPhoneNumbersXmlEndpoint extends IncomingPhoneNumbersE
     @GET
     public Response getIncomingLocalPhoneNumbersAsXml(@PathParam("accountSid") final String accountSid,@Context UriInfo info,
             @HeaderParam("Accept") String accept) {
-        MediaType acceptType = MediaType.valueOf(accept);
+        MediaType acceptType = retrieveMediaType();
         return getIncomingPhoneNumbers(accountSid,PhoneNumberType.Local,info, acceptType);
     }
 
@@ -126,7 +126,7 @@ public final class IncomingPhoneNumbersXmlEndpoint extends IncomingPhoneNumbersE
     public Response putIncomingLocalPhoneNumberAsXml(@PathParam("accountSid") final String accountSid,
             final MultivaluedMap<String, String> data,
             @HeaderParam("Accept") String accept) {
-        MediaType acceptType = MediaType.valueOf(accept);
+        MediaType acceptType = retrieveMediaType();
         return putIncomingPhoneNumber(accountSid, data, PhoneNumberType.Local, acceptType);
     }
 
@@ -136,7 +136,7 @@ public final class IncomingPhoneNumbersXmlEndpoint extends IncomingPhoneNumbersE
     @GET
     public Response getIncomingTollFreePhoneNumbersAsXml(@PathParam("accountSid") final String accountSid,@Context UriInfo info,
             @HeaderParam("Accept") String accept) {
-        MediaType acceptType = MediaType.valueOf(accept);
+        MediaType acceptType = retrieveMediaType();
         return getIncomingPhoneNumbers(accountSid,PhoneNumberType.TollFree,info, acceptType);
     }
 
@@ -146,7 +146,7 @@ public final class IncomingPhoneNumbersXmlEndpoint extends IncomingPhoneNumbersE
     public Response putIncomingTollFreePhoneNumberAsXml(@PathParam("accountSid") final String accountSid,
             final MultivaluedMap<String, String> data,
             @HeaderParam("Accept") String accept) {
-        MediaType acceptType = MediaType.valueOf(accept);
+        MediaType acceptType = retrieveMediaType();
         return putIncomingPhoneNumber(accountSid, data, PhoneNumberType.TollFree, acceptType);
     }
 
@@ -156,7 +156,7 @@ public final class IncomingPhoneNumbersXmlEndpoint extends IncomingPhoneNumbersE
     @GET
     public Response getIncomingMobilePhoneNumbersAsXml(@PathParam("accountSid") final String accountSid,@Context UriInfo info,
             @HeaderParam("Accept") String accept) {
-        MediaType acceptType = MediaType.valueOf(accept);
+        MediaType acceptType = retrieveMediaType();
         return getIncomingPhoneNumbers(accountSid,PhoneNumberType.Mobile,info, acceptType);
     }
 
@@ -166,7 +166,7 @@ public final class IncomingPhoneNumbersXmlEndpoint extends IncomingPhoneNumbersE
     public Response putIncomingMobilePhoneNumberAsXml(@PathParam("accountSid") final String accountSid,
             final MultivaluedMap<String, String> data,
             @HeaderParam("Accept") String accept) {
-        MediaType acceptType = MediaType.valueOf(accept);
+        MediaType acceptType = retrieveMediaType();
         return putIncomingPhoneNumber(accountSid, data, PhoneNumberType.Mobile, acceptType);
     }
 
@@ -177,7 +177,7 @@ public final class IncomingPhoneNumbersXmlEndpoint extends IncomingPhoneNumbersE
     public Response migrateIncomingPhoneNumbersAsXml(@PathParam("accountSid") final String accountSid,
             final MultivaluedMap<String, String> data,
             @HeaderParam("Accept") String accept) {
-        MediaType acceptType = MediaType.valueOf(accept);
+        MediaType acceptType = retrieveMediaType();
         return migrateIncomingPhoneNumbers(accountSid, data, acceptType);
     }
 
@@ -187,7 +187,7 @@ public final class IncomingPhoneNumbersXmlEndpoint extends IncomingPhoneNumbersE
     public Response migrateIncomingPhoneNumbersAsJson(@PathParam("accountSid") final String accountSid,
             final MultivaluedMap<String, String> data,
             @HeaderParam("Accept") String accept) {
-        MediaType acceptType = MediaType.valueOf(accept);
+        MediaType acceptType = retrieveMediaType();
         return migrateIncomingPhoneNumbers(accountSid, data, acceptType);
     }
 }

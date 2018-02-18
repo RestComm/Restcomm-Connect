@@ -27,7 +27,6 @@ import javax.ws.rs.POST;
 import javax.ws.rs.PUT;
 import javax.ws.rs.Path;
 import javax.ws.rs.PathParam;
-import javax.ws.rs.core.MediaType;
 import static javax.ws.rs.core.MediaType.APPLICATION_JSON_TYPE;
 import javax.ws.rs.core.MultivaluedMap;
 import javax.ws.rs.core.Response;
@@ -75,7 +74,7 @@ public final class GeolocationXmlEndpoint extends GeolocationEndpoint {
     @GET
     public Response getImmediateGeolocationAsXml(@PathParam("accountSid") final String accountSid,
                                                  @PathParam("sid") final String sid) {
-        return getGeolocation(accountSid, sid, MediaType.valueOf(accept));
+        return getGeolocation(accountSid, sid, retrieveMediaType());
     }
 
     @Path("/Immediate.json")
@@ -103,21 +102,21 @@ public final class GeolocationXmlEndpoint extends GeolocationEndpoint {
     @POST
     public Response putImmediateGeolocationXmlPost(@PathParam("accountSid") final String accountSid,
                                                    final MultivaluedMap<String, String> data) {
-        return putGeolocation(accountSid, data, Geolocation.GeolocationType.Immediate, MediaType.valueOf(accept));
+        return putGeolocation(accountSid, data, Geolocation.GeolocationType.Immediate, retrieveMediaType());
     }
 
     @Path("/Immediate/{sid}")
     @POST
     public Response putImmediateGeolocationAsXmlPost(@PathParam("accountSid") final String accountSid,
                                                      @PathParam("sid") final String sid, final MultivaluedMap<String, String> data) {
-        return updateGeolocation(accountSid, sid, data, MediaType.valueOf(accept));
+        return updateGeolocation(accountSid, sid, data, retrieveMediaType());
     }
 
     @Path("/Immediate/{sid}")
     @PUT
     public Response updateImmediateGeolocationAsXmlPut(@PathParam("accountSid") final String accountSid,
                                                        @PathParam("sid") final String sid, final MultivaluedMap<String, String> data) {
-        return updateGeolocation(accountSid, sid, data, MediaType.valueOf(accept));
+        return updateGeolocation(accountSid, sid, data, retrieveMediaType());
     }
 
     /*******************************************/
@@ -149,7 +148,7 @@ public final class GeolocationXmlEndpoint extends GeolocationEndpoint {
     @GET
     public Response getNotificationGeolocationAsXml(@PathParam("accountSid") final String accountSid,
                                                     @PathParam("sid") final String sid) {
-        return getGeolocation(accountSid, sid, MediaType.valueOf(accept));
+        return getGeolocation(accountSid, sid, retrieveMediaType());
     }
 
     @Path("/Notification.json")
@@ -177,26 +176,26 @@ public final class GeolocationXmlEndpoint extends GeolocationEndpoint {
     @POST
     public Response putNotificationGeolocationXmlPost(@PathParam("accountSid") final String accountSid,
                                                       final MultivaluedMap<String, String> data) {
-        return putGeolocation(accountSid, data, Geolocation.GeolocationType.Notification, MediaType.valueOf(accept));
+        return putGeolocation(accountSid, data, Geolocation.GeolocationType.Notification, retrieveMediaType());
     }
 
     @Path("/Notification/{sid}")
     @POST
     public Response putNotificationGeolocationAsXmlPost(@PathParam("accountSid") final String accountSid,
                                                         @PathParam("sid") final String sid, final MultivaluedMap<String, String> data) {
-        return updateGeolocation(accountSid, sid, data, MediaType.valueOf(accept));
+        return updateGeolocation(accountSid, sid, data, retrieveMediaType());
     }
 
     @Path("/Notification/{sid}")
     @PUT
     public Response updateNotificationGeolocationAsXmlPut(@PathParam("accountSid") final String accountSid,
                                                           @PathParam("sid") final String sid, final MultivaluedMap<String, String> data) {
-        return updateGeolocation(accountSid, sid, data, MediaType.valueOf(accept));
+        return updateGeolocation(accountSid, sid, data, retrieveMediaType());
     }
 
     @GET
     public Response getGeolocationsAsXml(@PathParam("accountSid") final String accountSid) {
-        return getGeolocations(accountSid, MediaType.valueOf(accept));
+        return getGeolocations(accountSid, retrieveMediaType());
     }
 
 
