@@ -883,6 +883,10 @@ public class VoiceInterpreter extends BaseVoiceInterpreter {
                 }
             } else if (is(bridging)) {
                 // Finally proceed with call bridging
+                if (logger.isInfoEnabled()) {
+                    String msg = String.format("About to join calls, inbound call %s, outbound call %s", call, outboundCall);
+                    logger.info(msg);
+                }
                 final JoinCalls bridgeCalls = new JoinCalls(call, outboundCall);
                 bridge.tell(bridgeCalls, self());
             } else if (msResponsePending) {
@@ -1240,8 +1244,9 @@ public class VoiceInterpreter extends BaseVoiceInterpreter {
                 //Do nothing
                 break;
             case RINGING:
-                if (is(forking)) {
-                    outboundCall = sender;
+                if (logger.isInfoEnabled()) {
+                    String msg = String.format("Got 180 Ringing from outbound call %s",sender);
+                    logger.info(msg);
                 }
                 break;
             case CANCELED:
@@ -1340,11 +1345,22 @@ public class VoiceInterpreter extends BaseVoiceInterpreter {
                     String msg = String.format("OnCallStateChanged, VI state %s, received %s, is it from inbound call: %s",fsm.state().toString(), callState.toString(), sender.equals(call));
                     logger.info(msg);
                 }
-                if (is(bridging)) {
-                    fsm.transition(message, finishDialing);
-                } else if (is(bridged) && (sender.equals(outboundCall) || outboundCall != null)) {
-                    fsm.transition(message, finishDialing);
-                } else
+                if (is(bridging) || is(bridged)) {
+                    if (sender == outboundCall || sender == call) {
+                        if(logger.isInfoEnabled()) {
+                            String msg = String.format("Received CallStateChanged COMPLETED from call %s, current fsm state %s, will move to finishDialingState ", sender(), fsm.state());
+                            logger.info(msg);
+                        }
+                        fsm.transition(message, finishDialing);
+                    } else {
+                        if (dialBranches != null && dialBranches.contains(sender)) {
+                            removeDialBranch(message, sender);
+                        }
+                        callManager.tell(new DestroyCall(sender()), self());
+                    }
+                    return;
+                }
+                else
                     // changed for https://bitbucket.org/telestax/telscale-restcomm/issue/132/ so that we can do Dial SIP Screening
                     if (is(forking) && ((dialBranches != null && dialBranches.contains(sender)) || outboundCall == null)) {
                         if (!sender.equals(call)) {
@@ -1397,9 +1413,13 @@ public class VoiceInterpreter extends BaseVoiceInterpreter {
                     }
                 } else if (is(forking)) {
                     if (outboundCall == null || !sender.equals(call)) {
+                        if (logger.isInfoEnabled()) {
+                            String msg = String.format("Got CallStateChanged.InProgress while forking, from outbound call %s, will proceed to cancel other branches", sender());
+                            logger.info(msg);
+                        }
                         outboundCall = sender;
+                        fsm.transition(message, acquiringOutboundCallInfo);
                     }
-                    fsm.transition(message, acquiringOutboundCallInfo);
                 } else if (is(conferencing)) {
                     // Call left the conference successfully
                     if (!liveCallModification) {
@@ -2506,9 +2526,17 @@ public class VoiceInterpreter extends BaseVoiceInterpreter {
         @Override
         public void execute(final Object message) throws Exception {
             if (isForking) {
+                if (logger.isInfoEnabled()) {
+                    String msg = String.format("About to cancel Calls in dialBranches and keep outboundCall %s", outboundCall);
+                    logger.info(msg);
+                }
                 dialBranches.remove(outboundCall);
                 for (final ActorRef branch : dialBranches) {
                     branch.tell(new Cancel(), null);
+                    if (logger.isInfoEnabled()) {
+                        String msg = String.format("Canceled outbound Call %s", branch);
+                        logger.info(msg);
+                    }
                 }
                 dialBranches = null;
             }
@@ -3508,12 +3536,16 @@ public class VoiceInterpreter extends BaseVoiceInterpreter {
         @Override
         public void execute(Object message) throws Exception {
             if(logger.isInfoEnabled()) {
-                logger.info("Joining call from:" + callInfo.from() + " to: " + callInfo.to() + " with outboundCall from: "
-                    + outboundCallInfo.from() + " to: " + outboundCallInfo.to());
+                String msg = String.format("Joining call %s from: %s to: %s with outboundCall %s from: %s to: %s", call, callInfo.from(), callInfo.to(), outboundCall, outboundCallInfo.from(), outboundCallInfo.to());
+                logger.info(msg);
             }
             // Check for any Dial verbs with url attributes (call screening url)
             Tag child = dialChildrenWithAttributes.get(outboundCall);
             if (child != null && child.attribute("url") != null) {
+                if (logger.isInfoEnabled()) {
+                    String msg = String.format("Call screening is enabled and will execute for %s", child.attribute("url"));
+                    logger.info(msg);
+                }
                 final ActorRef interpreter = buildSubVoiceInterpreter(child);
                 StartInterpreter start = new StartInterpreter(outboundCall);
                 try {
@@ -3538,6 +3570,10 @@ public class VoiceInterpreter extends BaseVoiceInterpreter {
                 getContext().stop(interpreter);
             }
 
+            if (logger.isInfoEnabled()) {
+                String msg = String.format("Will ask call %s to stop ringing", call);
+                logger.info(msg);
+            }
             // Stop ringing from inbound call
             final StopMediaGroup stop = new StopMediaGroup();
             call.tell(stop, super.source);

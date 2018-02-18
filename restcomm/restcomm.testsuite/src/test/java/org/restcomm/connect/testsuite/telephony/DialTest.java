@@ -52,6 +52,8 @@ import org.junit.BeforeClass;
 import org.junit.Ignore;
 import org.junit.Rule;
 import org.junit.Test;
+import org.junit.FixMethodOrder;
+import org.junit.runners.MethodSorters;
 import org.junit.experimental.categories.Category;
 import org.junit.runner.RunWith;
 import org.restcomm.connect.commons.Version;
@@ -75,6 +77,7 @@ import gov.nist.javax.sip.message.MessageExt;
  */
 @Ignore //Moved all tests to DialTest1, DialTest2, DialTest2
 @RunWith(Arquillian.class)
+@FixMethodOrder(MethodSorters.NAME_ASCENDING)
 @Category(value={SequentialClassTests.class})
 public class DialTest {
     private final static Logger logger = Logger.getLogger(DialTest.class.getName());

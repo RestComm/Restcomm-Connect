@@ -29,7 +29,11 @@ import static javax.ws.rs.core.MediaType.APPLICATION_JSON_TYPE;
 import javax.ws.rs.core.MultivaluedMap;
 import javax.ws.rs.core.Response;
 import javax.ws.rs.core.UriInfo;
-import org.restcomm.connect.commons.annotations.concurrency.ThreadSafe;
+
+import static javax.ws.rs.core.MediaType.APPLICATION_JSON_TYPE;
+import static org.restcomm.connect.http.security.AccountPrincipal.SUPER_ADMIN_ROLE;
+
+import javax.annotation.security.RolesAllowed;
 
 /**
  * @author <a href="mailto:gvagenas@gmail.com">gvagenas</a>
@@ -37,6 +41,7 @@ import org.restcomm.connect.commons.annotations.concurrency.ThreadSafe;
  */
 @Path("/Accounts/{accountSid}/Supervisor.json")
 @ThreadSafe
+@RolesAllowed(SUPER_ADMIN_ROLE)
 public class SupservisorJsonEndpoint extends SupervisorEndpoint{
 
     public SupservisorJsonEndpoint() {

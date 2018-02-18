@@ -54,6 +54,8 @@ import org.junit.Before;
 import org.junit.BeforeClass;
 import org.junit.Ignore;
 import org.junit.Test;
+import org.junit.FixMethodOrder;
+import org.junit.runners.MethodSorters;
 import org.junit.experimental.categories.Category;
 import org.junit.runner.RunWith;
 import org.restcomm.connect.commons.Version;
@@ -65,6 +67,7 @@ import org.restcomm.connect.commons.annotations.WithInMinsTests;
  *
  */
 @RunWith(Arquillian.class)
+@FixMethodOrder(MethodSorters.NAME_ASCENDING)
 @Category(value={WithInMinsTests.class, ParallelClassTests.class})
 public class UssdPullTest {
 
@@ -88,6 +91,8 @@ public class UssdPullTest {
     private static String ussdPullWithCollectDID = "sip:5555@" + restcommContact;
     private static String ussdPullMessageLengthExceeds = "sip:5566@" + restcommContact;
     private static String ussdPullDidNoHttpMethod = "sip:5577@" + restcommContact;
+    private static String ussdPullDidClosedAccount = "sip:5578@" + restcommContact;
+    private static String ussdPullDidSuspendedAccount = "sip:5579@" + restcommContact;
 
     @BeforeClass
     public static void beforeClass() throws Exception {
@@ -435,6 +440,40 @@ public class UssdPullTest {
         SipRequest bye = bobCall.getLastReceivedRequest();
         String receivedUssdPayload = new String(bye.getRawContent());
         assertTrue(receivedUssdPayload.equalsIgnoreCase(UssdPullTestMessages.ussdRestcommResponseForMessageLengthExceeds.trim()));
+        bobCall.dispose();
+    }
+
+    @Test
+    public void testUssdPullClosedAccount() {
+        final SipCall bobCall = bobPhone.createSipCall();
+        bobCall.initiateOutgoingCall(bobContact, ussdPullDidClosedAccount, null, UssdPullTestMessages.ussdClientRequestBody, "application", "vnd.3gpp.ussd+xml", null, null);
+        assertLastOperationSuccess(bobCall);
+
+        assertTrue(bobCall.waitOutgoingCallResponse(5 * 1000));
+        int responseBob = bobCall.getLastReceivedResponse().getStatusCode();
+        if (responseBob == Response.TRYING) {
+            assertTrue(bobCall.waitOutgoingCallResponse(5 * 1000));
+            assertEquals(Response.FORBIDDEN, bobCall.getLastReceivedResponse().getStatusCode());
+        } else {
+            assertEquals(Response.FORBIDDEN, bobCall.getLastReceivedResponse().getStatusCode());
+        }
+        bobCall.dispose();
+    }
+
+    @Test
+    public void testUssdPullSuspendedAccount() {
+        final SipCall bobCall = bobPhone.createSipCall();
+        bobCall.initiateOutgoingCall(bobContact, ussdPullDidSuspendedAccount, null, UssdPullTestMessages.ussdClientRequestBody, "application", "vnd.3gpp.ussd+xml", null, null);
+        assertLastOperationSuccess(bobCall);
+
+        assertTrue(bobCall.waitOutgoingCallResponse(5 * 1000));
+        int responseBob = bobCall.getLastReceivedResponse().getStatusCode();
+        if (responseBob == Response.TRYING) {
+            assertTrue(bobCall.waitOutgoingCallResponse(5 * 1000));
+            assertEquals(Response.FORBIDDEN, bobCall.getLastReceivedResponse().getStatusCode());
+        } else {
+            assertEquals(Response.FORBIDDEN, bobCall.getLastReceivedResponse().getStatusCode());
+        }
         bobCall.dispose();
     }
 

@@ -137,7 +137,6 @@ public class OrganizationsEndpoint extends SecuredEndpoint {
      */
     protected Response getOrganization(final String organizationSid, final MediaType responseType,
              UriInfo info) {
-        checkAuthenticatedAccount();
         //First check if the account has the required permissions in general, this way we can fail fast and avoid expensive DAO operations
         checkPermission("RestComm:Read:Organizations");
         Organization organization = null;
@@ -187,9 +186,6 @@ public class OrganizationsEndpoint extends SecuredEndpoint {
      * @return
      */
     protected Response getOrganizations(UriInfo info, final MediaType responseType) {
-        checkAuthenticatedAccount();
-        allowOnlySuperAdmin();
-
         List<Organization> organizations = null;
 
         String status = info.getQueryParameters().getFirst("Status");
@@ -224,8 +220,6 @@ public class OrganizationsEndpoint extends SecuredEndpoint {
         if(domainName == null){
             return status(BAD_REQUEST).entity(MSG_EMPTY_DOMAIN_NAME ).build();
         }else{
-            checkAuthenticatedAccount();
-            allowOnlySuperAdmin();
 
             //Character verification
             if(!pattern.matcher(domainName).matches()){

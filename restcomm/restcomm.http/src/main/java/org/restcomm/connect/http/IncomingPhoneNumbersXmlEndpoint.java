@@ -19,8 +19,11 @@
  */
 package org.restcomm.connect.http;
 
+import static javax.ws.rs.core.MediaType.APPLICATION_JSON_TYPE;
+import static javax.ws.rs.core.MediaType.APPLICATION_XML_TYPE;
+import static org.restcomm.connect.http.security.AccountPrincipal.SUPER_ADMIN_ROLE;
 
-import com.sun.jersey.spi.container.ResourceFilters;
+import javax.annotation.security.RolesAllowed;
 import javax.ws.rs.DELETE;
 import javax.ws.rs.GET;
 import javax.ws.rs.HeaderParam;
@@ -171,6 +174,7 @@ public final class IncomingPhoneNumbersXmlEndpoint extends IncomingPhoneNumbersE
 
     @Path("/migrate")
     @POST
+    @RolesAllowed(SUPER_ADMIN_ROLE)
     public Response migrateIncomingPhoneNumbersAsXml(@PathParam("accountSid") final String accountSid,
             final MultivaluedMap<String, String> data,
             @HeaderParam("Accept") String accept) {
@@ -180,6 +184,7 @@ public final class IncomingPhoneNumbersXmlEndpoint extends IncomingPhoneNumbersE
 
     @Path("/migrate.json")
     @POST
+    @RolesAllowed(SUPER_ADMIN_ROLE)
     public Response migrateIncomingPhoneNumbersAsJson(@PathParam("accountSid") final String accountSid,
             final MultivaluedMap<String, String> data,
             @HeaderParam("Accept") String accept) {

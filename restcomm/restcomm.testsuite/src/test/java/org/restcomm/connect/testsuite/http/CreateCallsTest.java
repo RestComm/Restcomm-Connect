@@ -33,6 +33,8 @@ import org.junit.Before;
 import org.junit.BeforeClass;
 import org.junit.Rule;
 import org.junit.Test;
+import org.junit.FixMethodOrder;
+import org.junit.runners.MethodSorters;
 import org.junit.experimental.categories.Category;
 import org.junit.runner.RunWith;
 import org.restcomm.connect.commons.Version;
@@ -50,6 +52,7 @@ import com.google.gson.JsonObject;
  * @author <a href="mailto:gvagenas@gmail.com">gvagenas</a>
  */
 @RunWith(Arquillian.class)
+@FixMethodOrder(MethodSorters.NAME_ASCENDING)
 public class CreateCallsTest {
 
     private final static Logger logger = Logger.getLogger(CreateCallsTest.class.getName());
@@ -277,6 +280,7 @@ public class CreateCallsTest {
     }
 
     @Test
+    @Category(UnstableTests.class)
     // Create a call to a Restcomm Client. Non-regression test for issue
     // https://bitbucket.org/telestax/telscale-restcomm/issue/175
     // Use Calls Rest API to dial Alice Restcomm client and connect him to the RCML app dial-number-entry.xml.

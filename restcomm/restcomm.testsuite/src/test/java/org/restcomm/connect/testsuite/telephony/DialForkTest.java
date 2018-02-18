@@ -9,11 +9,10 @@ import static com.github.tomakehurst.wiremock.client.WireMock.stubFor;
 import static com.github.tomakehurst.wiremock.client.WireMock.urlEqualTo;
 import static com.github.tomakehurst.wiremock.client.WireMock.urlPathEqualTo;
 import static com.github.tomakehurst.wiremock.client.WireMock.urlPathMatching;
-import static org.cafesip.sipunit.SipAssert.assertLastOperationSuccess;
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertNotNull;
-import static org.junit.Assert.assertTrue;
-
+import com.github.tomakehurst.wiremock.junit.WireMockRule;
+import com.github.tomakehurst.wiremock.verification.LoggedRequest;
+import com.google.gson.JsonArray;
+import com.google.gson.JsonObject;
 import java.net.MalformedURLException;
 import java.net.URL;
 import java.text.ParseException;
@@ -22,11 +21,13 @@ import java.util.Arrays;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
+import java.util.logging.Level;
 import javax.sip.address.SipURI;
 import javax.sip.message.Response;
-
 import org.apache.log4j.Logger;
+import static org.cafesip.sipunit.SipAssert.assertLastOperationSuccess;
 import org.cafesip.sipunit.SipCall;
 import org.cafesip.sipunit.SipPhone;
 import org.cafesip.sipunit.SipStack;
@@ -38,36 +39,34 @@ import org.jboss.arquillian.junit.Arquillian;
 import org.jboss.arquillian.test.api.ArquillianResource;
 import org.jboss.shrinkwrap.api.spec.WebArchive;
 import org.junit.After;
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertNotNull;
+import static org.junit.Assert.assertTrue;
 import org.junit.Before;
 import org.junit.BeforeClass;
+import org.junit.FixMethodOrder;
 import org.junit.Ignore;
 import org.junit.Rule;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
 import org.junit.runner.RunWith;
+import org.junit.runners.MethodSorters;
 import org.restcomm.connect.commons.annotations.FeatureAltTests;
 import org.restcomm.connect.commons.annotations.FeatureExpTests;
-import org.restcomm.connect.commons.annotations.ParallelClassTests;
+import org.restcomm.connect.commons.annotations.SequentialClassTests;
 import org.restcomm.connect.commons.annotations.UnstableTests;
 import org.restcomm.connect.testsuite.NetworkPortAssigner;
 import org.restcomm.connect.testsuite.WebArchiveUtil;
 import org.restcomm.connect.testsuite.http.RestcommCallsTool;
 import org.restcomm.connect.testsuite.tools.MonitoringServiceTool;
 
-import com.github.tomakehurst.wiremock.junit.WireMockRule;
-import com.github.tomakehurst.wiremock.verification.LoggedRequest;
-import com.google.gson.JsonArray;
-import com.google.gson.JsonObject;
-import java.util.concurrent.ExecutorService;
-import java.util.concurrent.Executors;
-import java.util.logging.Level;
-
 /**
  * Tests for the Dial forking
  * Created by gvagenas on 12/19/15.
  */
 @RunWith(Arquillian.class)
-@Category(ParallelClassTests.class)
+@FixMethodOrder(MethodSorters.NAME_ASCENDING)
+@Category(SequentialClassTests.class)
 public class DialForkTest {
 
     private final static Logger logger = Logger.getLogger(CallLifecycleTest.class.getName());
@@ -1611,7 +1610,7 @@ public class DialForkTest {
     }
 
 
-    @Test @Ignore
+    @Test
     @Category({FeatureExpTests.class, UnstableTests.class})
     public synchronized void testDialForkMultipleAnswer() throws InterruptedException, ParseException, MalformedURLException {
         List<AutoAnswer> autoAnswers = new ArrayList<AutoAnswer>();
@@ -1628,35 +1627,17 @@ public class DialForkTest {
         // Prepare Alice to receive call
         final SipCall aliceCall = alicePhone.createSipCall();
         aliceCall.listenForIncomingCall();
-        autoAnswers.add(new AutoAnswer(aliceCall));
-
 
         // Prepare George phone to receive call
         final SipCall georgeCall = georgePhone.createSipCall();
         georgeCall.listenForIncomingCall();
-        autoAnswers.add(new AutoAnswer(georgeCall));
 
         // Prepare Henrique phone to receive call
-        // henriquePhone.setLoopback(true);
         final SipCall henriqueCall = henriquePhone.createSipCall();
         henriqueCall.listenForIncomingCall();
-        autoAnswers.add(new AutoAnswer(henriqueCall));
-
-        //Prepare Fotini phone to receive a call
-        final SipCall fotiniCall = fotiniPhone.createSipCall();
-        fotiniCall.listenForIncomingCall();
-        autoAnswers.add(new AutoAnswer(fotiniCall));
 
         // Initiate a call using Bob
         final SipCall bobCall = bobPhone.createSipCall();
-
-
-        //both alice and george will answer
-        ExecutorService serv = Executors.newFixedThreadPool(10);
-        for (AutoAnswer auto : autoAnswers) {
-            serv.submit(auto);
-        }
-
 
         bobCall.initiateOutgoingCall(bobContact, "sip:1111@" + restcommContact, null, body, "application", "sdp", null, null);
         assertLastOperationSuccess(bobCall);
@@ -1670,20 +1651,50 @@ public class DialForkTest {
             assertEquals(Response.RINGING, bobCall.getLastReceivedResponse().getStatusCode());
         }
 
-//        assertTrue(bobCall.waitOutgoingCallResponse(5 * 1000));
-//        assertEquals(Response.OK, bobCall.getLastReceivedResponse().getStatusCode());
-//        bobCall.sendInviteOkAck();
         assertTrue(bobCall.waitForAnswer(10000));
         bobCall.sendInviteOkAck();
         assertTrue(!(bobCall.getLastReceivedResponse().getStatusCode() >= 400));
 
+        aliceCall.waitForIncomingCall(15000);
+        aliceCall.sendIncomingCallResponse(Response.TRYING, "Trying", 3600);
+        aliceCall.sendIncomingCallResponse(Response.RINGING, "Ringing", 3600);
 
-//        assertTrue(bobCall.waitForAnswer(10000));
-//        bobCall.sendInviteOkAck();
+        henriqueCall.waitForIncomingCall(15000);
+        henriqueCall.sendIncomingCallResponse(Response.TRYING, "Trying", 3600);
+        henriqueCall.sendIncomingCallResponse(Response.RINGING, "Ringing", 3600);
+
+        georgeCall.waitForIncomingCall(15000);
+        georgeCall.sendIncomingCallResponse(Response.TRYING, "Trying", 3600);
+        georgeCall.sendIncomingCallResponse(Response.RINGING, "Ringing", 3600);
+
+        Thread.sleep(3000);
+        String receivedBody = new String(aliceCall.getLastReceivedRequest().getRawContent());
+        aliceCall.sendIncomingCallResponse(Response.OK, "OK", 3600, receivedBody, "application", "sdp",
+                null, null);
+        henriqueCall.sendIncomingCallResponse(Response.OK, "OK", 3600, receivedBody, "application", "sdp",
+                null, null);
+        georgeCall.sendIncomingCallResponse(Response.OK, "OK", 3600, receivedBody, "application", "sdp",
+                null, null);
+
+        assertTrue(aliceCall.waitForAck(20000));
+        aliceCall.listenForDisconnect();
+
+        assertTrue(henriqueCall.waitForAck(20000));
+        henriqueCall.listenForDisconnect();
+
+        assertTrue(georgeCall.waitForAck(20000));
+        georgeCall.listenForDisconnect();
+
+        assertTrue(henriqueCall.waitForDisconnect(15000));
+        henriqueCall.respondToDisconnect();
+
+        assertTrue(georgeCall.waitForDisconnect(15000));
+        georgeCall.respondToDisconnect();
+
 
         //TODO assert just one call get establlished, rest are either cancel/bye
 
-        Thread.sleep(10000);
+        Thread.sleep(5000);
 
         assertEquals(1, MonitoringServiceTool.getInstance().getLiveIncomingCallStatistics(deploymentUrl.toString(), adminAccountSid, adminAuthToken));
         JsonObject liveCalls = MonitoringServiceTool.getInstance().getLiveCalls(deploymentUrl.toString(), adminAccountSid, adminAuthToken);
@@ -1693,9 +1704,11 @@ public class DialForkTest {
         assertEquals(2,liveCallDetails.size());
 
         bobCall.disconnect();
+        assertTrue(aliceCall.waitForDisconnect(5000));
+        aliceCall.respondToDisconnect();
+
         Thread.sleep(1000);
         assertNoMGCPResources();
-
     }
 
     @Test

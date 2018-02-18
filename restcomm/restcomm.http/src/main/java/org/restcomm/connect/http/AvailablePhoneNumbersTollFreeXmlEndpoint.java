@@ -62,7 +62,7 @@ public final class AvailablePhoneNumbersTollFreeXmlEndpoint extends AvailablePho
             PhoneNumberSearchFilters listFilters = new PhoneNumberSearchFilters(areaCode, null, null,
                     Boolean.TRUE, null, null, null, null, null, null, null, null,
                     null, null, rangeSizeInt, rangeIndexInt, PhoneNumberType.TollFree);
-            return getAvailablePhoneNumbers(accountSid, isoCountryCode, listFilters, filterPattern, MediaType.valueOf(accept));
+            return getAvailablePhoneNumbers(accountSid, isoCountryCode, listFilters, filterPattern, MediaType.APPLICATION_XML_TYPE);
         } else {
             return status(BAD_REQUEST).build();
         }

@@ -31,7 +31,12 @@ import static javax.ws.rs.core.MediaType.APPLICATION_FORM_URLENCODED;
 import javax.ws.rs.core.MultivaluedMap;
 import javax.ws.rs.core.Response;
 import javax.ws.rs.core.UriInfo;
-import org.restcomm.connect.commons.annotations.concurrency.ThreadSafe;
+
+import static javax.ws.rs.core.MediaType.APPLICATION_FORM_URLENCODED;
+import static javax.ws.rs.core.MediaType.APPLICATION_XML_TYPE;
+import static org.restcomm.connect.http.security.AccountPrincipal.SUPER_ADMIN_ROLE;
+
+import javax.annotation.security.RolesAllowed;
 
 /**
  * @author quintana.thomas@gmail.com (Thomas Quintana)
@@ -90,6 +95,7 @@ public final class AccountsXmlEndpoint extends AccountsEndpoint {
     @Path("/migrate/{accountSid}")
     @Consumes(APPLICATION_FORM_URLENCODED)
     @POST
+    @RolesAllowed(SUPER_ADMIN_ROLE)
     public Response migrateAccount(@PathParam("accoutSid") final String accountSid, final MultivaluedMap<String, String> data) {
         return migrateAccountOrganization(accountSid, data, MediaType.valueOf(accept));
     }
