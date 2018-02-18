@@ -26,7 +26,6 @@ import javax.ws.rs.PUT;
 import javax.ws.rs.Path;
 import javax.ws.rs.PathParam;
 import javax.ws.rs.core.Context;
-import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.MultivaluedMap;
 import javax.ws.rs.core.Response;
 import javax.ws.rs.core.UriInfo;
@@ -59,18 +58,18 @@ public final class AccountsXmlEndpoint extends AccountsEndpoint {
     @GET
     public Response getAccountAsXml(@PathParam("accountSid") final String accountSid,
             @Context UriInfo info) {
-        return getAccount(accountSid, MediaType.valueOf(accept), info);
+        return getAccount(accountSid, retrieveMediaType(), info);
     }
 
     @GET
     public Response getAccounts(@Context UriInfo info) {
-        return getAccounts(info, MediaType.valueOf(accept));
+        return getAccounts(info, retrieveMediaType());
     }
 
     @Consumes(APPLICATION_FORM_URLENCODED)
     @POST
     public Response putAccount(final MultivaluedMap<String, String> data) {
-        return putAccount(data, MediaType.valueOf(accept));
+        return putAccount(data, retrieveMediaType());
     }
 
     //The {accountSid} could be the email address of the account we need to update. Later we check if this is SID or EMAIL
@@ -79,7 +78,7 @@ public final class AccountsXmlEndpoint extends AccountsEndpoint {
     @POST
     public Response updateAccountAsXmlPost(@PathParam("accountSid") final String accountSid,
             final MultivaluedMap<String, String> data) {
-        return updateAccount(accountSid, data, MediaType.valueOf(accept));
+        return updateAccount(accountSid, data, retrieveMediaType());
     }
 
     //The {accountSid} could be the email address of the account we need to update. Later we check if this is SID or EMAIL
@@ -88,7 +87,7 @@ public final class AccountsXmlEndpoint extends AccountsEndpoint {
     @PUT
     public Response updateAccountAsXmlPut(@PathParam("accountSid") final String accountSid,
             final MultivaluedMap<String, String> data) {
-        return updateAccount(accountSid, data, MediaType.valueOf(accept));
+        return updateAccount(accountSid, data, retrieveMediaType());
     }
 
     @Path("/migrate/{accountSid}")
@@ -96,6 +95,6 @@ public final class AccountsXmlEndpoint extends AccountsEndpoint {
     @POST
     @RolesAllowed(SUPER_ADMIN_ROLE)
     public Response migrateAccount(@PathParam("accoutSid") final String accountSid, final MultivaluedMap<String, String> data) {
-        return migrateAccountOrganization(accountSid, data, MediaType.valueOf(accept));
+        return migrateAccountOrganization(accountSid, data, retrieveMediaType());
     }
 }

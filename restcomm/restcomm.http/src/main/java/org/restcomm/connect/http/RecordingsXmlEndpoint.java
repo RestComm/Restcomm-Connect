@@ -23,7 +23,6 @@ import javax.ws.rs.GET;
 import javax.ws.rs.Path;
 import javax.ws.rs.PathParam;
 import javax.ws.rs.core.Context;
-import javax.ws.rs.core.MediaType;
 import static javax.ws.rs.core.MediaType.APPLICATION_JSON_TYPE;
 import javax.ws.rs.core.Response;
 import javax.ws.rs.core.UriInfo;
@@ -60,11 +59,11 @@ public final class RecordingsXmlEndpoint extends RecordingsEndpoint {
     @Path("/{sid}")
     @GET
     public Response getRecordingAsXml(@PathParam("accountSid") final String accountSid, @PathParam("sid") final String sid) {
-        return getRecording(accountSid, sid, MediaType.valueOf(accept));
+        return getRecording(accountSid, sid, retrieveMediaType());
     }
 
     @GET
     public Response getRecordings(@PathParam("accountSid") final String accountSid, @Context UriInfo info) {
-        return getRecordings(accountSid, info, MediaType.valueOf(accept));
+        return getRecordings(accountSid, info, retrieveMediaType());
     }
 }

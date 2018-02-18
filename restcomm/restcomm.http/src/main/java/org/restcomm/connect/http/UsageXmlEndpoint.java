@@ -23,7 +23,6 @@ import javax.ws.rs.GET;
 import javax.ws.rs.Path;
 import javax.ws.rs.PathParam;
 import javax.ws.rs.core.Context;
-import javax.ws.rs.core.MediaType;
 import static javax.ws.rs.core.MediaType.APPLICATION_JSON_TYPE;
 import javax.ws.rs.core.Response;
 import javax.ws.rs.core.UriInfo;
@@ -48,7 +47,7 @@ public final class UsageXmlEndpoint extends UsageEndpoint {
     @Path("/{subresource}")
     @GET
     public Response getUsageAsXml(@PathParam("accountSid") final String accountSid, @PathParam("subresource") final String subresource, @Context UriInfo info) {
-      return getUsage(accountSid, subresource, info, MediaType.valueOf(accept));
+      return getUsage(accountSid, subresource, info, retrieveMediaType());
     }
 
   }

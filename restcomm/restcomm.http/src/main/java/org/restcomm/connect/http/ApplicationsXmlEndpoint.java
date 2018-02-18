@@ -28,7 +28,6 @@ import javax.ws.rs.PUT;
 import javax.ws.rs.Path;
 import javax.ws.rs.PathParam;
 import javax.ws.rs.core.Context;
-import javax.ws.rs.core.MediaType;
 import static javax.ws.rs.core.MediaType.APPLICATION_JSON_TYPE;
 import static javax.ws.rs.core.MediaType.APPLICATION_XML_TYPE;
 import javax.ws.rs.core.MultivaluedMap;
@@ -69,7 +68,7 @@ public class ApplicationsXmlEndpoint extends ApplicationsEndpoint {
     @Path("/{sid}")
     @GET
     public Response getApplicationAsXml(@PathParam("accountSid") final String accountSid, @PathParam("sid") final String sid) {
-        return getApplication(accountSid, sid, MediaType.valueOf(accept));
+        return getApplication(accountSid, sid, retrieveMediaType());
     }
 
     @Path("/{sid}.json")
@@ -80,7 +79,7 @@ public class ApplicationsXmlEndpoint extends ApplicationsEndpoint {
 
     @POST
     public Response putApplication(@PathParam("accountSid") String accountSid, final MultivaluedMap<String, String> data) {
-        return putApplication(accountSid, data, MediaType.valueOf(accept));
+        return putApplication(accountSid, data, retrieveMediaType());
     }
 
     @Path("/{sid}.json")
@@ -94,7 +93,7 @@ public class ApplicationsXmlEndpoint extends ApplicationsEndpoint {
     @POST
     public Response updateApplicationAsXmlPost(@PathParam("accountSid") final String accountSid,
             @PathParam("sid") final String sid, final MultivaluedMap<String, String> data) {
-        return updateApplication(accountSid, sid, data, MediaType.valueOf(accept));
+        return updateApplication(accountSid, sid, data, retrieveMediaType());
     }
 
     @Path("/{sid}.json")
@@ -108,7 +107,7 @@ public class ApplicationsXmlEndpoint extends ApplicationsEndpoint {
     @PUT
     public Response updateApplicationAsXmlPut(@PathParam("accountSid") final String accountSid,
             @PathParam("sid") final String sid, final MultivaluedMap<String, String> data) {
-        return updateApplication(accountSid, sid, data, MediaType.valueOf(accept));
+        return updateApplication(accountSid, sid, data, retrieveMediaType());
     }
 
     @Path("/{sid}.json")

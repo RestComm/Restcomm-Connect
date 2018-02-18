@@ -28,7 +28,6 @@ import javax.ws.rs.POST;
 import javax.ws.rs.Path;
 import javax.ws.rs.PathParam;
 import javax.ws.rs.QueryParam;
-import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.MultivaluedMap;
 import javax.ws.rs.core.Response;
 import org.restcomm.connect.commons.dao.Sid;
@@ -43,18 +42,18 @@ public class ExtensionsConfigurationXmlEndpoint extends ExtensionsConfigurationE
     @Path("/{extensionId}")
     @GET
     public Response getConfigurationAsXml(@PathParam("extensionId") final String extension, @QueryParam("AccountSid") Sid accountSid) {
-        return getConfiguration(extension, accountSid, MediaType.valueOf(accept));
+        return getConfiguration(extension, accountSid, retrieveMediaType());
     }
 
     @POST
     public Response postConfigurationAsXml(final MultivaluedMap<String, String> data) {
-        return postConfiguration(data, MediaType.valueOf(accept));
+        return postConfiguration(data, retrieveMediaType());
     }
 
     @Path("/{extensionSid}")
     @POST
     public Response updateConfigurationAsXml(@PathParam("extensionSid") final String extensionSid,
                                                   final MultivaluedMap<String, String> data) {
-        return updateConfiguration(extensionSid, data, MediaType.valueOf(accept));
+        return updateConfiguration(extensionSid, data, retrieveMediaType());
     }
 }
