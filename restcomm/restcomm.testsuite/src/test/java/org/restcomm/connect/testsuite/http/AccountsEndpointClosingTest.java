@@ -21,11 +21,16 @@
 package org.restcomm.connect.testsuite.http;
 
 import com.github.tomakehurst.wiremock.junit.WireMockRule;
+import com.google.gson.JsonArray;
+import com.google.gson.JsonParser;
 import com.sun.jersey.api.client.Client;
 import com.sun.jersey.api.client.ClientResponse;
 import com.sun.jersey.api.client.WebResource;
+import com.sun.jersey.api.client.filter.HTTPBasicAuthFilter;
 import com.sun.jersey.core.util.MultivaluedMapImpl;
 import junit.framework.Assert;
+
+import org.apache.http.HttpResponse;
 import org.apache.log4j.Logger;
 import org.jboss.arquillian.container.test.api.Deployer;
 import org.jboss.arquillian.container.test.api.Deployment;
@@ -37,10 +42,15 @@ import org.jboss.shrinkwrap.resolver.api.maven.archive.ShrinkWrapMaven;
 import org.junit.Before;
 import org.junit.Rule;
 import org.junit.Test;
+import org.junit.FixMethodOrder;
+import org.junit.runners.MethodSorters;
 import org.junit.runner.RunWith;
 import org.restcomm.connect.commons.Version;
 
+import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.MultivaluedMap;
+
+import java.io.IOException;
 import java.net.URL;
 
 import static com.github.tomakehurst.wiremock.client.WireMock.aResponse;
@@ -49,15 +59,22 @@ import static com.github.tomakehurst.wiremock.client.WireMock.equalToJson;
 import static com.github.tomakehurst.wiremock.client.WireMock.post;
 import static com.github.tomakehurst.wiremock.client.WireMock.postRequestedFor;
 import static com.github.tomakehurst.wiremock.client.WireMock.stubFor;
+import static com.github.tomakehurst.wiremock.client.WireMock.urlEqualTo;
 import static com.github.tomakehurst.wiremock.client.WireMock.urlMatching;
 import static com.github.tomakehurst.wiremock.client.WireMock.verify;
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertTrue;
+
 import org.junit.experimental.categories.Category;
 import org.restcomm.connect.commons.annotations.UnstableTests;
+import org.restcomm.connect.testsuite.provisioning.number.vi.AvailablePhoneNumbersEndpointTestUtils;
+import org.restcomm.connect.testsuite.provisioning.number.vi.RestcommIncomingPhoneNumberTool;
 
 /**
  * @author otsakir@gmail.com - Orestis Tsakiridis
  */
 @RunWith(Arquillian.class)
+@FixMethodOrder(MethodSorters.NAME_ASCENDING)
 public class AccountsEndpointClosingTest extends EndpointTest {
     private final static Logger logger = Logger.getLogger(AccountsEndpointClosingTest.class.getName());
 

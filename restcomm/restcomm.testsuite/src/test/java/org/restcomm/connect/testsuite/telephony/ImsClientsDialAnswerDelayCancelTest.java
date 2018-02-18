@@ -50,6 +50,8 @@ import org.junit.Before;
 import org.junit.BeforeClass;
 import org.junit.Rule;
 import org.junit.Test;
+import org.junit.FixMethodOrder;
+import org.junit.runners.MethodSorters;
 import org.junit.runner.RunWith;
 import org.restcomm.connect.commons.Version;
 import org.restcomm.connect.testsuite.http.RestcommCallsTool;
@@ -68,6 +70,7 @@ import org.restcomm.connect.commons.annotations.UnstableTests;
  * @author <a href="mailto:gvagenas@gmail.com">gvagenas</a>
  */
 @RunWith(Arquillian.class)
+@FixMethodOrder(MethodSorters.NAME_ASCENDING)
 @Category(value={FeatureAltTests.class, SequentialClassTests.class})
 public class ImsClientsDialAnswerDelayCancelTest {
 
@@ -137,13 +140,16 @@ public class ImsClientsDialAnswerDelayCancelTest {
         augustPhone = augustSipStack.createSipPhone("127.0.0.1", SipStack.PROTOCOL_UDP, 5080, augustContact);
         imsAugustPhone = imsSipStack.createSipPhone("127.0.0.1", SipStack.PROTOCOL_UDP, 5080, augustContact);
         imsAugustPhone.setLoopback(true);
+        imsAugustPhone.setPassThroughRegisterRequests(true);
 
         juliusSipStack = tool3.initializeSipStack(SipStack.PROTOCOL_UDP, "127.0.0.1", "5094", "127.0.0.1:5080");
         juliusPhone = juliusSipStack.createSipPhone("127.0.0.1", SipStack.PROTOCOL_UDP, 5080, juliusContact);
         imsJuliusPhone = imsSipStack.createSipPhone("127.0.0.1", SipStack.PROTOCOL_UDP, 5080, juliusContact);
         imsJuliusPhone.setLoopback(true);
+        imsJuliusPhone.setPassThroughRegisterRequests(true);
 
         pstnPhone = imsSipStack.createSipPhone("127.0.0.1", SipStack.PROTOCOL_UDP, 5080, pstnContact);
+        pstnPhone.setPassThroughRegisterRequests(true);
 
         if(isAugustRegistered){
         	unregisterAugust();

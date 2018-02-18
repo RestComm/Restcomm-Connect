@@ -30,6 +30,7 @@ import static com.github.tomakehurst.wiremock.client.WireMock.urlPathEqualTo;
 import static com.github.tomakehurst.wiremock.client.WireMock.urlPathMatching;
 import static org.cafesip.sipunit.SipAssert.assertLastOperationSuccess;
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertTrue;
 
@@ -64,6 +65,8 @@ import org.junit.Before;
 import org.junit.BeforeClass;
 import org.junit.Rule;
 import org.junit.Test;
+import org.junit.FixMethodOrder;
+import org.junit.runners.MethodSorters;
 import org.junit.experimental.categories.Category;
 import org.junit.runner.RunWith;
 import org.restcomm.connect.commons.Version;
@@ -88,6 +91,7 @@ import com.google.gson.JsonObject;
  *
  */
 @RunWith(Arquillian.class)
+@FixMethodOrder(MethodSorters.NAME_ASCENDING)
 @Category(value={ParallelClassTests.class})
 public class CallLifecycleTest {
 
@@ -117,6 +121,8 @@ public class CallLifecycleTest {
     private static SipStackTool tool3;
     private static SipStackTool tool4;
     private static SipStackTool tool5;
+    private static SipStackTool tool6;
+    private static SipStackTool tool7;
 
     // Bob is a simple SIP Client. Will not register with Restcomm
     private SipStack bobSipStack;
@@ -149,6 +155,16 @@ public class CallLifecycleTest {
     private static String subAccountPort = String.valueOf(NetworkPortAssigner.retrieveNextPortByFile());
     private String subAccountClientContact = "sip:subaccountclient@127.0.0.1:" + subAccountPort;
 
+    private SipStack closedSipStack;
+    private SipPhone closedPhone;
+    private static String closedPort = String.valueOf(NetworkPortAssigner.retrieveNextPortByFile());
+    private String closedContact = "sip:closed@127.0.0.1:" + closedPort;
+
+    private SipStack suspendedSipStack;
+    private SipPhone suspendedPhone;
+    private static String suspendedPort = String.valueOf(NetworkPortAssigner.retrieveNextPortByFile());
+    private String suspendedContact = "sip:suspended@127.0.0.1:" + suspendedPort;
+
     private String adminAccountSid = "ACae6e420f425248d6a26948c17a9e2acf";
     private String adminAuthToken = "77f8c12cc7b8f8423e5c38b035249166";
 
@@ -166,6 +182,8 @@ public class CallLifecycleTest {
         tool3 = new SipStackTool("DialActionTest3");
         tool4 = new SipStackTool("DialActionTest4");
         tool5 = new SipStackTool("DialActionTest5");
+        tool6 = new SipStackTool("DialActionTest6");
+        tool7 = new SipStackTool("DialActionTest7");
     }
 
     public static void reconfigurePorts() {
@@ -195,6 +213,12 @@ public class CallLifecycleTest {
 
         subAccountClientSipStack = tool5.initializeSipStack(SipStack.PROTOCOL_UDP, "127.0.0.1", subAccountPort, restcommContact);
         subAccountClientPhone = subAccountClientSipStack.createSipPhone("127.0.0.1", SipStack.PROTOCOL_UDP, restcommPort, subAccountClientContact);
+
+        closedSipStack = tool6.initializeSipStack(SipStack.PROTOCOL_UDP, "127.0.0.1", closedPort, restcommContact);
+        closedPhone = closedSipStack.createSipPhone("127.0.0.1", SipStack.PROTOCOL_UDP, restcommPort, closedContact);
+
+        suspendedSipStack = tool7.initializeSipStack(SipStack.PROTOCOL_UDP, "127.0.0.1", suspendedPort, restcommContact);
+        suspendedPhone = suspendedSipStack.createSipPhone("127.0.0.1", SipStack.PROTOCOL_UDP, restcommPort, suspendedContact);
     }
 
     @After
@@ -233,6 +257,21 @@ public class CallLifecycleTest {
         if (subAccountClientSipStack != null) {
         	subAccountClientSipStack.dispose();
         }
+
+        if (closedPhone != null) {
+            closedPhone.dispose();
+        }
+        if (closedSipStack != null) {
+            closedSipStack.dispose();
+        }
+
+        if (suspendedPhone != null) {
+            suspendedPhone.dispose();
+        }
+        if (suspendedSipStack != null) {
+            suspendedSipStack.dispose();
+        }
+
         Thread.sleep(1000);
         wireMockRule.resetRequests();
         Thread.sleep(4000);
@@ -486,6 +525,198 @@ public class CallLifecycleTest {
         assertEquals(0, mgcpConnections);
     }
 
+    private String dialClosedClientRcml = "<Response><Dial><Client>closed</Client></Dial></Response>";
+    @Test
+    public void testDialNumberClosedAccount() throws ParseException, InterruptedException, MalformedURLException {
+
+        //Dialed client belongs to a closed account
+
+        stubFor(get(urlPathEqualTo("/2222"))
+                .willReturn(aResponse()
+                        .withStatus(200)
+                        .withHeader("Content-Type", "text/xml")
+                        .withBody(dialClosedClientRcml)));
+
+        SipCall closedCall = closedPhone.createSipCall();
+        closedCall.listenForIncomingCall();
+
+        // Create outgoing call with first phone
+        final SipCall bobCall = bobPhone.createSipCall();
+        bobCall.initiateOutgoingCall(bobContact, "sip:2222@" + restcommContact, null, body, "application", "sdp", null, null);
+        assertLastOperationSuccess(bobCall);
+        assertTrue(bobCall.waitOutgoingCallResponse(5 * 1000));
+        final int response = bobCall.getLastReceivedResponse().getStatusCode();
+        assertTrue(response == Response.TRYING || response == Response.NOT_ACCEPTABLE);
+        logger.info("Last response: "+response);
+
+        if (response == Response.TRYING) {
+            assertTrue(bobCall.waitOutgoingCallResponse(5 * 1000));
+            assertEquals(Response.FORBIDDEN, bobCall.getLastReceivedResponse().getStatusCode());
+            logger.info("Last response: "+bobCall.getLastReceivedResponse().getStatusCode());
+        }
+
+        assertFalse(closedCall.waitForIncomingCall(5000));
+
+        Thread.sleep(1000);
+        JsonObject metrics = MonitoringServiceTool.getInstance().getMetrics(deploymentUrl.toString(),adminAccountSid, adminAuthToken);
+        int liveCalls = MonitoringServiceTool.getInstance().getStatistics(deploymentUrl.toString(),adminAccountSid, adminAuthToken);
+        int liveIncomingCalls = MonitoringServiceTool.getInstance().getLiveIncomingCallStatistics(deploymentUrl.toString(),adminAccountSid, adminAuthToken);
+        int liveOutgoingCalls = MonitoringServiceTool.getInstance().getLiveOutgoingCallStatistics(deploymentUrl.toString(),adminAccountSid, adminAuthToken);
+        int liveCallsArraySize = MonitoringServiceTool.getInstance().getLiveCallsArraySize(deploymentUrl.toString(),adminAccountSid, adminAuthToken);
+        assertTrue(liveCalls==0);
+        assertTrue(liveIncomingCalls==0);
+        assertTrue(liveOutgoingCalls==0);
+        assertTrue(liveCallsArraySize==0);
+
+        logger.info("About to check the Requests");
+        List<LoggedRequest> requests = findAll(getRequestedFor(urlPathMatching("/2222")));
+        assertEquals(0, requests.size());
+
+        Map<String, Integer> mgcpResources = MonitoringServiceTool.getInstance().getMgcpResources(metrics);
+        int mgcpEndpoints = mgcpResources.get("MgcpEndpoints");
+        int mgcpConnections = mgcpResources.get("MgcpConnections");
+
+        assertEquals(0, mgcpEndpoints);
+        assertEquals(0, mgcpConnections);
+    }
+
+    private String dialSuspendedClientRcml = "<Response><Dial><Client>suspended</Client></Dial></Response>";
+    @Test
+    public void testDialNumberSuspendedAccount() throws ParseException, InterruptedException, MalformedURLException {
+
+        //Dialed client belongs to a closed account
+
+        stubFor(get(urlPathEqualTo("/3333"))
+                .willReturn(aResponse()
+                        .withStatus(200)
+                        .withHeader("Content-Type", "text/xml")
+                        .withBody(dialSuspendedClientRcml)));
+
+        SipCall suspendedCall = suspendedPhone.createSipCall();
+        suspendedCall.listenForIncomingCall();
+
+        // Create outgoing call with first phone
+        final SipCall bobCall = bobPhone.createSipCall();
+        bobCall.initiateOutgoingCall(bobContact, "sip:3333@" + restcommContact, null, body, "application", "sdp", null, null);
+        assertLastOperationSuccess(bobCall);
+        assertTrue(bobCall.waitOutgoingCallResponse(5 * 1000));
+        final int response = bobCall.getLastReceivedResponse().getStatusCode();
+        assertTrue(response == Response.TRYING || response == Response.FORBIDDEN);
+        logger.info("Last response: "+response);
+
+        if (response == Response.TRYING) {
+            assertTrue(bobCall.waitOutgoingCallResponse(5 * 1000));
+            assertEquals(Response.FORBIDDEN, bobCall.getLastReceivedResponse().getStatusCode());
+            logger.info("Last response: "+bobCall.getLastReceivedResponse().getStatusCode());
+        }
+
+        assertFalse(suspendedCall.waitForIncomingCall(5000));
+
+        Thread.sleep(1000);
+        JsonObject metrics = MonitoringServiceTool.getInstance().getMetrics(deploymentUrl.toString(),adminAccountSid, adminAuthToken);
+        int liveCalls = MonitoringServiceTool.getInstance().getStatistics(deploymentUrl.toString(),adminAccountSid, adminAuthToken);
+        int liveIncomingCalls = MonitoringServiceTool.getInstance().getLiveIncomingCallStatistics(deploymentUrl.toString(),adminAccountSid, adminAuthToken);
+        int liveOutgoingCalls = MonitoringServiceTool.getInstance().getLiveOutgoingCallStatistics(deploymentUrl.toString(),adminAccountSid, adminAuthToken);
+        int liveCallsArraySize = MonitoringServiceTool.getInstance().getLiveCallsArraySize(deploymentUrl.toString(),adminAccountSid, adminAuthToken);
+        assertTrue(liveCalls==0);
+        assertTrue(liveIncomingCalls==0);
+        assertTrue(liveOutgoingCalls==0);
+        assertTrue(liveCallsArraySize==0);
+
+        logger.info("About to check the Requests");
+        List<LoggedRequest> requests = findAll(getRequestedFor(urlPathMatching("/2222")));
+        assertEquals(0, requests.size());
+
+        Map<String, Integer> mgcpResources = MonitoringServiceTool.getInstance().getMgcpResources(metrics);
+        int mgcpEndpoints = mgcpResources.get("MgcpEndpoints");
+        int mgcpConnections = mgcpResources.get("MgcpConnections");
+
+        assertEquals(0, mgcpEndpoints);
+        assertEquals(0, mgcpConnections);
+    }
+
+    @Test
+    public void testDialClosedClient() throws ParseException, InterruptedException, MalformedURLException {
+
+        // Create outgoing call with first phone
+        final SipCall georgeCall = georgePhone.createSipCall();
+        georgeCall.initiateOutgoingCall(georgeContact, "sip:closed@" + restcommContact, null, body, "application", "sdp", null, null);
+        assertLastOperationSuccess(georgeCall);
+        assertTrue(georgeCall.waitOutgoingCallResponse(5 * 1000));
+        final int response = georgeCall.getLastReceivedResponse().getStatusCode();
+        assertTrue(response == Response.TRYING || response == Response.FORBIDDEN);
+        logger.info("Last response: "+response);
+
+        if (response == Response.TRYING) {
+            assertTrue(georgeCall.waitOutgoingCallResponse(5 * 1000));
+            assertEquals(Response.FORBIDDEN, georgeCall.getLastReceivedResponse().getStatusCode());
+            logger.info("Last response: "+georgeCall.getLastReceivedResponse().getStatusCode());
+        }
+
+        Thread.sleep(1000);
+        JsonObject metrics = MonitoringServiceTool.getInstance().getMetrics(deploymentUrl.toString(),adminAccountSid, adminAuthToken);
+        int liveCalls = MonitoringServiceTool.getInstance().getStatistics(deploymentUrl.toString(),adminAccountSid, adminAuthToken);
+        int liveIncomingCalls = MonitoringServiceTool.getInstance().getLiveIncomingCallStatistics(deploymentUrl.toString(),adminAccountSid, adminAuthToken);
+        int liveOutgoingCalls = MonitoringServiceTool.getInstance().getLiveOutgoingCallStatistics(deploymentUrl.toString(),adminAccountSid, adminAuthToken);
+        int liveCallsArraySize = MonitoringServiceTool.getInstance().getLiveCallsArraySize(deploymentUrl.toString(),adminAccountSid, adminAuthToken);
+        assertTrue(liveCalls==0);
+        assertTrue(liveIncomingCalls==0);
+        assertTrue(liveOutgoingCalls==0);
+        assertTrue(liveCallsArraySize==0);
+
+        logger.info("About to check the Requests");
+        List<LoggedRequest> requests = findAll(getRequestedFor(urlPathMatching("/2222")));
+        assertEquals(0, requests.size());
+
+        Map<String, Integer> mgcpResources = MonitoringServiceTool.getInstance().getMgcpResources(metrics);
+        int mgcpEndpoints = mgcpResources.get("MgcpEndpoints");
+        int mgcpConnections = mgcpResources.get("MgcpConnections");
+
+        assertEquals(0, mgcpEndpoints);
+        assertEquals(0, mgcpConnections);
+    }
+
+    @Test
+    public void testDialSuspendedClient() throws ParseException, InterruptedException, MalformedURLException {
+
+        // Create outgoing call with first phone
+        final SipCall georgeCall = georgePhone.createSipCall();
+        georgeCall.initiateOutgoingCall(georgeContact, "sip:suspended@" + restcommContact, null, body, "application", "sdp", null, null);
+        assertLastOperationSuccess(georgeCall);
+        assertTrue(georgeCall.waitOutgoingCallResponse(5 * 1000));
+        final int response = georgeCall.getLastReceivedResponse().getStatusCode();
+        assertTrue(response == Response.TRYING || response == Response.FORBIDDEN);
+        logger.info("Last response: "+response);
+
+        if (response == Response.TRYING) {
+            assertTrue(georgeCall.waitOutgoingCallResponse(5 * 1000));
+            assertEquals(Response.FORBIDDEN, georgeCall.getLastReceivedResponse().getStatusCode());
+            logger.info("Last response: "+georgeCall.getLastReceivedResponse().getStatusCode());
+        }
+
+        Thread.sleep(1000);
+        JsonObject metrics = MonitoringServiceTool.getInstance().getMetrics(deploymentUrl.toString(),adminAccountSid, adminAuthToken);
+        int liveCalls = MonitoringServiceTool.getInstance().getStatistics(deploymentUrl.toString(),adminAccountSid, adminAuthToken);
+        int liveIncomingCalls = MonitoringServiceTool.getInstance().getLiveIncomingCallStatistics(deploymentUrl.toString(),adminAccountSid, adminAuthToken);
+        int liveOutgoingCalls = MonitoringServiceTool.getInstance().getLiveOutgoingCallStatistics(deploymentUrl.toString(),adminAccountSid, adminAuthToken);
+        int liveCallsArraySize = MonitoringServiceTool.getInstance().getLiveCallsArraySize(deploymentUrl.toString(),adminAccountSid, adminAuthToken);
+        assertTrue(liveCalls==0);
+        assertTrue(liveIncomingCalls==0);
+        assertTrue(liveOutgoingCalls==0);
+        assertTrue(liveCallsArraySize==0);
+
+        logger.info("About to check the Requests");
+        List<LoggedRequest> requests = findAll(getRequestedFor(urlPathMatching("/2222")));
+        assertEquals(0, requests.size());
+
+        Map<String, Integer> mgcpResources = MonitoringServiceTool.getInstance().getMgcpResources(metrics);
+        int mgcpEndpoints = mgcpResources.get("MgcpEndpoints");
+        int mgcpConnections = mgcpResources.get("MgcpConnections");
+
+        assertEquals(0, mgcpEndpoints);
+        assertEquals(0, mgcpConnections);
+    }
+
     @Test
     public void testDialClientAliceBehindLB() throws ParseException, InterruptedException, MalformedURLException {
 
@@ -669,7 +900,7 @@ public class CallLifecycleTest {
 
     private String dialAliceRcmlWithTimeLimit = "<Response><Dial timeLimit=\"10\"><Client>alice</Client></Dial></Response>";
     @Test
-    @Category({UnstableTests.class, FeatureAltTests.class})
+    @Category(FeatureAltTests.class)
     public void testDialClientAliceWithTimeLimit() throws ParseException, InterruptedException, MalformedURLException {
 
         stubFor(get(urlPathEqualTo("/1111"))
@@ -726,7 +957,7 @@ public class CallLifecycleTest {
         assertTrue(bobCall.respondToDisconnect());
         assertTrue(aliceCall.respondToDisconnect());
 
-        Thread.sleep(4000);
+        Thread.sleep(6000);
 
         logger.info("About to check the Requests");
         List<LoggedRequest> requests = findAll(getRequestedFor(urlPathMatching("/1111")));
@@ -740,6 +971,7 @@ public class CallLifecycleTest {
                 callSid = param.split("=")[1];
             }
         }
+
         JsonObject cdr = RestcommCallsTool.getInstance().getCall(deploymentUrl.toString(), adminAccountSid, adminAuthToken, callSid);
         JsonObject jsonObj = cdr.getAsJsonObject();
         String cdrStatus = jsonObj.get("status").getAsString().toLowerCase();

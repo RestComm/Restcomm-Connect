@@ -90,10 +90,6 @@ public class GatewaysEndpoint extends SecuredEndpoint {
     }
 
     protected Response getGateway(final String accountSid, final String sid, final MediaType responseType) {
-        //following 2 things are enough to grant access: 1. a valid authentication token is present. 2 it is a super admin.
-        checkAuthenticatedAccount();
-        allowOnlySuperAdmin();
-//        secure(accountsDao.getAccount(accountSid), "RestComm:Read:Gateways");
         final Gateway gateway = dao.getGateway(new Sid(sid));
         if (gateway == null) {
             return status(NOT_FOUND).build();
@@ -110,10 +106,6 @@ public class GatewaysEndpoint extends SecuredEndpoint {
     }
 
     protected Response getGateways(final String accountSid, final MediaType responseType) {
-        //following 2 things are enough to grant access: 1. a valid authentication token is present. 2 it is a super admin.
-        checkAuthenticatedAccount();
-        allowOnlySuperAdmin();
-//        secure(accountsDao.getAccount(accountSid), "RestComm:Read:Gateways");
         final List<Gateway> gateways = dao.getGateways();
         if (APPLICATION_XML_TYPE.equals(responseType)) {
             final RestCommResponse response = new RestCommResponse(new GatewayList(gateways));
@@ -126,10 +118,7 @@ public class GatewaysEndpoint extends SecuredEndpoint {
     }
 
     protected Response putGateway(final String accountSid, final MultivaluedMap<String, String> data, final MediaType responseType) {
-        //following 2 things are enough to grant access: 1. a valid authentication token is present. 2 it is a super admin.
-        checkAuthenticatedAccount();
-        allowOnlySuperAdmin();
-//        secure(accountsDao.getAccount(accountSid), "RestComm:Create:Gateways");
+
         try {
             validate(data);
         } catch (final RuntimeException exception) {
@@ -152,10 +141,7 @@ public class GatewaysEndpoint extends SecuredEndpoint {
     }
 
     protected Response updateGateway(final String accountSid, final String sid, final MultivaluedMap<String, String> data, final MediaType responseType) {
-        //following 2 things are enough to grant access: 1. a valid authentication token is present. 2 it is a super admin.
-        checkAuthenticatedAccount();
-        allowOnlySuperAdmin();
-//        secure(accountsDao.getAccount(accountSid), "RestComm:Modify:Gateways");
+
         Gateway gateway = dao.getGateway(new Sid(sid));
         if (gateway == null) {
             return status(NOT_FOUND).build();

@@ -11,6 +11,8 @@ import org.jboss.shrinkwrap.api.ShrinkWrap;
 import org.jboss.shrinkwrap.api.spec.WebArchive;
 import org.jboss.shrinkwrap.resolver.api.maven.archive.ShrinkWrapMaven;
 import org.junit.Test;
+import org.junit.FixMethodOrder;
+import org.junit.runners.MethodSorters;
 import org.junit.runner.RunWith;
 import org.restcomm.connect.commons.Version;
 
@@ -25,6 +27,7 @@ import static org.junit.Assert.assertNotNull;
  * Created by gvagenas on 27/10/2016.
  */
 @RunWith(Arquillian.class)
+@FixMethodOrder(MethodSorters.NAME_ASCENDING)
 public class ExtensionsConfigurationTest {
     private final static Logger logger = Logger.getLogger(ExtensionsConfigurationTest.class.getName());
     private static final String version = Version.getVersion();

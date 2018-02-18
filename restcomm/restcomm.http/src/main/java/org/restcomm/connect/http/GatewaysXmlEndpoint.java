@@ -19,6 +19,11 @@
  */
 package org.restcomm.connect.http;
 
+import static javax.ws.rs.core.MediaType.*;
+import static javax.ws.rs.core.Response.*;
+import static org.restcomm.connect.http.security.AccountPrincipal.SUPER_ADMIN_ROLE;
+
+import javax.annotation.security.RolesAllowed;
 import javax.ws.rs.DELETE;
 import javax.ws.rs.GET;
 import javax.ws.rs.POST;
@@ -38,6 +43,7 @@ import org.restcomm.connect.commons.dao.Sid;
  */
 @Path("/Accounts/{accountSid}/Management/Gateways")
 @ThreadSafe
+@RolesAllowed(SUPER_ADMIN_ROLE)
 public final class GatewaysXmlEndpoint extends GatewaysEndpoint {
     public GatewaysXmlEndpoint() {
         super();

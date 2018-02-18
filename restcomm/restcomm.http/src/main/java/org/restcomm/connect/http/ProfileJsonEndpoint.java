@@ -48,7 +48,7 @@ import static org.restcomm.connect.http.security.AccountPrincipal.SUPER_ADMIN_RO
 @ThreadSafe
 @RolesAllowed(SUPER_ADMIN_ROLE)
 @Singleton
-public class ProfileJsonEndpoint extends ProfileEndpoint{
+public class ProfileJsonEndpoint extends ProfileEndpoint {
 
     @GET
     @Produces(APPLICATION_JSON)

@@ -43,6 +43,8 @@ import org.jboss.shrinkwrap.api.spec.WebArchive;
 import org.jboss.shrinkwrap.resolver.api.maven.archive.ShrinkWrapMaven;
 import org.junit.Rule;
 import org.junit.Test;
+import org.junit.FixMethodOrder;
+import org.junit.runners.MethodSorters;
 import org.junit.runner.RunWith;
 
 import com.github.tomakehurst.wiremock.junit.WireMockRule;
@@ -65,6 +67,7 @@ import org.restcomm.connect.commons.annotations.UnstableTests;
  */
 
 @RunWith(Arquillian.class)
+@FixMethodOrder(MethodSorters.NAME_ASCENDING)
 public class VoxboneIncomingPhoneNumbersEndpointTest {
     private final static Logger logger = Logger.getLogger(VoxboneIncomingPhoneNumbersEndpointTest.class.getName());
 

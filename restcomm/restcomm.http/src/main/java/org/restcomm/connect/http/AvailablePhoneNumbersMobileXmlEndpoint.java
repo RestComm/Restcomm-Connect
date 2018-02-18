@@ -21,7 +21,6 @@ package org.restcomm.connect.http;
 
 import com.sun.jersey.spi.container.ResourceFilters;
 import javax.ws.rs.GET;
-import javax.ws.rs.HeaderParam;
 import javax.ws.rs.Path;
 import javax.ws.rs.PathParam;
 import javax.ws.rs.QueryParam;
@@ -52,8 +51,7 @@ public final class AvailablePhoneNumbersMobileXmlEndpoint extends AvailablePhone
             @QueryParam("Contains") String filterPattern, @QueryParam("SmsEnabled") String smsEnabled,
             @QueryParam("MmsEnabled") String mmsEnabled, @QueryParam("VoiceEnabled") String voiceEnabled,
             @QueryParam("FaxEnabled") String faxEnabled, @QueryParam("UssdEnabled") String ussdEnabled,
-            @QueryParam("RangeSize") String rangeSize, @QueryParam("RangeIndex") String rangeIndex,
-            @HeaderParam("Accept") String acccept) {
+            @QueryParam("RangeSize") String rangeSize, @QueryParam("RangeIndex") String rangeIndex) {
         if (isoCountryCode != null && !isoCountryCode.isEmpty()) {
             int rangeSizeInt = -1;
             if (rangeSize != null && !rangeSize.isEmpty()) {
@@ -86,8 +84,7 @@ public final class AvailablePhoneNumbersMobileXmlEndpoint extends AvailablePhone
             PhoneNumberSearchFilters listFilters = new PhoneNumberSearchFilters(areaCode, null, smsEnabledBool,
                     mmsEnabledBool, voiceEnabledBool, faxEnabledBool, ussdEnabledBool, null, null, null, null, null,
                     null, null, rangeSizeInt, rangeIndexInt, PhoneNumberType.Mobile);
-            MediaType acceptType = MediaType.valueOf(accept);
-            return getAvailablePhoneNumbers(accountSid, isoCountryCode, listFilters, filterPattern, acceptType);
+            return getAvailablePhoneNumbers(accountSid, isoCountryCode, listFilters, filterPattern, MediaType.APPLICATION_XML_TYPE);
         } else {
             return status(BAD_REQUEST).build();
         }

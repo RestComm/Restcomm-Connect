@@ -18,6 +18,8 @@ import org.jboss.shrinkwrap.resolver.api.maven.archive.ShrinkWrapMaven;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
+import org.junit.FixMethodOrder;
+import org.junit.runners.MethodSorters;
 import org.junit.runner.RunWith;
 import org.restcomm.connect.commons.Version;
 import org.restcomm.connect.email.api.Mail;
@@ -37,6 +39,7 @@ import static org.junit.Assert.assertTrue;
  * Created by gvagenas on 1/12/16.
  */
 @RunWith(Arquillian.class)
+@FixMethodOrder(MethodSorters.NAME_ASCENDING)
 public class EmailEndpointTest {
 
     private final static Logger logger = Logger.getLogger(CallsEndpointTest.class.getName());

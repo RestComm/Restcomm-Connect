@@ -27,6 +27,8 @@ import static org.junit.Assert.fail;
 import org.junit.Before;
 import org.junit.BeforeClass;
 import org.junit.Test;
+import org.junit.FixMethodOrder;
+import org.junit.runners.MethodSorters;
 import org.junit.experimental.categories.Category;
 import org.junit.runner.RunWith;
 import org.restcomm.connect.commons.Version;
@@ -39,6 +41,7 @@ import org.restcomm.connect.testsuite.http.RestcommCallsTool;
 //import org.restcomm.connect.telephony.Version;
 
 @RunWith(Arquillian.class)
+@FixMethodOrder(MethodSorters.NAME_ASCENDING)
 @Category(value={WithInMinsTests.class, ParallelClassTests.class})
 public final class ProxyManagerTest {
     private static final String version = Version.getVersion();

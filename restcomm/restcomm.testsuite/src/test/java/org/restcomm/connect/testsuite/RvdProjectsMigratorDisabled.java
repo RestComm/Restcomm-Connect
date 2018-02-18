@@ -35,6 +35,8 @@ import org.jboss.shrinkwrap.api.ShrinkWrap;
 import org.jboss.shrinkwrap.api.spec.WebArchive;
 import org.jboss.shrinkwrap.resolver.api.maven.archive.ShrinkWrapMaven;
 import org.junit.Test;
+import org.junit.FixMethodOrder;
+import org.junit.runners.MethodSorters;
 import org.junit.runner.RunWith;
 
 import com.google.gson.JsonArray;
@@ -45,6 +47,7 @@ import org.restcomm.connect.commons.Version;
  * @author guilherme.jansen@telestax.com
  */
 @RunWith(Arquillian.class)
+@FixMethodOrder(MethodSorters.NAME_ASCENDING)
 public class RvdProjectsMigratorDisabled {
 
     private final static Logger logger = Logger.getLogger(RvdProjectsMigratorDisabled.class);
