@@ -103,13 +103,6 @@ public final class GeolocationXmlEndpoint extends GeolocationEndpoint {
         return getGeolocation(accountSid, sid, retrieveMediaType());
     }
 
-    @Path("/Notification/{sid}.json")
-    @PUT
-    public Response updateNotificationGeolocationAsJsonPut(@PathParam("accountSid") final String accountSid,
-                                                           @PathParam("sid") final String sid, final MultivaluedMap<String, String> data) {
-        return updateGeolocation(accountSid, sid, data, APPLICATION_JSON_TYPE);
-    }
-
     @Path("/Notification")
     @POST
     public Response putNotificationGeolocationXmlPost(@PathParam("accountSid") final String accountSid,
