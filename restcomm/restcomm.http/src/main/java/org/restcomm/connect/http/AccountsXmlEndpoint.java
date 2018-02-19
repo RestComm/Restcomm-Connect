@@ -34,6 +34,8 @@ import static javax.ws.rs.core.MediaType.APPLICATION_FORM_URLENCODED;
 import static org.restcomm.connect.http.security.AccountPrincipal.SUPER_ADMIN_ROLE;
 
 import javax.annotation.security.RolesAllowed;
+import javax.ws.rs.Produces;
+import javax.ws.rs.core.MediaType;
 import org.restcomm.connect.commons.annotations.concurrency.ThreadSafe;
 
 /**
@@ -56,18 +58,21 @@ public final class AccountsXmlEndpoint extends AccountsEndpoint {
 
     @Path("/{accountSid}")
     @GET
+    @Produces({MediaType.APPLICATION_XML, MediaType.APPLICATION_JSON})
     public Response getAccountAsXml(@PathParam("accountSid") final String accountSid,
             @Context UriInfo info) {
         return getAccount(accountSid, retrieveMediaType(), info);
     }
 
     @GET
+    @Produces({MediaType.APPLICATION_XML, MediaType.APPLICATION_JSON})
     public Response getAccounts(@Context UriInfo info) {
         return getAccounts(info, retrieveMediaType());
     }
 
     @Consumes(APPLICATION_FORM_URLENCODED)
     @POST
+    @Produces({MediaType.APPLICATION_XML, MediaType.APPLICATION_JSON})
     public Response putAccount(final MultivaluedMap<String, String> data) {
         return putAccount(data, retrieveMediaType());
     }
@@ -76,6 +81,7 @@ public final class AccountsXmlEndpoint extends AccountsEndpoint {
     @Path("/{accountSid}")
     @Consumes(APPLICATION_FORM_URLENCODED)
     @POST
+    @Produces({MediaType.APPLICATION_XML, MediaType.APPLICATION_JSON})
     public Response updateAccountAsXmlPost(@PathParam("accountSid") final String accountSid,
             final MultivaluedMap<String, String> data) {
         return updateAccount(accountSid, data, retrieveMediaType());

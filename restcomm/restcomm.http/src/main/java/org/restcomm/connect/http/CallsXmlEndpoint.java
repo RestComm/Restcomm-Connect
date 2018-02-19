@@ -43,6 +43,7 @@ public final class CallsXmlEndpoint extends CallsEndpoint {
 
     @Path("/{sid}")
     @GET
+    @Produces({MediaType.APPLICATION_XML, MediaType.APPLICATION_JSON})
     public Response getCallAsXml(@PathParam("accountSid") final String accountSid, @PathParam("sid") final String sid) {
         return getCall(accountSid, sid, retrieveMediaType());
     }
@@ -50,11 +51,13 @@ public final class CallsXmlEndpoint extends CallsEndpoint {
     // Issue 153: https://bitbucket.org/telestax/telscale-restcomm/issue/153
     // Issue 110: https://bitbucket.org/telestax/telscale-restcomm/issue/110
     @GET
+    @Produces({MediaType.APPLICATION_XML, MediaType.APPLICATION_JSON})
     public Response getCalls(@PathParam("accountSid") final String accountSid, @Context UriInfo info) {
         return getCalls(accountSid, info, retrieveMediaType());
     }
 
     @POST
+    @Produces({MediaType.APPLICATION_XML, MediaType.APPLICATION_JSON})
     public Response putCall(@PathParam("accountSid") final String accountSid, final MultivaluedMap<String, String> data) {
         return putCall(accountSid, data, retrieveMediaType());
     }
@@ -62,6 +65,7 @@ public final class CallsXmlEndpoint extends CallsEndpoint {
     // Issue 139: https://bitbucket.org/telestax/telscale-restcomm/issue/139
     @Path("/{sid}")
     @POST
+    @Produces({MediaType.APPLICATION_XML, MediaType.APPLICATION_JSON})
     public Response modifyCall(@PathParam("accountSid") final String accountSid, @PathParam("sid") final String sid,
             final MultivaluedMap<String, String> data) {
         return updateCall(accountSid, sid, data, retrieveMediaType());
@@ -69,7 +73,7 @@ public final class CallsXmlEndpoint extends CallsEndpoint {
 
     @GET
     @Path("/{callSid}/Recordings")
-    @Produces(MediaType.APPLICATION_XML)
+    @Produces({MediaType.APPLICATION_XML, MediaType.APPLICATION_JSON})
     public Response getRecordingsByCallXml(@PathParam("accountSid") String accountSid, @PathParam("callSid") String callSid) {
         return getRecordingsByCall(accountSid, callSid, retrieveMediaType());
     }
