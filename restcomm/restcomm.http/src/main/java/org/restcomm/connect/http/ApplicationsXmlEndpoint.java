@@ -27,7 +27,9 @@ import javax.ws.rs.POST;
 import javax.ws.rs.PUT;
 import javax.ws.rs.Path;
 import javax.ws.rs.PathParam;
+import javax.ws.rs.Produces;
 import javax.ws.rs.core.Context;
+import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.MultivaluedMap;
 import javax.ws.rs.core.Response;
 import static javax.ws.rs.core.Response.ok;
@@ -59,17 +61,20 @@ public class ApplicationsXmlEndpoint extends ApplicationsEndpoint {
     }
 
     @GET
+    @Produces({MediaType.APPLICATION_XML, MediaType.APPLICATION_JSON})
     public Response getApplications(@PathParam("accountSid") final String accountSid, @Context UriInfo uriInfo) {
         return getApplications(accountSid, retrieveMediaType(), uriInfo );
     }
 
     @Path("/{sid}")
     @GET
+    @Produces({MediaType.APPLICATION_XML, MediaType.APPLICATION_JSON})
     public Response getApplicationAsXml(@PathParam("accountSid") final String accountSid, @PathParam("sid") final String sid) {
         return getApplication(accountSid, sid, retrieveMediaType());
     }
 
     @POST
+    @Produces({MediaType.APPLICATION_XML, MediaType.APPLICATION_JSON})
     public Response putApplication(@PathParam("accountSid") String accountSid, final MultivaluedMap<String, String> data) {
         return putApplication(accountSid, data, retrieveMediaType());
     }
@@ -83,6 +88,7 @@ public class ApplicationsXmlEndpoint extends ApplicationsEndpoint {
 
     @Path("/{sid}")
     @PUT
+    @Produces({MediaType.APPLICATION_XML, MediaType.APPLICATION_JSON})
     public Response updateApplicationAsXmlPut(@PathParam("accountSid") final String accountSid,
             @PathParam("sid") final String sid, final MultivaluedMap<String, String> data) {
         return updateApplication(accountSid, sid, data, retrieveMediaType());

@@ -26,7 +26,9 @@ import javax.ws.rs.GET;
 import javax.ws.rs.PUT;
 import javax.ws.rs.Path;
 import javax.ws.rs.PathParam;
+import javax.ws.rs.Produces;
 import javax.ws.rs.core.Context;
+import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
 import javax.ws.rs.core.UriInfo;
 import org.restcomm.connect.commons.annotations.concurrency.ThreadSafe;
@@ -44,6 +46,7 @@ public final class OrganizationsXmlEndpoint extends OrganizationsEndpoint {
 
     @Path("/{organizationSid}")
     @GET
+    @Produces({MediaType.APPLICATION_XML, MediaType.APPLICATION_JSON})
     public Response getOrganizationAsXml(@PathParam("organizationSid") final String organizationSid,
             @Context UriInfo info) {
         return getOrganization(organizationSid, retrieveMediaType(), info);
@@ -51,6 +54,7 @@ public final class OrganizationsXmlEndpoint extends OrganizationsEndpoint {
 
     @GET
     @RolesAllowed(SUPER_ADMIN_ROLE)
+    @Produces({MediaType.APPLICATION_XML, MediaType.APPLICATION_JSON})
     public Response getOrganizations(@Context UriInfo info) {
         return getOrganizations(info, retrieveMediaType());
     }
@@ -58,6 +62,7 @@ public final class OrganizationsXmlEndpoint extends OrganizationsEndpoint {
     @Path("/{domainName}")
     @PUT
     @RolesAllowed(SUPER_ADMIN_ROLE)
+    @Produces({MediaType.APPLICATION_XML, MediaType.APPLICATION_JSON})
     public Response putOrganizationPut(@PathParam("domainName") final String domainName, @Context UriInfo info) {
         return putOrganization(domainName, info, retrieveMediaType());
     }

@@ -22,6 +22,8 @@ package org.restcomm.connect.http;
 import javax.ws.rs.POST;
 import javax.ws.rs.Path;
 import javax.ws.rs.PathParam;
+import javax.ws.rs.Produces;
+import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.MultivaluedMap;
 import javax.ws.rs.core.Response;
 import org.restcomm.connect.commons.annotations.concurrency.ThreadSafe;
@@ -37,6 +39,7 @@ public final class EmailMessagesXmlEndpoint extends EmailMessagesEndpoint {
     }
 
     @POST
+    @Produces({MediaType.APPLICATION_XML, MediaType.APPLICATION_JSON})
     public Response putEmailMessage(@PathParam("accountSid") final String accountSid, final MultivaluedMap<String, String> data) {
         return putEmailMessage(accountSid, data, retrieveMediaType());
     }

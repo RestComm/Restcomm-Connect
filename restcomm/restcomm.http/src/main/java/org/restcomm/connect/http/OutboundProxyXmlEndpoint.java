@@ -26,6 +26,8 @@ import javax.annotation.security.RolesAllowed;
 import javax.ws.rs.GET;
 import javax.ws.rs.Path;
 import javax.ws.rs.PathParam;
+import javax.ws.rs.Produces;
+import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
 import org.restcomm.connect.commons.annotations.concurrency.ThreadSafe;
 
@@ -42,18 +44,21 @@ public class OutboundProxyXmlEndpoint extends OutboundProxyEndpoint {
     }
 
     @GET
+    @Produces({MediaType.APPLICATION_XML, MediaType.APPLICATION_JSON})
     public Response getProxies(@PathParam("accountSid") final String accountSid) {
         return getProxies(accountSid, retrieveMediaType());
     }
 
     @GET
     @Path("/switchProxy")
+    @Produces({MediaType.APPLICATION_XML, MediaType.APPLICATION_JSON})
     public Response switchProxy(@PathParam("accountSid") final String accountSid) {
         return switchProxy(accountSid, retrieveMediaType());
     }
 
     @GET
     @Path("/getActiveProxy")
+    @Produces({MediaType.APPLICATION_XML, MediaType.APPLICATION_JSON})
     public Response getActiveProxy(@PathParam("accountSid") final String accountSid) {
         return getActiveProxy(accountSid, retrieveMediaType());
     }

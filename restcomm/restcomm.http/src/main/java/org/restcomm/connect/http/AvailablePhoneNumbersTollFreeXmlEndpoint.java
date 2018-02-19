@@ -23,7 +23,9 @@ import com.sun.jersey.spi.container.ResourceFilters;
 import javax.ws.rs.GET;
 import javax.ws.rs.Path;
 import javax.ws.rs.PathParam;
+import javax.ws.rs.Produces;
 import javax.ws.rs.QueryParam;
+import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
 import static javax.ws.rs.core.Response.*;
 import static javax.ws.rs.core.Response.Status.*;
@@ -45,6 +47,7 @@ public final class AvailablePhoneNumbersTollFreeXmlEndpoint extends AvailablePho
 
     @GET
     @ResourceFilters({ ExtensionFilter.class })
+    @Produces({MediaType.APPLICATION_XML, MediaType.APPLICATION_JSON})
     public Response getAvailablePhoneNumber(@PathParam("accountSid") final String accountSid,
             @PathParam("IsoCountryCode") final String isoCountryCode, @QueryParam("AreaCode") String areaCode,
             @QueryParam("Contains") String filterPattern,

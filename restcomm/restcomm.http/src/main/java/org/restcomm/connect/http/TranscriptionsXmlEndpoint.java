@@ -23,7 +23,9 @@ import javax.ws.rs.DELETE;
 import javax.ws.rs.GET;
 import javax.ws.rs.Path;
 import javax.ws.rs.PathParam;
+import javax.ws.rs.Produces;
 import javax.ws.rs.core.Context;
+import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
 import static javax.ws.rs.core.Response.*;
 import javax.ws.rs.core.UriInfo;
@@ -56,11 +58,13 @@ public final class TranscriptionsXmlEndpoint extends TranscriptionsEndpoint {
 
     @Path("/{sid}")
     @GET
+    @Produces({MediaType.APPLICATION_XML, MediaType.APPLICATION_JSON})
     public Response getTranscriptionAsXml(@PathParam("accountSid") final String accountSid, @PathParam("sid") final String sid) {
         return getTranscription(accountSid, sid, retrieveMediaType());
     }
 
     @GET
+    @Produces({MediaType.APPLICATION_XML, MediaType.APPLICATION_JSON})
     public Response getTranscriptions(@PathParam("accountSid") final String accountSid, @Context UriInfo info) {
         return getTranscriptions(accountSid, info, retrieveMediaType());
     }

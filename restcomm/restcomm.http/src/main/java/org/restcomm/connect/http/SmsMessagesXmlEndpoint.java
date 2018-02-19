@@ -23,7 +23,9 @@ import javax.ws.rs.GET;
 import javax.ws.rs.POST;
 import javax.ws.rs.Path;
 import javax.ws.rs.PathParam;
+import javax.ws.rs.Produces;
 import javax.ws.rs.core.Context;
+import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.MultivaluedMap;
 import javax.ws.rs.core.Response;
 import javax.ws.rs.core.UriInfo;
@@ -41,16 +43,19 @@ public final class SmsMessagesXmlEndpoint extends SmsMessagesEndpoint {
 
     @Path("/{sid}")
     @GET
+    @Produces({MediaType.APPLICATION_XML, MediaType.APPLICATION_JSON})
     public Response getSmsMessageAsXml(@PathParam("accountSid") final String accountSid, @PathParam("sid") final String sid) {
         return getSmsMessage(accountSid, sid, retrieveMediaType());
     }
 
     @GET
+    @Produces({MediaType.APPLICATION_XML, MediaType.APPLICATION_JSON})
     public Response getSmsMessages(@PathParam("accountSid") final String accountSid, @Context UriInfo info) {
         return getSmsMessages(accountSid, info, retrieveMediaType());
     }
 
     @POST
+    @Produces({MediaType.APPLICATION_XML, MediaType.APPLICATION_JSON})
     public Response putSmsMessage(@PathParam("accountSid") final String accountSid, final MultivaluedMap<String, String> data) {
         return putSmsMessage(accountSid, data, retrieveMediaType());
     }
