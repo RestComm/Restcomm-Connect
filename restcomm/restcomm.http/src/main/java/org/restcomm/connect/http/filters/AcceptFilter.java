@@ -35,6 +35,8 @@ import org.apache.log4j.Logger;
 /**
  * Fixes the accept header taking into accoutn convention on URL (.json).
  *
+ * ".json" suffix will be removed before matching the actual REST endpoint
+ *
  * @author
  */
 @Provider
@@ -75,7 +77,9 @@ public class AcceptFilter implements ResourceFilter, ContainerRequestFilter {
             }
         }
 
-        if (cr.getPath().contains(JSON_EXTENSION)) {
+        //Do not apply for Profiles endpoint, as is not following .json convention
+        if (cr.getPath().contains(JSON_EXTENSION) &&
+                !cr.getPath().contains("Profiles")) {
             cr.getRequestHeaders().remove(ACCEPT_HDR);
             cr.getRequestHeaders().add(ACCEPT_HDR, MediaType.APPLICATION_JSON);
             URI reworkedUri = reworkJSONPath(cr);
