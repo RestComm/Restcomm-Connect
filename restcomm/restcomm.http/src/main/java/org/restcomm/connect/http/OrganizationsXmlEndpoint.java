@@ -32,6 +32,7 @@ import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
 import javax.ws.rs.core.UriInfo;
 import org.restcomm.connect.commons.annotations.concurrency.ThreadSafe;
+import static org.restcomm.connect.http.security.AccountPrincipal.ADMIN_ROLE;
 
 /**
  * @author maria farooq
@@ -47,6 +48,7 @@ public final class OrganizationsXmlEndpoint extends OrganizationsEndpoint {
     @Path("/{organizationSid}")
     @GET
     @Produces({MediaType.APPLICATION_XML, MediaType.APPLICATION_JSON})
+    @RolesAllowed({SUPER_ADMIN_ROLE, ADMIN_ROLE})
     public Response getOrganizationAsXml(@PathParam("organizationSid") final String organizationSid,
             @Context UriInfo info) {
         return getOrganization(organizationSid, retrieveMediaType(), info);
