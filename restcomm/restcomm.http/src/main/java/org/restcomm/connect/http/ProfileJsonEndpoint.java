@@ -19,7 +19,6 @@
  */
 package org.restcomm.connect.http;
 
-import com.sun.jersey.spi.container.ResourceFilters;
 import com.sun.jersey.spi.resource.Singleton;
 import java.io.InputStream;
 import javax.annotation.security.PermitAll;
@@ -41,7 +40,6 @@ import javax.ws.rs.core.UriInfo;
 import org.restcomm.connect.commons.annotations.concurrency.ThreadSafe;
 import static org.restcomm.connect.http.ProfileEndpoint.PROFILE_CONTENT_TYPE;
 import static org.restcomm.connect.http.ProfileEndpoint.PROFILE_SCHEMA_CONTENT_TYPE;
-import org.restcomm.connect.http.filters.MethodOverrideFilter;
 import static org.restcomm.connect.http.security.AccountPrincipal.SUPER_ADMIN_ROLE;
 
 @Path("/Profiles")
@@ -50,6 +48,8 @@ import static org.restcomm.connect.http.security.AccountPrincipal.SUPER_ADMIN_RO
 @Singleton
 public class ProfileJsonEndpoint extends ProfileEndpoint {
 
+    private static final String OVERRIDE_HDR = "X-HTTP-Method-Override";
+
     @GET
     @Produces(APPLICATION_JSON)
     public Response getProfilesAsJson(@Context UriInfo info) {
@@ -57,15 +57,15 @@ public class ProfileJsonEndpoint extends ProfileEndpoint {
     }
 
     @POST
-    @Consumes({PROFILE_CONTENT_TYPE,APPLICATION_JSON})
-    @Produces({PROFILE_CONTENT_TYPE,APPLICATION_JSON})
+    @Consumes({PROFILE_CONTENT_TYPE, APPLICATION_JSON})
+    @Produces({PROFILE_CONTENT_TYPE, APPLICATION_JSON})
     public Response createProfileAsJson(InputStream body, @Context UriInfo info) {
         return createProfile(body, info);
     }
 
     @Path("/{profileSid}")
     @GET
-    @Produces({PROFILE_CONTENT_TYPE,APPLICATION_JSON})
+    @Produces({PROFILE_CONTENT_TYPE, APPLICATION_JSON})
     public Response getProfileAsJson(@PathParam("profileSid") final String profileSid,
             @Context UriInfo info) {
         return getProfile(profileSid, info);
@@ -73,9 +73,20 @@ public class ProfileJsonEndpoint extends ProfileEndpoint {
 
     @Path("/{profileSid}")
     @PUT
-    @Consumes({PROFILE_CONTENT_TYPE,MediaType.APPLICATION_JSON})
+    @Consumes({PROFILE_CONTENT_TYPE, MediaType.APPLICATION_JSON})
     public Response updateProfileAsJson(@PathParam("profileSid") final String profileSid,
-            InputStream body, @Context UriInfo info) {
+            InputStream body, @Context UriInfo info,
+            @Context HttpHeaders headers) {
+        if (headers.getRequestHeader(OVERRIDE_HDR).size() > 0) {
+            String overrideHdr = headers.getRequestHeader(OVERRIDE_HDR).get(0);
+            switch (overrideHdr) {
+                case "LINK":
+                    return linkProfile(profileSid, headers, info);
+                case "UNLINK":
+                    return unlinkProfile(profileSid, headers);
+
+            }
+        }
         return updateProfile(profileSid, body, info);
     }
 
@@ -88,7 +99,6 @@ public class ProfileJsonEndpoint extends ProfileEndpoint {
     @Path("/{profileSid}")
     @LINK
     @Produces(APPLICATION_JSON)
-    @ResourceFilters({ MethodOverrideFilter.class })
     public Response linkProfileAsJson(@PathParam("profileSid") final String profileSid,
             @Context HttpHeaders headers, @Context UriInfo info
     ) {
@@ -98,7 +108,6 @@ public class ProfileJsonEndpoint extends ProfileEndpoint {
     @Path("/{profileSid}")
     @UNLINK
     @Produces(APPLICATION_JSON)
-    @ResourceFilters({ MethodOverrideFilter.class })
     public Response unlinkProfileAsJson(@PathParam("profileSid") final String profileSid,
             @Context HttpHeaders headers) {
         return unlinkProfile(profileSid, headers);
@@ -106,7 +115,7 @@ public class ProfileJsonEndpoint extends ProfileEndpoint {
 
     @Path("/schemas/{schemaId}")
     @GET
-    @Produces({PROFILE_SCHEMA_CONTENT_TYPE,MediaType.APPLICATION_JSON})
+    @Produces({PROFILE_SCHEMA_CONTENT_TYPE, MediaType.APPLICATION_JSON})
     @PermitAll
     public Response getProfileSchemaAsJson(@PathParam("schemaId") final String schemaId) {
         return getSchema(schemaId);
