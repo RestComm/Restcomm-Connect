@@ -3,11 +3,9 @@
         "DIDPurchase": {
             "allowedCountries": ["US",
                 "CA"]
-        },        
-        "destinations": {
-            "allowedPrefixes": ["+1"]
         },
         "outboundPSTN": {
+            "allowedPrefixes": ["+1"]
         },
         "inboundPSTN": {
         },
