@@ -91,6 +91,7 @@ public final class AccountsXmlEndpoint extends AccountsEndpoint {
     @Path("/{accountSid}")
     @Consumes(APPLICATION_FORM_URLENCODED)
     @PUT
+    @Produces({MediaType.APPLICATION_XML, MediaType.APPLICATION_JSON})
     public Response updateAccountAsXmlPut(@PathParam("accountSid") final String accountSid,
             final MultivaluedMap<String, String> data) {
         return updateAccount(accountSid, data, retrieveMediaType());
@@ -100,6 +101,7 @@ public final class AccountsXmlEndpoint extends AccountsEndpoint {
     @Consumes(APPLICATION_FORM_URLENCODED)
     @POST
     @RolesAllowed(SUPER_ADMIN_ROLE)
+    @Produces({MediaType.APPLICATION_XML, MediaType.APPLICATION_JSON})
     public Response migrateAccount(@PathParam("accountSid") final String accountSid, final MultivaluedMap<String, String> data) {
         return migrateAccountOrganization(accountSid, data, retrieveMediaType());
     }
