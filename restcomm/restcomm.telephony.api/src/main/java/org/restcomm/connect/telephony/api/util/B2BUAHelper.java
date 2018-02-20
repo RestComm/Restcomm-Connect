@@ -18,12 +18,14 @@
  *
  */package org.restcomm.connect.telephony.api.util;
 
- import java.io.IOException;
+import java.io.IOException;
 import java.math.BigDecimal;
 import java.net.InetAddress;
 import java.net.URI;
 import java.net.UnknownHostException;
+import java.util.ArrayList;
 import java.util.Currency;
+import java.util.Map;
 import java.util.Vector;
 
 import javax.sdp.Connection;
@@ -70,6 +72,7 @@ import org.restcomm.connect.telephony.api.CallStateChanged;
      public static final String B2BUA_LAST_REQUEST = "lastRequest";
      public static final String B2BUA_LAST_RESPONSE = "lastResponse";
      public static final String B2BUA_LAST_FINAL_RESPONSE = "lastFinalResponse";
+     public static final String EXTENSION_HEADERS = "extensionHeaders";
      private static final String B2BUA_LINKED_SESSION = "linkedSession";
      private static final String CDR_SID = "callDetailRecord_sid";
 
@@ -302,6 +305,9 @@ import org.restcomm.connect.telephony.api.CallStateChanged;
                      ((SipSessionExt) outRequest.getSession()).setBypassProxy(true);
                  }
              }
+
+             Map<String,ArrayList<String>> extensionHeaders = (Map<String,ArrayList<String>>)incomingSession.getAttribute(EXTENSION_HEADERS);
+             addHeadersToMessage(outRequest, extensionHeaders, sipFactory);
              outRequest.send();
              Address originalFromAddress = request.getFrom();
              SipURI originalFromUri = (SipURI) originalFromAddress.getURI();
@@ -624,6 +630,122 @@ import org.restcomm.connect.telephony.api.CallStateChanged;
      public static boolean isB2BUASession(SipServletMessage sipMessage) {
          SipSession linkedB2BUASession = getLinkedSession(sipMessage);
          return (linkedB2BUASession != null);
+     }
+
+     /**
+      * Modify Messages with new headers and header attributes
+      * Moved from CallManager and Call
+      * TODO: refactor/rename/handle more specific headers
+      * @param sipFactory SipFactory
+      * @param SipServletRequest message
+      * @param Map<String,ArrayList<String>> headers
+      */
+     public static void addHeadersToMessage(SipServletRequest message, Map<String, ArrayList<String>> headers, SipFactory sipFactory) {
+         if (headers != null && sipFactory != null) {
+             for (Map.Entry<String, ArrayList<String>> entry : headers.entrySet()) {
+                 //check if header exists
+                 String headerName = entry.getKey();
+
+                 if (logger.isDebugEnabled()) {
+                     logger.debug("headerName=" + headerName + " headerVal=" + message.getHeader(headerName));
+                 }
+
+                 if( headerName.equalsIgnoreCase("Request-URI") ) {
+                     //handle Request-URI
+                     javax.servlet.sip.URI reqURI = message.getRequestURI();
+                     if(logger.isDebugEnabled()) {
+                         logger.debug("ReqURI="+reqURI.toString()+" msgReqURI="+message.getRequestURI());
+                     }
+                     for(String keyValPair :entry.getValue()){
+                         String parName = "";
+                         String parVal = "";
+                         int equalsPos = keyValPair.indexOf("=");
+                         parName = keyValPair.substring(0, equalsPos);
+                         parVal = keyValPair.substring(equalsPos+1);
+                         reqURI.setParameter(parName, parVal);
+                         if(logger.isDebugEnabled()) {
+                             logger.debug("ReqURI pars ="+parName+"="+parVal+" equalsPos="+equalsPos+" keyValPair="+keyValPair);
+                         }
+                     }
+
+                     message.setRequestURI(reqURI);
+                     if(logger.isDebugEnabled()) {
+                         logger.debug("ReqURI="+reqURI.toString()+" msgReqURI="+message.getRequestURI());
+                     }
+                 } else if( headerName.equalsIgnoreCase("Route") ){
+                     //handle Route
+                     String headerVal = message.getHeader(headerName);
+                     //TODO: do we want to add arbitrary parameters?
+
+                     if(logger.isDebugEnabled()) {
+                         logger.debug("ROUTE: "+headerName + "=" + headerVal);
+                     }
+                     //check how many pairs of host +port
+                     for(String keyValPair :entry.getValue()){
+                         String parName = "";
+                         String parVal = "";
+                         int equalsPos = keyValPair.indexOf("=");
+                         if(equalsPos>0){
+                             parName = keyValPair.substring(0, equalsPos);
+                         }
+                         parVal = keyValPair.substring(equalsPos+1);
+
+                         if (parName.isEmpty() || parName.equalsIgnoreCase("host_name")) {
+                             try {
+                                 if(logger.isDebugEnabled()) {
+                                     logger.debug("adding ROUTE parVal =" + parVal);
+                                 }
+                                 final SipURI uri = sipFactory.createSipURI(null, parVal);
+                                 message.pushRoute((SipURI)uri);
+                                 if(logger.isDebugEnabled()) {
+                                     logger.debug("added ROUTE parVal =" + uri.toString());
+                                 }
+                             } catch (Exception e) {
+                                 if(logger.isDebugEnabled()) {
+                                     logger.debug("error adding ROUTE uri ="
+                                             + parVal);
+                                 }
+                             }
+
+                         }
+
+                         if(logger.isDebugEnabled()) {
+                             logger.debug("ROUTE pars ="+parName+"="+parVal+" equalsPos="+equalsPos+" keyValPair="+keyValPair);
+                         }
+                     }
+                 } else {
+                     StringBuilder sb = new StringBuilder();
+                     try {
+                         String headerVal = message.getHeader(headerName);
+                         if (headerVal != null && !headerVal.isEmpty()) {
+                             if (entry.getValue() instanceof ArrayList) {
+                                 for (String pair : entry.getValue()) {
+                                     sb.append(";").append(pair);
+                                 }
+                             }
+                             message.setHeader(headerName,
+                                     headerVal + sb.toString());
+                         } else {
+                             if (entry.getValue() instanceof ArrayList) {
+                                 for (String pair : entry.getValue()) {
+                                     sb.append(pair).append(";");
+                                 }
+                             }
+                             message.addHeader(headerName, sb.toString());
+                         }
+                     } catch (IllegalArgumentException iae) {
+                             logger.error("Exception while setting message header: "
+                                     + iae.getMessage());
+                     }
+                 }
+
+                 if (logger.isDebugEnabled()) {
+                     logger.debug("headerName=" + headerName + " headerVal=" + message.getHeader(headerName));
+                 }
+             }
+         } else {
+             logger.error("headers are null");
+         }
      }
 
  }
