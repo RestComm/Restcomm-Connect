@@ -32,6 +32,8 @@ import javax.ws.rs.core.UriInfo;
 import static org.restcomm.connect.http.security.AccountPrincipal.SUPER_ADMIN_ROLE;
 
 import javax.annotation.security.RolesAllowed;
+import javax.ws.rs.Produces;
+import javax.ws.rs.core.MediaType;
 import org.restcomm.connect.commons.annotations.concurrency.ThreadSafe;
 
 /**
@@ -49,6 +51,7 @@ public class SupservisorJsonEndpoint extends SupervisorEndpoint{
 
     //Simple PING/PONG message
     @GET
+    @Produces({MediaType.APPLICATION_XML, MediaType.APPLICATION_JSON})
     public Response ping(@PathParam("accountSid") final String accountSid) {
         return pong(accountSid, retrieveMediaType());
     }
@@ -56,6 +59,7 @@ public class SupservisorJsonEndpoint extends SupervisorEndpoint{
     //Get statistics
     @Path("/metrics")
     @GET
+    @Produces({MediaType.APPLICATION_XML, MediaType.APPLICATION_JSON})
     public Response getMetrics(@PathParam("accountSid") final String accountSid, @Context UriInfo info) {
         return getMetrics(accountSid, info, retrieveMediaType());
     }
@@ -63,6 +67,7 @@ public class SupservisorJsonEndpoint extends SupervisorEndpoint{
     //Get live calls
     @Path("/livecalls")
     @GET
+    @Produces({MediaType.APPLICATION_XML, MediaType.APPLICATION_JSON})
     public Response getLiveCalls(@PathParam("accountSid") final String accountSid) {
         return getLiveCalls(accountSid, retrieveMediaType());
     }
@@ -70,6 +75,7 @@ public class SupservisorJsonEndpoint extends SupervisorEndpoint{
     //Register a remote location where Restcomm will send monitoring updates
     @Path("/remote")
     @POST
+    @Produces({MediaType.APPLICATION_XML, MediaType.APPLICATION_JSON})
     public Response registerForMetricsUpdates(@PathParam("accountSid") final String accountSid, @Context UriInfo info) {
         return registerForUpdates(accountSid, info, retrieveMediaType());
     }
@@ -77,6 +83,7 @@ public class SupservisorJsonEndpoint extends SupervisorEndpoint{
     //Register a remote location where Restcomm will send monitoring updates for a specific Call
     @Path("/remote/{sid}")
     @POST
+    @Produces({MediaType.APPLICATION_XML, MediaType.APPLICATION_JSON})
     public Response registerForCallMetricsUpdates(@PathParam("accountSid") final String accountSid, @PathParam("sid") final String sid, final MultivaluedMap<String, String> data) {
         return registerForCallUpdates(accountSid, sid, data, retrieveMediaType());
     }
