@@ -58,14 +58,14 @@ public class ProfileJsonEndpoint extends ProfileEndpoint {
 
     @POST
     @Consumes({PROFILE_CONTENT_TYPE,APPLICATION_JSON})
-    @Produces(PROFILE_CONTENT_TYPE)
+    @Produces({PROFILE_CONTENT_TYPE,APPLICATION_JSON})
     public Response createProfileAsJson(InputStream body, @Context UriInfo info) {
         return createProfile(body, info);
     }
 
     @Path("/{profileSid}")
     @GET
-    @Produces(PROFILE_CONTENT_TYPE)
+    @Produces({PROFILE_CONTENT_TYPE,APPLICATION_JSON})
     public Response getProfileAsJson(@PathParam("profileSid") final String profileSid,
             @Context UriInfo info) {
         return getProfile(profileSid, info);
@@ -106,7 +106,7 @@ public class ProfileJsonEndpoint extends ProfileEndpoint {
 
     @Path("/schemas/{schemaId}")
     @GET
-    @Produces(PROFILE_SCHEMA_CONTENT_TYPE)
+    @Produces({PROFILE_SCHEMA_CONTENT_TYPE,MediaType.APPLICATION_JSON})
     @PermitAll
     public Response getProfileSchemaAsJson(@PathParam("schemaId") final String schemaId) {
         return getSchema(schemaId);
