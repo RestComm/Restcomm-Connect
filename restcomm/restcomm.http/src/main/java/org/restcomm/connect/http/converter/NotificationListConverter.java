@@ -24,7 +24,6 @@ import java.lang.reflect.Type;
 
 import com.google.gson.JsonObject;
 import com.google.gson.JsonSerializationContext;
-import com.google.gson.JsonSerializer;
 import org.apache.commons.configuration.Configuration;
 import org.restcomm.connect.commons.annotations.concurrency.ThreadSafe;
 import org.restcomm.connect.dao.entities.Notification;
@@ -37,7 +36,7 @@ import com.thoughtworks.xstream.io.HierarchicalStreamWriter;
  * @author quintana.thomas@gmail.com (Thomas Quintana)
  */
 @ThreadSafe
-public final class NotificationListConverter extends AbstractConverter implements JsonSerializer<NotificationList> {
+public final class NotificationListConverter extends AbstractConverter<NotificationList> {
     Integer page, pageSize, total;
     String pathUri;
 

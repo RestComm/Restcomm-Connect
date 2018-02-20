@@ -21,6 +21,8 @@
 
 package org.restcomm.connect.http.converter;
 
+import com.google.gson.JsonElement;
+import com.google.gson.JsonSerializationContext;
 import org.apache.commons.configuration.Configuration;
 import org.restcomm.connect.commons.annotations.concurrency.ThreadSafe;
 import org.restcomm.connect.dao.entities.Geolocation;
@@ -28,13 +30,14 @@ import org.restcomm.connect.dao.entities.GeolocationList;
 
 import com.thoughtworks.xstream.converters.MarshallingContext;
 import com.thoughtworks.xstream.io.HierarchicalStreamWriter;
+import java.lang.reflect.Type;
 
 /**
  * @author <a href="mailto:fernando.mendioroz@telestax.com"> Fernando Mendioroz </a>
  *
  */
 @ThreadSafe
-public class GeolocationListConverter extends AbstractConverter {
+public class GeolocationListConverter extends AbstractConverter<GeolocationList> {
 
     public GeolocationListConverter (final Configuration configuration){
         super(configuration);
@@ -54,6 +57,11 @@ public class GeolocationListConverter extends AbstractConverter {
             context.convertAnother(geolocation);
         }
         writer.endNode();
+    }
+
+    @Override
+    public JsonElement serialize(GeolocationList t, Type type, JsonSerializationContext jsc) {
+        throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
     }
 
 }

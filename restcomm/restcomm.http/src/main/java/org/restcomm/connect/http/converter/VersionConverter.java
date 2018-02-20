@@ -24,7 +24,6 @@ package org.restcomm.connect.http.converter;
 import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
 import com.google.gson.JsonSerializationContext;
-import com.google.gson.JsonSerializer;
 import com.thoughtworks.xstream.converters.MarshallingContext;
 import com.thoughtworks.xstream.io.HierarchicalStreamWriter;
 import org.apache.commons.configuration.Configuration;
@@ -35,7 +34,7 @@ import java.lang.reflect.Type;
 /**
  * Created by gvagenas on 1/19/16.
  */
-public class VersionConverter extends AbstractConverter implements JsonSerializer<VersionEntity> {
+public class VersionConverter extends AbstractConverter<VersionEntity> {
 
     public VersionConverter(Configuration configuration) {
         super(configuration);

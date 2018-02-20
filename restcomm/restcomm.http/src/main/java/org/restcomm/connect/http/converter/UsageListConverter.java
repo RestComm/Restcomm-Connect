@@ -19,6 +19,8 @@
  */
 package org.restcomm.connect.http.converter;
 
+import com.google.gson.JsonElement;
+import com.google.gson.JsonSerializationContext;
 import org.apache.commons.configuration.Configuration;
 import org.restcomm.connect.commons.annotations.concurrency.ThreadSafe;
 import org.restcomm.connect.dao.entities.Usage;
@@ -26,12 +28,13 @@ import org.restcomm.connect.dao.entities.UsageList;
 
 import com.thoughtworks.xstream.converters.MarshallingContext;
 import com.thoughtworks.xstream.io.HierarchicalStreamWriter;
+import java.lang.reflect.Type;
 
 /**
  * @author brainslog@gmail.com (Alexandre Mendonca)
  */
 @ThreadSafe
-public final class UsageListConverter extends AbstractConverter {
+public final class UsageListConverter extends AbstractConverter<UsageList> {
   public UsageListConverter(final Configuration configuration) {
     super(configuration);
   }
@@ -51,4 +54,9 @@ public final class UsageListConverter extends AbstractConverter {
     }
     writer.endNode();
   }
+
+    @Override
+    public JsonElement serialize(UsageList t, Type type, JsonSerializationContext jsc) {
+        throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
+    }
 }

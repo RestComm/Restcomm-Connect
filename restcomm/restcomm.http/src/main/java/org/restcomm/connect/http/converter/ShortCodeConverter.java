@@ -28,7 +28,6 @@ import org.restcomm.connect.dao.entities.ShortCode;
 import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
 import com.google.gson.JsonSerializationContext;
-import com.google.gson.JsonSerializer;
 import com.thoughtworks.xstream.converters.MarshallingContext;
 import com.thoughtworks.xstream.io.HierarchicalStreamWriter;
 
@@ -36,7 +35,7 @@ import com.thoughtworks.xstream.io.HierarchicalStreamWriter;
  * @author quintana.thomas@gmail.com (Thomas Quintana)
  */
 @ThreadSafe
-public final class ShortCodeConverter extends AbstractConverter implements JsonSerializer<ShortCode> {
+public final class ShortCodeConverter extends AbstractConverter<ShortCode> {
     public ShortCodeConverter(final Configuration configuration) {
         super(configuration);
     }

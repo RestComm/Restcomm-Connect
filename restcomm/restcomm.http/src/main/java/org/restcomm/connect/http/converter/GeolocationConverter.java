@@ -33,7 +33,6 @@ import com.google.gson.JsonElement;
 import com.google.gson.JsonNull;
 import com.google.gson.JsonObject;
 import com.google.gson.JsonSerializationContext;
-import com.google.gson.JsonSerializer;
 import com.thoughtworks.xstream.converters.MarshallingContext;
 import com.thoughtworks.xstream.io.HierarchicalStreamWriter;
 
@@ -42,7 +41,7 @@ import com.thoughtworks.xstream.io.HierarchicalStreamWriter;
  * @author <a href="mailto:fernando.mendioroz@telestax.com"> Fernando Mendioroz </a>
  *
  */
-public class GeolocationConverter extends AbstractConverter implements JsonSerializer<Geolocation> {
+public class GeolocationConverter extends AbstractConverter<Geolocation> {
 
     public GeolocationConverter(final Configuration configuration) {
         super(configuration);

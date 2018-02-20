@@ -28,7 +28,6 @@ import org.restcomm.connect.dao.entities.Gateway;
 import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
 import com.google.gson.JsonSerializationContext;
-import com.google.gson.JsonSerializer;
 import com.thoughtworks.xstream.converters.MarshallingContext;
 import com.thoughtworks.xstream.io.HierarchicalStreamWriter;
 
@@ -36,7 +35,7 @@ import com.thoughtworks.xstream.io.HierarchicalStreamWriter;
  * @author quintana.thomas@gmail.com (Thomas Quintana)
  */
 @ThreadSafe
-public final class GatewayConverter extends AbstractConverter implements JsonSerializer<Gateway> {
+public final class GatewayConverter extends AbstractConverter<Gateway> {
     public GatewayConverter(final Configuration configuration) {
         super(configuration);
     }

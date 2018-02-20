@@ -22,7 +22,6 @@ package org.restcomm.connect.http.converter;
 import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
 import com.google.gson.JsonSerializationContext;
-import com.google.gson.JsonSerializer;
 
 import org.apache.commons.configuration.Configuration;
 
@@ -38,7 +37,7 @@ import java.net.URI;
 /**
  * @author brainslog@gmail.com (Alexandre Mendonca)
  */
-public final class UsageConverter extends AbstractConverter implements JsonSerializer<Usage> {
+public final class UsageConverter extends AbstractConverter<Usage> {
   public UsageConverter(final Configuration configuration) {
     super(configuration);
   }

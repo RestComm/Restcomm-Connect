@@ -19,6 +19,8 @@
  */
 package org.restcomm.connect.http.converter;
 
+import com.google.gson.JsonElement;
+import com.google.gson.JsonSerializationContext;
 import org.apache.commons.configuration.Configuration;
 import org.restcomm.connect.commons.annotations.concurrency.ThreadSafe;
 import org.restcomm.connect.dao.entities.ShortCode;
@@ -26,12 +28,13 @@ import org.restcomm.connect.dao.entities.ShortCodeList;
 
 import com.thoughtworks.xstream.converters.MarshallingContext;
 import com.thoughtworks.xstream.io.HierarchicalStreamWriter;
+import java.lang.reflect.Type;
 
 /**
  * @author quintana.thomas@gmail.com (Thomas Quintana)
  */
 @ThreadSafe
-public final class ShortCodeListConverter extends AbstractConverter {
+public final class ShortCodeListConverter extends AbstractConverter<ShortCodeList> {
     public ShortCodeListConverter(final Configuration configuration) {
         super(configuration);
     }
@@ -50,5 +53,10 @@ public final class ShortCodeListConverter extends AbstractConverter {
             context.convertAnother(shortCode);
         }
         writer.endNode();
+    }
+
+    @Override
+    public JsonElement serialize(ShortCodeList t, Type type, JsonSerializationContext jsc) {
+        throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
     }
 }

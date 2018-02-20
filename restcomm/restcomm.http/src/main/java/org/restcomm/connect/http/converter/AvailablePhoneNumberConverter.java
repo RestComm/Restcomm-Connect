@@ -19,16 +19,19 @@
  */
 package org.restcomm.connect.http.converter;
 
+import com.google.gson.JsonElement;
+import com.google.gson.JsonSerializationContext;
 import org.apache.commons.configuration.Configuration;
 import org.restcomm.connect.dao.entities.AvailablePhoneNumber;
 
 import com.thoughtworks.xstream.converters.MarshallingContext;
 import com.thoughtworks.xstream.io.HierarchicalStreamWriter;
+import java.lang.reflect.Type;
 
 /**
  * @author quintana.thomas@gmail.com (Thomas Quintana)
  */
-public final class AvailablePhoneNumberConverter extends AbstractConverter {
+public final class AvailablePhoneNumberConverter extends AbstractConverter<AvailablePhoneNumber> {
     public AvailablePhoneNumberConverter(final Configuration configuration) {
         super(configuration);
     }
@@ -110,5 +113,10 @@ public final class AvailablePhoneNumberConverter extends AbstractConverter {
             writer.setValue(country);
         }
         writer.endNode();
+    }
+
+    @Override
+    public JsonElement serialize(AvailablePhoneNumber t, Type type, JsonSerializationContext jsc) {
+        throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
     }
 }

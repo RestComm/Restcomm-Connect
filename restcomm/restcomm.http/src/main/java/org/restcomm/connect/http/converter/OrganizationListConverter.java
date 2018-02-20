@@ -19,17 +19,20 @@
  */
 package org.restcomm.connect.http.converter;
 
+import com.google.gson.JsonElement;
+import com.google.gson.JsonSerializationContext;
 import org.apache.commons.configuration.Configuration;
 import org.restcomm.connect.dao.entities.Organization;
 import org.restcomm.connect.dao.entities.OrganizationList;
 
 import com.thoughtworks.xstream.converters.MarshallingContext;
 import com.thoughtworks.xstream.io.HierarchicalStreamWriter;
+import java.lang.reflect.Type;
 
 /**
  * @author maria farooq
  */
-public final class OrganizationListConverter extends AbstractConverter {
+public final class OrganizationListConverter extends AbstractConverter<OrganizationList> {
     public OrganizationListConverter(final Configuration configuration) {
         super(configuration);
     }
@@ -48,5 +51,10 @@ public final class OrganizationListConverter extends AbstractConverter {
             context.convertAnother(organization);
         }
         writer.endNode();
+    }
+
+    @Override
+    public JsonElement serialize(OrganizationList t, Type type, JsonSerializationContext jsc) {
+        throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
     }
 }

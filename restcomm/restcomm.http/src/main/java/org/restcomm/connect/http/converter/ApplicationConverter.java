@@ -32,7 +32,6 @@ import com.google.gson.JsonElement;
 import com.google.gson.JsonNull;
 import com.google.gson.JsonObject;
 import com.google.gson.JsonSerializationContext;
-import com.google.gson.JsonSerializer;
 import com.thoughtworks.xstream.converters.MarshallingContext;
 import com.thoughtworks.xstream.io.HierarchicalStreamWriter;
 import org.restcomm.connect.dao.entities.ApplicationNumberSummary;
@@ -41,7 +40,7 @@ import org.restcomm.connect.dao.entities.ApplicationNumberSummary;
  * @author quintana.thomas@gmail.com (Thomas Quintana)
  */
 @ThreadSafe
-public final class ApplicationConverter extends AbstractConverter implements JsonSerializer<Application> {
+public final class ApplicationConverter extends AbstractConverter<Application> {
     public ApplicationConverter(final Configuration configuration) {
         super(configuration);
     }

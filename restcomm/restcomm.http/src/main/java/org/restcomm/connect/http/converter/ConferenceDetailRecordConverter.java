@@ -22,7 +22,6 @@ package org.restcomm.connect.http.converter;
 import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
 import com.google.gson.JsonSerializationContext;
-import com.google.gson.JsonSerializer;
 import com.thoughtworks.xstream.converters.MarshallingContext;
 import com.thoughtworks.xstream.io.HierarchicalStreamWriter;
 import org.apache.commons.configuration.Configuration;
@@ -35,7 +34,7 @@ import java.lang.reflect.Type;
  * @author maria
  */
 @ThreadSafe
-public final class ConferenceDetailRecordConverter extends AbstractConverter implements JsonSerializer<ConferenceDetailRecord> {
+public final class ConferenceDetailRecordConverter extends AbstractConverter<ConferenceDetailRecord> {
     private final String apiVersion;
 
     public ConferenceDetailRecordConverter(final Configuration configuration) {

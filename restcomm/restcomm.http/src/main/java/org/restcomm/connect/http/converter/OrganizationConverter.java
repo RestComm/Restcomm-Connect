@@ -28,7 +28,6 @@ import org.restcomm.connect.dao.entities.Organization;
 import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
 import com.google.gson.JsonSerializationContext;
-import com.google.gson.JsonSerializer;
 import com.thoughtworks.xstream.converters.MarshallingContext;
 import com.thoughtworks.xstream.io.HierarchicalStreamWriter;
 
@@ -36,7 +35,7 @@ import com.thoughtworks.xstream.io.HierarchicalStreamWriter;
  * @author maria farooq
  */
 @ThreadSafe
-public final class OrganizationConverter extends AbstractConverter implements JsonSerializer<Organization> {
+public final class OrganizationConverter extends AbstractConverter<Organization> {
 
     public OrganizationConverter(final Configuration configuration) {
         super(configuration);

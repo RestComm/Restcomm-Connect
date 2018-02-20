@@ -24,7 +24,6 @@ import com.google.gson.JsonArray;
 import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
 import com.google.gson.JsonSerializationContext;
-import com.google.gson.JsonSerializer;
 import com.thoughtworks.xstream.converters.MarshallingContext;
 import com.thoughtworks.xstream.io.HierarchicalStreamWriter;
 import org.apache.commons.configuration.Configuration;
@@ -43,7 +42,7 @@ import java.util.List;
  * @author <a href="mailto:gvagenas@gmail.com">gvagenas</a>
  *
  */
-public class MonitoringServiceConverterCallDetails extends AbstractConverter implements JsonSerializer<LiveCallsDetails>{
+public class MonitoringServiceConverterCallDetails extends AbstractConverter<LiveCallsDetails> {
 
     private String dateTimeNow;
 

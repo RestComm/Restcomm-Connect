@@ -20,17 +20,24 @@
 
 package org.restcomm.connect.http.converter;
 
+import com.google.gson.JsonElement;
+import com.google.gson.JsonSerializationContext;
 import com.thoughtworks.xstream.converters.Converter;
 import com.thoughtworks.xstream.converters.MarshallingContext;
 import com.thoughtworks.xstream.converters.UnmarshallingContext;
 import com.thoughtworks.xstream.io.HierarchicalStreamReader;
 import com.thoughtworks.xstream.io.HierarchicalStreamWriter;
+import java.lang.reflect.Type;
+import org.apache.commons.configuration.Configuration;
 import org.restcomm.connect.dao.entities.ApplicationNumberSummary;
 
 /**
  * @author otsakir@gmail.com - Orestis Tsakiridis
  */
-public class ApplicationNumberSummaryConverter implements Converter {
+public class ApplicationNumberSummaryConverter extends AbstractConverter<ApplicationNumberSummary> {
+    public ApplicationNumberSummaryConverter(final Configuration configuration) {
+        super(configuration);
+    }
     @Override
     public void marshal(Object o, HierarchicalStreamWriter writer, MarshallingContext marshallingContext) {
         ApplicationNumberSummary number = (ApplicationNumberSummary) o;
@@ -74,5 +81,10 @@ public class ApplicationNumberSummaryConverter implements Converter {
     @Override
     public boolean canConvert(Class aClass) {
         return ApplicationNumberSummary.class.equals(aClass);
+    }
+
+    @Override
+    public JsonElement serialize(ApplicationNumberSummary t, Type type, JsonSerializationContext jsc) {
+        throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
     }
 }

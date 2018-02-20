@@ -29,7 +29,6 @@ import org.restcomm.connect.dao.entities.CallDetailRecordList;
 import com.google.gson.JsonArray;
 import com.google.gson.JsonObject;
 import com.google.gson.JsonSerializationContext;
-import com.google.gson.JsonSerializer;
 import com.thoughtworks.xstream.converters.MarshallingContext;
 import com.thoughtworks.xstream.io.HierarchicalStreamWriter;
 
@@ -38,7 +37,7 @@ import com.thoughtworks.xstream.io.HierarchicalStreamWriter;
  * @author gvagenas@gmail.com (George Vagenas)
  */
 @ThreadSafe
-public final class CallDetailRecordListConverter extends AbstractConverter implements JsonSerializer<CallDetailRecordList> {
+public final class CallDetailRecordListConverter extends AbstractConverter<CallDetailRecordList> {
 
     Integer page, pageSize, total;
     String pathUri;

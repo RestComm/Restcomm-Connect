@@ -29,14 +29,13 @@ import com.google.gson.JsonElement;
 import com.google.gson.JsonNull;
 import com.google.gson.JsonObject;
 import com.google.gson.JsonSerializationContext;
-import com.google.gson.JsonSerializer;
 import com.thoughtworks.xstream.converters.MarshallingContext;
 import com.thoughtworks.xstream.io.HierarchicalStreamWriter;
 
 /**
  * @author quintana.thomas@gmail.com (Thomas Quintana)
  */
-public class SmsMessageConverter extends AbstractConverter implements JsonSerializer<SmsMessage> {
+public class SmsMessageConverter extends AbstractConverter<SmsMessage> {
     public SmsMessageConverter(final Configuration configuration) {
         super(configuration);
     }

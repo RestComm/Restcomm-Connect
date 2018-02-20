@@ -31,6 +31,7 @@ import org.restcomm.connect.commons.dao.Sid;
 
 import com.google.gson.JsonNull;
 import com.google.gson.JsonObject;
+import com.google.gson.JsonSerializer;
 import com.thoughtworks.xstream.converters.Converter;
 import com.thoughtworks.xstream.converters.MarshallingContext;
 import com.thoughtworks.xstream.converters.UnmarshallingContext;
@@ -42,7 +43,7 @@ import com.thoughtworks.xstream.io.HierarchicalStreamWriter;
  * @author <a href="mailto:gvagenas@gmail.com">gvagenas</a>
  * @author <a href="mailto:jean.deruelle@telestax.com">Jean Deruelle</a>
  */
-public abstract class AbstractConverter implements Converter {
+public abstract class AbstractConverter<T> implements Converter,JsonSerializer<T> {
     protected final Configuration configuration;
 
     public AbstractConverter(final Configuration configuration) {

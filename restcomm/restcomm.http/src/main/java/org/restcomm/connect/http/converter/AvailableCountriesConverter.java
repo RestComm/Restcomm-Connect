@@ -19,15 +19,18 @@
  */
 package org.restcomm.connect.http.converter;
 
+import com.google.gson.JsonElement;
+import com.google.gson.JsonSerializationContext;
 import org.apache.commons.configuration.Configuration;
 
 import com.thoughtworks.xstream.converters.MarshallingContext;
 import com.thoughtworks.xstream.io.HierarchicalStreamWriter;
+import java.lang.reflect.Type;
 
 /**
  * @author jean.deruelle@telestax.com
  */
-public final class AvailableCountriesConverter extends AbstractConverter {
+public final class AvailableCountriesConverter extends AbstractConverter<AvailableCountriesList> {
     public AvailableCountriesConverter(final Configuration configuration) {
         super(configuration);
     }
@@ -48,5 +51,10 @@ public final class AvailableCountriesConverter extends AbstractConverter {
             writer.endNode();
         }
         writer.endNode();
+    }
+
+    @Override
+    public JsonElement serialize(AvailableCountriesList t, Type type, JsonSerializationContext jsc) {
+        throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
     }
 }

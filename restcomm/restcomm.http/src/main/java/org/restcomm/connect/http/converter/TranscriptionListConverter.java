@@ -22,7 +22,6 @@ package org.restcomm.connect.http.converter;
 import com.google.gson.JsonArray;
 import com.google.gson.JsonObject;
 import com.google.gson.JsonSerializationContext;
-import com.google.gson.JsonSerializer;
 import org.apache.commons.configuration.Configuration;
 import org.restcomm.connect.commons.annotations.concurrency.ThreadSafe;
 import org.restcomm.connect.dao.entities.Transcription;
@@ -36,7 +35,7 @@ import java.lang.reflect.Type;
  * @author quintana.thomas@gmail.com (Thomas Quintana)
  */
 @ThreadSafe
-public final class TranscriptionListConverter extends AbstractConverter implements JsonSerializer<TranscriptionList> {
+public final class TranscriptionListConverter extends AbstractConverter<TranscriptionList> {
     Integer page, pageSize, total;
     String pathUri;
 

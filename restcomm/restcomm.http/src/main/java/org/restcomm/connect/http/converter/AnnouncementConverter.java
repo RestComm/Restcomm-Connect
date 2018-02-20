@@ -9,7 +9,6 @@ import org.restcomm.connect.dao.entities.Announcement;
 import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
 import com.google.gson.JsonSerializationContext;
-import com.google.gson.JsonSerializer;
 import com.thoughtworks.xstream.converters.MarshallingContext;
 import com.thoughtworks.xstream.io.HierarchicalStreamWriter;
 
@@ -18,7 +17,7 @@ import com.thoughtworks.xstream.io.HierarchicalStreamWriter;
  */
 
 @ThreadSafe
-public final class AnnouncementConverter extends AbstractConverter implements JsonSerializer<Announcement> {
+public final class AnnouncementConverter extends AbstractConverter<Announcement>  {
     public AnnouncementConverter(final Configuration configuration) {
         super(configuration);
     }

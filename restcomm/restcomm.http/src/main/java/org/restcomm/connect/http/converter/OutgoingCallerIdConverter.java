@@ -28,7 +28,6 @@ import org.restcomm.connect.dao.entities.OutgoingCallerId;
 import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
 import com.google.gson.JsonSerializationContext;
-import com.google.gson.JsonSerializer;
 import com.thoughtworks.xstream.converters.MarshallingContext;
 import com.thoughtworks.xstream.io.HierarchicalStreamWriter;
 
@@ -36,7 +35,7 @@ import com.thoughtworks.xstream.io.HierarchicalStreamWriter;
  * @author quintana.thomas@gmail.com (Thomas Quintana)
  */
 @ThreadSafe
-public final class OutgoingCallerIdConverter extends AbstractConverter implements JsonSerializer<OutgoingCallerId> {
+public final class OutgoingCallerIdConverter extends AbstractConverter<OutgoingCallerId> {
     public OutgoingCallerIdConverter(final Configuration configuration) {
         super(configuration);
     }

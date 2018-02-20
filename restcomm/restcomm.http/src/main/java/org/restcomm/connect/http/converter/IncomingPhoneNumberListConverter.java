@@ -29,7 +29,6 @@ import org.restcomm.connect.dao.entities.IncomingPhoneNumberList;
 import com.google.gson.JsonArray;
 import com.google.gson.JsonObject;
 import com.google.gson.JsonSerializationContext;
-import com.google.gson.JsonSerializer;
 import com.thoughtworks.xstream.converters.MarshallingContext;
 import com.thoughtworks.xstream.io.HierarchicalStreamWriter;
 
@@ -37,8 +36,8 @@ import com.thoughtworks.xstream.io.HierarchicalStreamWriter;
  * @author quintana.thomas@gmail.com (Thomas Quintana)
  */
 @ThreadSafe
-public final class IncomingPhoneNumberListConverter extends AbstractConverter
-        implements JsonSerializer<IncomingPhoneNumberList> {
+public final class IncomingPhoneNumberListConverter extends AbstractConverter<IncomingPhoneNumberList>
+         {
 
     Integer page, pageSize, total;
     String pathUri;

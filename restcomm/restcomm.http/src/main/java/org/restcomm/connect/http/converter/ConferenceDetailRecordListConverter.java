@@ -29,7 +29,6 @@ import org.restcomm.connect.dao.entities.ConferenceDetailRecordList;
 import com.google.gson.JsonArray;
 import com.google.gson.JsonObject;
 import com.google.gson.JsonSerializationContext;
-import com.google.gson.JsonSerializer;
 import com.thoughtworks.xstream.converters.MarshallingContext;
 import com.thoughtworks.xstream.io.HierarchicalStreamWriter;
 
@@ -37,7 +36,7 @@ import com.thoughtworks.xstream.io.HierarchicalStreamWriter;
  * @author maria
  */
 @ThreadSafe
-public final class ConferenceDetailRecordListConverter extends AbstractConverter implements JsonSerializer<ConferenceDetailRecordList> {
+public final class ConferenceDetailRecordListConverter extends AbstractConverter<ConferenceDetailRecordList> {
 
     Integer page, pageSize, total;
     String pathUri;

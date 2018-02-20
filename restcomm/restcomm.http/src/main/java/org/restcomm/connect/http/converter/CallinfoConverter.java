@@ -31,7 +31,6 @@ import org.restcomm.connect.commons.util.StringUtils;
 import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
 import com.google.gson.JsonSerializationContext;
-import com.google.gson.JsonSerializer;
 import com.thoughtworks.xstream.converters.MarshallingContext;
 import com.thoughtworks.xstream.io.HierarchicalStreamWriter;
 
@@ -39,7 +38,7 @@ import com.thoughtworks.xstream.io.HierarchicalStreamWriter;
  * @author <a href="mailto:gvagenas@gmail.com">gvagenas</a>
  *
  */
-public class CallinfoConverter extends AbstractConverter implements JsonSerializer<CallInfo>{
+public class CallinfoConverter extends AbstractConverter<CallInfo> {
     private final String apiVersion;
     private final String rootUri;
 

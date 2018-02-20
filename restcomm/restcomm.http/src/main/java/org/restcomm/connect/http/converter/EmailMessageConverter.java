@@ -32,14 +32,13 @@ import com.google.gson.JsonElement;
 import com.google.gson.JsonNull;
 import com.google.gson.JsonObject;
 import com.google.gson.JsonSerializationContext;
-import com.google.gson.JsonSerializer;
 import com.thoughtworks.xstream.converters.MarshallingContext;
 import com.thoughtworks.xstream.io.HierarchicalStreamWriter;
 
 /**
  * @author eleftherios.banos@telestax.com (Lefteis Banos)
  */
-public class EmailMessageConverter extends AbstractConverter implements JsonSerializer<Mail> {
+public class EmailMessageConverter extends AbstractConverter<Mail> {
     public EmailMessageConverter(final Configuration configuration) {
         super(configuration);
     }
