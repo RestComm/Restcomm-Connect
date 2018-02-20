@@ -77,7 +77,8 @@ public class ProfileJsonEndpoint extends ProfileEndpoint {
     public Response updateProfileAsJson(@PathParam("profileSid") final String profileSid,
             InputStream body, @Context UriInfo info,
             @Context HttpHeaders headers) {
-        if (headers.getRequestHeader(OVERRIDE_HDR).size() > 0) {
+        if (headers.getRequestHeader(OVERRIDE_HDR)!= null &&
+            headers.getRequestHeader(OVERRIDE_HDR).size() > 0) {
             String overrideHdr = headers.getRequestHeader(OVERRIDE_HDR).get(0);
             switch (overrideHdr) {
                 case "LINK":
