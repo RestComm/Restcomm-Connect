@@ -100,7 +100,7 @@ public final class AccountsXmlEndpoint extends AccountsEndpoint {
     @Consumes(APPLICATION_FORM_URLENCODED)
     @POST
     @RolesAllowed(SUPER_ADMIN_ROLE)
-    public Response migrateAccount(@PathParam("accoutSid") final String accountSid, final MultivaluedMap<String, String> data) {
+    public Response migrateAccount(@PathParam("accountSid") final String accountSid, final MultivaluedMap<String, String> data) {
         return migrateAccountOrganization(accountSid, data, retrieveMediaType());
     }
 }
