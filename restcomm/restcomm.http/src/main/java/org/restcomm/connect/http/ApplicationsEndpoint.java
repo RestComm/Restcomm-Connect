@@ -94,7 +94,7 @@ public class ApplicationsEndpoint extends SecuredEndpoint {
         xstream.registerConverter(converter);
         xstream.registerConverter(new ApplicationListConverter(configuration));
         xstream.registerConverter(new RestCommResponseConverter(configuration));
-        xstream.registerConverter(new ApplicationNumberSummaryConverter());
+        xstream.registerConverter(new ApplicationNumberSummaryConverter(configuration));
         xstream.alias("Number",ApplicationNumberSummary.class);
     }
 

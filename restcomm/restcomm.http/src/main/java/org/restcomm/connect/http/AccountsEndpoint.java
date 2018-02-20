@@ -34,10 +34,6 @@ import javax.servlet.ServletContext;
 import javax.servlet.http.HttpServletRequest;
 import javax.ws.rs.WebApplicationException;
 import javax.ws.rs.core.MediaType;
-import static javax.ws.rs.core.MediaType.APPLICATION_JSON;
-import static javax.ws.rs.core.MediaType.APPLICATION_JSON_TYPE;
-import static javax.ws.rs.core.MediaType.APPLICATION_XML;
-import static javax.ws.rs.core.MediaType.APPLICATION_XML_TYPE;
 import javax.ws.rs.core.MultivaluedMap;
 import javax.ws.rs.core.Response;
 import static javax.ws.rs.core.Response.Status.BAD_REQUEST;
@@ -89,8 +85,6 @@ import org.restcomm.connect.provisioning.number.api.PhoneNumberProvisioningManag
 public class AccountsEndpoint extends SecuredEndpoint {
     protected Configuration runtimeConfiguration;
     protected Configuration rootConfiguration; // top-level configuration element
-    protected Gson gson;
-    protected XStream xstream;
     protected ClientsDao clientDao;
     protected IncomingPhoneNumbersDao incomingPhoneNumbersDao;
     private ProfileAssociationsDao profileAssociationsDao;
@@ -115,17 +109,6 @@ public class AccountsEndpoint extends SecuredEndpoint {
         clientDao = ((DaoManager) context.getAttribute(DaoManager.class.getName())).getClientsDao();
         incomingPhoneNumbersDao = ((DaoManager) context.getAttribute(DaoManager.class.getName())).getIncomingPhoneNumbersDao();
         profileAssociationsDao = ((DaoManager) context.getAttribute(DaoManager.class.getName())).getProfileAssociationsDao();
-        final AccountConverter converter = new AccountConverter(runtimeConfiguration);
-        final GsonBuilder builder = new GsonBuilder();
-        builder.registerTypeAdapter(Account.class, converter);
-        builder.setPrettyPrinting();
-        gson = builder.create();
-        xstream = new XStream();
-        xstream.alias("RestcommResponse", RestCommResponse.class);
-        xstream.registerConverter(converter);
-        xstream.registerConverter(new AccountListConverter(runtimeConfiguration));
-        xstream.registerConverter(new RestCommResponseConverter(runtimeConfiguration));
-        // Make sure there is an authenticated account present when this endpoint is used
     }
 
     private Account createFrom(final Sid accountSid, final MultivaluedMap<String, String> data, Account parent) throws PasswordTooWeak {
@@ -208,14 +191,9 @@ public class AccountsEndpoint extends SecuredEndpoint {
                 LinkHeader profileLink = composeLink(profileAssociationByTargetSid.getProfileSid(), info);
                 ok.header(ProfileEndpoint.LINK_HEADER, profileLink.toString());
             }
-            if (APPLICATION_XML_TYPE.equals(responseType)) {
-                final RestCommResponse response = new RestCommResponse(account);
-                return ok.type(APPLICATION_XML).entity(xstream.toXML(response)).build();
-            } else if (APPLICATION_JSON_TYPE.equals(responseType)) {
-                return ok.type(APPLICATION_JSON).entity(gson.toJson(account)).build();
-            } else {
-                return null;
-            }
+
+            return ok.entity(account).build();
+
         }
     }
 
@@ -376,14 +354,7 @@ public class AccountsEndpoint extends SecuredEndpoint {
                 }
             }
 
-            if (APPLICATION_XML_TYPE.equals(responseType)) {
-                final RestCommResponse response = new RestCommResponse(new AccountList(accounts));
-                return ok(xstream.toXML(response), APPLICATION_XML).build();
-            } else if (APPLICATION_JSON_TYPE.equals(responseType)) {
-                return ok(gson.toJson(accounts), APPLICATION_JSON).build();
-            } else {
-                return null;
-            }
+            return ok(new AccountList(accounts)).build();
         }
     }
 
@@ -450,14 +421,8 @@ public class AccountsEndpoint extends SecuredEndpoint {
 
             executePostApiAction(apiRequest);
 
-            if (APPLICATION_JSON_TYPE.equals(responseType)) {
-                return ok(gson.toJson(account), APPLICATION_JSON).build();
-            } else if (APPLICATION_XML_TYPE.equals(responseType)) {
-                final RestCommResponse response = new RestCommResponse(account);
-                return ok(xstream.toXML(response), APPLICATION_XML).build();
-            } else {
-                return null;
-            }
+
+             return ok(account).build();
         } else {
             if (logger.isDebugEnabled()) {
                 final String errMsg = "Creation of sub-accounts is not Allowed";
@@ -602,14 +567,7 @@ public class AccountsEndpoint extends SecuredEndpoint {
                 accountsDao.updateAccount(modifiedAccount);
             }
 
-            if (APPLICATION_JSON_TYPE.equals(responseType)) {
-                return ok(gson.toJson(modifiedAccount), APPLICATION_JSON).build();
-            } else if (APPLICATION_XML_TYPE.equals(responseType)) {
-                final RestCommResponse response = new RestCommResponse(modifiedAccount);
-                return ok(xstream.toXML(response), APPLICATION_XML).build();
-            } else {
-                return null;
-            }
+            return ok(modifiedAccount).build();
         }
     }
 
@@ -699,14 +657,8 @@ public class AccountsEndpoint extends SecuredEndpoint {
             }
         }
 
-        if (APPLICATION_JSON_TYPE.equals(responseType)) {
-            return ok(gson.toJson(modifiedAccount), APPLICATION_JSON).build();
-        } else if (APPLICATION_XML_TYPE.equals(responseType)) {
-            final RestCommResponse response = new RestCommResponse(modifiedAccount);
-            return ok(xstream.toXML(response), APPLICATION_XML).build();
-        } else {
-            return null;
-        }
+
+        return ok(modifiedAccount).build();
     }
 
     private void sendRVDStatusNotification(Account updatedAccount) {
