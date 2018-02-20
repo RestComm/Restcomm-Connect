@@ -334,7 +334,7 @@ public class ProfilesEndpointTest extends EndpointTest {
     	/*
 		 * unlink a profile from an account
 		 */
-    	response = RestcommProfilesTool.getInstance().unLinkProfile(deploymentUrl.toString(), SUPER_ADMIN_ACCOUNT_SID, AUTH_TOKEN, DEFAULT_PROFILE_SID, SUPER_ADMIN_ACCOUNT_SID, RestcommProfilesTool.AssociatedResourceType.ACCOUNT);
+    	response = RestcommProfilesTool.getInstance().unLinkProfileWithOverride(deploymentUrl.toString(), SUPER_ADMIN_ACCOUNT_SID, AUTH_TOKEN, DEFAULT_PROFILE_SID, SUPER_ADMIN_ACCOUNT_SID, RestcommProfilesTool.AssociatedResourceType.ACCOUNT);
     	logger.info("HttpResponse: "+response);
     	assertEquals(200, response.getStatusLine().getStatusCode());
 

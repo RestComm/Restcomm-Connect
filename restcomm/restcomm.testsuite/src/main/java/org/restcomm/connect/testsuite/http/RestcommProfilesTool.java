@@ -19,6 +19,8 @@ import java.util.logging.Logger;
 import javax.ws.rs.core.MediaType;
 import org.apache.commons.codec.binary.Base64;
 import org.apache.http.HttpResponse;
+import org.apache.http.client.methods.HttpPost;
+import org.apache.http.client.methods.HttpPut;
 import org.apache.http.client.methods.HttpRequestBase;
 import org.apache.http.impl.client.DefaultHttpClient;
 import org.apache.http.message.BasicHeader;
@@ -340,6 +342,18 @@ public class RestcommProfilesTool {
 
         HttpUnLink request = new HttpUnLink(url);
         request = (HttpUnLink) addLinkUnlinkRequiredHeaders(request, deploymentUrl, operatorUsername, operatorAuthtoken, profileSid, targetResourceSid, type);
+        final DefaultHttpClient client = new DefaultHttpClient();
+        final HttpResponse response = client.execute(request);
+        logger.info("response is here: " + response);
+        return response;
+    }
+
+    public HttpResponse unLinkProfileWithOverride(String deploymentUrl, String operatorUsername, String operatorAuthtoken, String profileSid, String targetResourceSid, AssociatedResourceType type) throws IOException, URISyntaxException {
+        String url = getProfilesEndpointUrl(deploymentUrl) + "/" + profileSid;
+
+        HttpPut request = new HttpPut(url);
+        addLinkUnlinkRequiredHeaders(request, deploymentUrl, operatorUsername, operatorAuthtoken, profileSid, targetResourceSid, type);
+        request.addHeader("X-HTTP-Method-Override", "UNLINK");
         final DefaultHttpClient client = new DefaultHttpClient();
         final HttpResponse response = client.execute(request);
         logger.info("response is here: " + response);
