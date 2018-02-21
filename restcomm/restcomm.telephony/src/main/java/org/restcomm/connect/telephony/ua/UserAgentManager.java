@@ -336,15 +336,36 @@ public final class UserAgentManager extends RestcommUntypedActor {
     }
 
     private void removeRegistration(final SipServletMessage sipServletMessage, boolean locationInContact) throws ServletParseException{
+        final RegistrationsDao regDao = storage.getRegistrationsDao();
+        List<Registration> registrations = null;
+
         Address toAddress = sipServletMessage.getTo();
         SipURI toURI = (SipURI) toAddress.getURI();
         String user = toURI.getUser();
         SipURI location = null;
         if(locationInContact || sipServletMessage instanceof SipServletResponse) {
             if((SipURI)sipServletMessage.getAddressHeader("Contact") == null) {
-                location = ((SipURI)sipServletMessage.getTo().getURI());
+                if(useSbc) {
+                    // https://github.com/RestComm/Restcomm-Connect/issues/2741 support for SBC
+                    SipServletRequest originalRequest = ((SipServletResponse)sipServletMessage).getRequest();
+                    if(logger.isDebugEnabled()) {
+                        logger.debug("Original request for the OPTIONS: " + originalRequest);
+                    }
+                    if(originalRequest == null) {
+                        location = (SipURI) sipServletMessage.getTo().getURI();
+
+                        registrations = regDao.getRegistrations(user, OrganizationUtil.getOrganizationSidBySipURIHost(storage, toURI));
+                        if(logger.isDebugEnabled()) {
+                            logger.debug("no Contact in OPTIONS response or original request so can't get the right location, getting all registrations " + registrations + " from " + toURI);
+                        }
+                    } else {
+                        location = (SipURI) originalRequest.getRequestURI();
+                    }
+                } else {
+                    location = (SipURI) sipServletMessage.getTo().getURI();
+                }
             } else {
-                location = ((SipURI)sipServletMessage.getAddressHeader("Contact").getURI());
+                location = (SipURI)sipServletMessage.getAddressHeader("Contact").getURI();
             }
         } else {
             location = (SipURI)((SipServletRequest)sipServletMessage).getRequestURI();
@@ -352,8 +373,14 @@ public final class UserAgentManager extends RestcommUntypedActor {
         if(logger.isDebugEnabled()) {
             logger.debug("Error response for the OPTIONS to: "+location+" will remove registration");
         }
-        final RegistrationsDao regDao = storage.getRegistrationsDao();
-        List<Registration> registrations = regDao.getRegistrationsByLocation(user, "%"+location.getHost()+":"+location.getPort());
+        if(registrations == null || registrations.isEmpty()) {
+            int port= location.getPort();
+            if(port > 0) {
+                registrations = regDao.getRegistrationsByLocation(user, "%"+location.getHost()+":"+location.getPort());
+            } else {
+                registrations = regDao.getRegistrationsByLocation(user, "%"+location.getHost());
+            }
+        }
         if(logger.isDebugEnabled()) {
             logger.debug("Resultant registrations of given criteria, that will be removed are:"+registrations);
         }
@@ -463,20 +490,28 @@ public final class UserAgentManager extends RestcommUntypedActor {
         SipServletRequest ping = null;
         SipURI uri = null;
 
-        ping = factory.createRequest(application, "OPTIONS", from, location);
-        uri = (SipURI) factory.createURI(location);
+        if(useSbc) {
+            // https://github.com/RestComm/Restcomm-Connect/issues/2741 support for SBC
+            ping = factory.createRequest(application, "OPTIONS", from, aor);
+            uri = (SipURI) factory.createURI(location);
+            //uri = (SipURI) factory.createURI(getLocationWithoutParameters(uri));
+            ping.setRequestURI(uri.clone());
+        } else {
+            ping = factory.createRequest(application, "OPTIONS", from, location);
+            uri = (SipURI) factory.createURI(location);
+        }
         ping.pushRoute(uri);
 
         final SipSession session = ping.getSession();
         session.setHandler("UserAgentManager");
         if(logger.isDebugEnabled()) {
-            logger.debug("About to send OPTIONS keepalive to: "+location);
+            logger.debug("About to send OPTIONS keepalive to: "+uri);
         }
         try {
             ping.send();
         } catch (IOException e) {
             if (logger.isInfoEnabled()) {
-                logger.info("There was a problem while trying to ping client: "+location+" , will remove registration. " + e.getMessage());
+                logger.info("There was a problem while trying to ping client: "+uri+" , will remove registration. " + e.getMessage());
             }
             removeRegistration(ping);
         }
@@ -562,6 +597,7 @@ public final class UserAgentManager extends RestcommUntypedActor {
         }
 
         boolean isLBPresent = false;
+        // https://github.com/RestComm/Restcomm-Connect/issues/2741 only do that for non SBC Use cases
         if(!useSbc) {
             //Issue 306: https://telestax.atlassian.net/browse/RESTCOMM-306
             final String initialIpBeforeLB = request.getHeader("X-Sip-Balancer-InitialRemoteAddr");

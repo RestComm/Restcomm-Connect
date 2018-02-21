@@ -112,22 +112,37 @@ import org.restcomm.connect.telephony.api.CallStateChanged;
                  final String aor = registration.getAddressOfRecord();
                  SipURI to;
                  SipURI from;
-                 SipURI locationURI;
-                 to = (SipURI) sipFactory.createURI(aor);
-                 locationURI = (SipURI) sipFactory.createURI(location);
+                 SipURI locationURI = null;
+
                  Sid fromOrganizationSid = OrganizationUtil.getOrganizationSidBySipURIHost(storage, (SipURI) request.getFrom().getURI());
                  // if both clients don't belong to same organization, call should not be allowed.
                  if(!toOrganizationSid.equals(fromOrganizationSid)){
                      logger.warn(String.format("B2B clients do not belong to same organization. from-client: %s belong to %s . where as to-client %s belong to %s", client.getLogin(), fromOrganizationSid, user, toOrganizationSid));
                      return false;
                  }
-                 from = (SipURI) sipFactory.createURI((registrations.getRegistration(client.getLogin(), fromOrganizationSid)).getAddressOfRecord());
+                 if(patchForNat) {
+                     to = (SipURI) sipFactory.createURI(location);
+                     from = (SipURI) sipFactory.createURI((registrations.getRegistration(client.getLogin(), fromOrganizationSid)).getLocation());
+                 } else {
+                     // https://github.com/RestComm/Restcomm-Connect/issues/2741 support for SBC
+                     if (logger.isDebugEnabled()) {
+                         logger.debug("B2BUA not patched for NAT, using address of record for to and from");
+                     }
+                     to = (SipURI) sipFactory.createURI(aor);
+                     locationURI = (SipURI) sipFactory.createURI(location);
+                     from = (SipURI) sipFactory.createURI((registrations.getRegistration(client.getLogin(), fromOrganizationSid)).getAddressOfRecord());
+                 }
+
                  final SipSession incomingSession = request.getSession();
                  // create and send the outgoing invite and do the session linking
                  incomingSession.setAttribute(B2BUA_LAST_REQUEST, request);
                  SipServletRequest outRequest = sipFactory.createRequest(request.getApplicationSession(), request.getMethod(),
                          from, to);
-                 outRequest.setRequestURI(locationURI);
+                 if(patchForNat) {
+                     outRequest.setRequestURI(to);
+                 } else {
+                     outRequest.setRequestURI(locationURI);
+                 }
 
                  if (request.getContent() != null) {
                      final byte[] sdp = request.getRawContent();
