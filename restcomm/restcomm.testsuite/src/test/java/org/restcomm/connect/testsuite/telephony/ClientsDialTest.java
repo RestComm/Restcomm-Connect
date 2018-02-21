@@ -368,18 +368,18 @@ public class ClientsDialTest {
             mariaSipStack.dispose();
         }
 
-        if (aliceSipStack != null) {
-            aliceSipStack.dispose();
-        }
         if (alicePhone != null) {
             alicePhone.dispose();
         }
-
-        if (dimitriSipStack != null) {
-            dimitriSipStack.dispose();
+        if (aliceSipStack != null) {
+            aliceSipStack.dispose();
         }
+
         if (dimitriPhone != null) {
             dimitriPhone.dispose();
+        }
+        if (dimitriSipStack != null) {
+            dimitriSipStack.dispose();
         }
 
         if (georgePhone != null) {
@@ -395,18 +395,21 @@ public class ClientsDialTest {
         if (clientWithAppSipStack != null) {
             clientWithAppSipStack.dispose();
         }
+
+        if (fotiniPhoneTcp != null) {
+            fotiniPhoneTcp.dispose();
+        }
         if (fotiniSipStackTcp != null) {
             fotiniSipStackTcp.dispose();
         }
-        if (fotiniPhoneTcp != null) {
-            fotiniPhoneTcp.dispose();
+
+        if (bobPhoneTcp != null) {
+            bobPhoneTcp.dispose();
         }
         if (bobSipStackTcp != null) {
             bobSipStackTcp.dispose();
         }
-        if (bobPhoneTcp != null) {
-            bobPhoneTcp.dispose();
-        }
+
         Thread.sleep(3000);
         wireMockRule.resetRequests();
         Thread.sleep(3000);
@@ -507,7 +510,7 @@ public class ClientsDialTest {
         assertNotNull(cdrs);
         JsonArray cdrsArray = cdrs.get("calls").getAsJsonArray();
         System.out.println("cdrsArray.size(): "+cdrsArray.size());
-        assertTrue(cdrsArray.size() == 1);
+        assertEquals(1, cdrsArray.size());
 
     }
 
