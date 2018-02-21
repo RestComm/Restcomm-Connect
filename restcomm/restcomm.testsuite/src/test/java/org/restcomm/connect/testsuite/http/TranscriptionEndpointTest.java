@@ -31,6 +31,8 @@ import org.jboss.shrinkwrap.api.spec.WebArchive;
 import org.jboss.shrinkwrap.resolver.api.maven.archive.ShrinkWrapMaven;
 import static org.junit.Assert.assertTrue;
 import org.junit.Test;
+import org.junit.FixMethodOrder;
+import org.junit.runners.MethodSorters;
 import org.junit.experimental.categories.Category;
 import org.junit.runner.RunWith;
 import org.restcomm.connect.commons.annotations.FeatureAltTests;
@@ -40,6 +42,7 @@ import org.restcomm.connect.commons.annotations.FeatureAltTests;
  *
  */
 @RunWith(Arquillian.class)
+@FixMethodOrder(MethodSorters.NAME_ASCENDING)
 public class TranscriptionEndpointTest extends EndpointTest{
     private static Logger logger = Logger.getLogger(TranscriptionEndpointTest.class);
 

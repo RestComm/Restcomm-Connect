@@ -33,6 +33,8 @@ import org.junit.Before;
 import org.junit.BeforeClass;
 import org.junit.Rule;
 import org.junit.Test;
+import org.junit.FixMethodOrder;
+import org.junit.runners.MethodSorters;
 import org.junit.experimental.categories.Category;
 import org.junit.runner.RunWith;
 import org.restcomm.connect.commons.Version;
@@ -53,6 +55,7 @@ import com.github.tomakehurst.wiremock.junit.WireMockRule;
  * @author gvagenas@gmail.com (George Vagenas)
  */
 @RunWith(Arquillian.class)
+@FixMethodOrder(MethodSorters.NAME_ASCENDING)
 @Category(value={SequentialClassTests.class, WithInSecsTests.class})
 public class SmppTest {
 
@@ -304,7 +307,28 @@ public class SmppTest {
 		assertTrue(inboundMessageEntity.getSmppTo().equals("9999"));
 		assertTrue(inboundMessageEntity.getSmppFrom().equals("alice"));
 		assertTrue(inboundMessageEntity.getSmppContent().equals("Test Message from Alice"));
-	}
+    }
+
+    @Test
+    public void testClientSentOutUsingSMPPDeliveryReceipt() throws ParseException, InterruptedException {
+        final String msg = "Test Message from Alice with Delivery Receipt";
+        SipURI uri = aliceSipStack.getAddressFactory().createSipURI(null, "127.0.0.1:5080");
+        assertTrue(alicePhone.register(uri, "alice", "1234", aliceContact, 3600, 3600));
+        Credential aliceCred = new Credential("127.0.0.1", "alice", "1234");
+        alicePhone.addUpdateCredential(aliceCred);
+
+        SipCall aliceCall = alicePhone.createSipCall();
+        aliceCall.initiateOutgoingMessage("sip:9999@127.0.0.1:5080", null, msg);
+        aliceCall.waitForAuthorisation(8000);
+        Thread.sleep(5000);
+        assertTrue(mockSmppServer.isMessageReceived());
+        SmppInboundMessageEntity inboundMessageEntity = mockSmppServer.getSmppInboundMessageEntity();
+        assertNotNull(inboundMessageEntity);
+        assertTrue(inboundMessageEntity.getSmppTo().equals("9999"));
+        assertTrue(inboundMessageEntity.getSmppFrom().equals("alice"));
+        assertTrue(inboundMessageEntity.getSmppContent().equals(msg));
+        assertTrue(inboundMessageEntity.getIsDeliveryReceipt());
+    }
 
 	@Test
         @Category(value={FeatureExpTests.class})

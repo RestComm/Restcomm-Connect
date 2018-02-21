@@ -19,22 +19,27 @@
  */
 package org.restcomm.connect.telephony.ua;
 
-import static java.lang.Integer.parseInt;
-import static javax.servlet.sip.SipServlet.OUTBOUND_INTERFACES;
-import static javax.servlet.sip.SipServletResponse.SC_OK;
-import static javax.servlet.sip.SipServletResponse.SC_PROXY_AUTHENTICATION_REQUIRED;
-import static javax.servlet.sip.SipServletResponse.SC_UNAUTHORIZED;
-import static javax.servlet.sip.SipServletResponse.SC_BUSY_EVERYWHERE;
-import static javax.servlet.sip.SipServletResponse.SC_BUSY_HERE;
-import static org.restcomm.connect.commons.util.HexadecimalUtils.toHex;
-
-import java.io.IOException;
-import java.net.UnknownHostException;
-import java.util.HashMap;
-import java.util.Iterator;
-import java.util.List;
-import java.util.Map;
-import java.util.UUID;
+import akka.actor.ActorRef;
+import akka.actor.ReceiveTimeout;
+import akka.event.Logging;
+import akka.event.LoggingAdapter;
+import org.apache.commons.configuration.Configuration;
+import org.joda.time.DateTime;
+import org.restcomm.connect.commons.configuration.RestcommConfiguration;
+import org.restcomm.connect.commons.dao.Sid;
+import org.restcomm.connect.commons.faulttolerance.RestcommUntypedActor;
+import org.restcomm.connect.commons.util.DigestAuthentication;
+import org.restcomm.connect.dao.ClientsDao;
+import org.restcomm.connect.dao.DaoManager;
+import org.restcomm.connect.dao.RegistrationsDao;
+import org.restcomm.connect.dao.common.OrganizationUtil;
+import org.restcomm.connect.dao.entities.Account;
+import org.restcomm.connect.dao.entities.Client;
+import org.restcomm.connect.dao.entities.Registration;
+import org.restcomm.connect.monitoringservice.MonitoringService;
+import org.restcomm.connect.telephony.api.GetCall;
+import org.restcomm.connect.telephony.api.Hangup;
+import org.restcomm.connect.telephony.api.UserRegistration;
 
 import javax.servlet.ServletContext;
 import javax.servlet.ServletException;
@@ -48,28 +53,22 @@ import javax.servlet.sip.SipServletRequest;
 import javax.servlet.sip.SipServletResponse;
 import javax.servlet.sip.SipSession;
 import javax.servlet.sip.SipURI;
+import java.io.IOException;
+import java.net.UnknownHostException;
+import java.util.HashMap;
+import java.util.Iterator;
+import java.util.List;
+import java.util.Map;
+import java.util.UUID;
 
-import org.apache.commons.configuration.Configuration;
-import org.joda.time.DateTime;
-import org.restcomm.connect.commons.configuration.RestcommConfiguration;
-import org.restcomm.connect.commons.dao.Sid;
-import org.restcomm.connect.commons.faulttolerance.RestcommUntypedActor;
-import org.restcomm.connect.commons.util.DigestAuthentication;
-import org.restcomm.connect.dao.ClientsDao;
-import org.restcomm.connect.dao.DaoManager;
-import org.restcomm.connect.dao.RegistrationsDao;
-import org.restcomm.connect.dao.common.OrganizationUtil;
-import org.restcomm.connect.dao.entities.Client;
-import org.restcomm.connect.dao.entities.Registration;
-import org.restcomm.connect.monitoringservice.MonitoringService;
-import org.restcomm.connect.telephony.api.GetCall;
-import org.restcomm.connect.telephony.api.Hangup;
-import org.restcomm.connect.telephony.api.UserRegistration;
-
-import akka.actor.ActorRef;
-import akka.actor.ReceiveTimeout;
-import akka.event.Logging;
-import akka.event.LoggingAdapter;
+import static java.lang.Integer.parseInt;
+import static javax.servlet.sip.SipServlet.OUTBOUND_INTERFACES;
+import static javax.servlet.sip.SipServletResponse.SC_BUSY_EVERYWHERE;
+import static javax.servlet.sip.SipServletResponse.SC_BUSY_HERE;
+import static javax.servlet.sip.SipServletResponse.SC_OK;
+import static javax.servlet.sip.SipServletResponse.SC_PROXY_AUTHENTICATION_REQUIRED;
+import static javax.servlet.sip.SipServletResponse.SC_UNAUTHORIZED;
+import static org.restcomm.connect.commons.util.HexadecimalUtils.toHex;
 
 /**
  * @author quintana.thomas@gmail.com (Thomas Quintana)
@@ -432,6 +431,9 @@ public final class UserAgentManager extends RestcommUntypedActor {
         final String response = map.get("response");
         final ClientsDao clients = storage.getClientsDao();
         final Client client = clients.getClient(user, OrganizationUtil.getOrganizationSidBySipURIHost(storage, sipURI));
+        if (client != null && storage.getAccountsDao().getAccount(client.getAccountSid()).getStatus() != Account.Status.ACTIVE) {
+            return false;
+        }
         if (client != null && Client.ENABLED == client.getStatus()) {
             final String password = client.getPassword();
             final String result = DigestAuthentication.response(algorithm, user, realm, password, nonce, nc, cnonce, method,

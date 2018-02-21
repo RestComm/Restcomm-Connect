@@ -38,6 +38,8 @@ import org.jboss.shrinkwrap.api.ShrinkWrap;
 import org.jboss.shrinkwrap.api.spec.WebArchive;
 import org.jboss.shrinkwrap.resolver.api.maven.archive.ShrinkWrapMaven;
 import org.junit.Test;
+import org.junit.FixMethodOrder;
+import org.junit.runners.MethodSorters;
 import org.junit.experimental.categories.Category;
 import org.junit.runner.RunWith;
 
@@ -53,6 +55,7 @@ import wiremock.org.apache.http.client.ClientProtocolException;
  * @author guilherme.jansen@telestax.com
  */
 @RunWith(Arquillian.class)
+@FixMethodOrder(MethodSorters.NAME_ASCENDING)
 public class MultitenancyAllowAccessApiTest {
 
     private final static Logger logger = Logger.getLogger(MultitenancyAllowAccessApiTest.class);
@@ -170,7 +173,10 @@ public class MultitenancyAllowAccessApiTest {
 
     @Test
     @Category(UnstableTests.class)
-    public void getElementSameAccount() throws ClientProtocolException, IOException {
+    /**
+     * using aaa prefix to ensure order and prevent sideeffects
+     */
+    public void aaagetElementSameAccount() throws ClientProtocolException, IOException {
         String baseUrl = deploymentUrl.toString() + apiPath + primaryAccountSid + "/";
         for (Endpoint endpoint : Endpoint.values()) {
             if (endpoint.get) {
@@ -184,7 +190,7 @@ public class MultitenancyAllowAccessApiTest {
 
     @Test
     @Category({UnstableTests.class, FeatureAltTests.class})
-    public void getElementSubaccount() throws ClientProtocolException, IOException {
+    public void aaagetElementSubaccount() throws ClientProtocolException, IOException {
         String baseUrl = deploymentUrl.toString() + apiPath + subaccountaAccountSid + "/";
         for (Endpoint endpoint : Endpoint.values()) {
             if (endpoint.get) {
@@ -198,7 +204,10 @@ public class MultitenancyAllowAccessApiTest {
 
     @Test
     @Category(UnstableTests.class)
-    public void postElementSameAccount() throws ClientProtocolException, IOException {
+    /**
+     * using aaa prefix to ensure order and prevent sideeffects
+     */
+    public void aaapostElementSameAccount() throws ClientProtocolException, IOException {
         Endpoint endpoints[] = modifyPostParameters("3");
         String baseUrl = deploymentUrl.toString() + apiPath + primaryAccountSid + "/";
         for (Endpoint endpoint : endpoints) {
@@ -214,7 +223,10 @@ public class MultitenancyAllowAccessApiTest {
 
     @Test
     @Category(FeatureAltTests.class)
-    public void postElementSubaccount() throws ClientProtocolException, IOException {
+    /**
+     * using aaa prefix to ensure order and prevent sideeffects
+     */
+    public void aaapostElementSubaccount() throws ClientProtocolException, IOException {
         Endpoint endpoints[] = modifyPostParameters("4");
         String baseUrl = deploymentUrl.toString() + apiPath + subaccountaAccountSid + "/";
         for (Endpoint endpoint : endpoints) {
@@ -256,20 +268,23 @@ public class MultitenancyAllowAccessApiTest {
     }
 
     @Test
-    public void accountsApi() throws ClientProtocolException, IOException {
+    /**
+     * using aaa prefix to ensure order and prevent sideeffects
+     */
+    public void aaaaccountsApi() throws ClientProtocolException, IOException {
         // Same account
         String baseUrl = deploymentUrl.toString() + apiPath.substring(0, apiPath.length()-1);
         int statusCode = RestcommMultitenancyTool.getInstance().get(baseUrl + jsonExtension, primaryUsername, accountsPassword);
-        assertTrue(statusCode == httpOk);
+        Assert.assertEquals(httpOk, statusCode);
         statusCode = RestcommMultitenancyTool.getInstance().post(baseUrl + jsonExtension, primaryUsername, accountsPassword, new HashMap<String,String>(){{ put("EmailAddress","test@test.com"); put("Password","RestComm12");}});
         Assert.assertEquals(httpOk, statusCode);
 
         // Sub account
         baseUrl = deploymentUrl.toString() + apiPath.substring(0, apiPath.length()-1);
         statusCode = RestcommMultitenancyTool.getInstance().get(baseUrl + jsonExtension + "/" + subaccountbAccountSid, primaryUsername, accountsPassword);
-        assertTrue(statusCode == httpOk);
+        Assert.assertEquals(httpOk, statusCode);
         statusCode = RestcommMultitenancyTool.getInstance().post(baseUrl + "/" + subaccountbAccountSid, primaryUsername, accountsPassword, new HashMap<String,String>(){{ put("EmailAddress","test2@test.com"); put("Password","RestComm12");}});
-        assertTrue(statusCode == httpOk);
+        Assert.assertEquals(httpOk, statusCode);
         Map<String,String> updateParams = new HashMap<String,String>();
         updateParams.put("Status", "closed");
         statusCode = RestcommMultitenancyTool.getInstance().update(baseUrl + jsonExtension + "/" + subaccountbAccountSid, primaryUsername, accountsPassword,updateParams);

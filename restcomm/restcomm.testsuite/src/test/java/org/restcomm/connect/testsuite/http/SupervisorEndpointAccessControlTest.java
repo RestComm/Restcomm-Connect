@@ -28,6 +28,8 @@ import org.jboss.shrinkwrap.api.spec.WebArchive;
 import org.jboss.shrinkwrap.resolver.api.maven.archive.ShrinkWrapMaven;
 import org.junit.Assert;
 import org.junit.Test;
+import org.junit.FixMethodOrder;
+import org.junit.runners.MethodSorters;
 import org.junit.experimental.categories.Category;
 import org.junit.runner.RunWith;
 import org.restcomm.connect.commons.annotations.FeatureAltTests;
@@ -46,6 +48,7 @@ import com.sun.jersey.api.client.filter.HTTPBasicAuthFilter;
  * @author Maria Farooq <dam dam nak nak>
  */
 @RunWith(Arquillian.class)
+@FixMethodOrder(MethodSorters.NAME_ASCENDING)
 public class SupervisorEndpointAccessControlTest extends EndpointTest {
     protected final static Logger logger = Logger.getLogger(SupervisorEndpointAccessControlTest.class);
 

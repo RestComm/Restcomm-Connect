@@ -30,6 +30,10 @@ import com.github.fge.jsonschema.main.JsonSchemaFactory;
 
 import junit.framework.Assert;
 
+import java.io.File;
+
+import static org.junit.Assert.assertTrue;
+
 /**
  *
  * @author
@@ -92,6 +96,22 @@ public class ProfileSchemaTest {
 
         report = schema.validate(good);
         Assert.assertFalse(report.isSuccess());
+    }
+
+    @Test
+    public void testDefaultPlan() throws Exception {
+        final JsonNode fstabSchema = JsonLoader.fromResource("/org/restcomm/connect/http/schemas/rc-profile-schema.json");
+        File defaultPlan = new File("../restcomm.application/src/main/webapp/WEB-INF/conf/defaultPlan.json");
+        final JsonNode good = JsonLoader.fromFile(defaultPlan);
+
+        final JsonSchemaFactory factory = JsonSchemaFactory.byDefault();
+
+        final JsonSchema schema = factory.getJsonSchema(fstabSchema);
+
+        ProcessingReport report;
+
+        report = schema.validate(good);
+        assertTrue(report.isSuccess());
     }
 
 }

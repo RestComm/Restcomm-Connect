@@ -640,7 +640,7 @@ import org.restcomm.connect.telephony.api.CallStateChanged;
       * TODO: refactor/rename/handle more specific headers
       * @param sipFactory SipFactory
       * @param SipServletRequest message
-      * @param Map<String,ArrayList<String> > headers
+      * @param Map<String,ArrayList<String>> headers
       */
      public static void addHeadersToMessage(SipServletRequest message, Map<String, ArrayList<String>> headers, SipFactory sipFactory) {
          if (headers != null && sipFactory != null) {

@@ -1953,17 +1953,20 @@ public final class Call extends RestcommUntypedActor {
     private void onCancel(Cancel message, ActorRef self, ActorRef sender) throws Exception {
         if (is(initializing) || is(dialing) || is(ringing) || is(failingNoAnswer)) {
             if(logger.isInfoEnabled()) {
-                logger.info("Got CANCEL for Call with the following details, from: "+from+" to: "+to+" direction: "+direction+" state: "+fsm.state()+", will Cancel the call");
+                String msg = String.format("Got Cancel %s for call %s, from %s, to %s, direction %s, fsm state %s, will Cancel the call", message, self(), from, to, direction, fsm.state());
+                logger.info(msg);
             }
             fsm.transition(message, canceling);
         } else if (is(inProgress) || is(updatingMediaSession)) {
             if(logger.isInfoEnabled()) {
-                logger.info("Got CANCEL for Call with the following details, from: "+from+" to: "+to+" direction: "+direction+" state: "+fsm.state()+", will Hangup the call");
+                String msg = String.format("Got Cancel %s for call %s, from %s, to %s, direction %s, fsm state %s, will Hangup the call", message, self(), from, to, direction, fsm.state());
+                logger.info(msg);
             }
             onHangup(new Hangup(), self(), sender());
         } else {
             if(logger.isInfoEnabled()) {
-                logger.info("Got CANCEL for Call with the following details, from: "+from+" to: "+to+" direction: "+direction+" state: "+fsm.state());
+                String msg = String.format("Got Cancel %s for call %s, from %s, to %s, direction %s, fsm state %s", message, self(), from, to, direction, fsm.state());
+                logger.info(msg);
             }
         }
     }
@@ -2248,7 +2251,8 @@ public final class Call extends RestcommUntypedActor {
 
     private void onHangup(Hangup message, ActorRef self, ActorRef sender) throws Exception {
         if(logger.isDebugEnabled()) {
-            logger.debug("Got Hangup: "+message+" for Call, from: "+from+", to: "+to+", state: "+fsm.state()+", conferencing: "+conferencing +", conference: "+conference);
+            String msg = String.format("Got Hangup %s for call %s, from %s, to %s, fsm state %s, conferencing %s, conference %s ", message, self(), from, to, fsm.state(), conferencing, conference);
+            logger.debug(msg);
         }
 
         if (is(completed)) {

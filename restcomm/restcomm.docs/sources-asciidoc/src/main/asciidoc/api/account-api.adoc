@@ -41,6 +41,25 @@ Accounts and sub-accounts are useful for things like segmenting phone numbers an
 |Password |A password that will be used to generate the AuthToken for the new Account resource.
 |==============================================================================================
 
+=== Account Status transitions
+
+When the Status of an account is modified by invoking the POST method, different
+business constraints will be applied:
+
+* Any modification over a Closed account will be rejected.
+* The given Status will be applied to the given Account, and all the subaccount
+tree.
+* The rest of request parameters will be ignored. This means is not possible to
+suspend an account, and change its FriendlyName at the same time.
+
+=== Suspended Account Status
+The following conditions will be honored for a suspended account:
+
+* A Suspended account will reject its Credentials to be used for any REST API invocation.
+* A Suspended account will reject any Voice/SMS/USSD traffic. In addition, any
+client registration will be rejected.
+
+
 === Account Migration to new Organization
 
 Account Migration operation can be used to migrate a top level account to a new organization.

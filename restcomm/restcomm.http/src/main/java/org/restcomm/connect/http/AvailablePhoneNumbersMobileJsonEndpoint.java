@@ -19,6 +19,7 @@
  */
 package org.restcomm.connect.http;
 
+import com.sun.jersey.spi.container.ResourceFilters;
 import static javax.ws.rs.core.Response.status;
 import static javax.ws.rs.core.Response.Status.BAD_REQUEST;
 
@@ -30,6 +31,7 @@ import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
 
 import org.restcomm.connect.commons.annotations.concurrency.ThreadSafe;
+import org.restcomm.connect.http.filters.ExtensionFilter;
 import org.restcomm.connect.provisioning.number.api.PhoneNumberSearchFilters;
 import org.restcomm.connect.provisioning.number.api.PhoneNumberType;
 
@@ -45,6 +47,7 @@ public class AvailablePhoneNumbersMobileJsonEndpoint extends AvailablePhoneNumbe
     }
 
     @GET
+    @ResourceFilters({ ExtensionFilter.class })
     public Response getAvailablePhoneNumber(@PathParam("accountSid") final String accountSid,
             @PathParam("IsoCountryCode") final String isoCountryCode, @QueryParam("AreaCode") String areaCode,
             @QueryParam("Contains") String filterPattern, @QueryParam("SmsEnabled") String smsEnabled,

@@ -18,6 +18,8 @@ import org.junit.Before;
 import org.junit.BeforeClass;
 import org.junit.Rule;
 import org.junit.Test;
+import org.junit.FixMethodOrder;
+import org.junit.runners.MethodSorters;
 import org.junit.runner.RunWith;
 import org.restcomm.connect.commons.Version;
 import org.restcomm.connect.commons.annotations.FeatureAltTests;
@@ -39,6 +41,7 @@ import org.restcomm.connect.commons.annotations.WithInMinsTests;
  * Created by gvagenas on 26/06/2017.
  */
 @RunWith(Arquillian.class)
+@FixMethodOrder(MethodSorters.NAME_ASCENDING)
 @Category({FeatureAltTests.class, SequentialClassTests.class})
 public class RestcommActingAsProxyTest {
 
