@@ -264,6 +264,46 @@ public final class UserAgentManagerWithSBCTest {
         // Clean up (Unregister).
         assertTrue(phone.unregister(aliceContact, 0));
     }
+    
+    @Test
+    public void registerUserAgentWith408ErrorResponse() throws ParseException, InterruptedException, InvalidArgumentException {
+//        deployer.deploy("UserAgentTest");
+        // Register the phone so we can get OPTIONS pings from RestComm.
+        SipURI uri = sipStack2.getAddressFactory().createSipURI(null, restcommContact);
+        Credential c = new Credential("127.0.0.1","bob", "1234");
+        phone2.addUpdateCredential(c);
+
+        phone2.setAutoResponseOptionsRequests(false);
+
+        assertTrue(phone2.register(uri, "bob", "1234", bobContact, 3600, 3600));
+        Thread.sleep(2000);
+        assertEquals(1, MonitoringServiceTool.getInstance().getRegisteredUsers(deploymentUrl.toString(),adminAccountSid, adminAuthToken));
+
+        Thread.sleep(50000);
+        assertEquals(0, MonitoringServiceTool.getInstance().getRegisteredUsers(deploymentUrl.toString(),adminAccountSid, adminAuthToken));
+
+        phone2.setAutoResponseOptionsRequests(true);
+    }
+    
+    @Test
+    public void registerUserAgentWithExtraParamsAnd408ToOptionsPing() throws ParseException, InterruptedException, InvalidArgumentException {
+//        deployer.deploy("UserAgentTest");
+        // Register the phone so we can get OPTIONS pings from RestComm.
+        SipURI uri = sipStack3.getAddressFactory().createSipURI(null, restcommContact);
+        Credential c = new Credential("127.0.0.1","alice", "1234");
+        phone3.addUpdateCredential(c);
+
+        phone3.setAutoResponseOptionsRequests(false);
+
+        assertTrue(phone3.register(uri, "alice", "1234", aliceContact3, 3600, 3600));
+        Thread.sleep(500);
+        assertEquals(1, MonitoringServiceTool.getInstance().getRegisteredUsers(deploymentUrl.toString(),adminAccountSid, adminAuthToken));
+
+        Thread.sleep(50000);
+        assertEquals(0, MonitoringServiceTool.getInstance().getRegisteredUsers(deploymentUrl.toString(),adminAccountSid, adminAuthToken));
+
+        phone3.setAutoResponseOptionsRequests(true);
+    }
 
     @Deployment(name = "UserAgentTest", managed = true, testable = false)
     public static WebArchive createWebArchiveNoGw() {
