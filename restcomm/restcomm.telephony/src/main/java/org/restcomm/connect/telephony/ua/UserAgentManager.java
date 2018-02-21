@@ -344,7 +344,7 @@ public final class UserAgentManager extends RestcommUntypedActor {
         String user = toURI.getUser();
         SipURI location = null;
         if(locationInContact || sipServletMessage instanceof SipServletResponse) {
-            if((SipURI)sipServletMessage.getAddressHeader("Contact") == null) {
+            if(sipServletMessage.getAddressHeader("Contact") == null) {
                 if(useSbc) {
                     // https://github.com/RestComm/Restcomm-Connect/issues/2741 support for SBC
                     SipServletRequest originalRequest = ((SipServletResponse)sipServletMessage).getRequest();
@@ -816,9 +816,9 @@ public final class UserAgentManager extends RestcommUntypedActor {
             }
             patch(uri, ip, port);
         }
-        SipServletResponse incomingLegResposne = incomingRequest.createResponse(response.getStatus(), response.getReasonPhrase());
+        SipServletResponse incomingLegResponse = incomingRequest.createResponse(response.getStatus(), response.getReasonPhrase());
         if (wwwAuthenticate != null) {
-            incomingLegResposne.addHeader("WWW-Authenticate", wwwAuthenticate);
+            incomingLegResponse.addHeader("WWW-Authenticate", wwwAuthenticate);
         }
         int ttl = 3600;
         final Address imsContact = response.getAddressHeader("Contact");
@@ -839,13 +839,16 @@ public final class UserAgentManager extends RestcommUntypedActor {
                 logger.info("new contact: "+newContact);
 
             }
-            incomingLegResposne.setHeader("Contact", newContact);
+            incomingLegResponse.setHeader("Contact", newContact);
         }
 
         if(logger.isInfoEnabled()) {
-            logger.info("outgoing leg state: "+response.getSession().getState());
-            logger.info("incoming leg state: "+incomingLegResposne.getSession().getState());
-
+            if(response.getSession().isValid()) {
+                logger.info("outgoing leg state: "+response.getSession().getState());
+            }
+            if(incomingLegResponse.getSession().isValid()) {
+                logger.info("incoming leg state: "+incomingLegResponse.getSession().getState());
+            }
         }
         if (response.getStatus()>=400 && response.getStatus() != SC_UNAUTHORIZED && response.getStatus() != SC_PROXY_AUTHENTICATION_REQUIRED) {
             removeRegistration(incomingRequest, true);
@@ -877,7 +880,7 @@ public final class UserAgentManager extends RestcommUntypedActor {
             if (ttl == 0) {
                 // Remove Registration if ttl=0
                 registrations.removeRegistration(registration);
-                incomingLegResposne.setHeader("Expires", "0");
+                incomingLegResponse.setHeader("Expires", "0");
                 monitoringService.tell(new UserRegistration(user, address, false, organizationSid), self());
                 if(logger.isInfoEnabled()) {
                     logger.info("The user agent manager unregistered " + user + " at address "+address+":"+port);
@@ -900,9 +903,9 @@ public final class UserAgentManager extends RestcommUntypedActor {
             }
 
         }
-        incomingLegResposne.send();
+        incomingLegResponse.send();
         if(logger.isDebugEnabled()) {
-            logger.debug("REGISTER IMS Response sent: "+incomingLegResposne);
+            logger.debug("REGISTER IMS Response sent: "+incomingLegResponse);
         }
     }
 

@@ -724,8 +724,8 @@ public final class CallManager extends RestcommUntypedActor {
                         // proxy DID or number if the outbound proxy fields are not empty in the restcomm.xml
                         if (proxyURI != null && !proxyURI.isEmpty()) {
                             //FIXME: not so nice to just inject headers here
-                            B2BUAHelper.addHeadersToMessage(request, er.getOutboundProxyHeaders(), sipFactory);
-                            if(er.getOutboundProxyHeaders() != null && !er.getOutboundProxyHeaders().isEmpty()) {
+                            if (er.getOutboundProxyHeaders() != null) {
+                                B2BUAHelper.addHeadersToMessage(request, er.getOutboundProxyHeaders(), sipFactory);
                                 request.getSession().setAttribute(B2BUAHelper.EXTENSION_HEADERS, er.getOutboundProxyHeaders());
                             }
                             proxyOut(request, client, toUser, toHost, toHostIpAddress, toPort, outboundIntf, proxyURI, proxyUsername, proxyPassword, from, to, callToSipUri);
