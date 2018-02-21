@@ -229,14 +229,38 @@ public final class UserAgentManagerTest {
         if (sipStack4 != null) {
             sipStack4.dispose();
         }
+
+        if (phone5 != null) {
+            phone5.dispose();
+        }
         if (sipStack5 != null) {
             sipStack5.dispose();
         }
 
+        if (phone6 != null) {
+            phone6.dispose();
+        }
+        if (sipStack6 != null) {
+            sipStack6.dispose();
+        }
+
+        if (phone7 != null) {
+            phone7.dispose();
+        }
+        if (sipStack7 != null) {
+            sipStack7.dispose();
+        }
+
+        if (closedPhone != null) {
+            closedPhone.dispose();
+        }
         if (sipStack8 != null) {
             sipStack8.dispose();
         }
 
+        if (suspendedPhone != null) {
+            suspendedPhone.dispose();
+        }
         if (sipStack9 != null) {
             sipStack9.dispose();
         }
@@ -395,12 +419,11 @@ public final class UserAgentManagerTest {
 
         assertTrue(phone2.register(uri, "bob", "1234", bobContact, 3600, 3600));
 
-        phone2.setAutoResponseOptionsRequests(false);
-        phone2.setErrorRespondToOptions(SipServletResponse.SC_SERVICE_UNAVAILABLE);
-
         Thread.sleep(500);
         assertEquals(1, MonitoringServiceTool.getInstance().getRegisteredUsers(deploymentUrl.toString(),adminAccountSid, adminAuthToken));
 
+        phone2.setAutoResponseOptionsRequests(false);
+        phone2.setErrorRespondToOptions(SipServletResponse.SC_SERVICE_UNAVAILABLE);
 
         phone2.listenRequestMessage();
         RequestEvent request = phone2.waitRequest(10000);
