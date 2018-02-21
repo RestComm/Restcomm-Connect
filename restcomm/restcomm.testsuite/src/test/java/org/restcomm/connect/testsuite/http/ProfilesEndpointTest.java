@@ -28,6 +28,7 @@ import org.junit.runners.MethodSorters;
 import org.junit.experimental.categories.Category;
 import org.junit.runner.RunWith;
 import org.restcomm.connect.commons.Version;
+import org.restcomm.connect.commons.annotations.BrokenTests;
 import org.restcomm.connect.commons.annotations.FeatureAltTests;
 import org.restcomm.connect.commons.annotations.FeatureExpTests;
 
@@ -283,11 +284,11 @@ public class ProfilesEndpointTest extends EndpointTest {
     }
 
     @Test
-    @Category(FeatureExpTests.class)
+    @Category({FeatureExpTests.class, BrokenTests.class})
     public void createExceedingProfileTest(){
         String longProfile = new String(new char[10000001]);
     	//admin tries to create profile
-    	ClientResponse  clientResponse = RestcommProfilesTool.getInstance().createProfileResponse(deploymentUrl.toString(), ADMIN_ACCOUNT_SID, AUTH_TOKEN, longProfile);
+	    ClientResponse  clientResponse = RestcommProfilesTool.getInstance().createProfileResponse(deploymentUrl.toString(), ADMIN_ACCOUNT_SID, AUTH_TOKEN, longProfile);
     	assertEquals(413, clientResponse.getStatus());
     }
 

@@ -230,18 +230,18 @@ public class CallLifecycleTest {
             bobSipStack.dispose();
         }
 
-        if (aliceSipStack != null) {
-            aliceSipStack.dispose();
-        }
         if (alicePhone != null) {
             alicePhone.dispose();
         }
-
-        if (henriqueSipStack != null) {
-            henriqueSipStack.dispose();
+        if (aliceSipStack != null) {
+            aliceSipStack.dispose();
         }
+
         if (henriquePhone != null) {
             henriquePhone.dispose();
+        }
+        if (henriqueSipStack != null) {
+            henriqueSipStack.dispose();
         }
 
         if (georgePhone != null) {
@@ -316,7 +316,7 @@ public class CallLifecycleTest {
         assertTrue(bobCall.waitForCancelResponse(cancelTransaction,5 * 1000));
         assertTrue(bobCall.getLastReceivedResponse().getStatusCode()==Response.OK);
         assertTrue(bobCall.waitOutgoingCallResponse(5 * 1000));
-        assertTrue(bobCall.getLastReceivedResponse().getStatusCode()==Response.REQUEST_TERMINATED);
+        assertEquals(Response.REQUEST_TERMINATED, bobCall.getLastReceivedResponse().getStatusCode());
 
         Thread.sleep(10000);
 
@@ -326,14 +326,14 @@ public class CallLifecycleTest {
         logger.info("LiveCalls: "+liveCalls);
         int liveCallsArraySize = metrics.getAsJsonArray("LiveCallDetails").size();
         logger.info("LiveCallsArraySize: "+liveCallsArraySize);
-        assertTrue(liveCalls==0);
-        assertTrue(liveCallsArraySize==0);
+        assertEquals(0, liveCalls);
+        assertEquals(0, liveCallsArraySize);
         int maxConcurrentCalls = metrics.getAsJsonObject("Metrics").get("MaximumConcurrentCalls").getAsInt();
         int maxConcurrentIncomingCalls = metrics.getAsJsonObject("Metrics").get("MaximumConcurrentIncomingCalls").getAsInt();
         int maxConcurrentOutgoingCalls = metrics.getAsJsonObject("Metrics").get("MaximumConcurrentIncomingCalls").getAsInt();
-        assertTrue(maxConcurrentCalls==0);
-        assertTrue(maxConcurrentIncomingCalls==0);
-        assertTrue(maxConcurrentOutgoingCalls==0);
+        assertEquals(0, maxConcurrentCalls);
+        assertEquals(0, maxConcurrentIncomingCalls);
+        assertEquals(0, maxConcurrentOutgoingCalls);
 
         Map<String, Integer> mgcpResources = MonitoringServiceTool.getInstance().getMgcpResources(metrics);
         int mgcpEndpoints = mgcpResources.get("MgcpEndpoints");
@@ -387,8 +387,8 @@ public class CallLifecycleTest {
 //        logger.info("LiveCalls: "+liveCalls);
 //        int liveCallsArraySize = MonitoringServiceTool.getInstance().getLiveCallsArraySize(deploymentUrl.toString(),adminAccountSid, adminAuthToken);
 //        logger.info("LiveCallsArraySize: "+liveCallsArraySize);
-//        assertTrue(liveCalls==0);
-//        assertTrue(liveCallsArraySize==0);
+//        assertEquals(0, liveCalls);
+//        assertEquals(0, liveCallsArraySize);
 
         Thread.sleep(10000);
 
@@ -508,8 +508,8 @@ public class CallLifecycleTest {
         logger.info("LiveCalls: "+liveCalls);
         liveCallsArraySize = metrics.getAsJsonArray("LiveCallDetails").size();
         logger.info("LiveCallsArraySize: "+liveCallsArraySize);
-        assertTrue(liveCalls==0);
-        assertTrue(liveCallsArraySize==0);
+        assertEquals(0, liveCalls);
+        assertEquals(0, liveCallsArraySize);
         int maxConcurrentCalls = metrics.getAsJsonObject("Metrics").get("MaximumConcurrentCalls").getAsInt();
         int maxConcurrentIncomingCalls = metrics.getAsJsonObject("Metrics").get("MaximumConcurrentIncomingCalls").getAsInt();
         int maxConcurrentOutgoingCalls = metrics.getAsJsonObject("Metrics").get("MaximumConcurrentIncomingCalls").getAsInt();
@@ -563,10 +563,10 @@ public class CallLifecycleTest {
         int liveIncomingCalls = MonitoringServiceTool.getInstance().getLiveIncomingCallStatistics(deploymentUrl.toString(),adminAccountSid, adminAuthToken);
         int liveOutgoingCalls = MonitoringServiceTool.getInstance().getLiveOutgoingCallStatistics(deploymentUrl.toString(),adminAccountSid, adminAuthToken);
         int liveCallsArraySize = MonitoringServiceTool.getInstance().getLiveCallsArraySize(deploymentUrl.toString(),adminAccountSid, adminAuthToken);
-        assertTrue(liveCalls==0);
+        assertEquals(0, liveCalls);
         assertTrue(liveIncomingCalls==0);
         assertTrue(liveOutgoingCalls==0);
-        assertTrue(liveCallsArraySize==0);
+        assertEquals(0, liveCallsArraySize);
 
         logger.info("About to check the Requests");
         List<LoggedRequest> requests = findAll(getRequestedFor(urlPathMatching("/2222")));
@@ -618,10 +618,10 @@ public class CallLifecycleTest {
         int liveIncomingCalls = MonitoringServiceTool.getInstance().getLiveIncomingCallStatistics(deploymentUrl.toString(),adminAccountSid, adminAuthToken);
         int liveOutgoingCalls = MonitoringServiceTool.getInstance().getLiveOutgoingCallStatistics(deploymentUrl.toString(),adminAccountSid, adminAuthToken);
         int liveCallsArraySize = MonitoringServiceTool.getInstance().getLiveCallsArraySize(deploymentUrl.toString(),adminAccountSid, adminAuthToken);
-        assertTrue(liveCalls==0);
+        assertEquals(0, liveCalls);
         assertTrue(liveIncomingCalls==0);
         assertTrue(liveOutgoingCalls==0);
-        assertTrue(liveCallsArraySize==0);
+        assertEquals(0, liveCallsArraySize);
 
         logger.info("About to check the Requests");
         List<LoggedRequest> requests = findAll(getRequestedFor(urlPathMatching("/2222")));
@@ -659,10 +659,10 @@ public class CallLifecycleTest {
         int liveIncomingCalls = MonitoringServiceTool.getInstance().getLiveIncomingCallStatistics(deploymentUrl.toString(),adminAccountSid, adminAuthToken);
         int liveOutgoingCalls = MonitoringServiceTool.getInstance().getLiveOutgoingCallStatistics(deploymentUrl.toString(),adminAccountSid, adminAuthToken);
         int liveCallsArraySize = MonitoringServiceTool.getInstance().getLiveCallsArraySize(deploymentUrl.toString(),adminAccountSid, adminAuthToken);
-        assertTrue(liveCalls==0);
+        assertEquals(0, liveCalls);
         assertTrue(liveIncomingCalls==0);
         assertTrue(liveOutgoingCalls==0);
-        assertTrue(liveCallsArraySize==0);
+        assertEquals(0, liveCallsArraySize);
 
         logger.info("About to check the Requests");
         List<LoggedRequest> requests = findAll(getRequestedFor(urlPathMatching("/2222")));
@@ -700,10 +700,10 @@ public class CallLifecycleTest {
         int liveIncomingCalls = MonitoringServiceTool.getInstance().getLiveIncomingCallStatistics(deploymentUrl.toString(),adminAccountSid, adminAuthToken);
         int liveOutgoingCalls = MonitoringServiceTool.getInstance().getLiveOutgoingCallStatistics(deploymentUrl.toString(),adminAccountSid, adminAuthToken);
         int liveCallsArraySize = MonitoringServiceTool.getInstance().getLiveCallsArraySize(deploymentUrl.toString(),adminAccountSid, adminAuthToken);
-        assertTrue(liveCalls==0);
+        assertEquals(0, liveCalls);
         assertTrue(liveIncomingCalls==0);
         assertTrue(liveOutgoingCalls==0);
-        assertTrue(liveCallsArraySize==0);
+        assertEquals(0, liveCallsArraySize);
 
         logger.info("About to check the Requests");
         List<LoggedRequest> requests = findAll(getRequestedFor(urlPathMatching("/2222")));
@@ -808,8 +808,8 @@ public class CallLifecycleTest {
         logger.info("LiveCalls: "+liveCalls);
         liveCallsArraySize = metrics.getAsJsonArray("LiveCallDetails").size();
         logger.info("LiveCallsArraySize: "+liveCallsArraySize);
-        assertTrue(liveCalls==0);
-        assertTrue(liveCallsArraySize==0);
+        assertEquals(0, liveCalls);
+        assertEquals(0, liveCallsArraySize);
         int maxConcurrentCalls = metrics.getAsJsonObject("Metrics").get("MaximumConcurrentCalls").getAsInt();
         int maxConcurrentIncomingCalls = metrics.getAsJsonObject("Metrics").get("MaximumConcurrentIncomingCalls").getAsInt();
         int maxConcurrentOutgoingCalls = metrics.getAsJsonObject("Metrics").get("MaximumConcurrentIncomingCalls").getAsInt();
@@ -984,8 +984,8 @@ public class CallLifecycleTest {
         logger.info("LiveCalls: "+liveCalls);
         int liveCallsArraySize = metrics.getAsJsonArray("LiveCallDetails").size();
         logger.info("LiveCallsArraySize: "+liveCallsArraySize);
-        assertTrue(liveCalls==0);
-        assertTrue(liveCallsArraySize==0);
+        assertEquals(0, liveCalls);
+        assertEquals(0, liveCallsArraySize);
         int maxConcurrentCalls = metrics.getAsJsonObject("Metrics").get("MaximumConcurrentCalls").getAsInt();
         int maxConcurrentIncomingCalls = metrics.getAsJsonObject("Metrics").get("MaximumConcurrentIncomingCalls").getAsInt();
         int maxConcurrentOutgoingCalls = metrics.getAsJsonObject("Metrics").get("MaximumConcurrentIncomingCalls").getAsInt();
@@ -1049,8 +1049,8 @@ public class CallLifecycleTest {
         logger.info("LiveCalls: "+liveCalls);
         int liveCallsArraySize = metrics.getAsJsonArray("LiveCallDetails").size();
         logger.info("LiveCallsArraySize: "+liveCallsArraySize);
-        assertTrue(liveCalls==0);
-        assertTrue(liveCallsArraySize==0);
+        assertEquals(0, liveCalls);
+        assertEquals(0, liveCallsArraySize);
 
         logger.info("About to check the Requests");
         List<LoggedRequest> requests = findAll(getRequestedFor(urlPathMatching("/1111")));
@@ -1566,8 +1566,8 @@ public class CallLifecycleTest {
         JsonObject metrics = MonitoringServiceTool.getInstance().getMetrics(deploymentUrl.toString(),adminAccountSid, adminAuthToken);
         int liveCalls = metrics.getAsJsonObject("Metrics").get("LiveCalls").getAsInt();
         int liveCallsArraySize = metrics.getAsJsonArray("LiveCallDetails").size();
-        assertTrue(liveCalls==0);
-        assertTrue(liveCallsArraySize==0);
+        assertEquals(0, liveCalls);
+        assertEquals(0, liveCallsArraySize);
 
         Thread.sleep(10000);
 
@@ -1593,8 +1593,8 @@ public class CallLifecycleTest {
         logger.info("LiveCalls: "+liveCalls);
         liveCallsArraySize = metrics.getAsJsonArray("LiveCallDetails").size();
         logger.info("LiveCallsArraySize: "+liveCallsArraySize);
-        assertTrue(liveCalls==0);
-        assertTrue(liveCallsArraySize==0);
+        assertEquals(0, liveCalls);
+        assertEquals(0, liveCallsArraySize);
         int maxConcurrentCalls = metrics.getAsJsonObject("Metrics").get("MaximumConcurrentCalls").getAsInt();
         int maxConcurrentIncomingCalls = metrics.getAsJsonObject("Metrics").get("MaximumConcurrentIncomingCalls").getAsInt();
         int maxConcurrentOutgoingCalls = metrics.getAsJsonObject("Metrics").get("MaximumConcurrentIncomingCalls").getAsInt();
@@ -1669,8 +1669,8 @@ public class CallLifecycleTest {
         logger.info("LiveCalls: "+liveCalls);
         int liveCallsArraySize = metrics.getAsJsonArray("LiveCallDetails").size();
         logger.info("LiveCallsArraySize: "+liveCallsArraySize);
-        assertTrue(liveCalls==0);
-        assertTrue(liveCallsArraySize==0);
+        assertEquals(0, liveCalls);
+        assertEquals(0, liveCallsArraySize);
 
         Thread.sleep(10000);
 
@@ -2166,8 +2166,8 @@ public class CallLifecycleTest {
         logger.info("LiveCalls: "+liveCalls);
         int liveCallsArraySize = metrics.getAsJsonArray("LiveCallDetails").size();
         logger.info("LiveCallsArraySize: "+liveCallsArraySize);
-        assertTrue(liveCalls==0);
-        assertTrue(liveCallsArraySize==0);
+        assertEquals(0, liveCalls);
+        assertEquals(0, liveCallsArraySize);
 
         Thread.sleep(10000);
 
@@ -2244,9 +2244,9 @@ public class CallLifecycleTest {
         int liveIncomingCalls = MonitoringServiceTool.getInstance().getLiveIncomingCallStatistics(deploymentUrl.toString(),adminAccountSid, adminAuthToken);
         int liveOutgoingCalls = MonitoringServiceTool.getInstance().getLiveOutgoingCallStatistics(deploymentUrl.toString(),adminAccountSid, adminAuthToken);
         int liveCallsArraySize = MonitoringServiceTool.getInstance().getLiveCallsArraySize(deploymentUrl.toString(),adminAccountSid, adminAuthToken);
-        assertTrue(liveCalls==0);
+        assertEquals(0, liveCalls);
         assertTrue(liveIncomingCalls==0);
-        assertTrue(liveCallsArraySize==0);
+        assertEquals(0, liveCallsArraySize);
 
         JsonObject metrics = MonitoringServiceTool.getInstance().getMetrics(deploymentUrl.toString(),adminAccountSid, adminAuthToken);
         Map<String, Integer> mgcpResources = MonitoringServiceTool.getInstance().getMgcpResources(metrics);
@@ -2280,8 +2280,8 @@ public class CallLifecycleTest {
 //        logger.info("LiveCalls: "+liveCalls);
 //        liveCallsArraySize = metrics.getAsJsonArray("LiveCallDetails").size();
 //        logger.info("LiveCallsArraySize: "+liveCallsArraySize);
-//        assertTrue(liveCalls==0);
-//        assertTrue(liveCallsArraySize==0);
+//        assertEquals(0, liveCalls);
+//        assertEquals(0, liveCallsArraySize);
 //        int maxConcurrentCalls = metrics.getAsJsonObject("Metrics").get("MaximumConcurrentCalls").getAsInt();
 //        int maxConcurrentIncomingCalls = metrics.getAsJsonObject("Metrics").get("MaximumConcurrentIncomingCalls").getAsInt();
 //        int maxConcurrentOutgoingCalls = metrics.getAsJsonObject("Metrics").get("MaximumConcurrentIncomingCalls").getAsInt();
