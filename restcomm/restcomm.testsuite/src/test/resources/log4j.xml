@@ -23,6 +23,9 @@
 	<logger name="org.mobicents.servlet.sip.annotations">
 		<level value="INFO" />
 	</logger>
+	<logger name="org.cafesip.sipunit">
+		<level value="TRACE" />
+	</logger>
 	<root>
 		<priority value="DEBUG" />
 		<appender-ref ref="console" />

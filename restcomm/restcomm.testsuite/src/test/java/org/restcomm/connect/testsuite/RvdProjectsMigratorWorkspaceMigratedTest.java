@@ -40,6 +40,8 @@ import org.jboss.arquillian.test.api.ArquillianResource;
 import org.jboss.shrinkwrap.api.spec.WebArchive;
 import org.junit.AfterClass;
 import org.junit.Test;
+import org.junit.FixMethodOrder;
+import org.junit.runners.MethodSorters;
 import org.junit.runner.RunWith;
 
 import com.google.gson.JsonArray;
@@ -62,6 +64,7 @@ import org.restcomm.connect.commons.annotations.WithInMinsTests;
  * @author guilherme.jansen@telestax.com
  */
 @RunWith(Arquillian.class)
+@FixMethodOrder(MethodSorters.NAME_ASCENDING)
 @Category(value={WithInMinsTests.class, ParallelClassTests.class})
 public class RvdProjectsMigratorWorkspaceMigratedTest {
 

@@ -43,6 +43,8 @@ import org.junit.BeforeClass;
 import org.junit.Ignore;
 import org.junit.Rule;
 import org.junit.Test;
+import org.junit.FixMethodOrder;
+import org.junit.runners.MethodSorters;
 import org.junit.experimental.categories.Category;
 import org.junit.runner.RunWith;
 import org.restcomm.connect.commons.Version;
@@ -68,6 +70,7 @@ import gov.nist.javax.sip.address.SipUri;
  * @author <a href="mailto:gvagenas@gmail.com">gvagenas</a>
  */
 @RunWith(Arquillian.class)
+@FixMethodOrder(MethodSorters.NAME_ASCENDING)
 @Category(value={ParallelClassTests.class})
 public class ClientsDialTest {
 
@@ -200,6 +203,8 @@ public class ClientsDialTest {
     private static SipStackTool tool8;
     private static SipStackTool tool9;
     private static SipStackTool tool10;
+    private static SipStackTool tool11;
+    private static SipStackTool tool12;
 
     private String pstnNumber = "+151261006100";
 
@@ -266,6 +271,16 @@ public class ClientsDialTest {
     private static String externalPort = String.valueOf(NetworkPortAssigner.retrieveNextPortByFile());
     private String externalContact = "sip:external@127.0.0.1:" + externalPort;
 
+    private SipStack closedSipStack;
+    private SipPhone closedPhone;
+    private static String closedPort = String.valueOf(NetworkPortAssigner.retrieveNextPortByFile());
+    private String closedContact = "sip:closed@127.0.0.1:" + closedPort;
+
+    private SipStack suspendedSipStack;
+    private SipPhone suspendedPhone;
+    private static String suspendedPort = String.valueOf(NetworkPortAssigner.retrieveNextPortByFile());
+    private String suspendedContact = "sip:suspended@127.0.0.1:" + suspendedPort;
+
     private String adminAccountSid = "ACae6e420f425248d6a26948c17a9e2acf";
     private String adminAuthToken = "77f8c12cc7b8f8423e5c38b035249166";
 
@@ -285,6 +300,8 @@ public class ClientsDialTest {
         tool8 = new SipStackTool("ClientsDialTest8");
         tool9 = new SipStackTool("ClientsDialTest9");
         tool10 = new SipStackTool("ClientsDialTest10");
+        tool11 = new SipStackTool("ClientsDialTest11");
+        tool12 = new SipStackTool("ClientsDialTest12");
     }
 
     public static void reconfigurePorts() {
@@ -334,6 +351,12 @@ public class ClientsDialTest {
 
         externalSipStack = tool10.initializeSipStack(SipStack.PROTOCOL_UDP, "127.0.0.1", externalPort, restcommContact);
         externalPhone = externalSipStack.createSipPhone("127.0.0.1", SipStack.PROTOCOL_UDP, restcommPort, externalContact);
+
+        closedSipStack = tool11.initializeSipStack(SipStack.PROTOCOL_UDP, "127.0.0.1", closedPort, restcommContact);
+        closedPhone = closedSipStack.createSipPhone("127.0.0.1", SipStack.PROTOCOL_UDP, restcommPort, closedContact);
+
+        suspendedSipStack = tool12.initializeSipStack(SipStack.PROTOCOL_UDP, "127.0.0.1", suspendedPort, restcommContact);
+        suspendedPhone = suspendedSipStack.createSipPhone("127.0.0.1", SipStack.PROTOCOL_UDP, restcommPort, suspendedContact);
     }
 
     @After
@@ -575,6 +598,7 @@ public class ClientsDialTest {
     }
 
     @Test
+    @Category(UnstableTests.class)
     public void testClientDialOutPstn() throws ParseException, InterruptedException {
 
         assertNotNull(mariaRestcommClientSid);
@@ -1411,6 +1435,45 @@ public class ClientsDialTest {
         System.out.println("cdrsArray.size(): "+cdrsArray.size());
         assertTrue(cdrsArray.size() == 1);
 
+    }
+
+    @Test
+    public void testSuspendedClientDialingOut() {
+        Credential c = new Credential("127.0.0.1", "suspended", "1234");
+        suspendedPhone.addUpdateCredential(c);
+
+        SipCall suspendedCall = suspendedPhone.createSipCall();
+
+        suspendedCall.initiateOutgoingCall(suspendedContact, "sip:+151212344566@"+restcommContact, null, body, "application", "sdp", null, null);
+        assertLastOperationSuccess(suspendedCall);
+        assertTrue(suspendedCall.waitOutgoingCallResponse(10000));
+
+        final int response = suspendedCall.getLastReceivedResponse().getStatusCode();
+        assertTrue(response == Response.TRYING || response == Response.FORBIDDEN);
+
+        if (response == Response.TRYING) {
+            assertTrue(suspendedCall.waitOutgoingCallResponse(5 * 1000));
+            assertEquals(Response.FORBIDDEN, suspendedCall.getLastReceivedResponse().getStatusCode());
+        }
+    }
+
+    @Test
+    public void testClosedClientDialingOut() {
+        Credential c = new Credential("127.0.0.1", "closed", "1234");
+        closedPhone.addUpdateCredential(c);
+
+        SipCall closedCall = closedPhone.createSipCall();
+
+        closedCall.initiateOutgoingCall(closedContact, "sip:+151212344566@"+restcommContact, null, body, "application", "sdp", null, null);
+        assertLastOperationSuccess(closedCall);
+        assertTrue(closedCall.waitOutgoingCallResponse(10000));
+        final int response = closedCall.getLastReceivedResponse().getStatusCode();
+        assertTrue(response == Response.TRYING || response == Response.FORBIDDEN);
+
+        if (response == Response.TRYING) {
+            assertTrue(closedCall.waitOutgoingCallResponse(5 * 1000));
+            assertEquals(Response.FORBIDDEN, closedCall.getLastReceivedResponse().getStatusCode());
+        }
     }
 
     @Deployment(name = "ClientsDialTest", managed = true, testable = false)

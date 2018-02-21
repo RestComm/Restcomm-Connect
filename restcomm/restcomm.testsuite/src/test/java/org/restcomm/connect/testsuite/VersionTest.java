@@ -3,6 +3,8 @@ package org.restcomm.connect.testsuite;
 
 import org.apache.log4j.Logger;
 import org.junit.Test;
+import org.junit.FixMethodOrder;
+import org.junit.runners.MethodSorters;
 import org.restcomm.connect.commons.Version;
 
 /**

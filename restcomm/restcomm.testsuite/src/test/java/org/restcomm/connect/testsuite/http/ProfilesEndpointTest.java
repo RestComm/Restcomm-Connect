@@ -10,7 +10,6 @@ import java.net.URI;
 import java.net.URISyntaxException;
 import java.net.URL;
 
-import javax.ws.rs.core.MediaType;
 
 import org.apache.http.HttpResponse;
 import org.apache.http.client.ClientProtocolException;
@@ -24,24 +23,19 @@ import org.jboss.shrinkwrap.api.spec.WebArchive;
 import org.jboss.shrinkwrap.resolver.api.maven.archive.ShrinkWrapMaven;
 import org.junit.Before;
 import org.junit.Test;
+import org.junit.FixMethodOrder;
+import org.junit.runners.MethodSorters;
 import org.junit.experimental.categories.Category;
 import org.junit.runner.RunWith;
 import org.restcomm.connect.commons.Version;
 import org.restcomm.connect.commons.annotations.FeatureAltTests;
 import org.restcomm.connect.commons.annotations.FeatureExpTests;
 
-import com.fasterxml.jackson.databind.JsonNode;
-import com.github.fge.jackson.JsonLoader;
-import com.github.fge.jsonschema.main.JsonSchema;
-import com.github.fge.jsonschema.main.JsonSchemaFactory;
 import com.google.gson.JsonArray;
 import com.google.gson.JsonObject;
 import com.google.gson.JsonParser;
-import com.sun.jersey.api.client.Client;
 import com.sun.jersey.api.client.ClientResponse;
-import com.sun.jersey.api.client.WebResource;
 import com.sun.jersey.api.client.WebResourceLinkHeaders;
-import com.sun.jersey.api.client.filter.HTTPBasicAuthFilter;
 import com.sun.jersey.core.header.LinkHeader;
 
 /**
@@ -49,6 +43,7 @@ import com.sun.jersey.core.header.LinkHeader;
  */
 
 @RunWith(Arquillian.class)
+@FixMethodOrder(MethodSorters.NAME_ASCENDING)
 public class ProfilesEndpointTest extends EndpointTest {
     private final static Logger logger = Logger.getLogger(ProfilesEndpointTest.class.getName());
 
@@ -289,6 +284,15 @@ public class ProfilesEndpointTest extends EndpointTest {
 
     @Test
     @Category(FeatureExpTests.class)
+    public void createExceedingProfileTest(){
+        String longProfile = new String(new char[10000001]);
+    	//admin tries to create profile
+    	ClientResponse  clientResponse = RestcommProfilesTool.getInstance().createProfileResponse(deploymentUrl.toString(), ADMIN_ACCOUNT_SID, AUTH_TOKEN, longProfile);
+    	assertEquals(413, clientResponse.getStatus());
+    }
+
+    @Test
+    @Category(FeatureExpTests.class)
     public void createProfilePermissionTest(){
     	//admin tries to create profile
     	ClientResponse  clientResponse = RestcommProfilesTool.getInstance().createProfileResponse(deploymentUrl.toString(), ADMIN_ACCOUNT_SID, AUTH_TOKEN, PROFILE_DOCUMENT);
@@ -309,7 +313,7 @@ public class ProfilesEndpointTest extends EndpointTest {
 		/*
 		 * link a profile to an account
 		 */
-    	HttpResponse response = RestcommProfilesTool.getInstance().linkProfile(deploymentUrl.toString(), SUPER_ADMIN_ACCOUNT_SID, AUTH_TOKEN, DEFAULT_PROFILE_SID, SUPER_ADMIN_ACCOUNT_SID, RestcommProfilesTool.AssociatedResourceType.ACCOUNT);
+    	HttpResponse response = RestcommProfilesTool.getInstance().linkProfileWithOverride(deploymentUrl.toString(), SUPER_ADMIN_ACCOUNT_SID, AUTH_TOKEN, DEFAULT_PROFILE_SID, SUPER_ADMIN_ACCOUNT_SID, RestcommProfilesTool.AssociatedResourceType.ACCOUNT);
     	logger.info("HttpResponse: "+response);
     	assertEquals(200, response.getStatusLine().getStatusCode());
 
@@ -330,7 +334,7 @@ public class ProfilesEndpointTest extends EndpointTest {
     	/*
 		 * unlink a profile from an account
 		 */
-    	response = RestcommProfilesTool.getInstance().unLinkProfile(deploymentUrl.toString(), SUPER_ADMIN_ACCOUNT_SID, AUTH_TOKEN, DEFAULT_PROFILE_SID, SUPER_ADMIN_ACCOUNT_SID, RestcommProfilesTool.AssociatedResourceType.ACCOUNT);
+    	response = RestcommProfilesTool.getInstance().unLinkProfileWithOverride(deploymentUrl.toString(), SUPER_ADMIN_ACCOUNT_SID, AUTH_TOKEN, DEFAULT_PROFILE_SID, SUPER_ADMIN_ACCOUNT_SID, RestcommProfilesTool.AssociatedResourceType.ACCOUNT);
     	logger.info("HttpResponse: "+response);
     	assertEquals(200, response.getStatusLine().getStatusCode());
 
