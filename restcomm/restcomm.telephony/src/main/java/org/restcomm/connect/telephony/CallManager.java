@@ -529,21 +529,6 @@ public final class CallManager extends RestcommUntypedActor {
                 logger.info("Null Organization, call is probably coming from a provider: fromUri: "+fromUri);
         }
 
-        //Fail fast
-        if (sourceOrganizationSid == null && toOrganizationSid == null) {
-            //sourceOrganization is null which means we got a call from external provider or unregistered client
-            // AND toOrganization is null which means there will be no client or number for this INVITE
-            // THUS we should fail fast
-            final SipServletResponse response = request.createResponse(SC_NOT_FOUND);
-            response.send();
-            // We didn't find anyway to handle the call.
-            String msg = String.format("Restcomm cannot process this call to %s from %s. Source and To organizations are null", toUser, fromUser);
-            if (logger.isInfoEnabled()) {
-                logger.info(msg);
-            }
-            sendNotification(null, msg, 11005, "error", true);
-        }
-
         final Client client = clients.getClient(fromUser,sourceOrganizationSid);
         final Client toClient = clients.getClient(toUser, toOrganizationSid);
 
@@ -593,7 +578,7 @@ public final class CallManager extends RestcommUntypedActor {
         }
 
         IncomingPhoneNumber number = null;
-        if (toClient == null && toOrganizationSid != null) {
+        if (toClient == null) {
 
             number = getIncomingPhoneNumber(request, toUser, (client != null ? client.getSid() : null),
                     sourceOrganizationSid, toOrganizationSid);
@@ -611,7 +596,25 @@ public final class CallManager extends RestcommUntypedActor {
                     sendNotification(null, msg, 11005, "error", true);
                     return;
                 }
+
+                if (toOrganizationSid == null) {
+                    toOrganizationSid = number.getOrganizationSid();
+                }
             }
+        }
+
+        if (sourceOrganizationSid == null && toOrganizationSid == null) {
+            //sourceOrganization is null which means we got a call from external provider or unregistered client
+            // AND toOrganization is null which means there will be no client or number for this INVITE
+            // THUS we should fail fast
+            final SipServletResponse response = request.createResponse(SC_NOT_FOUND);
+            response.send();
+            // We didn't find anyway to handle the call.
+            String msg = String.format("Restcomm cannot process this call to %s from %s. Source and To organizations are null", toUser, fromUser);
+            if (logger.isInfoEnabled()) {
+                logger.info(msg);
+            }
+            sendNotification(null, msg, 11005, "error", true);
         }
 
         if (logger.isInfoEnabled()) {
