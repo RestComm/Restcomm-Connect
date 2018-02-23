@@ -56,7 +56,7 @@ public class SecurityFilter implements ContainerRequestFilter {
         logger.info("cr.getPath(): "+cr.getPath());
         if (!cr.getPath().matches(PATTERN_FOR_RECORDING_FILE_PATH)) {
             checkAuthenticatedAccount(userIdentityContext);
-            filterClosedAccounts(userIdentityContext);
+            filterClosedAccounts(userIdentityContext, cr.getPath());
         }
         String scheme = cr.getAuthenticationScheme();
         AccountPrincipal aPrincipal = new AccountPrincipal(userIdentityContext);
@@ -77,8 +77,11 @@ public class SecurityFilter implements ContainerRequestFilter {
      * filter out accounts that are not active
      * @param userIdentityContext
      */
-    protected void filterClosedAccounts(UserIdentityContext userIdentityContext){
+    protected void filterClosedAccounts(UserIdentityContext userIdentityContext, String path){
         if(userIdentityContext.getEffectiveAccount() != null && !userIdentityContext.getEffectiveAccount().getStatus().equals(Account.Status.ACTIVE)){
+            if (userIdentityContext.getEffectiveAccount().getStatus().equals(Account.Status.UNINITIALIZED) && path.startsWith("Accounts")) {
+                return;
+            }
             throw new WebApplicationException(status(Status.FORBIDDEN).entity("Provided Account is not active").build());
         }
     }
