@@ -64,7 +64,7 @@ public class UssdPullTestMessagesEC2 {
             + "\t</anyExt>\n"
             + "</ussd-data>";
     
-    static String ussdClientRequestBodyForMessageLenghtExceeds = "<?xml version=\"1.0\" encoding=\"UTF-8\" ?>\n"
+    static String ussdClientRequestBodyForMessageLengthExceeds = "<?xml version=\"1.0\" encoding=\"UTF-8\" ?>\n"
             + "<ussd-data>\n"
             + "\t<language value=\"en\"/>\n"
             + "\t<ussd-string value=\"5566\"/>\n"
