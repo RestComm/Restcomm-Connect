@@ -415,7 +415,7 @@ public class UssdPullTest {
     @Test
     public void testUssdMessageLengthExceeds() {
         final SipCall bobCall = bobPhone.createSipCall();
-        bobCall.initiateOutgoingCall(bobContact, ussdPullMessageLengthExceeds, null, UssdPullTestMessages.ussdClientRequestBodyForMessageLenghtExceeds, "application", "vnd.3gpp.ussd+xml", null, null);
+        bobCall.initiateOutgoingCall(bobContact, ussdPullMessageLengthExceeds, null, UssdPullTestMessages.ussdClientRequestBodyForMessageLengthExceeds, "application", "vnd.3gpp.ussd+xml", null, null);
         assertLastOperationSuccess(bobCall);
 
         assertTrue(bobCall.waitOutgoingCallResponse(5 * 1000));
