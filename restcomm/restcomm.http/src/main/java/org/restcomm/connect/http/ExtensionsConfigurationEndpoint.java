@@ -28,6 +28,7 @@ import org.joda.time.DateTime;
 import org.restcomm.connect.commons.dao.Sid;
 import org.restcomm.connect.dao.DaoManager;
 import org.restcomm.connect.dao.ExtensionsConfigurationDao;
+import org.restcomm.connect.dao.entities.ExtensionConfigurationList;
 import org.restcomm.connect.dao.entities.RestCommResponse;
 import org.restcomm.connect.extension.api.ConfigurationException;
 import org.restcomm.connect.extension.api.ExtensionConfiguration;
@@ -46,6 +47,9 @@ import static javax.ws.rs.core.MediaType.APPLICATION_XML_TYPE;
 import static javax.ws.rs.core.Response.Status.BAD_REQUEST;
 import static javax.ws.rs.core.Response.Status.NOT_ACCEPTABLE;
 import static javax.ws.rs.core.Response.Status.NOT_FOUND;
+
+import java.util.List;
+
 import static javax.ws.rs.core.Response.ok;
 import static javax.ws.rs.core.Response.status;
 
@@ -77,6 +81,26 @@ public class  ExtensionsConfigurationEndpoint extends SecuredEndpoint {
         xstream.registerConverter(converter);
         xstream.registerConverter(new ExtensionConfigurationConverter(configuration));
         xstream.registerConverter(new RestCommResponseConverter(configuration));
+    }
+
+    /**
+     */
+    protected Response getExtensions(MediaType applicationJsonType) {
+        ExtensionConfiguration.configurationType configurationType = null;
+        if (applicationJsonType.equals(APPLICATION_JSON_TYPE)) {
+            configurationType = ExtensionConfiguration.configurationType.JSON;
+        } else if (applicationJsonType.equals(APPLICATION_XML_TYPE)) {
+            configurationType = ExtensionConfiguration.configurationType.XML;
+        }
+        final List<ExtensionConfiguration> extensions = extensionsConfigurationDao.getAllConfigurationByType(configurationType);
+        if (APPLICATION_XML_TYPE == applicationJsonType) {
+            final RestCommResponse response = new RestCommResponse(new ExtensionConfigurationList(extensions));
+            return ok(xstream.toXML(response), APPLICATION_XML).build();
+        } else if (APPLICATION_JSON_TYPE == applicationJsonType) {
+            return ok(gson.toJson(extensions), APPLICATION_JSON).build();
+        } else {
+            return null;
+        }
     }
 
     /**
