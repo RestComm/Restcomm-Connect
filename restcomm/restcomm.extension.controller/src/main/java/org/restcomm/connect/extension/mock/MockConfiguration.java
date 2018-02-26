@@ -20,8 +20,6 @@
 
 package org.restcomm.connect.extension.mock;
 
-import com.google.gson.JsonObject;
-import java.io.IOException;
 import org.restcomm.connect.dao.DaoManager;
 import org.restcomm.connect.extension.api.ConfigurationException;
 import org.restcomm.connect.extension.configuration.DefaultExtensionConfiguration;
@@ -36,11 +34,6 @@ public class MockConfiguration extends DefaultExtensionConfiguration{
     public MockConfiguration(DaoManager daoManager, String extensionName, String localConfigPath)
             throws ConfigurationException {
         super(daoManager, extensionName, localConfigPath);
-    }
-
-    @Override
-    public JsonObject loadDefaultConfiguration(String localConfigFilePath) throws IOException {
-        return super.loadDefaultConfiguration(localConfigFilePath);
     }
 
 }
