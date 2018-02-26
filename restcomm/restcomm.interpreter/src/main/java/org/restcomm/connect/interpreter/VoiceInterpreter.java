@@ -1012,7 +1012,7 @@ public class VoiceInterpreter extends BaseVoiceInterpreter {
                 //Check if Outbound SMS is allowed
                 ExtensionController ec = ExtensionController.getInstance();
                 final IExtensionFeatureAccessRequest far = new FeatureAccessRequest(FeatureAccessRequest.Feature.OUTBOUND_SMS, accountId);
-                ExtensionResponse er = ec.executePreInboundAction(far, this.extensions);
+                ExtensionResponse er = ec.executePreOutboundAction(far, this.extensions);
 
                 if (er.isAllowed()) {
                     fsm.transition(message, creatingSmsSession);
@@ -1026,7 +1026,7 @@ public class VoiceInterpreter extends BaseVoiceInterpreter {
                     final Notification notification = notification(WARNING_NOTIFICATION, 11001, "Outbound SMS is now allowed");
                     notifications.addNotification(notification);
                     fsm.transition(message, rejecting);
-                    ec.executePostInboundAction(far, extensions);
+                    ec.executePostOutboundAction(far, extensions);
                     return;
                 }
             } else if (Verbs.email.equals(verb.name())) {

@@ -75,6 +75,7 @@ import akka.actor.UntypedActorContext;
 import akka.actor.UntypedActorFactory;
 import akka.event.Logging;
 import akka.event.LoggingAdapter;
+import org.restcomm.connect.extension.api.ExtensionResponse;
 
 //import org.restcomm.connect.extension.api.ExtensionRequest;
 //import org.restcomm.connect.extension.api.ExtensionResponse;
@@ -124,8 +125,8 @@ public class SmppMessageHandler extends RestcommUntypedActor {
         } else if (message instanceof CreateSmsSession) {
             IExtensionCreateSmsSessionRequest ier = (CreateSmsSession)message;
             ier.setConfiguration(this.configuration);
-            ec.executePreOutboundAction(ier, this.extensions);
-            if (ier.isAllowed()) {
+            ExtensionResponse executePreOutboundAction = ec.executePreOutboundAction(ier, this.extensions);
+            if (executePreOutboundAction.isAllowed()) {
                 CreateSmsSession createSmsSession = (CreateSmsSession) message;
                 final ActorRef session = session(ier.getConfiguration(), OrganizationUtil.getOrganizationSidByAccountSid(storage, new Sid(createSmsSession.getAccountSid())));
                 final SmsServiceResponse<ActorRef> response = new  SmsServiceResponse<ActorRef>(session);
