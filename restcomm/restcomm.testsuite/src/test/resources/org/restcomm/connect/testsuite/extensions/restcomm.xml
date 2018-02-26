@@ -317,9 +317,9 @@
 
 	<!-- by default activateSmppConnection is set to false -->
 
-	<smpp class="org.restcomm.connect.sms.smpp.SmppService" activateSmppConnection ="false">
-		<connections>
-			<connection activateAddressMapping="false" sourceAddressMap="" destinationAddressMap="" tonNpiValue="1">
+    <smpp class="org.restcomm.connect.sms.smpp.SmppService" activateSmppConnection ="true">
+        <connections>
+            <connection activateAddressMapping="false" sourceAddressMap="" destinationAddressMap="" tonNpiValue="1">
 				<!-- Name must be unique for each connection -->
 				<name>test</name>
 				<systemid>test</systemid>
@@ -328,7 +328,7 @@
 				<bindtype>TRANSCEIVER</bindtype>
 				<!-- These are optional params -->
 				<password>test</password>
-				<systemtype>sms</systemtype>
+				<systemtype></systemtype>
 				<!-- byte value for interface version 0x34 is 3.4, 0x33 is 3.3 and 0x50
 					is 5.0 -->
 				<interfaceversion>0x34</interfaceversion>

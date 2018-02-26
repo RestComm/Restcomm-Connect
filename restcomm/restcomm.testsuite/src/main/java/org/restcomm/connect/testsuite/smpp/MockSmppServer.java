@@ -36,10 +36,9 @@ import com.cloudhopper.smpp.type.SmppProcessingException;
 import org.restcomm.connect.sms.smpp.SmppInboundMessageEntity;
 import org.restcomm.connect.sms.smpp.DataCoding;
 
-
 public class MockSmppServer {
 
-    private final static Logger logger = Logger.getLogger(MockSmppServer.class);
+    private static final Logger logger = Logger.getLogger(MockSmppServer.class);
 
     private final DefaultSmppServer smppServer;
     private static SmppServerSession smppServerSession;
@@ -154,8 +153,8 @@ public class MockSmppServer {
         return smppServer.getConfiguration().getPort();
     }
 
-
     private static class DefaultSmppServerHandler implements SmppServerHandler {
+
         @Override
         public void sessionBindRequested(Long sessionId, SmppSessionConfiguration sessionConfiguration, final BaseBind bindRequest) throws SmppProcessingException {
             // test name change of sessions

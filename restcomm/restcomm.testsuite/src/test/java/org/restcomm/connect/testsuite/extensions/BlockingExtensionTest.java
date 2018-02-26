@@ -19,6 +19,8 @@
  */
 package org.restcomm.connect.testsuite.extensions;
 
+import com.cloudhopper.commons.charset.CharsetUtil;
+import com.cloudhopper.smpp.type.SmppInvalidArgumentException;
 import static com.github.tomakehurst.wiremock.client.WireMock.aResponse;
 import static com.github.tomakehurst.wiremock.client.WireMock.get;
 import static com.github.tomakehurst.wiremock.client.WireMock.post;
@@ -53,7 +55,6 @@ import org.junit.BeforeClass;
 import org.junit.Rule;
 import org.junit.Test;
 import org.junit.FixMethodOrder;
-import org.junit.Ignore;
 import org.junit.runners.MethodSorters;
 import org.junit.experimental.categories.Category;
 import org.junit.runner.RunWith;
@@ -69,21 +70,17 @@ import com.sun.jersey.api.client.WebResource;
 import com.sun.jersey.api.client.filter.HTTPBasicAuthFilter;
 import com.sun.jersey.core.util.MultivaluedMapImpl;
 import java.io.IOException;
-import java.net.URISyntaxException;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.MultivaluedMap;
 import junit.framework.Assert;
-import org.apache.http.HttpResponse;
 import org.cafesip.sipunit.Credential;
 import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertNotNull;
-import static org.junit.Assert.assertNull;
-import org.restcomm.connect.testsuite.provisioning.number.nexmo.NexmoIncomingPhoneNumbersEndpointTestUtils;
+import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertTrue;
+import org.restcomm.connect.testsuite.provisioning.number.nexmo.NexmoIncomingPhoneNumbersEndpointTestUtils;
 import org.restcomm.connect.commons.annotations.FeatureAltTests;
-import org.restcomm.connect.testsuite.http.RestcommProfilesTool;
 import org.restcomm.connect.testsuite.provisioning.number.nexmo.NexmoAvailablePhoneNumbersEndpointTestUtils;
-import org.restcomm.connect.testsuite.sms.SmsEndpointTool;
+import org.restcomm.connect.testsuite.smpp.MockSmppServer;
 import org.restcomm.connect.testsuite.tools.MonitoringServiceTool;
 
 /**
@@ -120,6 +117,9 @@ public class BlockingExtensionTest {
     @Rule
     public WireMockRule wireMockRule = new WireMockRule(mockPort);
 
+    private static int smppPort = NetworkPortAssigner.retrieveNextPortByFile();
+    private static MockSmppServer mockSmppServer;
+
     private static SipStackTool tool1;
     private static SipStackTool tool2;
 
@@ -151,13 +151,16 @@ public class BlockingExtensionTest {
     private static int restcommHTTPPort = 8080;
     private static String restcommContact = "127.0.0.1:" + restcommPort;
 
-
-
-
     @BeforeClass
     public static void beforeClass() throws Exception {
         tool1 = new SipStackTool("DialActionTest1");
         tool2 = new SipStackTool("DialActionTest2");
+        mockSmppServer = new MockSmppServer(smppPort);
+        logger.info("Will wait for the SMPP link to be established");
+        do {
+            Thread.sleep(1000);
+        } while (!mockSmppServer.isLinkEstablished());
+        logger.info("SMPP link is now established");
     }
 
     public static void reconfigurePorts() {
@@ -178,6 +181,15 @@ public class BlockingExtensionTest {
         aliceSipStack = tool2.initializeSipStack(SipStack.PROTOCOL_UDP, "127.0.0.1", alicePort, restcommContact);
         alicePhone = aliceSipStack.createSipPhone("127.0.0.1", SipStack.PROTOCOL_UDP, restcommPort, aliceContact);
 
+        mockSmppServer.cleanup();
+        Thread.sleep(5000);
+    }
+
+    @AfterClass
+    public static void cleanup() {
+        if (mockSmppServer != null) {
+            mockSmppServer.stop();
+        }
     }
 
     @After
@@ -209,7 +221,7 @@ public class BlockingExtensionTest {
     private String dialAliceRcml = "<Response><Dial><Client>alice1</Client></Dial></Response>";
 
     @Test
-    public void testInboundVoiceBlocked() throws ParseException, InterruptedException, MalformedURLException {
+    public void inboundRcmlVoiceBlocked() throws ParseException, InterruptedException, MalformedURLException {
 
         stubFor(get(urlPathEqualTo("/1111"))
                 .willReturn(aResponse()
@@ -235,7 +247,7 @@ public class BlockingExtensionTest {
             logger.info("Last response: " + bobCall.getLastReceivedResponse().getStatusCode());
         }
 
-        JsonObject metrics = MonitoringServiceTool.getInstance().getMetrics(deploymentUrl.toString(),adminAccountSid, adminAuthToken);
+        JsonObject metrics = MonitoringServiceTool.getInstance().getMetrics(deploymentUrl.toString(), adminAccountSid, adminAuthToken);
         Map<String, Integer> mgcpResources = MonitoringServiceTool.getInstance().getMgcpResources(metrics);
         int mgcpEndpoints = mgcpResources.get("MgcpEndpoints");
         int mgcpConnections = mgcpResources.get("MgcpConnections");
@@ -249,7 +261,7 @@ public class BlockingExtensionTest {
 
     @Test
     @Category(value = {FeatureAltTests.class})
-    public void testInboundSmsBlocked() throws ParseException {
+    public void inboundRcmlSmsBlocked() throws ParseException {
         stubFor(get(urlPathEqualTo("/smsApp1"))
                 .willReturn(aResponse()
                         .withStatus(200)
@@ -278,15 +290,13 @@ public class BlockingExtensionTest {
         final int response = call.getLastReceivedResponse().getStatusCode();
         if (response == Response.TRYING) {
             assertTrue(call.waitOutgoingCallResponse(5 * 1000));
-            assertEquals(Response.FORBIDDEN, call.getLastReceivedResponse().getStatusCode());
-            logger.info("Last response: " + call.getLastReceivedResponse().getStatusCode());
         }
+        assertEquals(Response.FORBIDDEN, call.getLastReceivedResponse().getStatusCode());
+        logger.info("Last response: " + call.getLastReceivedResponse().getStatusCode());
     }
 
-
-
     @Test
-    public void testDIDPurchaseBlocked() throws Exception {
+    public void incomingPhoneBlocked() throws Exception {
         stubFor(post(urlMatching("/nexmo/number/buy/.*/.*/US/14156902867"))
                 .willReturn(aResponse()
                         .withStatus(200)
@@ -316,13 +326,34 @@ public class BlockingExtensionTest {
 
     }
 
+    private static String to = "7777";
+    private static String msgBodyResp = "Response from Restcomm to SMPP server";
+    private static String msgBody = "Message from SMPP Server to Restcomm";
+    private String smsEchoRcml = "<Response><Sms to=\"" + from + "\" from=\"" + to + "\">" + msgBodyResp + "</Sms></Response>";
+
+    @Test
+    public void inboundSMPPBlocked() throws SmppInvalidArgumentException, IOException, InterruptedException {
+
+        stubFor(get(urlPathEqualTo("/smsApp"))
+                .willReturn(aResponse()
+                        .withStatus(200)
+                        .withHeader("Content-Type", "text/xml")
+                        .withBody(smsEchoRcml)));
+
+        mockSmppServer.sendSmppMessageToRestcomm(msgBody, to, from, CharsetUtil.CHARSET_GSM);
+        Thread.sleep(2000);
+        assertTrue(mockSmppServer.isMessageSent());
+        Thread.sleep(2000);
+        assertFalse(mockSmppServer.isMessageReceived());
+    }
+
     /*
      * https://www.twilio.com/docs/api/rest/available-phone-numbers#local-get-basic-example-1
      * available local phone numbers in the United States in the 510 area code.
      */
     @Test
     @Category(FeatureAltTests.class)
-    public void testAvaiPhoneNumBlocked() {
+    public void avaiPhoneNumBlocked() {
         stubFor(get(urlMatching("/nexmo/number/search/.*/.*/CA\\?pattern=1450&search_pattern=0"))
                 .willReturn(aResponse()
                         .withStatus(200)
@@ -348,6 +379,7 @@ public class BlockingExtensionTest {
         Map<String, String> replacements = new HashMap();
         //replace mediaport 2727
         replacements.put("2727", String.valueOf(mediaPort));
+        replacements.put("2776", String.valueOf(smppPort));
         replacements.put("8080", String.valueOf(restcommHTTPPort));
         replacements.put("8090", String.valueOf(mockPort));
         replacements.put("5080", String.valueOf(restcommPort));
