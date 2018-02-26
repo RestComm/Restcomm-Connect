@@ -21,6 +21,7 @@ package org.restcomm.connect.testsuite;
 
 /**
  * @author <a href="mailto:gvagenas@gmail.com">gvagenas</a>
+ * @modified <a href="mailto:fernando.mendioroz@telestax.com"> Fernando Mendioroz </a>
  *
  */
 public class UssdPullTestMessagesEC2 {
@@ -78,5 +79,20 @@ public class UssdPullTestMessagesEC2 {
             + "<message-type>processUnstructuredSSRequest_Response</message-type>\n"
             + "</anyExt>\n"
             + "</ussd-data>\n";
-    
+
+    static String ussdClientFastDialRequestBody = "<?xml version=\"1.0\" encoding=\"UTF-8\" ?>\n"
+        + "<ussd-data>\n"
+        + "\t<language value=\"en\"/>\n"
+        + "\t<ussd-string value=\"*777*3#\"/>\n"
+        + "</ussd-data>";
+
+    static String ussdRestcommShortDialResponse = "<?xml version=\"1.0\" encoding=\"UTF-8\"?>\n"
+        + "<ussd-data>\n"
+        + "<language value=\"en\"></language>\n"
+        + "<ussd-string value=\"The information you requested for option 3 is bronze\"></ussd-string>\n"
+        + "<anyExt>\n"
+        + "<message-type>processUnstructuredSSRequest_Response</message-type>\n"
+        + "</anyExt>\n"
+        + "</ussd-data>\n";
+
 }
