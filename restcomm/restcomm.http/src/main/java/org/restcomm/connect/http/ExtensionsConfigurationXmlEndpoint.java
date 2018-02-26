@@ -43,7 +43,7 @@ import javax.annotation.security.RolesAllowed;
 public class ExtensionsConfigurationXmlEndpoint extends ExtensionsConfigurationEndpoint {
 
     @GET
-    public Response getExtensionsAsJson() {
+    public Response getExtensionsAsXml() {
         return getExtensions(APPLICATION_XML_TYPE);
     }
 
