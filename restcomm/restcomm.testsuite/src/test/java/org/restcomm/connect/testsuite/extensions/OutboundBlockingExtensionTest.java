@@ -21,9 +21,7 @@ package org.restcomm.connect.testsuite.extensions;
 
 import static com.github.tomakehurst.wiremock.client.WireMock.aResponse;
 import static com.github.tomakehurst.wiremock.client.WireMock.get;
-import static com.github.tomakehurst.wiremock.client.WireMock.post;
 import static com.github.tomakehurst.wiremock.client.WireMock.stubFor;
-import static com.github.tomakehurst.wiremock.client.WireMock.urlMatching;
 import static com.github.tomakehurst.wiremock.client.WireMock.urlPathEqualTo;
 
 import java.net.MalformedURLException;
@@ -53,7 +51,6 @@ import org.junit.BeforeClass;
 import org.junit.Rule;
 import org.junit.Test;
 import org.junit.FixMethodOrder;
-import org.junit.Ignore;
 import org.junit.runners.MethodSorters;
 import org.junit.experimental.categories.Category;
 import org.junit.runner.RunWith;
@@ -63,26 +60,14 @@ import org.restcomm.connect.testsuite.WebArchiveUtil;
 
 import com.github.tomakehurst.wiremock.junit.WireMockRule;
 import com.google.gson.JsonObject;
-import com.sun.jersey.api.client.Client;
-import com.sun.jersey.api.client.ClientResponse;
-import com.sun.jersey.api.client.WebResource;
-import com.sun.jersey.api.client.filter.HTTPBasicAuthFilter;
-import com.sun.jersey.core.util.MultivaluedMapImpl;
+import com.sun.jersey.api.client.UniformInterfaceException;
 import java.io.IOException;
 import java.net.URISyntaxException;
-import javax.ws.rs.core.MediaType;
-import javax.ws.rs.core.MultivaluedMap;
-import junit.framework.Assert;
-import org.apache.http.HttpResponse;
 import org.cafesip.sipunit.Credential;
 import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertNotNull;
-import static org.junit.Assert.assertNull;
-import org.restcomm.connect.testsuite.provisioning.number.nexmo.NexmoIncomingPhoneNumbersEndpointTestUtils;
 import static org.junit.Assert.assertTrue;
+import static org.junit.Assert.fail;
 import org.restcomm.connect.commons.annotations.FeatureAltTests;
-import org.restcomm.connect.testsuite.http.RestcommProfilesTool;
-import org.restcomm.connect.testsuite.provisioning.number.nexmo.NexmoAvailablePhoneNumbersEndpointTestUtils;
 import org.restcomm.connect.testsuite.sms.SmsEndpointTool;
 import org.restcomm.connect.testsuite.tools.MonitoringServiceTool;
 
@@ -300,17 +285,17 @@ public class OutboundBlockingExtensionTest {
         JsonObject callResult;
         try {
             callResult = SmsEndpointTool.getInstance().createSms(deploymentUrl.toString(), adminAccountSid, adminAuthToken, from, toUnresolvedNumber1, msgBody1, null);
-        } catch (Exception e) {
-            callResult = null;
+            fail("expected error response");
+        } catch (UniformInterfaceException e) {
+            assertEquals(403, e.getResponse().getStatus());
         }
-        assertNull(callResult);
 
         try {
             callResult = SmsEndpointTool.getInstance().createSms(deploymentUrl.toString(), adminAccountSid, adminAuthToken, from, toUnresolvedNumber2, msgBody1, null);
-        } catch (Exception e) {
-            callResult = null;
+            fail("expected error response");
+        } catch (UniformInterfaceException e) {
+            assertEquals(403, e.getResponse().getStatus());
         }
-        assertNull(callResult);
     }
 
 
