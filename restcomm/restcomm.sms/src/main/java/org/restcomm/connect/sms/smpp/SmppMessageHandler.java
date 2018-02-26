@@ -41,10 +41,12 @@ import org.restcomm.connect.dao.DaoManager;
 import org.restcomm.connect.dao.common.OrganizationUtil;
 import org.restcomm.connect.dao.entities.Application;
 import org.restcomm.connect.dao.entities.IncomingPhoneNumber;
+import org.restcomm.connect.extension.api.ExtensionResponse;
 //import org.restcomm.connect.extension.api.ExtensionRequest;
 //import org.restcomm.connect.extension.api.ExtensionResponse;
 import org.restcomm.connect.extension.api.ExtensionType;
 import org.restcomm.connect.extension.api.IExtensionCreateSmsSessionRequest;
+import org.restcomm.connect.extension.api.IExtensionFeatureAccessRequest;
 import org.restcomm.connect.extension.api.RestcommExtensionException;
 import org.restcomm.connect.extension.api.RestcommExtensionGeneric;
 import org.restcomm.connect.extension.controller.ExtensionController;
@@ -56,6 +58,7 @@ import org.restcomm.connect.sms.SmsSession;
 import org.restcomm.connect.sms.api.CreateSmsSession;
 import org.restcomm.connect.sms.api.DestroySmsSession;
 import org.restcomm.connect.sms.api.SmsServiceResponse;
+import org.restcomm.connect.telephony.api.FeatureAccessRequest;
 import org.restcomm.smpp.parameter.TlvSet;
 
 import com.cloudhopper.commons.charset.CharsetUtil;
@@ -173,50 +176,69 @@ public class SmppMessageHandler extends RestcommUntypedActor {
             if (number != null) {
                 ActorRef interpreter = null;
 
-                URI appUri = number.getSmsUrl();
+                ExtensionController ec = ExtensionController.getInstance();
+                IExtensionFeatureAccessRequest far = new FeatureAccessRequest(FeatureAccessRequest.Feature.INBOUND_SMS, number.getAccountSid());
+                ExtensionResponse er = ec.executePreInboundAction(far, extensions);
 
-                final SmppInterpreterParams.Builder builder = new SmppInterpreterParams.Builder();
-                builder.setSmsService(self);
-                builder.setConfiguration(configuration);
-                builder.setStorage(storage);
-                builder.setAccountId(number.getAccountSid());
-                builder.setVersion(number.getApiVersion());
-                final Sid sid = number.getSmsApplicationSid();
-                boolean isApplicationNull=true;
-                if (sid != null) {
-                    final Application application = applications.getApplication(sid);
-                    if(application != null){
-                        isApplicationNull=false;
-                        RcmlserverConfigurationSet rcmlserverConfig = RestcommConfiguration.getInstance().getRcmlserver();
-                        RcmlserverResolver resolver = RcmlserverResolver.getInstance(rcmlserverConfig.getBaseUrl(), rcmlserverConfig.getApiPath());
-                        builder.setUrl(UriUtils.resolve(resolver.resolveRelative(application.getRcmlUrl())));
+                if (er.isAllowed()) {
+                    URI appUri = number.getSmsUrl();
+
+                    final SmppInterpreterParams.Builder builder = new SmppInterpreterParams.Builder();
+                    builder.setSmsService(self);
+                    builder.setConfiguration(configuration);
+                    builder.setStorage(storage);
+                    builder.setAccountId(number.getAccountSid());
+                    builder.setVersion(number.getApiVersion());
+                    final Sid sid = number.getSmsApplicationSid();
+                    boolean isApplicationNull=true;
+                    if (sid != null) {
+                        final Application application = applications.getApplication(sid);
+                        if(application != null){
+                            isApplicationNull=false;
+                            RcmlserverConfigurationSet rcmlserverConfig = RestcommConfiguration.getInstance().getRcmlserver();
+                            RcmlserverResolver resolver = RcmlserverResolver.getInstance(rcmlserverConfig.getBaseUrl(), rcmlserverConfig.getApiPath());
+                            builder.setUrl(UriUtils.resolve(resolver.resolveRelative(application.getRcmlUrl())));
+                        }
                     }
-                }
-                if (isApplicationNull && appUri != null) {
-                    builder.setUrl(UriUtils.resolve(appUri));
-                } else if (isApplicationNull){
-                    logger.warning("the matched number doesn't have SMS application attached, number: "+number.getPhoneNumber());
+                    if (isApplicationNull && appUri != null) {
+                        builder.setUrl(UriUtils.resolve(appUri));
+                    } else if (isApplicationNull){
+                        logger.warning("the matched number doesn't have SMS application attached, number: "+number.getPhoneNumber());
+                        return false;
+                    }
+                    builder.setMethod(number.getSmsMethod());
+                    URI appFallbackUrl = number.getSmsFallbackUrl();
+                    if (appFallbackUrl != null) {
+                        builder.setFallbackUrl(UriUtils.resolve(number.getSmsFallbackUrl()));
+                        builder.setFallbackMethod(number.getSmsFallbackMethod());
+                    }
+                    final Props props = SmppInterpreter.props(builder.build());
+                    interpreter = getContext().actorOf(props);
+
+                    Sid organizationSid = storage.getOrganizationsDao().getOrganization(storage.getAccountsDao().getAccount(number.getAccountSid()).getOrganizationSid()).getSid();
+                    if(logger.isDebugEnabled())
+                        logger.debug("redirectToHostedSmsApp organizationSid = "+organizationSid);
+                    Configuration cfg = this.configuration;
+                    //Extension
+                    final ActorRef session = session(cfg, organizationSid);
+                    session.tell(request, self);
+                    final StartInterpreter start = new StartInterpreter(session);
+                    interpreter.tell(start, self);
+                    isFoundHostedApp = true;
+                }else {
+                    if (logger.isDebugEnabled()) {
+                        final String errMsg = "Inbound SMS is not Allowed";
+                        logger.debug(errMsg);
+                    }
+                    String errMsg = "Inbound SMS to Number: " + number.getPhoneNumber()
+                            + " is not allowed";
+                    //sendNotification(errMsg, 11001, "warning", true);
+                    //final SipServletResponse resp = request.createResponse(SC_FORBIDDEN, "SMS not allowed");
+                    //resp.send();
+                    ec.executePostOutboundAction(far, extensions);
                     return false;
                 }
-                builder.setMethod(number.getSmsMethod());
-                URI appFallbackUrl = number.getSmsFallbackUrl();
-                if (appFallbackUrl != null) {
-                    builder.setFallbackUrl(UriUtils.resolve(number.getSmsFallbackUrl()));
-                    builder.setFallbackMethod(number.getSmsFallbackMethod());
-                }
-                final Props props = SmppInterpreter.props(builder.build());
-                interpreter = getContext().actorOf(props);
 
-                Sid organizationSid = storage.getOrganizationsDao().getOrganization(storage.getAccountsDao().getAccount(number.getAccountSid()).getOrganizationSid()).getSid();
-                if(logger.isDebugEnabled())
-                    logger.debug("redirectToHostedSmsApp organizationSid = "+organizationSid);
-                Configuration cfg = this.configuration;
-                //Extension
-                final ActorRef session = session(cfg, organizationSid);
-                session.tell(request, self);
-                final StartInterpreter start = new StartInterpreter(session);
-                interpreter.tell(start, self);
-                isFoundHostedApp = true;
 
             }
         } catch (Exception e) {
