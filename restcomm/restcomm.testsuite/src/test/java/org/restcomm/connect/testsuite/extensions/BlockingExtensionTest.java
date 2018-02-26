@@ -326,7 +326,7 @@ public class BlockingExtensionTest {
 
     }
 
-    private static String to = "7777";
+    private static String to = "9999";
     private static String msgBodyResp = "Response from Restcomm to SMPP server";
     private static String msgBody = "Message from SMPP Server to Restcomm";
     private String smsEchoRcml = "<Response><Sms to=\"" + from + "\" from=\"" + to + "\">" + msgBodyResp + "</Sms></Response>";
