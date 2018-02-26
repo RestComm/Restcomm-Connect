@@ -37,9 +37,9 @@ import org.restcomm.connect.extension.api.ExtensionResponse;
  */
 
 
-public class BlockingExtensionMockTest {
+public class OutboundBlockingExtensionMockTest {
 
-    public BlockingExtensionMockTest() {
+    public OutboundBlockingExtensionMockTest() {
     }
     class ExtensionCollaborators {
 
@@ -53,21 +53,21 @@ public class BlockingExtensionMockTest {
                     thenReturn(daoMng);
             when(daoMng.getExtensionsConfigurationDao()).
                     thenReturn(extDao);
-            when(extDao.getConfigurationByName("blocking")).thenReturn(null);
+            when(extDao.getConfigurationByName("outbound_blocking")).thenReturn(null);
         }
     }
 
     @Test
-    public void testAllowingExtension() throws Exception {
+    public void testExtension() throws Exception {
         ExtensionCollaborators mocks = new ExtensionCollaborators();
-        BlockingExtensionMock extension = new BlockingExtensionMock();
+        OutboundBlockingExtensionMock extension = new OutboundBlockingExtensionMock();
         extension.init(mocks.sCtx);
 
         final ExtensionRequest far = new ExtensionRequest("accountSid", true);
         ExtensionResponse response = extension.preInboundAction(far);
-        Assert.assertFalse(response.isAllowed());
+        Assert.assertTrue(response.isAllowed());
         response = extension.postInboundAction(far);
-        Assert.assertFalse(response.isAllowed());
+        Assert.assertTrue(response.isAllowed());
 
         response = extension.preOutboundAction(far);
         Assert.assertFalse(response.isAllowed());
@@ -76,9 +76,9 @@ public class BlockingExtensionMockTest {
 
         ApiRequest apiReq = new ApiRequest("accountSid", null, ApiRequest.Type.CREATE_SUBACCOUNT);
         response = extension.preApiAction(apiReq);
-        Assert.assertFalse(response.isAllowed());
+        Assert.assertTrue(response.isAllowed());
         response = extension.postApiAction(apiReq);
-        Assert.assertFalse(response.isAllowed());
+        Assert.assertTrue(response.isAllowed());
     }
 
 }
