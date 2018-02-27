@@ -1,5 +1,6 @@
 package org.restcomm.connect.testsuite.http;
 
+import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
 import com.google.gson.JsonParser;
 import com.sun.jersey.api.client.Client;
@@ -63,6 +64,19 @@ public class RestcommExtensionsConfigurationTool {
 
         ClientResponse clientResponse = webResource.accept(MediaType.APPLICATION_JSON).post(ClientResponse.class, configurationParams);
         jsonResponse = parser.parse(clientResponse.getEntity(String.class)).getAsJsonObject();
+        return jsonResponse;
+    }
+
+    public JsonElement getExtensionsList(String deploymentUrl, String adminUsername, String adminAuthToken, boolean xml) {
+        Client jerseyClient = Client.create();
+        jerseyClient.addFilter(new HTTPBasicAuthFilter(adminUsername, adminAuthToken));
+
+        WebResource webResource = jerseyClient.resource(getUrl(deploymentUrl, xml));
+        String response = webResource.get(String.class);
+
+        JsonParser parser = new JsonParser();
+        JsonElement jsonResponse = parser.parse(response);
+
         return jsonResponse;
     }
 
