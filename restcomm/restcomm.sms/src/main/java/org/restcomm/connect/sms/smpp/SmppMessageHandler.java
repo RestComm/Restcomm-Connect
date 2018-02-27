@@ -21,6 +21,7 @@ package org.restcomm.connect.sms.smpp;
 
 import java.io.IOException;
 import java.net.URI;
+import java.net.URISyntaxException;
 import java.util.Collection;
 import java.util.List;
 
@@ -30,6 +31,7 @@ import javax.servlet.sip.SipServlet;
 import javax.servlet.sip.SipURI;
 
 import org.apache.commons.configuration.Configuration;
+import org.joda.time.DateTime;
 import org.restcomm.connect.commons.configuration.RestcommConfiguration;
 import org.restcomm.connect.commons.configuration.sets.RcmlserverConfigurationSet;
 import org.restcomm.connect.commons.dao.Sid;
@@ -38,13 +40,17 @@ import org.restcomm.connect.commons.util.UriUtils;
 import org.restcomm.connect.dao.AccountsDao;
 import org.restcomm.connect.dao.ApplicationsDao;
 import org.restcomm.connect.dao.DaoManager;
+import org.restcomm.connect.dao.NotificationsDao;
 import org.restcomm.connect.dao.common.OrganizationUtil;
 import org.restcomm.connect.dao.entities.Application;
 import org.restcomm.connect.dao.entities.IncomingPhoneNumber;
+import org.restcomm.connect.dao.entities.Notification;
+import org.restcomm.connect.extension.api.ExtensionResponse;
 //import org.restcomm.connect.extension.api.ExtensionRequest;
 //import org.restcomm.connect.extension.api.ExtensionResponse;
 import org.restcomm.connect.extension.api.ExtensionType;
 import org.restcomm.connect.extension.api.IExtensionCreateSmsSessionRequest;
+import org.restcomm.connect.extension.api.IExtensionFeatureAccessRequest;
 import org.restcomm.connect.extension.api.RestcommExtensionException;
 import org.restcomm.connect.extension.api.RestcommExtensionGeneric;
 import org.restcomm.connect.extension.controller.ExtensionController;
@@ -56,6 +62,7 @@ import org.restcomm.connect.sms.SmsSession;
 import org.restcomm.connect.sms.api.CreateSmsSession;
 import org.restcomm.connect.sms.api.DestroySmsSession;
 import org.restcomm.connect.sms.api.SmsServiceResponse;
+import org.restcomm.connect.telephony.api.FeatureAccessRequest;
 import org.restcomm.smpp.parameter.TlvSet;
 
 import com.cloudhopper.commons.charset.CharsetUtil;
@@ -90,6 +97,9 @@ public class SmppMessageHandler extends RestcommUntypedActor {
     private final NumberSelectorService numberSelector;
     //List of extensions for SmsService
     List<RestcommExtensionGeneric> extensions;
+
+    private static final int ERROR_NOTIFICATION = 0;
+    private static final int WARNING_NOTIFICATION = 1;
 
     public SmppMessageHandler(final ServletContext servletContext) {
         this.servletContext = servletContext;
@@ -173,50 +183,71 @@ public class SmppMessageHandler extends RestcommUntypedActor {
             if (number != null) {
                 ActorRef interpreter = null;
 
-                URI appUri = number.getSmsUrl();
+                ExtensionController ec = ExtensionController.getInstance();
+                IExtensionFeatureAccessRequest far = new FeatureAccessRequest(FeatureAccessRequest.Feature.INBOUND_SMS, number.getAccountSid());
+                ExtensionResponse er = ec.executePreInboundAction(far, extensions);
 
-                final SmppInterpreterParams.Builder builder = new SmppInterpreterParams.Builder();
-                builder.setSmsService(self);
-                builder.setConfiguration(configuration);
-                builder.setStorage(storage);
-                builder.setAccountId(number.getAccountSid());
-                builder.setVersion(number.getApiVersion());
-                final Sid sid = number.getSmsApplicationSid();
-                boolean isApplicationNull=true;
-                if (sid != null) {
-                    final Application application = applications.getApplication(sid);
-                    if(application != null){
-                        isApplicationNull=false;
-                        RcmlserverConfigurationSet rcmlserverConfig = RestcommConfiguration.getInstance().getRcmlserver();
-                        RcmlserverResolver resolver = RcmlserverResolver.getInstance(rcmlserverConfig.getBaseUrl(), rcmlserverConfig.getApiPath());
-                        builder.setUrl(UriUtils.resolve(resolver.resolveRelative(application.getRcmlUrl())));
+                if (er.isAllowed()) {
+                    URI appUri = number.getSmsUrl();
+
+                    final SmppInterpreterParams.Builder builder = new SmppInterpreterParams.Builder();
+                    builder.setSmsService(self);
+                    builder.setConfiguration(configuration);
+                    builder.setStorage(storage);
+                    builder.setAccountId(number.getAccountSid());
+                    builder.setVersion(number.getApiVersion());
+                    final Sid sid = number.getSmsApplicationSid();
+                    boolean isApplicationNull=true;
+                    if (sid != null) {
+                        final Application application = applications.getApplication(sid);
+                        if(application != null){
+                            isApplicationNull=false;
+                            RcmlserverConfigurationSet rcmlserverConfig = RestcommConfiguration.getInstance().getRcmlserver();
+                            RcmlserverResolver resolver = RcmlserverResolver.getInstance(rcmlserverConfig.getBaseUrl(), rcmlserverConfig.getApiPath());
+                            builder.setUrl(UriUtils.resolve(resolver.resolveRelative(application.getRcmlUrl())));
+                        }
                     }
-                }
-                if (isApplicationNull && appUri != null) {
-                    builder.setUrl(UriUtils.resolve(appUri));
-                } else if (isApplicationNull){
-                    logger.warning("the matched number doesn't have SMS application attached, number: "+number.getPhoneNumber());
+                    if (isApplicationNull && appUri != null) {
+                        builder.setUrl(UriUtils.resolve(appUri));
+                    } else if (isApplicationNull){
+                        logger.warning("the matched number doesn't have SMS application attached, number: "+number.getPhoneNumber());
+                        return false;
+                    }
+                    builder.setMethod(number.getSmsMethod());
+                    URI appFallbackUrl = number.getSmsFallbackUrl();
+                    if (appFallbackUrl != null) {
+                        builder.setFallbackUrl(UriUtils.resolve(number.getSmsFallbackUrl()));
+                        builder.setFallbackMethod(number.getSmsFallbackMethod());
+                    }
+                    final Props props = SmppInterpreter.props(builder.build());
+                    interpreter = getContext().actorOf(props);
+
+                    Sid organizationSid = storage.getOrganizationsDao().getOrganization(storage.getAccountsDao().getAccount(number.getAccountSid()).getOrganizationSid()).getSid();
+                    if(logger.isDebugEnabled())
+                        logger.debug("redirectToHostedSmsApp organizationSid = "+organizationSid);
+                    Configuration cfg = this.configuration;
+                    //Extension
+                    final ActorRef session = session(cfg, organizationSid);
+                    session.tell(request, self);
+                    final StartInterpreter start = new StartInterpreter(session);
+                    interpreter.tell(start, self);
+                    isFoundHostedApp = true;
+                }else {
+                    if (logger.isDebugEnabled()) {
+                        final String errMsg = "Inbound SMS is not Allowed";
+                        logger.debug(errMsg);
+                    }
+                    //TODO: Notifications API and idioms need to be cleaned up across whole RC
+                    String errMsg = "Inbound SMS to Number: " + number.getPhoneNumber()
+                            + " is not allowed";
+                    final NotificationsDao notifications = storage.getNotificationsDao();
+                    final Notification notification = notification(WARNING_NOTIFICATION, 11001, errMsg);
+                    notifications.addNotification(notification);
+                    //TODO: implement DLR here
+                    ec.executePostOutboundAction(far, extensions);
                     return false;
                 }
-                builder.setMethod(number.getSmsMethod());
-                URI appFallbackUrl = number.getSmsFallbackUrl();
-                if (appFallbackUrl != null) {
-                    builder.setFallbackUrl(UriUtils.resolve(number.getSmsFallbackUrl()));
-                    builder.setFallbackMethod(number.getSmsFallbackMethod());
-                }
-                final Props props = SmppInterpreter.props(builder.build());
-                interpreter = getContext().actorOf(props);
 
-                Sid organizationSid = storage.getOrganizationsDao().getOrganization(storage.getAccountsDao().getAccount(number.getAccountSid()).getOrganizationSid()).getSid();
-                if(logger.isDebugEnabled())
-                    logger.debug("redirectToHostedSmsApp organizationSid = "+organizationSid);
-                Configuration cfg = this.configuration;
-                //Extension
-                final ActorRef session = session(cfg, organizationSid);
-                session.tell(request, self);
-                final StartInterpreter start = new StartInterpreter(session);
-                interpreter.tell(start, self);
-                isFoundHostedApp = true;
 
             }
         } catch (Exception e) {
@@ -297,5 +328,53 @@ public class SmppMessageHandler extends RestcommUntypedActor {
                 | InterruptedException e) {
             logger.error("SMPP message cannot be sent : " + e );
         }
+    }
+
+    //TODO: Notifications API and idioms need to be cleaned up across whole RC
+    //FIXME: duplicate of SmsService
+    private Notification notification(final int log, final int error, final String message) {
+        String version = configuration.subset("runtime-settings").getString("api-version");
+        Sid accountId = new Sid("ACae6e420f425248d6a26948c17a9e2acf");
+        //        Sid callSid = new Sid("CA00000000000000000000000000000000");
+        final Notification.Builder builder = Notification.builder();
+        final Sid sid = Sid.generate(Sid.Type.NOTIFICATION);
+        builder.setSid(sid);
+        // builder.setAccountSid(accountId);
+        builder.setAccountSid(accountId);
+        //        builder.setCallSid(callSid);
+        builder.setApiVersion(version);
+        builder.setLog(log);
+        builder.setErrorCode(error);
+        final String base = configuration.subset("runtime-settings").getString("error-dictionary-uri");
+        StringBuilder buffer = new StringBuilder();
+        buffer.append(base);
+        if (!base.endsWith("/")) {
+            buffer.append("/");
+        }
+        buffer.append(error).append(".html");
+        final URI info = URI.create(buffer.toString());
+        builder.setMoreInfo(info);
+        builder.setMessageText(message);
+        final DateTime now = DateTime.now();
+        builder.setMessageDate(now);
+        try {
+            builder.setRequestUrl(new URI(""));
+        } catch (URISyntaxException e) {
+            e.printStackTrace();
+        }
+        /**
+         * if (response != null) { builder.setRequestUrl(request.getUri()); builder.setRequestMethod(request.getMethod());
+         * builder.setRequestVariables(request.getParametersAsString()); }
+         **/
+
+        builder.setRequestMethod("");
+        builder.setRequestVariables("");
+        buffer = new StringBuilder();
+        buffer.append("/").append(version).append("/Accounts/");
+        buffer.append(accountId.toString()).append("/Notifications/");
+        buffer.append(sid.toString());
+        final URI uri = URI.create(buffer.toString());
+        builder.setUri(uri);
+        return builder.build();
     }
 }
