@@ -1,7 +1,14 @@
 package org.restcomm.connect.testsuite.http;
 
-import com.google.gson.JsonObject;
-import com.sun.jersey.core.util.MultivaluedMapImpl;
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertNotNull;
+import static org.junit.Assert.assertTrue;
+
+import java.io.UnsupportedEncodingException;
+import java.net.URL;
+
+import javax.ws.rs.core.MultivaluedMap;
+
 import org.apache.log4j.Logger;
 import org.jboss.arquillian.container.test.api.Deployer;
 import org.jboss.arquillian.container.test.api.Deployment;
@@ -10,18 +17,16 @@ import org.jboss.arquillian.test.api.ArquillianResource;
 import org.jboss.shrinkwrap.api.ShrinkWrap;
 import org.jboss.shrinkwrap.api.spec.WebArchive;
 import org.jboss.shrinkwrap.resolver.api.maven.archive.ShrinkWrapMaven;
-import org.junit.Test;
 import org.junit.FixMethodOrder;
-import org.junit.runners.MethodSorters;
+import org.junit.Test;
 import org.junit.runner.RunWith;
+import org.junit.runners.MethodSorters;
 import org.restcomm.connect.commons.Version;
 
-import javax.ws.rs.core.MultivaluedMap;
-import java.io.UnsupportedEncodingException;
-import java.net.URL;
-
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertNotNull;
+import com.google.gson.JsonArray;
+import com.google.gson.JsonElement;
+import com.google.gson.JsonObject;
+import com.sun.jersey.core.util.MultivaluedMapImpl;
 
 /**
  * Created by gvagenas on 27/10/2016.
@@ -63,6 +68,37 @@ public class ExtensionsConfigurationTest {
             "  },\n" +
             "  \"enabed\": \"true\"\n" +
             "}";
+
+    @Test
+    public void testGetExtensionsList() {
+        String extensionName1 = "testExtension1";
+        String extensionName2 = "testExtension2";
+        String extensionName3 = "testExtension3";
+        MultivaluedMap<String, String> configurationParams1 = new MultivaluedMapImpl();
+        MultivaluedMap<String, String> configurationParams2 = new MultivaluedMapImpl();
+        MultivaluedMap<String, String> configurationParams3 = new MultivaluedMapImpl();
+        configurationParams1.add("ExtensionName", extensionName1);
+        configurationParams1.add("ConfigurationData", jsonConfiguration);
+        configurationParams2.add("ExtensionName", extensionName2);
+        configurationParams2.add("ConfigurationData", jsonConfiguration);
+        configurationParams3.add("ExtensionName", extensionName3);
+        configurationParams3.add("ConfigurationData", jsonConfiguration);
+        JsonObject response = RestcommExtensionsConfigurationTool.getInstance().postConfiguration(deploymentUrl.toString(), adminAccountSid,
+                adminAuthToken, configurationParams1);
+        assertNotNull(response);
+        response = RestcommExtensionsConfigurationTool.getInstance().postConfiguration(deploymentUrl.toString(), adminAccountSid,
+                adminAuthToken, configurationParams2);
+        assertNotNull(response);
+        response = RestcommExtensionsConfigurationTool.getInstance().postConfiguration(deploymentUrl.toString(), adminAccountSid,
+                adminAuthToken, configurationParams3);
+        assertNotNull(response);
+
+        JsonElement extensionsList = RestcommExtensionsConfigurationTool.getInstance().getExtensionsList(deploymentUrl.toString(), adminAccountSid, adminAuthToken, false);
+        assertNotNull(extensionsList);
+        assertTrue(extensionsList.isJsonArray());
+        JsonArray extensionsArray = extensionsList.getAsJsonArray();
+        assertEquals(extensionsArray.size(), 3);
+    }
 
     @Test
     public void testCreateAndUpdateJsonConfiguration() throws UnsupportedEncodingException {
