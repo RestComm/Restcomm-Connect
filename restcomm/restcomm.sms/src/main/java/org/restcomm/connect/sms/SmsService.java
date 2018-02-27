@@ -318,7 +318,7 @@ public final class SmsService extends RestcommUntypedActor {
                 }
 
                 ExtensionController ec = ExtensionController.getInstance();
-                final IExtensionFeatureAccessRequest far = new FeatureAccessRequest(FeatureAccessRequest.Feature.OUTBOUND_SMS, client.getAccountSid());
+                final IExtensionFeatureAccessRequest far = new FeatureAccessRequest(FeatureAccessRequest.Feature.INBOUND_SMS, client.getAccountSid());
                 ExtensionResponse er = ec.executePreInboundAction(far, this.extensions);
 
                 if (er.isAllowed()) {
@@ -486,8 +486,8 @@ public final class SmsService extends RestcommUntypedActor {
         if (CreateSmsSession.class.equals(klass)) {
             IExtensionCreateSmsSessionRequest ier = (CreateSmsSession)message;
             ier.setConfiguration(this.configuration);
-            ec.executePreOutboundAction(ier, this.extensions);
-            if (ier.isAllowed()) {
+            ExtensionResponse executePreOutboundAction = ec.executePreOutboundAction(ier, this.extensions);
+            if (executePreOutboundAction.isAllowed()) {
                 CreateSmsSession createSmsSession = (CreateSmsSession) message;
                 final ActorRef session = session(ier.getConfiguration(), OrganizationUtil.getOrganizationSidByAccountSid(storage, new Sid(createSmsSession.getAccountSid())));
                 final SmsServiceResponse<ActorRef> response = new SmsServiceResponse<ActorRef>(session);
