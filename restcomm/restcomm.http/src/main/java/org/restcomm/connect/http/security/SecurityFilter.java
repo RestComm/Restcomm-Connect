@@ -42,6 +42,7 @@ public class SecurityFilter implements ContainerRequestFilter {
 
     private final Logger logger = Logger.getLogger(SecurityFilter.class);
     private static final String PATTERN_FOR_RECORDING_FILE_PATH=".*Accounts/.*/Recordings/RE.*[.mp4|.wav]";
+    private static final String PATTERN_FOR_LOGOUT_PATH=".*Logout$";
 
     @Context
     private HttpServletRequest servletRequest;
@@ -54,7 +55,9 @@ public class SecurityFilter implements ContainerRequestFilter {
         UserIdentityContext userIdentityContext = new UserIdentityContext(servletRequest, accountsDao);
         // exclude recording file https://telestax.atlassian.net/browse/RESTCOMM-1736
         logger.info("cr.getPath(): "+cr.getPath());
-        if (!cr.getPath().matches(PATTERN_FOR_RECORDING_FILE_PATH)) {
+        final boolean isRecordingsPath = cr.getPath().matches(PATTERN_FOR_RECORDING_FILE_PATH);
+        final boolean isLogoutPath = cr.getPath().matches(PATTERN_FOR_LOGOUT_PATH);
+        if (!isRecordingsPath && !isLogoutPath) {
             checkAuthenticatedAccount(userIdentityContext);
             filterClosedAccounts(userIdentityContext, cr.getPath());
         }
