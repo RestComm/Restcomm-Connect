@@ -1362,7 +1362,7 @@ public final class CallManager extends RestcommUntypedActor {
                     call.tell(request, self());
                     interpreter.tell(new StartInterpreter(call), self());
                     isFoundHostedApp = true;
-                    ec.executePostOutboundAction(far, extensions);
+                    ec.executePostInboundAction(far, extensions);
                 } else {
                     //Extensions didn't allowed this call
                     String errMsg = "Inbound call to Number: " + number.getPhoneNumber()
@@ -1373,7 +1373,7 @@ public final class CallManager extends RestcommUntypedActor {
                     sendNotification(number.getAccountSid(), errMsg, 11001, "warning", true);
                     final SipServletResponse resp = request.createResponse(SC_FORBIDDEN, "Call not allowed");
                     resp.send();
-                    ec.executePostOutboundAction(far, extensions);
+                    ec.executePostInboundAction(far, extensions);
                     return false;
                 }
             }

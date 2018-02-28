@@ -9,16 +9,21 @@ import java.util.List;
 import org.apache.ibatis.session.SqlSessionFactory;
 import org.apache.ibatis.session.SqlSessionFactoryBuilder;
 import org.junit.After;
+import org.junit.Assert;
 import org.junit.Before;
 import org.junit.Test;
 import org.restcomm.connect.commons.dao.Sid;
 import org.restcomm.connect.dao.ProfileAssociationsDao;
 import org.restcomm.connect.dao.entities.ProfileAssociation;
 
-import junit.framework.Assert;
+import static org.junit.Assert.assertEquals;
+import org.restcomm.connect.dao.ProfilesDao;
+import org.restcomm.connect.dao.entities.Profile;
 
 public class ProfileAssociationsDaoTest extends DaoTest {
+
     private static MybatisDaoManager manager;
+    private static final String jsonProfile = "{}";
 
     public ProfileAssociationsDaoTest() {
         super();
@@ -53,11 +58,11 @@ public class ProfileAssociationsDaoTest extends DaoTest {
         ProfileAssociation profileAssociation = new ProfileAssociation(profileSid, targetSid, Calendar.getInstance().getTime(), Calendar.getInstance().getTime());
         //Add ProfileAssociation
         dao.addProfileAssociation(profileAssociation);
-        
+
         //Read ProfileAssociation ByTargetSid
         ProfileAssociation resultantProfileAssociation = dao.getProfileAssociationByTargetSid(targetSid.toString());
         Assert.assertNotNull(resultantProfileAssociation);
-        Assert.assertEquals(profileAssociation.toString(), resultantProfileAssociation.toString());
+        Assert.assertEquals(profileAssociation.getProfileSid(), resultantProfileAssociation.getProfileSid());
 
         //Read ProfileAssociation ByTargetSid
         List<ProfileAssociation> resultantProfileAssociations = dao.getProfileAssociationsByProfileSid(profileSid.toString());
@@ -90,13 +95,49 @@ public class ProfileAssociationsDaoTest extends DaoTest {
         Assert.assertNotNull(resultantProfileAssociationdao);
         Assert.assertEquals(updatedProfileAssociation.getProfileSid().toString(), resultantProfileAssociationdao.getProfileSid().toString());
 
+        //Delete ByTargetSid
+        int removed = dao.deleteProfileAssociationByTargetSid(resultantProfileAssociationdao.getTargetSid().toString(),
+                resultantProfileAssociationdao.getProfileSid().toString());
+        assertEquals(1, removed);
+        ProfileAssociation profileAssociationByTargetSid = dao.getProfileAssociationByTargetSid(resultantProfileAssociationdao.getTargetSid().toString());
+        Assert.assertNull(profileAssociationByTargetSid);
+
         //Delete ByProfileSid
         dao.deleteProfileAssociationByProfileSid(newProfileSid2.toString());
-        Assert.assertEquals(0,dao.getProfileAssociationsByProfileSid(newProfileSid2.toString()).size());
-        
-        //Delete ByTargetSid
-        dao.deleteProfileAssociationByTargetSid(resultantProfileAssociationdao.getProfileSid().toString());
-        Assert.assertNull(dao.getProfileAssociationByTargetSid(resultantProfileAssociationdao.getProfileSid().toString()));
+        Assert.assertEquals(0, dao.getProfileAssociationsByProfileSid(newProfileSid2.toString()).size());
+
     }
 
+
+    /**
+     * changep rofile for an account.
+     *
+     * Simlaute disorder of unlink7link in network
+     * @throws IllegalArgumentException
+     * @throws URISyntaxException
+     */
+    @Test
+    public void changeProfile() throws IllegalArgumentException, URISyntaxException {
+        ProfileAssociationsDao dao = manager.getProfileAssociationsDao();
+        ProfilesDao profileDao = manager.getProfilesDao();
+
+        Sid targetSid = Sid.generate(Sid.Type.ACCOUNT);
+        Profile profile = new Profile(Sid.generate(Sid.Type.PROFILE).toString(), jsonProfile, Calendar.getInstance().getTime(), Calendar.getInstance().getTime());
+        Profile profile2 = new Profile(Sid.generate(Sid.Type.PROFILE).toString(), jsonProfile, Calendar.getInstance().getTime(), Calendar.getInstance().getTime());
+        profileDao.addProfile(profile);
+        profileDao.addProfile(profile2);
+        ProfileAssociation profileAssociation = new ProfileAssociation(new Sid(profile.getSid()), targetSid, Calendar.getInstance().getTime(), Calendar.getInstance().getTime());
+        dao.addProfileAssociation(profileAssociation);
+
+
+        //linking to new profile comes before unlinking to previous
+        ProfileAssociation profileAssociation2 = new ProfileAssociation(new Sid(profile2.getSid()), targetSid, Calendar.getInstance().getTime(), Calendar.getInstance().getTime());
+        dao.deleteProfileAssociationByTargetSid(targetSid.toString());
+        dao.addProfileAssociation(profileAssociation2);
+
+        //unlinking to previous comes after
+        int removed = dao.deleteProfileAssociationByTargetSid(targetSid.toString(), profile.getSid());
+        //the association was removed in last linking
+        assertEquals(0, removed);
+    }
 }
