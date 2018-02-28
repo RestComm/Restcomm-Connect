@@ -167,7 +167,7 @@ public class ProfileEndpoint {
         checkRelType(link);
         String targetSid = retrieveSid(link.getUri());
         checkTargetSid(new Sid(targetSid));
-        profileAssociationsDao.deleteProfileAssociationByTargetSid(targetSid);
+        profileAssociationsDao.deleteProfileAssociationByTargetSid(targetSid, profileSidStr);
         return Response.ok().build();
     }
 
