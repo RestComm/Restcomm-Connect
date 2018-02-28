@@ -68,6 +68,16 @@ public interface ProfileAssociationsDao {
     /**
      * will delete all associations of given target sid
      * @param targetSid
+     * @return number of associations removed
+     *
      */
-    void deleteProfileAssociationByTargetSid(String targetSid);
+    int deleteProfileAssociationByTargetSid(String targetSid);
+
+    /**
+     * will delete all associations of given target sid
+     * @param targetSid
+     * @return number of associations removed
+     *
+     */
+    int deleteProfileAssociationByTargetSid(String targetSid, String profileSid);
 }
