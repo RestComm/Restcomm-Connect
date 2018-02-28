@@ -32,15 +32,13 @@ import com.cloudhopper.smpp.pdu.PduResponse;
 import com.cloudhopper.smpp.pdu.SubmitSm;
 import com.cloudhopper.smpp.type.SmppChannelException;
 import com.cloudhopper.smpp.type.SmppProcessingException;
-import com.cloudhopper.smpp.util.SmppUtil;
 
 import org.restcomm.connect.sms.smpp.SmppInboundMessageEntity;
 import org.restcomm.connect.sms.smpp.DataCoding;
 
-
 public class MockSmppServer {
 
-    private final static Logger logger = Logger.getLogger(MockSmppServer.class);
+    private static final Logger logger = Logger.getLogger(MockSmppServer.class);
 
     private final DefaultSmppServer smppServer;
     private static SmppServerSession smppServerSession;
@@ -49,8 +47,11 @@ public class MockSmppServer {
     private static SmppInboundMessageEntity smppInboundMessageEntity;
     private static boolean messageReceived;
 
-
     public MockSmppServer() throws SmppChannelException {
+        this(2776);
+    }
+
+    public MockSmppServer(int port) throws SmppChannelException {
         ThreadPoolExecutor executor = (ThreadPoolExecutor) Executors.newCachedThreadPool();
         ScheduledThreadPoolExecutor monitorExecutor = (ScheduledThreadPoolExecutor) Executors.newScheduledThreadPool(1, new ThreadFactory() {
             private AtomicInteger sequence = new AtomicInteger(0);
@@ -66,7 +67,7 @@ public class MockSmppServer {
         // create a server configuration
         SmppServerConfiguration configuration = new SmppServerConfiguration();
         configuration.setHost("127.0.0.1");
-        configuration.setPort(2776);
+        configuration.setPort(port);
         configuration.setMaxConnectionSize(10);
         configuration.setNonBlockingSocketsEnabled(true);
         configuration.setDefaultRequestExpiryTimeout(30000);
@@ -148,8 +149,12 @@ public class MockSmppServer {
         return messageReceived;
     }
 
+    public int getPort() {
+        return smppServer.getConfiguration().getPort();
+    }
 
     private static class DefaultSmppServerHandler implements SmppServerHandler {
+
         @Override
         public void sessionBindRequested(Long sessionId, SmppSessionConfiguration sessionConfiguration, final BaseBind bindRequest) throws SmppProcessingException {
             // test name change of sessions
