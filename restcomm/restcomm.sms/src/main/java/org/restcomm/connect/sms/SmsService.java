@@ -319,7 +319,7 @@ public final class SmsService extends RestcommUntypedActor {
 
                 ExtensionController ec = ExtensionController.getInstance();
                 final IExtensionFeatureAccessRequest far = new FeatureAccessRequest(FeatureAccessRequest.Feature.OUTBOUND_SMS, client.getAccountSid());
-                ExtensionResponse er = ec.executePreInboundAction(far, this.extensions);
+                ExtensionResponse er = ec.executePreOutboundAction(far, this.extensions);
 
                 if (er.isAllowed()) {
                     final SipServletResponse trying = request.createResponse(SipServletResponse.SC_TRYING);
@@ -454,7 +454,7 @@ public final class SmsService extends RestcommUntypedActor {
                     final StartInterpreter start = new StartInterpreter(session);
                     interpreter.tell(start, self());
                     isFoundHostedApp = true;
-                    ec.executePostOutboundAction(far, extensions);
+                    ec.executePostInboundAction(far, extensions);
                 } else {
                     if (logger.isDebugEnabled()) {
                         final String errMsg = "Inbound SMS is not Allowed";
@@ -465,7 +465,7 @@ public final class SmsService extends RestcommUntypedActor {
                     sendNotification(errMsg, 11001, "warning", true);
                     final SipServletResponse resp = request.createResponse(SC_FORBIDDEN, "SMS not allowed");
                     resp.send();
-                    ec.executePostOutboundAction(far, extensions);
+                    ec.executePostInboundAction(far, extensions);
                     return false;
                 }
             }
@@ -486,8 +486,8 @@ public final class SmsService extends RestcommUntypedActor {
         if (CreateSmsSession.class.equals(klass)) {
             IExtensionCreateSmsSessionRequest ier = (CreateSmsSession)message;
             ier.setConfiguration(this.configuration);
-            ec.executePreOutboundAction(ier, this.extensions);
-            if (ier.isAllowed()) {
+            ExtensionResponse executePreOutboundAction = ec.executePreOutboundAction(ier, this.extensions);
+            if (executePreOutboundAction.isAllowed()) {
                 CreateSmsSession createSmsSession = (CreateSmsSession) message;
                 final ActorRef session = session(ier.getConfiguration(), OrganizationUtil.getOrganizationSidByAccountSid(storage, new Sid(createSmsSession.getAccountSid())));
                 final SmsServiceResponse<ActorRef> response = new SmsServiceResponse<ActorRef>(session);
