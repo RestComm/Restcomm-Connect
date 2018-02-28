@@ -63,6 +63,12 @@ public class WebArchiveUtil {
                 .resolve(mavenApp).withoutTransitivity()
                 .asSingle(WebArchive.class);
         archive = archive.merge(restcommArchive);
+
+        //by default include Allowing extension to check executionPoints
+        File extFile = WebArchiveUtil.tweakFilePorts("org/restcomm/connect/testsuite/extensions/extensions_allowing.xml", replacements);
+        archive.delete("/WEB-INF/" + "conf/extensions.xml");
+        archive.addAsWebInfResource(extFile, "conf/extensions.xml");
+
         for (String webdInfFile : webInfResources.keySet()) {
             File f = WebArchiveUtil.tweakFilePorts(webdInfFile, replacements);
             archive.delete("/WEB-INF/" + webInfResources.get(webdInfFile));
