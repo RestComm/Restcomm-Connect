@@ -34,6 +34,13 @@
   
   <delete id="deleteProfileAssociationByTargetSid" parameterType="map">
     DELETE from restcomm_profile_associations 
-    WHERE target_sid=#{target_sid};
+    WHERE '1' = '1'
+        <if test="target_sid != null">
+                AND target_sid = #{target_sid}
+        </if>
+        <if test="profile_sid != null">
+                AND profile_sid = #{profile_sid}
+        </if>
+        ;
   </delete>
 </mapper>
