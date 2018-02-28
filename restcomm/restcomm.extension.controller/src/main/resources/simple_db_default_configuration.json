@@ -1,0 +1,14 @@
+{
+    "extension_name": "simple_db",
+    "version": "1.0.0",
+    "pre-api-CREATE_SUBACCOUNT": {},
+    "post-api-CREATE_SUBACCOUNT": {},
+    "pre-api-AVAILABLEPHONENUMBER": {},
+    "post-api-AVAILABLEPHONENUMBER": {},
+    "pre-api-INCOMINGPHONENUMBER": {},
+    "post-api-INCOMINGPHONENUMBER": {},
+    "pre-inbound-ExtensionRequest": {},
+    "post-inbound-ExtensionRequest": {},
+    "pre-outbound-ExtensionRequest": {},
+    "post-outbound-ExtensionRequest": {}
+}
