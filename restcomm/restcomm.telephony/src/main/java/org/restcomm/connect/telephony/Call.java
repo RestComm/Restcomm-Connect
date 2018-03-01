@@ -125,6 +125,7 @@ import org.restcomm.connect.telephony.api.InitializeOutbound;
 import org.restcomm.connect.telephony.api.Reject;
 import org.restcomm.connect.telephony.api.RemoveParticipant;
 import org.restcomm.connect.telephony.api.StopWaiting;
+import org.restcomm.connect.telephony.api.util.B2BUAHelper;
 
 import akka.actor.ActorRef;
 import akka.actor.Props;
@@ -998,7 +999,7 @@ public final class Call extends RestcommUntypedActor {
             addHeadersToMessage(invite, rcmlHeaders, "X-");
 
             //the extension headers will override any headers
-            addHeadersToMessage(invite, extensionHeaders);
+            B2BUAHelper.addHeadersToMessage(invite, extensionHeaders, factory);
 
             final SipSession session = invite.getSession();
             session.setHandler("CallManager");
@@ -1060,70 +1061,6 @@ public final class Call extends RestcommUntypedActor {
             } catch (IllegalArgumentException iae) {
                 if(logger.isErrorEnabled()) {
                     logger.error("Exception while setting message header: "+iae.getMessage());
-                }
-            }
-        }
-
-        /**
-         * Replace headers
-         * @param SipServletRequest message
-         * @param Map<String, ArrayList<String> > headers
-         */
-        private void addHeadersToMessage(SipServletRequest message, Map<String, ArrayList<String> > headers) {
-
-            if(headers!=null) {
-                for (Map.Entry<String, ArrayList<String>> entry : headers.entrySet()) {
-                    //check if header exists
-                    String headerName = entry.getKey();
-
-                    StringBuilder sb = new StringBuilder();
-                    if(entry.getValue() instanceof ArrayList){
-                        for(String pair : entry.getValue()){
-                            sb.append(";").append(pair);
-                        }
-                    }
-                    if(logger.isDebugEnabled()) {
-                        logger.debug("headerName="+headerName+" headerVal="+message.getHeader(headerName)+" concatValue="+sb.toString());
-                    }
-                    if(!headerName.equalsIgnoreCase("Request-URI")){
-                        try {
-                            String headerVal = message.getHeader(headerName);
-                            if(headerVal!=null && !headerVal.isEmpty()) {
-                                message.setHeader(headerName , headerVal+sb.toString());
-                            }else{
-                                message.addHeader(headerName , sb.toString());
-                            }
-                        } catch (IllegalArgumentException iae) {
-                            if(logger.isErrorEnabled()) {
-                                logger.error("Exception while setting message header: "+iae.getMessage());
-                            }
-                        }
-                    }else{
-                        //handle Request-URI
-                        javax.servlet.sip.URI reqURI = message.getRequestURI();
-                        if(logger.isDebugEnabled()) {
-                            logger.debug("ReqURI="+reqURI.toString()+" msgReqURI="+message.getRequestURI());
-                        }
-                        for(String keyValPair :entry.getValue()){
-                            String parName = "";
-                            String parVal = "";
-                            int equalsPos = keyValPair.indexOf("=");
-                            parName = keyValPair.substring(0, equalsPos);
-                            parVal = keyValPair.substring(equalsPos+1);
-                            reqURI.setParameter(parName, parVal);
-                            if(logger.isDebugEnabled()) {
-                                logger.debug("ReqURI pars ="+parName+"="+parVal+" equalsPos="+equalsPos+" keyValPair="+keyValPair);
-                            }
-                        }
-
-                        message.setRequestURI(reqURI);
-                        if(logger.isDebugEnabled()) {
-                            logger.debug("ReqURI="+reqURI.toString()+" msgReqURI="+message.getRequestURI());
-                        }
-                    }
-                    if(logger.isDebugEnabled()) {
-                        logger.debug("headerName="+headerName+" headerVal="+message.getHeader(headerName));
-                    }
                 }
             }
         }
@@ -2008,17 +1945,20 @@ public final class Call extends RestcommUntypedActor {
     private void onCancel(Cancel message, ActorRef self, ActorRef sender) throws Exception {
         if (is(initializing) || is(dialing) || is(ringing) || is(failingNoAnswer)) {
             if(logger.isInfoEnabled()) {
-                logger.info("Got CANCEL for Call with the following details, from: "+from+" to: "+to+" direction: "+direction+" state: "+fsm.state()+", will Cancel the call");
+                String msg = String.format("Got Cancel %s for call %s, from %s, to %s, direction %s, fsm state %s, will Cancel the call", message, self(), from, to, direction, fsm.state());
+                logger.info(msg);
             }
             fsm.transition(message, canceling);
         } else if (is(inProgress) || is(updatingMediaSession)) {
             if(logger.isInfoEnabled()) {
-                logger.info("Got CANCEL for Call with the following details, from: "+from+" to: "+to+" direction: "+direction+" state: "+fsm.state()+", will Hangup the call");
+                String msg = String.format("Got Cancel %s for call %s, from %s, to %s, direction %s, fsm state %s, will Hangup the call", message, self(), from, to, direction, fsm.state());
+                logger.info(msg);
             }
             onHangup(new Hangup(), self(), sender());
         } else {
             if(logger.isInfoEnabled()) {
-                logger.info("Got CANCEL for Call with the following details, from: "+from+" to: "+to+" direction: "+direction+" state: "+fsm.state());
+                String msg = String.format("Got Cancel %s for call %s, from %s, to %s, direction %s, fsm state %s", message, self(), from, to, direction, fsm.state());
+                logger.info(msg);
             }
         }
     }
@@ -2303,7 +2243,8 @@ public final class Call extends RestcommUntypedActor {
 
     private void onHangup(Hangup message, ActorRef self, ActorRef sender) throws Exception {
         if(logger.isDebugEnabled()) {
-            logger.debug("Got Hangup: "+message+" for Call, from: "+from+", to: "+to+", state: "+fsm.state()+", conferencing: "+conferencing +", conference: "+conference);
+            String msg = String.format("Got Hangup %s for call %s, from %s, to %s, fsm state %s, conferencing %s, conference %s ", message, self(), from, to, fsm.state(), conferencing, conference);
+            logger.debug(msg);
         }
 
         if (is(completed)) {

@@ -6,7 +6,9 @@ import static com.github.tomakehurst.wiremock.client.WireMock.get;
 import static com.github.tomakehurst.wiremock.client.WireMock.stubFor;
 import static com.github.tomakehurst.wiremock.client.WireMock.urlPathEqualTo;
 import static org.cafesip.sipunit.SipAssert.assertLastOperationSuccess;
+import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
+import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertTrue;
 
 import java.net.URL;
@@ -35,6 +37,8 @@ import org.junit.Before;
 import org.junit.BeforeClass;
 import org.junit.Rule;
 import org.junit.Test;
+import org.junit.FixMethodOrder;
+import org.junit.runners.MethodSorters;
 import org.junit.experimental.categories.Category;
 import org.junit.runner.RunWith;
 //import org.restcomm.connect.sms.Version;
@@ -55,6 +59,7 @@ import com.google.gson.JsonObject;
  * @author gvagenas@gmail.com (George Vagenas)
  */
 @RunWith(Arquillian.class)
+@FixMethodOrder(MethodSorters.NAME_ASCENDING)
 @Category(value={WithInSecsTests.class, ParallelClassTests.class})
 public final class SmsSessionTest {
     private static final String version = Version.getVersion();
@@ -132,6 +137,7 @@ public final class SmsSessionTest {
         if (alice != null) {
             alice.dispose();
         }
+        Thread.sleep(1000);
     }
 
     @Test
@@ -284,7 +290,7 @@ public final class SmsSessionTest {
 
     @Test
     @Category(value={FeatureExpTests.class})
-    public void sendMessageUsingValidContentType() throws ParseException {
+    public void sendMessageUsingValidContentType() throws ParseException, InterruptedException {
         final String proxy = phone.getStackAddress() + ":" + restcommPort + ";lr/udp";
         final String to = "sip:+12223334450@" + restcommContact;
         final String body = "VALID-CONTENT-TYPE";
@@ -296,8 +302,10 @@ public final class SmsSessionTest {
         replaceHeaders.add(header);
         call.initiateOutgoingMessage(null, to, proxy, new ArrayList<Header>(), replaceHeaders, body);
         assertLastOperationSuccess(call);
+        Thread.sleep(1000);
         // Verify if message was properly registered
         JsonArray array = SmsEndpointTool.getInstance().getSmsList(deploymentUrl.toString(), adminAccountSid, adminAuthToken);
+        assertNotNull(array);
         boolean found = false;
         for (int i = 0; i < array.size(); i++) {
             if (((JsonObject) array.get(i)).get("body").getAsString().equals(body)) {

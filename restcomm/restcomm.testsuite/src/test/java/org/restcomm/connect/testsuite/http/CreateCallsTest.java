@@ -33,6 +33,8 @@ import org.junit.Before;
 import org.junit.BeforeClass;
 import org.junit.Rule;
 import org.junit.Test;
+import org.junit.FixMethodOrder;
+import org.junit.runners.MethodSorters;
 import org.junit.experimental.categories.Category;
 import org.junit.runner.RunWith;
 import org.restcomm.connect.commons.Version;
@@ -50,6 +52,7 @@ import com.google.gson.JsonObject;
  * @author <a href="mailto:gvagenas@gmail.com">gvagenas</a>
  */
 @RunWith(Arquillian.class)
+@FixMethodOrder(MethodSorters.NAME_ASCENDING)
 public class CreateCallsTest {
 
     private final static Logger logger = Logger.getLogger(CreateCallsTest.class.getName());
@@ -129,23 +132,25 @@ public class CreateCallsTest {
             georgeSipStack.dispose();
         }
 
-        if (aliceSipStack != null) {
-            aliceSipStack.dispose();
-        }
         if (alicePhone != null) {
             alicePhone.dispose();
         }
-
-        if (alice2SipStack != null) {
-            alice2SipStack.dispose();
+        if (aliceSipStack != null) {
+            aliceSipStack.dispose();
         }
+
         if (alice2Phone != null) {
             alice2Phone.dispose();
         }
+        if (alice2SipStack != null) {
+            alice2SipStack.dispose();
+        }
+
+        Thread.sleep(1000);
     }
 
     @Test
-    @Category(UnstableTests.class)
+//    @Category(UnstableTests.class)
     // Create a call to a SIP URI. Non-regression test for issue https://bitbucket.org/telestax/telscale-restcomm/issue/175
     // Use Calls Rest API to dial Bob (SIP URI sip:bob@127.0.0.1:5090) and connect him to the RCML app dial-number-entry.xml.
     // This RCML will dial +131313 which George's phone is listening (use the dial-number-entry.xml as a side effect to verify
@@ -209,7 +214,8 @@ public class CreateCallsTest {
     }
 
     @Test
-    @Category({FeatureAltTests.class, UnstableTests.class})
+//    @Category({FeatureAltTests.class, UnstableTests.class})
+    @Category(FeatureAltTests.class)
     // Create a call to a SIP URI. Non-regression test for issue https://github.com/Mobicents/RestComm/issues/150
     // Use Calls Rest API to dial Bob (SIP URI sip:bob@127.0.0.1:5090) and connect him to the RCML app dial-number-entry.xml.
     // This RCML will dial +131313 which George's phone is listening (use the dial-number-entry.xml as a side effect to verify
@@ -277,7 +283,7 @@ public class CreateCallsTest {
     }
 
     @Test
-    @Category(UnstableTests.class)
+//    @Category(UnstableTests.class)
     // Create a call to a Restcomm Client. Non-regression test for issue
     // https://bitbucket.org/telestax/telscale-restcomm/issue/175
     // Use Calls Rest API to dial Alice Restcomm client and connect him to the RCML app dial-number-entry.xml.
@@ -596,7 +602,8 @@ public class CreateCallsTest {
         but there will be no answer within the timeout interval (10sec) and Restcomm should cancel the call to alice and disconnect 'george' call
     */
     @Test
-    @Category({FeatureExpTests.class, UnstableTests.class})
+//    @Category({FeatureExpTests.class, UnstableTests.class})
+    @Category(FeatureExpTests.class)
     public void createCallNumberTestNoAnswerOnRcml() throws InterruptedException, ParseException {
 
         stubFor(post(urlPathEqualTo("/1111"))
@@ -661,7 +668,8 @@ public class CreateCallsTest {
 	but the response will be 486 Busy here and Restcomm should disconnect 'george' call
 */
     @Test
-    @Category({FeatureExpTests.class, UnstableTests.class})
+//    @Category({FeatureExpTests.class, UnstableTests.class})
+    @Category(FeatureExpTests.class)
     public void createCallNumberTestBusyOnRcml () throws InterruptedException, ParseException {
 
         stubFor(post(urlPathEqualTo("/1111"))

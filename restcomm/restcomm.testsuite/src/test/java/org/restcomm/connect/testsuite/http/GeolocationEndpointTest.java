@@ -53,6 +53,8 @@ import org.joda.time.format.DateTimeFormatter;
 import org.junit.After;
 import org.junit.Rule;
 import org.junit.Test;
+import org.junit.FixMethodOrder;
+import org.junit.runners.MethodSorters;
 import org.junit.experimental.categories.Category;
 import org.junit.runner.RunWith;
 import org.restcomm.connect.dao.entities.Geolocation;
@@ -70,6 +72,7 @@ import com.sun.jersey.core.util.MultivaluedMapImpl;
  *
  */
 @RunWith(Arquillian.class)
+@FixMethodOrder(MethodSorters.NAME_ASCENDING)
 public class GeolocationEndpointTest {
 
     private static final Logger logger = Logger.getLogger(GeolocationEndpointTest.class);

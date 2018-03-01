@@ -1589,7 +1589,7 @@ public abstract class BaseVoiceInterpreter extends RestcommUntypedActor {
                     call.tell(new Hangup(errMsg), source);
                     return;
                 }
-                ec.executePostOutboundAction(far, extensions);
+                ec.executePostInboundAction(far, extensions);
             }
 
             // parse attribute "language"

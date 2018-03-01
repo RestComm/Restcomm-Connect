@@ -34,10 +34,11 @@ Restcomm Accounts have the following subresources. Click on a link to read the A
 * <<ussd-push-api.adoc#uss-push,Restcomm API – UssdPush>>
 * <<conferences-api.adoc#conferenceapi, Restcomm API - Conference Management>>
 * <<participants-api.adoc#participantsapi, Restcomm API - Conference Participants Management>>
+* <<profile-api.adoc#profileapi, Restcomm API - Profiles Management>>
 
 === Management Sub-Resources
 
 * <<gateway-api.adoc#gateways,Restcomm API – Gateway>>
 * <<monitoring-service.adoc#monitoring, Restcomm API - Supervisor/Monitoring Service>>
 * <<outbound-proxy-api.adoc#outbound-proxy,Restcomm API – OutboundProxy>>
-* <<extensions-multiprovider-configuration.adoc,Restcomm API – MultiProvider Extension Configuration>>
+* <<extensions-multiprovider-configuration.adoc#extensions-multiprovider-configuration,Restcomm API – MultiProvider Extension Configuration>>

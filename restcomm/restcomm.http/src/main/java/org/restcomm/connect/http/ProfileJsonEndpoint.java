@@ -46,6 +46,8 @@ import static org.restcomm.connect.http.security.AccountPrincipal.SUPER_ADMIN_RO
 @Singleton
 public class ProfileJsonEndpoint extends ProfileEndpoint {
 
+    private static final String OVERRIDE_HDR = "X-HTTP-Method-Override";
+
     @GET
     @Produces(APPLICATION_JSON)
     public Response getProfilesAsJson(@Context UriInfo info) {
@@ -69,9 +71,22 @@ public class ProfileJsonEndpoint extends ProfileEndpoint {
 
     @Path("/{profileSid}")
     @PUT
-    @Consumes({PROFILE_CONTENT_TYPE,MediaType.APPLICATION_JSON})
+    @Consumes({PROFILE_CONTENT_TYPE, MediaType.APPLICATION_JSON})
+    @Produces({PROFILE_CONTENT_TYPE, MediaType.APPLICATION_JSON})
     public Response updateProfileAsJson(@PathParam("profileSid") final String profileSid,
-            InputStream body, @Context UriInfo info) {
+            InputStream body, @Context UriInfo info,
+            @Context HttpHeaders headers) {
+        if (headers.getRequestHeader(OVERRIDE_HDR) != null
+                && headers.getRequestHeader(OVERRIDE_HDR).size() > 0) {
+            String overrideHdr = headers.getRequestHeader(OVERRIDE_HDR).get(0);
+            switch (overrideHdr) {
+                case "LINK":
+                    return linkProfile(profileSid, headers, info);
+                case "UNLINK":
+                    return unlinkProfile(profileSid, headers);
+
+            }
+        }
         return updateProfile(profileSid, body, info);
     }
 

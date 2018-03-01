@@ -29,6 +29,8 @@ import org.junit.Before;
 import org.junit.BeforeClass;
 import org.junit.Rule;
 import org.junit.Test;
+import org.junit.FixMethodOrder;
+import org.junit.runners.MethodSorters;
 import org.junit.experimental.categories.Category;
 import org.junit.runner.RunWith;
 import org.restcomm.connect.commons.Version;
@@ -44,6 +46,7 @@ import com.google.gson.JsonObject;
  * https://telestax.atlassian.net/browse/RESTCOMM-1343
  */
 @RunWith(Arquillian.class)
+@FixMethodOrder(MethodSorters.NAME_ASCENDING)
 @Category(value={SequentialClassTests.class})
 public class DialConferenceConnectionFailureTest {
     private final static Logger logger = Logger.getLogger(DialConferenceConnectionFailureTest.class.getName());

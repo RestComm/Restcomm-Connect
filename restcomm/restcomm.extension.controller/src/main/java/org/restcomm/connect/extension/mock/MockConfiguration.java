@@ -17,27 +17,23 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>
  *
  */
-package org.restcomm.connect.http.exceptions;
 
-import javax.ws.rs.core.Response.Status;
-import org.restcomm.connect.commons.exceptions.RestcommRuntimeException;
+package org.restcomm.connect.extension.mock;
 
-public class StatusException extends RestcommRuntimeException {
+import org.restcomm.connect.dao.DaoManager;
+import org.restcomm.connect.extension.api.ConfigurationException;
+import org.restcomm.connect.extension.configuration.DefaultExtensionConfiguration;
 
-    private Status status;
 
-    public StatusException(Status status) {
-        this.status = status;
+
+public class MockConfiguration extends DefaultExtensionConfiguration{
+
+    public MockConfiguration(){
+        super();
     }
-
-    public StatusException(Status status,String message) {
-        super(message);
-        this.status = status;
+    public MockConfiguration(DaoManager daoManager, String extensionName, String localConfigPath)
+            throws ConfigurationException {
+        super(daoManager, extensionName, localConfigPath);
     }
-
-    public Status getStatus() {
-        return status;
-    }
-
 
 }
