@@ -63,7 +63,7 @@ public class ProfileJsonEndpoint extends ProfileEndpoint {
 
     @Path("/{profileSid}")
     @GET
-    @Produces(PROFILE_CONTENT_TYPE)
+    @Produces({PROFILE_CONTENT_TYPE, MediaType.APPLICATION_JSON})
     public Response getProfileAsJson(@PathParam("profileSid") final String profileSid,
             @Context UriInfo info) {
         return getProfile(profileSid, info);
