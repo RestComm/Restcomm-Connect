@@ -290,7 +290,7 @@ public final class SmsService extends RestcommUntypedActor {
                     public void run() {
                         try {
                             // to the b2bua
-                            if (B2BUAHelper.redirectToB2BUA(request, client, toClient, storage, sipFactory, patchForNatB2BUASessions)) {
+                            if (B2BUAHelper.redirectToB2BUA(system, request, client, toClient, storage, sipFactory, patchForNatB2BUASessions)) {
                                 // if all goes well with proxying the SIP MESSAGE on to the target client
                                 // then we can end further processing of this request and send response to sender
                                 if(logger.isInfoEnabled()) {
@@ -523,7 +523,7 @@ public final class SmsService extends RestcommUntypedActor {
         final SipServletResponse response = (SipServletResponse) message;
         // https://bitbucket.org/telestax/telscale-restcomm/issue/144/send-p2p-chat-works-but-gives-npe
         if (B2BUAHelper.isB2BUASession(response)) {
-            B2BUAHelper.forwardResponse(response, patchForNatB2BUASessions);
+            B2BUAHelper.forwardResponse(system, response, patchForNatB2BUASessions);
             return;
         }
         final SipApplicationSession application = response.getApplicationSession();

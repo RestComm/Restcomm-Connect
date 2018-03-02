@@ -50,7 +50,6 @@ public final class VoiceInterpreterParams {
     private String referTarget;
     private String emailAddress;
     private ActorRef monitoring;
-    private ActorRef sdr;
     private String rcml;
     private long timeout;
 
@@ -61,7 +60,7 @@ public final class VoiceInterpreterParams {
     private String transferor;
     private String transferee;
 
-    private VoiceInterpreterParams(Configuration configuration, DaoManager storage, ActorRef callManager, ActorRef conferences, ActorRef bridgeManager, ActorRef smsService, Sid account, Sid phone, String version, URI url, String method, URI fallbackUrl, String fallbackMethod, URI statusCallback, String statusCallbackMethod, String referTarget, String emailAddress, ActorRef monitoring, ActorRef sdr, String rcml, boolean asImsUa, String imsUaLogin, String imsUaPassword, String transferor, String transferee, long timeout) {
+    private VoiceInterpreterParams(Configuration configuration, DaoManager storage, ActorRef callManager, ActorRef conferences, ActorRef bridgeManager, ActorRef smsService, Sid account, Sid phone, String version, URI url, String method, URI fallbackUrl, String fallbackMethod, URI statusCallback, String statusCallbackMethod, String referTarget, String emailAddress, ActorRef monitoring, String rcml, boolean asImsUa, String imsUaLogin, String imsUaPassword, String transferor, String transferee, long timeout) {
         this.configuration = configuration;
         this.storage = storage;
         this.callManager = callManager;
@@ -80,7 +79,6 @@ public final class VoiceInterpreterParams {
         this.referTarget = referTarget;
         this.emailAddress = emailAddress;
         this.monitoring = monitoring;
-        this.sdr = sdr;
         this.rcml = rcml;
         this.asImsUa = asImsUa;
         this.imsUaLogin = imsUaLogin;
@@ -162,10 +160,6 @@ public final class VoiceInterpreterParams {
         return monitoring;
     }
 
-    public ActorRef getSdr() {
-        return sdr;
-    }
-
     public String getRcml() {
         return rcml;
     }
@@ -213,7 +207,6 @@ public final class VoiceInterpreterParams {
         private String referTarget;
         private String emailAddress;
         private ActorRef monitoring;
-        private ActorRef sdr;
         private String rcml;
         private boolean asImsUa;
         private String imsUaLogin;
@@ -315,11 +308,6 @@ public final class VoiceInterpreterParams {
             return this;
         }
 
-        public Builder setSdr(ActorRef sdr) {
-            this.sdr = sdr;
-            return this;
-        }
-
         public Builder setRcml(String rcml) {
             this.rcml = rcml;
             return this;
@@ -356,7 +344,7 @@ public final class VoiceInterpreterParams {
         }
 
         public VoiceInterpreterParams build() {
-            return new VoiceInterpreterParams(configuration, storage, callManager, conferenceCenter, bridgeManager, smsService, account, phone, version, url, method, fallbackUrl, fallbackMethod, statusCallback, statusCallbackMethod, referTarget, emailAddress, monitoring, sdr, rcml, asImsUa, imsUaLogin, imsUaPassword, transferor, transferee, timeout);
+            return new VoiceInterpreterParams(configuration, storage, callManager, conferenceCenter, bridgeManager, smsService, account, phone, version, url, method, fallbackUrl, fallbackMethod, statusCallback, statusCallbackMethod, referTarget, emailAddress, monitoring, rcml, asImsUa, imsUaLogin, imsUaPassword, transferor, transferee, timeout);
         }
     }
 }
