@@ -364,8 +364,12 @@ public class SmppMessageHandler extends RestcommUntypedActor {
             textBytes = CharsetUtil.encode(request.getSmppContent(), request.getSmppEncoding());
         }
 
+        //TODO reverted from https://telestax.atlassian.net/browse/RESTCOMM-1595 as it caused SMS loop at SMSC
+        //TODO the delivery receipt should be introduced only together with the remaining/pending DLR implementation
+        //TODO the DLR implementation should be configurable (on/off)
+        //TODO when enabling delivery receipts again, enable also SmppTest.testClientSentOutUsingSMPPDeliveryReceipt()
         //set the delivery flag to true
-        submit0.setRegisteredDelivery((byte) 1);
+        //submit0.setRegisteredDelivery((byte) 1);
 
         submit0.setShortMessage(textBytes);
 

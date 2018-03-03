@@ -136,7 +136,7 @@ public class ProfilesEndpointTest extends EndpointTest {
      * Create, Read And Update Profile Test
      */
     @Test
-    public void createReadUpdateDeleteProfileTest(){
+    public void createReadUpdateDeleteProfileTest() throws IOException, URISyntaxException{
     	/*
 		 * create a profile
 		 */
@@ -152,6 +152,13 @@ public class ProfilesEndpointTest extends EndpointTest {
     	assertNotNull(profileUriElements);
     	String newlyCreatedProfileSid = profileUriElements[profileUriElements.length-1];
 
+        /**
+         * link default profile to dev account
+         */
+        HttpResponse response = RestcommProfilesTool.getInstance().linkProfile(deploymentUrl.toString(), SUPER_ADMIN_ACCOUNT_SID, AUTH_TOKEN, newlyCreatedProfileSid, SUPER_ADMIN_ACCOUNT_SID, RestcommProfilesTool.AssociatedResourceType.ACCOUNT);
+        logger.info("HttpResponse: "+response);
+        assertEquals(200, response.getStatusLine().getStatusCode());
+
     	/*
 		 * read newly created profile
 		 */
@@ -165,6 +172,13 @@ public class ProfilesEndpointTest extends EndpointTest {
     	clientResponse = RestcommProfilesTool.getInstance().updateProfileResponse(deploymentUrl.toString(), SUPER_ADMIN_ACCOUNT_SID, AUTH_TOKEN, newlyCreatedProfileSid, UPDATE_PROFILE_DOCUMENT);
     	assertEquals(200, clientResponse.getStatus());
     	assertEquals(UPDATE_PROFILE_DOCUMENT, clientResponse.getEntity(String.class));
+
+        /*
+		 * unlink a profile from an account
+		 */
+    	response = RestcommProfilesTool.getInstance().unLinkProfileWithOverride(deploymentUrl.toString(), SUPER_ADMIN_ACCOUNT_SID, AUTH_TOKEN, newlyCreatedProfileSid, SUPER_ADMIN_ACCOUNT_SID, RestcommProfilesTool.AssociatedResourceType.ACCOUNT);
+    	logger.info("HttpResponse: "+response);
+    	assertEquals(200, response.getStatusLine().getStatusCode());
 
     	/*
 		 * delete the profile
