@@ -17,35 +17,12 @@
  *  along  this program.  If not, see <http:www.gnu.orglicenses>
  */
 
-package org.restcomm.connect.sdr.api;
-
-import org.restcomm.connect.commons.dao.Sid;
-
-import javax.servlet.sip.SipServletMessage;
+package org.restcomm.connect.commons.fsm;
 
 /**
  * @author oleg.agafonov@telestax.com (Oleg Agafonov)
  */
-public final class B2BUASdrMessage {
+public interface TransitionEndListener {
 
-    private Sid accountSid;
-
-    private final SipServletMessage sipServletMessage;
-
-    public B2BUASdrMessage(Sid accountSid, SipServletMessage sipServletMessage) {
-        this.accountSid = accountSid;
-        this.sipServletMessage = sipServletMessage;
-    }
-
-    public B2BUASdrMessage(SipServletMessage sipServletMessage) {
-        this(null, sipServletMessage);
-    }
-
-    public Sid getAccountSid() {
-        return accountSid;
-    }
-
-    public SipServletMessage getSipServletMessage() {
-        return sipServletMessage;
-    }
+    void onTransitionEnd(State was, State is, Object event);
 }

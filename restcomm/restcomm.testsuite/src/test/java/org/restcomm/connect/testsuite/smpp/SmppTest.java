@@ -31,6 +31,7 @@ import org.junit.After;
 import org.junit.AfterClass;
 import org.junit.Before;
 import org.junit.BeforeClass;
+import org.junit.Ignore;
 import org.junit.Rule;
 import org.junit.Test;
 import org.junit.FixMethodOrder;
@@ -310,6 +311,7 @@ public class SmppTest {
     }
 
     @Test
+	@Ignore
     public void testClientSentOutUsingSMPPDeliveryReceipt() throws ParseException, InterruptedException {
         final String msg = "Test Message from Alice with Delivery Receipt";
         SipURI uri = aliceSipStack.getAddressFactory().createSipURI(null, "127.0.0.1:5080");
