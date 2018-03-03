@@ -252,6 +252,7 @@ public final class Call extends RestcommUntypedActor {
     private Configuration runtimeSettings;
     private Configuration configuration;
     private boolean disableSdpPatchingOnUpdatingMediaSession;
+    private boolean useSbc;
 
     private Sid inboundCallSid;
     private boolean inboundConfirmCall;
@@ -431,7 +432,7 @@ public final class Call extends RestcommUntypedActor {
         this.configuration = configuration;
         final Configuration runtime = this.configuration.subset("runtime-settings");
         this.disableSdpPatchingOnUpdatingMediaSession = runtime.getBoolean("disable-sdp-patching-on-updating-mediasession", false);
-        boolean useSbc = runtime.getBoolean("use-sbc", false);
+        this.useSbc = runtime.getBoolean("use-sbc", false);
         if(useSbc) {
             if (logger.isDebugEnabled()) {
                 logger.debug("Call: use-sbc is true, disable-sdp-patching-on-updating-mediasession to true");
@@ -996,7 +997,9 @@ public final class Call extends RestcommUntypedActor {
             } else {
                 invite = ((SipFactoryExt)factory).createRequestWithCallID(application, "INVITE", from, to, callId);
             }
-            invite.pushRoute(uri);
+            if(!useSbc) {
+                invite.pushRoute(uri);
+            }
 
             if(userAgent!=null){
                 invite.setHeader("User-Agent", userAgent);
