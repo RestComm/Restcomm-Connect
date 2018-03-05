@@ -687,6 +687,10 @@ otherRestCommConf(){
     echo "CACHE_NO_WAV $CACHE_NO_WAV"
     sed -i "s|<cache-no-wav>.*</cache-no-wav>|<cache-no-wav>${CACHE_NO_WAV}</cache-no-wav>|" $FILE
 
+    #Configure USESBC
+    echo "USESBC: $USESBC"
+    sed -i "s|<use-sbc>.*</use-sbc>|<use-sbc>${USESBC}</use-sbc>" $FILE
+
     echo "End Rest RestComm configuration"
 }
 
