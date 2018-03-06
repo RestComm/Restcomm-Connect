@@ -511,7 +511,6 @@ public class AccountsEndpoint extends SecuredEndpoint {
 
 
         if (data.containsKey("Status")) {
-            // if the status is switched , the rest of the updates are ignored.
             Account.Status newStatus = Account.Status.getValueOf(data.getFirst("Status").toLowerCase());
             accBuilder.setStatus(newStatus);
         }
