@@ -1808,14 +1808,20 @@ public final class CallManager extends RestcommUntypedActor {
             case CLIENT: {
                 if (extRes.isAllowed()) {
                     ClientsDao clients = storage.getClientsDao();
-                    Client client = clients.getClient(request.to().replaceFirst("client:", ""), storage.getAccountsDao().getAccount(request.accountId()).getOrganizationSid());
+                    String clientName = null;
+                    if (request.to().contains("?")) {
+                        clientName = request.to().replaceFirst("client:", "").substring(0, request.to().replaceFirst("client:", "").lastIndexOf('?'));
+                    } else {
+                        clientName = request.to().replaceFirst("client:", "");
+                    }
+                    final Client client = clients.getClient(clientName, storage.getAccountsDao().getAccount(request.accountId()).getOrganizationSid());
                     if (client != null) {
                         long delay = pushNotificationServerHelper.sendPushNotificationIfNeeded(client.getPushClientIdentity());
                         system.scheduler().scheduleOnce(Duration.create(delay, TimeUnit.MILLISECONDS), new Runnable() {
                             @Override
                             public void run() {
                                 try {
-                                    outboundToClient(request, sender);
+                                    outboundToClient(request, sender, client);
 
                                     ExtensionController.getInstance().executePostOutboundAction(request, extensions);
                                 } catch (ServletParseException e) {
@@ -1867,15 +1873,18 @@ public final class CallManager extends RestcommUntypedActor {
         }
     }
 
-    private void outboundToClient(final CreateCall request, final ActorRef sender) throws ServletParseException {
+    private void outboundToClient(final CreateCall request, final ActorRef sender, final Client client) throws ServletParseException {
         SipURI outboundIntf = null;
         SipURI from = null;
         SipURI to = null;
         boolean webRTC = false;
         boolean isLBPresent = false;
+        String customHeaders = null;
 
         final RegistrationsDao registrationsDao = storage.getRegistrationsDao();
-        final String client = request.to().replaceFirst("client:", "");
+        if (request.to().contains("?")) {
+            customHeaders = request.to().replaceFirst("client:", "").substring(request.to().replaceFirst("client:", "").lastIndexOf('?'), request.to().replaceFirst("client:", "").length());
+        }
 
         //1, If this is a WebRTC client check if the instance is the current instance
         //2. Check if the client has more than one registrations
@@ -1883,7 +1892,7 @@ public final class CallManager extends RestcommUntypedActor {
         List<Registration> registrationToDial = new CopyOnWriteArrayList<Registration>();
         Sid organizationSid = storage.getAccountsDao().getAccount(request.accountId()).getOrganizationSid();
 
-        List<Registration> registrations = registrationsDao.getRegistrations(client, organizationSid);
+        List<Registration> registrations = registrationsDao.getRegistrations(client.getFriendlyName(), organizationSid);
         if (registrations != null && registrations.size() > 0) {
             if (logger.isInfoEnabled()) {
                 logger.info("Preparing call for client: " + client + ". There are " + registrations.size() + " registrations at the database for this client");
@@ -1960,6 +1969,11 @@ public final class CallManager extends RestcommUntypedActor {
                 }
                 final String location = registration.getLocation();
                 to = (SipURI) sipFactory.createURI(location);
+                if (customHeaders != null) {
+                    for (String customHeader: customHeaders.replace("?","").split("&")) {
+                        to.setHeader(customHeader.split("=")[0], customHeader.split("=")[1]);
+                    }
+                }
                 webRTC = registration.isWebRTC();
                 if (from == null || to == null) {
                     //In case From or To are null we have to cancel outbound call and hnagup initial call if needed
