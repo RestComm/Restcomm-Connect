@@ -200,6 +200,7 @@ public final class CallManager extends RestcommUntypedActor {
 
     //Control whether Restcomm will patch Request-URI and SDP for B2BUA calls
     private boolean patchForNatB2BUASessions;
+    private boolean useSbc;
 
     //List of extensions for CallManager
     List<RestcommExtensionGeneric> extensions;
@@ -314,7 +315,7 @@ public final class CallManager extends RestcommUntypedActor {
         allowFallbackToPrimary = outboundProxyConfig.getBoolean("allow-fallback-to-primary", false);
 
         patchForNatB2BUASessions = runtime.getBoolean("patch-for-nat-b2bua-sessions", true);
-        boolean useSbc = runtime.getBoolean("use-sbc", false);
+        useSbc = runtime.getBoolean("use-sbc", false);
         if(useSbc) {
             if (logger.isDebugEnabled()) {
                 logger.debug("CallManager: use-sbc is true, overriding patch-for-nat-b2bua-sessions to false");
@@ -1974,6 +1975,12 @@ public final class CallManager extends RestcommUntypedActor {
                     logger.warning(errMsg);
                     sender.tell(new CallManagerResponse<ActorRef>(new NullPointerException(errMsg), request), self());
                 } else {
+                    if(useSbc) {
+                        // To avoid using SDP with encryption enabled between RC and the SBC
+                        // we need to disable webRTC as it will be handled on the last mile
+                        // ie between SBC and Client and SBC will be responsible for that not RC
+                        webRTC = false;
+                    }
                     calls.add(createOutbound(request, from, to, webRTC));
                 }
             }
