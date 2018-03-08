@@ -2374,14 +2374,16 @@ public class VoiceInterpreter extends BaseVoiceInterpreter {
                     to = child.text();
                 }
 
-                //Extract and pass custom headers for Dial Client and Dial Number
-                //No need to support Dial SIP because custom headers are already in the SIP URI
-                String customHeaders = getCustomHeaders(to);
-
-                //Get Callee after removing any custom headers (this way there will be no impact on the Extensions execution)
-                String callee = customHeaders != null ? to.substring(0, to.indexOf("?")) : to;
+                String callee = to;
 
                 if (Nouns.client.equals(child.name())) {
+                    //Extract and pass custom headers for Dial Client and Dial Number
+                    //No need to support Dial SIP because custom headers are already in the SIP URI
+                    String customHeaders = getCustomHeaders(to);
+
+                    //Get Callee after removing any custom headers (this way there will be no impact on the Extensions execution)
+                    callee = customHeaders != null ? to.substring(0, to.indexOf("?")) : to;
+
                     if (call != null && callInfo != null) {
                         create = new CreateCall(e164(callerId(verb)), e164(callee), null, null, callInfo.isFromApi(), timeout(verb),
                                 CreateCallType.CLIENT, accountId, callInfo.sid(), statusCallback, statusCallbackMethod, statusCallbackEvent, mediaAttributes, customHeaders);
@@ -2390,6 +2392,13 @@ public class VoiceInterpreter extends BaseVoiceInterpreter {
                                 CreateCallType.CLIENT, accountId, null, statusCallback, statusCallbackMethod, statusCallbackEvent, mediaAttributes, customHeaders);
                     }
                 } else if (Nouns.number.equals(child.name())) {
+                    //Extract and pass custom headers for Dial Client and Dial Number
+                    //No need to support Dial SIP because custom headers are already in the SIP URI
+                    String customHeaders = getCustomHeaders(to);
+
+                    //Get Callee after removing any custom headers (this way there will be no impact on the Extensions execution)
+                    callee = customHeaders != null ? to.substring(0, to.indexOf("?")) : to;
+
                     if (call != null && callInfo != null) {
                         create = new CreateCall(e164(callerId(verb)), e164(callee), null, null, callInfo.isFromApi(), timeout(verb),
                                 CreateCallType.PSTN, accountId, callInfo.sid(), statusCallback, statusCallbackMethod, statusCallbackEvent, customHeaders);
