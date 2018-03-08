@@ -6,7 +6,7 @@
         <version>4.0.1</version>
     </parent>    
     <modelVersion>4.0.0</modelVersion>
-    <groupId>org.restcomm</groupId>
+    <groupId>org.restcomm.connect</groupId>
     <artifactId>restcomm-connect-root</artifactId>
     <version>8.3.0-SNAPSHOT</version>
     <packaging>pom</packaging>
@@ -38,5 +38,71 @@
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
         <mobicents.mgcp.impl.version>6.0.23</mobicents.mgcp.impl.version>
         <servletapi.version>2.5</servletapi.version>
-    </properties>    
+    </properties> 
+    
+    <repositories>
+        <repository>
+            <id>mobicents-public-repository-group</id>
+            <name>Mobicens Public Maven Repository Group</name>
+            <url>https://oss.sonatype.org/content/groups/public</url>
+            <layout>default</layout>
+            <releases>
+                <enabled>true</enabled>
+                <updatePolicy>never</updatePolicy>
+            </releases>
+            <snapshots>
+                <enabled>true</enabled>
+                <updatePolicy>never</updatePolicy>
+            </snapshots>
+        </repository>
+        <repository>
+            <id>jboss-public-repository-group</id>
+            <name>JBoss Public Maven Repository Group</name>
+            <url>https://repository.jboss.org/nexus/content/groups/public-jboss/</url>
+            <layout>default</layout>
+            <releases>
+                <enabled>true</enabled>
+                <updatePolicy>never</updatePolicy>
+            </releases>
+            <snapshots>
+                <enabled>true</enabled>
+                <updatePolicy>never</updatePolicy>
+            </snapshots>
+        </repository>
+
+        <!-- Local repository for the ATT TTS Java wrapper library -->
+        <!-- <repository> <id>project</id> <url>file:///${basedir}/restcomm.tts.att/lib</url>
+        </repository> -->
+    </repositories>
+
+    <pluginRepositories>
+        <pluginRepository>
+            <id>mobicents-public-repository-group</id>
+            <name>Mobicens Public Maven Repository Group</name>
+            <url>https://oss.sonatype.org/content/groups/public</url>
+            <layout>default</layout>
+            <releases>
+                <enabled>true</enabled>
+                <updatePolicy>never</updatePolicy>
+            </releases>
+            <snapshots>
+                <enabled>true</enabled>
+                <updatePolicy>never</updatePolicy>
+            </snapshots>
+        </pluginRepository>
+        <pluginRepository>
+            <id>jboss-public-repository-group</id>
+            <name>JBoss Public Maven Repository Group</name>
+            <url>https://repository.jboss.org/nexus/content/groups/public-jboss/</url>
+            <layout>default</layout>
+            <releases>
+                <enabled>true</enabled>
+                <updatePolicy>never</updatePolicy>
+            </releases>
+            <snapshots>
+                <enabled>true</enabled>
+                <updatePolicy>never</updatePolicy>
+            </snapshots>
+        </pluginRepository>
+    </pluginRepositories>          
 </project>
