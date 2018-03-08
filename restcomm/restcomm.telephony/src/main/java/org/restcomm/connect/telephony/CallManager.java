@@ -1961,9 +1961,7 @@ public final class CallManager extends RestcommUntypedActor {
                 final String location = registration.getLocation();
                 to = (SipURI) sipFactory.createURI(location);
                 if (customHeaders != null) {
-                    for (String customHeader: customHeaders.replace("?","").split("&")) {
-                        to.setHeader(customHeader.split("=")[0], customHeader.split("=")[1]);
-                    }
+                    to = addCustomHeadersForToUri(customHeaders, to);
                 }
                 webRTC = registration.isWebRTC();
                 if (from == null || to == null) {
@@ -1986,11 +1984,19 @@ public final class CallManager extends RestcommUntypedActor {
         }
     }
 
+    private SipURI addCustomHeadersForToUri (String customHeaders, SipURI to) {
+        for (String customHeader: customHeaders.split("&")) {
+            to.setHeader(customHeader.split("=")[0], customHeader.split("=")[1]);
+        }
+        return to;
+    }
+
     private void outboundToPstn(final CreateCall request, final ActorRef sender) throws ServletParseException {
         final String uri = (request.getOutboundProxy() != null && (!request.getOutboundProxy().isEmpty())) ? request.getOutboundProxy() : activeProxy;
         SipURI outboundIntf = null;
         SipURI from = null;
         SipURI to = null;
+        String customHeaders = request.getCustomHeaders();
 
         final Configuration runtime = configuration.subset("runtime-settings");
         final boolean useLocalAddressAtFromHeader = runtime.getBoolean("use-local-address", false);
@@ -2000,6 +2006,9 @@ public final class CallManager extends RestcommUntypedActor {
         if (uri != null) {
             try {
                 to = sipFactory.createSipURI(request.to(), uri);
+                if (customHeaders != null) {
+                    to = addCustomHeadersForToUri(customHeaders, to);
+                }
                 String transport = (to.getTransportParam() != null) ? to.getTransportParam() : "udp";
                 outboundIntf = outboundInterface(transport);
                 final boolean outboudproxyUserAtFromHeader = runtime.subset("outbound-proxy").getBoolean(
