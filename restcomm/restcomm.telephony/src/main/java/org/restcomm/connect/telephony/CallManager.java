@@ -1883,7 +1883,7 @@ public final class CallManager extends RestcommUntypedActor {
         List<Registration> registrationToDial = new CopyOnWriteArrayList<Registration>();
         Sid organizationSid = storage.getAccountsDao().getAccount(request.accountId()).getOrganizationSid();
 
-        List<Registration> registrations = registrationsDao.getRegistrations(client.getFriendlyName(), organizationSid);
+        List<Registration> registrations = registrationsDao.getRegistrations(client.getLogin(), organizationSid);
         if (registrations != null && registrations.size() > 0) {
             if (logger.isInfoEnabled()) {
                 logger.info("Preparing call for client: " + client + ". There are " + registrations.size() + " registrations at the database for this client");
