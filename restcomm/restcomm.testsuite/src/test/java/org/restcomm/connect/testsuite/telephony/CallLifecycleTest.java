@@ -902,7 +902,7 @@ public class CallLifecycleTest {
 
     private String dialAliceRcmlWithTimeLimit = "<Response><Dial timeLimit=\"10\"><Client>alice</Client></Dial></Response>";
     @Test
-    @Category(FeatureAltTests.class)
+    @Category({FeatureAltTests.class, UnstableTests.class})
     public void testDialClientAliceWithTimeLimit() throws ParseException, InterruptedException, MalformedURLException {
 
         stubFor(get(urlPathEqualTo("/1111"))
