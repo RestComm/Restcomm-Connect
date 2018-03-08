@@ -5,17 +5,24 @@
     <formats>
         <format>zip</format>
     </formats>
-    <baseDirectory>${project.build.finalName}</baseDirectory>
+    <baseDirectory>Restcomm-JBoss-Wildfly10-${project.version}</baseDirectory>
     <fileSets>
+        <!-- place sipservlets binary ditribution first -->
         <fileSet>
             <directory>${project.build.directory}/dependency/restcomm-sip-servlets-${sipservletapi.version}-wildfly-10.0.0.Final</directory>
             <outputDirectory>/</outputDirectory>
+            <excludes>
+                <!-- these files will be overwriten later by restcomm files-->
+                <exclude>standalone/configuration/dars/mobicents-dar.properties</exclude>
+                <exclude>standalone/configuration/mss-sip-stack.properties</exclude>                
+            </excludes>            
         </fileSet>
         
         <fileSet>
             <directory>${project.build.directory}/dependency/restcomm-media-server</directory>
             <outputDirectory>/mediaserver</outputDirectory>
             <excludes>
+                <!-- exclude bash scripts, those will be included later -->
                 <exclude>**/*.sh</exclude>
             </excludes>
         </fileSet>           
@@ -23,19 +30,16 @@
             <directory>${project.build.directory}/dependency/restcomm-media-server</directory>
             <outputDirectory>/mediaserver</outputDirectory>
             <includes>
+                <!-- include bash scripts now with proper file mask -->
                 <include>**/*.sh</include>
             </includes>
             <!-- include bash scripts with READ/EXEC mask -->
             <fileMode>555</fileMode>
         </fileSet> 
         <fileSet>
+            <!-- here we override some jboss/sipservlets files -->
             <directory>${project.basedir}/src/main/resources/assembly-resources</directory>
             <outputDirectory>/</outputDirectory>
-            <includes>
-                <include>**/*.sh</include>
-            </includes>
-            <!-- include bash scripts with READ/EXEC mask -->
-            <fileMode>555</fileMode>
         </fileSet>                
     </fileSets>
     <dependencySets>       
@@ -57,21 +61,20 @@
         </dependencySet>    
         
         <dependencySet>
-            <outputDirectory>/standalone/deployments</outputDirectory>
+            <outputDirectory>/standalone/deployments/restcomm.war</outputDirectory>
             <unpack>true</unpack>
-            <outputFileNameMapping>restcomm.war</outputFileNameMapping>
             <includes>
                 <include>org.restcomm:restcomm-connect.application</include>
             </includes>
-        </dependencySet> 
+        </dependencySet>
         <dependencySet>
-            <outputDirectory>/standalone/deployments/restcomm.war</outputDirectory>
-            <unpack>true</unpack>
-
+            <unpack>false</unpack>            
+            <outputDirectory>/standalone/deployments</outputDirectory>
+            <outputFileNameMapping>restcomm-management.war</outputFileNameMapping>
             <includes>
-                <include>org.restcomm:restcomm-connect.configuration</include>
+                <include>org.restcomm:restcomm-connect-management</include>
             </includes>
-        </dependencySet>                             
+        </dependencySet>                                 
     </dependencySets>
 
 
