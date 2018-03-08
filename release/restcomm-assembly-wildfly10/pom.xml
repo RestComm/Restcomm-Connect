@@ -2,11 +2,10 @@
 <project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
     <modelVersion>4.0.0</modelVersion>
     <parent>
-        <groupId>org.restcomm</groupId>
+        <groupId>org.restcomm.connect</groupId>
         <artifactId>assembly-parent</artifactId>
         <version>8.3.0-SNAPSHOT</version>
     </parent>     
-    <groupId>org.restcomm</groupId>
     <artifactId>assembly-wildfly10</artifactId>
     <packaging>pom</packaging>
     <properties>
@@ -23,7 +22,15 @@
             <groupId>org.restcomm</groupId>
             <artifactId>restcomm-connect.application</artifactId>
             <type>war</type>
-        </dependency>               
+        </dependency>   
+        
+        <dependency>
+            <groupId>org.restcomm</groupId>
+            <artifactId>restcomm-connect-management</artifactId>
+            <type>war</type>
+        </dependency>         
+        
+                                
         <dependency>
             <groupId>org.mobicents.webrtc</groupId>
             <artifactId>webrtc-ui</artifactId>
@@ -48,7 +55,6 @@
                                 <artifactItem>
                                     <groupId>org.mobicents.servlet.sip</groupId>
                                     <artifactId>sip-servlets-wildfly-10</artifactId>
-                                    <version>${sipservletapi.version}</version>
                                     <type>zip</type>
                                     <classifier>assembly</classifier>
                                 </artifactItem>
@@ -66,7 +72,6 @@
                                 <artifactItem>
                                     <groupId>org.mobicents.media</groupId>
                                     <artifactId>media-server-standalone</artifactId>
-                                    <version>6.0.23</version>
                                     <type>zip</type>
                                     <classifier>assembly</classifier>
                                 </artifactItem>
@@ -83,7 +88,7 @@
                     <descriptors>
                         <descriptor>src/main/resources/descriptor.xml</descriptor>
                     </descriptors>
-                    <finalName>Restcomm-JBoss-AS7-${project.version}</finalName>
+                    <finalName>Restcomm-JBoss-Wildfly10-${project.version}</finalName>
                     <appendAssemblyId>false</appendAssemblyId>
                 </configuration>
                 <executions>
