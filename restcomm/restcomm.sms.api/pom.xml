@@ -11,6 +11,16 @@
 	<dependency>
 	    <groupId>org.restcomm.smpp</groupId>
 	    <artifactId>smpp-extensions</artifactId>
+        <exclusions>
+            <exclusion>
+                <groupId>org.restcomm.smpp</groupId>
+                <artifactId>ch-commons-util</artifactId>
+            </exclusion>
+            <exclusion>
+                <groupId>org.restcomm.smpp</groupId>
+                <artifactId>ch-commons-charset</artifactId>
+            </exclusion>
+        </exclusions>
 	</dependency>
     <dependency>
 	  <groupId>org.restcomm</groupId>
