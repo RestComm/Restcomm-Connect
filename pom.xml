@@ -1,5 +1,10 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
+    <parent>
+        <groupId>org.restcomm</groupId>
+        <artifactId>restcomm-parent</artifactId>
+        <version>4.0.1</version>
+    </parent>    
     <modelVersion>4.0.0</modelVersion>
     <groupId>org.restcomm</groupId>
     <artifactId>restcomm-connect-root</artifactId>
@@ -9,4 +14,29 @@
         <module>restcomm</module>
         <module>release</module>
     </modules>
+    <scm>
+        <connection>scm:git:https://github.com/RestComm/Restcomm-Connect.git</connection>
+        <developerConnection>scm:git:git@github.com:RestComm/Restcomm-Connect.git</developerConnection>
+        <url>https://github.com/RestComm/Restcomm-Connect</url>
+    </scm>
+
+    <distributionManagement>
+        <repository>
+            <id>restcomm-releases-repository</id>
+            <name>Restcomm Releases Repository</name>
+            <url>https://oss.sonatype.org/service/local/staging/deploy/maven2
+            </url>
+        </repository>
+        <snapshotRepository>
+            <id>restcomm-snapshots-repository</id>
+            <name>Restcomm Snapshots Repository</name>
+            <url>https://oss.sonatype.org/content/repositories/snapshots</url>
+        </snapshotRepository>
+    </distributionManagement>
+
+    <properties>
+        <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
+        <mobicents.mgcp.impl.version>6.0.23</mobicents.mgcp.impl.version>
+        <servletapi.version>2.5</servletapi.version>
+    </properties>    
 </project>
