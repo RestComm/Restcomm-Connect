@@ -2,15 +2,13 @@
 <project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
   <modelVersion>4.0.0</modelVersion>
 
-	<parent>
-		<groupId>org.restcomm</groupId>
-		<artifactId>restcomm-parent</artifactId>
-		<version>4.0.1</version>
-	</parent>
+    <parent>
+            <groupId>org.restcomm.connect</groupId>
+            <artifactId>restcomm-connect-root</artifactId>
+            <version>8.3.0-SNAPSHOT</version>
+    </parent>
 
-  <groupId>org.restcomm</groupId>
   <artifactId>restcomm-connect</artifactId>
-  <version>8.3.0-SNAPSHOT</version>
   <packaging>pom</packaging>
   <name>RestComm-Connect</name>
   <description>A unified communications platform for web developers.</description>
@@ -140,8 +138,7 @@
                     Therefore we set this empty property here-->
                 <jacocoArgLine />
 	</properties>
-	<modules>
-		<!-- <module>restcomm.docs</module> -->
+	<modules>           
 		<module>restcomm.application</module>
 		<module>restcomm.commons</module>
 		<module>restcomm.dao</module>
@@ -165,7 +162,6 @@
 		<module>restcomm.telephony</module>
 		<module>restcomm.tts.api</module>
 		<module>restcomm.tts.voicerss</module>
-		<module>restcomm.testsuite</module>
 		<module>restcomm.ui</module>
 		<module>restcomm.tts.att</module>
 		<module>restcomm.ussd</module>
@@ -793,6 +789,12 @@
 			</modules>
 		</profile>
 		<profile>
+			<id>testsuite</id>
+			<modules>
+				<module>restcomm.testsuite</module>
+			</modules>
+		</profile>               
+		<profile>
 			<id>set-git-hash</id>
 			<build>
 				<plugins>
@@ -877,71 +879,4 @@
 			</build>
 		</profile>
 	</profiles>
-
-	<repositories>
-		<repository>
-			<id>mobicents-public-repository-group</id>
-			<name>Mobicens Public Maven Repository Group</name>
-			<url>https://oss.sonatype.org/content/groups/public</url>
-			<layout>default</layout>
-			<releases>
-				<enabled>true</enabled>
-				<updatePolicy>never</updatePolicy>
-			</releases>
-			<snapshots>
-				<enabled>true</enabled>
-				<updatePolicy>never</updatePolicy>
-			</snapshots>
-		</repository>
-		<repository>
-			<id>jboss-public-repository-group</id>
-			<name>JBoss Public Maven Repository Group</name>
-			<url>https://repository.jboss.org/nexus/content/groups/public-jboss/</url>
-			<layout>default</layout>
-			<releases>
-				<enabled>true</enabled>
-				<updatePolicy>never</updatePolicy>
-			</releases>
-			<snapshots>
-				<enabled>true</enabled>
-				<updatePolicy>never</updatePolicy>
-			</snapshots>
-		</repository>
-
-		<!-- Local repository for the ATT TTS Java wrapper library -->
-		<!-- <repository> <id>project</id> <url>file:///${basedir}/restcomm.tts.att/lib</url>
-			</repository> -->
-	</repositories>
-
-	<pluginRepositories>
-		<pluginRepository>
-			<id>mobicents-public-repository-group</id>
-			<name>Mobicens Public Maven Repository Group</name>
-			<url>https://oss.sonatype.org/content/groups/public</url>
-			<layout>default</layout>
-			<releases>
-				<enabled>true</enabled>
-				<updatePolicy>never</updatePolicy>
-			</releases>
-			<snapshots>
-				<enabled>true</enabled>
-				<updatePolicy>never</updatePolicy>
-			</snapshots>
-		</pluginRepository>
-		<pluginRepository>
-			<id>jboss-public-repository-group</id>
-			<name>JBoss Public Maven Repository Group</name>
-			<url>https://repository.jboss.org/nexus/content/groups/public-jboss/</url>
-			<layout>default</layout>
-			<releases>
-				<enabled>true</enabled>
-				<updatePolicy>never</updatePolicy>
-			</releases>
-			<snapshots>
-				<enabled>true</enabled>
-				<updatePolicy>never</updatePolicy>
-			</snapshots>
-		</pluginRepository>
-	</pluginRepositories>
-
 </project>
