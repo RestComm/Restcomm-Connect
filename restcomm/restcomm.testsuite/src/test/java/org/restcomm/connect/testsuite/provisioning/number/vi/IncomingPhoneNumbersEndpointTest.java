@@ -45,6 +45,8 @@ import org.jboss.shrinkwrap.api.spec.WebArchive;
 import org.jboss.shrinkwrap.resolver.api.maven.archive.ShrinkWrapMaven;
 import org.junit.Rule;
 import org.junit.Test;
+import org.junit.FixMethodOrder;
+import org.junit.runners.MethodSorters;
 import org.junit.runner.RunWith;
 
 import com.github.tomakehurst.wiremock.junit.WireMockRule;
@@ -59,13 +61,17 @@ import com.sun.jersey.core.util.MultivaluedMapImpl;
 import org.junit.experimental.categories.Category;
 import org.restcomm.connect.commons.Version;
 import org.restcomm.connect.commons.dao.Sid;
-import org.restcomm.connect.testsuite.UnstableTests;
+import org.restcomm.connect.commons.annotations.BrokenTests;
+import org.restcomm.connect.commons.annotations.FeatureAltTests;
+import org.restcomm.connect.commons.annotations.FeatureExpTests;
+import org.restcomm.connect.commons.annotations.UnstableTests;
 
 /**
  * @author <a href="mailto:jean.deruelle@telestax.com">Jean Deruelle</a>
  */
 
 @RunWith(Arquillian.class)
+@FixMethodOrder(MethodSorters.NAME_ASCENDING)
 public class IncomingPhoneNumbersEndpointTest {
     private final static Logger logger = Logger.getLogger(IncomingPhoneNumbersEndpointTest.class.getName());
 
@@ -81,6 +87,7 @@ public class IncomingPhoneNumbersEndpointTest {
     private String adminAccountSid = "ACae6e420f425248d6a26948c17a9e2acf";
     private String adminAuthToken = "77f8c12cc7b8f8423e5c38b035249166";
     private String baseURL = "2012-04-24/Accounts/" + adminAccountSid + "/";
+    private String migrateURL = "2012-04-24/Accounts/ACae6e420f425248d6a26948c17a9e2acg/";
     private String adminOrg2Username = "administrator@org2.restcomm.com";
     private String adminOrg2AccountSid = "ACae6e420f425248d6a26948c17a9e2acg";
     private String adminOrg2AuthToken = "77f8c12cc7b8f8423e5c38b035249166";
@@ -95,6 +102,7 @@ public class IncomingPhoneNumbersEndpointTest {
      * try deleting a number that does not exist
      */
     @Test
+    @Category(FeatureExpTests.class)
     public void testDeletePhoneNumberNotFound() {
         stubFor(post(urlEqualTo("/test"))
                 .withRequestBody(containing("queryDID"))
@@ -139,6 +147,7 @@ public class IncomingPhoneNumbersEndpointTest {
      * try updating a number that does not exist
      */
     @Test
+    @Category(FeatureExpTests.class)
     public void testUpdatePhoneNumberNotFound() {
         stubFor(post(urlEqualTo("/test"))
                 .withRequestBody(containing("queryDID"))
@@ -185,6 +194,7 @@ public class IncomingPhoneNumbersEndpointTest {
     }
 
     @Test
+    @Category(BrokenTests.class)
     public void getIncomingPhoneNumbersList() {
         JsonObject firstPage = RestcommIncomingPhoneNumberTool.getInstance().getIncomingPhoneNumbers(deploymentUrl.toString(), adminAccountSid,
                 adminAuthToken);
@@ -215,6 +225,7 @@ public class IncomingPhoneNumbersEndpointTest {
     }
 
     @Test
+    @Category(BrokenTests.class)
     public void getIncomingPhoneNumbersListUsingPageSize() {
         JsonObject firstPage = (JsonObject) RestcommIncomingPhoneNumberTool.getInstance().getIncomingPhoneNumbers(deploymentUrl.toString(), adminAccountSid,
                 adminAuthToken, null, 100, true);
@@ -324,6 +335,7 @@ public class IncomingPhoneNumbersEndpointTest {
      * If Twilio cannot find a phone number to match your request, you will receive an HTTP 400 with Twilio error code 21452.
      */
     @Test
+    @Category(FeatureExpTests.class)
     public void testPurchasePhoneNumberNoPhoneNumberFound() {
         stubFor(post(urlEqualTo("/test"))
                 .withRequestBody(containing("queryDID"))
@@ -417,6 +429,7 @@ public class IncomingPhoneNumbersEndpointTest {
      * If Twilio cannot find a phone number to match your request, you will receive an HTTP 400 with Twilio error code 21452.
      */
     @Test
+    @Category(FeatureExpTests.class)
     public void testPurchaseLocalPhoneNumberNoPhoneNumberFound() {
         stubFor(post(urlEqualTo("/test"))
                 .withRequestBody(containing("queryDID"))
@@ -510,6 +523,7 @@ public class IncomingPhoneNumbersEndpointTest {
      * If Twilio cannot find a phone number to match your request, you will receive an HTTP 400 with Twilio error code 21452.
      */
     @Test
+    @Category(FeatureExpTests.class)
     public void testPurchaseTollFreePhoneNumberNoPhoneNumberFound() {
         stubFor(post(urlEqualTo("/test"))
                 .withRequestBody(containing("queryDID"))
@@ -603,6 +617,7 @@ public class IncomingPhoneNumbersEndpointTest {
      * If Twilio cannot find a phone number to match your request, you will receive an HTTP 400 with Twilio error code 21452.
      */
     @Test
+    @Category(FeatureExpTests.class)
     public void testPurchaseMobilePhoneNumberNoPhoneNumberFound() {
         stubFor(post(urlEqualTo("/test"))
                 .withRequestBody(containing("queryDID"))
@@ -774,6 +789,56 @@ public class IncomingPhoneNumbersEndpointTest {
         assertTrue(IncomingPhoneNumbersEndpointTestUtils.match(jsonResponse.toString(),IncomingPhoneNumbersEndpointTestUtils.jSonResultUpdateSuccessPurchaseNumber));
     }
 
+    @Test
+    @Category(FeatureAltTests.class)
+    public void testMigratePhoneNumberSuccess() {
+        Client jerseyClient = Client.create();
+        jerseyClient.addFilter(new HTTPBasicAuthFilter(adminUsername, adminAuthToken));
+
+        String provisioningURL = deploymentUrl + migrateURL + "IncomingPhoneNumbers/migrate";
+        WebResource webResource = jerseyClient.resource(provisioningURL);
+        MultivaluedMap<String, String> formData = new MultivaluedMapImpl();
+        formData = new MultivaluedMapImpl();
+        formData.add("OrganizationSid", "ORafbe225ad37541eba518a74248f0ac4c");
+        ClientResponse clientResponse = webResource.type(MediaType.APPLICATION_FORM_URLENCODED_TYPE).accept("application/json").post(ClientResponse.class, formData);
+        logger.info(clientResponse);
+        assertEquals(200, clientResponse.getStatus());
+    }
+
+    @Test
+    @Category(FeatureExpTests.class)
+    public void testMigratePhoneNumberPermission() {
+        Client jerseyClient = Client.create();
+        jerseyClient.addFilter(new HTTPBasicAuthFilter(adminOrg2AccountSid, adminAuthToken));
+
+        String provisioningURL = deploymentUrl + migrateURL + "IncomingPhoneNumbers/migrate";
+        WebResource webResource = jerseyClient.resource(provisioningURL);
+        MultivaluedMap<String, String> formData = new MultivaluedMapImpl();
+        formData = new MultivaluedMapImpl();
+        formData.add("OrganizationSid", "ORafbe225ad37541eba518a74248f0ac4c");
+        ClientResponse clientResponse = webResource.type(MediaType.APPLICATION_FORM_URLENCODED_TYPE).accept("application/json").post(ClientResponse.class, formData);
+        logger.info(clientResponse);
+        assertEquals(403, clientResponse.getStatus());
+    }
+
+    /**
+     * super admin's number migration is not allowed
+     */
+    @Test
+    @Category(FeatureExpTests.class)
+    public void testMigratePhoneNumberSuperAdminMigration() {
+        Client jerseyClient = Client.create();
+        jerseyClient.addFilter(new HTTPBasicAuthFilter(adminAccountSid, adminAuthToken));
+
+        String provisioningURL = deploymentUrl + baseURL + "IncomingPhoneNumbers/migrate";
+        WebResource webResource = jerseyClient.resource(provisioningURL);
+        MultivaluedMap<String, String> formData = new MultivaluedMapImpl();
+        formData = new MultivaluedMapImpl();
+        formData.add("OrganizationSid", "ORafbe225ad37541eba518a74248f0ac4c");
+        ClientResponse clientResponse = webResource.type(MediaType.APPLICATION_FORM_URLENCODED_TYPE).accept("application/json").post(ClientResponse.class, formData);
+        logger.info(clientResponse);
+        assertEquals(400, clientResponse.getStatus());
+    }
     /*
      * https://www.twilio.com/docs/api/rest/incoming-phone-numbers#list-get-example-1
      */
@@ -1068,7 +1133,7 @@ public class IncomingPhoneNumbersEndpointTest {
         formData.add("FriendlyName", "My Company Line");
         formData.add("VoiceMethod", "GET");
         ClientResponse clientResponse = webResource.type(MediaType.APPLICATION_FORM_URLENCODED_TYPE).accept("application/json").post(ClientResponse.class, formData);
-        assertTrue(clientResponse.getStatus() == 200);
+        assertEquals(200, clientResponse.getStatus());
         String response = clientResponse.getEntity(String.class);
         logger.info(response);
         assertTrue(!response.trim().equalsIgnoreCase("[]"));

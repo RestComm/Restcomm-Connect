@@ -33,6 +33,8 @@ import org.jboss.shrinkwrap.api.ShrinkWrap;
 import org.jboss.shrinkwrap.api.spec.WebArchive;
 import org.jboss.shrinkwrap.resolver.api.maven.archive.ShrinkWrapMaven;
 import org.junit.Test;
+import org.junit.FixMethodOrder;
+import org.junit.runners.MethodSorters;
 import org.junit.runner.RunWith;
 
 import com.google.gson.JsonObject;
@@ -43,6 +45,7 @@ import org.restcomm.connect.commons.Version;
  *
  */
 @RunWith(Arquillian.class)
+@FixMethodOrder(MethodSorters.NAME_ASCENDING)
 public class OutboundProxyEndpointTest {
 
     private final static Logger logger = Logger.getLogger(OutboundProxyEndpointTest.class.getName());

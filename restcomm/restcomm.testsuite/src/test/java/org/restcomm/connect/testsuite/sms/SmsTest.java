@@ -19,24 +19,7 @@
  */
 package org.restcomm.connect.testsuite.sms;
 
-import static org.cafesip.sipunit.SipAssert.assertLastOperationSuccess;
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertTrue;
 import gov.nist.javax.sip.header.SIPHeader;
-
-import java.net.URL;
-import java.text.ParseException;
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
-
-import javax.sip.address.SipURI;
-import javax.sip.header.Header;
-import javax.sip.message.Request;
-import javax.sip.message.Response;
-
 import org.apache.log4j.Logger;
 import org.cafesip.sipunit.Credential;
 import org.cafesip.sipunit.SipCall;
@@ -52,16 +35,41 @@ import org.junit.After;
 import org.junit.Before;
 import org.junit.BeforeClass;
 import org.junit.Test;
+import org.junit.FixMethodOrder;
+import org.junit.runners.MethodSorters;
+import org.junit.experimental.categories.Category;
 import org.junit.runner.RunWith;
 import org.restcomm.connect.commons.Version;
+import org.restcomm.connect.commons.annotations.FeatureAltTests;
+import org.restcomm.connect.commons.annotations.ParallelClassTests;
+import org.restcomm.connect.commons.annotations.WithInSecsTests;
 import org.restcomm.connect.testsuite.NetworkPortAssigner;
 import org.restcomm.connect.testsuite.WebArchiveUtil;
+
+import javax.sip.address.SipURI;
+import javax.sip.header.Header;
+import javax.sip.message.Request;
+import javax.sip.message.Response;
+import java.net.URL;
+import java.text.ParseException;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+
+import static javax.servlet.sip.SipServletResponse.SC_FORBIDDEN;
+import static org.cafesip.sipunit.SipAssert.assertLastOperationSuccess;
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertTrue;
 
 /**
  * @author <a href="mailto:gvagenas@gmail.com">gvagenas</a>
  *
  */
 @RunWith(Arquillian.class)
+@FixMethodOrder(MethodSorters.NAME_ASCENDING)
+@Category(value={WithInSecsTests.class, ParallelClassTests.class})
 public class SmsTest {
 
     private final static Logger logger = Logger.getLogger(SmsTest.class);
@@ -89,6 +97,9 @@ public class SmsTest {
     private static SipStackTool tool6;
     private static SipStackTool tool7;
     private static SipStackTool tool8;
+    private static SipStackTool tool9;
+    private static SipStackTool tool10;
+
 
     private SipStack bobSipStack;
     private SipPhone bobPhone;
@@ -130,6 +141,16 @@ public class SmsTest {
     private static String fotiniPort2 = String.valueOf(NetworkPortAssigner.retrieveNextPortByFile());
     private String fotiniContactOrg2 = "sip:fotini@org2.restcomm.com";
 
+    private SipStack closedSipStack;
+    private SipPhone closedPhone;
+    private static String closedPort = String.valueOf(NetworkPortAssigner.retrieveNextPortByFile());
+    private String closedContact = "sip:closed@127.0.0.1:" + closedPort;
+
+    private SipStack suspendedSipStack;
+    private SipPhone suspendedPhone;
+    private static String suspendedPort = String.valueOf(NetworkPortAssigner.retrieveNextPortByFile());
+    private String suspendedContact = "sip:suspended@127.0.0.1:" + suspendedPort;
+
     private static int restcommPort = 5080;
     private static int restcommHTTPPort = 8080;
     private static String restcommContact = "127.0.0.1:" + restcommPort;
@@ -157,6 +178,8 @@ public class SmsTest {
         tool6 = new SipStackTool("SmsTest6");
         tool7 = new SipStackTool("SmsTest7");
         tool8 = new SipStackTool("SmsTest8");
+        tool9 = new SipStackTool("SmsTest9");
+        tool10 = new SipStackTool("SmsTest10");
     }
 
     public static void reconfigurePorts() {
@@ -200,6 +223,12 @@ public class SmsTest {
 
         fotiniSipStackOrg2 = tool8.initializeSipStack(SipStack.PROTOCOL_UDP, "127.0.0.1", fotiniPort2, restcommContact);
         fotiniPhoneOrg2 = fotiniSipStackOrg2.createSipPhone("127.0.0.1", SipStack.PROTOCOL_UDP, restcommPort, fotiniContactOrg2);
+
+        closedSipStack = tool9.initializeSipStack(SipStack.PROTOCOL_UDP, "127.0.0.1", closedPort, restcommContact);
+        closedPhone = closedSipStack.createSipPhone("127.0.0.1", SipStack.PROTOCOL_UDP, restcommPort, closedContact);
+
+        suspendedSipStack = tool10.initializeSipStack(SipStack.PROTOCOL_UDP, "127.0.0.1", suspendedPort, restcommContact);
+        suspendedPhone = suspendedSipStack.createSipPhone("127.0.0.1", SipStack.PROTOCOL_UDP, restcommPort, suspendedContact);
     }
 
     @After
@@ -258,6 +287,21 @@ public class SmsTest {
         if (alicePhoneOrg2 != null) {
             alicePhoneOrg2.dispose();
         }
+
+        if (closedPhone != null) {
+            closedPhone.dispose();
+        }
+        if (closedSipStack != null) {
+            closedSipStack.dispose();
+        }
+
+        if (suspendedPhone != null) {
+            suspendedPhone.dispose();
+        }
+        if (suspendedSipStack != null) {
+            suspendedSipStack.dispose();
+        }
+        Thread.sleep(1000);
     }
 
     @Test
@@ -354,6 +398,7 @@ public class SmsTest {
     }
 
     @Test
+    @Category(value={FeatureAltTests.class})
     public void TestIncomingSmsSendToClientAliceGreekHugeMessage() throws ParseException, InterruptedException {
         SipURI uri = aliceSipStack.getAddressFactory().createSipURI(null, restcommContact);
         assertTrue(alicePhone.register(uri, "alice", "1234", aliceContact, 3600, 3600));
@@ -379,6 +424,7 @@ public class SmsTest {
     }
 
     @Test
+    @Category(value={FeatureAltTests.class})
     public void TestIncomingSmsSendToClientAliceGreek() throws ParseException, InterruptedException {
         SipURI uri = aliceSipStack.getAddressFactory().createSipURI(null, restcommContact);
         assertTrue(alicePhone.register(uri, "alice", "1234", aliceContact, 3600, 3600));
@@ -429,6 +475,7 @@ public class SmsTest {
     }
 
     @Test
+    @Category(value={FeatureAltTests.class})
     public void TestIncomingSmsSendToNumber1313WithCustomHeaders() throws ParseException, InterruptedException {
         String myFirstHeaderName = "X-Custom-Header-1";
         String myFirstHeaderValue = "X Custom Header Value 1";
@@ -547,6 +594,7 @@ public class SmsTest {
     }
 
     @Test
+    @Category(value={FeatureAltTests.class})
     public void testP2PSendSMS_GeorgeClient_ToFotiniClient_EmptyContent() throws ParseException {
         SipURI uri = georgeSipStack.getAddressFactory().createSipURI(null, restcommContact);
         //Register George phone
@@ -569,6 +617,28 @@ public class SmsTest {
         assertLastOperationSuccess(georgeCall);
         assertTrue(georgeCall.waitOutgoingMessageResponse(5000));
         assertTrue(georgeCall.getLastReceivedResponse().getStatusCode() == Response.NOT_ACCEPTABLE);
+    }
+
+    @Test
+    public void TestIncomingSmsSendToNumberOfClosedAccount() throws ParseException, InterruptedException {
+        // Create outgoing call with first phone
+        final SipCall bobCall = bobPhone.createSipCall();
+        bobCall.initiateOutgoingMessage("sip:2222@" + restcommContact, null, "Hello from Bob!");
+        assertLastOperationSuccess(bobCall);
+        assertTrue(bobCall.waitOutgoingCallResponse(5 * 1000));
+        final int response = bobCall.getLastReceivedResponse().getStatusCode();
+        assertEquals(SC_FORBIDDEN, response);
+    }
+
+    @Test
+    public void TestIncomingSmsSendToNumberOfSuspendedAccount() throws ParseException, InterruptedException {
+        // Create outgoing call with first phone
+        final SipCall bobCall = bobPhone.createSipCall();
+        bobCall.initiateOutgoingMessage("sip:3333@" + restcommContact, null, "Hello from Bob!");
+        assertLastOperationSuccess(bobCall);
+        assertTrue(bobCall.waitOutgoingCallResponse(5 * 1000));
+        final int response = bobCall.getLastReceivedResponse().getStatusCode();
+        assertEquals(SC_FORBIDDEN, response);
     }
 
     @Deployment(name = "SmsTest", managed = true, testable = false)

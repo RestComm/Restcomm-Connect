@@ -40,6 +40,8 @@ import org.junit.Before;
 import org.junit.BeforeClass;
 import org.junit.Rule;
 import org.junit.Test;
+import org.junit.FixMethodOrder;
+import org.junit.runners.MethodSorters;
 import org.junit.runner.RunWith;
 import org.restcomm.connect.commons.Version;
 import org.restcomm.connect.testsuite.http.CreateClientsTool;
@@ -56,12 +58,13 @@ import static org.cafesip.sipunit.SipAssert.assertLastOperationSuccess;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
 import org.junit.experimental.categories.Category;
-import org.restcomm.connect.testsuite.UnstableTests;
+import org.restcomm.connect.commons.annotations.UnstableTests;
 
 /**
  * @author oleg.agafonov@telestax.com (Oleg Agafonov)
  */
 @RunWith(Arquillian.class)
+@FixMethodOrder(MethodSorters.NAME_ASCENDING)
 public class CallPushNotificationServerTest {
 
     private final static Logger logger = Logger.getLogger(CallPushNotificationServerTest.class.getName());

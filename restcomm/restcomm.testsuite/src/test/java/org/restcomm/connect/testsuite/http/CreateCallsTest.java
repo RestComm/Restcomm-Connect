@@ -1,12 +1,11 @@
 package org.restcomm.connect.testsuite.http;
 
 import static com.github.tomakehurst.wiremock.client.WireMock.aResponse;
-import static com.github.tomakehurst.wiremock.client.WireMock.get;
 import static com.github.tomakehurst.wiremock.client.WireMock.post;
 import static com.github.tomakehurst.wiremock.client.WireMock.stubFor;
 import static com.github.tomakehurst.wiremock.client.WireMock.urlPathEqualTo;
-import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertTrue;
 
 import java.net.URL;
@@ -16,10 +15,6 @@ import javax.sip.address.SipURI;
 import javax.sip.header.FromHeader;
 import javax.sip.message.Response;
 
-import com.github.tomakehurst.wiremock.junit.WireMockRule;
-import com.google.gson.JsonArray;
-import com.google.gson.JsonElement;
-import com.google.gson.JsonObject;
 import org.apache.log4j.Logger;
 import org.cafesip.sipunit.SipCall;
 import org.cafesip.sipunit.SipPhone;
@@ -38,14 +33,26 @@ import org.junit.Before;
 import org.junit.BeforeClass;
 import org.junit.Rule;
 import org.junit.Test;
+import org.junit.FixMethodOrder;
+import org.junit.runners.MethodSorters;
+import org.junit.experimental.categories.Category;
 import org.junit.runner.RunWith;
 import org.restcomm.connect.commons.Version;
+import org.restcomm.connect.commons.annotations.FeatureAltTests;
+import org.restcomm.connect.commons.annotations.FeatureExpTests;
+import org.restcomm.connect.commons.annotations.UnstableTests;
 import org.restcomm.connect.testsuite.tools.MonitoringServiceTool;
+
+import com.github.tomakehurst.wiremock.junit.WireMockRule;
+import com.google.gson.JsonArray;
+import com.google.gson.JsonElement;
+import com.google.gson.JsonObject;
 
 /**
  * @author <a href="mailto:gvagenas@gmail.com">gvagenas</a>
  */
 @RunWith(Arquillian.class)
+@FixMethodOrder(MethodSorters.NAME_ASCENDING)
 public class CreateCallsTest {
 
     private final static Logger logger = Logger.getLogger(CreateCallsTest.class.getName());
@@ -125,22 +132,25 @@ public class CreateCallsTest {
             georgeSipStack.dispose();
         }
 
-        if (aliceSipStack != null) {
-            aliceSipStack.dispose();
-        }
         if (alicePhone != null) {
             alicePhone.dispose();
         }
-
-        if (alice2SipStack != null) {
-            alice2SipStack.dispose();
+        if (aliceSipStack != null) {
+            aliceSipStack.dispose();
         }
+
         if (alice2Phone != null) {
             alice2Phone.dispose();
         }
+        if (alice2SipStack != null) {
+            alice2SipStack.dispose();
+        }
+
+        Thread.sleep(1000);
     }
 
     @Test
+//    @Category(UnstableTests.class)
     // Create a call to a SIP URI. Non-regression test for issue https://bitbucket.org/telestax/telscale-restcomm/issue/175
     // Use Calls Rest API to dial Bob (SIP URI sip:bob@127.0.0.1:5090) and connect him to the RCML app dial-number-entry.xml.
     // This RCML will dial +131313 which George's phone is listening (use the dial-number-entry.xml as a side effect to verify
@@ -204,6 +214,8 @@ public class CreateCallsTest {
     }
 
     @Test
+//    @Category({FeatureAltTests.class, UnstableTests.class})
+    @Category(FeatureAltTests.class)
     // Create a call to a SIP URI. Non-regression test for issue https://github.com/Mobicents/RestComm/issues/150
     // Use Calls Rest API to dial Bob (SIP URI sip:bob@127.0.0.1:5090) and connect him to the RCML app dial-number-entry.xml.
     // This RCML will dial +131313 which George's phone is listening (use the dial-number-entry.xml as a side effect to verify
@@ -271,6 +283,7 @@ public class CreateCallsTest {
     }
 
     @Test
+//    @Category(UnstableTests.class)
     // Create a call to a Restcomm Client. Non-regression test for issue
     // https://bitbucket.org/telestax/telscale-restcomm/issue/175
     // Use Calls Rest API to dial Alice Restcomm client and connect him to the RCML app dial-number-entry.xml.
@@ -339,6 +352,7 @@ public class CreateCallsTest {
     }
 
     @Test
+    @Category({FeatureExpTests.class})
     // Create a call to a Restcomm Client for wrong RCML url
     public void createCallClientTestWrongRcmlUrl() throws InterruptedException, ParseException {
 
@@ -444,7 +458,7 @@ public class CreateCallsTest {
         assertTrue(aliceCall.waitForDisconnect(5000));
         assertTrue(aliceCall.respondToDisconnect());
 
-        Thread.sleep(2000);
+        Thread.sleep(3000);
 
         JsonObject metrics = MonitoringServiceTool.getInstance().getMetrics(deploymentUrl.toString(),adminAccountSid, adminAuthToken);
         assertNotNull(metrics);
@@ -529,6 +543,7 @@ public class CreateCallsTest {
         Restcomm should cancel the call and cleanup
      */
     @Test
+    @Category({FeatureExpTests.class})
     public void createCallNumberTestNoAnswer() throws InterruptedException, ParseException {
 
         stubFor(post(urlPathEqualTo("/1111"))
@@ -587,6 +602,8 @@ public class CreateCallsTest {
         but there will be no answer within the timeout interval (10sec) and Restcomm should cancel the call to alice and disconnect 'george' call
     */
     @Test
+//    @Category({FeatureExpTests.class, UnstableTests.class})
+    @Category(FeatureExpTests.class)
     public void createCallNumberTestNoAnswerOnRcml() throws InterruptedException, ParseException {
 
         stubFor(post(urlPathEqualTo("/1111"))
@@ -651,6 +668,8 @@ public class CreateCallsTest {
 	but the response will be 486 Busy here and Restcomm should disconnect 'george' call
 */
     @Test
+//    @Category({FeatureExpTests.class, UnstableTests.class})
+    @Category(FeatureExpTests.class)
     public void createCallNumberTestBusyOnRcml () throws InterruptedException, ParseException {
 
         stubFor(post(urlPathEqualTo("/1111"))
@@ -710,6 +729,7 @@ public class CreateCallsTest {
 
 
     @Test
+    @Category({FeatureExpTests.class})
     public void createCallNumberTestWith500ErrorResponse() throws InterruptedException, ParseException {
 
         SipCall georgeCall = georgePhone.createSipCall();

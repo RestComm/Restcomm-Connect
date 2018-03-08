@@ -1,9 +1,30 @@
 package org.restcomm.connect.testsuite.telephony;
 
-import com.github.tomakehurst.wiremock.junit.WireMockRule;
-import com.google.gson.JsonArray;
-import com.google.gson.JsonObject;
-import gov.nist.javax.sip.address.SipUri;
+import static com.github.tomakehurst.wiremock.client.WireMock.aResponse;
+import static com.github.tomakehurst.wiremock.client.WireMock.get;
+import static com.github.tomakehurst.wiremock.client.WireMock.post;
+import static com.github.tomakehurst.wiremock.client.WireMock.stubFor;
+import static com.github.tomakehurst.wiremock.client.WireMock.urlPathEqualTo;
+import static org.cafesip.sipunit.SipAssert.assertLastOperationSuccess;
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertNotNull;
+import static org.junit.Assert.assertTrue;
+
+import java.net.URL;
+import java.text.ParseException;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+
+import javax.sip.Dialog;
+import javax.sip.InvalidArgumentException;
+import javax.sip.SipException;
+import javax.sip.address.SipURI;
+import javax.sip.header.UserAgentHeader;
+import javax.sip.message.Response;
+
 import org.cafesip.sipunit.Credential;
 import org.cafesip.sipunit.SipCall;
 import org.cafesip.sipunit.SipPhone;
@@ -22,39 +43,26 @@ import org.junit.BeforeClass;
 import org.junit.Ignore;
 import org.junit.Rule;
 import org.junit.Test;
+import org.junit.FixMethodOrder;
+import org.junit.runners.MethodSorters;
+import org.junit.experimental.categories.Category;
 import org.junit.runner.RunWith;
 import org.restcomm.connect.commons.Version;
+import org.restcomm.connect.commons.annotations.FeatureAltTests;
+import org.restcomm.connect.commons.annotations.FeatureExpTests;
+import org.restcomm.connect.commons.annotations.ParallelClassTests;
+import org.restcomm.connect.commons.annotations.UnstableTests;
+import org.restcomm.connect.testsuite.NetworkPortAssigner;
+import org.restcomm.connect.testsuite.WebArchiveUtil;
 import org.restcomm.connect.testsuite.http.CreateClientsTool;
 import org.restcomm.connect.testsuite.http.RestcommCallsTool;
 import org.restcomm.connect.testsuite.tools.MonitoringServiceTool;
 
-import javax.sip.Dialog;
-import javax.sip.InvalidArgumentException;
-import javax.sip.SipException;
-import javax.sip.address.SipURI;
-import javax.sip.header.UserAgentHeader;
-import javax.sip.message.Response;
-import java.net.URL;
-import java.text.ParseException;
-import java.util.ArrayList;
-import java.util.List;
+import com.github.tomakehurst.wiremock.junit.WireMockRule;
+import com.google.gson.JsonArray;
+import com.google.gson.JsonObject;
 
-import static com.github.tomakehurst.wiremock.client.WireMock.aResponse;
-import static com.github.tomakehurst.wiremock.client.WireMock.get;
-import static com.github.tomakehurst.wiremock.client.WireMock.post;
-import static com.github.tomakehurst.wiremock.client.WireMock.stubFor;
-import static com.github.tomakehurst.wiremock.client.WireMock.urlPathEqualTo;
-import java.util.Arrays;
-import java.util.HashMap;
-import java.util.Map;
-import static org.cafesip.sipunit.SipAssert.assertLastOperationSuccess;
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertNotNull;
-import static org.junit.Assert.assertTrue;
-import org.junit.experimental.categories.Category;
-import org.restcomm.connect.testsuite.NetworkPortAssigner;
-import org.restcomm.connect.testsuite.UnstableTests;
-import org.restcomm.connect.testsuite.WebArchiveUtil;
+import gov.nist.javax.sip.address.SipUri;
 
 /**
  * Test for clients with or without VoiceURL (Bitbucket issue 115). Clients without VoiceURL can dial anything.
@@ -62,6 +70,8 @@ import org.restcomm.connect.testsuite.WebArchiveUtil;
  * @author <a href="mailto:gvagenas@gmail.com">gvagenas</a>
  */
 @RunWith(Arquillian.class)
+@FixMethodOrder(MethodSorters.NAME_ASCENDING)
+@Category(value={ParallelClassTests.class})
 public class ClientsDialTest {
 
     private static final String version = Version.getVersion();
@@ -193,6 +203,8 @@ public class ClientsDialTest {
     private static SipStackTool tool8;
     private static SipStackTool tool9;
     private static SipStackTool tool10;
+    private static SipStackTool tool11;
+    private static SipStackTool tool12;
 
     private String pstnNumber = "+151261006100";
 
@@ -259,6 +271,16 @@ public class ClientsDialTest {
     private static String externalPort = String.valueOf(NetworkPortAssigner.retrieveNextPortByFile());
     private String externalContact = "sip:external@127.0.0.1:" + externalPort;
 
+    private SipStack closedSipStack;
+    private SipPhone closedPhone;
+    private static String closedPort = String.valueOf(NetworkPortAssigner.retrieveNextPortByFile());
+    private String closedContact = "sip:closed@127.0.0.1:" + closedPort;
+
+    private SipStack suspendedSipStack;
+    private SipPhone suspendedPhone;
+    private static String suspendedPort = String.valueOf(NetworkPortAssigner.retrieveNextPortByFile());
+    private String suspendedContact = "sip:suspended@127.0.0.1:" + suspendedPort;
+
     private String adminAccountSid = "ACae6e420f425248d6a26948c17a9e2acf";
     private String adminAuthToken = "77f8c12cc7b8f8423e5c38b035249166";
 
@@ -278,6 +300,8 @@ public class ClientsDialTest {
         tool8 = new SipStackTool("ClientsDialTest8");
         tool9 = new SipStackTool("ClientsDialTest9");
         tool10 = new SipStackTool("ClientsDialTest10");
+        tool11 = new SipStackTool("ClientsDialTest11");
+        tool12 = new SipStackTool("ClientsDialTest12");
     }
 
     public static void reconfigurePorts() {
@@ -327,6 +351,12 @@ public class ClientsDialTest {
 
         externalSipStack = tool10.initializeSipStack(SipStack.PROTOCOL_UDP, "127.0.0.1", externalPort, restcommContact);
         externalPhone = externalSipStack.createSipPhone("127.0.0.1", SipStack.PROTOCOL_UDP, restcommPort, externalContact);
+
+        closedSipStack = tool11.initializeSipStack(SipStack.PROTOCOL_UDP, "127.0.0.1", closedPort, restcommContact);
+        closedPhone = closedSipStack.createSipPhone("127.0.0.1", SipStack.PROTOCOL_UDP, restcommPort, closedContact);
+
+        suspendedSipStack = tool12.initializeSipStack(SipStack.PROTOCOL_UDP, "127.0.0.1", suspendedPort, restcommContact);
+        suspendedPhone = suspendedSipStack.createSipPhone("127.0.0.1", SipStack.PROTOCOL_UDP, restcommPort, suspendedContact);
     }
 
     @After
@@ -338,18 +368,18 @@ public class ClientsDialTest {
             mariaSipStack.dispose();
         }
 
-        if (aliceSipStack != null) {
-            aliceSipStack.dispose();
-        }
         if (alicePhone != null) {
             alicePhone.dispose();
         }
-
-        if (dimitriSipStack != null) {
-            dimitriSipStack.dispose();
+        if (aliceSipStack != null) {
+            aliceSipStack.dispose();
         }
+
         if (dimitriPhone != null) {
             dimitriPhone.dispose();
+        }
+        if (dimitriSipStack != null) {
+            dimitriSipStack.dispose();
         }
 
         if (georgePhone != null) {
@@ -365,18 +395,21 @@ public class ClientsDialTest {
         if (clientWithAppSipStack != null) {
             clientWithAppSipStack.dispose();
         }
+
+        if (fotiniPhoneTcp != null) {
+            fotiniPhoneTcp.dispose();
+        }
         if (fotiniSipStackTcp != null) {
             fotiniSipStackTcp.dispose();
         }
-        if (fotiniPhoneTcp != null) {
-            fotiniPhoneTcp.dispose();
+
+        if (bobPhoneTcp != null) {
+            bobPhoneTcp.dispose();
         }
         if (bobSipStackTcp != null) {
             bobSipStackTcp.dispose();
         }
-        if (bobPhoneTcp != null) {
-            bobPhoneTcp.dispose();
-        }
+
         Thread.sleep(3000);
         wireMockRule.resetRequests();
         Thread.sleep(3000);
@@ -477,11 +510,12 @@ public class ClientsDialTest {
         assertNotNull(cdrs);
         JsonArray cdrsArray = cdrs.get("calls").getAsJsonArray();
         System.out.println("cdrsArray.size(): "+cdrsArray.size());
-        assertTrue(cdrsArray.size() == 1);
+        assertEquals(1, cdrsArray.size());
 
     }
 
     @Test
+    @Category(FeatureAltTests.class)
     public void testClientsCallEachOtherWithFriendlyNameSetKouKouRouKou() throws ParseException, InterruptedException {
 
         assertNotNull(mariaRestcommClientSid);
@@ -567,6 +601,7 @@ public class ClientsDialTest {
     }
 
     @Test
+    @Category(UnstableTests.class)
     public void testClientDialOutPstn() throws ParseException, InterruptedException {
 
         assertNotNull(mariaRestcommClientSid);
@@ -676,6 +711,7 @@ public class ClientsDialTest {
     }
 
     @Test //Non regression test for issue https://github.com/RestComm/Restcomm-Connect/issues/1042 - Support WebRTC clients to dial out through MediaServer
+    @Category(FeatureExpTests.class)
     public void testClientDialOutPstnSimulateWebRTCClient() throws ParseException, InterruptedException {
 
         assertNotNull(mariaRestcommClientSid);
@@ -743,6 +779,7 @@ public class ClientsDialTest {
     }
 
     @Test //Non regression test for issue https://github.com/RestComm/Restcomm-Connect/issues/1379 - Webrtc calls from non WS clients aren't routed to PSTN #1379
+    @Category(FeatureAltTests.class)
     public void testClientDialOutPstnWebRTCClientwithSDP() throws ParseException, InterruptedException {
 
         assertNotNull(mariaRestcommClientSid);
@@ -803,6 +840,7 @@ public class ClientsDialTest {
     }
 
     @Test
+    @Category(FeatureExpTests.class)
     public void testClientDialToInvalidNumber() throws ParseException, InterruptedException, InvalidArgumentException, SipException {
         String invalidNumber = "+123456789";
         SipPhone outboundProxy = georgeSipStack.createSipPhone("127.0.0.1", SipStack.PROTOCOL_UDP, 5080, "sip:"+invalidNumber+"@127.0.0.1:" + georgePort);
@@ -847,6 +885,7 @@ public class ClientsDialTest {
     }
 
     @Test
+    @Category(FeatureExpTests.class)
     public void testClientDialOutPstnCancelBefore200() throws ParseException, InterruptedException {
 
         assertNotNull(mariaRestcommClientSid);
@@ -1112,7 +1151,6 @@ public class ClientsDialTest {
 
     private String dialAliceDimitriRcml= "<Response><Dial timeLimit=\"10\" timeout=\"10\"><Client>alice</Client><Sip>"+dimitriContact+"</Sip></Dial></Response>";
     @Test
-    @Category(UnstableTests.class)
     public synchronized void testDialForkClient_AliceMultipleRegistrations_George() throws InterruptedException, ParseException {
         stubFor(get(urlPathEqualTo("/1111"))
                 .willReturn(aResponse()
@@ -1202,7 +1240,6 @@ public class ClientsDialTest {
     }
 
     @Test
-    @Category(UnstableTests.class)
     public synchronized void testDialForkClientWebRTCBob_And_AliceWithMultipleRegistrations() throws InterruptedException, ParseException {
         stubFor(get(urlPathEqualTo("/1111"))
                 .willReturn(aResponse()
@@ -1401,6 +1438,45 @@ public class ClientsDialTest {
         System.out.println("cdrsArray.size(): "+cdrsArray.size());
         assertTrue(cdrsArray.size() == 1);
 
+    }
+
+    @Test
+    public void testSuspendedClientDialingOut() {
+        Credential c = new Credential("127.0.0.1", "suspended", "1234");
+        suspendedPhone.addUpdateCredential(c);
+
+        SipCall suspendedCall = suspendedPhone.createSipCall();
+
+        suspendedCall.initiateOutgoingCall(suspendedContact, "sip:+151212344566@"+restcommContact, null, body, "application", "sdp", null, null);
+        assertLastOperationSuccess(suspendedCall);
+        assertTrue(suspendedCall.waitOutgoingCallResponse(10000));
+
+        final int response = suspendedCall.getLastReceivedResponse().getStatusCode();
+        assertTrue(response == Response.TRYING || response == Response.FORBIDDEN);
+
+        if (response == Response.TRYING) {
+            assertTrue(suspendedCall.waitOutgoingCallResponse(5 * 1000));
+            assertEquals(Response.FORBIDDEN, suspendedCall.getLastReceivedResponse().getStatusCode());
+        }
+    }
+
+    @Test
+    public void testClosedClientDialingOut() {
+        Credential c = new Credential("127.0.0.1", "closed", "1234");
+        closedPhone.addUpdateCredential(c);
+
+        SipCall closedCall = closedPhone.createSipCall();
+
+        closedCall.initiateOutgoingCall(closedContact, "sip:+151212344566@"+restcommContact, null, body, "application", "sdp", null, null);
+        assertLastOperationSuccess(closedCall);
+        assertTrue(closedCall.waitOutgoingCallResponse(10000));
+        final int response = closedCall.getLastReceivedResponse().getStatusCode();
+        assertTrue(response == Response.TRYING || response == Response.FORBIDDEN);
+
+        if (response == Response.TRYING) {
+            assertTrue(closedCall.waitOutgoingCallResponse(5 * 1000));
+            assertEquals(Response.FORBIDDEN, closedCall.getLastReceivedResponse().getStatusCode());
+        }
     }
 
     @Deployment(name = "ClientsDialTest", managed = true, testable = false)

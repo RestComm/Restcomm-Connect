@@ -19,8 +19,12 @@ import org.junit.Before;
 import org.junit.BeforeClass;
 import org.junit.Rule;
 import org.junit.Test;
+import org.junit.FixMethodOrder;
+import org.junit.runners.MethodSorters;
 import org.junit.runner.RunWith;
 import org.restcomm.connect.commons.Version;
+import org.restcomm.connect.commons.annotations.FeatureAltTests;
+import org.restcomm.connect.commons.annotations.FeatureExpTests;
 import org.restcomm.connect.testsuite.http.RestcommCallsTool;
 
 import javax.sip.address.SipURI;
@@ -38,6 +42,9 @@ import static org.cafesip.sipunit.SipAssert.assertLastOperationSuccess;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertTrue;
+import org.junit.experimental.categories.Category;
+import org.restcomm.connect.commons.annotations.ParallelClassTests;
+import org.restcomm.connect.commons.annotations.WithInMinsTests;
 import org.restcomm.connect.testsuite.NetworkPortAssigner;
 import org.restcomm.connect.testsuite.WebArchiveUtil;
 
@@ -48,6 +55,8 @@ import org.restcomm.connect.testsuite.WebArchiveUtil;
  * @author jean.deruelle@telestax.com
  */
 @RunWith(Arquillian.class)
+@FixMethodOrder(MethodSorters.NAME_ASCENDING)
+@Category(ParallelClassTests.class)
 public class TestDialVerbPartOne {
     private final static Logger logger = Logger.getLogger(TestDialVerbPartOne.class.getName());
 
@@ -87,7 +96,7 @@ public class TestDialVerbPartOne {
     private String adminAuthToken = "77f8c12cc7b8f8423e5c38b035249166";
 
     private static int mediaPort = NetworkPortAssigner.retrieveNextPortByFile();
-    
+
     private static int mockPort = NetworkPortAssigner.retrieveNextPortByFile();
     @Rule
     public WireMockRule wireMockRule = new WireMockRule(mockPort);
@@ -111,23 +120,23 @@ public class TestDialVerbPartOne {
     private SipStack aliceSipStack;
     private SipPhone alicePhone;
     private static String alicePort = String.valueOf(NetworkPortAssigner.retrieveNextPortByFile());
-    private String aliceContact = "sip:alice@127.0.0.1:" + alicePort;        
+    private String aliceContact = "sip:alice@127.0.0.1:" + alicePort;
 
     // George is a simple SIP Client. Will not register with Restcomm
     private SipStack georgeSipStack;
     private SipPhone georgePhone;
     private static String georgePort = String.valueOf(NetworkPortAssigner.retrieveNextPortByFile());
-    private String georgeContact = "sip:+131313@127.0.0.1:" + georgePort;      
+    private String georgeContact = "sip:+131313@127.0.0.1:" + georgePort;
 
     // Fotini is a simple SIP Client. Will not register with Restcomm
     private SipStack fotiniSipStack;
     private SipPhone fotiniPhone;
     private static String fotiniPort = String.valueOf(NetworkPortAssigner.retrieveNextPortByFile());
-    private String fotiniContact = "sip:fotini@127.0.0.1:" + fotiniPort;     
+    private String fotiniContact = "sip:fotini@127.0.0.1:" + fotiniPort;
 
     private static int restcommPort = 5080;
-    private static int restcommHTTPPort = 8080;    
-    private static String restcommContact = "127.0.0.1:" + restcommPort;       
+    private static int restcommHTTPPort = 8080;
+    private static String restcommContact = "127.0.0.1:" + restcommPort;
     private static String dialRestcomm = "sip:1111@" + restcommContact;
     private static String notFoundDialNumber = "sip:+12223334457@" + restcommContact;
 
@@ -138,17 +147,17 @@ public class TestDialVerbPartOne {
         tool3 = new SipStackTool("DialTest1Tool3");
         tool4 = new SipStackTool("DialTest1Tool4");
     }
-     
-    public static void reconfigurePorts() { 
+
+    public static void reconfigurePorts() {
         if (System.getProperty("arquillian_sip_port") != null) {
             restcommPort = Integer.valueOf(System.getProperty("arquillian_sip_port"));
-            restcommContact = "127.0.0.1:" + restcommPort; 
+            restcommContact = "127.0.0.1:" + restcommPort;
             dialRestcomm = "sip:1111@" + restcommContact;
-            notFoundDialNumber = "sip:+12223334457@" + restcommContact;            
-        } 
+            notFoundDialNumber = "sip:+12223334457@" + restcommContact;
+        }
         if (System.getProperty("arquillian_http_port") != null) {
-            restcommHTTPPort = Integer.valueOf(System.getProperty("arquillian_http_port"));       
-        }       
+            restcommHTTPPort = Integer.valueOf(System.getProperty("arquillian_http_port"));
+        }
     }
 
     @Before
@@ -298,6 +307,7 @@ public class TestDialVerbPartOne {
 
     private String dialConfernceRcmlWithTimeLimitSmsAfterConf = "<Response><Dial timeLimit=\"50\"><Conference>test</Conference></Dial><Sms>Conference time limit reached</Sms></Response>";
     @Test
+    @Category(FeatureAltTests.class)
     public synchronized void testDialConferenceOnlyOneClientWithTimeLimitSmsAfterConf() throws InterruptedException {
         stubFor(get(urlPathEqualTo("/1111"))
                 .willReturn(aResponse()
@@ -335,6 +345,7 @@ public class TestDialVerbPartOne {
 
     private String dialConfernceRcmlWithoutTimeLimit = "<Response><Dial><Conference>test</Conference></Dial></Response>";
     @Test
+    @Category(FeatureAltTests.class)
     public synchronized void testDialConferenceOnlyOneClientWithoutTimeLimit() throws InterruptedException {
         stubFor(get(urlPathEqualTo("/1111"))
                 .willReturn(aResponse()
@@ -434,6 +445,7 @@ public class TestDialVerbPartOne {
 
     private String dialConfernceRcmlWithPlay = "<Response><Play>/restcomm/audio/demo-prompt.wav</Play><Dial timeLimit=\"50\"><Conference>test</Conference></Dial></Response>";
     @Test
+    @Category(FeatureAltTests.class)
     public synchronized void testDialConferenceWithPlay() throws InterruptedException {
         stubFor(get(urlPathEqualTo("/1111"))
                 .willReturn(aResponse()
@@ -498,6 +510,7 @@ public class TestDialVerbPartOne {
     }
 
     @Test
+    @Category(FeatureAltTests.class)
     public synchronized void testDialConferenceWithPlayInDialogInviteHold() throws InterruptedException {
         stubFor(get(urlPathEqualTo("/1111"))
                 .willReturn(aResponse()
@@ -567,6 +580,7 @@ public class TestDialVerbPartOne {
     }
 
     @Test
+    @Category(FeatureAltTests.class)
     public synchronized void testDialConferenceWithContactHeaderPortNull() throws InterruptedException {
         stubFor(get(urlPathEqualTo("/1111"))
                 .willReturn(aResponse()
@@ -634,6 +648,7 @@ public class TestDialVerbPartOne {
     @Test
     // Non regression test for
     // https://bitbucket.org/telestax/telscale-restcomm/issue/113/when-restcomm-cannot-find-an-app-url-it
+    @Category(FeatureExpTests.class)
     public synchronized void testDialApplicationInvalidURL() throws InterruptedException, ParseException {
 
         // Phone2 register as alice
@@ -649,8 +664,15 @@ public class TestDialVerbPartOne {
         bobCall.initiateOutgoingCall(bobContact, notFoundDialNumber, null, body, "application", "sdp", null, null);
         assertLastOperationSuccess(bobCall);
 
-        // wait for 180 Ringing
-        assertTrue(bobCall.waitOutgoingCallResponse(10000));
+        assertTrue(bobCall.waitOutgoingCallResponse(5 * 1000));
+        final int response = bobCall.getLastReceivedResponse().getStatusCode();
+
+        assertTrue(response == Response.TRYING || response == Response.RINGING);
+
+        if (response == Response.TRYING) {
+            assertTrue(bobCall.waitOutgoingCallResponse(5 * 1000));
+            assertEquals(Response.RINGING, bobCall.getLastReceivedResponse().getStatusCode());
+        }
         // wait for 404 Not Found
         assertTrue(bobCall.waitOutgoingCallResponse(10000));
         SipResponse lastResponse = bobCall.getLastReceivedResponse();
@@ -796,6 +818,7 @@ public class TestDialVerbPartOne {
     }
 
     @Test
+    @Category(FeatureAltTests.class)
     public synchronized void testDialUriBobHangupCheckCDRs() throws InterruptedException, ParseException {
         stubFor(get(urlPathEqualTo("/1111"))
                 .willReturn(aResponse()
@@ -920,6 +943,7 @@ public class TestDialVerbPartOne {
     }
 
     @Test
+    @Category(FeatureExpTests.class)
     public synchronized void testDialClientAliceNoSDP() throws InterruptedException, ParseException {
         stubFor(get(urlPathEqualTo("/1111"))
                 .willReturn(aResponse()
@@ -946,6 +970,7 @@ public class TestDialVerbPartOne {
     }
 
     @Test
+    @Category(FeatureExpTests.class)
     public synchronized void testDialClientAliceNullSDP() throws InterruptedException, ParseException {
         stubFor(get(urlPathEqualTo("/1111"))
                 .willReturn(aResponse()
@@ -972,6 +997,7 @@ public class TestDialVerbPartOne {
 
     final String screeningResponse = "<Response></Response>";
     @Test
+    @Category(FeatureAltTests.class)
     public synchronized void testDialClientAliceWithScreeningAbsoluteURL() throws InterruptedException, ParseException {
 
         stubFor(get(urlPathEqualTo("/screening"))
@@ -1033,6 +1059,7 @@ public class TestDialVerbPartOne {
 
     private String screeningRcml = "<Response><Say>Hi bob. Someone wants to talk to you</Say></Response>";
     @Test
+    @Category(FeatureAltTests.class)
     public synchronized void testDialClientAliceWithScreeningRelativeURL() throws InterruptedException, ParseException {
 
         stubFor(get(urlPathEqualTo("/1111"))
@@ -1090,8 +1117,8 @@ public class TestDialVerbPartOne {
         assertTrue(aliceCall.waitForDisconnect(30 * 1000));
         assertTrue(aliceCall.respondToDisconnect());
     }
-    
-   
+
+
 
     @Deployment(name = "TestDialVerbPartOne", managed = true, testable = false)
     public static WebArchive createWebArchiveNoGw() {
@@ -1099,15 +1126,15 @@ public class TestDialVerbPartOne {
         reconfigurePorts();
 
         Map<String,String> replacements = new HashMap();
-        //replace mediaport 2727 
-        replacements.put("2727", String.valueOf(mediaPort));         
+        //replace mediaport 2727
+        replacements.put("2727", String.valueOf(mediaPort));
         replacements.put("8080", String.valueOf(restcommHTTPPort));
         replacements.put("8090", String.valueOf(mockPort));
         replacements.put("5080", String.valueOf(restcommPort));
-        replacements.put("5070", String.valueOf(georgePort));        
+        replacements.put("5070", String.valueOf(georgePort));
         replacements.put("5090", String.valueOf(bobPort));
         replacements.put("5091", String.valueOf(alicePort));
-      
+
         return WebArchiveUtil.createWebArchiveNoGw("restcomm.xml", "restcomm.script_dialTest_new", replacements);
     }
 

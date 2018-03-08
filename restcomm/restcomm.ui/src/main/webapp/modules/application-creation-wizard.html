@@ -1,0 +1,43 @@
+<div class="apps-wizard">
+    <div class="row">
+        <button class="rc-btn btn-default" ng-click="$root.goTo('/applications')">
+            <span><i class="fa fa-chevron-left"></i></span>
+        </button>
+    </div>
+    <div class="row bottom-row">
+
+        <div class="col-sm-4 pick-area">
+            <div class="hidden-xs spacer60"></div>
+            <div><a href="#/applications/new-external" id="select-app-external"> <img src="resources/img/v2/app-wizard-url-app.png"/></a></div>
+            <h4>Create a URL Application</h4>
+            <div class="hidden-xs spacer60"></div>
+        </div>
+
+        <div class="col-sm-4 pick-area">
+            <div class="hidden-xs spacer60"></div>
+            <div><a href="#/application-templates" id="select-app-template"> <img src="resources/img/v2/app-wizard-vd-app.png"/></a></div>
+            <h4>Create a Visual Designer Application</h4>
+            <div class="hidden-xs spacer60"></div>
+            <!--
+            <div ngf-drop="uploadFiles($files)" class="drop-box" ngf-drag-over-class="'dragover'" ngf-multiple="true" ngf-pattern="'image/*,application/pdf'">Drop Images or PDFs files here</div>
+            -->
+
+            <!--
+            REMOVE THIS
+            <div class='drop-area' ng-file-drop="onFileSelect($files)" ng-file-drag-over-class="dropping" ng-show="dropSupported">
+                <div class="drop-prompt">{{'Drop new media' | translate}}</div>
+            </div>
+            -->
+        </div>
+
+        <div class="col-sm-4 pick-area">
+            <div class="hidden-xs spacer60"></div>
+            <div ngf-drop="onFileDropped($files)" ngf-multiple="false">
+                <div><a href="" ngf-select="onFileDropped($files)" id="select-app-import" ngf-pattern="'application/zip'" ngf-accept="'application/zip'"> <img src="resources/img/v2/app-wizard-zip-app.png"/></a></div>
+                <h4>Import a Visual Designer Application</h4>
+            </div>
+            <div class="hidden-xs spacer60"></div>
+        </div>
+
+    </div>
+</div>

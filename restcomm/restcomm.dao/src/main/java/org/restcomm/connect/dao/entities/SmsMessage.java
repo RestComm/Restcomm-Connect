@@ -28,12 +28,13 @@ import org.joda.time.DateTime;
 import org.restcomm.connect.commons.annotations.concurrency.Immutable;
 import org.restcomm.connect.commons.annotations.concurrency.NotThreadSafe;
 import org.restcomm.connect.commons.dao.Sid;
+import org.restcomm.connect.commons.stream.StreamEvent;
 
 /**
  * @author quintana.thomas@gmail.com (Thomas Quintana)
  */
 @Immutable
-public final class SmsMessage {
+public final class SmsMessage implements StreamEvent {
     public static final int MAX_SIZE = 160;
     private final Sid sid;
     private final DateTime dateCreated;
@@ -155,14 +156,21 @@ public final class SmsMessage {
         private Currency priceUnit;
         private String apiVersion;
         private URI uri;
+        private DateTime dateCreated;
+        private DateTime dateUpdated;
 
         private Builder() {
             super();
         }
 
         public SmsMessage build() {
-            final DateTime now = DateTime.now();
-            return new SmsMessage(sid, now, now, dateSent, accountSid, sender, recipient, body, status, direction, price,
+            if (dateCreated == null) {
+                dateCreated = DateTime.now();
+            }
+            if (dateUpdated == null) {
+                dateUpdated = dateCreated;
+            }
+            return new SmsMessage(sid, dateCreated, dateUpdated, dateSent, accountSid, sender, recipient, body, status, direction, price,
                     priceUnit, apiVersion, uri);
         }
 
@@ -212,6 +220,14 @@ public final class SmsMessage {
 
         public void setUri(final URI uri) {
             this.uri = uri;
+        }
+
+        public void setDateCreated(DateTime dateCreated) {
+            this.dateCreated = dateCreated;
+        }
+
+        public void setDateUpdated(DateTime dateUpdated) {
+            this.dateUpdated = dateUpdated;
         }
     }
 

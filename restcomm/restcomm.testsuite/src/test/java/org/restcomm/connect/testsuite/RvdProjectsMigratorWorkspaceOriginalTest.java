@@ -42,6 +42,8 @@ import org.jboss.shrinkwrap.api.spec.WebArchive;
 import org.junit.AfterClass;
 import org.junit.BeforeClass;
 import org.junit.Test;
+import org.junit.FixMethodOrder;
+import org.junit.runners.MethodSorters;
 import org.junit.runner.RunWith;
 
 import com.google.gson.JsonArray;
@@ -54,12 +56,16 @@ import java.util.List;
 import java.util.Map;
 import org.junit.experimental.categories.Category;
 import org.restcomm.connect.commons.Version;
-import static org.restcomm.connect.testsuite.RvdProjectsMigratorWorkspaceMigratedTest.reconfigurePorts;
+import org.restcomm.connect.commons.annotations.ParallelClassTests;
+import org.restcomm.connect.commons.annotations.UnstableTests;
+import org.restcomm.connect.commons.annotations.WithInMinsTests;
 
 /**
  * @author guilherme.jansen@telestax.com
  */
 @RunWith(Arquillian.class)
+@FixMethodOrder(MethodSorters.NAME_ASCENDING)
+@Category(value={WithInMinsTests.class, ParallelClassTests.class})
 public class RvdProjectsMigratorWorkspaceOriginalTest {
 
     private final static Logger logger = Logger.getLogger(RvdProjectsMigratorWorkspaceOriginalTest.class);
@@ -69,9 +75,9 @@ public class RvdProjectsMigratorWorkspaceOriginalTest {
     private Deployer deployer;
     @ArquillianResource
     URL deploymentUrl;
-    
+
     private static int mediaPort = NetworkPortAssigner.retrieveNextPortByFile();
-    private static int smtpPort = NetworkPortAssigner.retrieveNextPortByFile();    
+    private static int smtpPort = NetworkPortAssigner.retrieveNextPortByFile();
 
     private String adminUsername = "administrator@company.com";
     private String adminAccountSid = "ACae6e420f425248d6a26948c17a9e2acf";
@@ -81,8 +87,8 @@ public class RvdProjectsMigratorWorkspaceOriginalTest {
 
     private static int restcommPort = 5080;
     private static int restcommHTTPPort = 8080;
-    private static String restcommContact = "127.0.0.1:" + restcommPort;    
-    
+    private static String restcommContact = "127.0.0.1:" + restcommPort;
+
     public static void reconfigurePorts() throws Exception {
         if (System.getProperty("arquillian_sip_port") != null) {
             restcommPort = Integer.valueOf(System.getProperty("arquillian_sip_port"));
@@ -90,9 +96,9 @@ public class RvdProjectsMigratorWorkspaceOriginalTest {
         }
         if (System.getProperty("arquillian_http_port") != null) {
             restcommHTTPPort = Integer.valueOf(System.getProperty("arquillian_http_port"));
-        }       
-    }    
-    
+        }
+    }
+
     @BeforeClass
     public static void before() {
         applicationNames = new ArrayList<String>();
@@ -179,6 +185,7 @@ public class RvdProjectsMigratorWorkspaceOriginalTest {
     }
 
     @Test
+    @Category({UnstableTests.class})
     public void checkEmail() throws IOException, MessagingException, InterruptedException {
         mailServer.waitForIncomingEmail(60000, 1);
         MimeMessage[] messages = mailServer.getReceivedMessages();
@@ -197,10 +204,10 @@ public class RvdProjectsMigratorWorkspaceOriginalTest {
     public static WebArchive createWebArchiveRestcomm() throws Exception {
         logger.info("Packaging Test App");
         reconfigurePorts();
-        
+
         Map<String, String> replacements = new HashMap();
         replacements.put("3025", String.valueOf(smtpPort));
-        //replace mediaport 2727 
+        //replace mediaport 2727
         replacements.put("2727", String.valueOf(mediaPort));
         replacements.put("8080", String.valueOf(restcommHTTPPort));
         replacements.put("5080", String.valueOf(restcommPort));
@@ -209,15 +216,15 @@ public class RvdProjectsMigratorWorkspaceOriginalTest {
         ));
 
         WebArchive archive = WebArchiveUtil.createWebArchiveNoGw("restcomm_workspaceMigration.xml",
-                "restcomm.script_projectMigratorWorkspaceOriginalTest", 
+                "restcomm.script_projectMigratorWorkspaceOriginalTest",
                 resources, replacements);
-        
+
         String source = "src/test/resources/workspace-migration-scenarios/original";
         String target = "workspace-migration";
         File f = new File(source);
-        addFiles(archive, f, source, target);        
+        addFiles(archive, f, source, target);
         return archive;
-    }     
+    }
 
     private static void addFiles(WebArchive war, File dir, String source, String target) throws Exception {
         if (!dir.isDirectory()) {

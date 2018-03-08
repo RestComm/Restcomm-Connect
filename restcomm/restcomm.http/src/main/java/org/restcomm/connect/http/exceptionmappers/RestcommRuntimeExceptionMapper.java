@@ -17,9 +17,10 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>
  *
  */
-
 package org.restcomm.connect.http.exceptionmappers;
 
+import java.util.HashMap;
+import java.util.Map;
 import org.apache.log4j.Logger;
 import org.restcomm.connect.dao.exceptions.AccountHierarchyDepthCrossed;
 import org.restcomm.connect.http.exceptions.InsufficientPermission;
@@ -33,42 +34,48 @@ import javax.ws.rs.ext.ExceptionMapper;
 import javax.ws.rs.ext.Provider;
 
 /**
- * Generates 401 for AuthorizationException instead of a 500 (and an exception to the log). It helps to handle
- * authorization errors when they occur in *Endpoint.init() method where there is no explicit way of returning
- * a response (feature was  needed after shiro removal).
+ * Generates 401 for AuthorizationException instead of a 500 (and an exception
+ * to the log). It helps to handle authorization errors when they occur in
+ * *Endpoint.init() method where there is no explicit way of returning a
+ * response (feature was needed after shiro removal).
  *
  * @author Orestis Tsakiridis
  */
 @Provider
 public class RestcommRuntimeExceptionMapper implements ExceptionMapper<RestcommRuntimeException> {
+
     static final Logger logger = Logger.getLogger(RestcommRuntimeExceptionMapper.class.getName());
+    static final Map<Class, Response> exceptionMap = new HashMap();
+
+    static {
+        exceptionMap.put(NotAuthenticated.class,
+                Response.status(Response.Status.UNAUTHORIZED).header("WWW-Authenticate", "Basic realm=\"Restcomm realm\"").build());
+        exceptionMap.put(InsufficientPermission.class,
+                Response.status(Response.Status.FORBIDDEN).build());
+        exceptionMap.put(OperatedAccountMissing.class,
+                Response.status(Response.Status.NOT_FOUND).build());
+        exceptionMap.put(ResourceAccountMissmatch.class,
+                Response.status(Response.Status.BAD_REQUEST).build());
+        exceptionMap.put(AccountHierarchyDepthCrossed.class,
+                Response.status(Response.Status.INTERNAL_SERVER_ERROR).build());
+        exceptionMap.put(NotAuthenticated.class,
+                Response.status(Response.Status.UNAUTHORIZED).header("WWW-Authenticate", "Basic realm=\"Restcomm realm\"").build());
+
+    }
 
     @Override
     public Response toResponse(RestcommRuntimeException e) {
-        if (logger.isDebugEnabled())
+        if (logger.isDebugEnabled()) {
             logger.debug("Converting response to a corresponding http status.");
+        }
+        Response res = null;
 
-        if (e instanceof NotAuthenticated) {
-            return Response.status(Response.Status.UNAUTHORIZED).header("WWW-Authenticate","Basic realm=\"Restcomm realm\"").build();
-        }
-        else
-        if (e instanceof InsufficientPermission)
-            return Response.status(Response.Status.FORBIDDEN).build();
-        else
-        if (e instanceof OperatedAccountMissing){
-            // Return 404 if the account specified in the url (operated account) was missing - NULL.
-            return Response.status(Response.Status.NOT_FOUND).build();
-        } else
-        if (e instanceof ResourceAccountMissmatch) {
-            // in case the resource does belong to the user that it is accessed under, the url is wrong. Throw 400.
-            return Response.status(Response.Status.BAD_REQUEST).build();
-        } else
-        if (e instanceof AccountHierarchyDepthCrossed) {
-            return Response.status(Response.Status.INTERNAL_SERVER_ERROR).build();
-        }
-        else {
+        if (exceptionMap.containsKey(e.getClass())) {
+            res = exceptionMap.get(e.getClass());
+        } else {
             // map all other types of auth errors to 403
-            return Response.status(Response.Status.FORBIDDEN).build();
+            res = Response.status(Response.Status.FORBIDDEN).build();
         }
+        return res;
     }
 }

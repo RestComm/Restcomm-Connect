@@ -1,0 +1,38 @@
+<div class="templates-view">
+
+    <div class="row templates-head">
+        <div class="col-lg-3 col-md-12">
+            <h2 class="templates-title">Template Gallery</h2>
+        </div>
+        <div class="col-lg-5 col-md-6 col-sm-12 template-tags">
+            <div class="row">
+                <div class="col-lg-4 col-md-4 col-sm-3 col-xs-4">
+                    <div class="checkbox"><label><input ng-model="queryTags.tagVoice" type="checkbox"> <i class="fa fa-microphone"></i> Voice</label></div>
+                </div>
+                <div class="col-lg-4 col-md-4 col-sm-3 col-xs-4">
+                    <div class="checkbox"><label><input ng-model="queryTags.tagSms" type="checkbox"><i class="fa fa-comment"></i> SMS</label></div>
+                </div>
+                <div class="col-lg-4 col-md-4 col-sm-3 col-xs-4">
+                    <div class="checkbox"><label><input ng-model="queryTags.tagUssd"  type="checkbox"><i class="fa fa-sitemap"></i> USSD</label></div>
+                </div>
+            </div>
+        </div>
+        <div class="col-lg-offset-1 col-lg-3 col-md-offset-1 col-md-5 col-sm-8 col-xs-12 template-search">
+            <form class="search-form">
+                <i class="fa fa-search search-icon"></i>
+                <input name="q" type="text" size="40" placeholder="Search..." ng-model="query.name" uib-tooltip="Search by template name" tooltip-popup-delay="1000">
+            </form>
+        </div>
+    </div>
+
+    <div class="row">
+        <div class="col-md-3 col-sm-6">
+            <application-template template="blankVoiceTemplate" ng-click="$root.goTo('/applications/new')"></application-template>
+        </div>
+        <div ng-repeat="template in templateList.results | filter:query | tagFilter:queryTags" class="col-md-3 col-sm-6">
+            <application-template template="template" ng-click='templateClicked(template)'></application-template>
+        </div>
+    </div>
+
+</div>
+

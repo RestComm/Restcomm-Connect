@@ -19,8 +19,6 @@
  */
 package org.restcomm.connect.testsuite.telephony.ua;
 
-import gov.nist.javax.sip.address.SipUri;
-import gov.nist.javax.sip.message.SIPResponse;
 import org.cafesip.sipunit.Credential;
 import org.cafesip.sipunit.SipPhone;
 import org.cafesip.sipunit.SipRequest;
@@ -34,11 +32,21 @@ import org.jboss.shrinkwrap.api.spec.WebArchive;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.BeforeClass;
+import org.junit.Ignore;
 import org.junit.Test;
+import org.junit.FixMethodOrder;
+import org.junit.runners.MethodSorters;
+import org.junit.experimental.categories.Category;
 import org.junit.runner.RunWith;
 import org.restcomm.connect.commons.Version;
+import org.restcomm.connect.commons.annotations.ParallelClassTests;
+import org.restcomm.connect.commons.annotations.UnstableTests;
+import org.restcomm.connect.commons.annotations.WithInMinsTests;
+import org.restcomm.connect.testsuite.NetworkPortAssigner;
+import org.restcomm.connect.testsuite.WebArchiveUtil;
 import org.restcomm.connect.testsuite.tools.MonitoringServiceTool;
 
+import javax.servlet.sip.SipServletResponse;
 import javax.sip.InvalidArgumentException;
 import javax.sip.RequestEvent;
 import javax.sip.address.SipURI;
@@ -52,10 +60,8 @@ import java.util.Map;
 import java.util.logging.Logger;
 
 import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertNotNull;
+import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertTrue;
-import org.restcomm.connect.testsuite.NetworkPortAssigner;
-import org.restcomm.connect.testsuite.WebArchiveUtil;
 //import org.restcomm.connect.telephony.Version;
 
 /**
@@ -64,6 +70,8 @@ import org.restcomm.connect.testsuite.WebArchiveUtil;
  */
 
 @RunWith(Arquillian.class)
+@FixMethodOrder(MethodSorters.NAME_ASCENDING)
+@Category(value={WithInMinsTests.class, ParallelClassTests.class})
 public final class UserAgentManagerTest {
     private static Logger logger = Logger.getLogger(UserAgentManagerTest.class.getName());
     private static final String version = Version.getVersion();
@@ -75,55 +83,68 @@ public final class UserAgentManagerTest {
 
     private String adminAccountSid = "ACae6e420f425248d6a26948c17a9e2acf";
     private String adminAuthToken = "77f8c12cc7b8f8423e5c38b035249166";
-    
-    private static int mediaPort = NetworkPortAssigner.retrieveNextPortByFile();    
+
+    private static int mediaPort = NetworkPortAssigner.retrieveNextPortByFile();
 
     private static SipStackTool tool1;
     private SipStack sipStack;
     private SipPhone phone;
     private static String alicePort = String.valueOf(NetworkPortAssigner.retrieveNextPortByFile());
-    private String aliceContact = "sip:alice@127.0.0.1:" + alicePort + ";transport=udp";       
+    private String aliceContact = "sip:alice@127.0.0.1:" + alicePort + ";transport=udp";
 
     private static SipStackTool tool2;
     private SipStack sipStack2;
     private SipPhone phone2;
     private static String bobPort = String.valueOf(NetworkPortAssigner.retrieveNextPortByFile());
-    private String bobContact = "sip:bob@127.0.0.1:" + bobPort;    
+    private String bobContact = "sip:bob@127.0.0.1:" + bobPort;
 
     private static SipStackTool tool3;
     private SipStack sipStack3;
     private SipPhone phone3;
     private static String alicePort3 = String.valueOf(NetworkPortAssigner.retrieveNextPortByFile());
-    private String aliceContact3 = "sip:alice@127.0.0.1:" + alicePort3 + ";transport=udp;rc-id=7616";     
+    private String aliceContact3 = "sip:alice@127.0.0.1:" + alicePort3 + ";transport=udp;rc-id=7616";
 
     private static SipStackTool tool4;
     private SipStack sipStack4;
     private SipPhone phone4;
     private static String alicePort4 = String.valueOf(NetworkPortAssigner.retrieveNextPortByFile());
-    private String aliceContact4 = "sip:alice@127.0.0.1:" + alicePort4;     
-    
+    private String aliceContact4 = "sip:alice@127.0.0.1:" + alicePort4;
+
 
     private static SipStackTool tool5;
     private SipStack sipStack5;
     private SipPhone phone5;
     private static String mariaPort5 = String.valueOf(NetworkPortAssigner.retrieveNextPortByFile());
-    private String mariaContact5 = "sip:maria.test%40telestax.com@127.0.0.1:" + mariaPort5;      
+    private String mariaContact5 = "sip:maria.test%40telestax.com@127.0.0.1:" + mariaPort5;
 
     private static SipStackTool tool6;
     private SipStack sipStack6;
     private SipPhone phone6;
     private static String alicePort6 = String.valueOf(NetworkPortAssigner.retrieveNextPortByFile());
-    private String aliceContact6 = "sip:alice@testdomain2.restcomm.com:" + alicePort6;     
+    private String aliceContact6 = "sip:alice@testdomain2.restcomm.com:" + alicePort6;
 
     private static SipStackTool tool7;
     private SipStack sipStack7;
     private SipPhone phone7;
     private static String alicePort7 = String.valueOf(NetworkPortAssigner.retrieveNextPortByFile());
     private String aliceContact7 = "sip:alice@127.0.0.1:" + alicePort7;
-    
+
+    private static SipStackTool tool8;
+    private SipStack sipStack8;
+    private SipPhone closedPhone;
+    private static String closedPort = String.valueOf(NetworkPortAssigner.retrieveNextPortByFile());
+    private String closedContact = "sip:closed@127.0.0.1:" + closedPort;
+
+    private static SipStackTool tool9;
+    private SipStack sipStack9;
+    private SipPhone suspendedPhone;
+    private static String suspendedPort = String.valueOf(NetworkPortAssigner.retrieveNextPortByFile());
+    private String suspendedContact = "sip:suspended@127.0.0.1:" + suspendedPort;
+
+
     private static int restcommPort = 5080;
-    private static int restcommHTTPPort = 8080;    
-    private static String restcommContact = "127.0.0.1:" + restcommPort;          
+    private static int restcommHTTPPort = 8080;
+    private static String restcommContact = "127.0.0.1:" + restcommPort;
 
     public UserAgentManagerTest() {
         super();
@@ -138,16 +159,18 @@ public final class UserAgentManagerTest {
         tool5 = new SipStackTool("UserAgentTest5");
         tool6 = new SipStackTool("UserAgentTest6");
         tool7 = new SipStackTool("UserAgentTest7");
+        tool8 = new SipStackTool("UserAgentTest8");
+        tool9 = new SipStackTool("UserAgentTest9");
     }
-     
-    public static void reconfigurePorts() { 
+
+    public static void reconfigurePorts() {
         if (System.getProperty("arquillian_sip_port") != null) {
             restcommPort = Integer.valueOf(System.getProperty("arquillian_sip_port"));
-            restcommContact = "127.0.0.1:" + restcommPort;          
-        } 
+            restcommContact = "127.0.0.1:" + restcommPort;
+        }
         if (System.getProperty("arquillian_http_port") != null) {
-            restcommHTTPPort = Integer.valueOf(System.getProperty("arquillian_http_port"));       
-        }        
+            restcommHTTPPort = Integer.valueOf(System.getProperty("arquillian_http_port"));
+        }
     }
 
     @Before
@@ -172,6 +195,12 @@ public final class UserAgentManagerTest {
 
         sipStack7 = tool7.initializeSipStack(SipStack.PROTOCOL_TCP, "127.0.0.1", alicePort7, restcommContact);
         phone7 = sipStack7.createSipPhone("127.0.0.1", SipStack.PROTOCOL_TCP, restcommPort, aliceContact7);
+
+        sipStack8 = tool8.initializeSipStack(SipStack.PROTOCOL_UDP, "127.0.0.1", closedPort, restcommContact);
+        closedPhone = sipStack8.createSipPhone("127.0.0.1", SipStack.PROTOCOL_UDP, restcommPort, closedContact);
+
+        sipStack9 = tool9.initializeSipStack(SipStack.PROTOCOL_UDP, "127.0.0.1", suspendedPort, restcommContact);
+        suspendedPhone = sipStack9.createSipPhone("127.0.0.1", SipStack.PROTOCOL_UDP, restcommPort, suspendedContact);
     }
 
     @After
@@ -200,8 +229,40 @@ public final class UserAgentManagerTest {
         if (sipStack4 != null) {
             sipStack4.dispose();
         }
+
+        if (phone5 != null) {
+            phone5.dispose();
+        }
         if (sipStack5 != null) {
             sipStack5.dispose();
+        }
+
+        if (phone6 != null) {
+            phone6.dispose();
+        }
+        if (sipStack6 != null) {
+            sipStack6.dispose();
+        }
+
+        if (phone7 != null) {
+            phone7.dispose();
+        }
+        if (sipStack7 != null) {
+            sipStack7.dispose();
+        }
+
+        if (closedPhone != null) {
+            closedPhone.dispose();
+        }
+        if (sipStack8 != null) {
+            sipStack8.dispose();
+        }
+
+        if (suspendedPhone != null) {
+            suspendedPhone.dispose();
+        }
+        if (sipStack9 != null) {
+            sipStack9.dispose();
         }
 //        deployer.undeploy("UserAgentTest");
     }
@@ -213,10 +274,38 @@ public final class UserAgentManagerTest {
         phone.addUpdateCredential(c);
         assertTrue(phone.register(uri, "alice", "1234", "sip:127.0.0.1:" + alicePort, 3600, 3600));
         Thread.sleep(500);
-        assertTrue(MonitoringServiceTool.getInstance().getRegisteredUsers(deploymentUrl.toString(),adminAccountSid, adminAuthToken)==1);
+        assertEquals(1, MonitoringServiceTool.getInstance().getRegisteredUsers(deploymentUrl.toString(),adminAccountSid, adminAuthToken));
         assertTrue(phone.unregister("sip:127.0.0.1:" + alicePort, 0));
         Thread.sleep(500);
-        assertTrue(MonitoringServiceTool.getInstance().getRegisteredUsers(deploymentUrl.toString(),adminAccountSid, adminAuthToken)==0);
+        assertEquals(0, MonitoringServiceTool.getInstance().getRegisteredUsers(deploymentUrl.toString(),adminAccountSid, adminAuthToken));
+    }
+
+    @Test
+    public void registerClosedClient() throws Exception {
+        SipURI uri = sipStack8.getAddressFactory().createSipURI(null, restcommContact);
+        Credential c = new Credential("127.0.0.1","closed", "1234");
+        closedPhone.addUpdateCredential(c);
+        assertFalse(closedPhone.register(uri, "closed", "1234", "sip:127.0.0.1:" + closedPort, 3600, 3600));
+        Thread.sleep(500);
+        assertEquals(Response.FORBIDDEN, closedPhone.getReturnCode());
+        assertEquals(0, MonitoringServiceTool.getInstance().getRegisteredUsers(deploymentUrl.toString(),adminAccountSid, adminAuthToken));
+//        assertTrue(closedPhone.unregister("sip:127.0.0.1:" + closedPort, 0));
+//        Thread.sleep(500);
+//        assertEquals(0, MonitoringServiceTool.getInstance().getRegisteredUsers(deploymentUrl.toString(),adminAccountSid, adminAuthToken));
+    }
+
+    @Test
+    public void registerSuspendedClient() throws Exception {
+        SipURI uri = sipStack9.getAddressFactory().createSipURI(null, restcommContact);
+        Credential c = new Credential("127.0.0.1","suspended", "1234");
+        suspendedPhone.addUpdateCredential(c);
+        assertFalse(suspendedPhone.register(uri, "suspended", "1234", "sip:127.0.0.1:" + suspendedPort, 3600, 3600));
+        Thread.sleep(500);
+        assertEquals(Response.FORBIDDEN, suspendedPhone.getReturnCode());
+        assertEquals(0, MonitoringServiceTool.getInstance().getRegisteredUsers(deploymentUrl.toString(),adminAccountSid, adminAuthToken));
+//        assertTrue(suspendedPhone.unregister("sip:127.0.0.1:" + closedPort, 0));
+//        Thread.sleep(500);
+//        assertEquals(0, MonitoringServiceTool.getInstance().getRegisteredUsers(deploymentUrl.toString(),adminAccountSid, adminAuthToken));
     }
 
     @Test
@@ -226,10 +315,10 @@ public final class UserAgentManagerTest {
         phone.addUpdateCredential(c);
         assertTrue(phone.register(uri, "alice", "1234", aliceContact, 3600, 3600));
         Thread.sleep(500);
-        assertTrue(MonitoringServiceTool.getInstance().getRegisteredUsers(deploymentUrl.toString(),adminAccountSid, adminAuthToken)==1);
+        assertEquals(1, MonitoringServiceTool.getInstance().getRegisteredUsers(deploymentUrl.toString(),adminAccountSid, adminAuthToken));
         assertTrue(phone.unregister(aliceContact, 0));
         Thread.sleep(500);
-        assertTrue(MonitoringServiceTool.getInstance().getRegisteredUsers(deploymentUrl.toString(),adminAccountSid, adminAuthToken)==0);
+        assertEquals(0, MonitoringServiceTool.getInstance().getRegisteredUsers(deploymentUrl.toString(),adminAccountSid, adminAuthToken));
     }
 
     @Test
@@ -240,10 +329,10 @@ public final class UserAgentManagerTest {
         phone4.addUpdateCredential(c);
         assertTrue(phone4.register(uri, "alice", "1234", aliceContact4, 3600, 3600));
         Thread.sleep(500);
-        assertTrue(MonitoringServiceTool.getInstance().getRegisteredUsers(deploymentUrl.toString(),adminAccountSid, adminAuthToken)==1);
+        assertEquals(1, MonitoringServiceTool.getInstance().getRegisteredUsers(deploymentUrl.toString(),adminAccountSid, adminAuthToken));
         assertTrue(phone4.unregister(aliceContact4, 0));
         Thread.sleep(500);
-        assertTrue(MonitoringServiceTool.getInstance().getRegisteredUsers(deploymentUrl.toString(),adminAccountSid, adminAuthToken)==0);
+        assertEquals(0, MonitoringServiceTool.getInstance().getRegisteredUsers(deploymentUrl.toString(),adminAccountSid, adminAuthToken));
     }
 
     @Test
@@ -254,13 +343,13 @@ public final class UserAgentManagerTest {
         phone.addUpdateCredential(c);
         assertTrue(phone.register(uri, "alice", "1234", "sip:127.0.0.1:" + alicePort, 3600, 3600));
         Thread.sleep(500);
-        assertTrue(MonitoringServiceTool.getInstance().getRegisteredUsers(deploymentUrl.toString(),adminAccountSid, adminAuthToken)==1);
+        assertEquals(1, MonitoringServiceTool.getInstance().getRegisteredUsers(deploymentUrl.toString(),adminAccountSid, adminAuthToken));
         assertTrue(phone.register(uri, "alice", "1234", "sip:127.0.0.1:" + alicePort, 3600, 3600));
         Thread.sleep(500);
-        assertTrue(MonitoringServiceTool.getInstance().getRegisteredUsers(deploymentUrl.toString(),adminAccountSid, adminAuthToken)==1);
+        assertEquals(1, MonitoringServiceTool.getInstance().getRegisteredUsers(deploymentUrl.toString(),adminAccountSid, adminAuthToken));
         assertTrue(phone.unregister("sip:127.0.0.1:" + alicePort, 0));
         Thread.sleep(500);
-        assertTrue(MonitoringServiceTool.getInstance().getRegisteredUsers(deploymentUrl.toString(),adminAccountSid, adminAuthToken)==0);
+        assertEquals(0, MonitoringServiceTool.getInstance().getRegisteredUsers(deploymentUrl.toString(),adminAccountSid, adminAuthToken));
     }
 
     @Test
@@ -272,18 +361,12 @@ public final class UserAgentManagerTest {
         phone.addUpdateCredential(c);
         assertTrue(phone.register(uri, "alice", "1234", aliceContact, 3600, 3600));
         Thread.sleep(500);
-        assertTrue(MonitoringServiceTool.getInstance().getRegisteredUsers(deploymentUrl.toString(),adminAccountSid, adminAuthToken)==1);
-        // This is necessary for SipUnit to accept unsolicited requests.
-//        phone.setLoopback(true);
-        phone.listenRequestMessage();
-        RequestEvent requestEvent = phone.waitRequest(75000);
-        assertNotNull(requestEvent);
-        assertTrue(requestEvent.getRequest().getMethod().equals(SipRequest.OPTIONS));
-        logger.info("RequestEvent :"+requestEvent.getRequest().toString());
-        Response response = sipStack.getMessageFactory().createResponse(SIPResponse.OK, requestEvent.getRequest());
-        phone.sendReply(requestEvent, response);
-        Thread.sleep(1000);
+        assertEquals(1, MonitoringServiceTool.getInstance().getRegisteredUsers(deploymentUrl.toString(),adminAccountSid, adminAuthToken));
+        Thread.sleep(15000);
         // Clean up (Unregister).
+
+        assertTrue(phone.getLastReceivedOptionsRequest() != null);
+
         assertTrue(phone.unregister(aliceContact, 0));
     }
 
@@ -296,19 +379,12 @@ public final class UserAgentManagerTest {
         phone.addUpdateCredential(c);
         assertTrue(phone.register(uri, "alice", "1234", "sip:alice@127.0.0.1:" + alicePort + ";transport=udp;rc-id=7616", 3600, 3600));
         Thread.sleep(500);
-        assertTrue(MonitoringServiceTool.getInstance().getRegisteredUsers(deploymentUrl.toString(),adminAccountSid, adminAuthToken)==1);
-        // This is necessary for SipUnit to accept unsolicited requests.
-//        phone.setLoopback(true);
-        phone.listenRequestMessage();
-        RequestEvent requestEvent = phone.waitRequest(75000);
-        assertNotNull(requestEvent);
-        assertTrue(requestEvent.getRequest().getMethod().equals(SipRequest.OPTIONS));
-        String extraParam = ((SipUri)requestEvent.getRequest().getRequestURI()).getParameter("rc-id");
-        assertNotNull(extraParam);
-        logger.info("RequestEvent :"+requestEvent.getRequest().toString());
-        Response response = sipStack.getMessageFactory().createResponse(SIPResponse.OK, requestEvent.getRequest());
-        phone.sendReply(requestEvent, response);
-        Thread.sleep(1000);
+        assertEquals(1, MonitoringServiceTool.getInstance().getRegisteredUsers(deploymentUrl.toString(),adminAccountSid, adminAuthToken));
+
+        Thread.sleep(15000);
+
+        assertTrue(phone.getLastReceivedOptionsRequest() != null);
+
         // Clean up (Unregister).
         assertTrue(phone.unregister(aliceContact, 0));
     }
@@ -320,17 +396,17 @@ public final class UserAgentManagerTest {
         SipURI uri = sipStack.getAddressFactory().createSipURI(null, restcommContact);
         Credential c = new Credential("127.0.0.1","alice", "1234");
         phone.addUpdateCredential(c);
+
+        phone.setAutoResponseOptionsRequests(false);
+
         assertTrue(phone.register(uri, "alice", "1234", aliceContact, 3600, 3600));
         Thread.sleep(500);
-        assertTrue(MonitoringServiceTool.getInstance().getRegisteredUsers(deploymentUrl.toString(),adminAccountSid, adminAuthToken)==1);
+        assertEquals(1, MonitoringServiceTool.getInstance().getRegisteredUsers(deploymentUrl.toString(),adminAccountSid, adminAuthToken));
 
-        //Dispose phone. Restcomm will fail to send the OPTIONS message and should remove the registration
-        sipStack.dispose();
-        phone = null;
-        sipStack = null;
+        Thread.sleep(50000);
+        assertEquals(0, MonitoringServiceTool.getInstance().getRegisteredUsers(deploymentUrl.toString(),adminAccountSid, adminAuthToken));
 
-        Thread.sleep(100000);
-        assertTrue(MonitoringServiceTool.getInstance().getRegisteredUsers(deploymentUrl.toString(),adminAccountSid, adminAuthToken)==0);
+        phone.setAutoResponseOptionsRequests(true);
     }
 
     @Test
@@ -340,9 +416,14 @@ public final class UserAgentManagerTest {
         SipURI uri = sipStack2.getAddressFactory().createSipURI(null, restcommContact);
         Credential c = new Credential("127.0.0.1","bob", "1234");
         phone2.addUpdateCredential(c);
+
         assertTrue(phone2.register(uri, "bob", "1234", bobContact, 3600, 3600));
-        Thread.sleep(2000);
-        assertTrue(MonitoringServiceTool.getInstance().getRegisteredUsers(deploymentUrl.toString(),adminAccountSid, adminAuthToken)==1);
+
+        Thread.sleep(500);
+        assertEquals(1, MonitoringServiceTool.getInstance().getRegisteredUsers(deploymentUrl.toString(),adminAccountSid, adminAuthToken));
+
+        phone2.setAutoResponseOptionsRequests(false);
+        phone2.setErrorRespondToOptions(SipServletResponse.SC_SERVICE_UNAVAILABLE);
 
         phone2.listenRequestMessage();
         RequestEvent request = phone2.waitRequest(10000);
@@ -353,13 +434,9 @@ public final class UserAgentManagerTest {
         additionalHeader.add(reason);
         phone2.sendReply(request, 503, "Service unavailable", null, null, 3600, additionalHeader, null, null);
 
-        //Dispose phone. Restcomm will fail to send the OPTIONS message and should remove the registration
-        sipStack2.dispose();
-        phone2 = null;
-        sipStack2 = null;
-
-        Thread.sleep(1000);
+        Thread.sleep(50000);
         assertTrue(MonitoringServiceTool.getInstance().getRegisteredUsers(deploymentUrl.toString(),adminAccountSid, adminAuthToken)==0);
+        phone2.setAutoResponseOptionsRequests(true);
     }
 
     @Test
@@ -370,33 +447,17 @@ public final class UserAgentManagerTest {
         Credential c = new Credential("127.0.0.1","alice", "1234");
         phone3.addUpdateCredential(c);
 
+        phone3.setAutoResponseOptionsRequests(false);
+        phone3.setErrorRespondToOptions(SipServletResponse.SC_SERVICE_UNAVAILABLE);
+
         assertTrue(phone3.register(uri, "alice", "1234", aliceContact3, 3600, 3600));
         Thread.sleep(500);
-        assertTrue(MonitoringServiceTool.getInstance().getRegisteredUsers(deploymentUrl.toString(),adminAccountSid, adminAuthToken)==1);
+        assertEquals(1,MonitoringServiceTool.getInstance().getRegisteredUsers(deploymentUrl.toString(),adminAccountSid, adminAuthToken));
 
-        phone3.listenRequestMessage();
-        RequestEvent requestEvent = phone3.waitRequest(10000);
-        assertNotNull(requestEvent);
-        assertTrue(requestEvent.getRequest().getMethod().equals(SipRequest.OPTIONS));
-        String extraParam = ((SipUri)requestEvent.getRequest().getRequestURI()).getParameter("rc-id");
-        assertNotNull(extraParam);
-        logger.info("RequestEvent :"+requestEvent.getRequest().toString());
+        Thread.sleep(50000);
+        assertEquals(0, MonitoringServiceTool.getInstance().getRegisteredUsers(deploymentUrl.toString(),adminAccountSid, adminAuthToken));
 
-        ArrayList<Header> additionalHeader = new ArrayList<Header>();
-        Header reason = sipStack3.getHeaderFactory().createReasonHeader("udp", 503, "Destination not available");
-        additionalHeader.add(reason);
-        ArrayList<Header> replaceHeaders = new ArrayList<Header>();
-        Header toHeader = sipStack3.getHeaderFactory().createToHeader(sipStack3.getAddressFactory().createAddress(aliceContact3), null);
-        replaceHeaders.add(toHeader);
-        phone3.sendReply(requestEvent, 503, "Service unavailable", null, null, 3600, additionalHeader, replaceHeaders, null);
-
-        //Dispose phone. Restcomm will fail to send the OPTIONS message and should remove the registration
-        sipStack3.dispose();
-        phone3 = null;
-        sipStack3 = null;
-
-        Thread.sleep(1000);
-        assertTrue(MonitoringServiceTool.getInstance().getRegisteredUsers(deploymentUrl.toString(),adminAccountSid, adminAuthToken)==0);
+        phone3.setAutoResponseOptionsRequests(true);
     }
 
     @Test
@@ -407,34 +468,17 @@ public final class UserAgentManagerTest {
         Credential c = new Credential("127.0.0.1","alice", "1234");
         phone3.addUpdateCredential(c);
 
+        phone3.setAutoResponseOptionsRequests(false);
+        phone3.setErrorRespondToOptions(SipServletResponse.SC_SERVICE_UNAVAILABLE);
+
         assertTrue(phone3.register(uri, "alice", "1234", aliceContact3, 3600, 3600));
         Thread.sleep(500);
-        assertTrue(MonitoringServiceTool.getInstance().getRegisteredUsers(deploymentUrl.toString(),adminAccountSid, adminAuthToken)==1);
+        assertEquals(1,MonitoringServiceTool.getInstance().getRegisteredUsers(deploymentUrl.toString(),adminAccountSid, adminAuthToken));
 
-        phone3.listenRequestMessage();
-        RequestEvent requestEvent = phone3.waitRequest(10000);
-        assertNotNull(requestEvent);
-        assertTrue(requestEvent.getRequest().getMethod().equals(SipRequest.OPTIONS));
-        String extraParam = ((SipUri)requestEvent.getRequest().getRequestURI()).getParameter("rc-id");
-        assertNotNull(extraParam);
-        logger.info("RequestEvent :"+requestEvent.getRequest().toString());
+        Thread.sleep(50000);
+        assertEquals(0, MonitoringServiceTool.getInstance().getRegisteredUsers(deploymentUrl.toString(),adminAccountSid, adminAuthToken));
 
-        ArrayList<Header> additionalHeader = new ArrayList<Header>();
-        Header reason = sipStack3.getHeaderFactory().createReasonHeader("udp", 503, "Destination not available");
-        additionalHeader.add(reason);
-        ArrayList<Header> replaceHeaders = new ArrayList<Header>();
-        //The To Header will not contain the transport
-        Header toHeader = sipStack3.getHeaderFactory().createToHeader(sipStack3.getAddressFactory().createAddress("sip:alice@127.0.0.1:" + alicePort3 + ";rc-id=7616"), null);
-        replaceHeaders.add(toHeader);
-        phone3.sendReply(requestEvent, 503, "Service unavailable", null, null, 3600, additionalHeader, replaceHeaders, null);
-
-        //Dispose phone. Restcomm will fail to send the OPTIONS message and should remove the registration
-        sipStack3.dispose();
-        phone3 = null;
-        sipStack3 = null;
-
-        Thread.sleep(1000);
-        assertTrue(MonitoringServiceTool.getInstance().getRegisteredUsers(deploymentUrl.toString(),adminAccountSid, adminAuthToken)==0);
+        phone3.setAutoResponseOptionsRequests(true);
     }
 
     @Test
@@ -445,33 +489,16 @@ public final class UserAgentManagerTest {
         Credential c = new Credential("127.0.0.1","alice", "1234");
         phone3.addUpdateCredential(c);
 
+        phone3.setAutoResponseOptionsRequests(false);
+
         assertTrue(phone3.register(uri, "alice", "1234", aliceContact3, 3600, 3600));
         Thread.sleep(500);
-        assertTrue(MonitoringServiceTool.getInstance().getRegisteredUsers(deploymentUrl.toString(),adminAccountSid, adminAuthToken)==1);
+        assertEquals(1, MonitoringServiceTool.getInstance().getRegisteredUsers(deploymentUrl.toString(),adminAccountSid, adminAuthToken));
 
-        phone3.listenRequestMessage();
-        RequestEvent requestEvent = phone3.waitRequest(10000);
-        assertNotNull(requestEvent);
-        assertTrue(requestEvent.getRequest().getMethod().equals(SipRequest.OPTIONS));
-        String extraParam = ((SipUri)requestEvent.getRequest().getRequestURI()).getParameter("rc-id");
-        assertNotNull(extraParam);
-        logger.info("RequestEvent :"+requestEvent.getRequest().toString());
+        Thread.sleep(50000);
+        assertEquals(0, MonitoringServiceTool.getInstance().getRegisteredUsers(deploymentUrl.toString(),adminAccountSid, adminAuthToken));
 
-        ArrayList<Header> additionalHeader = new ArrayList<Header>();
-        Header reason = sipStack3.getHeaderFactory().createReasonHeader("udp", 503, "Destination not available");
-        additionalHeader.add(reason);
-        ArrayList<Header> replaceHeaders = new ArrayList<Header>();
-        Header toHeader = sipStack3.getHeaderFactory().createToHeader(sipStack3.getAddressFactory().createAddress(aliceContact3), null);
-        replaceHeaders.add(toHeader);
-        phone3.sendReply(requestEvent, 408, "Request Timeout", null, null, 3600, additionalHeader, replaceHeaders, null);
-
-        //Dispose phone. Restcomm will fail to send the OPTIONS message and should remove the registration
-        sipStack3.dispose();
-        phone3 = null;
-        sipStack3 = null;
-
-        Thread.sleep(1000);
-        assertTrue(MonitoringServiceTool.getInstance().getRegisteredUsers(deploymentUrl.toString(),adminAccountSid, adminAuthToken)==0);
+        phone3.setAutoResponseOptionsRequests(true);
     }
 
     @Test
@@ -481,28 +508,40 @@ public final class UserAgentManagerTest {
         SipURI uri = sipStack2.getAddressFactory().createSipURI(null, restcommContact);
         Credential c = new Credential("127.0.0.1","bob", "1234");
         phone2.addUpdateCredential(c);
+
+        phone2.setAutoResponseOptionsRequests(false);
+
         assertTrue(phone2.register(uri, "bob", "1234", bobContact, 3600, 3600));
         Thread.sleep(2000);
-        assertTrue(MonitoringServiceTool.getInstance().getRegisteredUsers(deploymentUrl.toString(),adminAccountSid, adminAuthToken)==1);
+        assertEquals(1, MonitoringServiceTool.getInstance().getRegisteredUsers(deploymentUrl.toString(),adminAccountSid, adminAuthToken));
 
-        phone2.listenRequestMessage();
-        RequestEvent request = phone2.waitRequest(10000);
-        assertEquals(request.getRequest().getMethod(), SipRequest.OPTIONS);
+        Thread.sleep(50000);
+        assertEquals(0, MonitoringServiceTool.getInstance().getRegisteredUsers(deploymentUrl.toString(),adminAccountSid, adminAuthToken));
 
-        ArrayList<Header> additionalHeader = new ArrayList<Header>();
-        Header reason = sipStack2.getHeaderFactory().createReasonHeader("udp", 503, "Destination not available");
-        additionalHeader.add(reason);
-
-        phone2.sendReply(request, 408, "Request timeout", null, null, 3600);
-
-        //Dispose phone. Restcomm will fail to send the OPTIONS message and should remove the registration
-        sipStack2.dispose();
-        phone2 = null;
-        sipStack2 = null;
-
-        Thread.sleep(1000);
-        assertTrue(MonitoringServiceTool.getInstance().getRegisteredUsers(deploymentUrl.toString(),adminAccountSid, adminAuthToken)==0);
+        phone2.setAutoResponseOptionsRequests(true);
     }
+
+    @Test @Ignore @Category(UnstableTests.class)
+    public void registerUserAgentWith486BusyErrorResponse() throws ParseException, InterruptedException, InvalidArgumentException {
+//        deployer.deploy("UserAgentTest");
+        // Register the phone so we can get OPTIONS pings from RestComm.
+        SipURI uri = sipStack2.getAddressFactory().createSipURI(null, restcommContact);
+        Credential c = new Credential("127.0.0.1","bob", "1234");
+        phone2.addUpdateCredential(c);
+
+        assertTrue(phone2.register(uri, "bob", "1234", bobContact, 3600, 3600));
+
+        phone2.setAutoResponseOptionsRequests(false);
+        phone2.setErrorRespondToOptions(SipServletResponse.SC_BUSY_HERE);
+
+        Thread.sleep(2000);
+        assertEquals(1, MonitoringServiceTool.getInstance().getRegisteredUsers(deploymentUrl.toString(),adminAccountSid, adminAuthToken));
+
+        Thread.sleep(50000);
+        assertEquals(0, MonitoringServiceTool.getInstance().getRegisteredUsers(deploymentUrl.toString(),adminAccountSid, adminAuthToken));
+        phone2.setAutoResponseOptionsRequests(true);
+    }
+
 
     /**
      * registerUserAgentWithAtTheRateSignInLogin
@@ -516,19 +555,18 @@ public final class UserAgentManagerTest {
         SipURI uri = sipStack5.getAddressFactory().createSipURI(null, restcommContact);
         Credential c = new Credential("127.0.0.1","maria.test@telestax.com", "1234");
         phone5.addUpdateCredential(c);
+
+        phone5.setAutoResponseOptionsRequests(false);
+
         assertTrue(phone5.register(uri, "maria.test@telestax.com", "1234", mariaContact5, 3600, 3600));
         Thread.sleep(2000);
 
         //user should be registered successfully
-        assertTrue(MonitoringServiceTool.getInstance().getRegisteredUsers(deploymentUrl.toString(),adminAccountSid, adminAuthToken)==1);
+        assertEquals(1, MonitoringServiceTool.getInstance().getRegisteredUsers(deploymentUrl.toString(),adminAccountSid, adminAuthToken));
 
-        //Dispose phone. Restcomm will fail to send the OPTIONS message and should remove the registration
-        sipStack5.dispose();
-        phone5 = null;
-        sipStack5 = null;
-
-        Thread.sleep(100000);
-        assertTrue(MonitoringServiceTool.getInstance().getRegisteredUsers(deploymentUrl.toString(),adminAccountSid, adminAuthToken)==0);
+        Thread.sleep(50000);
+        assertEquals(0, MonitoringServiceTool.getInstance().getRegisteredUsers(deploymentUrl.toString(),adminAccountSid, adminAuthToken));
+        phone5.setAutoResponseOptionsRequests(true);
     }
 
     /**
@@ -540,37 +578,39 @@ public final class UserAgentManagerTest {
      */
     @Test
     public void registerMultipleUsersWithSameLoginUnderDifferentOrganizations() throws ParseException, InterruptedException, InvalidArgumentException {
-       
+
         //register alice of organization (testdomain2.restcomm.com)
         SipURI uri = sipStack6.getAddressFactory().createSipURI(null, restcommContact);
         Credential c = new Credential("testdomain2.restcomm.com","alice", "1234");
         phone6.addUpdateCredential(c);
+
+        phone6.setAutoResponseOptionsRequests(false);
+
         assertTrue(phone6.register(uri, "alice", "1234", aliceContact6, 3600, 3600));
         Thread.sleep(500);
         //alice should be registered successfully
-        assertTrue(MonitoringServiceTool.getInstance().getRegisteredUsers(deploymentUrl.toString(),adminAccountSid, adminAuthToken)==1);
+        assertEquals(1, MonitoringServiceTool.getInstance().getRegisteredUsers(deploymentUrl.toString(),adminAccountSid, adminAuthToken));
 
         //register another alice of organization (127.0.0.1)
         uri = sipStack7.getAddressFactory().createSipURI(null, restcommContact);
         c = new Credential("127.0.0.1","alice", "1234");
         phone7.addUpdateCredential(c);
+
+        phone7.setAutoResponseOptionsRequests(false);
+
         assertTrue(phone7.register(uri, "alice", "1234", aliceContact7, 3600, 3600));
         Thread.sleep(500);
 
         //both users should be registered successfully
         int totalRegistrations = MonitoringServiceTool.getInstance().getRegisteredUsers(deploymentUrl.toString(),adminAccountSid, adminAuthToken);
         logger.info("Totatl Registrations: "+totalRegistrations);
-        assertTrue(totalRegistrations==2);
+        assertEquals(2, totalRegistrations);
 
-        //Dispose phones. Restcomm will fail to send the OPTIONS message and should remove the registration
-        sipStack6.dispose();
-        phone6 = null;
-        sipStack6 = null;
-        sipStack7.dispose();
-        phone7 = null;
-        sipStack7 = null;
-        Thread.sleep(100000);
-        assertTrue(MonitoringServiceTool.getInstance().getRegisteredUsers(deploymentUrl.toString(),adminAccountSid, adminAuthToken)==0);
+        Thread.sleep(50000);
+        assertEquals(0, MonitoringServiceTool.getInstance().getRegisteredUsers(deploymentUrl.toString(),adminAccountSid, adminAuthToken));
+
+        phone6.setAutoResponseOptionsRequests(true);
+        phone7.setAutoResponseOptionsRequests(true);
     }
 
     @Deployment(name = "UserAgentTest", managed = true, testable = false)
@@ -579,22 +619,22 @@ public final class UserAgentManagerTest {
         reconfigurePorts();
 
         Map<String,String> replacements = new HashMap();
-        //replace mediaport 2727 
-        replacements.put("2727", String.valueOf(mediaPort));         
+        //replace mediaport 2727
+        replacements.put("2727", String.valueOf(mediaPort));
         replacements.put("8080", String.valueOf(restcommHTTPPort));
         replacements.put("5080", String.valueOf(restcommPort));
-        replacements.put("5070", String.valueOf(alicePort)); 
-        replacements.put("5071", String.valueOf(alicePort3)); 
-        replacements.put("5072", String.valueOf(alicePort4)); 
-        replacements.put("5073", String.valueOf(mariaPort5)); 
-        replacements.put("5074", String.valueOf(alicePort6)); 
-        replacements.put("5075", String.valueOf(alicePort7)); 
-        
+        replacements.put("5070", String.valueOf(alicePort));
+        replacements.put("5071", String.valueOf(alicePort3));
+        replacements.put("5072", String.valueOf(alicePort4));
+        replacements.put("5073", String.valueOf(mariaPort5));
+        replacements.put("5074", String.valueOf(alicePort6));
+        replacements.put("5075", String.valueOf(alicePort7));
+
         replacements.put("5090", String.valueOf(bobPort));
 
-      
-        return WebArchiveUtil.createWebArchiveNoGw("restcomm_UserAgentManagerTest.xml", 
-                "restcomm.script_UserAgentTest", 
+
+        return WebArchiveUtil.createWebArchiveNoGw("restcomm_UserAgentManagerTest.xml",
+                "restcomm.script_UserAgentTest",
                 replacements);
-    }    
+    }
 }

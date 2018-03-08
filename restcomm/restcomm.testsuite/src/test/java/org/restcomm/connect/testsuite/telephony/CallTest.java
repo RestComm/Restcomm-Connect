@@ -43,8 +43,12 @@ import org.junit.Before;
 import org.junit.BeforeClass;
 import org.junit.Ignore;
 import org.junit.Test;
+import org.junit.FixMethodOrder;
+import org.junit.runners.MethodSorters;
+import org.junit.experimental.categories.Category;
 import org.junit.runner.RunWith;
 import org.restcomm.connect.commons.Version;
+import org.restcomm.connect.commons.annotations.SequentialClassTests;
 //import org.restcomm.connect.telephony.Version;
 
 /**
@@ -52,6 +56,8 @@ import org.restcomm.connect.commons.Version;
  */
 @Ignore
 @RunWith(Arquillian.class)
+@FixMethodOrder(MethodSorters.NAME_ASCENDING)
+@Category(value={SequentialClassTests.class})
 public final class CallTest {
     private static final String version = Version.getVersion();
     private static final byte[] bytes = new byte[] { 118, 61, 48, 13, 10, 111, 61, 117, 115, 101, 114, 49, 32, 53, 51, 54, 53,

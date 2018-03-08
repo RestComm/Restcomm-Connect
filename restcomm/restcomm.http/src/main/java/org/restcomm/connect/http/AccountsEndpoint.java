@@ -19,28 +19,12 @@
  */
 package org.restcomm.connect.http;
 
-import static javax.ws.rs.core.MediaType.APPLICATION_JSON;
-import static javax.ws.rs.core.MediaType.APPLICATION_JSON_TYPE;
-import static javax.ws.rs.core.MediaType.APPLICATION_XML;
-import static javax.ws.rs.core.MediaType.APPLICATION_XML_TYPE;
-import static javax.ws.rs.core.Response.ok;
-import static javax.ws.rs.core.Response.status;
-import static javax.ws.rs.core.Response.Status.BAD_REQUEST;
-import static javax.ws.rs.core.Response.Status.CONFLICT;
-import static javax.ws.rs.core.Response.Status.NOT_FOUND;
-
-import java.net.URI;
-import java.util.ArrayList;
-import java.util.List;
-
-import javax.annotation.PostConstruct;
-import javax.servlet.ServletContext;
-import javax.servlet.http.HttpServletRequest;
-import javax.ws.rs.core.MediaType;
-import javax.ws.rs.core.MultivaluedMap;
-import javax.ws.rs.core.Response;
-import javax.ws.rs.core.UriInfo;
-
+import com.google.gson.Gson;
+import com.google.gson.GsonBuilder;
+import com.sun.jersey.core.header.LinkHeader;
+import com.sun.jersey.core.header.LinkHeader.LinkHeaderBuilder;
+import com.sun.jersey.core.util.MultivaluedMapImpl;
+import com.thoughtworks.xstream.XStream;
 import org.apache.commons.configuration.Configuration;
 import org.apache.shiro.crypto.hash.Md5Hash;
 import org.joda.time.DateTime;
@@ -56,14 +40,13 @@ import org.restcomm.connect.dao.entities.Client;
 import org.restcomm.connect.dao.entities.IncomingPhoneNumber;
 import org.restcomm.connect.dao.entities.Organization;
 import org.restcomm.connect.dao.entities.RestCommResponse;
+import org.restcomm.connect.extension.api.ApiRequest;
+import org.restcomm.connect.extension.controller.ExtensionController;
 import org.restcomm.connect.http.client.rcmlserver.RcmlserverApi;
 import org.restcomm.connect.http.client.rcmlserver.RcmlserverNotifications;
 import org.restcomm.connect.http.converter.AccountConverter;
 import org.restcomm.connect.http.converter.AccountListConverter;
 import org.restcomm.connect.http.converter.RestCommResponseConverter;
-import org.restcomm.connect.http.exceptions.AccountAlreadyClosed;
-import org.restcomm.connect.http.exceptions.AuthorizationException;
-import org.restcomm.connect.http.exceptions.EmailAlreadyExisted;
 import org.restcomm.connect.http.exceptions.InsufficientPermission;
 import org.restcomm.connect.http.exceptions.InvalidEmailException;
 import org.restcomm.connect.http.exceptions.PasswordTooWeak;
@@ -74,10 +57,35 @@ import org.restcomm.connect.identity.passwords.PasswordValidatorFactory;
 import org.restcomm.connect.provisioning.number.api.PhoneNumberProvisioningManager;
 import org.restcomm.connect.provisioning.number.api.PhoneNumberProvisioningManagerProvider;
 
-import com.google.gson.Gson;
-import com.google.gson.GsonBuilder;
-import com.sun.jersey.core.util.MultivaluedMapImpl;
-import com.thoughtworks.xstream.XStream;
+import javax.annotation.PostConstruct;
+import javax.servlet.ServletContext;
+import javax.servlet.http.HttpServletRequest;
+import javax.ws.rs.core.MediaType;
+import javax.ws.rs.core.MultivaluedMap;
+import javax.ws.rs.core.Response;
+import javax.ws.rs.core.UriInfo;
+import java.net.URI;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Map;
+import javax.ws.rs.WebApplicationException;
+
+import static javax.ws.rs.core.MediaType.APPLICATION_JSON;
+import static javax.ws.rs.core.MediaType.APPLICATION_JSON_TYPE;
+import static javax.ws.rs.core.MediaType.APPLICATION_XML;
+import static javax.ws.rs.core.MediaType.APPLICATION_XML_TYPE;
+import static javax.ws.rs.core.Response.Status.BAD_REQUEST;
+import static javax.ws.rs.core.Response.Status.CONFLICT;
+import static javax.ws.rs.core.Response.Status.NOT_FOUND;
+import static javax.ws.rs.core.Response.Status.PRECONDITION_FAILED;
+import static javax.ws.rs.core.Response.ok;
+import static javax.ws.rs.core.Response.status;
+import org.restcomm.connect.dao.ProfileAssociationsDao;
+import org.restcomm.connect.dao.entities.Account.Status;
+import org.restcomm.connect.dao.entities.ProfileAssociation;
+import static org.restcomm.connect.http.ProfileEndpoint.PROFILE_REL_TYPE;
+import static org.restcomm.connect.http.ProfileEndpoint.TITLE_PARAM;
+import org.restcomm.connect.http.exceptionmappers.CustomReasonPhraseType;
 
 /**
  * @author quintana.thomas@gmail.com (Thomas Quintana)
@@ -89,6 +97,11 @@ public class AccountsEndpoint extends SecuredEndpoint {
     protected Gson gson;
     protected XStream xstream;
     protected ClientsDao clientDao;
+    protected IncomingPhoneNumbersDao incomingPhoneNumbersDao;
+    private ProfileAssociationsDao profileAssociationsDao;
+
+    private Map<Status,Runnable> statusActionMap;
+
 
     public AccountsEndpoint() {
         super();
@@ -105,6 +118,8 @@ public class AccountsEndpoint extends SecuredEndpoint {
         runtimeConfiguration = rootConfiguration.subset("runtime-settings");
         super.init(runtimeConfiguration);
         clientDao = ((DaoManager) context.getAttribute(DaoManager.class.getName())).getClientsDao();
+        incomingPhoneNumbersDao = ((DaoManager) context.getAttribute(DaoManager.class.getName())).getIncomingPhoneNumbersDao();
+        profileAssociationsDao = ((DaoManager) context.getAttribute(DaoManager.class.getName())).getProfileAssociationsDao();
         final AccountConverter converter = new AccountConverter(runtimeConfiguration);
         final GsonBuilder builder = new GsonBuilder();
         builder.registerTypeAdapter(Account.class, converter);
@@ -162,8 +177,14 @@ public class AccountsEndpoint extends SecuredEndpoint {
         return new Account(sid, now, now, emailAddress, friendlyName, accountSid, type, status, authToken, role, uri, organizationSid);
     }
 
-    protected Response getAccount(final String accountSid, final MediaType responseType) {
-        checkAuthenticatedAccount();
+    public LinkHeader composeLink(Sid targetSid, UriInfo info) {
+        String sid = targetSid.toString();
+        URI uri = info.getBaseUriBuilder().path(ProfileJsonEndpoint.class).path(sid).build();
+        LinkHeaderBuilder link = LinkHeader.uri(uri).parameter(TITLE_PARAM, "Profiles");
+        return link.rel(PROFILE_REL_TYPE).build();
+    }
+
+    protected Response getAccount(final String accountSid, final MediaType responseType, UriInfo info) {
         //First check if the account has the required permissions in general, this way we can fail fast and avoid expensive DAO operations
         Account account = null;
         checkPermission("RestComm:Read:Accounts");
@@ -186,11 +207,17 @@ public class AccountsEndpoint extends SecuredEndpoint {
         if (account == null) {
             return status(NOT_FOUND).build();
         } else {
+            Response.ResponseBuilder ok = Response.ok();
+            ProfileAssociation profileAssociationByTargetSid = profileAssociationsDao.getProfileAssociationByTargetSid(accountSid);
+            if (profileAssociationByTargetSid != null) {
+                LinkHeader profileLink = composeLink(profileAssociationByTargetSid.getProfileSid(), info);
+                ok.header(ProfileEndpoint.LINK_HEADER, profileLink.toString());
+            }
             if (APPLICATION_XML_TYPE == responseType) {
                 final RestCommResponse response = new RestCommResponse(account);
-                return ok(xstream.toXML(response), APPLICATION_XML).build();
+                return ok.type(APPLICATION_XML).entity(xstream.toXML(response)).build();
             } else if (APPLICATION_JSON_TYPE == responseType) {
-                return ok(gson.toJson(account), APPLICATION_JSON).build();
+                return ok.type(APPLICATION_JSON).entity(gson.toJson(account)).build();
             } else {
                 return null;
             }
@@ -268,6 +295,7 @@ public class AccountsEndpoint extends SecuredEndpoint {
      * @param sid
      */
     private void removeAccoundDependencies(Sid sid) {
+        logger.debug("removing accoutn dependencies");
         DaoManager daoManager = (DaoManager) context.getAttribute(DaoManager.class.getName());
         // remove dependency entities first and dependent entities last. Also, do safer operation first (as a secondary rule)
         daoManager.getAnnouncementsDao().removeAnnouncements(sid);
@@ -279,6 +307,7 @@ public class AccountsEndpoint extends SecuredEndpoint {
         daoManager.getApplicationsDao().removeApplications(sid);
         removeIncomingPhoneNumbers(sid,daoManager.getIncomingPhoneNumbersDao());
         daoManager.getClientsDao().removeClients(sid);
+        profileAssociationsDao.deleteProfileAssociationByTargetSid(sid.toString());
     }
 
     /**
@@ -324,7 +353,6 @@ public class AccountsEndpoint extends SecuredEndpoint {
 
 
     protected Response getAccounts(final UriInfo info, final MediaType responseType) {
-        checkAuthenticatedAccount();
         //First check if the account has the required permissions in general, this way we can fail fast and avoid expensive DAO operations
         checkPermission("RestComm:Read:Accounts");
         final Account account = userIdentityContext.getEffectiveAccount();
@@ -366,7 +394,6 @@ public class AccountsEndpoint extends SecuredEndpoint {
     }
 
     protected Response putAccount(final MultivaluedMap<String, String> data, final MediaType responseType) {
-        checkAuthenticatedAccount();
         //First check if the account has the required permissions in general, this way we can fail fast and avoid expensive DAO operations
         checkPermission("RestComm:Create:Accounts");
         // check account level depth. If we're already at third level no sub-accounts are allowed to be created
@@ -378,57 +405,73 @@ public class AccountsEndpoint extends SecuredEndpoint {
 
         // what if effectiveAccount is null ?? - no need to check since we checkAuthenticatedAccount() in AccountsEndoint.init()
         final Sid sid = userIdentityContext.getEffectiveAccount().getSid();
-        final Account parent = accountsDao.getAccount(sid);
-        Account account = null;
-        try {
-            account = createFrom(sid, data, parent);
-        } catch (IllegalArgumentException  illegalArgumentException) {
-            return status(BAD_REQUEST).entity(illegalArgumentException.getMessage()).build();
-        }catch (final NullPointerException exception) {
-            return status(BAD_REQUEST).entity(exception.getMessage()).build();
-        } catch (PasswordTooWeak passwordTooWeak) {
-            return status(BAD_REQUEST).entity(buildErrorResponseBody("Password too weak",responseType)).type(responseType).build();
-        }
 
-        // If Account already exists don't add it again
+        ExtensionController ec = ExtensionController.getInstance();
+        ApiRequest apiRequest = new ApiRequest(sid.toString(), data, ApiRequest.Type.CREATE_SUBACCOUNT);
+
+        if (executePreApiAction(apiRequest)) {
+            final Account parent = accountsDao.getAccount(sid);
+            Account account = null;
+            try {
+                account = createFrom(sid, data, parent);
+            } catch (IllegalArgumentException  illegalArgumentException) {
+                return status(BAD_REQUEST).entity(illegalArgumentException.getMessage()).build();
+            }catch (final NullPointerException exception) {
+                return status(BAD_REQUEST).entity(exception.getMessage()).build();
+            } catch (PasswordTooWeak passwordTooWeak) {
+                return status(BAD_REQUEST).entity(buildErrorResponseBody("Password too weak",responseType)).type(responseType).build();
+            }
+
+            // If Account already exists don't add it again
         /*
             Account creation rules:
             - either be Administrator or have the following permission: RestComm:Create:Accounts
             - only Administrators can choose a role for newly created accounts. Normal users will create accounts with the same role as their own.
          */
-        if (accountsDao.getAccount(account.getSid()) == null && !account.getEmailAddress().equalsIgnoreCase("administrator@company.com")) {
-            if (parent.getStatus().equals(Account.Status.ACTIVE) && isSecuredByPermission("RestComm:Create:Accounts")) {
-                if (!hasAccountRole(getAdministratorRole()) || !data.containsKey("Role")) {
-                    account = account.setRole(parent.getRole());
-                }
-                accountsDao.addAccount(account);
+            if (accountsDao.getAccount(account.getSid()) == null && !account.getEmailAddress().equalsIgnoreCase("administrator@company.com")) {
+                if (parent.getStatus().equals(Account.Status.ACTIVE) && isSecuredByPermission("RestComm:Create:Accounts")) {
+                    if (!hasAccountRole(getAdministratorRole()) || !data.containsKey("Role")) {
+                        account = account.setRole(parent.getRole());
+                    }
+                    accountsDao.addAccount(account);
 
-                // Create default SIP client data
-                MultivaluedMap<String, String> clientData = new MultivaluedMapImpl();
-                String username = data.getFirst("EmailAddress").split("@")[0];
-                clientData.add("Login", username);
-                clientData.add("Password", data.getFirst("Password"));
-                clientData.add("FriendlyName", account.getFriendlyName());
-                clientData.add("AccountSid", account.getSid().toString());
-                Client client = clientDao.getClient(clientData.getFirst("Login"), account.getOrganizationSid());
-                if (client == null) {
-                    client = createClientFrom(account.getSid(), clientData);
-                    clientDao.addClient(client);
+                    // Create default SIP client data
+                    MultivaluedMap<String, String> clientData = new MultivaluedMapImpl();
+                    String username = data.getFirst("EmailAddress").split("@")[0];
+                    clientData.add("Login", username);
+                    clientData.add("Password", data.getFirst("Password"));
+                    clientData.add("FriendlyName", account.getFriendlyName());
+                    clientData.add("AccountSid", account.getSid().toString());
+                    Client client = clientDao.getClient(clientData.getFirst("Login"), account.getOrganizationSid());
+                    if (client == null) {
+                        client = createClientFrom(account.getSid(), clientData);
+                        clientDao.addClient(client);
+                    }
+                } else {
+                    throw new InsufficientPermission();
                 }
             } else {
-                throw new InsufficientPermission();
+                return status(CONFLICT).entity("The email address used for the new account is already in use.").build();
+            }
+
+            executePostApiAction(apiRequest);
+
+            if (APPLICATION_JSON_TYPE == responseType) {
+                return ok(gson.toJson(account), APPLICATION_JSON).build();
+            } else if (APPLICATION_XML_TYPE == responseType) {
+                final RestCommResponse response = new RestCommResponse(account);
+                return ok(xstream.toXML(response), APPLICATION_XML).build();
+            } else {
+                return null;
             }
         } else {
-            return status(CONFLICT).entity("The email address used for the new account is already in use.").build();
-        }
-
-        if (APPLICATION_JSON_TYPE == responseType) {
-            return ok(gson.toJson(account), APPLICATION_JSON).build();
-        } else if (APPLICATION_XML_TYPE == responseType) {
-            final RestCommResponse response = new RestCommResponse(account);
-            return ok(xstream.toXML(response), APPLICATION_XML).build();
-        } else {
-            return null;
+            if (logger.isDebugEnabled()) {
+                final String errMsg = "Creation of sub-accounts is not Allowed";
+                logger.debug(errMsg);
+            }
+            executePostApiAction(apiRequest);
+            String errMsg = "Creation of sub-accounts is not Allowed";
+            return status(Response.Status.FORBIDDEN).entity(errMsg).build();
         }
     }
 
@@ -461,144 +504,130 @@ public class AccountsEndpoint extends SecuredEndpoint {
      *
      * @param account
      * @param data
-     * @return
-     * @throws AccountAlreadyClosed
+     * @return a new instance with given account,and overriden fields from data
      */
-    private Account prepareAccountForUpdate(final Account account, final MultivaluedMap<String, String> data)
-            throws AccountAlreadyClosed, PasswordTooWeak, EmailAlreadyExisted, InvalidEmailException {
-        Account result = account;
-        boolean isPasswordReset = false;
-        Account.Status newStatus = null;
-        try {
-            // if the account is already CLOSED, no updates are allowed
-            if (account.getStatus() == Account.Status.CLOSED) {
-                throw new AccountAlreadyClosed();
-            }
-            if (data.containsKey("Status")) {
-                newStatus = Account.Status.getValueOf(data.getFirst("Status").toLowerCase());
-                if (newStatus == Account.Status.CLOSED)
-                    return account.setStatus(Account.Status.CLOSED);
-                // if the status is switched to CLOSED, the rest of the updates are ignored.
-            }
-            if (data.containsKey("FriendlyName")) {
-                result = result.setFriendlyName(data.getFirst("FriendlyName"));
-            }
-            if (data.containsKey("Password")) {
-                // if this is a reset-password operation, we also need to set the account status to active
-                if (account.getStatus() == Account.Status.UNINITIALIZED)
-                    isPasswordReset = true;
+    private Account prepareAccountForUpdate(final Account account, final MultivaluedMap<String, String> data) {
+        Account.Builder accBuilder = Account.builder();
+        //copy full incoming account, and let override happen
+        //in a separate instance later
+        accBuilder.copy(account);
 
-                String password = data.getFirst("Password");
-                PasswordValidator validator = PasswordValidatorFactory.createDefault();
-                if (!validator.isStrongEnough(password))
-                    throw new PasswordTooWeak();
-                final String hash = new Md5Hash(data.getFirst("Password")).toString();
-                result = result.setAuthToken(hash);
+
+        if (data.containsKey("Status")) {
+            Account.Status newStatus = Account.Status.getValueOf(data.getFirst("Status").toLowerCase());
+            accBuilder.setStatus(newStatus);
+        }
+        if (data.containsKey("FriendlyName")) {
+            accBuilder.setFriendlyName(data.getFirst("FriendlyName"));
+        }
+        if (data.containsKey("Password")) {
+            // if this is a reset-password operation, we also need to set the account status to active
+            if (account.getStatus() == Account.Status.UNINITIALIZED) {
+                accBuilder.setStatus(Account.Status.ACTIVE);
             }
-            if (newStatus != null) {
-                result = result.setStatus(newStatus);
+
+            String password = data.getFirst("Password");
+            PasswordValidator validator = PasswordValidatorFactory.createDefault();
+            if (!validator.isStrongEnough(password)) {
+                CustomReasonPhraseType stat = new CustomReasonPhraseType(Response.Status.BAD_REQUEST, "Password too weak");
+                throw new WebApplicationException(status(stat).build());
+            }
+            final String hash = new Md5Hash(data.getFirst("Password")).toString();
+            accBuilder.setAuthToken(hash);
+        }
+        if (data.containsKey("Role")) {
+            // Only allow role change for administrators. Multitenancy checks will take care of restricting the modification scope to sub-accounts.
+            if (userIdentityContext.getEffectiveAccountRoles().contains(getAdministratorRole())) {
+                accBuilder.setRole(data.getFirst("Role"));
             } else {
-                // if this is a password reset operation we need to activate the account (in case there is no explicity Status passed of course)
-                if (isPasswordReset)
-                    result = result.setStatus(Account.Status.ACTIVE);
-            }
-            if (data.containsKey("Role")) {
-                Account operatingAccount = userIdentityContext.getEffectiveAccount();
-                // Only allow role change for administrators. Multitenancy checks will take care of restricting the modification scope to sub-accounts.
-                if (userIdentityContext.getEffectiveAccountRoles().contains(getAdministratorRole())) {
-                    result = result.setRole(data.getFirst("Role"));
-                } else
-                    throw new AuthorizationException();
-            }
-            if (data.containsKey("EmailAddress")) {
-                String newEmailAddress = data.getFirst("EmailAddress").toLowerCase();
-                if (!EmailValidator.isValidEmailFormat(newEmailAddress)) {
-                    throw new InvalidEmailException();
-                }
-                if (accountsDao.getAccount(newEmailAddress) != null) {
-                    throw new EmailAlreadyExisted();
-                }
-                result = result.setEmailAddress(newEmailAddress);
-            }
-        } catch (AuthorizationException | AccountAlreadyClosed | PasswordTooWeak | EmailAlreadyExisted | InvalidEmailException e) {
-            // some exceptions should reach outer layers and result in 403
-            throw e;
-        } catch (Exception e) {
-            if (logger.isInfoEnabled()) {
-                logger.info("Exception during Account update: " + e.getStackTrace());
+                CustomReasonPhraseType stat = new CustomReasonPhraseType(Response.Status.FORBIDDEN, "Only Administrator allowed");
+                throw new WebApplicationException(status(stat).build());
             }
         }
-        return result;
+        if (data.containsKey("EmailAddress")) {
+            String newEmailAddress = data.getFirst("EmailAddress").toLowerCase();
+            if (!EmailValidator.isValidEmailFormat(newEmailAddress)) {
+                CustomReasonPhraseType stat = new CustomReasonPhraseType(Response.Status.BAD_REQUEST, "Not allowed email address format");
+                throw new WebApplicationException(status(stat).build());
+            }
+            if (accountsDao.getAccount(newEmailAddress) != null) {
+                CustomReasonPhraseType stat = new CustomReasonPhraseType(Response.Status.CONFLICT, "This email address was already taken. Please, choose a different email address and try again.");
+                throw new WebApplicationException(status(stat).build());
+            }
+            accBuilder.setEmailAddress(newEmailAddress);
+        }
+
+        return accBuilder.build();
+    }
+
+    /**
+     * update SIP client of the corresponding Account.Password and FriendlyName fields are synched.
+     */
+    private void updateLinkedClient(Account account, MultivaluedMap<String, String> data) {
+        logger.debug("checking linked client");
+        String email = account.getEmailAddress();
+        if (email != null && !email.equals("")) {
+            logger.debug("account email is valid");
+            String username = email.split("@")[0];
+            Client client = clientDao.getClient(username, account.getOrganizationSid());
+            if (client != null) {
+                logger.debug("client found");
+                // TODO: need to encrypt this password because it's
+                // same with Account password.
+                // Don't implement now. Opened another issue for it.
+                if (data.containsKey("Password")) {
+                    // Md5Hash(data.getFirst("Password")).toString();
+                    logger.debug("password changed");
+                    String password = data.getFirst("Password");
+                    client = client.setPassword(password);
+                }
+
+                if (data.containsKey("FriendlyName")) {
+                    logger.debug("friendlyname changed");
+                    client = client.setFriendlyName(data.getFirst("FriendlyName"));
+                }
+                logger.debug("updating linked client");
+                clientDao.updateClient(client);
+            }
+        }
     }
 
     protected Response updateAccount(final String identifier, final MultivaluedMap<String, String> data,
             final MediaType responseType) {
-        checkAuthenticatedAccount();
         // First check if the account has the required permissions in general, this way we can fail fast and avoid expensive DAO
         // operations
         checkPermission("RestComm:Modify:Accounts");
-        Sid sid = null;
-        Account account = null;
-        try {
-            sid = new Sid(identifier);
-            account = accountsDao.getAccount(sid);
-        } catch (Exception e) {
-            if (logger.isDebugEnabled()) {
-                logger.debug("At update account, exception trying to get SID. Seems we have email as identifier"); // TODO check when this exception is thrown
-            }
-        }
-        if (account == null) {
-            if (logger.isDebugEnabled()) {
-                logger.debug("At update account, trying to get account using email as identifier");
-            }
-            account = accountsDao.getAccount(identifier);
-        }
+        Account account = getOperatingAccount(identifier);
 
         if (account == null) {
             return status(NOT_FOUND).build();
         } else {
             // since the operated account exists, first thing to do is make sure we have access
             secure(account, "RestComm:Modify:Accounts", SecuredType.SECURED_ACCOUNT);
-            // If the account is CLOSED, no updates are allowed. Return a BAD_REQUEST status code.
+
+            // if the account is already CLOSED, no updates are allowed
+            if (account.getStatus() == Account.Status.CLOSED) {
+                // If the account is CLOSED, no updates are allowed. Return a BAD_REQUEST status code.
+                CustomReasonPhraseType stat = new CustomReasonPhraseType(Response.Status.BAD_REQUEST, "Account is closed");
+                throw new WebApplicationException(status(stat).build());
+            }
+
             Account modifiedAccount;
-            try {
-                modifiedAccount = prepareAccountForUpdate(account, data);
-            } catch (AccountAlreadyClosed accountAlreadyClosed) {
-                return status(BAD_REQUEST).build();
-            } catch (PasswordTooWeak passwordTooWeak) {
-                return status(BAD_REQUEST).entity(buildErrorResponseBody("Password too weak",responseType)).type(responseType).build();
+            modifiedAccount = prepareAccountForUpdate(account, data);
+
+            // we are modifying status
+            if (modifiedAccount.getStatus() != null &&
+                    account.getStatus() != modifiedAccount.getStatus()) {
+                switchAccountStatusTree(modifiedAccount);
             }
 
-            // are we closing the account ?
-            if (account.getStatus() != Account.Status.CLOSED && modifiedAccount.getStatus() == Account.Status.CLOSED) {
-                closeAccountTree(modifiedAccount);
-                accountsDao.updateAccount(modifiedAccount);
-            } else {
-                // if we're not closing the account, update SIP client of the corresponding Account.
-                // Password and FriendlyName fields are synched.
-                String email = modifiedAccount.getEmailAddress();
-                if (email != null && !email.equals("")) {
-                    String username = email.split("@")[0];
-                    Client client = clientDao.getClient(username, account.getOrganizationSid());
-                    if (client != null) {
-                        // TODO: need to encrypt this password because it's
-                        // same with Account password.
-                        // Don't implement now. Opened another issue for it.
-                        if (data.containsKey("Password")) {
-                            // Md5Hash(data.getFirst("Password")).toString();
-                            String password = data.getFirst("Password");
-                            client = client.setPassword(password);
-                        }
-
-                        if (data.containsKey("FriendlyName")) {
-                            client = client.setFriendlyName(data.getFirst("FriendlyName"));
-                        }
-
-                        clientDao.updateClient(client);
-                    }
-                }
-                accountsDao.updateAccount(modifiedAccount);
+            //update client only if friendlyname or password was changed
+            if (data.containsKey("Password") ||
+                data.containsKey("FriendlyName") )  {
+                updateLinkedClient(account, data);
             }
+            accountsDao.updateAccount(modifiedAccount);
+
 
             if (APPLICATION_JSON_TYPE == responseType) {
                 return ok(gson.toJson(modifiedAccount), APPLICATION_JSON).build();
@@ -611,64 +640,174 @@ public class AccountsEndpoint extends SecuredEndpoint {
         }
     }
 
-    /**
-     * Removes all resources belonging to an account and sets its status to CLOSED. If rcmlServerApi is not null it will
-     * also send account-removal notifications to the rcmlserver
-     *
-     * @param closedAccount
-     */
-    private void closeSingleAccount(Account closedAccount, RcmlserverApi rcmlServerApi) {
-        // first send account removal notification to RVD now that the applications of the account still exist
-        if (rcmlServerApi != null) {
-            RcmlserverNotifications notifications = new RcmlserverNotifications();
-            notifications.add(rcmlServerApi.buildAccountClosingNotification(closedAccount));
-            Account notifier = userIdentityContext.getEffectiveAccount();
-            try {
-                rcmlServerApi.transmitNotifications(notifications, notifier.getSid().toString(), notifier.getAuthToken());
-            } catch (RcmlserverNotifyError e) {
-                logger.error(e.getMessage(),e); // just report
+    private Account getOperatingAccount (String identifier) {
+        Sid sid = null;
+        Account account = null;
+        try {
+            sid = new Sid(identifier);
+            account = accountsDao.getAccount(sid);
+        } catch (Exception e) {
+            if (logger.isDebugEnabled()) {
+                logger.debug("Exception trying to get account using SID. Seems we have email as identifier");
             }
         }
-        // then proceed to dependency removal
-        removeAccoundDependencies(closedAccount.getSid());
-        // finally, set account status to closed.
-        closedAccount = closedAccount.setStatus(Account.Status.CLOSED);
-        accountsDao.updateAccount(closedAccount);
+        if (account == null) {
+            account = accountsDao.getAccount(identifier);
+        }
+        return account;
     }
 
-    /**
-     * Closes an account along with all its children (the whole tree). Dependent entities are removed and,
-     * if configured, notification are sent to the rcml server (RVD) as well.
-     *
-     * @param parentAccount
-     */
-    private void closeAccountTree(Account parentAccount) {
-        // set rcmlserverApi in case we need to also notify the application sever (RVD)
-        RestcommConfiguration rcommConfiguration = RestcommConfiguration.getInstance();
-        RcmlserverConfigurationSet config = rcommConfiguration.getRcmlserver();
-        RcmlserverApi rcmlserverApi = null;
-        if (config != null && config.getNotify())
-            rcmlserverApi = new RcmlserverApi(rcommConfiguration.getMain(), rcommConfiguration.getRcmlserver());
+    private Organization getOrganization(final MultivaluedMap<String, String> data) {
+        Organization organization = null;
+        String organizationId = null;
 
-        // close child accounts
-        List<String> subAccountsToClose = accountsDao.getSubAccountSidsRecursive(parentAccount.getSid());
-        if (subAccountsToClose != null && !subAccountsToClose.isEmpty()) {
-            int i = subAccountsToClose.size(); // is is the count of accounts left to process
-            // we iterate backwards to handle child accounts first, parent accounts next
-            while (i > 0) {
-                i --;
-                String removedSid = subAccountsToClose.get(i);
-                try {
-                    Account subAccount = accountsDao.getAccount(new Sid(removedSid));
-                    closeSingleAccount(subAccount,rcmlserverApi);
-                } catch (Exception e) {
-                    // if anything bad happens, log the error and continue removing the rest of the accounts.
-                    logger.error("Failed removing (child) account '" + removedSid + "'");
+        if (data.containsKey("Organization")) {
+            organizationId = data.getFirst("Organization");
+        } else {
+            return null;
+        }
+
+        if (Sid.pattern.matcher(organizationId).matches()) {
+            //Attempt to get Organization by SID
+            organization = organizationsDao.getOrganization(new Sid(organizationId));
+            return organization;
+        } else {
+            //Attempt to get Organization by domain name
+            organization = organizationsDao.getOrganizationByDomainName(organizationId);
+            return organization;
+        }
+    }
+
+    protected Response migrateAccountOrganization(final String identifier, final MultivaluedMap<String, String> data,
+                                              final MediaType responseType) {
+
+        Organization organization = getOrganization(data);
+        //Validation 2 - Check if data contains Organization (either SID or domain name)
+        if (organization == null) {
+            return status(PRECONDITION_FAILED).entity("Missing Organization SID or Domain Name").build();
+        }
+
+        Account operatingAccount = getOperatingAccount(identifier);
+
+        //Validation 3 - Operating Account shouldn't be null;
+        if (operatingAccount == null) {
+            return status(NOT_FOUND).build();
+        }
+
+        //Validation 4 - Only direct child of super admin account can be migrated to a new organization
+        if (!isDirectChildOfAccount(userIdentityContext.getEffectiveAccount(), operatingAccount)) {
+            return status(BAD_REQUEST).build();
+        }
+
+        //Validation 5 - Check if Account already in the requested Organization
+        if (operatingAccount.getOrganizationSid().equals(organization.getSid())) {
+            return status(BAD_REQUEST).entity("Account already in the requested Organization").build();
+        }
+
+        //Update Account for the new Organization
+        Account modifiedAccount = operatingAccount.setOrganizationSid(organization.getSid());
+        accountsDao.updateAccount(modifiedAccount);
+
+        if (logger.isDebugEnabled()) {
+            String msg = String.format("Parent Account %s migrated to Organization %s", modifiedAccount.getSid(), organization.getSid());
+            logger.debug(msg);
+        }
+
+        //Update Child accounts and their numbers
+        List<Account> childAccounts = accountsDao.getChildAccounts(operatingAccount.getSid());
+        for (Account child : childAccounts) {
+            if (!child.getOrganizationSid().equals(organization.getSid())) {
+                Account modifiedChildAccount = child.setOrganizationSid(organization.getSid());
+                accountsDao.updateAccount(modifiedChildAccount);
+                if (logger.isDebugEnabled()) {
+                    String msg = String.format("Child Account %s from Parent Account %s, migrated to Organization %s", modifiedChildAccount.getSid(), modifiedAccount.getSid(), organization.getSid());
+                    logger.debug(msg);
                 }
             }
         }
-        // close parent account too
-        closeSingleAccount(parentAccount,rcmlserverApi);
+
+        if (APPLICATION_JSON_TYPE == responseType) {
+            return ok(gson.toJson(modifiedAccount), APPLICATION_JSON).build();
+        } else if (APPLICATION_XML_TYPE == responseType) {
+            final RestCommResponse response = new RestCommResponse(modifiedAccount);
+            return ok(xstream.toXML(response), APPLICATION_XML).build();
+        } else {
+            return null;
+        }
+    }
+
+    private void sendRVDStatusNotification(Account updatedAccount) {
+        logger.debug("sendRVDStatusNotification");
+        // set rcmlserverApi in case we need to also notify the application sever (RVD)
+        RestcommConfiguration rcommConfiguration = RestcommConfiguration.getInstance();
+        RcmlserverConfigurationSet config = rcommConfiguration.getRcmlserver();
+        if (config != null && config.getNotify()) {
+            logger.debug("notification enabled");
+            // first send account removal notification to RVD now that the applications of the account still exist
+            RcmlserverApi rcmlServerApi = new RcmlserverApi(rcommConfiguration.getMain(), rcommConfiguration.getRcmlserver());
+            RcmlserverNotifications notifications = new RcmlserverNotifications();
+            notifications.add(rcmlServerApi.buildAccountStatusNotification(updatedAccount));
+            Account notifier = userIdentityContext.getEffectiveAccount();
+            rcmlServerApi.transmitNotifications(notifications, notifier.getSid().toString(), notifier.getAuthToken());
+        }
+    }
+
+
+    /**
+     * Switches an account status at dao level.
+     *
+     * If status is CLSOED, Removes all resources belonging to an account.
+     *
+     * If rcmlServerApi is not null it will
+     * also send account-removal notifications to the rcmlserver
+     *
+     * @param account
+     */
+    private void switchAccountStatus(Account account, Account.Status status) {
+        if (logger.isDebugEnabled()) {
+            logger.debug("Switching status for account:" + account.getSid() + ",status:" + status);
+        }
+        switch (status) {
+            case CLOSED:
+                sendRVDStatusNotification(account);
+                // then proceed to dependency removal
+                removeAccoundDependencies(account.getSid());
+                break;
+            default:
+                break;
+
+        }
+        // finally, set and persist account status
+        account = account.setStatus(status);
+        accountsDao.updateAccount(account);
+    }
+
+    /**
+     * Switches status of account along with all its children (the whole tree).
+     *
+     * @param parentAccount
+     */
+    private void switchAccountStatusTree(Account parentAccount) {
+        logger.debug("Status transition requested");
+        // transition child accounts
+        List<String> subAccountsToSwitch = accountsDao.getSubAccountSidsRecursive(parentAccount.getSid());
+        if (subAccountsToSwitch != null && !subAccountsToSwitch.isEmpty()) {
+            int i = subAccountsToSwitch.size(); // is is the count of accounts left to process
+            // we iterate backwards to handle child accounts first, parent accounts next
+            while (i > 0) {
+                i --;
+                String removedSid = subAccountsToSwitch.get(i);
+                try {
+                    Account subAccount = accountsDao.getAccount(new Sid(removedSid));
+                    switchAccountStatus(subAccount, parentAccount.getStatus());
+                } catch (Exception e) {
+                    // if anything bad happens, log the error and continue removing the rest of the accounts.
+                    logger.error("Failed switching status (child) account '" + removedSid + "'");
+                }
+            }
+        }
+        // switch parent account too
+        switchAccountStatus(parentAccount, parentAccount.getStatus());
     }
 
     private void validate(final MultivaluedMap<String, String> data) throws NullPointerException {

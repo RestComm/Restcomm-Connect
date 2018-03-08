@@ -25,21 +25,19 @@ import org.apache.log4j.Logger;
 import org.apache.shiro.authz.Permission;
 import org.apache.shiro.authz.SimpleRole;
 import org.apache.shiro.authz.permission.WildcardPermissionResolver;
-import org.restcomm.connect.dao.exceptions.AccountHierarchyDepthCrossed;
+import org.restcomm.connect.commons.dao.Sid;
 import org.restcomm.connect.dao.AccountsDao;
 import org.restcomm.connect.dao.DaoManager;
 import org.restcomm.connect.dao.OrganizationsDao;
 import org.restcomm.connect.dao.entities.Account;
 import org.restcomm.connect.dao.entities.Organization;
-import org.restcomm.connect.commons.dao.Sid;
+import org.restcomm.connect.dao.exceptions.AccountHierarchyDepthCrossed;
 import org.restcomm.connect.extension.api.ApiRequest;
-import org.restcomm.connect.extension.api.ExtensionResponse;
 import org.restcomm.connect.extension.api.ExtensionType;
 import org.restcomm.connect.extension.api.RestcommExtensionGeneric;
 import org.restcomm.connect.extension.controller.ExtensionController;
 import org.restcomm.connect.http.exceptions.AuthorizationException;
 import org.restcomm.connect.http.exceptions.InsufficientPermission;
-import org.restcomm.connect.http.exceptions.NotAuthenticated;
 import org.restcomm.connect.http.exceptions.OperatedAccountMissing;
 import org.restcomm.connect.identity.AuthOutcome;
 import org.restcomm.connect.identity.IdentityContext;
@@ -113,15 +111,6 @@ public abstract class SecuredEndpoint extends AbstractEndpoint {
     }
 
     /**
-     * Grants general purpose access if any valid token exists in the request
-     */
-    protected void checkAuthenticatedAccount() {
-        if (userIdentityContext.getEffectiveAccount() == null) {
-            throw new NotAuthenticated();
-        }
-    }
-
-    /**
      * Checks if the effective account is a super account (top level account)
      * @return
      */
@@ -131,6 +120,14 @@ public abstract class SecuredEndpoint extends AbstractEndpoint {
         //2. Is ACTIVE
         return (userIdentityContext.getEffectiveAccount().getParentSid() == null)
                 && (userIdentityContext.getEffectiveAccount().getStatus().equals(Account.Status.ACTIVE));
+    }
+
+    /**
+     * Checks if the operated account is a direct child of effective account
+     * @return
+     */
+    protected boolean isDirectChildOfAccount(final Account effectiveAccount, final Account operatedAccount) {
+        return operatedAccount.getParentSid().equals(effectiveAccount.getSid());
     }
 
     /**
@@ -178,8 +175,13 @@ public abstract class SecuredEndpoint extends AbstractEndpoint {
         secure(operatedAccount, permission, SecuredType.SECURED_STANDARD);
     }
 
+    /**
+     * @param operatedAccount
+     * @param permission
+     * @param type
+     * @throws AuthorizationException
+     */
     protected void secure(final Account operatedAccount, final String permission, SecuredType type) throws AuthorizationException {
-        checkAuthenticatedAccount();
         checkPermission(permission); // check an authenticated account allowed to do "permission" is available
         checkOrganization(operatedAccount); // check if valid organization is attached with this account.
         if (operatedAccount == null) {
@@ -219,8 +221,13 @@ public abstract class SecuredEndpoint extends AbstractEndpoint {
         }
     }
 
+    /**
+     * @param operatedAccount
+     * @param resourceAccountSid
+     * @param type
+     * @throws AuthorizationException
+     */
     protected void secure(final Account operatedAccount, final Sid resourceAccountSid, SecuredType type) throws AuthorizationException {
-        checkAuthenticatedAccount();
         if (operatedAccount == null) {
             // if operatedAccount is NULL, we'll probably return a 404. But let's handle that in a central place.
             throw new OperatedAccountMissing();
@@ -431,20 +438,12 @@ public abstract class SecuredEndpoint extends AbstractEndpoint {
     }
 
     protected boolean executePreApiAction(final ApiRequest apiRequest) {
-        if (extensions != null && extensions.size() > 0) {
-            for (RestcommExtensionGeneric extension : extensions) {
-                if (extension.isEnabled()) {
-                    ExtensionResponse response = extension.preApiAction(apiRequest);
-                    if (!response.isAllowed())
-                        return false;
-                }
-            }
-        }
-        return true;
+        ExtensionController ec = ExtensionController.getInstance();
+        return ec.executePreApiAction(apiRequest, extensions).isAllowed();
     }
 
     protected boolean executePostApiAction(final ApiRequest apiRequest) {
-        return false;
+        ExtensionController ec = ExtensionController.getInstance();
+        return ec.executePostApiAction(apiRequest, extensions).isAllowed();
     }
-
 }

@@ -1,0 +1,140 @@
+# IMPORTANT: this file is intended to help you quickly get started with deploying RestComm.
+# It is NOT intended for production deployments.
+
+version: '3.1'
+
+volumes:
+# You can persist the logs, database, recordings, text-to-speech cache and RVD workspace using shared filesystem, so even if you stop and remove
+# your container, your work won't be lost. Download the https://github.com/restcomm/Restcomm-Docker/blob/master/restcomm_workspace.zip?raw=true[*restcomm_workspace*]
+# that contains the default database, default RVD workspace and the required folders and unzip it to a folder in your filesystem.
+  restcomm_logs:
+  recordings:
+  cache:
+  hsql_data:
+  rvd_workspace:
+
+services:
+  restcomm:
+    image: restcomm/restcomm:latest
+    volumes:
+      - restcomm_logs:/var/log/restcomm
+      - recordings:/opt/Restcomm-JBoss-AS7/standalone/deployments/restcomm.war/recordings
+      - cache:/opt/Restcomm-JBoss-AS7/standalone/deployments/restcomm.war/cache
+      - hsql_data:/var/restcomm/data
+      - rvd_workspace:/opt/Restcomm-JBoss-AS7/standalone/deployments/restcomm-rvd
+
+    environment:
+      ## =============================== IMPORTANT!!    While most of the below defaults should be fine, YOU PROBABLY NEED TO CHANGE THIS!!
+      RCBCONF_STATIC_ADDRESS: 127.0.0.1   # YOUR LOCAL IP ADDRESS GOES HERE.
+      RMSCONF_EXTERNAL_ADDRESS: 127.0.0.1  # YOUR LOCAL IP ADDRESS GOES HERE.
+      ## =============================== IMPORTANT ========================================================================================
+
+      # ENVCONFURL: https://raw.githubusercontent.com/RestComm/Restcomm-Docker/master/env_files/restcomm_env_locally.sh
+      # REPOUSR: Username for `ENVCONFURL` if Authentication needed.
+      # REPOPWD: Password for `ENVCONFURL` if Authentication needed.
+
+      EXTCONF_RESTCOMM_LOGS: /var/log/restcomm
+      EXTCONF_CORE_LOGS_LOCATION: restcomm_core
+      EXTCONF_RESTCOMM_TRACE_LOG: restcomm_trace
+      EXTCONF_MEDIASERVER_LOGS_LOCATION: media_server
+
+      #SSL certificate
+      # Below options set up a self-signed certificate for HTTPS. The generated truststore file will be located at
+      # `/opt/Mobicents-Restcomm-JBoss-AS7/standalone/configuration/restcomm-combined.jks`
+      RCADVCONF_SECURESSL: SELF
+      RCADVCONF_SSL_MODE: allowall
+      RCADVCONF_TRUSTSTORE_PASSWORD: changeme
+      RCADVCONF_TRUSTSTORE_ALIAS: restcomm
+
+      #Functional configuration. Make sure these match the published port range in the `ports` section below.
+      RMSCONF_MEDIA_LOW_PORT: 65000
+      RMSCONF_MEDIA_HIGH_PORT: 65050
+
+      #RestComm Port configuration. Make sure these match the published ports in the `ports` section below.
+      RCBCONF_SIP_PORT_UDP: 5080
+      RCBCONF_SIP_PORT_TCP: 5080
+      RCBCONF_SIP_PORT_TLS: 5081
+      RCBCONF_SIP_PORT_WS: 5082
+      RCBCONF_SIP_PORT_WSS: 5083
+
+      #Log
+      RCBCONF_LOG_LEVEL: DEBUG
+      RCBCONF_AKKA_LOG_LEVEL: INFO
+      RCBCONF_LOG_LEVEL_COMPONENT_GOVNIST: INFO
+      RCBCONF_LOG_LEVEL_COMPONENT_SIPSERVLET: INFO
+      RCBCONF_LOG_LEVEL_COMPONENT_SIPRESTCOMM: INFO
+      RCBCONF_LOG_LEVEL_COMPONENT_RESTCOMM: INFO
+
+      #SMS
+      RCBCONF_SMS_PREFIX: ''
+
+      #TTS - Text To Speech
+      RCBCONF_VOICERSS_KEY: VOICERSS_KEY_HERE #FIXME: You may get a free VoiceRSS API key from http://www.voicerss.org/from
+
+      #RVD_LOCATION
+      RCADVCONF_RVD_LOCATION: /var/restcomm/rvd/workspace
+
+      #HSQL-persist data
+      RCADVCONF_HSQL_DIR: /var/restcomm/data # Defines path where HSQL data will be persisted.
+
+
+      # Powermedia XMS integration: uncomment below env vars. Also:
+      #
+      # RMSCONF_MS_COMPATIBILITY_MODE: xms
+      # RMSCONF_MS_ADDRESS: 127.0.0.1 # The IP of a working Powermedia XMS server.
+      # NOTE: In our example, we are assuming Powermedia XMS is installed on the host where Restcomm-Connect is running in a Docker container. As
+      # such, they can share a docker volume for storing recordings (the `recordings` volume). XMS should be configured to store files to that
+      # directory. For more complex examples, you'll want to set up NFS shares, etc.
+
+
+      #  The RestComm docker image supports the same set of environment variables with RestComm, with some prefix, depending on the config file it is in.
+      #  - Variables that are located at "restcomm.conf" need to be prefixed with "RCBCONF_"
+      #  - Variables that are located at "advanced.conf" need to be prefixed with "RCADVCONF_"
+      #  - Variables that are used to configure RMS ("mediaserver.conf") need to be prefixed with "RMSCONF_"
+      #  - Variables that are docker specific only need to be prefixed with "EXTCONF_".
+      #  - Variables that are used to configure Load Balancer need to be prefixed with "LBCONF_".
+      #  - Variables that are set from the RUN command line to overwrite the ones set at the configuration file need to be prefixed with "CLI_".
+
+      #  Docker Specific Environment Variables
+      #  ===== RestComm Logs Configuration
+      #  * *EXTCONF_RESTCOMM_LOGS* Base path where all RestComm related logs will be placed.
+      #  * *EXTCONF_RESTCOMM_TRACE_LOG* Set the location were to store network trace logs (pcap files)
+      #  * *EXTCONF_MEDIASERVER_LOGS_LOCATION* Set the location were to store Mediaserver l     og
+
+      #  ===== Other
+      #  * *EXTCONF_RVD_PORT* Used when port mapping at docker is not the default (e.g: -p 445:443
+
+      # Related Documentation
+      #
+      #  RestComm configuration: http://documentation.telestax.com/core/media_server/Media_Server_User_Guide.html#_ctms_configuring_the_media_server.
+      #  config files:
+      #  - restcomm.conf https://raw.githubusercontent.com/RestComm/Restcomm-Connect/master/restcomm/configuration/config-scripts/as7-config-scripts/restcomm/restcomm.conf
+      #  - advanced.conf https://raw.githubusercontent.com/RestComm/Restcomm-Connect/master/restcomm/configuration/config-scripts/as7-config-scripts/restcomm/advanced.conf
+      #  RMS configuration http://documentation.telestax.com/core/media_server/Media_Server_User_Guide.html#_ctms_configuring_the_media_server
+
+    ports:
+#      - "8080:8080"                   # RestComm Console HTTP Port. Disabled by default, so you get used to HTTPS  ; )
+      - "8443:8443"                   # RestComm Console HTTPS Port
+      - "9990:9990"                   # RestComm Console Management Port
+      - "5080:5080/udp"               # SIP/UDP
+      - "5080:5080"                   # SIP/TCP
+      - "5081:5081"                   # SIP/TLS
+      - "5082:5082"                   # SIP/WS (Used for WebRTC - SIP Over WebSockets)
+      - "5083:5083"                   # SIP/WSS (Used for WebRTC - Secure SIP Over WebSockets)
+      - "65000-65050:65000-65050/udp" # RTP/UDP
+
+    # To specify additional custom port connectors add `ADDITIONAL_CONNECTOR_1=second-sip-udp:5090`, `ADDITIONAL_CONNECTOR_2=second-sip-tcpp:5090`
+    # env vars and export port in this section. More info http://documentation.telestax.com/core/sip_servlets/SIP_Servlets_Server_User_Guide.html
+
+#   IMPORTANT! COMMENT OUT BELOW ON OSX / macOS. (you thought "Host" is really your host, didn't you? Well, let me tell you
+#   about this embedded hypervisor called "xhyve" and how it's not all really "native" the way you took that to mean...  : )  )
+#    network_mode: "host"
+
+    restart: always
+
+    logging:
+      driver: "json-file"
+    # Uncomment below to enable logs rotation. (Rotate using 3 files 20m each file)
+    #  options:
+    #    max-size: "20m"
+    #    max-file: "3"

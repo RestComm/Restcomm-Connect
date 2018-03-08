@@ -1,8 +1,19 @@
 package org.restcomm.connect.testsuite.telephony;
 
-import com.github.tomakehurst.wiremock.junit.WireMockRule;
-import com.google.gson.JsonArray;
-import com.google.gson.JsonObject;
+import static com.github.tomakehurst.wiremock.client.WireMock.aResponse;
+import static com.github.tomakehurst.wiremock.client.WireMock.get;
+import static com.github.tomakehurst.wiremock.client.WireMock.stubFor;
+import static com.github.tomakehurst.wiremock.client.WireMock.urlPathEqualTo;
+import static org.cafesip.sipunit.SipAssert.assertLastOperationSuccess;
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertNotNull;
+import static org.junit.Assert.assertTrue;
+
+import java.net.URL;
+import java.util.Map;
+
+import javax.sip.message.Response;
+
 import org.apache.log4j.Logger;
 import org.cafesip.sipunit.SipCall;
 import org.cafesip.sipunit.SipPhone;
@@ -20,30 +31,28 @@ import org.junit.BeforeClass;
 import org.junit.Ignore;
 import org.junit.Rule;
 import org.junit.Test;
+import org.junit.FixMethodOrder;
+import org.junit.runners.MethodSorters;
+import org.junit.experimental.categories.Category;
 import org.junit.runner.RunWith;
 import org.restcomm.connect.commons.Version;
-import org.restcomm.connect.monitoringservice.MonitoringMetrics;
+import org.restcomm.connect.commons.annotations.FeatureAltTests;
+import org.restcomm.connect.commons.annotations.SequentialClassTests;
+import org.restcomm.connect.commons.annotations.UnstableTests;
 import org.restcomm.connect.testsuite.http.RestcommConferenceParticipantsTool;
 import org.restcomm.connect.testsuite.http.RestcommConferenceTool;
 import org.restcomm.connect.testsuite.tools.MonitoringServiceTool;
 
-import javax.sip.message.Response;
-import java.net.URL;
-import java.util.Map;
-
-import static com.github.tomakehurst.wiremock.client.WireMock.aResponse;
-import static com.github.tomakehurst.wiremock.client.WireMock.get;
-import static com.github.tomakehurst.wiremock.client.WireMock.stubFor;
-import static com.github.tomakehurst.wiremock.client.WireMock.urlPathEqualTo;
-import static org.cafesip.sipunit.SipAssert.assertLastOperationSuccess;
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertNotNull;
-import static org.junit.Assert.assertTrue;
+import com.github.tomakehurst.wiremock.junit.WireMockRule;
+import com.google.gson.JsonArray;
+import com.google.gson.JsonObject;
 
 /**
  * Created by gvagenas on 5/19/16.
  */
 @RunWith(Arquillian.class)
+@FixMethodOrder(MethodSorters.NAME_ASCENDING)
+@Category(value={SequentialClassTests.class})
 public class DialConferenceTest {
     private final static Logger logger = Logger.getLogger(DialConferenceTest.class.getName());
 
@@ -176,6 +185,7 @@ public class DialConferenceTest {
     private final String confRoom1 = "confRoom1";
     private String dialConfernceRcmlWithTimeLimit = "<Response><Dial timeLimit=\"50\"><Conference>"+confRoom1+"</Conference></Dial></Response>";
     @Test //This is expected to fail because of https://github.com/RestComm/Restcomm-Connect/issues/1081
+    @Category({FeatureAltTests.class, UnstableTests.class})
     public synchronized void testDialConferenceClientsWaitForDisconnect() throws InterruptedException {
         stubFor(get(urlPathEqualTo("/1111"))
                 .willReturn(aResponse()
@@ -217,14 +227,16 @@ public class DialConferenceTest {
         georgeCall.sendInviteOkAck();
         assertTrue(!(georgeCall.getLastReceivedResponse().getStatusCode() >= 400));
 
-        assertTrue(getConferencesSize()==1);
-        assertTrue(getParticipantsSize(confRoom1)==2);
+        Thread.sleep(1000);
+
+        assertEquals(1, getConferencesSize());
+        assertEquals(2, getParticipantsSize(confRoom1));
         int liveCalls = MonitoringServiceTool.getInstance().getStatistics(deploymentUrl.toString(), adminAccountSid, adminAuthToken);
         int liveCallsArraySize = MonitoringServiceTool.getInstance().getLiveCallsArraySize(deploymentUrl.toString(), adminAccountSid, adminAuthToken);
         logger.info("&&&&& LiveCalls: "+liveCalls);
         logger.info("&&&&& LiveCallsArraySize: "+liveCallsArraySize);
-        assertTrue(liveCalls == 2);
-        assertTrue(liveCallsArraySize == 2);
+        assertEquals(2, liveCalls);
+        assertEquals(2, liveCallsArraySize);
 
         JsonObject metrics = MonitoringServiceTool.getInstance().getMetrics(deploymentUrl.toString(),adminAccountSid, adminAuthToken);
         Map<String, Integer> mgcpResources = MonitoringServiceTool.getInstance().getMgcpResources(metrics);
@@ -242,14 +254,14 @@ public class DialConferenceTest {
         assertTrue(georgeCall.waitForDisconnect(50 * 1000));
 
         Thread.sleep(1000);
-        assertTrue(getConferencesSize()==1);
-        assertTrue(getParticipantsSize(confRoom1)==0);
+        assertEquals(1, getConferencesSize());
+        assertEquals(0, getParticipantsSize(confRoom1));
         liveCalls = MonitoringServiceTool.getInstance().getStatistics(deploymentUrl.toString(), adminAccountSid, adminAuthToken);
         liveCallsArraySize = MonitoringServiceTool.getInstance().getLiveCallsArraySize(deploymentUrl.toString(), adminAccountSid, adminAuthToken);
         logger.info("&&&&& LiveCalls: "+liveCalls);
         logger.info("&&&&& LiveCallsArraySize: "+liveCallsArraySize);
-        assertTrue(liveCalls == 0);
-        assertTrue(liveCallsArraySize == 0);
+        assertEquals(0, liveCalls);
+        assertEquals(0, liveCallsArraySize);
 
         metrics = MonitoringServiceTool.getInstance().getMetrics(deploymentUrl.toString(),adminAccountSid, adminAuthToken);
         mgcpResources = MonitoringServiceTool.getInstance().getMgcpResources(metrics);
@@ -429,6 +441,7 @@ public class DialConferenceTest {
     private String dialConfernceRcmlWithWaitUrl = "<Response><Dial><Conference startConferenceOnEnter=\"false\" waitUrl=\"http://127.0.0.1:8090/waitUrl\" waitMethod=\"GET\">"+confRoom3+"</Conference></Dial></Response>";
     private String waitUrlRcml = "<Response><Say>Wait while somebody joins the conference</Say><Play>/restcomm/audio/demo-prompt.wav</Play></Response>";
     @Test @Ignore //TTS is not working on the testsuite
+    @Category(FeatureAltTests.class)
     public synchronized void testDialConferenceClientsDisconnectWithWaitUrl() throws InterruptedException {
         stubFor(get(urlPathEqualTo("/1111"))
                 .willReturn(aResponse()

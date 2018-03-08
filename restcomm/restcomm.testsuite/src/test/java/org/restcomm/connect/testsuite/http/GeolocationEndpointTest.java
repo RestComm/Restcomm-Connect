@@ -53,9 +53,14 @@ import org.joda.time.format.DateTimeFormatter;
 import org.junit.After;
 import org.junit.Rule;
 import org.junit.Test;
+import org.junit.FixMethodOrder;
+import org.junit.runners.MethodSorters;
+import org.junit.experimental.categories.Category;
 import org.junit.runner.RunWith;
 import org.restcomm.connect.dao.entities.Geolocation;
 import org.restcomm.connect.commons.Version;
+import org.restcomm.connect.commons.annotations.FeatureAltTests;
+import org.restcomm.connect.commons.annotations.FeatureExpTests;
 import org.restcomm.connect.commons.dao.Sid;
 
 import com.google.gson.JsonArray;
@@ -67,6 +72,7 @@ import com.sun.jersey.core.util.MultivaluedMapImpl;
  *
  */
 @RunWith(Arquillian.class)
+@FixMethodOrder(MethodSorters.NAME_ASCENDING)
 public class GeolocationEndpointTest {
 
     private static final Logger logger = Logger.getLogger(GeolocationEndpointTest.class);
@@ -201,6 +207,7 @@ public class GeolocationEndpointTest {
     }
 
     @Test
+    @Category(FeatureAltTests.class)
     public void testCreateNotApiCompliantImmediateGeolocation()
         throws ParseException, IllegalArgumentException, ClientProtocolException, IOException {
 
@@ -457,6 +464,7 @@ public class GeolocationEndpointTest {
     }
 
     @Test
+    @Category(FeatureAltTests.class)
     public void testNotApiCompliantUpdateImmediateGeolocation()
         throws ParseException, IllegalArgumentException, ClientProtocolException, IOException {
 
@@ -785,6 +793,7 @@ public class GeolocationEndpointTest {
     }
 
     @Test
+    @Category(FeatureAltTests.class)
     public void testCreateNotApiCompliantNotificationGeolocation()
         throws ParseException, IllegalArgumentException, ClientProtocolException, IOException {
 
@@ -1042,6 +1051,7 @@ public class GeolocationEndpointTest {
     }
 
     @Test
+    @Category(FeatureAltTests.class)
     public void testNotApiCompliantUpdateNotificationGeolocation()
         throws ParseException, IllegalArgumentException, ClientProtocolException, IOException {
 

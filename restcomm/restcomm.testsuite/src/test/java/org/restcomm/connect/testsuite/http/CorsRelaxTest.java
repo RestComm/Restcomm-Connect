@@ -32,7 +32,10 @@ import org.jboss.arquillian.test.api.ArquillianResource;
 import org.jboss.shrinkwrap.api.ShrinkWrap;
 import org.jboss.shrinkwrap.api.spec.WebArchive;
 import org.jboss.shrinkwrap.resolver.api.maven.archive.ShrinkWrapMaven;
+import org.junit.Ignore;
 import org.junit.Test;
+import org.junit.FixMethodOrder;
+import org.junit.runners.MethodSorters;
 import org.junit.runner.RunWith;
 import org.restcomm.connect.commons.Version;
 
@@ -44,8 +47,15 @@ import java.net.URL;
  * Currently it only tests Accounts endpoint where CORS-relax logic has been applied
  *
  * @author otsakir@gmail.com - Orestis Tsakiridis
+ * 
+ * It was written for the case when restcomm should accept CORS requests and return the appropriate headers.
+ * Initially that would happen if restcomm would be in a different domain from RVD. 
+ * Later, we decided to put everything (restcomm and RVD) behind the same domain.
+ * So, relaxing CORS restrictions is not really needed
  */
 @RunWith(Arquillian.class)
+@FixMethodOrder(MethodSorters.NAME_ASCENDING)
+@Ignore
 public class CorsRelaxTest extends EndpointTest {
     private final static Logger logger = Logger.getLogger(CorsRelaxTest.class.getName());
 

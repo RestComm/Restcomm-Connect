@@ -35,18 +35,22 @@ import org.jboss.shrinkwrap.api.spec.WebArchive;
 import org.jboss.shrinkwrap.resolver.api.maven.archive.ShrinkWrapMaven;
 
 import org.junit.Test;
+import org.junit.FixMethodOrder;
+import org.junit.runners.MethodSorters;
 import org.junit.runner.RunWith;
 import org.restcomm.connect.commons.Version;
 
 import java.net.URL;
 import org.junit.experimental.categories.Category;
-import org.restcomm.connect.testsuite.UnstableTests;
+import org.restcomm.connect.commons.annotations.BrokenTests;
+import org.restcomm.connect.commons.annotations.UnstableTests;
 
 /**
  * @author <a href="mailto:abdulazizali@acm.org">abdulazizali77</a>
  */
 
 @RunWith(Arquillian.class)
+@FixMethodOrder(MethodSorters.NAME_ASCENDING)
 public class UsageRecordsTest {
     private static Logger logger = Logger.getLogger(UsageRecordsTest.class);
 
@@ -82,7 +86,7 @@ public class UsageRecordsTest {
     }
 
     @Test
-    @Category(UnstableTests.class)
+    @Category(BrokenTests.class)
     public void getUsageRecordsDaily() {
         JsonElement response = RestcommUsageRecordsTool.getInstance().getUsageRecordsDaily(deploymentUrl.toString(),
                 adminAccountSid, adminAuthToken, "", true);
@@ -121,7 +125,7 @@ public class UsageRecordsTest {
     }
 
     @Test
-    @Category(UnstableTests.class)
+    @Category(BrokenTests.class)
     public void getUsageRecordsMonthly() {
         JsonElement response = RestcommUsageRecordsTool.getInstance().getUsageRecordsMonthly(deploymentUrl.toString(),
                 adminAccountSid, adminAuthToken, "", true);
@@ -157,7 +161,7 @@ public class UsageRecordsTest {
     }
 
     @Test
-    @Category(UnstableTests.class)
+    @Category(BrokenTests.class)
     public void getUsageRecordsYearly() {
         JsonElement response = RestcommUsageRecordsTool.getInstance().getUsageRecordsYearly(deploymentUrl.toString(),
                 adminAccountSid, adminAuthToken, "", true);
@@ -193,7 +197,7 @@ public class UsageRecordsTest {
     }
 
     @Test
-    @Category(UnstableTests.class)
+    @Category(BrokenTests.class)
     public void getUsageRecordsAlltime() {
         JsonElement response = RestcommUsageRecordsTool.getInstance().getUsageRecordsAllTime(deploymentUrl.toString(),
                 adminAccountSid, adminAuthToken, "", true);

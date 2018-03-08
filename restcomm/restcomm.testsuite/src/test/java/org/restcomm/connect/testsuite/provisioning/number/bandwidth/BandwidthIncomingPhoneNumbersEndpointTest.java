@@ -39,6 +39,8 @@ import org.jboss.shrinkwrap.api.spec.WebArchive;
 import org.jboss.shrinkwrap.resolver.api.maven.archive.ShrinkWrapMaven;
 import org.junit.Rule;
 import org.junit.Test;
+import org.junit.FixMethodOrder;
+import org.junit.runners.MethodSorters;
 import org.junit.runner.RunWith;
 import org.restcomm.connect.commons.Version;
 
@@ -50,11 +52,14 @@ import java.net.URL;
 import static com.github.tomakehurst.wiremock.client.WireMock.*;
 import static junit.framework.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
+import org.junit.experimental.categories.Category;
+import org.restcomm.connect.commons.annotations.UnstableTests;
 
 /**
  * Created by sbarstow on 10/14/14.
  */
 @RunWith(Arquillian.class)
+@FixMethodOrder(MethodSorters.NAME_ASCENDING)
 public class BandwidthIncomingPhoneNumbersEndpointTest {
     private final static Logger logger = Logger.getLogger(BandwidthIncomingPhoneNumbersEndpointTest.class.getName());
 
@@ -76,6 +81,7 @@ public class BandwidthIncomingPhoneNumbersEndpointTest {
     private static JsonObject jsonRespone;
 
     @Test
+    @Category(value={UnstableTests.class})
     public void testBuyNumber() {
         String ordersUrl = "/v1.0/accounts/12345/orders.*";
         stubFor(post(urlMatching(ordersUrl))
@@ -113,6 +119,7 @@ public class BandwidthIncomingPhoneNumbersEndpointTest {
     }
 
     @Test
+    @Category(value={UnstableTests.class})
     public void testCancelNumber() {
         String ordersUrl = "/v1.0/accounts/12345/orders.*";
         stubFor(post(urlMatching(ordersUrl))

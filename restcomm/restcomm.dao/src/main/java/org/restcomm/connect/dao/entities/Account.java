@@ -146,6 +146,11 @@ public final class Account {
                 role, uri, organizationSid);
     }
 
+    public Account setOrganizationSid(final Sid organizationSid) {
+        return new Account(sid, dateCreated, DateTime.now(), emailAddress, friendlyName, parentSid, type, status, authToken,
+                role, uri, organizationSid);
+    }
+
     public enum Status {
         ACTIVE("active"), CLOSED("closed"), SUSPENDED("suspended"), INACTIVE("inactive"), UNINITIALIZED("uninitialized");
 
@@ -210,6 +215,20 @@ public final class Account {
 
         private Builder() {
             super();
+        }
+
+        public Builder copy(Account account) {
+            sid = account.getSid();
+            parentSid = account.getParentSid();
+            organizationSid = account.getOrganizationSid();
+            type = account.getType();
+            uri = account.getUri();
+            authToken = account.getAuthToken();
+            emailAddress = account.getEmailAddress();
+            friendlyName = account.getFriendlyName();
+            role = account.getRole();
+            status = account.getStatus();
+            return this;
         }
 
         public Account build() {

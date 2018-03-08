@@ -363,7 +363,8 @@ public abstract class CallsEndpoint extends SecuredEndpoint {
         final String to = data.getFirst("To").trim();
         final String username = data.getFirst("Username");
         final String password = data.getFirst("Password");
-        final Integer timeout = getTimeout(data);
+        Integer timeout = getTimeout(data);
+        timeout = timeout != null ? timeout : 30;
         final Timeout expires = new Timeout(Duration.create(60, TimeUnit.SECONDS));
         final URI rcmlUrl = getUrl("Url", data);
 
@@ -387,13 +388,13 @@ public abstract class CallsEndpoint extends SecuredEndpoint {
         CreateCall create = null;
         try {
             if (to.contains("@")) {
-                create = new CreateCall(from, to, username, password, true, timeout != null ? timeout : 30, CreateCallType.SIP,
+                create = new CreateCall(from, to, username, password, true, timeout, CreateCallType.SIP,
                         accountId, null, statusCallback, statusCallbackMethod, statusCallbackEvent);
             } else if (to.startsWith("client")) {
-                create = new CreateCall(from, to, username, password, true, timeout != null ? timeout : 30, CreateCallType.CLIENT,
+                create = new CreateCall(from, to, username, password, true, timeout, CreateCallType.CLIENT,
                         accountId, null, statusCallback, statusCallbackMethod, statusCallbackEvent);
             } else {
-                create = new CreateCall(from, to, username, password, true, timeout != null ? timeout : 30, CreateCallType.PSTN,
+                create = new CreateCall(from, to, username, password, true, timeout, CreateCallType.PSTN,
                         accountId, null, statusCallback, statusCallbackMethod, statusCallbackEvent);
             }
             create.setCreateCDR(false);
@@ -428,7 +429,7 @@ public abstract class CallsEndpoint extends SecuredEndpoint {
                                 final URI fallbackUrl = getUrl("FallbackUrl", data);
                                 final String fallbackMethod = getMethod("FallbackMethod", data);
                                 final ExecuteCallScript execute = new ExecuteCallScript(call, accountId, version, url, method,
-                                        fallbackUrl, fallbackMethod);
+                                        fallbackUrl, fallbackMethod, timeout);
                                 callManager.tell(execute, null);
                                 cdrs.add(daos.getCallDetailRecordsDao().getCallDetailRecord(callInfo.sid()));
                             }
@@ -482,7 +483,10 @@ public abstract class CallsEndpoint extends SecuredEndpoint {
             cdr = dao.getCallDetailRecord(new Sid(callSid));
 
             if (cdr != null) {
-                secure(account, cdr.getAccountSid(), SecuredType.SECURED_STANDARD);
+                //allow super admin to perform LCM on any call - https://telestax.atlassian.net/browse/RESTCOMM-1171
+                if(!isSuperAdmin()){
+                    secure(account, cdr.getAccountSid(), SecuredType.SECURED_STANDARD);
+                }
             } else {
                 return Response.status(NOT_ACCEPTABLE).build();
             }

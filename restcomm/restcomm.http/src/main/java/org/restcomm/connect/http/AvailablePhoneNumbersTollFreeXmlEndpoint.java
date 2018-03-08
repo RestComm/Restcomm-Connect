@@ -19,18 +19,17 @@
  */
 package org.restcomm.connect.http;
 
+import com.sun.jersey.spi.container.ResourceFilters;
 import javax.ws.rs.GET;
 import javax.ws.rs.Path;
 import javax.ws.rs.PathParam;
 import javax.ws.rs.QueryParam;
-
-import static javax.ws.rs.core.MediaType.*;
+import javax.ws.rs.core.MediaType;
+import javax.ws.rs.core.Response;
 import static javax.ws.rs.core.Response.*;
 import static javax.ws.rs.core.Response.Status.*;
-
-import javax.ws.rs.core.Response;
-
 import org.restcomm.connect.commons.annotations.concurrency.ThreadSafe;
+import org.restcomm.connect.http.filters.ExtensionFilter;
 import org.restcomm.connect.provisioning.number.api.PhoneNumberSearchFilters;
 import org.restcomm.connect.provisioning.number.api.PhoneNumberType;
 
@@ -46,6 +45,7 @@ public final class AvailablePhoneNumbersTollFreeXmlEndpoint extends AvailablePho
     }
 
     @GET
+    @ResourceFilters({ ExtensionFilter.class })
     public Response getAvailablePhoneNumber(@PathParam("accountSid") final String accountSid,
             @PathParam("IsoCountryCode") final String isoCountryCode, @QueryParam("AreaCode") String areaCode,
             @QueryParam("Contains") String filterPattern,
@@ -62,7 +62,7 @@ public final class AvailablePhoneNumbersTollFreeXmlEndpoint extends AvailablePho
             PhoneNumberSearchFilters listFilters = new PhoneNumberSearchFilters(areaCode, null, null,
                     Boolean.TRUE, null, null, null, null, null, null, null, null,
                     null, null, rangeSizeInt, rangeIndexInt, PhoneNumberType.TollFree);
-            return getAvailablePhoneNumbers(accountSid, isoCountryCode, listFilters, filterPattern, APPLICATION_XML_TYPE);
+            return getAvailablePhoneNumbers(accountSid, isoCountryCode, listFilters, filterPattern, MediaType.APPLICATION_XML_TYPE);
         } else {
             return status(BAD_REQUEST).build();
         }

@@ -26,7 +26,7 @@ import javax.ws.rs.core.MultivaluedMap;
  */
 public class ApiRequest {
     public static enum Type {
-        INCOMINGPHONENUMBER, CREATE_CALL, CREATE_SMS, CREATE_USSD
+        AVAILABLEPHONENUMBER,INCOMINGPHONENUMBER, CREATE_SUBACCOUNT
     };
 
     final String requestedAccountSid;

@@ -66,7 +66,7 @@ public final class IncomingPhoneNumber {
     private String referMethod;
     private Sid referApplicationSid;
     private String referApplicationName;
-    private final Sid organizationSid;
+    private Sid organizationSid;
 
     // Capabilities
     private Boolean voiceCapable;
@@ -668,6 +668,10 @@ public final class IncomingPhoneNumber {
         this.ussdApplicationName = ussdApplicationName;
     }
 
+    public void setOrganizationSid(Sid organizationSid) {
+        this.organizationSid = organizationSid;
+    }
+
     public String getVoiceApplicationName() {
         return voiceApplicationName;
     }
@@ -689,6 +693,24 @@ public final class IncomingPhoneNumber {
 
     public static Builder builder() {
         return new Builder();
+    }
+
+    @Override
+    public String toString() {
+        return "IncomingPhoneNumber [sid=" + sid + ", friendlyName=" + friendlyName + ", accountSid=" + accountSid
+                + ", phoneNumber=" + phoneNumber + ", cost=" + cost + ", apiVersion=" + apiVersion
+                + ", hasVoiceCallerIdLookup=" + hasVoiceCallerIdLookup + ", voiceUrl=" + voiceUrl + ", voiceMethod="
+                + voiceMethod + ", voiceFallbackUrl=" + voiceFallbackUrl + ", voiceFallbackMethod="
+                + voiceFallbackMethod + ", statusCallback=" + statusCallback + ", statusCallbackMethod="
+                + statusCallbackMethod + ", voiceApplicationSid=" + voiceApplicationSid + ", smsUrl=" + smsUrl
+                + ", smsMethod=" + smsMethod + ", smsFallbackUrl=" + smsFallbackUrl + ", smsFallbackMethod="
+                + smsFallbackMethod + ", smsApplicationSid=" + smsApplicationSid + ", uri=" + uri + ", ussdUrl="
+                + ussdUrl + ", ussdMethod=" + ussdMethod + ", ussdFallbackUrl=" + ussdFallbackUrl
+                + ", ussdFallbackMethod=" + ussdFallbackMethod + ", ussdApplicationSid=" + ussdApplicationSid
+                + ", referUrl=" + referUrl + ", referMethod=" + referMethod + ", referApplicationSid="
+                + referApplicationSid + ", voiceCapable=" + voiceCapable + ", smsCapable=" + smsCapable
+                + ", mmsCapable=" + mmsCapable + ", faxCapable=" + faxCapable + ", pureSip=" + pureSip
+                + ", organizationSid=" + organizationSid + "]";
     }
 
     @NotThreadSafe

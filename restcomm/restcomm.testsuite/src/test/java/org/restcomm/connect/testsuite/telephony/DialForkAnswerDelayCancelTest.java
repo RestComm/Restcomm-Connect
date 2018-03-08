@@ -1,9 +1,18 @@
 package org.restcomm.connect.testsuite.telephony;
 
+import static com.github.tomakehurst.wiremock.client.WireMock.*;
 import com.github.tomakehurst.wiremock.junit.WireMockRule;
 import com.github.tomakehurst.wiremock.verification.LoggedRequest;
 import com.google.gson.JsonObject;
+import java.net.MalformedURLException;
+import java.net.URL;
+import java.text.ParseException;
+import java.util.Arrays;
+import java.util.List;
+import javax.sip.address.SipURI;
+import javax.sip.message.Response;
 import org.apache.log4j.Logger;
+import static org.cafesip.sipunit.SipAssert.assertLastOperationSuccess;
 import org.cafesip.sipunit.SipCall;
 import org.cafesip.sipunit.SipPhone;
 import org.cafesip.sipunit.SipStack;
@@ -17,30 +26,24 @@ import org.jboss.shrinkwrap.api.ShrinkWrap;
 import org.jboss.shrinkwrap.api.spec.WebArchive;
 import org.jboss.shrinkwrap.resolver.api.maven.archive.ShrinkWrapMaven;
 import org.junit.*;
-import org.junit.runner.RunWith;
-import org.restcomm.connect.commons.Version;
-import org.restcomm.connect.testsuite.http.RestcommCallsTool;
-import org.restcomm.connect.testsuite.tools.MonitoringServiceTool;
-
-import javax.sip.address.SipURI;
-import javax.sip.message.Response;
-import java.net.MalformedURLException;
-import java.net.URL;
-import java.text.ParseException;
-import java.util.Arrays;
-import java.util.List;
-
-import static com.github.tomakehurst.wiremock.client.WireMock.*;
-import static org.cafesip.sipunit.SipAssert.assertLastOperationSuccess;
 import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertTrue;
 import static org.junit.Assert.assertNotNull;
+import static org.junit.Assert.assertTrue;
+import org.junit.experimental.categories.Category;
+import org.junit.runner.RunWith;
+import org.junit.runners.MethodSorters;
+import org.restcomm.connect.commons.Version;
+import org.restcomm.connect.commons.annotations.FeatureAltTests;
+import org.restcomm.connect.commons.annotations.SequentialClassTests;
+import org.restcomm.connect.testsuite.http.RestcommCallsTool;
 
 /**
  * Tests for the Dial forking
  * Created by gvagenas on 12/19/15.
  */
 @RunWith(Arquillian.class)
+@FixMethodOrder(MethodSorters.NAME_ASCENDING)
+@Category(value={FeatureAltTests.class, SequentialClassTests.class})
 public class DialForkAnswerDelayCancelTest {
 
     private final static Logger logger = Logger.getLogger(CallLifecycleTest.class.getName());
@@ -224,7 +227,7 @@ public class DialForkAnswerDelayCancelTest {
         georgeCall.respondToCancel(georgeCancelTransaction, 200, "OK-2-Cancel-George", 3600);
         aliceCall.respondToCancel(aliceCancelTransaction, 200, "OK-2-Cancel-Alice", 3600);
         henriqueCall.respondToCancel(henriqueCancelTransaction, 200, "OK-2-Cancel-Henrique", 3600);
-        
+
         assertTrue(bobCall.waitOutgoingCallResponse(5 * 1000));
         assertEquals(Response.REQUEST_TERMINATED, bobCall.getLastReceivedResponse().getStatusCode());
 
@@ -249,7 +252,7 @@ public class DialForkAnswerDelayCancelTest {
         logger.info("Status for call: "+callSid+" : "+jsonObj.get("status").getAsString());
         assertTrue(jsonObj.get("status").getAsString().equalsIgnoreCase("canceled"));
     }
-    
+
     @Deployment(name = "DialForkAnswerDelayTest", managed = true, testable = false)
     public static WebArchive createWebArchiveNoGw() {
         logger.info("Packaging Test App");

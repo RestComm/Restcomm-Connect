@@ -19,12 +19,17 @@
  */
 package org.restcomm.connect.telephony;
 
-import akka.actor.ActorRef;
-import akka.event.Logging;
-import akka.event.LoggingAdapter;
-import jain.protocol.ip.mgcp.message.parms.ConnectionMode;
+import java.util.ArrayList;
+import java.util.HashSet;
+import java.util.Iterator;
+import java.util.List;
+import java.util.Set;
+import java.util.concurrent.TimeUnit;
+
+import org.joda.time.DateTime;
 import org.mobicents.servlet.restcomm.mscontrol.messages.MediaServerConferenceControllerStateChanged;
 import org.restcomm.connect.commons.annotations.concurrency.Immutable;
+import org.restcomm.connect.commons.configuration.RestcommConfiguration;
 import org.restcomm.connect.commons.dao.Sid;
 import org.restcomm.connect.commons.faulttolerance.RestcommUntypedActor;
 import org.restcomm.connect.commons.fsm.Action;
@@ -37,7 +42,10 @@ import org.restcomm.connect.commons.patterns.StopObserving;
 import org.restcomm.connect.dao.CallDetailRecordsDao;
 import org.restcomm.connect.dao.ConferenceDetailRecordsDao;
 import org.restcomm.connect.dao.DaoManager;
+import org.restcomm.connect.dao.entities.CallDetailRecord;
 import org.restcomm.connect.dao.entities.ConferenceDetailRecord;
+import org.restcomm.connect.http.client.CallApiResponse;
+import org.restcomm.connect.http.client.api.CallApiClient;
 import org.restcomm.connect.mscontrol.api.MediaServerControllerFactory;
 import org.restcomm.connect.mscontrol.api.messages.CreateMediaSession;
 import org.restcomm.connect.mscontrol.api.messages.JoinCall;
@@ -56,15 +64,20 @@ import org.restcomm.connect.telephony.api.ConferenceModeratorPresent;
 import org.restcomm.connect.telephony.api.ConferenceResponse;
 import org.restcomm.connect.telephony.api.ConferenceStateChanged;
 import org.restcomm.connect.telephony.api.GetConferenceInfo;
+import org.restcomm.connect.telephony.api.Hangup;
 import org.restcomm.connect.telephony.api.RemoveParticipant;
 import org.restcomm.connect.telephony.api.StartConference;
 import org.restcomm.connect.telephony.api.StopConference;
 
-import java.util.ArrayList;
-import java.util.HashSet;
-import java.util.Iterator;
-import java.util.List;
-import java.util.Set;
+import akka.actor.ActorRef;
+import akka.actor.Props;
+import akka.actor.ReceiveTimeout;
+import akka.actor.UntypedActor;
+import akka.actor.UntypedActorFactory;
+import akka.event.Logging;
+import akka.event.LoggingAdapter;
+import jain.protocol.ip.mgcp.message.parms.ConnectionMode;
+import scala.concurrent.duration.Duration;
 
 /**
  * @author quintana.thomas@gmail.com (Thomas Quintana)
@@ -107,6 +120,9 @@ public final class Conference extends RestcommUntypedActor {
     private ConferenceStateChanged.State waitingState;
 
     private final ActorRef conferenceCenter;
+    private ActorRef callApiClient;
+
+    private static final Sid SUPER_ADMIN_ACCOUNT_SID = new Sid("ACae6e420f425248d6a26948c17a9e2acf");
 
     public Conference(final String name, final MediaServerControllerFactory factory, final DaoManager storage, final ActorRef conferenceCenter) {
         super();
@@ -188,6 +204,7 @@ public final class Conference extends RestcommUntypedActor {
 
         if (logger.isInfoEnabled()) {
             logger.info(" ********** Conference " + self().path() + " Current State: " + state.toString());
+            logger.info(" ********** Conference " + self().path() + " Sender: " + sender);
             logger.info(" ********** Conference " + self().path() + " Processing Message: " + klass.getName());
         }
 
@@ -219,6 +236,10 @@ public final class Conference extends RestcommUntypedActor {
             onStartRecording((StartRecording) message, self, sender);
         } else if (StopRecording.class.equals(klass)) {
             onStopRecording((StopRecording) message, self, sender);
+        } else if (message instanceof ReceiveTimeout) {
+            onReceiveTimeout((ReceiveTimeout) message, self, sender);
+        } else if (CallApiResponse.class.equals(klass)) {
+            onCallApiResponse((CallApiResponse) message, self, sender);
         }
     }
 
@@ -276,6 +297,7 @@ public final class Conference extends RestcommUntypedActor {
                 logger.info("################################## Conference " + name + " has sid: "+sid +" stateStr: "+stateStr+" initial state: "+waitingState);
             }
             broadcast(new ConferenceStateChanged(name, waitingState));
+            startConferenceTimer();
         }
     }
 
@@ -309,8 +331,13 @@ public final class Conference extends RestcommUntypedActor {
                 final Leave leave = new Leave();
                 call.tell(leave, super.source);
             }
+            //tell call api client to kick all remote calls
+            kickoutRemoteParticipants();
+            // Stop the conference if ALL local participants have been evicted
+            if (calls.isEmpty()) {
+                fsm.transition(message, stopping);
+            }
         }
-
     }
 
     private class Stopping extends AbstractAction {
@@ -478,6 +505,9 @@ public final class Conference extends RestcommUntypedActor {
     private void onMediaServerControllerStateChanged(MediaServerConferenceControllerStateChanged message, ActorRef self, ActorRef sender)
             throws Exception {
         MediaServerControllerState state = message.getState();
+        if (logger.isInfoEnabled()) {
+            logger.info("MediaServerControllerState state: "+state);
+        }
         switch (state) {
             case ACTIVE:
                 if (is(initializing)) {
@@ -553,6 +583,20 @@ public final class Conference extends RestcommUntypedActor {
         }
     }
 
+    private void onReceiveTimeout(ReceiveTimeout message, ActorRef self, ActorRef sender) throws Exception {
+        if (logger.isInfoEnabled()) {
+            logger.info("Conference Received Timeout, will stop conference now.");
+        }
+        onStopConference(new StopConference(), self, sender);
+    }
+
+    private void onCallApiResponse(CallApiResponse message, ActorRef self, ActorRef sender) {
+        if (logger.isInfoEnabled()) {
+            logger.info(String.format("Conference will stop sender of CallApiResponse: %s", sender));
+        }
+        getContext().stop(sender);
+    }
+
     /**
      * get global total no of participants from db
      * @throws Exception
@@ -564,8 +608,8 @@ public final class Conference extends RestcommUntypedActor {
             CallDetailRecordsDao dao = storage.getCallDetailRecordsDao();
             globalNoOfParticipants = dao.getTotalRunningCallDetailRecordsByConferenceSid(sid);
         }
-        if(logger.isInfoEnabled())
-            logger.info("sid: "+sid+"globalNoOfParticipants: "+globalNoOfParticipants);
+        if(logger.isDebugEnabled())
+            logger.debug("sid: "+sid+"globalNoOfParticipants: "+globalNoOfParticipants);
         return globalNoOfParticipants;
     }
 
@@ -576,5 +620,90 @@ public final class Conference extends RestcommUntypedActor {
             cdr = cdr.setStatus(state.name());
             dao.updateConferenceDetailRecordStatus(cdr);
         }
+    }
+
+    /**
+     * startConferenceTimer - conference should expire after 4 hours/(configurable)
+     */
+    private void startConferenceTimer() {
+        final long conferenceTotalLifeInMillis = RestcommConfiguration.getInstance().getMain().getConferenceTimeout()*1000;
+        final long conferenceRemainingLife =  conferenceTotalLifeInMillis - conferenceAge();
+        context().setReceiveTimeout(Duration.create(conferenceRemainingLife, TimeUnit.MILLISECONDS));
+        if(logger.isInfoEnabled())
+            logger.info(String.format("conference timer started for: %s milliseconds", conferenceRemainingLife));
+    }
+
+    /**
+     * @return conference age in milli seconds
+     */
+    private long conferenceAge() {
+        if(sid != null){
+            final ConferenceDetailRecordsDao dao = storage.getConferenceDetailRecordsDao();
+            ConferenceDetailRecord cdr = dao.getConferenceDetailRecord(sid);
+            if(cdr == null){
+                logger.warning(String.format("Conference cdr is null for sid: %s", sid));
+            }else{
+                return DateTime.now().getMillis()-cdr.getDateCreated().getMillis();
+            }
+        }
+        return 0;
+    }
+
+    private void kickoutRemoteParticipants(){
+        if(sid != null){
+            List<CallDetailRecord> callDetailRecords = storage.getCallDetailRecordsDao().getRunningCallDetailRecordsByConferenceSid(sid);
+
+            if(callDetailRecords == null || callDetailRecords.isEmpty()){
+                if (logger.isDebugEnabled())
+                    logger.debug("no active participants found.");
+            } else {
+                try {
+                   if (logger.isDebugEnabled())
+                        logger.debug("total conference participants are: "+callDetailRecords.size());
+                   Iterator<CallDetailRecord> iterator = callDetailRecords.iterator();
+                   while(iterator.hasNext()){
+                       final CallDetailRecord CallDR = iterator.next();
+                       //kick only remote participants
+                       if(!CallDR.getInstanceId().equals(RestcommConfiguration.getInstance().getMain().getInstanceId())){
+                           ActorRef callApiClient = callApiClient(CallDR.getSid());
+                           callApiClient.tell(new Hangup("conference timed out", SUPER_ADMIN_ACCOUNT_SID, CallDR), self());
+                       }
+                   }
+                } catch (Exception e) {
+                    logger.error("Exception while trying to terminate conference via api: ", e);
+                }
+            }
+        }else {
+            if (logger.isInfoEnabled())
+                logger.info("sid is null hence no remote participants will be kickedout");
+        }
+    }
+
+
+    protected ActorRef callApiClient(final Sid callSid) {
+        final Props props = new Props(new UntypedActorFactory() {
+            private static final long serialVersionUID = 1L;
+
+            @Override
+            public UntypedActor create() throws Exception {
+                return new CallApiClient(callSid, storage);
+            }
+        });
+        return getContext().actorOf(props);
+    }
+
+    @Override
+    public void postStop() {
+        if (!fsm.state().equals(uninitialized)) {
+            if(logger.isInfoEnabled()) {
+                logger.info("Conference: " + self().path()
+                    + "At the postStop() method.");
+            }
+            if(callApiClient != null && !callApiClient.isTerminated())
+                getContext().stop(callApiClient);
+
+            getContext().stop(self());
+        }
+        super.postStop();
     }
 }

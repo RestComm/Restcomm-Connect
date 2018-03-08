@@ -40,6 +40,8 @@ import org.jboss.arquillian.test.api.ArquillianResource;
 import org.jboss.shrinkwrap.api.spec.WebArchive;
 import org.junit.AfterClass;
 import org.junit.Test;
+import org.junit.FixMethodOrder;
+import org.junit.runners.MethodSorters;
 import org.junit.runner.RunWith;
 
 import com.google.gson.JsonArray;
@@ -54,11 +56,16 @@ import java.util.Map;
 import org.junit.BeforeClass;
 import org.junit.experimental.categories.Category;
 import org.restcomm.connect.commons.Version;
+import org.restcomm.connect.commons.annotations.ParallelClassTests;
+import org.restcomm.connect.commons.annotations.UnstableTests;
+import org.restcomm.connect.commons.annotations.WithInMinsTests;
 
 /**
  * @author guilherme.jansen@telestax.com
  */
 @RunWith(Arquillian.class)
+@FixMethodOrder(MethodSorters.NAME_ASCENDING)
+@Category(value={WithInMinsTests.class, ParallelClassTests.class})
 public class RvdProjectsMigratorWorkspaceMigratedTest {
 
     private final static Logger logger = Logger.getLogger(RvdProjectsMigratorWorkspaceMigratedTest.class);

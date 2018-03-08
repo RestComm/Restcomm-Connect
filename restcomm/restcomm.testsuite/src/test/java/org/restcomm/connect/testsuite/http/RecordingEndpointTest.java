@@ -31,13 +31,18 @@ import org.jboss.shrinkwrap.api.spec.WebArchive;
 import org.jboss.shrinkwrap.resolver.api.maven.archive.ShrinkWrapMaven;
 import static org.junit.Assert.assertTrue;
 import org.junit.Test;
+import org.junit.FixMethodOrder;
+import org.junit.runners.MethodSorters;
+import org.junit.experimental.categories.Category;
 import org.junit.runner.RunWith;
+import org.restcomm.connect.commons.annotations.FeatureAltTests;
 
 /**
  * @author <a href="mailto:n.congvu@gmail.com">vunguyen</a>
  *
  */
 @RunWith(Arquillian.class)
+@FixMethodOrder(MethodSorters.NAME_ASCENDING)
 public class RecordingEndpointTest extends EndpointTest{
     private static Logger logger = Logger.getLogger(RecordingEndpointTest.class);
 
@@ -58,6 +63,7 @@ public class RecordingEndpointTest extends EndpointTest{
     }
 
     @Test
+    @Category(FeatureAltTests.class)
     public void getRecordingListUsingPageSize() {
         JsonObject firstPage = RecordingEndpointTool.getInstance().getRecordingList(deploymentUrl.toString(), adminAccountSid,
                 adminAuthToken, null, 10, true);
@@ -82,6 +88,7 @@ public class RecordingEndpointTest extends EndpointTest{
     }
 
     @Test
+    @Category(FeatureAltTests.class)
     public void getRecordingListFilteredByStartTime() {
         Map<String, String> filters = new HashMap<String, String>();
         filters.put("StartTime", "2015-01-08 08:51:07.955000");
@@ -95,6 +102,7 @@ public class RecordingEndpointTest extends EndpointTest{
     }
 
     @Test
+    @Category(FeatureAltTests.class)
     public void getRecordingListFilteredByEndTime() {
         Map<String, String> filters = new HashMap<String, String>();
         filters.put("EndTime", "2015-01-08 08:51:07.955000");

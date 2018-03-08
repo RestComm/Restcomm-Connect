@@ -50,13 +50,18 @@ import org.junit.After;
 import org.junit.Before;
 import org.junit.BeforeClass;
 import org.junit.Test;
+import org.junit.FixMethodOrder;
+import org.junit.runners.MethodSorters;
 import org.junit.runner.RunWith;
 import org.restcomm.connect.commons.Version;
+import org.restcomm.connect.commons.annotations.ParallelClassTests;
 import org.restcomm.connect.testsuite.http.CreateClientsTool;
 import org.restcomm.connect.testsuite.http.RestcommCallsTool;
 
 import com.google.gson.JsonArray;
 import com.google.gson.JsonObject;
+import org.junit.experimental.categories.Category;
+import org.restcomm.connect.commons.annotations.UnstableTests;
 import org.restcomm.connect.testsuite.tools.MonitoringServiceTool;
 
 /**
@@ -66,6 +71,8 @@ import org.restcomm.connect.testsuite.tools.MonitoringServiceTool;
  * @author <a href="mailto:gvagenas@gmail.com">gvagenas</a>
  */
 @RunWith(Arquillian.class)
+@FixMethodOrder(MethodSorters.NAME_ASCENDING)
+@Category(ParallelClassTests.class)
 public class RegisterClientTest {
 
     private static final String version = Version.getVersion();
@@ -162,6 +169,7 @@ public class RegisterClientTest {
     }
 
     @Test
+    @Category(value={UnstableTests.class})
     public void testRegisterClients() throws ParseException, InterruptedException {
 
         assertNotNull(mariaRestcommClientSid);
@@ -181,6 +189,7 @@ public class RegisterClientTest {
     }
 
     @Test
+    @Category(value={UnstableTests.class})
     public void testRegisterClientAndRemoveItAfterNoResponseToOptions() throws ParseException, InterruptedException, SipException, InvalidArgumentException, IOException {
         assertNotNull(georgeRestcommClientSid);
         SipURI uri = georgeSipStack.getAddressFactory().createSipURI(null, "127.0.0.1:5080");
@@ -205,6 +214,7 @@ public class RegisterClientTest {
 
 
     @Test
+    @Category(value={UnstableTests.class})
     public void testGeorgeCallMaria() throws ParseException, InterruptedException {
 
         assertNotNull(mariaRestcommClientSid);

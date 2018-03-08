@@ -19,14 +19,41 @@
  */
 package org.restcomm.connect.telephony;
 
-import akka.actor.ActorRef;
-import akka.actor.Props;
-import akka.actor.ReceiveTimeout;
-import akka.actor.UntypedActor;
-import akka.actor.UntypedActorContext;
-import akka.actor.UntypedActorFactory;
-import akka.event.Logging;
-import akka.event.LoggingAdapter;
+import java.io.IOException;
+import java.math.BigDecimal;
+import java.net.InetAddress;
+import java.net.URI;
+import java.net.UnknownHostException;
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.Currency;
+import java.util.HashMap;
+import java.util.HashSet;
+import java.util.Iterator;
+import java.util.List;
+import java.util.ListIterator;
+import java.util.Map;
+import java.util.Set;
+import java.util.StringTokenizer;
+import java.util.UUID;
+import java.util.concurrent.TimeUnit;
+
+import javax.sdp.SdpException;
+import javax.servlet.sip.Address;
+import javax.servlet.sip.AuthInfo;
+import javax.servlet.sip.ServletParseException;
+import javax.servlet.sip.SipApplicationSession;
+import javax.servlet.sip.SipFactory;
+import javax.servlet.sip.SipServletMessage;
+import javax.servlet.sip.SipServletRequest;
+import javax.servlet.sip.SipServletResponse;
+import javax.servlet.sip.SipSession;
+import javax.servlet.sip.SipURI;
+import javax.servlet.sip.TelURL;
+import javax.sip.header.RecordRouteHeader;
+import javax.sip.header.RouteHeader;
+import javax.sip.message.Response;
+
 import org.apache.commons.configuration.Configuration;
 import org.apache.http.NameValuePair;
 import org.apache.http.message.BasicNameValuePair;
@@ -43,6 +70,7 @@ import org.restcomm.connect.commons.fsm.Action;
 import org.restcomm.connect.commons.fsm.FiniteStateMachine;
 import org.restcomm.connect.commons.fsm.State;
 import org.restcomm.connect.commons.fsm.Transition;
+import org.restcomm.connect.commons.fsm.TransitionEndListener;
 import org.restcomm.connect.commons.fsm.TransitionFailedException;
 import org.restcomm.connect.commons.fsm.TransitionNotFoundException;
 import org.restcomm.connect.commons.fsm.TransitionRollbackException;
@@ -84,6 +112,7 @@ import org.restcomm.connect.telephony.api.BridgeStateChanged;
 import org.restcomm.connect.telephony.api.CallFail;
 import org.restcomm.connect.telephony.api.CallHoldStateChange;
 import org.restcomm.connect.telephony.api.CallInfo;
+import org.restcomm.connect.telephony.api.CallInfoStreamEvent;
 import org.restcomm.connect.telephony.api.CallResponse;
 import org.restcomm.connect.telephony.api.CallStateChanged;
 import org.restcomm.connect.telephony.api.Cancel;
@@ -97,41 +126,18 @@ import org.restcomm.connect.telephony.api.Hangup;
 import org.restcomm.connect.telephony.api.InitializeOutbound;
 import org.restcomm.connect.telephony.api.Reject;
 import org.restcomm.connect.telephony.api.RemoveParticipant;
-import scala.concurrent.duration.Duration;
+import org.restcomm.connect.telephony.api.StopWaiting;
+import org.restcomm.connect.telephony.api.util.B2BUAHelper;
 
-import javax.sdp.SdpException;
-import javax.servlet.sip.Address;
-import javax.servlet.sip.AuthInfo;
-import javax.servlet.sip.ServletParseException;
-import javax.servlet.sip.SipApplicationSession;
-import javax.servlet.sip.SipFactory;
-import javax.servlet.sip.SipServletMessage;
-import javax.servlet.sip.SipServletRequest;
-import javax.servlet.sip.SipServletResponse;
-import javax.servlet.sip.SipSession;
-import javax.servlet.sip.SipURI;
-import javax.servlet.sip.TelURL;
-import javax.sip.header.RecordRouteHeader;
-import javax.sip.header.RouteHeader;
-import javax.sip.message.Response;
-import java.io.IOException;
-import java.math.BigDecimal;
-import java.net.InetAddress;
-import java.net.URI;
-import java.net.UnknownHostException;
-import java.util.ArrayList;
-import java.util.Collections;
-import java.util.Currency;
-import java.util.HashMap;
-import java.util.HashSet;
-import java.util.Iterator;
-import java.util.List;
-import java.util.ListIterator;
-import java.util.Map;
-import java.util.Set;
-import java.util.StringTokenizer;
-import java.util.UUID;
-import java.util.concurrent.TimeUnit;
+import akka.actor.ActorRef;
+import akka.actor.Props;
+import akka.actor.ReceiveTimeout;
+import akka.actor.UntypedActor;
+import akka.actor.UntypedActorContext;
+import akka.actor.UntypedActorFactory;
+import akka.event.Logging;
+import akka.event.LoggingAdapter;
+import scala.concurrent.duration.Duration;
 
 /**
  * @author quintana.thomas@gmail.com (Thomas Quintana)
@@ -143,7 +149,7 @@ import java.util.concurrent.TimeUnit;
  *
  */
 @Immutable
-public final class Call extends RestcommUntypedActor {
+public final class Call extends RestcommUntypedActor implements TransitionEndListener {
 
     // Logging
     private final LoggingAdapter logger = Logging.getLogger(getContext().system(), this);
@@ -287,17 +293,18 @@ public final class Call extends RestcommUntypedActor {
         }
     };
 
-    public Call(final SipFactory factory, final MediaServerControllerFactory mediaSessionControllerFactory, final Configuration configuration,
+    public Call(final Sid accountSid, final SipFactory factory, final MediaServerControllerFactory mediaSessionControllerFactory, final Configuration configuration,
     final URI statusCallback, final String statusCallbackMethod, final List<String> statusCallbackEvent) {
-        this(factory, mediaSessionControllerFactory, configuration, statusCallback, statusCallbackMethod,
+        this(accountSid, factory, mediaSessionControllerFactory, configuration, statusCallback, statusCallbackMethod,
                 statusCallbackEvent, null);
     }
 
-    public Call(final SipFactory factory, final MediaServerControllerFactory mediaSessionControllerFactory, final Configuration configuration,
+    public Call(final Sid accountSid, final SipFactory factory, final MediaServerControllerFactory mediaSessionControllerFactory, final Configuration configuration,
                 final URI statusCallback, final String statusCallbackMethod, final List<String> statusCallbackEvent, Map<String, ArrayList<String>> headers)
     {
         super();
         final ActorRef source = self();
+        this.accountId = accountSid;
         this.statusCallback = statusCallback;
         this.statusCallbackMethod = statusCallbackMethod;
         this.statusCallbackEvent = statusCallbackEvent;
@@ -393,6 +400,7 @@ public final class Call extends RestcommUntypedActor {
         transitions.add(new Transition(this.failingNoAnswer, this.canceling));
         transitions.add(new Transition(this.updatingMediaSession, this.inProgress));
         transitions.add(new Transition(this.updatingMediaSession, this.failed));
+        transitions.add(new Transition(this.updatingMediaSession, this.stopping));
         transitions.add(new Transition(this.stopping, this.completed));
         transitions.add(new Transition(this.stopping, this.failed));
         transitions.add(new Transition(this.failed, this.completed));
@@ -402,6 +410,7 @@ public final class Call extends RestcommUntypedActor {
 
         // FSM
         this.fsm = new FiniteStateMachine(this.uninitialized, transitions);
+        this.fsm.addTransitionEndListener(this);
 
         // SIP runtime stuff.
         this.factory = factory;
@@ -461,7 +470,7 @@ public final class Call extends RestcommUntypedActor {
         return !isInbound();
     }
 
-    private CallResponse<CallInfo> info() {
+    private CallInfo info() {
         try {
             final String from;
             if(actAsImsUa) {
@@ -476,8 +485,7 @@ public final class Call extends RestcommUntypedActor {
             } else {
                 to = ((TelURL) this.to).getPhoneNumber();
             }
-            final CallInfo info = new CallInfo(id, external, type, direction, created, forwardedFrom, name, from, to, invite, lastResponse, webrtc, muted, isFromApi, callUpdatedTime, mediaAttributes);
-            return new CallResponse<CallInfo>(info);
+            return new CallInfo(id, accountId, external, type, direction, created, forwardedFrom, name, from, to, invite, lastResponse, webrtc, muted, isFromApi, callUpdatedTime, mediaAttributes);
         } catch (Exception e) {
             if (logger.isInfoEnabled()) {
                 logger.info("Problem during preparing call info, exception {}",e);
@@ -740,6 +748,24 @@ public final class Call extends RestcommUntypedActor {
             onBridgeStateChanged((BridgeStateChanged) message, self, sender);
         } else if (CallHoldStateChange.class.equals(klass)) {
             onCallHoldStateChange((CallHoldStateChange)message, sender);
+        } else if (StopWaiting.class.equals(klass)) {
+            onStopWaiting((StopWaiting)message, sender);
+        }
+    }
+
+    @Override
+    public void onTransitionEnd(State was, State is, Object event) {
+        CallInfo callInfo = info();
+        if (callInfo != null) {
+            getContext().system()
+                    .eventStream()
+                    .publish(new CallInfoStreamEvent(callInfo));
+        }
+    }
+
+    private void onStopWaiting(StopWaiting message, ActorRef sender) throws Exception {
+        if(is(waitingForAnswer)) {
+            sendInviteOk();
         }
     }
 
@@ -787,7 +813,7 @@ public final class Call extends RestcommUntypedActor {
     // received
     private void sendCallInfoToObservers() {
         for (final ActorRef observer : this.observers) {
-            observer.tell(info(), self());
+            observer.tell(new CallResponse(info()), self());
         }
     }
 
@@ -986,7 +1012,7 @@ public final class Call extends RestcommUntypedActor {
             addHeadersToMessage(invite, rcmlHeaders, "X-");
 
             //the extension headers will override any headers
-            addHeadersToMessage(invite, extensionHeaders);
+            B2BUAHelper.addHeadersToMessage(invite, extensionHeaders, factory);
 
             final SipSession session = invite.getSession();
             session.setHandler("CallManager");
@@ -1013,8 +1039,17 @@ public final class Call extends RestcommUntypedActor {
             // Send the invite.
             invite.send();
             // Set the timeout period.
-            final UntypedActorContext context = getContext();
-            context.setReceiveTimeout(Duration.create(timeout, TimeUnit.SECONDS));
+
+//            final UntypedActorContext context = getContext();
+//            if (logger.isDebugEnabled()) {
+//                logger.debug("About to set timeout to "+timeout);
+//            }
+//            context.setReceiveTimeout(Duration.create(timeout, TimeUnit.SECONDS));
+//            deadline = Duration.create(timeout, TimeUnit.SECONDS).fromNow();
+//            if (deadline != null) {
+//                String msg = String.format("Deadline left %s", deadline.timeLeft().toSeconds());
+//                logger.debug(msg);
+//            }
             executeStatusCallback(CallbackState.INITIATED);
         }
 
@@ -1039,70 +1074,6 @@ public final class Call extends RestcommUntypedActor {
             } catch (IllegalArgumentException iae) {
                 if(logger.isErrorEnabled()) {
                     logger.error("Exception while setting message header: "+iae.getMessage());
-                }
-            }
-        }
-
-        /**
-         * Replace headers
-         * @param SipServletRequest message
-         * @param Map<String, ArrayList<String> > headers
-         */
-        private void addHeadersToMessage(SipServletRequest message, Map<String, ArrayList<String> > headers) {
-
-            if(headers!=null) {
-                for (Map.Entry<String, ArrayList<String>> entry : headers.entrySet()) {
-                    //check if header exists
-                    String headerName = entry.getKey();
-
-                    StringBuilder sb = new StringBuilder();
-                    if(entry.getValue() instanceof ArrayList){
-                        for(String pair : entry.getValue()){
-                            sb.append(";").append(pair);
-                        }
-                    }
-                    if(logger.isDebugEnabled()) {
-                        logger.debug("headerName="+headerName+" headerVal="+message.getHeader(headerName)+" concatValue="+sb.toString());
-                    }
-                    if(!headerName.equalsIgnoreCase("Request-URI")){
-                        try {
-                            String headerVal = message.getHeader(headerName);
-                            if(headerVal!=null && !headerVal.isEmpty()) {
-                                message.setHeader(headerName , headerVal+sb.toString());
-                            }else{
-                                message.addHeader(headerName , sb.toString());
-                            }
-                        } catch (IllegalArgumentException iae) {
-                            if(logger.isErrorEnabled()) {
-                                logger.error("Exception while setting message header: "+iae.getMessage());
-                            }
-                        }
-                    }else{
-                        //handle Request-URI
-                        javax.servlet.sip.URI reqURI = message.getRequestURI();
-                        if(logger.isDebugEnabled()) {
-                            logger.debug("ReqURI="+reqURI.toString()+" msgReqURI="+message.getRequestURI());
-                        }
-                        for(String keyValPair :entry.getValue()){
-                            String parName = "";
-                            String parVal = "";
-                            int equalsPos = keyValPair.indexOf("=");
-                            parName = keyValPair.substring(0, equalsPos);
-                            parVal = keyValPair.substring(equalsPos+1);
-                            reqURI.setParameter(parName, parVal);
-                            if(logger.isDebugEnabled()) {
-                                logger.debug("ReqURI pars ="+parName+"="+parVal+" equalsPos="+equalsPos+" keyValPair="+keyValPair);
-                            }
-                        }
-
-                        message.setRequestURI(reqURI);
-                        if(logger.isDebugEnabled()) {
-                            logger.debug("ReqURI="+reqURI.toString()+" msgReqURI="+message.getRequestURI());
-                        }
-                    }
-                    if(logger.isDebugEnabled()) {
-                        logger.debug("headerName="+headerName+" headerVal="+message.getHeader(headerName));
-                    }
                 }
             }
         }
@@ -1178,13 +1149,23 @@ public final class Call extends RestcommUntypedActor {
         public void execute(final Object message) throws Exception {
             try {
                 if (isOutbound() && (invite.getSession().getState() != SipSession.State.INITIAL || invite.getSession().getState() != SipSession.State.TERMINATED)) {
-                    final UntypedActorContext context = getContext();
-                    context.setReceiveTimeout(Duration.Undefined());
-                    final SipServletRequest cancel = invite.createCancel();
-                    addCustomHeaders(cancel);
-                    cancel.send();
-                    if (logger.isInfoEnabled()) {
-                        logger.info("Sent CANCEL for Call: "+self().path()+", state: "+fsm.state()+", direction: "+direction);
+                    if(invite.getSession().getState() != SipSession.State.CONFIRMED) {
+                        final UntypedActorContext context = getContext();
+                        context.setReceiveTimeout(Duration.Undefined());
+                        final SipServletRequest cancel = invite.createCancel();
+                        addCustomHeaders(cancel);
+                        cancel.send();
+                        if (logger.isInfoEnabled()) {
+                            logger.info("Sent CANCEL for Call: "+self().path()+", state: "+fsm.state()+", direction: "+direction);
+                        }
+                    } else {
+                        // if sip session is already confirmed, cancel wont work so we need to send bye.
+                        // https://telestax.atlassian.net/browse/RESTCOMM-1623
+                        if (logger.isInfoEnabled()) {
+                            logger.info("Got Cancel request for call: "+self().path()+", state: "+fsm.state()+", direction: "+direction);
+                            logger.info("Call's sip session is already confirmed so restcomm will send BYE instead of CANCEL.");
+                            sendBye(new Hangup());
+                        }
                     }
                 }
             } catch (Exception e) {
@@ -1199,6 +1180,9 @@ public final class Call extends RestcommUntypedActor {
                 logger.warning(strBuffer.toString());
             }
             msController.tell(new CloseMediaSession(), source);
+            //Github issue 2261 - https://github.com/RestComm/Restcomm-Connect/issues/2261
+            //Set a ReceivedTimeout duration to make sure call doesn't block waiting for the response from MmsCallController
+            context().setReceiveTimeout(Duration.create(2000, TimeUnit.MILLISECONDS));
         }
     }
 
@@ -1394,22 +1378,29 @@ public final class Call extends RestcommUntypedActor {
                 try {
                     SipSession session = invite.getSession();
                     SipSession.State sessionState = session.getState();
-                    if (session.isValid() && !sessionState.name().equalsIgnoreCase(SipSession.State.TERMINATED.name())) {
-                        SipServletResponse resp = null;
-                        if (message instanceof CallFail) {
-                            resp = invite.createResponse(500, "Problem to setup the call");
-                            String reason = ((CallFail) message).getReason();
-                            if (reason != null)
-                                resp.addHeader("Reason", reason);
-                        } else {
-                            // https://github.com/RestComm/Restcomm-Connect/issues/1663
-                            // We use 569 only if there is a problem to reach RMS as LB can be configured to take out
-                            // nodes that send back 569. This is meant to protect the cluster from nodes where the RMS
-                            // is in bad state and not responding anymore
-                            resp = invite.createResponse(MEDIA_SERVER_FAILURE_RESPONSE_CODE, "Problem to setup services");
+                    if (session.isValid()) {
+                        if (sessionState.name().equalsIgnoreCase(SipSession.State.CONFIRMED.name()) && !receivedBye) {
+                            //send BYE
+                            Hangup hangup = (message instanceof Hangup) ? (Hangup)message : new Hangup();
+                            sendBye(hangup);
+                        } else if (!sessionState.name().equalsIgnoreCase(SipSession.State.TERMINATED.name())){
+                            //send invite response
+                            SipServletResponse resp = null;
+                            if (message instanceof CallFail) {
+                                resp = invite.createResponse(500, "Problem to setup the call");
+                                String reason = ((CallFail) message).getReason();
+                                if (reason != null)
+                                    resp.addHeader("Reason", reason);
+                            } else {
+                                // https://github.com/RestComm/Restcomm-Connect/issues/1663
+                                // We use 569 only if there is a problem to reach RMS as LB can be configured to take out
+                                // nodes that send back 569. This is meant to protect the cluster from nodes where the RMS
+                                // is in bad state and not responding anymore
+                                resp = invite.createResponse(MEDIA_SERVER_FAILURE_RESPONSE_CODE, "Problem to setup services");
+                            }
+                            addCustomHeaders(resp);
+                            resp.send();
                         }
-                        addCustomHeaders(resp);
-                        resp.send();
                     }
                 } catch (Exception e) {
                     logger.error("Exception while trying to prepare failed response, exception: "+e);
@@ -1924,7 +1915,7 @@ public final class Call extends RestcommUntypedActor {
     }
 
     private void onGetCallInfo(GetCallInfo message, ActorRef sender) throws Exception {
-        sender.tell(info(), self());
+        sender.tell(new CallResponse(info()), self());
     }
 
     private void onInitializeOutbound(InitializeOutbound message, ActorRef self, ActorRef sender) throws Exception {
@@ -1967,17 +1958,20 @@ public final class Call extends RestcommUntypedActor {
     private void onCancel(Cancel message, ActorRef self, ActorRef sender) throws Exception {
         if (is(initializing) || is(dialing) || is(ringing) || is(failingNoAnswer)) {
             if(logger.isInfoEnabled()) {
-                logger.info("Got CANCEL for Call with the following details, from: "+from+" to: "+to+" direction: "+direction+" state: "+fsm.state()+", will Cancel the call");
+                String msg = String.format("Got Cancel %s for call %s, from %s, to %s, direction %s, fsm state %s, will Cancel the call", message, self(), from, to, direction, fsm.state());
+                logger.info(msg);
             }
             fsm.transition(message, canceling);
-        } else if (is(inProgress)) {
+        } else if (is(inProgress) || is(updatingMediaSession)) {
             if(logger.isInfoEnabled()) {
-                logger.info("Got CANCEL for Call with the following details, from: "+from+" to: "+to+" direction: "+direction+" state: "+fsm.state()+", will Hangup the call");
+                String msg = String.format("Got Cancel %s for call %s, from %s, to %s, direction %s, fsm state %s, will Hangup the call", message, self(), from, to, direction, fsm.state());
+                logger.info(msg);
             }
             onHangup(new Hangup(), self(), sender());
         } else {
             if(logger.isInfoEnabled()) {
-                logger.info("Got CANCEL for Call with the following details, from: "+from+" to: "+to+" direction: "+direction+" state: "+fsm.state());
+                String msg = String.format("Got Cancel %s for call %s, from %s, to %s, direction %s, fsm state %s", message, self(), from, to, direction, fsm.state());
+                logger.info(msg);
             }
         }
     }
@@ -2262,7 +2256,8 @@ public final class Call extends RestcommUntypedActor {
 
     private void onHangup(Hangup message, ActorRef self, ActorRef sender) throws Exception {
         if(logger.isDebugEnabled()) {
-            logger.debug("Got Hangup: "+message+" for Call, from: "+from+", to: "+to+", state: "+fsm.state()+", conferencing: "+conferencing +", conference: "+conference);
+            String msg = String.format("Got Hangup %s for call %s, from %s, to %s, fsm state %s, conferencing %s, conference %s ", message, self(), from, to, fsm.state(), conferencing, conference);
+            logger.debug(msg);
         }
 
         if (is(completed)) {
@@ -2304,7 +2299,8 @@ public final class Call extends RestcommUntypedActor {
         } else if (is(stopping)) {
             fsm.transition(message, completed);
         } else {
-            fsm.transition(message, stopping);
+            if (!is(leaving) && !is(canceling) && !is(canceled))
+                fsm.transition(message, stopping);
         }
     }
 
@@ -2570,6 +2566,19 @@ public final class Call extends RestcommUntypedActor {
                     fsm.transition(message, busy);
                 } else if (is(failingNoAnswer)) {
                     fsm.transition(message, noAnswer);
+                } else if (is(joining)) {
+                    // https://telestax.atlassian.net/browse/RESTCOMM-1343
+                    // if call was in joining state and we received INACTIVE MS response.
+                    // means: MS failed to bridge the call to the conference.
+                    // call should move to failed state so proper sip response is generated &
+                    // call resources get cleaned up
+                    logger.error("Call failed to join conference, media operation to connect call with conference failed.");
+                    // Let conference know the call exited the room so
+                    // it does not keep waiting for it to complete the join
+                    this.conferencing = false;
+                    this.conference.tell(new Left(self()), self);
+                    this.conference = null;
+                    fsm.transition(new Hangup("failed to join conference"), failed);
                 }
                 break;
 
@@ -2632,7 +2641,7 @@ public final class Call extends RestcommUntypedActor {
             fsm.transition(message, leaving);
         } else {
             if (logger.isDebugEnabled()) {
-                logger.debug("Received Leave for Call: "+self.path()+", but state is :"+fsm.state().toString());
+            logger.debug("Received Leave for Call: "+self.path()+", but state is :"+fsm.state().toString());
             }
         }
     }

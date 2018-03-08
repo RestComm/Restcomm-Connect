@@ -19,26 +19,34 @@
  */
 package org.restcomm.connect.testsuite.http;
 
-import com.google.gson.JsonArray;
-import com.google.gson.JsonObject;
+import static org.junit.Assert.assertTrue;
+
 import java.util.HashMap;
 import java.util.Map;
+
 import org.apache.log4j.Logger;
 import org.jboss.arquillian.container.test.api.Deployment;
 import org.jboss.arquillian.junit.Arquillian;
 import org.jboss.shrinkwrap.api.ShrinkWrap;
 import org.jboss.shrinkwrap.api.spec.WebArchive;
 import org.jboss.shrinkwrap.resolver.api.maven.archive.ShrinkWrapMaven;
-import static org.junit.Assert.assertTrue;
 import org.junit.Test;
+import org.junit.FixMethodOrder;
+import org.junit.runners.MethodSorters;
+import org.junit.experimental.categories.Category;
 import org.junit.runner.RunWith;
+import org.restcomm.connect.commons.annotations.FeatureAltTests;
 import org.restcomm.connect.testsuite.sms.SmsEndpointTool;
+
+import com.google.gson.JsonArray;
+import com.google.gson.JsonObject;
 
 /**
  * @author <a href="mailto:n.congvu@gmail.com">vunguyen</a>
  *
  */
 @RunWith(Arquillian.class)
+@FixMethodOrder(MethodSorters.NAME_ASCENDING)
 public class SmsMessagesEndpointTest extends EndpointTest{
     private static Logger logger = Logger.getLogger(SmsMessagesEndpointTest.class);
 
@@ -59,6 +67,7 @@ public class SmsMessagesEndpointTest extends EndpointTest{
     }
 
     @Test
+    @Category(FeatureAltTests.class)
     public void getSmsMessageListUsingPageSize() {
         JsonObject firstPage = SmsEndpointTool.getInstance().getSmsMessageList(deploymentUrl.toString(), adminAccountSid,
                 adminAuthToken, null, 10, true);
@@ -83,6 +92,7 @@ public class SmsMessagesEndpointTest extends EndpointTest{
     }
 
     @Test
+    @Category(FeatureAltTests.class)
     public void getSmsMessageListFilteredBySender() {
 
         Map<String, String> filters = new HashMap<String, String>();
@@ -97,6 +107,7 @@ public class SmsMessagesEndpointTest extends EndpointTest{
     }
 
     @Test
+    @Category(FeatureAltTests.class)
     public void getSmsMessageListFilteredByRecipent() {
 
         Map<String, String> filters = new HashMap<String, String>();
@@ -111,6 +122,7 @@ public class SmsMessagesEndpointTest extends EndpointTest{
     }
 
     @Test
+    @Category(FeatureAltTests.class)
     public void getSmsMessageListFilteredByStartTime() {
         Map<String, String> filters = new HashMap<String, String>();
         filters.put("StartTime", "2013-07-07 18:15:12.018000000");
@@ -124,6 +136,7 @@ public class SmsMessagesEndpointTest extends EndpointTest{
     }
 
     @Test
+    @Category(FeatureAltTests.class)
     public void getSmsMessageListFilteredByEndTime() {
         Map<String, String> filters = new HashMap<String, String>();
         filters.put("EndTime", "2013-07-09 16:22:35.146000000");
@@ -137,6 +150,7 @@ public class SmsMessagesEndpointTest extends EndpointTest{
     }
 
     @Test
+    @Category(FeatureAltTests.class)
     public void getSmsMessageListFilteredByBody() {
         Map<String, String> filters = new HashMap<String, String>();
         filters.put("Body", "Hello");

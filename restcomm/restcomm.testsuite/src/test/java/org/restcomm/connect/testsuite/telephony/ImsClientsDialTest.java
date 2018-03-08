@@ -1,21 +1,38 @@
 package org.restcomm.connect.testsuite.telephony;
 
-import static org.cafesip.sipunit.SipAssert.assertLastOperationSuccess;
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertNotNull;
-import static org.junit.Assert.assertTrue;
-import static org.junit.Assert.assertFalse;
-import static org.junit.Assert.fail;
-
-import java.net.URL;
-import java.sql.SQLException;
-import java.text.ParseException;
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
-import java.util.concurrent.ExecutorService;
-import java.util.concurrent.Executors;
+import com.github.tomakehurst.wiremock.junit.WireMockRule;
+import com.google.gson.JsonObject;
+import org.apache.log4j.Logger;
+import org.cafesip.sipunit.Credential;
+import org.cafesip.sipunit.SipCall;
+import org.cafesip.sipunit.SipPhone;
+import org.cafesip.sipunit.SipRequest;
+import org.cafesip.sipunit.SipStack;
+import org.cafesip.sipunit.SipTransaction;
+import org.jboss.arquillian.container.mss.extension.SipStackTool;
+import org.jboss.arquillian.container.test.api.Deployer;
+import org.jboss.arquillian.container.test.api.Deployment;
+import org.jboss.arquillian.junit.Arquillian;
+import org.jboss.arquillian.test.api.ArquillianResource;
+import org.jboss.shrinkwrap.api.spec.WebArchive;
+import org.junit.After;
+import org.junit.Before;
+import org.junit.BeforeClass;
+import org.junit.Rule;
+import org.junit.Test;
+import org.junit.FixMethodOrder;
+import org.junit.runners.MethodSorters;
+import org.junit.experimental.categories.Category;
+import org.junit.runner.RunWith;
+import org.restcomm.connect.commons.Version;
+import org.restcomm.connect.commons.annotations.FeatureAltTests;
+import org.restcomm.connect.commons.annotations.ParallelClassTests;
+import org.restcomm.connect.commons.annotations.UnstableTests;
+import org.restcomm.connect.testsuite.NetworkPortAssigner;
+import org.restcomm.connect.testsuite.WebArchiveUtil;
+import org.restcomm.connect.testsuite.http.RestcommCallsTool;
+import org.restcomm.connect.testsuite.telephony.security.DigestServerAuthenticationMethod;
+import org.restcomm.connect.testsuite.tools.MonitoringServiceTool;
 
 import javax.sip.Dialog;
 import javax.sip.InvalidArgumentException;
@@ -38,38 +55,23 @@ import javax.sip.header.ViaHeader;
 import javax.sip.header.WWWAuthenticateHeader;
 import javax.sip.message.Request;
 import javax.sip.message.Response;
-
-import org.apache.log4j.Logger;
-import org.cafesip.sipunit.Credential;
-import org.cafesip.sipunit.SipCall;
-import org.cafesip.sipunit.SipPhone;
-import org.cafesip.sipunit.SipRequest;
-import org.cafesip.sipunit.SipStack;
-import org.cafesip.sipunit.SipTransaction;
-import org.jboss.arquillian.container.mss.extension.SipStackTool;
-import org.jboss.arquillian.container.test.api.Deployer;
-import org.jboss.arquillian.container.test.api.Deployment;
-import org.jboss.arquillian.junit.Arquillian;
-import org.jboss.arquillian.test.api.ArquillianResource;
-import org.jboss.shrinkwrap.api.spec.WebArchive;
-import org.junit.After;
-import org.junit.Before;
-import org.junit.BeforeClass;
-import org.junit.Rule;
-import org.junit.Test;
-import org.junit.runner.RunWith;
-import org.restcomm.connect.commons.Version;
-import org.restcomm.connect.testsuite.http.RestcommCallsTool;
-import org.restcomm.connect.testsuite.telephony.security.DigestServerAuthenticationMethod;
-import org.restcomm.connect.testsuite.tools.MonitoringServiceTool;
-
-import com.github.tomakehurst.wiremock.junit.WireMockRule;
-import com.google.gson.JsonObject;
+import java.net.URL;
+import java.sql.SQLException;
+import java.text.ParseException;
+import java.util.ArrayList;
 import java.util.Arrays;
-import org.junit.experimental.categories.Category;
-import org.restcomm.connect.testsuite.NetworkPortAssigner;
-import org.restcomm.connect.testsuite.UnstableTests;
-import org.restcomm.connect.testsuite.WebArchiveUtil;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
+
+import static org.cafesip.sipunit.SipAssert.assertLastOperationSuccess;
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertFalse;
+import static org.junit.Assert.assertNotNull;
+import static org.junit.Assert.assertTrue;
+import static org.junit.Assert.fail;
 
 /**
  * Test for clients with or without VoiceURL (Bitbucket issue 115). Clients without VoiceURL can dial anything.
@@ -77,6 +79,8 @@ import org.restcomm.connect.testsuite.WebArchiveUtil;
  * @author <a href="mailto:gvagenas@gmail.com">gvagenas</a>
  */
 @RunWith(Arquillian.class)
+@FixMethodOrder(MethodSorters.NAME_ASCENDING)
+@Category(value={FeatureAltTests.class, ParallelClassTests.class})
 public class ImsClientsDialTest {
 
     private static final String version = Version.getVersion();
@@ -177,19 +181,23 @@ public class ImsClientsDialTest {
         augustPhone = augustSipStack.createSipPhone("127.0.0.1", SipStack.PROTOCOL_UDP, restcommPort, augustContact);
         imsAugustPhone = imsSipStack.createSipPhone("127.0.0.1", SipStack.PROTOCOL_UDP, restcommPort, augustContact);
         imsAugustPhone.setLoopback(true);
+        imsAugustPhone.setPassThroughRegisterRequests(true);
 
         imsAugustPhone2 = imsSipStack.createSipPhone("127.0.0.1", SipStack.PROTOCOL_UDP, restcommPort, "sip:august@ims.com");
         imsAugustPhone2.setLoopback(true);
+        imsAugustPhone2.setPassThroughRegisterRequests(true);
 
         juliusSipStack = tool3.initializeSipStack(SipStack.PROTOCOL_UDP, "127.0.0.1", juliusPort, restcommContact);
         juliusPhone = juliusSipStack.createSipPhone("127.0.0.1", SipStack.PROTOCOL_UDP, restcommPort, juliusContact);
         imsJuliusPhone = imsSipStack.createSipPhone("127.0.0.1", SipStack.PROTOCOL_UDP, restcommPort, juliusContact);
         imsJuliusPhone.setLoopback(true);
+        imsJuliusPhone.setPassThroughRegisterRequests(true);
 
         bobSipStack = tool4.initializeSipStack(SipStack.PROTOCOL_UDP, "127.0.0.1", bobPort, restcommContact);
         bobPhone = bobSipStack.createSipPhone("127.0.0.1", SipStack.PROTOCOL_UDP, restcommPort, bobContact);
         imsBobPhone = imsSipStack.createSipPhone("127.0.0.1", SipStack.PROTOCOL_UDP, restcommPort, bobContact);
         imsBobPhone.setLoopback(true);
+        imsBobPhone.setPassThroughRegisterRequests(true);
 
         pstnPhone = imsSipStack.createSipPhone("127.0.0.1", SipStack.PROTOCOL_UDP, restcommPort, pstnContact);
 
@@ -319,8 +327,8 @@ public class ImsClientsDialTest {
             }
         });
         assertTrue(augustPhone.unregister(augustContact, 0));
-        Thread.sleep(500);
-        assertTrue(MonitoringServiceTool.getInstance().getRegisteredUsers(deploymentUrl.toString(),adminAccountSid, adminAuthToken)==0);
+        Thread.sleep(1000);
+        assertEquals(0,MonitoringServiceTool.getInstance().getRegisteredUsers(deploymentUrl.toString(),adminAccountSid, adminAuthToken));
         isAugustRegistered = false;
     }
 
@@ -718,6 +726,7 @@ public class ImsClientsDialTest {
     }
 
     @Test
+    @Category(UnstableTests.class)
     public void testWebRTCClientOutgoingBHold() throws SipException, ParseException, InterruptedException, InvalidArgumentException {
 
         logger.info("testWebRTCClientOutgoingBHold");

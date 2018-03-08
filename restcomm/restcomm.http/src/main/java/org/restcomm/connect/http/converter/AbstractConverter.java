@@ -462,7 +462,7 @@ public abstract class AbstractConverter implements Converter {
         if (pushClientIdentity != null) {
             object.addProperty("push_client_identity", pushClientIdentity);
         } else {
-            object.add("voice_application_sid", JsonNull.INSTANCE);
+            object.add("push_client_identity", JsonNull.INSTANCE);
         }
     }
 

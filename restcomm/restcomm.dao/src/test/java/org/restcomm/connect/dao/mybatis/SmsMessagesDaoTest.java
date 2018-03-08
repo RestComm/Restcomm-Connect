@@ -114,7 +114,7 @@ public final class SmsMessagesDaoTest {
         assertTrue(messages.getSmsMessage(sid) == null);
     }
 
-    private SmsMessage createSms(Sid account, SmsMessage.Direction direction, int i) {
+    private SmsMessage createSms(Sid account, SmsMessage.Direction direction, int i, DateTime date) {
         final Sid sid = Sid.generate(Sid.Type.SMS_MESSAGE);
         final URI url = URI.create("2012-04-24/Accounts/Acoount/SMS/Messages/unique-id.json");
         final SmsMessage.Builder builder = SmsMessage.builder();
@@ -129,6 +129,7 @@ public final class SmsMessagesDaoTest {
         builder.setPrice(new BigDecimal("0.00"));
         builder.setPriceUnit(Currency.getInstance("USD"));
         builder.setUri(url);
+        builder.setDateCreated(date);
         SmsMessage message = builder.build();
         return message;
     }
@@ -137,20 +138,21 @@ public final class SmsMessagesDaoTest {
     public void testGetSmsMessagesLastMinute() throws InterruptedException, ParseException {
         final SmsMessagesDao messages = manager.getSmsMessagesDao();
         final Sid account = Sid.generate(Sid.Type.ACCOUNT);
+        DateTime oneMinuteAgo = DateTime.now().minusSeconds(58);
         for (int i = 0; i < 2; i++) {
-            SmsMessage message = createSms(account, SmsMessage.Direction.OUTBOUND_API, i);
+            SmsMessage message = createSms(account, SmsMessage.Direction.OUTBOUND_API, i, oneMinuteAgo);
             // Create a new sms message in the data store.
             messages.addSmsMessage(message);
             logger.info("Created message: "+message);
         }
         for (int i = 0; i < 2; i++) {
-            SmsMessage message = createSms(account, SmsMessage.Direction.OUTBOUND_CALL, i);
+            SmsMessage message = createSms(account, SmsMessage.Direction.OUTBOUND_CALL, i, oneMinuteAgo);
             // Create a new sms message in the data store.
             messages.addSmsMessage(message);
             logger.info("Created message: "+message);
         }
         for (int i = 0; i < 2; i++) {
-            SmsMessage message = createSms(account, SmsMessage.Direction.OUTBOUND_REPLY, i);
+            SmsMessage message = createSms(account, SmsMessage.Direction.OUTBOUND_REPLY, i, oneMinuteAgo);
             // Create a new sms message in the data store.
             messages.addSmsMessage(message);
             logger.info("Created message: "+message);
@@ -158,9 +160,10 @@ public final class SmsMessagesDaoTest {
         int lastMessages = messages.getSmsMessagesPerAccountLastPerMinute(account.toString());
         logger.info("SMS Messages last minutes: "+lastMessages);
         assertEquals(6, lastMessages);
-        Thread.sleep(70000);
+        Thread.sleep(5000);
+        DateTime oneMinuteLater = DateTime.now();
         for (int i = 0; i < 3; i++) {
-            SmsMessage message = createSms(account, SmsMessage.Direction.OUTBOUND_CALL, i);
+            SmsMessage message = createSms(account, SmsMessage.Direction.OUTBOUND_CALL, i, oneMinuteLater);
             // Create a new sms message in the data store.
             messages.addSmsMessage(message);
             logger.info("Created message: "+message);

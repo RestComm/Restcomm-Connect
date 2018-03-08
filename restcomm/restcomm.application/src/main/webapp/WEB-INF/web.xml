@@ -1,8 +1,9 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<web-app version="2.5"
-         xmlns="http://java.sun.com/xml/ns/javaee"
-         xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
-         xsi:schemaLocation="http://java.sun.com/xml/ns/javaee http://java.sun.com/xml/ns/javaee/web-app_2_5.xsd">
+<web-app xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+    xmlns="http://java.sun.com/xml/ns/javaee"
+    xsi:schemaLocation="http://java.sun.com/xml/ns/javaee 
+    http://java.sun.com/xml/ns/javaee/web-app_3_0.xsd"
+    version="3.0">
   <display-name>RestComm</display-name>
 
   <servlet>
@@ -13,6 +14,18 @@
       <param-name>com.sun.jersey.spi.container.ContainerResponseFilters</param-name>
       <param-value>org.restcomm.connect.http.cors.CorsFilter</param-value>
     </init-param>
+    <init-param>
+      <param-name>com.sun.jersey.spi.container.ContainerRequestFilters</param-name>
+      <param-value>org.restcomm.connect.http.security.SecurityFilter;org.restcomm.connect.http.filters.BodyLengthFilter</param-value>
+    </init-param>    
+    <init-param>
+        <param-name>com.sun.jersey.spi.container.ResourceFilters</param-name>
+        <param-value>com.sun.jersey.api.container.filter.RolesAllowedResourceFilterFactory</param-value>
+    </init-param>
+    <init-param>
+            <param-name>com.sun.jersey.api.json.POJOMappingFeature</param-name>
+            <param-value>true</param-value>
+    </init-param>    
   </servlet>
 
   <context-param>
@@ -47,4 +60,16 @@
       <transport-guarantee>CONFIDENTIAL</transport-guarantee>
   </user-data-constraint>
   </security-constraint-->
+  
+    <security-constraint>
+        <web-resource-collection>
+            <web-resource-name>restAPI</web-resource-name>
+            <url-pattern>/2012-04-24/*</url-pattern>
+        </web-resource-collection>
+    </security-constraint> 
+    <login-config>
+        <auth-method>BASIC</auth-method>
+        <realm-name>Restcomm realm</realm-name>
+    </login-config>    
+        
 </web-app>
