@@ -2391,10 +2391,10 @@ public class VoiceInterpreter extends BaseVoiceInterpreter {
                     }
                 } else if (Nouns.number.equals(child.name())) {
                     if (call != null && callInfo != null) {
-                        create = new CreateCall(e164(callerId(verb)), e164(child.text()), null, null, callInfo.isFromApi(), timeout(verb),
+                        create = new CreateCall(e164(callerId(verb)), e164(callee), null, null, callInfo.isFromApi(), timeout(verb),
                                 CreateCallType.PSTN, accountId, callInfo.sid(), statusCallback, statusCallbackMethod, statusCallbackEvent, customHeaders);
                     } else {
-                        create = new CreateCall(e164(callerId(verb)), e164(child.text()), null, null, false, timeout(verb),
+                        create = new CreateCall(e164(callerId(verb)), e164(callee), null, null, false, timeout(verb),
                                 CreateCallType.PSTN, accountId, null, statusCallback, statusCallbackMethod, statusCallbackEvent, customHeaders);
                     }
                 } else if (Nouns.uri.equals(child.name())) {
@@ -2471,7 +2471,7 @@ public class VoiceInterpreter extends BaseVoiceInterpreter {
         String customHeaders = null;
 
         if (to.contains("?")) {
-            customHeaders = to.substring(to.indexOf("?"), to.length());
+            customHeaders = to.substring(to.indexOf("?")+1, to.length());
         }
 
         return customHeaders;
