@@ -1,0 +1,78 @@
+<assembly xmlns="http://maven.apache.org/ASSEMBLY/2.0.0"
+          xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+          xsi:schemaLocation="http://maven.apache.org/ASSEMBLY/2.0.0 http://maven.apache.org/xsd/assembly-2.0.0.xsd">
+    <id>assembly</id>
+    <formats>
+        <format>zip</format>
+    </formats>
+    <baseDirectory>${project.build.finalName}</baseDirectory>
+    <fileSets>
+        <fileSet>
+            <directory>${project.build.directory}/dependency/restcomm-sip-servlets-${sipservletapi.version}-wildfly-10.0.0.Final</directory>
+            <outputDirectory>/</outputDirectory>
+        </fileSet>
+        
+        <fileSet>
+            <directory>${project.build.directory}/dependency/restcomm-media-server</directory>
+            <outputDirectory>/mediaserver</outputDirectory>
+            <excludes>
+                <exclude>**/*.sh</exclude>
+            </excludes>
+        </fileSet>           
+        <fileSet>
+            <directory>${project.build.directory}/dependency/restcomm-media-server</directory>
+            <outputDirectory>/mediaserver</outputDirectory>
+            <includes>
+                <include>**/*.sh</include>
+            </includes>
+            <!-- include bash scripts with READ/EXEC mask -->
+            <fileMode>555</fileMode>
+        </fileSet> 
+        <fileSet>
+            <directory>${project.basedir}/src/main/resources/assembly-resources</directory>
+            <outputDirectory>/</outputDirectory>
+            <includes>
+                <include>**/*.sh</include>
+            </includes>
+            <!-- include bash scripts with READ/EXEC mask -->
+            <fileMode>555</fileMode>
+        </fileSet>                
+    </fileSets>
+    <dependencySets>       
+        <dependencySet>
+            <outputDirectory>/standalone/deployments</outputDirectory>
+            <unpack>false</unpack>
+            <outputFileNameMapping>restcomm-rvd.war</outputFileNameMapping>
+            <includes>
+                <include>org.restcomm:restcomm-connect-rvd</include>
+            </includes>
+        </dependencySet>      
+        <dependencySet>
+            <outputDirectory>/standalone/deployments</outputDirectory>
+            <unpack>false</unpack>
+            <outputFileNameMapping>olympus.war</outputFileNameMapping>
+            <includes>
+                <include>org.mobicents.webrtc:webrtc-ui</include>
+            </includes>
+        </dependencySet>    
+        
+        <dependencySet>
+            <outputDirectory>/standalone/deployments</outputDirectory>
+            <unpack>true</unpack>
+            <outputFileNameMapping>restcomm.war</outputFileNameMapping>
+            <includes>
+                <include>org.restcomm:restcomm-connect.application</include>
+            </includes>
+        </dependencySet> 
+        <dependencySet>
+            <outputDirectory>/standalone/deployments/restcomm.war</outputDirectory>
+            <unpack>true</unpack>
+
+            <includes>
+                <include>org.restcomm:restcomm-connect.configuration</include>
+            </includes>
+        </dependencySet>                             
+    </dependencySets>
+
+
+</assembly>
