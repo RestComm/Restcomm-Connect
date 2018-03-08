@@ -36,6 +36,7 @@ import com.google.common.collect.ImmutableMap;
 public class FiniteStateMachine {
     private final ImmutableMap<State, Map<State, Transition>> transitions;
     private State state;
+    private TransitionEndListener transitionEndListener;
 
     public FiniteStateMachine(final State initial, final Set<Transition> transitions) {
         super();
@@ -47,6 +48,10 @@ public class FiniteStateMachine {
 
     public State state() {
         return state;
+    }
+
+    public void addTransitionEndListener(TransitionEndListener transitionEndListener) {
+        this.transitionEndListener = transitionEndListener;
     }
 
     public void transition(final Object event, final State target) throws TransitionFailedException,
@@ -91,6 +96,7 @@ public class FiniteStateMachine {
             }
 
             // Move to a new state
+            State source = state;
             state = target;
 
             // Execute action after entering new state (processing)
@@ -101,6 +107,10 @@ public class FiniteStateMachine {
                 } catch (final Exception exception) {
                     throw new TransitionFailedException(exception, event, transition);
                 }
+            }
+
+            if (transitionEndListener != null) {
+                transitionEndListener.onTransitionEnd(source, target, event);
             }
         } else {
             final StringBuilder buffer = new StringBuilder();

@@ -199,15 +199,28 @@ rcMod.controller('ProfileCtrl', function($scope, $resource, $stateParams, Sessio
     $scope.newPassword2 = '';
   };
 
-  $scope.updateProfile = function() {
-    var params = {FriendlyName: $scope.urlAccount.friendly_name, Type: $scope.urlAccount.type, Status: $scope.urlAccount.status};
-    if ($scope.newPassword) {
-      params.Password = $scope.newPassword;
+  var getModifiedProfileFields = function () {
+    var params = {};
+    if ($scope.urlAccount.friendly_name !== $scope.urlAccountBackup.friendly_name) {
+      params.FriendlyName = $scope.urlAccount.friendly_name;
+    }
+    if ($scope.urlAccount.type !== $scope.urlAccountBackup.type) {
+      params.Type = $scope.urlAccount.type;
+    }
+    if ($scope.urlAccount.status !== $scope.urlAccountBackup.status) {
+      params.Status = $scope.urlAccount.status;
     }
     if ($scope.urlAccount.role !== $scope.urlAccountBackup.role) {
       params.Role = $scope.urlAccount.role;
     }
-    RCommAccounts.update({accountSid:$scope.urlAccount.sid}, $.param(params), function(result) {
+    if ($scope.newPassword) {
+      params.Password = $scope.newPassword;
+    }
+    return params;
+  };
+
+  $scope.updateProfile = function() {
+    RCommAccounts.update({accountSid:$scope.urlAccount.sid}, $.param(getModifiedProfileFields()), function(result) {
       // let's update our credentials on password change (https://github.com/restcomm/restcomm-connect/issues/2801)
       if ($scope.newPassword) {
         $scope.urlAccount.auth_token = result.auth_token;
