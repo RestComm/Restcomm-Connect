@@ -31,7 +31,7 @@
                 <property name="driver" value="com.mysql.jdbc.Driver"/>
                 <property name="url" value="jdbc:mysql://192.168.8.102:3306/restcomm"/>
                 <property name="username" value="root"/>
-                <property name="password" value="1234"/>
+                <property name="password" value="root"/>
             </dataSource>
         </environment>
 -->

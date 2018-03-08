@@ -129,7 +129,7 @@
                     </pool>
                     <security>
                         <user-name>root</user-name>
-                        <password>abcd@1234</password>
+                        <password>root</password>
                     </security>
                     <statement>
                         <prepared-statement-cache-size>100</prepared-statement-cache-size>
@@ -142,7 +142,7 @@
                     <driver>h2</driver>
                     <security>
                         <user-name>root</user-name>
-                        <password>abcd@1234</password>
+                        <password>root</password>
                     </security>
                 </datasource>
                 <drivers>
