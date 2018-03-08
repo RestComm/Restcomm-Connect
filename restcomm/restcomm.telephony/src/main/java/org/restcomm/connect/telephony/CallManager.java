@@ -628,7 +628,7 @@ public final class CallManager extends RestcommUntypedActor {
                 }
 
                 ExtensionController ec = ExtensionController.getInstance();
-                final IExtensionCreateCallRequest er = new CreateCall(fromUser, toUser, "", "", false, 0, CreateCallType.CLIENT, client.getAccountSid(), null, null, null, null);
+                final IExtensionCreateCallRequest er = new CreateCall(fromUser, toUser, "", "", false, 0, CreateCallType.CLIENT, client.getAccountSid(), null, null, null, null, null);
                 ExtensionResponse extRes = ec.executePreOutboundAction(er, extensions);
                 if (extRes.isAllowed()) {
                     long delay = pushNotificationServerHelper.sendPushNotificationIfNeeded(toClient.getPushClientIdentity());
@@ -685,7 +685,7 @@ public final class CallManager extends RestcommUntypedActor {
                 sendNotification(client.getAccountSid(), errMsg, 11002, "info", true);
 
                 ExtensionController ec = ExtensionController.getInstance();
-                IExtensionCreateCallRequest er = new CreateCall(fromUser, toUser, "", "", false, 0, CreateCallType.PSTN, client.getAccountSid(), null, null, null, null);
+                IExtensionCreateCallRequest er = new CreateCall(fromUser, toUser, "", "", false, 0, CreateCallType.PSTN, client.getAccountSid(), null, null, null, null, null);
                 ExtensionResponse extRes = ec.executePreOutboundAction(er, this.extensions);
                 if (extRes.isAllowed()) {
                     if (actAsProxyOut) {
@@ -741,7 +741,7 @@ public final class CallManager extends RestcommUntypedActor {
             // First try to check if the call is for a client
             if (toClient != null) {
                 ExtensionController ec = ExtensionController.getInstance();
-                final IExtensionCreateCallRequest cc = new CreateCall(fromUser, toUser, "", "", false, 0, CreateCallType.CLIENT, toClient.getAccountSid(), null, null, null, null);
+                final IExtensionCreateCallRequest cc = new CreateCall(fromUser, toUser, "", "", false, 0, CreateCallType.CLIENT, toClient.getAccountSid(), null, null, null, null, null);
                 ExtensionResponse extRes = ec.executePreInboundAction(cc, this.extensions);
 
                 if (extRes.isAllowed()) {
@@ -1808,12 +1808,7 @@ public final class CallManager extends RestcommUntypedActor {
             case CLIENT: {
                 if (extRes.isAllowed()) {
                     ClientsDao clients = storage.getClientsDao();
-                    String clientName = null;
-                    if (request.to().contains("?")) {
-                        clientName = request.to().replaceFirst("client:", "").substring(0, request.to().replaceFirst("client:", "").lastIndexOf('?'));
-                    } else {
-                        clientName = request.to().replaceFirst("client:", "");
-                    }
+                    String clientName = request.to().replaceFirst("client:", "");
                     final Client client = clients.getClient(clientName, storage.getAccountsDao().getAccount(request.accountId()).getOrganizationSid());
                     if (client != null) {
                         long delay = pushNotificationServerHelper.sendPushNotificationIfNeeded(client.getPushClientIdentity());
@@ -1821,7 +1816,7 @@ public final class CallManager extends RestcommUntypedActor {
                             @Override
                             public void run() {
                                 try {
-                                    outboundToClient(request, sender, client);
+                                    outboundToClient(request, sender, client, request.getCustomHeaders());
 
                                     ExtensionController.getInstance().executePostOutboundAction(request, extensions);
                                 } catch (ServletParseException e) {
@@ -1873,18 +1868,14 @@ public final class CallManager extends RestcommUntypedActor {
         }
     }
 
-    private void outboundToClient(final CreateCall request, final ActorRef sender, final Client client) throws ServletParseException {
+    private void outboundToClient(final CreateCall request, final ActorRef sender, final Client client, final String customHeaders) throws ServletParseException {
         SipURI outboundIntf = null;
         SipURI from = null;
         SipURI to = null;
         boolean webRTC = false;
         boolean isLBPresent = false;
-        String customHeaders = null;
 
         final RegistrationsDao registrationsDao = storage.getRegistrationsDao();
-        if (request.to().contains("?")) {
-            customHeaders = request.to().replaceFirst("client:", "").substring(request.to().replaceFirst("client:", "").lastIndexOf('?'), request.to().replaceFirst("client:", "").length());
-        }
 
         //1, If this is a WebRTC client check if the instance is the current instance
         //2. Check if the client has more than one registrations
