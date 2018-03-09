@@ -361,7 +361,9 @@ public class SmppMessageHandler extends RestcommUntypedActor {
             textBytes = CharsetUtil.encode(request.getSmppContent(), CharsetUtil.CHARSET_UCS_2);
         } else {
             submit0.setDataCoding(DataCoding.DATA_CODING_GSM7);
-            textBytes = CharsetUtil.encode(request.getSmppContent(), request.getSmppEncoding());
+
+            //FIXME: quick fix for https://telestax.atlassian.net/browse/RESTCOMM-1927
+            textBytes = CharsetUtil.encode(request.getSmppContent(), CharsetUtil.CHARSET_UTF_8);
         }
 
         //TODO reverted from https://telestax.atlassian.net/browse/RESTCOMM-1595 as it caused SMS loop at SMSC

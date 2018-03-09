@@ -352,15 +352,18 @@ public class SmppClientOpsThread implements Runnable {
 
                 DeliverSm deliverSm = (DeliverSm) pduRequest;
                 try {
-                    String decodedPduMessage = CharsetUtil.CHARSET_MODIFIED_UTF8.decode(deliverSm.getShortMessage());
+                    String decodedPduMessage;
                     String destSmppAddress = deliverSm.getDestAddress().getAddress();
                     String sourceSmppAddress = deliverSm.getSourceAddress().getAddress();
                     Charset charset;
                     if (DataCoding.DATA_CODING_UCS2 == deliverSm.getDataCoding()) {
                         charset = CharsetUtil.CHARSET_UCS_2;
                     } else {
-                        charset = CharsetUtil.CHARSET_GSM;
+                        //FIXME: quick fix for https://telestax.atlassian.net/browse/RESTCOMM-1927
+                        charset = CharsetUtil.CHARSET_UTF_8;
                     }
+                    //FIXME: Workaround RESTCOMM-1927
+                    decodedPduMessage = charset.decode(deliverSm.getShortMessage());
                     //send received SMPP PDU message to restcomm
                     try {
                         sendSmppMessageToRestcomm(decodedPduMessage, destSmppAddress, sourceSmppAddress, charset);

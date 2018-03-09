@@ -188,6 +188,8 @@ public final class SmsSession extends RestcommUntypedActor {
             if(request.getSmppEncoding().equals(CharsetUtil.CHARSET_UCS_2)) {
                 encoding = SmsSessionRequest.Encoding.UCS_2;
             } else {
+                //FIXME: unused, due to hardcoded encoding in SmppMessageHandler
+                //quick fix for https://telestax.atlassian.net/browse/RESTCOMM-1927
                 encoding = SmsSessionRequest.Encoding.GSM;
             }
             // Store the last sms event.
