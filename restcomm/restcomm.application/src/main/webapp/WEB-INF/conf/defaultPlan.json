@@ -1,27 +1,16 @@
 {
     "featureEnablement": {
-        "DIDPurchase": {
-            "allowedCountries": ["US",
-                "CA"]
-        },        
-        "destinations": {
-            "allowedPrefixes": ["+1"]
+        "DIDPurchase": {},
+        "subaccountsCreation": {},
+        "outboundPSTN": {},
+        "inboundPSTN": {},
+        "outboundSMS": {},
+        "inboundSMS": {},
+        "asr": {},
+        "USSD": {
+        	"provider": "default"
         },
-        "outboundPSTN": {
-        },
-        "inboundPSTN": {
-        },
-        "outboundSMS": {
-        },
-        "inboundSMS": {
-        }
-
-    },
-    "sessionThrottling": {
-        "PSTNCallsPerTime": {
-            "events" : 300,
-            "time" : 30,
-            "timeUnit" : "days"
-        }
-    }    
+        "inboundUSSD": {},
+        "outboundUSSD": {}
+    }
 }

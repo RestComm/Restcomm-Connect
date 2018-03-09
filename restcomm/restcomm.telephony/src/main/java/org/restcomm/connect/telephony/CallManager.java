@@ -79,7 +79,6 @@ import org.restcomm.connect.interpreter.VoiceInterpreter;
 import org.restcomm.connect.interpreter.VoiceInterpreterParams;
 import org.restcomm.connect.monitoringservice.MonitoringService;
 import org.restcomm.connect.mscontrol.api.MediaServerControllerFactory;
-import org.restcomm.connect.sdr.api.SdrService;
 import org.restcomm.connect.telephony.api.CallInfo;
 import org.restcomm.connect.telephony.api.CallManagerResponse;
 import org.restcomm.connect.telephony.api.CallResponse;
@@ -173,7 +172,6 @@ public final class CallManager extends RestcommUntypedActor {
     private final SipFactory sipFactory;
     private final DaoManager storage;
     private final ActorRef monitoring;
-    private final ActorRef sdr;
     private final NumberSelectorService numberSelector;
 
     // configurable switch whether to use the To field in a SIP header to determine the callee address
@@ -320,9 +318,6 @@ public final class CallManager extends RestcommUntypedActor {
         //Monitoring Service
         this.monitoring = (ActorRef) context.getAttribute(MonitoringService.class.getName());
 
-        //Sdr Service
-        this.sdr = (ActorRef) context.getAttribute(SdrService.class.getName());
-
         extensions = ExtensionController.getInstance().getExtensions(ExtensionType.CallManager);
         if (logger.isInfoEnabled()) {
             logger.info("CallManager extensions: " + (extensions != null ? extensions.size() : "0"));
@@ -392,7 +387,7 @@ public final class CallManager extends RestcommUntypedActor {
         }
     }
 
-    private ActorRef call(final CreateCall request) {
+    private ActorRef call(final Sid accountSid, final CreateCall request) {
         Props props = null;
         if (request == null) {
             props = new Props(new UntypedActorFactory() {
@@ -400,7 +395,7 @@ public final class CallManager extends RestcommUntypedActor {
 
                 @Override
                 public UntypedActor create() throws Exception {
-                    return new Call(sipFactory, msControllerFactory, configuration,
+                    return new Call(accountSid, sipFactory, msControllerFactory, configuration,
                             null, null, null, null);
                 }
             });
@@ -410,7 +405,7 @@ public final class CallManager extends RestcommUntypedActor {
 
                 @Override
                 public UntypedActor create() throws Exception {
-                    return new Call(sipFactory, msControllerFactory, configuration,
+                    return new Call(accountSid, sipFactory, msControllerFactory, configuration,
                             request.statusCallback(), request.statusCallbackMethod(), request.statusCallbackEvent(), request.getOutboundProxyHeaders());
                 }
             });
@@ -529,21 +524,6 @@ public final class CallManager extends RestcommUntypedActor {
                 logger.info("Null Organization, call is probably coming from a provider: fromUri: "+fromUri);
         }
 
-        //Fail fast
-        if (sourceOrganizationSid == null && toOrganizationSid == null) {
-            //sourceOrganization is null which means we got a call from external provider or unregistered client
-            // AND toOrganization is null which means there will be no client or number for this INVITE
-            // THUS we should fail fast
-            final SipServletResponse response = request.createResponse(SC_NOT_FOUND);
-            response.send();
-            // We didn't find anyway to handle the call.
-            String msg = String.format("Restcomm cannot process this call to %s from %s. Source and To organizations are null", toUser, fromUser);
-            if (logger.isInfoEnabled()) {
-                logger.info(msg);
-            }
-            sendNotification(null, msg, 11005, "error", true);
-        }
-
         final Client client = clients.getClient(fromUser,sourceOrganizationSid);
         final Client toClient = clients.getClient(toUser, toOrganizationSid);
 
@@ -593,7 +573,7 @@ public final class CallManager extends RestcommUntypedActor {
         }
 
         IncomingPhoneNumber number = null;
-        if (toClient == null && toOrganizationSid != null) {
+        if (toClient == null) {
 
             number = getIncomingPhoneNumber(request, toUser, (client != null ? client.getSid() : null),
                     sourceOrganizationSid, toOrganizationSid);
@@ -611,7 +591,25 @@ public final class CallManager extends RestcommUntypedActor {
                     sendNotification(null, msg, 11005, "error", true);
                     return;
                 }
+
+                if (toOrganizationSid == null) {
+                    toOrganizationSid = number.getOrganizationSid();
+                }
             }
+        }
+
+        if (sourceOrganizationSid == null && toOrganizationSid == null) {
+            //sourceOrganization is null which means we got a call from external provider or unregistered client
+            // AND toOrganization is null which means there will be no client or number for this INVITE
+            // THUS we should fail fast
+            final SipServletResponse response = request.createResponse(SC_NOT_FOUND);
+            response.send();
+            // We didn't find anyway to handle the call.
+            String msg = String.format("Restcomm cannot process this call to %s from %s. Source and To organizations are null", toUser, fromUser);
+            if (logger.isInfoEnabled()) {
+                logger.info(msg);
+            }
+            sendNotification(null, msg, 11005, "error", true);
         }
 
         if (logger.isInfoEnabled()) {
@@ -638,7 +636,7 @@ public final class CallManager extends RestcommUntypedActor {
                         @Override
                         public void run() {
                             try {
-                                if (B2BUAHelper.redirectToB2BUA(request, client, toClient, storage, sipFactory, patchForNatB2BUASessions)) {
+                                if (B2BUAHelper.redirectToB2BUA(system, request, client, toClient, storage, sipFactory, patchForNatB2BUASessions)) {
                                     if (logger.isInfoEnabled()) {
                                         logger.info("Call to CLIENT.  myHostIp: " + myHostIp + " mediaExternalIp: " + mediaExternalIp + " toHost: "
                                                 + toHost + " fromClient: " + client.getUri() + " toClient: " + toClient.getUri());
@@ -717,8 +715,10 @@ public final class CallManager extends RestcommUntypedActor {
                         // proxy DID or number if the outbound proxy fields are not empty in the restcomm.xml
                         if (proxyURI != null && !proxyURI.isEmpty()) {
                             //FIXME: not so nice to just inject headers here
-                            B2BUAHelper.addHeadersToMessage(request, er.getOutboundProxyHeaders(), sipFactory);
-                            request.getSession().setAttribute(B2BUAHelper.EXTENSION_HEADERS, er.getOutboundProxyHeaders());
+                            if (er.getOutboundProxyHeaders() != null) {
+                                B2BUAHelper.addHeadersToMessage(request, er.getOutboundProxyHeaders(), sipFactory);
+                                request.getSession().setAttribute(B2BUAHelper.EXTENSION_HEADERS, er.getOutboundProxyHeaders());
+                            }
                             proxyOut(request, client, toUser, toHost, toHostIpAddress, toPort, outboundIntf, proxyURI, proxyUsername, proxyPassword, from, to, callToSipUri);
                         } else {
                             errMsg = "Restcomm tried to proxy this call to an outbound party but it seems the outbound proxy is not configured.";
@@ -838,7 +838,7 @@ public final class CallManager extends RestcommUntypedActor {
             to = sipFactory.createSipURI(toUser, toHost + ":" + toPort);
             callToSipUri = true;
         }
-        if (B2BUAHelper.redirectToB2BUA(request, client, from, to, proxyUsername, proxyPassword, storage,
+        if (B2BUAHelper.redirectToB2BUA(system, request, client, from, to, proxyUsername, proxyPassword, storage,
                 sipFactory, callToSipUri, patchForNatB2BUASessions)) {
             return true;
         }
@@ -928,10 +928,9 @@ public final class CallManager extends RestcommUntypedActor {
             builder.setEmailAddress(account.getEmailAddress());
             builder.setRcml(rcml);
             builder.setMonitoring(monitoring);
-            builder.setSdr(sdr);
             final Props props = VoiceInterpreter.props(builder.build());
             final ActorRef interpreter = getContext().actorOf(props);
-            final ActorRef call = call(null);
+            final ActorRef call = call(accountSid, null);
             final SipApplicationSession application = request.getApplicationSession();
             application.setAttribute(Call.class.getName(), call);
             call.tell(request, self());
@@ -958,11 +957,10 @@ public final class CallManager extends RestcommUntypedActor {
         builder.setEmailAddress(account.getEmailAddress());
         builder.setRcml(rcml);
         builder.setMonitoring(monitoring);
-        builder.setSdr(sdr);
         final Props props = VoiceInterpreter.props(builder.build());
         final ActorRef interpreter = getContext().actorOf(props);
 
-        final ActorRef call = call(null);
+        final ActorRef call = call(client.getAccountSid(), null);
         final SipApplicationSession application = request.getApplicationSession();
         application.setAttribute(Call.class.getName(), call);
         call.tell(request, self());
@@ -984,11 +982,10 @@ public final class CallManager extends RestcommUntypedActor {
         builder.setEmailAddress(account.getEmailAddress());
         builder.setRcml(rcml);
         builder.setMonitoring(monitoring);
-        builder.setSdr(sdr);
         final Props props = VoiceInterpreter.props(builder.build());
         final ActorRef interpreter = getContext().actorOf(props);
 
-        final ActorRef call = call(null);
+        final ActorRef call = call(client.getAccountSid(), null);
         final SipApplicationSession application = request.getApplicationSession();
         application.setAttribute(Call.class.getName(), call);
         call.tell(request, self());
@@ -1219,7 +1216,6 @@ public final class CallManager extends RestcommUntypedActor {
         builder.setStatusCallback(null);
         builder.setStatusCallbackMethod("POST");
         builder.setMonitoring(monitoring);
-        builder.setSdr(sdr);
 
         // Ask first transferorActor leg to execute with the new Interpreter
         final Props props = VoiceInterpreter.props(builder.build());
@@ -1340,17 +1336,16 @@ public final class CallManager extends RestcommUntypedActor {
                     builder.setStatusCallback(number.getStatusCallback());
                     builder.setStatusCallbackMethod(number.getStatusCallbackMethod());
                     builder.setMonitoring(monitoring);
-                    builder.setSdr(sdr);
                     final Props props = VoiceInterpreter.props(builder.build());
                     final ActorRef interpreter = getContext().actorOf(props);
 
-                    final ActorRef call = call(null);
+                    final ActorRef call = call(accSid, null);
                     final SipApplicationSession application = request.getApplicationSession();
                     application.setAttribute(Call.class.getName(), call);
                     call.tell(request, self());
                     interpreter.tell(new StartInterpreter(call), self());
                     isFoundHostedApp = true;
-                    ec.executePostOutboundAction(far, extensions);
+                    ec.executePostInboundAction(far, extensions);
                 } else {
                     //Extensions didn't allowed this call
                     String errMsg = "Inbound call to Number: " + number.getPhoneNumber()
@@ -1361,7 +1356,7 @@ public final class CallManager extends RestcommUntypedActor {
                     sendNotification(number.getAccountSid(), errMsg, 11001, "warning", true);
                     final SipServletResponse resp = request.createResponse(SC_FORBIDDEN, "Call not allowed");
                     resp.send();
-                    ec.executePostOutboundAction(far, extensions);
+                    ec.executePostInboundAction(far, extensions);
                     return false;
                 }
             }
@@ -1425,10 +1420,9 @@ public final class CallManager extends RestcommUntypedActor {
                 builder.setFallbackUrl(null);
             builder.setFallbackMethod(client.getVoiceFallbackMethod());
             builder.setMonitoring(monitoring);
-            builder.setSdr(sdr);
             final Props props = VoiceInterpreter.props(builder.build());
             final ActorRef interpreter = getContext().actorOf(props);
-            final ActorRef call = call(null);
+            final ActorRef call = call(client.getAccountSid(), null);
             final SipApplicationSession application = request.getApplicationSession();
             application.setAttribute(Call.class.getName(), call);
             call.tell(request, self);
@@ -1676,7 +1670,6 @@ public final class CallManager extends RestcommUntypedActor {
         builder.setFallbackUrl(request.fallbackUrl());
         builder.setFallbackMethod(request.fallbackMethod());
         builder.setMonitoring(monitoring);
-        builder.setSdr(sdr);
         builder.setTimeout(request.timeout());
         final Props props = VoiceInterpreter.props(builder.build());
         final ActorRef interpreter = getContext().actorOf(props);
@@ -1763,7 +1756,6 @@ public final class CallManager extends RestcommUntypedActor {
         builder.setStatusCallback(request.callback());
         builder.setStatusCallbackMethod(request.callbackMethod());
         builder.setMonitoring(monitoring);
-        builder.setSdr(sdr);
         final Props props = VoiceInterpreter.props(builder.build());
 
         // Ask first call leg to execute with the new Interpreter
@@ -2112,7 +2104,7 @@ public final class CallManager extends RestcommUntypedActor {
         final String proxyUsername = (request.username() != null) ? request.username() : activeProxyUsername;
         final String proxyPassword = (request.password() != null) ? request.password() : activeProxyPassword;
 
-        final ActorRef call = call(request);
+        final ActorRef call = call(null, request);
         final ActorRef self = self();
         final boolean userAtDisplayedName = runtime.subset("outbound-proxy").getBoolean("user-at-displayed-name");
         InitializeOutbound init;
@@ -2270,7 +2262,7 @@ public final class CallManager extends RestcommUntypedActor {
                     }
                 }
             }
-            B2BUAHelper.updateCDR(request, CallStateChanged.State.COMPLETED);
+            B2BUAHelper.updateCDR(system, request, CallStateChanged.State.COMPLETED);
             //Prepare 200 OK for received BYE
             SipServletResponse okay = request.createResponse(Response.OK);
             okay.send();
@@ -2321,7 +2313,7 @@ public final class CallManager extends RestcommUntypedActor {
                 B2BUAHelper.addHeadersToMessage(challengeRequest, extensionHeaders, sipFactory);
                 challengeRequest.send();
             } else {
-                B2BUAHelper.forwardResponse(response, patchForNatB2BUASessions);
+                B2BUAHelper.forwardResponse(system, response, patchForNatB2BUASessions);
             }
         } else {
             if (application.isValid()) {
@@ -2576,7 +2568,6 @@ public final class CallManager extends RestcommUntypedActor {
             builder.setVersion(runtime.getString("api-version"));
             builder.setRcml(rcml);
             builder.setMonitoring(monitoring);
-            builder.setSdr(sdr);
             builder.setAsImsUa(actAsImsUa);
             if (actAsImsUa) {
                 builder.setImsUaLogin(user);
@@ -2584,7 +2575,7 @@ public final class CallManager extends RestcommUntypedActor {
             }
             final Props props = VoiceInterpreter.props(builder.build());
             final ActorRef interpreter = getContext().actorOf(props);
-            final ActorRef call = call(null);
+            final ActorRef call = call(null, null);
             final SipApplicationSession application = request.getApplicationSession();
             application.setAttribute(Call.class.getName(), call);
             call.tell(request, self());
@@ -2618,7 +2609,7 @@ public final class CallManager extends RestcommUntypedActor {
             logger.error(errMsg);
             sender.tell(new CallManagerResponse<ActorRef>(new NullPointerException(errMsg), request), self());
         } else {
-            final ActorRef call = call(request);
+            final ActorRef call = call(null, request);
             final ActorRef self = self();
             final Configuration runtime = configuration.subset("runtime-settings");
             if (logger.isInfoEnabled()) {

@@ -156,6 +156,7 @@ public class ProfileEndpoint {
             };
             return Response.ok(entity, MediaType.APPLICATION_JSON).build();
         } catch (SQLException ex) {
+            logger.debug("getting profiles", ex);
             return Response.serverError().entity(ex.getMessage()).build();
         }
     }
@@ -167,7 +168,7 @@ public class ProfileEndpoint {
         checkRelType(link);
         String targetSid = retrieveSid(link.getUri());
         checkTargetSid(new Sid(targetSid));
-        profileAssociationsDao.deleteProfileAssociationByTargetSid(targetSid);
+        profileAssociationsDao.deleteProfileAssociationByTargetSid(targetSid, profileSidStr);
         return Response.ok().build();
     }
 
@@ -260,12 +261,13 @@ public class ProfileEndpoint {
                 return Response.status(Response.Status.BAD_REQUEST).entity(report.toString()).build();
             }
         } catch (Exception ex) {
+            logger.debug("updating profiles", ex);
             return Response.serverError().entity(ex.getMessage()).build();
         }
     }
 
     public LinkHeader composeSchemaLink(UriInfo info) throws MalformedURLException {
-        URI build = info.getBaseUriBuilder().path("/schemas/rc-profile-schema.json").build();
+        URI build = info.getBaseUriBuilder().path(this.getClass()).path("/schemas/rc-profile-schema.json").build();
         return LinkHeader.uri(build).rel(DESCRIBED_REL_TYPE).build();
     }
 
@@ -295,7 +297,7 @@ public class ProfileEndpoint {
             default:
         }
         if (link != null) {
-            return link.type(MediaType.valueOf(PROFILE_REL_TYPE)).build();
+            return link.rel(PROFILE_REL_TYPE).build();
         } else {
             return null;
         }
@@ -342,6 +344,7 @@ public class ProfileEndpoint {
             ok.type(PROFILE_CONTENT_TYPE);
             return ok;
         } catch (Exception ex) {
+            logger.debug("getting profile", ex);
             return Response.serverError().entity(ex.getMessage());
         }
     }
@@ -361,12 +364,13 @@ public class ProfileEndpoint {
             if (report.isSuccess()) {
                 Profile profile = new Profile(profileSid.toString(), profileStr, new Date(), new Date());
                 profilesDao.addProfile(profile);
-                URI location = info.getBaseUriBuilder().path(profileSid.toString()).build();
+                URI location = info.getBaseUriBuilder().path(this.getClass()).path(profileSid.toString()).build();
                 response = getProfileBuilder(profileSid.toString(), info).status(Status.CREATED).location(location).build();
             } else {
                 response = Response.status(Response.Status.BAD_REQUEST).entity(report.toString()).build();
             }
         } catch (Exception ex) {
+            logger.debug("creating profile", ex);
             return Response.serverError().entity(ex.getMessage()).build();
         }
         return response;
@@ -377,6 +381,7 @@ public class ProfileEndpoint {
             JsonNode schema = JsonLoader.fromResource("/org/restcomm/connect/http/schemas/" + schemaId);
             return Response.ok(schema.toString(), PROFILE_SCHEMA_CONTENT_TYPE).build();
         } catch (IOException ex) {
+            logger.debug("getting schema", ex);
             return Response.status(Status.NOT_FOUND).build();
         }
     }

@@ -472,7 +472,6 @@ public class VoiceInterpreter extends BaseVoiceInterpreter {
         this.enable200OkDelay = this.configuration.subset("runtime-settings").getBoolean("enable-200-ok-delay",false);
         this.downloader = downloader();
         this.monitoring = params.getMonitoring();
-        this.sdr = params.getSdr();
         this.rcml = params.getRcml();
         this.asImsUa = params.isAsImsUa();
         this.imsUaLogin = params.getImsUaLogin();
@@ -1012,11 +1011,11 @@ public class VoiceInterpreter extends BaseVoiceInterpreter {
                 //Check if Outbound SMS is allowed
                 ExtensionController ec = ExtensionController.getInstance();
                 final IExtensionFeatureAccessRequest far = new FeatureAccessRequest(FeatureAccessRequest.Feature.OUTBOUND_SMS, accountId);
-                ExtensionResponse er = ec.executePreInboundAction(far, this.extensions);
+                ExtensionResponse er = ec.executePreOutboundAction(far, this.extensions);
 
                 if (er.isAllowed()) {
                     fsm.transition(message, creatingSmsSession);
-                    ec.executePostInboundAction(far, extensions);
+                    ec.executePostOutboundAction(far, extensions);
                 } else {
                     if (logger.isDebugEnabled()) {
                         final String errMsg = "Outbound SMS is not Allowed";
@@ -1026,7 +1025,7 @@ public class VoiceInterpreter extends BaseVoiceInterpreter {
                     final Notification notification = notification(WARNING_NOTIFICATION, 11001, "Outbound SMS is now allowed");
                     notifications.addNotification(notification);
                     fsm.transition(message, rejecting);
-                    ec.executePostInboundAction(far, extensions);
+                    ec.executePostOutboundAction(far, extensions);
                     return;
                 }
             } else if (Verbs.email.equals(verb.name())) {
@@ -1146,8 +1145,6 @@ public class VoiceInterpreter extends BaseVoiceInterpreter {
                     //Enable Monitoring Service for the call
                     if (monitoring != null)
                         call.tell(new Observe(monitoring), self());
-                    if (sdr != null)
-                        call.tell(new Observe(sdr), self());
                 }
             } else {
                 outboundCallInfo = response.get();
@@ -2476,9 +2473,6 @@ public class VoiceInterpreter extends BaseVoiceInterpreter {
                 if (monitoring != null) {
                     outboundCall.tell(new Observe(monitoring), self());
                 }
-                if (sdr != null) {
-                    outboundCall.tell(new Observe(sdr), self());
-                }
                 outboundCall.tell(new Dial(), source);
             } else if (Fork.class.equals(klass)) {
                 final Observe observe = new Observe(source);
@@ -2487,9 +2481,6 @@ public class VoiceInterpreter extends BaseVoiceInterpreter {
                     branch.tell(observe, source);
                     if (monitoring != null) {
                         branch.tell(new Observe(monitoring), self());
-                    }
-                    if (sdr != null) {
-                        branch.tell(new Observe(sdr), self());
                     }
                     branch.tell(dial, source);
                 }

@@ -302,7 +302,7 @@ public class UssdCallManager extends RestcommUntypedActor {
                 applicationSession.setAttribute(UssdInterpreter.class.getName(), ussdInterpreter);
                 applicationSession.setAttribute(UssdCall.class.getName(), ussdCall);
                 isFoundHostedApp = true;
-                ec.executePostOutboundAction(far, extensions);
+                ec.executePostInboundAction(far, extensions);
             } else {
                 if (logger.isDebugEnabled()) {
                     final String errMsg = "Inbound USSD session is not Allowed";
@@ -314,7 +314,7 @@ public class UssdCallManager extends RestcommUntypedActor {
                 sendNotification(errMsg, 11001, "warning", true);
                 final SipServletResponse resp = request.createResponse(SC_FORBIDDEN, "Inbound USSD session is not Allowed");
                 resp.send();
-                ec.executePostOutboundAction(far, extensions);
+                ec.executePostInboundAction(far, extensions);
                 return false;
             }
         } else {
