@@ -290,6 +290,7 @@ public class AccountsEndpoint extends SecuredEndpoint {
      * @param sid
      */
     private void removeAccoundDependencies(Sid sid) {
+        logger.debug("removing accoutn dependencies");
         DaoManager daoManager = (DaoManager) context.getAttribute(DaoManager.class.getName());
         // remove dependency entities first and dependent entities last. Also, do safer operation first (as a secondary rule)
         daoManager.getAnnouncementsDao().removeAnnouncements(sid);
@@ -498,26 +499,27 @@ public class AccountsEndpoint extends SecuredEndpoint {
      *
      * @param account
      * @param data
-     * @return
+     * @return a new instance with given account,and overriden fields from data
      */
     private Account prepareAccountForUpdate(final Account account, final MultivaluedMap<String, String> data) {
-        Account result = account;
-        boolean isPasswordReset = false;
-        Account.Status newStatus = null;
+        Account.Builder accBuilder = Account.builder();
+        //copy full incoming account, and let override happen
+        //in a separate instance later
+        accBuilder.copy(account);
 
 
         if (data.containsKey("Status")) {
-            // if the status is switched , the rest of the updates are ignored.
-            newStatus = Account.Status.getValueOf(data.getFirst("Status").toLowerCase());
-            return account.setStatus(newStatus);
+            Account.Status newStatus = Account.Status.getValueOf(data.getFirst("Status").toLowerCase());
+            accBuilder.setStatus(newStatus);
         }
         if (data.containsKey("FriendlyName")) {
-            result = result.setFriendlyName(data.getFirst("FriendlyName"));
+            accBuilder.setFriendlyName(data.getFirst("FriendlyName"));
         }
         if (data.containsKey("Password")) {
             // if this is a reset-password operation, we also need to set the account status to active
-            if (account.getStatus() == Account.Status.UNINITIALIZED)
-                isPasswordReset = true;
+            if (account.getStatus() == Account.Status.UNINITIALIZED) {
+                accBuilder.setStatus(Account.Status.ACTIVE);
+            }
 
             String password = data.getFirst("Password");
             PasswordValidator validator = PasswordValidatorFactory.createDefault();
@@ -526,27 +528,52 @@ public class AccountsEndpoint extends SecuredEndpoint {
                 throw new WebApplicationException(status(stat).build());
             }
             final String hash = new Md5Hash(data.getFirst("Password")).toString();
-            result = result.setAuthToken(hash);
+            accBuilder.setAuthToken(hash);
         }
-        if (newStatus != null) {
-            result = result.setStatus(newStatus);
-        } else {
-            // if this is a password reset operation we need to activate the account (in case there is no explicity Status passed of course)
-            if (isPasswordReset) {
-                result = result.setStatus(Account.Status.ACTIVE);
-            }
-        }
+
         if (data.containsKey("Role")) {
             // Only allow role change for administrators. Multitenancy checks will take care of restricting the modification scope to sub-accounts.
             if (userIdentityContext.getEffectiveAccountRoles().contains(getAdministratorRole())) {
-                result = result.setRole(data.getFirst("Role"));
+                accBuilder.setRole(data.getFirst("Role"));
             } else {
                 CustomReasonPhraseType stat = new CustomReasonPhraseType(Response.Status.FORBIDDEN, "Only Administrator allowed");
                 throw new WebApplicationException(status(stat).build());
             }
         }
 
-        return result;
+        return accBuilder.build();
+    }
+
+    /**
+     * update SIP client of the corresponding Account.Password and FriendlyName fields are synched.
+     */
+    private void updateLinkedClient(Account account, MultivaluedMap<String, String> data) {
+        logger.debug("checking linked client");
+        String email = account.getEmailAddress();
+        if (email != null && !email.equals("")) {
+            logger.debug("account email is valid");
+            String username = email.split("@")[0];
+            Client client = clientDao.getClient(username, account.getOrganizationSid());
+            if (client != null) {
+                logger.debug("client found");
+                // TODO: need to encrypt this password because it's
+                // same with Account password.
+                // Don't implement now. Opened another issue for it.
+                if (data.containsKey("Password")) {
+                    // Md5Hash(data.getFirst("Password")).toString();
+                    logger.debug("password changed");
+                    String password = data.getFirst("Password");
+                    client = client.setPassword(password);
+                }
+
+                if (data.containsKey("FriendlyName")) {
+                    logger.debug("friendlyname changed");
+                    client = client.setFriendlyName(data.getFirst("FriendlyName"));
+                }
+                logger.debug("updating linked client");
+                clientDao.updateClient(client);
+            }
+        }
     }
 
     protected Response updateAccount(final String identifier, final MultivaluedMap<String, String> data,
@@ -573,34 +600,18 @@ public class AccountsEndpoint extends SecuredEndpoint {
             modifiedAccount = prepareAccountForUpdate(account, data);
 
             // we are modifying status
-            if (account.getStatus() != modifiedAccount.getStatus()) {
+            if (modifiedAccount.getStatus() != null &&
+                    account.getStatus() != modifiedAccount.getStatus()) {
                 switchAccountStatusTree(modifiedAccount);
-            } else {
-                // if we're not closing the account, update SIP client of the corresponding Account.
-                // Password and FriendlyName fields are synched.
-                String email = modifiedAccount.getEmailAddress();
-                if (email != null && !email.equals("")) {
-                    String username = email.split("@")[0];
-                    Client client = clientDao.getClient(username, account.getOrganizationSid());
-                    if (client != null) {
-                        // TODO: need to encrypt this password because it's
-                        // same with Account password.
-                        // Don't implement now. Opened another issue for it.
-                        if (data.containsKey("Password")) {
-                            // Md5Hash(data.getFirst("Password")).toString();
-                            String password = data.getFirst("Password");
-                            client = client.setPassword(password);
-                        }
-
-                        if (data.containsKey("FriendlyName")) {
-                            client = client.setFriendlyName(data.getFirst("FriendlyName"));
-                        }
-
-                        clientDao.updateClient(client);
-                    }
-                }
-                accountsDao.updateAccount(modifiedAccount);
             }
+
+            //update client only if friendlyname or password was changed
+            if (data.containsKey("Password") ||
+                data.containsKey("FriendlyName") )  {
+                updateLinkedClient(account, data);
+            }
+            accountsDao.updateAccount(modifiedAccount);
+
 
             if (APPLICATION_JSON_TYPE.equals(responseType)) {
                 return ok(gson.toJson(modifiedAccount), APPLICATION_JSON).build();
@@ -710,10 +721,12 @@ public class AccountsEndpoint extends SecuredEndpoint {
     }
 
     private void sendRVDStatusNotification(Account updatedAccount) {
+        logger.debug("sendRVDStatusNotification");
         // set rcmlserverApi in case we need to also notify the application sever (RVD)
         RestcommConfiguration rcommConfiguration = RestcommConfiguration.getInstance();
         RcmlserverConfigurationSet config = rcommConfiguration.getRcmlserver();
         if (config != null && config.getNotify()) {
+            logger.debug("notification enabled");
             // first send account removal notification to RVD now that the applications of the account still exist
             RcmlserverApi rcmlServerApi = new RcmlserverApi(rcommConfiguration.getMain(), rcommConfiguration.getRcmlserver());
             RcmlserverNotifications notifications = new RcmlserverNotifications();
@@ -735,6 +748,9 @@ public class AccountsEndpoint extends SecuredEndpoint {
      * @param account
      */
     private void switchAccountStatus(Account account, Account.Status status) {
+        if (logger.isDebugEnabled()) {
+            logger.debug("Switching status for account:" + account.getSid() + ",status:" + status);
+        }
         switch (status) {
             case CLOSED:
                 sendRVDStatusNotification(account);
@@ -756,6 +772,7 @@ public class AccountsEndpoint extends SecuredEndpoint {
      * @param parentAccount
      */
     private void switchAccountStatusTree(Account parentAccount) {
+        logger.debug("Status transition requested");
         // transition child accounts
         List<String> subAccountsToSwitch = accountsDao.getSubAccountSidsRecursive(parentAccount.getSid());
         if (subAccountsToSwitch != null && !subAccountsToSwitch.isEmpty()) {

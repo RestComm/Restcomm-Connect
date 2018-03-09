@@ -259,4 +259,8 @@ public class DefaultExtensionConfiguration {
     public void setDaoManager(DaoManager daoManager) {
         this.daoManager = daoManager;
     }
+
+    public JsonObject getCurrentConf() {
+        return configurationJsonObj;
+    }
 }
