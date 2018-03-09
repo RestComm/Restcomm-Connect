@@ -55,6 +55,7 @@
                                 <artifactItem>
                                     <groupId>org.mobicents.servlet.sip</groupId>
                                     <artifactId>sip-servlets-wildfly-10</artifactId>
+                                    <version>${sipservletapi.version}</version>
                                     <type>zip</type>
                                     <classifier>assembly</classifier>
                                 </artifactItem>
