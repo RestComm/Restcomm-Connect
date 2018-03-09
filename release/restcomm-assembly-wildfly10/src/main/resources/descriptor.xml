@@ -21,21 +21,7 @@
         <fileSet>
             <directory>${project.build.directory}/dependency/restcomm-media-server</directory>
             <outputDirectory>/mediaserver</outputDirectory>
-            <excludes>
-                <!-- exclude bash scripts, those will be included later -->
-                <exclude>**/*.sh</exclude>
-            </excludes>
         </fileSet>           
-        <fileSet>
-            <directory>${project.build.directory}/dependency/restcomm-media-server</directory>
-            <outputDirectory>/mediaserver</outputDirectory>
-            <includes>
-                <!-- include bash scripts now with proper file mask -->
-                <include>**/*.sh</include>
-            </includes>
-            <!-- include bash scripts with READ/EXEC mask -->
-            <fileMode>555</fileMode>
-        </fileSet> 
         <fileSet>
             <!-- here we override some jboss/sipservlets files -->
             <directory>${project.basedir}/src/main/resources/assembly-resources</directory>
