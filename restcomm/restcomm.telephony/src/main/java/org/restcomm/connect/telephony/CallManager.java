@@ -30,8 +30,11 @@ import akka.actor.UntypedActorFactory;
 import akka.event.Logging;
 import akka.event.LoggingAdapter;
 import akka.util.Timeout;
+
 import com.google.i18n.phonenumbers.NumberParseException;
+
 import gov.nist.javax.sip.header.UserAgent;
+
 import org.apache.commons.configuration.Configuration;
 import org.apache.commons.configuration.HierarchicalConfiguration;
 import org.joda.time.DateTime;
@@ -46,6 +49,9 @@ import org.restcomm.connect.commons.telephony.ProxyRule;
 import org.restcomm.connect.commons.util.DNSUtils;
 import org.restcomm.connect.commons.util.SdpUtils;
 import org.restcomm.connect.commons.util.UriUtils;
+import org.restcomm.connect.core.service.CoreServices;
+import org.restcomm.connect.core.service.number.NumberSelectionResult;
+import org.restcomm.connect.core.service.number.NumberSelectorService;
 import org.restcomm.connect.dao.AccountsDao;
 import org.restcomm.connect.dao.ApplicationsDao;
 import org.restcomm.connect.dao.CallDetailRecordsDao;
@@ -70,8 +76,6 @@ import org.restcomm.connect.extension.api.RestcommExtensionException;
 import org.restcomm.connect.extension.api.RestcommExtensionGeneric;
 import org.restcomm.connect.extension.controller.ExtensionController;
 import org.restcomm.connect.http.client.rcmlserver.resolver.RcmlserverResolver;
-import org.restcomm.connect.interpreter.NumberSelectionResult;
-import org.restcomm.connect.interpreter.NumberSelectorService;
 import org.restcomm.connect.interpreter.SIPOrganizationUtil;
 import org.restcomm.connect.interpreter.StartInterpreter;
 import org.restcomm.connect.interpreter.StopInterpreter;
@@ -99,6 +103,7 @@ import org.restcomm.connect.telephony.api.SwitchProxy;
 import org.restcomm.connect.telephony.api.UpdateCallScript;
 import org.restcomm.connect.telephony.api.util.B2BUAHelper;
 import org.restcomm.connect.telephony.api.util.CallControlHelper;
+
 import scala.concurrent.Await;
 import scala.concurrent.Future;
 import scala.concurrent.duration.Duration;
@@ -118,6 +123,7 @@ import javax.servlet.sip.SipURI;
 import javax.servlet.sip.TelURL;
 import javax.sip.header.RouteHeader;
 import javax.sip.message.Response;
+
 import java.io.IOException;
 import java.net.InetAddress;
 import java.net.URI;
@@ -263,7 +269,7 @@ public final class CallManager extends RestcommUntypedActor {
         this.sms = sms;
         this.sipFactory = factory;
         this.storage = storage;
-        numberSelector = (NumberSelectorService) context.getAttribute(NumberSelectorService.class.getName());
+        numberSelector = CoreServices.getInstance().getNumberSelector();
         final Configuration runtime = configuration.subset("runtime-settings");
         final Configuration outboundProxyConfig = runtime.subset("outbound-proxy");
         SipURI outboundIntf = outboundInterface("udp");

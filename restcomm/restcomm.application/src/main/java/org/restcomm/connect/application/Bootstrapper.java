@@ -34,6 +34,7 @@ import org.restcomm.connect.commons.dao.Sid;
 import org.restcomm.connect.commons.loader.ObjectFactory;
 import org.restcomm.connect.commons.loader.ObjectInstantiationException;
 import org.restcomm.connect.commons.util.DNSUtils;
+import org.restcomm.connect.core.service.CoreServices;
 import org.restcomm.connect.dao.DaoManager;
 import org.restcomm.connect.dao.entities.InstanceId;
 import org.restcomm.connect.dao.entities.Organization;
@@ -41,7 +42,6 @@ import org.restcomm.connect.dao.entities.Profile;
 import org.restcomm.connect.dao.entities.shiro.ShiroResources;
 import org.restcomm.connect.extension.controller.ExtensionBootstrapper;
 import org.restcomm.connect.identity.IdentityContext;
-import org.restcomm.connect.interpreter.NumberSelectorService;
 import org.restcomm.connect.monitoringservice.MonitoringService;
 import org.restcomm.connect.mrb.api.StartMediaResourceBroker;
 import org.restcomm.connect.mscontrol.api.MediaServerControllerFactory;
@@ -401,8 +401,8 @@ public final class Bootstrapper extends SipServlet implements SipServletListener
             IdentityContext identityContext = new IdentityContext(xml);
             context.setAttribute(IdentityContext.class.getName(), identityContext);
 
-            //init NumberSelectorService
-            context.setAttribute(NumberSelectorService.class.getName(), new NumberSelectorService(storage.getIncomingPhoneNumbersDao()));
+            // init CoreServices
+            CoreServices.getInstance().startServices(storage);
 
             // Create the media gateway.
 
