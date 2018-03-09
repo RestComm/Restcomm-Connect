@@ -23,13 +23,6 @@
                 <type>war</type>
             </dependency> 
             <dependency>
-                <groupId>org.mobicents.servlet.sip</groupId>
-                <artifactId>sip-servlets-wildfly-10</artifactId>
-                <version>${sipservletapi.version}</version>
-                <type>zip</type>
-                <classifier>assembly</classifier>                
-            </dependency>
-            <dependency>
                 <groupId>org.mobicents.media</groupId>
                 <artifactId>media-server-standalone</artifactId>
                 <version>${mobicents.mgcp.impl.version}</version>
@@ -52,9 +45,10 @@
     </dependencyManagement>
     <modules>
         <!--
-        <module>restcomm-assembly-as7</module>
+
         <module>restcomm-assembly-docker</module>
         -->
+        <module>restcomm-assembly-as7</module>        
         <module>restcomm-assembly-wildfly10</module>
     </modules>
 </project>
