@@ -17,7 +17,7 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>
  *
  */
-package org.restcomm.connect.interpreter;
+package org.restcomm.connect.core.service.number;
 
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -32,6 +32,7 @@ import java.util.regex.Pattern;
 
 import org.apache.log4j.Logger;
 import org.restcomm.connect.commons.dao.Sid;
+import org.restcomm.connect.core.service.CoreService;
 import org.restcomm.connect.dao.IncomingPhoneNumbersDao;
 import org.restcomm.connect.dao.entities.IncomingPhoneNumber;
 import org.restcomm.connect.dao.entities.IncomingPhoneNumberFilter;
@@ -52,7 +53,7 @@ import com.google.i18n.phonenumbers.PhoneNumberUtil;
  * yet, then null values are allowed, but Regexes will not be evaluated in these
  * cases.
  */
-public class NumberSelectorService {
+public class NumberSelectorService extends CoreService {
 
     private static Logger logger = Logger.getLogger(NumberSelectorService.class);
 

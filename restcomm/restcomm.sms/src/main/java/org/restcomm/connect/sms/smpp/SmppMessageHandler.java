@@ -35,6 +35,8 @@ import org.restcomm.connect.commons.configuration.sets.RcmlserverConfigurationSe
 import org.restcomm.connect.commons.dao.Sid;
 import org.restcomm.connect.commons.faulttolerance.RestcommUntypedActor;
 import org.restcomm.connect.commons.util.UriUtils;
+import org.restcomm.connect.core.service.CoreServices;
+import org.restcomm.connect.core.service.number.NumberSelectorService;
 import org.restcomm.connect.dao.AccountsDao;
 import org.restcomm.connect.dao.ApplicationsDao;
 import org.restcomm.connect.dao.DaoManager;
@@ -49,7 +51,6 @@ import org.restcomm.connect.extension.api.RestcommExtensionException;
 import org.restcomm.connect.extension.api.RestcommExtensionGeneric;
 import org.restcomm.connect.extension.controller.ExtensionController;
 import org.restcomm.connect.http.client.rcmlserver.resolver.RcmlserverResolver;
-import org.restcomm.connect.interpreter.NumberSelectorService;
 import org.restcomm.connect.interpreter.StartInterpreter;
 import org.restcomm.connect.monitoringservice.MonitoringService;
 import org.restcomm.connect.sms.SmsSession;
@@ -75,7 +76,9 @@ import akka.actor.UntypedActorContext;
 import akka.actor.UntypedActorFactory;
 import akka.event.Logging;
 import akka.event.LoggingAdapter;
+
 import java.net.URISyntaxException;
+
 import org.joda.time.DateTime;
 import org.restcomm.connect.dao.NotificationsDao;
 import org.restcomm.connect.dao.entities.Notification;
@@ -103,7 +106,7 @@ public class SmppMessageHandler extends RestcommUntypedActor {
         this.configuration = (Configuration) servletContext.getAttribute(Configuration.class.getName());
         this.sipFactory = (SipFactory) servletContext.getAttribute(SipFactory.class.getName());
         this.monitoringService = (ActorRef) servletContext.getAttribute(MonitoringService.class.getName());
-        numberSelector = (NumberSelectorService) servletContext.getAttribute(NumberSelectorService.class.getName());
+        numberSelector = CoreServices.getInstance().getNumberSelector();
         //FIXME:Should new ExtensionType.SmppMessageHandler be defined?
         extensions = ExtensionController.getInstance().getExtensions(ExtensionType.SmsService);
         if (logger.isInfoEnabled()) {

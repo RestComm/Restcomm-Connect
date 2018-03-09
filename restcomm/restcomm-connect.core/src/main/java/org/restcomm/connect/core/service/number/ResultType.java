@@ -18,7 +18,7 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>
  *
  */
-package org.restcomm.connect.interpreter;
+package org.restcomm.connect.core.service.number;
 
 public enum ResultType {
     REGULAR, REGEX, STAR;
