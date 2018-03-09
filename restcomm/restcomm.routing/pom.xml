@@ -5,11 +5,11 @@
   <parent>
     <groupId>org.restcomm</groupId>
     <artifactId>restcomm-connect</artifactId>
-    <version>8.3.1-SNAPSHOT</version>
+    <version>8.3.0-191</version>
   </parent>
   <groupId>org.restcomm</groupId>
   <artifactId>restcomm-connect.routing</artifactId>
-  <version>8.3.1-SNAPSHOT</version>
+  <version>8.3.0-191</version>
   <name>restcomm-connect.routing</name>
   <url>http://maven.apache.org</url>
   <properties>
