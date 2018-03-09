@@ -21,6 +21,7 @@ package org.restcomm.connect.dao.mybatis;
 
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
+
 import org.apache.commons.configuration.Configuration;
 import org.apache.commons.configuration.XMLConfiguration;
 import org.apache.commons.io.IOUtils;
@@ -34,6 +35,7 @@ import org.restcomm.connect.dao.DaoUtils;
 import org.restcomm.connect.dao.ExtensionsConfigurationDao;
 import org.restcomm.connect.extension.api.ConfigurationException;
 import org.restcomm.connect.extension.api.ExtensionConfiguration;
+import org.restcomm.connect.extension.api.ExtensionConfiguration.configurationType;
 
 import java.io.InputStream;
 import java.util.ArrayList;
@@ -137,6 +139,27 @@ public class MybatisExtensionsConfigurationDao implements ExtensionsConfiguratio
                 }
             }
             return confs;
+        } finally {
+            session.close();
+        }
+    }
+
+    @Override
+    public List<ExtensionConfiguration> getAllConfigurationByType(ExtensionConfiguration.configurationType type) {
+        final SqlSession session = sessions.openSession();
+
+        try {
+            final List<Map<String, Object>> results = session.selectList(namespace + "getAllConfigurationByType", type.name());
+            final List<ExtensionConfiguration> confs = new ArrayList<ExtensionConfiguration>();
+            if (results != null && !results.isEmpty()) {
+                for (final Map<String, Object> result : results) {
+                    confs.add(toExtensionConfiguration(result));
+                }
+            }
+            return confs;
+        } catch(Exception e){
+            e.printStackTrace();
+            return null;
         } finally {
             session.close();
         }
@@ -263,7 +286,7 @@ public class MybatisExtensionsConfigurationDao implements ExtensionsConfiguratio
         final Sid sid = new Sid((String)map.get("extension"));
         final String extension = (String) map.get("extension");
         final Object confData = map.get("configuration_data");
-        return new ExtensionConfiguration(sid, extension, true, confData, null, null, null);
+        return new ExtensionConfiguration(sid, extension, true, confData, configurationType.JSON, null, null);
     }
 
     private Map<String, Object> toMap(final ExtensionConfiguration extensionConfiguration) {

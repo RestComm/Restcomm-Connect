@@ -42,9 +42,20 @@ import javax.annotation.security.RolesAllowed;
 @RolesAllowed(SUPER_ADMIN_ROLE)
 public class ExtensionsConfigurationXmlEndpoint extends ExtensionsConfigurationEndpoint {
 
+    @GET
+    public Response getExtensionsAsXml() {
+        return getExtensions(APPLICATION_XML_TYPE);
+    }
+
     @Path("/{extensionId}")
     @GET
     public Response getConfigurationAsXml(@PathParam("extensionId") final String extension, @QueryParam("AccountSid") Sid accountSid) {
+        return getConfiguration(extension, accountSid, APPLICATION_XML_TYPE);
+    }
+
+    @Path("/{extensionId}/{accountSid}")
+    @GET
+    public Response getAccountSpecificConfigurationAsJson(@PathParam("extensionId") final String extension, @PathParam("accountSid") Sid accountSid) {
         return getConfiguration(extension, accountSid, APPLICATION_XML_TYPE);
     }
 
