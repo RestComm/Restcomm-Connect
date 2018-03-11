@@ -1862,7 +1862,7 @@ public class VoiceInterpreter extends BaseVoiceInterpreter {
                 builder.setUri(uri);
 
                 builder.setCallPath(call.path().toString());
-
+                builder.setType(callInfo.type());
                 callRecord = builder.build();
                 records.addCallDetailRecord(callRecord);
             }

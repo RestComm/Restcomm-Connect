@@ -239,10 +239,10 @@ public abstract class CallsEndpoint extends SecuredEndpoint {
 
             if (localInstanceOnly) {
                 filterForTotal = new CallDetailRecordFilter(accountSid, ownerAccounts, recipient, sender, status, startTime, endTime,
-                        parentCallSid, conferenceSid, null, null);
+                        parentCallSid, conferenceSid, null, null, null);
             } else {
                 filterForTotal = new CallDetailRecordFilter(accountSid, ownerAccounts, recipient, sender, status, startTime, endTime,
-                        parentCallSid, conferenceSid, null, null, instanceId);
+                        parentCallSid, conferenceSid, null, null, null, instanceId);
             }
         } catch (ParseException e) {
             return status(BAD_REQUEST).build();
@@ -273,10 +273,10 @@ public abstract class CallsEndpoint extends SecuredEndpoint {
         try {
             if (localInstanceOnly) {
                 filter = new CallDetailRecordFilter(accountSid, ownerAccounts, recipient, sender, status, startTime, endTime,
-                        parentCallSid, conferenceSid, limit, offset);
+                        parentCallSid, conferenceSid, limit, offset, null);
             } else {
                 filter = new CallDetailRecordFilter(accountSid, ownerAccounts, recipient, sender, status, startTime, endTime,
-                        parentCallSid, conferenceSid, limit, offset, instanceId);
+                        parentCallSid, conferenceSid, limit, offset, null, instanceId);
             }
         } catch (ParseException e) {
             return status(BAD_REQUEST).build();
