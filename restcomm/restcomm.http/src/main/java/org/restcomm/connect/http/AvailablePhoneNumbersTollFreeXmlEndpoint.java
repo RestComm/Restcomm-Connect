@@ -23,6 +23,7 @@ import com.sun.jersey.spi.container.ResourceFilters;
 import javax.ws.rs.GET;
 import javax.ws.rs.Path;
 import javax.ws.rs.PathParam;
+import javax.ws.rs.Produces;
 import javax.ws.rs.QueryParam;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
@@ -46,6 +47,7 @@ public final class AvailablePhoneNumbersTollFreeXmlEndpoint extends AvailablePho
 
     @GET
     @ResourceFilters({ ExtensionFilter.class })
+    @Produces({MediaType.APPLICATION_XML, MediaType.APPLICATION_JSON})
     public Response getAvailablePhoneNumber(@PathParam("accountSid") final String accountSid,
             @PathParam("IsoCountryCode") final String isoCountryCode, @QueryParam("AreaCode") String areaCode,
             @QueryParam("Contains") String filterPattern,
@@ -62,7 +64,7 @@ public final class AvailablePhoneNumbersTollFreeXmlEndpoint extends AvailablePho
             PhoneNumberSearchFilters listFilters = new PhoneNumberSearchFilters(areaCode, null, null,
                     Boolean.TRUE, null, null, null, null, null, null, null, null,
                     null, null, rangeSizeInt, rangeIndexInt, PhoneNumberType.TollFree);
-            return getAvailablePhoneNumbers(accountSid, isoCountryCode, listFilters, filterPattern, MediaType.APPLICATION_XML_TYPE);
+            return getAvailablePhoneNumbers(accountSid, isoCountryCode, listFilters, filterPattern, retrieveMediaType());
         } else {
             return status(BAD_REQUEST).build();
         }

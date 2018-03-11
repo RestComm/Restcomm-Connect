@@ -21,16 +21,16 @@ package org.restcomm.connect.http;
 
 import javax.ws.rs.DELETE;
 import javax.ws.rs.GET;
-import static javax.ws.rs.core.MediaType.*;
 import javax.ws.rs.Path;
 import javax.ws.rs.PathParam;
+import javax.ws.rs.Produces;
 import javax.ws.rs.core.Context;
+import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
 import static javax.ws.rs.core.Response.*;
 import javax.ws.rs.core.UriInfo;
-
-import org.restcomm.connect.dao.entities.Account;
 import org.restcomm.connect.commons.dao.Sid;
+import org.restcomm.connect.dao.entities.Account;
 import org.restcomm.connect.dao.entities.Transcription;
 
 /**
@@ -56,20 +56,16 @@ public final class TranscriptionsXmlEndpoint extends TranscriptionsEndpoint {
         return ok().build();
     }
 
-    @Path("/{sid}.json")
-    @GET
-    public Response getTranscriptionAsJson(@PathParam("accountSid") final String accountSid, @PathParam("sid") final String sid) {
-        return getTranscription(accountSid, sid, APPLICATION_JSON_TYPE);
-    }
-
     @Path("/{sid}")
     @GET
+    @Produces({MediaType.APPLICATION_XML, MediaType.APPLICATION_JSON})
     public Response getTranscriptionAsXml(@PathParam("accountSid") final String accountSid, @PathParam("sid") final String sid) {
-        return getTranscription(accountSid, sid, APPLICATION_XML_TYPE);
+        return getTranscription(accountSid, sid, retrieveMediaType());
     }
 
     @GET
+    @Produces({MediaType.APPLICATION_XML, MediaType.APPLICATION_JSON})
     public Response getTranscriptions(@PathParam("accountSid") final String accountSid, @Context UriInfo info) {
-        return getTranscriptions(accountSid, info, APPLICATION_XML_TYPE);
+        return getTranscriptions(accountSid, info, retrieveMediaType());
     }
 }

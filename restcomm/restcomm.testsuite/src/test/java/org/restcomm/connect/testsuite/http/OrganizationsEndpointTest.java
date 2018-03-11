@@ -19,13 +19,14 @@ import org.junit.runners.MethodSorters;
 import org.junit.experimental.categories.Category;
 import org.junit.runner.RunWith;
 import org.restcomm.connect.commons.Version;
-import org.restcomm.connect.commons.annotations.FeatureAltTests;
 import org.restcomm.connect.commons.annotations.FeatureExpTests;
 import org.restcomm.connect.commons.annotations.UnstableTests;
 
 import com.google.gson.JsonArray;
 import com.google.gson.JsonObject;
 import com.sun.jersey.api.client.ClientResponse;
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertNotNull;
 
 /**
  * @author maria
@@ -93,23 +94,23 @@ public class OrganizationsEndpointTest extends EndpointTest {
     @Test
     public void getOrganizationFromAdministratorAccount(){
     	ClientResponse clientResponse = RestcommOrganizationsTool.getInstance().getOrganizationResponse(deploymentUrl.toString(), adminAccountSid, adminAuthToken, org1);
-    	assertTrue(clientResponse!=null);
+    	assertNotNull(clientResponse);
     	logger.info("organization: "+clientResponse);
-    	assertTrue(clientResponse.getStatus() == 200);
+    	assertEquals(200 , clientResponse.getStatus());
 
     	// only superadmin can read an org that does not affiliate with its account
     	clientResponse = null;
     	clientResponse = RestcommOrganizationsTool.getInstance().getOrganizationResponse(deploymentUrl.toString(), adminAccountSid, adminAuthToken, org2);
     	assertTrue(clientResponse!=null);
     	logger.info("organization: "+clientResponse);
-    	assertTrue(clientResponse.getStatus() == 403);
+    	assertEquals(403, 403);
 
     	//only superadmin can read the whole list of organizations
     	clientResponse = null;
     	clientResponse = RestcommOrganizationsTool.getInstance().getOrganizationsResponse(deploymentUrl.toString(), adminAccountSid, adminAuthToken);
     	logger.info("organization list: "+clientResponse);
     	assertTrue(clientResponse!=null);
-    	assertTrue(clientResponse.getStatus() == 403);
+    	assertEquals(403, clientResponse.getStatus());
 
     }
     /**

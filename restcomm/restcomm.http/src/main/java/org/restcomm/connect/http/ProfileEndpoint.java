@@ -20,23 +20,23 @@
 package org.restcomm.connect.http;
 
 import com.fasterxml.jackson.databind.JsonNode;
-import com.github.fge.jsonschema.main.JsonSchema;
-import com.github.fge.jsonschema.main.JsonSchemaFactory;
-import java.io.InputStream;
-import java.net.URI;
-import java.sql.SQLException;
-import java.util.Date;
-import java.util.List;
 import com.github.fge.jackson.JsonLoader;
 import com.github.fge.jsonschema.core.report.ProcessingReport;
+import com.github.fge.jsonschema.main.JsonSchema;
+import com.github.fge.jsonschema.main.JsonSchemaFactory;
 import com.sun.jersey.core.header.LinkHeader;
 import com.sun.jersey.core.header.LinkHeader.LinkHeaderBuilder;
 import java.io.IOException;
+import java.io.InputStream;
 import java.net.MalformedURLException;
+import java.net.URI;
 import java.nio.charset.Charset;
 import java.nio.file.Path;
 import java.nio.file.Paths;
+import java.sql.SQLException;
 import java.util.ArrayList;
+import java.util.Date;
+import java.util.List;
 import javax.annotation.PostConstruct;
 import javax.servlet.ServletContext;
 import javax.ws.rs.WebApplicationException;
@@ -287,11 +287,11 @@ public class ProfileEndpoint {
         LinkHeaderBuilder link = null;
         switch (extractSidPrefix(targetSid)) {
             case ACCOUNTS_PREFIX:
-                uri = info.getBaseUriBuilder().path(AccountsJsonEndpoint.class).path(sid).build();
+                uri = info.getBaseUriBuilder().path(AccountsXmlEndpoint.class).path(sid).build();
                 link = LinkHeader.uri(uri).parameter(TITLE_PARAM, "Accounts");
                 break;
             case ORGANIZATIONS_PREFIX:
-                uri = info.getBaseUriBuilder().path(OrganizationsJsonEndpoint.class).path(sid).build();
+                uri = info.getBaseUriBuilder().path(AccountsXmlEndpoint.class).path(sid).build();
                 link = LinkHeader.uri(uri).parameter(TITLE_PARAM, "Organizations");
                 break;
             default:
