@@ -197,13 +197,46 @@ public class ClientsEndpointTest {
         ClientResponse response = resource.accept(MediaType.APPLICATION_JSON).post(ClientResponse.class, params);
         Assert.assertEquals(400, response.getStatus());
         Assert.assertTrue("Response should contain 'invalid' term", response.getEntity(String.class).toLowerCase().contains("invalid"));
+
+        params = new MultivaluedMapImpl();
+        params.add("Login","maria.test?"); // login contains @ sign
+        params.add("Password","RestComm1234!");
+        response = resource.accept(MediaType.APPLICATION_JSON).post(ClientResponse.class, params);
+        Assert.assertEquals(400, response.getStatus());
+        Assert.assertTrue("Response should contain 'invalid' term", response.getEntity(String.class).toLowerCase().contains("invalid"));
+
+        params = new MultivaluedMapImpl();
+        params.add("Login","maria-test"); // login contains @ sign
+        params.add("Password","RestComm1234!");
+        response = resource.accept(MediaType.APPLICATION_JSON).post(ClientResponse.class, params);
+        Assert.assertEquals(400, response.getStatus());
+        Assert.assertTrue("Response should contain 'invalid' term", response.getEntity(String.class).toLowerCase().contains("invalid"));
+
+        params = new MultivaluedMapImpl();
+        params.add("Login","maria.test="); // login contains @ sign
+        params.add("Password","RestComm1234!");
+        response = resource.accept(MediaType.APPLICATION_JSON).post(ClientResponse.class, params);
+        Assert.assertEquals(400, response.getStatus());
+        Assert.assertTrue("Response should contain 'invalid' term", response.getEntity(String.class).toLowerCase().contains("invalid"));
+    }
+
+    @Test@Category(FeatureExpTests.class)
+    public void createClientTestWithInvalidCharacters2() throws ClientProtocolException, IOException, ParseException, InterruptedException {
+        Client jersey = getClient(developerUsername, developeerAuthToken);
+        WebResource resource = jersey.resource( getResourceUrl("/2012-04-24/Accounts/" + developerAccountSid + "/Clients.json" ) );
+        MultivaluedMap<String, String> params = new MultivaluedMapImpl();
+        params.add("Login","maria.test?"); // login contains @ sign
+        params.add("Password","RestComm1234!");
+        ClientResponse response = resource.accept(MediaType.APPLICATION_JSON).post(ClientResponse.class, params);
+        Assert.assertEquals(400, response.getStatus());
+        Assert.assertTrue("Response should contain 'invalid' term", response.getEntity(String.class).toLowerCase().contains("invalid"));
     }
 
     /**
      * addSameClientNameInDifferentOrganizations
      * https://github.com/RestComm/Restcomm-Connect/issues/2106
      * We should be able to add same client in different organizations
-     * 
+     *
      */
     @Test
     public void addSameClientNameInDifferentOrganizations() {
@@ -217,7 +250,7 @@ public class ClientsEndpointTest {
         params.add("Password","RestComm1234!");
         ClientResponse response = resource.accept(MediaType.APPLICATION_JSON).post(ClientResponse.class, params);
         Assert.assertEquals(200, response.getStatus());
-        
+
         //try to add same client again in same organization - should not be allowed
         /*jersey = getClient(developerUsername, developeerAuthToken);
         resource = jersey.resource( getResourceUrl("/2012-04-24/Accounts/" + developerAccountSid + "/Clients.json" ) );
@@ -237,7 +270,7 @@ public class ClientsEndpointTest {
         params.add("Password","RestComm1234!");
         response = resource.accept(MediaType.APPLICATION_JSON).post(ClientResponse.class, params);
         Assert.assertEquals(200, response.getStatus());
-    	
+
     }
 
     @Test@Category({FeatureAltTests.class, UnstableTests.class})
