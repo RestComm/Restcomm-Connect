@@ -943,7 +943,13 @@ public final class CallManager extends RestcommUntypedActor {
     }
 
     private void proxyThroughMediaServerAsNumber(final SipServletRequest request, final Client client, final String destNumber) {
-        String rcml = "<Response><Dial>" + destNumber + "</Dial></Response>";
+        String number = destNumber;
+        String customHeaders = customHeaders(request);
+        if (customHeaders != null && !customHeaders.equals("")) {
+            number = destNumber+"?"+customHeaders;
+        }
+
+        String rcml = "<Response><Dial>" + number + "</Dial></Response>";
         final VoiceInterpreterParams.Builder builder = new VoiceInterpreterParams.Builder();
         builder.setConfiguration(configuration);
         builder.setStorage(storage);
@@ -968,7 +974,13 @@ public final class CallManager extends RestcommUntypedActor {
     }
 
     private void proxyDialClientThroughMediaServer(final SipServletRequest request, final Client client, final String destNumber) {
-        String rcml = "<Response><Dial><Client>" + destNumber + "</Client></Dial></Response>";
+        String number = destNumber;
+        String customHeaders = customHeaders(request);
+        if (customHeaders != null && !customHeaders.equals("")) {
+            number = destNumber+"?"+customHeaders;
+        }
+
+        String rcml = "<Response><Dial><Client>" + number + "</Client></Dial></Response>";
         final VoiceInterpreterParams.Builder builder = new VoiceInterpreterParams.Builder();
         builder.setConfiguration(configuration);
         builder.setStorage(storage);
@@ -990,6 +1002,26 @@ public final class CallManager extends RestcommUntypedActor {
         application.setAttribute(Call.class.getName(), call);
         call.tell(request, self());
         interpreter.tell(new StartInterpreter(call), self());
+    }
+
+    private String customHeaders (final SipServletRequest request) {
+        StringBuffer customHeaders = new StringBuffer();
+
+        Iterator<String> headerNames = request.getHeaderNames();
+        while (headerNames.hasNext()) {
+            String headerName = headerNames.next();
+            if (headerName.startsWith("X-")) {
+                if (logger.isDebugEnabled()) {
+                    logger.debug("Identified customer header at SipServletRequest : " + headerName);
+                }
+                if (customHeaders.length()>0) {
+                    customHeaders.append("&");
+                }
+                customHeaders.append(headerName+"="+request.getHeader(headerName));
+            }
+        }
+
+        return customHeaders.toString();
     }
 
     private void info(final SipServletRequest request) throws IOException {
