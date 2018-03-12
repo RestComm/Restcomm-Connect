@@ -191,6 +191,27 @@ public class AccountsEndpointTest extends EndpointTest {
         assertEquals(createdAuthToken, createAccountResponse.get("auth_token").getAsString());
     }
 
+    @Test @Category(FeatureExpTests.class)
+    public void testCreateAccountWithInvalidChars() {
+
+        String username1 = "my?account@company.com";
+        String username2 = "my@account@company.com";
+        String username3 = "my=account@company.com";
+        String password = "RestCom1233@";
+
+        JsonObject createAccountResponse = RestcommAccountsTool.getInstance().createAccount(deploymentUrl.toString(),
+                adminUsername, adminAuthToken, username1, password);
+        assertNull(createAccountResponse);
+
+        createAccountResponse = RestcommAccountsTool.getInstance().createAccount(deploymentUrl.toString(),
+                adminUsername, adminAuthToken, username2, password);
+        assertNull(createAccountResponse);
+
+        createAccountResponse = RestcommAccountsTool.getInstance().createAccount(deploymentUrl.toString(),
+                adminUsername, adminAuthToken, username3, password);
+        assertNull(createAccountResponse);
+    }
+
     @Test
     @Category(UnstableTests.class)
     public void testCreateAccountWithJapaneseChars() {
