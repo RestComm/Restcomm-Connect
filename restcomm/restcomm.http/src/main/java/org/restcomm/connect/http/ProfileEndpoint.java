@@ -36,6 +36,7 @@ import java.net.MalformedURLException;
 import java.nio.charset.Charset;
 import java.nio.file.Path;
 import java.nio.file.Paths;
+import java.security.Principal;
 import java.util.ArrayList;
 import javax.annotation.PostConstruct;
 import javax.servlet.ServletContext;
@@ -48,6 +49,7 @@ import javax.ws.rs.core.Response;
 import javax.ws.rs.core.Response.ResponseBuilder;
 import javax.ws.rs.core.Response.Status;
 import static javax.ws.rs.core.Response.status;
+import javax.ws.rs.core.SecurityContext;
 import javax.ws.rs.core.UriInfo;
 import org.apache.commons.configuration.Configuration;
 import org.apache.commons.io.IOUtils;
@@ -64,6 +66,8 @@ import org.restcomm.connect.dao.entities.Profile;
 import static org.restcomm.connect.dao.entities.Profile.DEFAULT_PROFILE_SID;
 import org.restcomm.connect.dao.entities.ProfileAssociation;
 import org.restcomm.connect.http.exceptionmappers.CustomReasonPhraseType;
+import org.restcomm.connect.http.security.AccountPrincipal;
+import org.restcomm.connect.http.security.RCSecContext;
 
 public class ProfileEndpoint {
 
@@ -94,6 +98,9 @@ public class ProfileEndpoint {
     private JsonNode schemaJson;
     private JsonSchema profileSchema;
 
+
+    private ProfileService pService = null;
+
     public ProfileEndpoint() {
         super();
     }
@@ -101,6 +108,7 @@ public class ProfileEndpoint {
     @PostConstruct
     void init() {
         rootConfiguration = (Configuration) context.getAttribute(Configuration.class.getName());
+        pService = (ProfileService) context.getAttribute(ProfileService.class.getName());
         runtimeConfiguration = rootConfiguration.subset("runtime-settings");
         final DaoManager storage = (DaoManager) context.getAttribute(DaoManager.class.getName());
         profileAssociationsDao = storage.getProfileAssociationsDao();
@@ -256,7 +264,8 @@ public class ProfileEndpoint {
             if (report.isSuccess()) {
                 Profile profile = new Profile(profileSid, profileStr, new Date(), new Date());
                 profilesDao.updateProfile(profile);
-                return getProfile(profileSid, info);
+                Profile updatedProfile = profilesDao.getProfile(profileSid);
+                return getProfileBuilder(updatedProfile, info).build();
             } else {
                 return Response.status(Response.Status.BAD_REQUEST).entity(report.toString()).build();
             }
@@ -328,11 +337,10 @@ public class ProfileEndpoint {
         }
     }
 
-    public ResponseBuilder getProfileBuilder(String profileSid, UriInfo info) {
-        Profile profile = checkProfileExists(profileSid);
+    public ResponseBuilder getProfileBuilder(Profile profile , UriInfo info) {
         try {
             Response.ResponseBuilder ok = Response.ok(profile.getProfileDocument());
-            List<ProfileAssociation> profileAssociationsByProfileSid = profileAssociationsDao.getProfileAssociationsByProfileSid(profileSid);
+            List<ProfileAssociation> profileAssociationsByProfileSid = profileAssociationsDao.getProfileAssociationsByProfileSid(profile.getSid());
             for (ProfileAssociation assoc : profileAssociationsByProfileSid) {
                 LinkHeader composeLink = composeLink(assoc.getTargetSid(), info);
                 ok.header(LINK_HEADER, composeLink.toString());
@@ -349,8 +357,29 @@ public class ProfileEndpoint {
         }
     }
 
-    public Response getProfile(String profileSid, UriInfo info) {
-        return getProfileBuilder(profileSid, info).build();
+    //TODO replace with actual service itn when ready
+    interface ProfileService {
+
+        Profile retrieveEffectiveProfile(String sid);
+    }
+
+    private void checkProfileAccess(String profileSid, SecurityContext secCtx) {
+        RCSecContext ctx = (RCSecContext) secCtx;
+        AccountPrincipal userPrincipal = (AccountPrincipal) ctx.getUserPrincipal();
+        if (!userPrincipal.isSuperAdmin()) {
+
+            Profile effectiveProfile = pService.retrieveEffectiveProfile(userPrincipal.getIdentityContext().getAccountKey().getAccount().toString());
+            if (!effectiveProfile.getSid().equals(profileSid)) {
+                CustomReasonPhraseType stat = new CustomReasonPhraseType(Response.Status.FORBIDDEN, "Profile not liked");
+                throw new WebApplicationException(status(stat).build());
+            }
+        }
+    }
+
+    public Response getProfile(String profileSid, UriInfo info, SecurityContext secCtx) {
+        Profile profile = checkProfileExists(profileSid);
+        checkProfileAccess(profileSid, secCtx);
+        return getProfileBuilder(profile, info).build();
     }
 
     public Response createProfile(InputStream body, UriInfo info) {
@@ -365,7 +394,8 @@ public class ProfileEndpoint {
                 Profile profile = new Profile(profileSid.toString(), profileStr, new Date(), new Date());
                 profilesDao.addProfile(profile);
                 URI location = info.getBaseUriBuilder().path(this.getClass()).path(profileSid.toString()).build();
-                response = getProfileBuilder(profileSid.toString(), info).status(Status.CREATED).location(location).build();
+                Profile createdProfile = profilesDao.getProfile(profileStr);
+                response = getProfileBuilder(createdProfile, info).status(Status.CREATED).location(location).build();
             } else {
                 response = Response.status(Response.Status.BAD_REQUEST).entity(report.toString()).build();
             }
