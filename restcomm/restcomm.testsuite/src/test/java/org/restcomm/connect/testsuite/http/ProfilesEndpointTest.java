@@ -132,14 +132,14 @@ public class ProfilesEndpointTest extends EndpointTest {
     	assertNotNull(clientResponse);
     	assertEquals(200, clientResponse.getStatus());
     	// admin account gets associated profile - should be able to get it
-    	clientResponse = RestcommProfilesTool.getInstance().getProfileResponse(deploymentUrl.toString(), ADMIN_ACCOUNT_SID, AUTH_TOKEN, DEFAULT_PROFILE_SID);
+    	clientResponse = RestcommProfilesTool.getInstance().getProfileResponse(deploymentUrl.toString(), ADMIN_ACCOUNT_SID, AUTH_TOKEN, SECONDARY_PROFILE_SID);
     	assertNotNull(clientResponse);
     	assertEquals(200, clientResponse.getStatus());
     	// admin account gets not associated profile - should not be able to get it
-    	clientResponse = RestcommProfilesTool.getInstance().getProfileResponse(deploymentUrl.toString(), ADMIN_ACCOUNT_SID, AUTH_TOKEN, SECONDARY_PROFILE_SID);
+    	clientResponse = RestcommProfilesTool.getInstance().getProfileResponse(deploymentUrl.toString(), ADMIN_ACCOUNT_SID, AUTH_TOKEN, DEFAULT_PROFILE_SID);
     	assertNotNull(clientResponse);
     	assertEquals(403, clientResponse.getStatus());
-    	// dev account gets associated profile that is not explicitly assign to it - should be able to get it
+    	// dev account gets associated profile that is not explicitly assign to it but associated by inheritance - should be able to get it
     	clientResponse = RestcommProfilesTool.getInstance().getProfileResponse(deploymentUrl.toString(), DEVELOPER_ACCOUNT_SID, AUTH_TOKEN, DEFAULT_PROFILE_SID);
     	assertNotNull(clientResponse);
     	assertEquals(200, clientResponse.getStatus());
