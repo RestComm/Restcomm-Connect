@@ -25,6 +25,7 @@ import javax.sip.address.SipURI;
 import javax.sip.header.UserAgentHeader;
 import javax.sip.message.Response;
 
+import gov.nist.javax.sip.header.HeaderExt;
 import org.cafesip.sipunit.Credential;
 import org.cafesip.sipunit.SipCall;
 import org.cafesip.sipunit.SipPhone;
@@ -659,6 +660,90 @@ public class ClientsDialTest {
         //        assertTrue(georgeCall.respondToDisconnect());
     }
 
+    @Test
+    @Category(FeatureAltTests.class)
+    public void testWebRTCClientDialOutPstnWithCustomHeadersOnInitialInvite() throws ParseException, InterruptedException {
+
+        String customHeaderName1 = "X-custom-header1";
+        String value1 = "1234";
+
+        String customHeaderName2 = "X-custom-header2";
+        String value2 = "4321";
+
+        assertNotNull(mariaRestcommClientSid);
+        assertNotNull(dimitriRestcommClientSid);
+
+        SipURI uri = mariaSipStack.getAddressFactory().createSipURI(null, restcommContact);
+        assertTrue(mariaPhone.register(uri, "maria", clientPassword, mariaContact, 14400, 3600));
+        Thread.sleep(3000);
+
+        Credential c = new Credential("127.0.0.1", "maria", clientPassword);
+        mariaPhone.addUpdateCredential(c);
+
+        Thread.sleep(1000);
+
+        // Maria initiates a call to Dimitri
+        final SipCall mariaCall = mariaPhone.createSipCall();
+
+        ArrayList<String> additionalHeaders = new ArrayList<>();
+        additionalHeaders.add(mariaPhone.getParent().getHeaderFactory().createHeader(customHeaderName1, value1).toString());
+        additionalHeaders.add(mariaPhone.getParent().getHeaderFactory().createHeader(customHeaderName2, value2).toString());
+
+        ArrayList<String> replaceHeaders = new ArrayList<>();
+        replaceHeaders.add(mariaPhone.getParent().getHeaderFactory().createHeader("User-Agent", "wss-sipunit").toString());
+
+
+        mariaCall.initiateOutgoingCall(mariaContact, "sip:"+pstnNumber+"@" + restcommContact, null, body, "application", "sdp", additionalHeaders, replaceHeaders);
+        assertLastOperationSuccess(mariaCall);
+        assertTrue(mariaCall.waitForAuthorisation(3000));
+        assertTrue(mariaCall.waitOutgoingCallResponse(5 * 1000));
+        int responseMaria = mariaCall.getLastReceivedResponse().getStatusCode();
+        assertTrue(responseMaria == Response.TRYING || responseMaria == Response.RINGING);
+
+        Dialog mariaDialog = null;
+
+        if (responseMaria == Response.TRYING) {
+            assertTrue(mariaCall.waitOutgoingCallResponse(5 * 1000));
+            assertEquals(Response.RINGING, mariaCall.getLastReceivedResponse().getStatusCode());
+            mariaDialog = mariaCall.getDialog();
+        }
+
+        assertTrue(mariaCall.waitOutgoingCallResponse(5 * 1000));
+        assertEquals(Response.OK, mariaCall.getLastReceivedResponse().getStatusCode());
+        assertTrue(mariaCall.sendInviteOkAck());
+
+        final SipCall georgeCall = georgePhone.createSipCall();
+        georgeCall.listenForIncomingCall();
+
+        assertTrue(georgeCall.waitForIncomingCall(5 * 1000));
+
+        SipRequest invite = georgeCall.getLastReceivedRequest();
+        assertEquals(SipRequest.INVITE, invite.getRequestEvent().getRequest().getMethod());
+
+        String customHeader1 = ((HeaderExt) invite.getRequestEvent().getRequest().getHeader(customHeaderName1)).getValue();
+        String customHeader2 = ((HeaderExt) invite.getRequestEvent().getRequest().getHeader(customHeaderName2)).getValue();
+        assertEquals(value1, customHeader1);
+        assertEquals(value2, customHeader2);
+
+        georgeCall.sendIncomingCallResponse(Response.RINGING, "RINGING-George", 3600);
+
+        String receivedBody = new String(georgeCall.getLastReceivedRequest().getRawContent());
+        assertTrue(georgeCall.sendIncomingCallResponse(Response.OK, "OK-George", 3600, receivedBody, "application", "sdp", null,
+                null));
+
+
+
+        //        For a reason the ACK will never reach Restcomm. This is only when working with the sipUnit
+        //        assertTrue(georgeCall.waitForAck(5 * 1000));
+
+        Thread.sleep(3000);
+        georgeCall.listenForDisconnect();
+        assertTrue(mariaCall.disconnect());
+
+        //        assertTrue(georgeCall.waitForDisconnect(5 * 1000));
+        //        assertTrue(georgeCall.respondToDisconnect());
+    }
+
     @Test //Issue: https://github.com/RestComm/Restcomm-Connect/issues/2086
     public void testDialClientFromPstn() throws ParseException, InterruptedException {
 
@@ -688,6 +773,81 @@ public class ClientsDialTest {
         assertTrue(externalCall.sendInviteOkAck());
 
         assertTrue(mariaCall.waitForIncomingCall(5000));
+        assertTrue(mariaCall.sendIncomingCallResponse(Response.TRYING, "Maria-Trying", 3600));
+        assertTrue(mariaCall.sendIncomingCallResponse(Response.RINGING, "Maria-Ringing", 3600));
+        String receivedBody = new String(mariaCall.getLastReceivedRequest().getRawContent());
+        assertTrue(mariaCall.sendIncomingCallResponse(Response.OK, "Maria-OK", 3600, receivedBody, "application", "sdp",
+                null, null));
+
+
+        assertTrue(mariaCall.waitForAck(5000));
+
+
+        Thread.sleep(1000);
+
+        externalCall.listenForDisconnect();
+
+        assertTrue(mariaCall.disconnect());
+        assertTrue(externalCall.waitForDisconnect(5000));
+        assertTrue(externalCall.respondToDisconnect());
+
+        //        assertTrue(georgeCall.waitForDisconnect(5 * 1000));
+        //        assertTrue(georgeCall.respondToDisconnect());
+    }
+
+    @Test //Issue: https://github.com/RestComm/Restcomm-Connect/issues/2086
+    @Category(FeatureAltTests.class)
+    public void testDialWebRTCClientFromPstnWithCustomHeadersOnInitialInvite() throws ParseException, InterruptedException {
+
+        String customHeaderName1 = "X-custom-header1";
+        String value1 = "1234";
+
+        String customHeaderName2 = "X-custom-header2";
+        String value2 = "4321";
+
+        assertNotNull(mariaRestcommClientSid);
+
+        SipURI uri = mariaSipStack.getAddressFactory().createSipURI(null, restcommContact);
+        assertTrue(mariaPhone.register(uri, "maria", clientPassword, mariaContact, 14400, 3600));
+        Thread.sleep(3000);
+
+        SipCall mariaCall = mariaPhone.createSipCall();
+        mariaCall.listenForIncomingCall();
+
+        final SipCall externalCall = externalPhone.createSipCall();
+
+        ArrayList<String> additionalHeaders = new ArrayList<>();
+        additionalHeaders.add(externalPhone.getParent().getHeaderFactory().createHeader(customHeaderName1, value1).toString());
+        additionalHeaders.add(externalPhone.getParent().getHeaderFactory().createHeader(customHeaderName2, value2).toString());
+
+        ArrayList<String> replaceHeaders = new ArrayList<>();
+        replaceHeaders.add(externalPhone.getParent().getHeaderFactory().createHeader("User-Agent", "wss-sipunit").toString());
+
+        externalCall.initiateOutgoingCall(leftyContact, "sip:maria@" + restcommContact, null, body, "application", "sdp", additionalHeaders, replaceHeaders);
+        assertLastOperationSuccess(externalCall);
+        assertTrue(externalCall.waitOutgoingCallResponse(5 * 1000));
+        final int response = externalCall.getLastReceivedResponse().getStatusCode();
+        assertTrue(response == Response.TRYING || response == Response.RINGING);
+
+        if (response == Response.TRYING) {
+            assertTrue(externalCall.waitOutgoingCallResponse(5 * 1000));
+            assertEquals(Response.RINGING, externalCall.getLastReceivedResponse().getStatusCode());
+        }
+
+        assertTrue(externalCall.waitOutgoingCallResponse(5 * 1000));
+        assertEquals(Response.OK, externalCall.getLastReceivedResponse().getStatusCode());
+        assertTrue(externalCall.sendInviteOkAck());
+
+        assertTrue(mariaCall.waitForIncomingCall(5000));
+
+        SipRequest invite = mariaCall.getLastReceivedRequest();
+        assertEquals(SipRequest.INVITE, invite.getRequestEvent().getRequest().getMethod());
+
+        String customHeader1 = ((HeaderExt) invite.getRequestEvent().getRequest().getHeader(customHeaderName1)).getValue();
+        String customHeader2 = ((HeaderExt) invite.getRequestEvent().getRequest().getHeader(customHeaderName2)).getValue();
+        assertEquals(value1, customHeader1);
+        assertEquals(value2, customHeader2);
+
         assertTrue(mariaCall.sendIncomingCallResponse(Response.TRYING, "Maria-Trying", 3600));
         assertTrue(mariaCall.sendIncomingCallResponse(Response.RINGING, "Maria-Ringing", 3600));
         String receivedBody = new String(mariaCall.getLastReceivedRequest().getRawContent());
