@@ -29,6 +29,14 @@ Accounts and sub-accounts are useful for things like segmenting phone numbers an
 
 * Account Resource URI. */2012-04-24/Accounts/\{EmailAddress}*
 
+==== Response Headers
+[cols=",",options="header",]
+|==============================================================================================
+|Header |Description
+|Link | a link to the effective Profile document with attribute "rel" set to "related"
+|==============================================================================================
+
+
 **HTTP POST/PUT**. Modifies an Account resource and returns the representation, including the properties above. Below you will find a list of optional parameters.
 
 ==== Request Parameters
