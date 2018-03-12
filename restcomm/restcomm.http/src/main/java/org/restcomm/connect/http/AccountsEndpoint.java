@@ -31,6 +31,7 @@ import org.joda.time.DateTime;
 import org.restcomm.connect.commons.configuration.RestcommConfiguration;
 import org.restcomm.connect.commons.configuration.sets.RcmlserverConfigurationSet;
 import org.restcomm.connect.commons.dao.Sid;
+import org.restcomm.connect.commons.util.ClientLoginConstrains;
 import org.restcomm.connect.dao.ClientsDao;
 import org.restcomm.connect.dao.DaoManager;
 import org.restcomm.connect.dao.IncomingPhoneNumbersDao;
@@ -55,6 +56,8 @@ import org.restcomm.connect.provisioning.number.api.PhoneNumberProvisioningManag
 import org.restcomm.connect.provisioning.number.api.PhoneNumberProvisioningManagerProvider;
 
 import javax.annotation.PostConstruct;
+import javax.mail.internet.AddressException;
+import javax.mail.internet.InternetAddress;
 import javax.servlet.ServletContext;
 import javax.servlet.http.HttpServletRequest;
 import javax.ws.rs.core.MediaType;
@@ -801,6 +804,29 @@ public class AccountsEndpoint extends SecuredEndpoint {
             throw new NullPointerException("Email address can not be null.");
         } else if (!data.containsKey("Password")) {
             throw new NullPointerException("Password can not be null.");
+        }
+
+        String emailAddress = data.getFirst("EmailAddress");
+        try {
+            InternetAddress emailAddr = new InternetAddress(emailAddress);
+            emailAddr.validate();
+        } catch (AddressException ex) {
+            String msg = String.format("Provided email address %s is not valid",emailAddress);
+            if (logger.isDebugEnabled()) {
+                logger.debug(msg);
+            }
+            throw new IllegalArgumentException(msg);
+        }
+
+        String clientLogin = data.getFirst("EmailAddress").split("@")[0];
+        for (char ch: ClientLoginConstrains.NOT_ALLOWED_CHARS) {
+            if (clientLogin.indexOf(ch) > -1) {
+                String msg = String.format("Login %s contains invalid character: %s ",data.getFirst("Login"), ch);
+                if (logger.isDebugEnabled()) {
+                    logger.debug(msg);
+                }
+                throw new IllegalArgumentException(msg);
+            }
         }
     }
 
