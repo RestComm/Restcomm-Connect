@@ -61,6 +61,7 @@ public class ProfilesEndpointTest extends EndpointTest {
     private static final String AUTH_TOKEN = "77f8c12cc7b8f8423e5c38b035249166";
 
     private static final String DEFAULT_PROFILE_SID = "PRae6e420f425248d6a26948c17a9e2acf";
+    private static final String SECONDARY_PROFILE_SID = "PRae6e420f425248d6a26948c17a9e2acg";
     private static final String UNKNOWN_PROFILE_SID = "PRafbe225ad37541eba518a74248f0ac4d";
     private static final String ORGANIZATION_SID = "ORafbe225ad37541eba518a74248f0ac4c";
     private static final String UNKNOWN_ACCOUNT_SID = "AC1111225ad37541eba518a74248f0ac4d";
@@ -116,17 +117,34 @@ public class ProfilesEndpointTest extends EndpointTest {
     }
 
     /**
-     * Administrators and Developers can not read profile
+     * super admin can read any profile
+     * others can read profile applicatble only to them
      */
     @Test
     @Category(FeatureExpTests.class)
     public void getProfilePermissionTest(){
-    	ClientResponse clientResponse = RestcommProfilesTool.getInstance().getProfileResponse(deploymentUrl.toString(), ADMIN_ACCOUNT_SID, AUTH_TOKEN, DEFAULT_PROFILE_SID);
+    	// super admin account gets associated profile - should be able to get it
+    	ClientResponse clientResponse = RestcommProfilesTool.getInstance().getProfileResponse(deploymentUrl.toString(), SUPER_ADMIN_ACCOUNT_SID, AUTH_TOKEN, DEFAULT_PROFILE_SID);
+    	assertNotNull(clientResponse);
+    	assertEquals(200, clientResponse.getStatus());
+    	// super admin account gets not associated profile - should be able to get it
+    	clientResponse = RestcommProfilesTool.getInstance().getProfileResponse(deploymentUrl.toString(), SUPER_ADMIN_ACCOUNT_SID, AUTH_TOKEN, SECONDARY_PROFILE_SID);
+    	assertNotNull(clientResponse);
+    	assertEquals(200, clientResponse.getStatus());
+    	// admin account gets associated profile - should be able to get it
+    	clientResponse = RestcommProfilesTool.getInstance().getProfileResponse(deploymentUrl.toString(), ADMIN_ACCOUNT_SID, AUTH_TOKEN, DEFAULT_PROFILE_SID);
+    	assertNotNull(clientResponse);
+    	assertEquals(200, clientResponse.getStatus());
+    	// admin account gets not associated profile - should not be able to get it
+    	clientResponse = RestcommProfilesTool.getInstance().getProfileResponse(deploymentUrl.toString(), ADMIN_ACCOUNT_SID, AUTH_TOKEN, SECONDARY_PROFILE_SID);
     	assertNotNull(clientResponse);
     	assertEquals(403, clientResponse.getStatus());
-
-
+    	// dev account gets associated profile that is not explicitly assign to it - should be able to get it
     	clientResponse = RestcommProfilesTool.getInstance().getProfileResponse(deploymentUrl.toString(), DEVELOPER_ACCOUNT_SID, AUTH_TOKEN, DEFAULT_PROFILE_SID);
+    	assertNotNull(clientResponse);
+    	assertEquals(200, clientResponse.getStatus());
+    	// dev account gets un associated profile - should not be able to get it
+    	clientResponse = RestcommProfilesTool.getInstance().getProfileResponse(deploymentUrl.toString(), DEVELOPER_ACCOUNT_SID, AUTH_TOKEN, SECONDARY_PROFILE_SID);
     	assertNotNull(clientResponse);
     	assertEquals(403, clientResponse.getStatus());
 

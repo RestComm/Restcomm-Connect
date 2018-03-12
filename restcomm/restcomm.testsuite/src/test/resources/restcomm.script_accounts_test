@@ -29,6 +29,7 @@ CREATE USER SA PASSWORD ""
 GRANT DBA TO SA
 SET WRITE_DELAY 10
 SET SCHEMA PUBLIC
+INSERT INTO "restcomm_profiles" VALUES('PRae6e420f425248d6a26948c17a9e2acg', null , '2018-03-12 12:20:52.371', '2018-03-12 12:20:52.371') 
 INSERT INTO "restcomm_organizations" VALUES('ORafbe225ad37541eba518a74248f0ac4c', 'default.restcomm.com', '2017-04-19 00:00:00.000000000','2017-04-19 00:00:00.000000000', 'active')
 INSERT INTO "restcomm_organizations" VALUES('ORafbe225ad37541eba518a74248f0ac4d', 'org1.restcomm.com', '2017-04-19 00:00:00.000000000','2017-04-19 00:00:00.000000000', 'active')
 INSERT INTO "restcomm_organizations" VALUES('ORafbe225ad37541eba518a74248f0ac4e', 'org2.restcomm.com', '2017-04-19 00:00:00.000000000','2017-04-19 00:00:00.000000000', 'closed')
