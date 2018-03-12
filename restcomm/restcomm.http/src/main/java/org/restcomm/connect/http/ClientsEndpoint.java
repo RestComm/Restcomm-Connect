@@ -25,6 +25,7 @@ import com.thoughtworks.xstream.XStream;
 import org.apache.commons.configuration.Configuration;
 import org.restcomm.connect.commons.annotations.concurrency.NotThreadSafe;
 import org.restcomm.connect.commons.dao.Sid;
+import org.restcomm.connect.commons.util.ClientLoginConstrains;
 import org.restcomm.connect.dao.AccountsDao;
 import org.restcomm.connect.dao.ClientsDao;
 import org.restcomm.connect.dao.DaoManager;
@@ -70,8 +71,6 @@ public abstract class ClientsEndpoint extends SecuredEndpoint {
     protected Gson gson;
     protected XStream xstream;
     protected AccountsDao accountsDao;
-
-    private static char[] NOT_ALLOWED_CHARS = {'?', '-', '=', '@'};
 
     public ClientsEndpoint() {
         super();
@@ -256,8 +255,8 @@ public abstract class ClientsEndpoint extends SecuredEndpoint {
         } else if (!data.containsKey("Password")) {
             throw new NullPointerException("Password can not be null.");
         }
-        // https://github.com/RestComm/Restcomm-Connect/issues/1979
-        for (char ch: NOT_ALLOWED_CHARS) {
+        // https://github.com/RestComm/Restcomm-Connect/issues/1979 && https://telestax.atlassian.net/browse/RESTCOMM-1797
+        for (char ch: ClientLoginConstrains.NOT_ALLOWED_CHARS) {
             if (data.getFirst("Login").indexOf(ch) > -1) {
                 String msg = String.format("Login %s contains invalid character: %s ",data.getFirst("Login"), ch);
                 if (logger.isDebugEnabled()) {
