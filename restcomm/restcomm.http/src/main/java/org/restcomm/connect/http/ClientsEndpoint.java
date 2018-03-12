@@ -71,6 +71,8 @@ public abstract class ClientsEndpoint extends SecuredEndpoint {
     protected XStream xstream;
     protected AccountsDao accountsDao;
 
+    private static char[] NOT_ALLOWED_CHARS = {'?', '-', '=', '@'};
+
     public ClientsEndpoint() {
         super();
     }
@@ -255,8 +257,14 @@ public abstract class ClientsEndpoint extends SecuredEndpoint {
             throw new NullPointerException("Password can not be null.");
         }
         // https://github.com/RestComm/Restcomm-Connect/issues/1979
-        if (data.getFirst("Login").contains("@")) {
-            throw new IllegalArgumentException("Login contains invalid character: @ "+data.getFirst("Login"));
+        for (char ch: NOT_ALLOWED_CHARS) {
+            if (data.getFirst("Login").indexOf(ch) > -1) {
+                String msg = String.format("Login %s contains invalid character: %s ",data.getFirst("Login"), ch);
+                if (logger.isDebugEnabled()) {
+                    logger.debug(msg);
+                }
+                throw new IllegalArgumentException(msg);
+            }
         }
     }
 
