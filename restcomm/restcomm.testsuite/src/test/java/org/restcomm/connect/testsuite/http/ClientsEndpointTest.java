@@ -206,13 +206,6 @@ public class ClientsEndpointTest {
         Assert.assertTrue("Response should contain 'invalid' term", response.getEntity(String.class).toLowerCase().contains("invalid"));
 
         params = new MultivaluedMapImpl();
-        params.add("Login","maria-test"); // login contains @ sign
-        params.add("Password","RestComm1234!");
-        response = resource.accept(MediaType.APPLICATION_JSON).post(ClientResponse.class, params);
-        Assert.assertEquals(400, response.getStatus());
-        Assert.assertTrue("Response should contain 'invalid' term", response.getEntity(String.class).toLowerCase().contains("invalid"));
-
-        params = new MultivaluedMapImpl();
         params.add("Login","maria.test="); // login contains @ sign
         params.add("Password","RestComm1234!");
         response = resource.accept(MediaType.APPLICATION_JSON).post(ClientResponse.class, params);
