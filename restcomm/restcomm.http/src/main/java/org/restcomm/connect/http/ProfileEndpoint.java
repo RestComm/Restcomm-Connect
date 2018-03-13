@@ -36,7 +36,6 @@ import java.net.MalformedURLException;
 import java.nio.charset.Charset;
 import java.nio.file.Path;
 import java.nio.file.Paths;
-import java.security.Principal;
 import java.util.ArrayList;
 import javax.annotation.PostConstruct;
 import javax.servlet.ServletContext;
@@ -48,7 +47,6 @@ import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
 import javax.ws.rs.core.Response.ResponseBuilder;
 import javax.ws.rs.core.Response.Status;
-import static javax.ws.rs.core.Response.status;
 import javax.ws.rs.core.SecurityContext;
 import javax.ws.rs.core.UriInfo;
 import org.apache.commons.configuration.Configuration;
@@ -56,7 +54,6 @@ import org.apache.commons.io.IOUtils;
 import org.apache.log4j.Logger;
 import org.restcomm.connect.commons.dao.Sid;
 import org.restcomm.connect.core.service.RestcommConnectServiceProvider;
-import org.restcomm.connect.core.service.profile.ProfileService;
 import org.restcomm.connect.dao.AccountsDao;
 import org.restcomm.connect.dao.DaoManager;
 import org.restcomm.connect.dao.OrganizationsDao;
@@ -70,6 +67,8 @@ import org.restcomm.connect.dao.entities.ProfileAssociation;
 import org.restcomm.connect.http.exceptionmappers.CustomReasonPhraseType;
 import org.restcomm.connect.http.security.AccountPrincipal;
 import org.restcomm.connect.http.security.RCSecContext;
+import static javax.ws.rs.core.Response.status;
+import org.restcomm.connect.core.service.api.ProfileService;
 
 public class ProfileEndpoint {
 
@@ -363,7 +362,7 @@ public class ProfileEndpoint {
         AccountPrincipal userPrincipal = (AccountPrincipal) ctx.getUserPrincipal();
         if (!userPrincipal.isSuperAdmin()) {
 
-            Profile effectiveProfile = profileService.retrieveProfileByAccountSid(userPrincipal.getIdentityContext().getAccountKey().getAccount().toString());
+            Profile effectiveProfile = profileService.retrieveEffectiveProfile(userPrincipal.getIdentityContext().getAccountKey().getAccount().toString());
             if (!effectiveProfile.getSid().equals(profileSid)) {
                 CustomReasonPhraseType stat = new CustomReasonPhraseType(Response.Status.FORBIDDEN, "Profile not liked");
                 throw new WebApplicationException(status(stat).build());
