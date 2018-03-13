@@ -53,7 +53,6 @@ import org.apache.commons.configuration.Configuration;
 import org.apache.commons.io.IOUtils;
 import org.apache.log4j.Logger;
 import org.restcomm.connect.commons.dao.Sid;
-import org.restcomm.connect.core.service.RestcommConnectServiceProvider;
 import org.restcomm.connect.dao.AccountsDao;
 import org.restcomm.connect.dao.DaoManager;
 import org.restcomm.connect.dao.OrganizationsDao;
@@ -109,7 +108,7 @@ public class ProfileEndpoint {
         rootConfiguration = (Configuration) context.getAttribute(Configuration.class.getName());
         runtimeConfiguration = rootConfiguration.subset("runtime-settings");
         final DaoManager storage = (DaoManager) context.getAttribute(DaoManager.class.getName());
-        profileService = RestcommConnectServiceProvider.getInstance().provideProfileService();
+        profileService = (ProfileService)context.getAttribute(ProfileService.class.getName());
         profileAssociationsDao = storage.getProfileAssociationsDao();
         this.accountsDao = storage.getAccountsDao();
         this.organizationsDao = storage.getOrganizationsDao();

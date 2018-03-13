@@ -46,7 +46,6 @@ import org.restcomm.connect.commons.configuration.sets.RcmlserverConfigurationSe
 import org.restcomm.connect.commons.dao.Sid;
 import org.restcomm.connect.commons.faulttolerance.RestcommUntypedActor;
 import org.restcomm.connect.commons.util.UriUtils;
-import org.restcomm.connect.core.service.RestcommConnectServiceProvider;
 import org.restcomm.connect.core.service.api.NumberSelectorService;
 import org.restcomm.connect.dao.AccountsDao;
 import org.restcomm.connect.dao.ApplicationsDao;
@@ -125,7 +124,7 @@ public class UssdCallManager extends RestcommUntypedActor {
         this.ussdGatewayUri = ussdGatewayConfig.getString("ussd-gateway-uri");
         this.ussdGatewayUsername = ussdGatewayConfig.getString("ussd-gateway-user");
         this.ussdGatewayPassword = ussdGatewayConfig.getString("ussd-gateway-password");
-        numberSelector = RestcommConnectServiceProvider.getInstance().provideNumberSelectorService();
+        numberSelector = (NumberSelectorService)context.getAttribute(NumberSelectorService.class.getName());
 
         extensions = ExtensionController.getInstance().getExtensions(ExtensionType.FeatureAccessControl);
     }
