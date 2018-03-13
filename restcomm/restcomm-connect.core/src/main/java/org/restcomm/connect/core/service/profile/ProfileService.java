@@ -19,7 +19,10 @@
  */
 package org.restcomm.connect.core.service.profile;
 
+import java.net.URI;
 import java.sql.SQLException;
+
+import javax.ws.rs.core.UriInfo;
 
 import org.apache.log4j.Logger;
 import org.restcomm.connect.commons.dao.Sid;
@@ -29,78 +32,98 @@ import org.restcomm.connect.dao.entities.Account;
 import org.restcomm.connect.dao.entities.Profile;
 import org.restcomm.connect.dao.entities.ProfileAssociation;
 
+import com.sun.jersey.core.header.LinkHeader;
+import com.sun.jersey.core.header.LinkHeader.LinkHeaderBuilder;
+
 public class ProfileService implements CoreService {
-    static String DEFAULT_PROFILE_SID = Profile.DEFAULT_PROFILE_SID;
-    private static Logger logger = Logger.getLogger(ProfileService.class);
+	private static Logger logger = Logger.getLogger(ProfileService.class);
 
-    private final DaoManager daoManager;
+	private static String DEFAULT_PROFILE_SID = Profile.DEFAULT_PROFILE_SID;
+    private static final String PROFILE_REL_TYPE = "related";
+    private static final String TITLE_PARAM = "title";
 
-    public ProfileService(DaoManager daoManager){
-        super();
-        this.daoManager = daoManager;
-    }
+	private final DaoManager daoManager;
+
+	public ProfileService(DaoManager daoManager) {
+		super();
+		this.daoManager = daoManager;
+	}
+
+	/**
+	 * @param accountSid
+	 * @return will return associated profile of provided accountSid
+	 */
+	public Profile retrieveProfileByAccountSid(String accountSid) {
+		Profile profile = null;
+		Sid currentAccount = new Sid(accountSid);
+		Account lastAccount = null;
+
+		// try to find profile in account hierarchy
+		do {
+			profile = retrieveProfileForTarget(currentAccount.toString());
+			if (profile == null) {
+				lastAccount = daoManager.getAccountsDao().getAccount(currentAccount);
+				if (lastAccount != null) {
+					currentAccount = lastAccount.getParentSid();
+				} else {
+					throw new RuntimeException("account not found!!!");
+				}
+			}
+		} while (profile == null && currentAccount != null);
+
+		// if profile is not found in account hierarchy,try org
+		if (profile == null && lastAccount != null) {
+			Sid organizationSid = lastAccount.getOrganizationSid();
+			profile = retrieveProfileForTarget(organizationSid.toString());
+		}
+
+		// finally try with default profile
+		if (profile == null) {
+			try {
+				profile = daoManager.getProfilesDao().getProfile(DEFAULT_PROFILE_SID);
+			} catch (SQLException ex) {
+				throw new RuntimeException(ex);
+			}
+		}
+
+		if (logger.isDebugEnabled()) {
+			logger.debug("Returning profile:" + profile);
+		}
+
+		return profile;
+	}
+
+	/**
+	 * @param targetSid
+	 * @return will return associated profile of provided target (account or
+	 *         organization)
+	 */
+	public Profile retrieveProfileForTarget(String targetSid) {
+		ProfileAssociation assoc = daoManager.getProfileAssociationsDao().getProfileAssociationByTargetSid(targetSid);
+		Profile profile = null;
+		if (assoc != null) {
+			try {
+				profile = daoManager.getProfilesDao().getProfile(assoc.getProfileSid().toString());
+			} catch (SQLException ex) {
+				throw new RuntimeException("problem retrieving profile", ex);
+			}
+		}
+		if (logger.isDebugEnabled()) {
+			logger.debug("Returning profile:" + profile);
+		}
+		return profile;
+	}
 
     /**
-     * @param accountSid
-     * @return will return associated profile of provided accountSid
+     * @param targetSid
+     * @param info
+     * @param resource
+     * @return
      */
-    public Profile retrieveProfileByAccountSid(String accountSid) {
-            Profile profile = null;
-            Sid currentAccount = new Sid(accountSid);
-            Account lastAccount = null;
-
-            //try to find profile in account hierarchy
-            do {
-                profile = retrieveProfileForTarget(currentAccount.toString());
-                if (profile == null) {
-                    lastAccount = daoManager.getAccountsDao().getAccount(currentAccount);
-                    if (lastAccount != null) {
-                        currentAccount = lastAccount.getParentSid();
-                    } else {
-                        throw new RuntimeException("account not found!!!");
-                    }
-                }
-            } while(profile == null && currentAccount != null);
-
-            //if profile is not found in account hierarchy,try org
-            if (profile == null && lastAccount != null) {
-                Sid organizationSid = lastAccount.getOrganizationSid();
-                profile = retrieveProfileForTarget(organizationSid.toString());
-            }
-
-            //finally try with default profile
-            if (profile == null) {
-                try {
-                    profile = daoManager.getProfilesDao().getProfile(DEFAULT_PROFILE_SID);
-                } catch (SQLException ex) {
-                    throw new RuntimeException(ex);
-                }
-            }
-
-            if (logger.isDebugEnabled()) {
-                logger.debug("Returning profile:" + profile);
-            }
-
-            return profile;
-        }
-
-        /**
-         * @param targetSid
-         * @return will return associated profile of provided target (account or organization)
-         */
-        public Profile retrieveProfileForTarget(String targetSid) {
-            ProfileAssociation assoc = daoManager.getProfileAssociationsDao().getProfileAssociationByTargetSid(targetSid);
-            Profile profile = null;
-            if (assoc != null) {
-                try {
-                    profile = daoManager.getProfilesDao().getProfile(assoc.getProfileSid().toString());
-                } catch (SQLException ex) {
-                    throw new RuntimeException("problem retrieving profile", ex);
-                }
-            }
-            if (logger.isDebugEnabled()) {
-                logger.debug("Returning profile:" + profile);
-            }
-            return profile;
-        }
+    public LinkHeader composeProfileLink(String targetSid, UriInfo info, Class resource) {
+        String sid = targetSid.toString();
+        URI uri = info.getBaseUriBuilder().path(resource).path(sid).build();
+        LinkHeaderBuilder link = LinkHeader.uri(uri).parameter(TITLE_PARAM, "Profiles");
+        return link.rel(PROFILE_REL_TYPE).build();
+    }
 }
