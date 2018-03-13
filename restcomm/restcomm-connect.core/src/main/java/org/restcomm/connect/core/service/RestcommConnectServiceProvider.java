@@ -23,38 +23,55 @@ package org.restcomm.connect.core.service;
 
 import org.apache.log4j.Logger;
 import org.restcomm.connect.core.service.number.NumberSelectorService;
+import org.restcomm.connect.core.service.profile.ProfileService;
 import org.restcomm.connect.dao.DaoManager;
 
 /**
  * @author guilherme.jansen@telestax.com
+ * @author Maria
  */
-public class CoreServices {
+public class RestcommConnectServiceProvider {
 
-    private static final Logger logger = Logger.getLogger(CoreServices.class);
-    private static CoreServices instance = null;
+    private static final Logger logger = Logger.getLogger(RestcommConnectServiceProvider.class);
+    private static RestcommConnectServiceProvider instance = null;
 
     // core services
     private NumberSelectorService numberSelector;
+    private ProfileService profileService;
 
-    public static CoreServices getInstance() {
+    public static RestcommConnectServiceProvider getInstance() {
         if (instance == null) {
-            instance = new CoreServices();
+            instance = new RestcommConnectServiceProvider();
         }
         return instance;
     }
 
-    public void startServices(DaoManager storage) {
+    /**
+     * @param daoManager
+     */
+    public void startServices(DaoManager daoManager) {
         try {
             // core services initialization
-            this.numberSelector = new NumberSelectorService(storage.getIncomingPhoneNumbersDao());
+            this.numberSelector = new NumberSelectorService(daoManager.getIncomingPhoneNumbersDao());
+            this.profileService = new ProfileService(daoManager);
         } catch (Exception e) {
             logger.error("Error while initializing core services: ", e);
             throw e;
         }
     }
 
-    public NumberSelectorService getNumberSelector() {
+    /**
+     * @return
+     */
+    public NumberSelectorService provideNumberSelectorService() {
         return numberSelector;
+    }
+
+    /**
+     * @return
+     */
+    public ProfileService provideProfileService() {
+        return profileService;
     }
 
 }
