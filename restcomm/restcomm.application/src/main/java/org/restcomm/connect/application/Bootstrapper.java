@@ -36,7 +36,6 @@ import org.restcomm.connect.commons.dao.Sid;
 import org.restcomm.connect.commons.loader.ObjectFactory;
 import org.restcomm.connect.commons.loader.ObjectInstantiationException;
 import org.restcomm.connect.commons.util.DNSUtils;
-import org.restcomm.connect.core.service.RestcommConnectServiceProvider;
 import org.restcomm.connect.dao.DaoManager;
 import org.restcomm.connect.dao.entities.InstanceId;
 import org.restcomm.connect.dao.entities.Organization;
@@ -403,7 +402,7 @@ public final class Bootstrapper extends SipServlet implements SipServletListener
             context.setAttribute(IdentityContext.class.getName(), identityContext);
 
             // Initialize CoreServices
-            RestcommConnectServiceProvider.getInstance().startServices(storage);
+            RestcommConnectServiceProvider.getInstance().startServices(context);
 
             // Create the media gateway.
 

@@ -37,7 +37,6 @@ import org.restcomm.connect.commons.configuration.sets.RcmlserverConfigurationSe
 import org.restcomm.connect.commons.dao.Sid;
 import org.restcomm.connect.commons.faulttolerance.RestcommUntypedActor;
 import org.restcomm.connect.commons.util.UriUtils;
-import org.restcomm.connect.core.service.RestcommConnectServiceProvider;
 import org.restcomm.connect.core.service.api.NumberSelectorService;
 import org.restcomm.connect.dao.AccountsDao;
 import org.restcomm.connect.dao.ApplicationsDao;
@@ -104,7 +103,7 @@ public class SmppMessageHandler extends RestcommUntypedActor {
         this.configuration = (Configuration) servletContext.getAttribute(Configuration.class.getName());
         this.sipFactory = (SipFactory) servletContext.getAttribute(SipFactory.class.getName());
         this.monitoringService = (ActorRef) servletContext.getAttribute(MonitoringService.class.getName());
-        numberSelector = RestcommConnectServiceProvider.getInstance().provideNumberSelectorService();
+        numberSelector = (NumberSelectorService)servletContext.getAttribute(NumberSelectorService.class.getName());
         //FIXME:Should new ExtensionType.SmppMessageHandler be defined?
         extensions = ExtensionController.getInstance().getExtensions(ExtensionType.SmsService);
         if (logger.isInfoEnabled()) {

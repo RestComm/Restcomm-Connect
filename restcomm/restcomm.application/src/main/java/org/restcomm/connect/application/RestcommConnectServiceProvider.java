@@ -18,8 +18,9 @@
  * Software Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA
  * 02110-1301 USA, or see the FSF site: http://www.fsf.org.
  */
-package org.restcomm.connect.core.service;
+package org.restcomm.connect.application;
 
+import javax.servlet.ServletContext;
 import org.apache.log4j.Logger;
 import org.restcomm.connect.core.service.api.NumberSelectorService;
 import org.restcomm.connect.core.service.api.ProfileService;
@@ -50,10 +51,13 @@ public class RestcommConnectServiceProvider {
     /**
      * @param daoManager
      */
-    public void startServices(DaoManager daoManager) {
+    public void startServices(ServletContext ctx) {
+        DaoManager daoManager = (DaoManager) ctx.getAttribute(DaoManager.class.getName());
         // core services initialization
         this.numberSelector = new NumberSelectorServiceImpl(daoManager.getIncomingPhoneNumbersDao());
+        ctx.setAttribute(NumberSelectorService.class.getName(), numberSelector);
         this.profileService = new ProfileServiceImpl(daoManager);
+        ctx.setAttribute(ProfileService.class.getName(), profileService);
     }
 
     /**

@@ -26,7 +26,6 @@ import org.apache.shiro.authz.Permission;
 import org.apache.shiro.authz.SimpleRole;
 import org.apache.shiro.authz.permission.WildcardPermissionResolver;
 import org.restcomm.connect.commons.dao.Sid;
-import org.restcomm.connect.core.service.RestcommConnectServiceProvider;
 import org.restcomm.connect.dao.AccountsDao;
 import org.restcomm.connect.dao.DaoManager;
 import org.restcomm.connect.dao.OrganizationsDao;
@@ -111,7 +110,7 @@ public abstract class SecuredEndpoint extends AbstractEndpoint {
                 logger.info("RestAPI extensions: "+(extensions != null ? extensions.size() : "0"));
             }
         }
-        profileService = RestcommConnectServiceProvider.getInstance().provideProfileService();
+        profileService = (ProfileService)context.getAttribute(ProfileService.class.getName());
     }
 
     /**
