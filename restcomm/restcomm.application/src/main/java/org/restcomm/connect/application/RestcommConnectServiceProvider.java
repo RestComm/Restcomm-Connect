@@ -33,8 +33,6 @@ import org.restcomm.connect.dao.DaoManager;
  * @author Maria
  */
 public class RestcommConnectServiceProvider {
-
-    private static final Logger logger = Logger.getLogger(RestcommConnectServiceProvider.class);
     private static RestcommConnectServiceProvider instance = null;
 
     // core services

@@ -30,11 +30,7 @@
 		<dependency>
 			<groupId>com.googlecode.libphonenumber</groupId>
 			<artifactId>libphonenumber</artifactId>
-		</dependency>
-		<dependency>
-			<groupId>com.sun.jersey</groupId>
-			<artifactId>jersey-json</artifactId>
-		</dependency>  
+		</dependency> 
 	</dependencies>
 
 </project>
