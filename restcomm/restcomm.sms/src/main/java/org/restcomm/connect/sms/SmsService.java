@@ -36,7 +36,7 @@ import org.restcomm.connect.commons.dao.Sid;
 import org.restcomm.connect.commons.faulttolerance.RestcommUntypedActor;
 import org.restcomm.connect.commons.push.PushNotificationServerHelper;
 import org.restcomm.connect.commons.util.UriUtils;
-import org.restcomm.connect.core.service.RestcommConnectServiceFactory;
+import org.restcomm.connect.core.service.RestcommConnectServiceProvider;
 import org.restcomm.connect.core.service.number.NumberSelectorService;
 import org.restcomm.connect.dao.AccountsDao;
 import org.restcomm.connect.dao.ApplicationsDao;
@@ -148,7 +148,7 @@ public final class SmsService extends RestcommUntypedActor {
         this.storage = storage;
         this.servletContext = servletContext;
         monitoringService = (ActorRef) servletContext.getAttribute(MonitoringService.class.getName());
-        numberSelector = RestcommConnectServiceFactory.getInstance().provideNumberSelectorService();
+        numberSelector = RestcommConnectServiceProvider.getInstance().provideNumberSelectorService();
         this.pushNotificationServerHelper = new PushNotificationServerHelper(system, configuration);
         // final Configuration runtime = configuration.subset("runtime-settings");
         // TODO this.useTo = runtime.getBoolean("use-to");
