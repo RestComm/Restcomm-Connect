@@ -45,8 +45,11 @@ import javax.ws.rs.core.UriInfo;
 import org.apache.commons.configuration.Configuration;
 import org.joda.time.DateTime;
 import org.restcomm.connect.commons.dao.Sid;
+import org.restcomm.connect.dao.DaoManager;
+import org.restcomm.connect.dao.ProfileAssociationsDao;
 import org.restcomm.connect.dao.entities.Organization;
 import org.restcomm.connect.dao.entities.OrganizationList;
+import org.restcomm.connect.dao.entities.Profile;
 import org.restcomm.connect.dao.entities.RestCommResponse;
 import org.restcomm.connect.dns.DnsProvisioningManager;
 import org.restcomm.connect.dns.DnsProvisioningManagerProvider;
@@ -58,12 +61,6 @@ import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
 import com.sun.jersey.core.header.LinkHeader;
 import com.thoughtworks.xstream.XStream;
-import java.net.URI;
-import org.restcomm.connect.dao.DaoManager;
-import org.restcomm.connect.dao.ProfileAssociationsDao;
-import org.restcomm.connect.dao.entities.ProfileAssociation;
-import static org.restcomm.connect.http.ProfileEndpoint.PROFILE_REL_TYPE;
-import static org.restcomm.connect.http.ProfileEndpoint.TITLE_PARAM;
 
 /**
  * @author maria.farooq@telestax.com (Maria Farooq)
@@ -127,13 +124,6 @@ public class OrganizationsEndpoint extends SecuredEndpoint {
         xstream.registerConverter(new RestCommResponseConverter(configuration));
     }
 
-    public LinkHeader composeLink(Sid targetSid, UriInfo info) {
-        String sid = targetSid.toString();
-        URI uri = info.getBaseUriBuilder().path(ProfileJsonEndpoint.class).path(sid).build();
-        LinkHeader.LinkHeaderBuilder link = LinkHeader.uri(uri).parameter(TITLE_PARAM, "Profiles");
-        return link.rel(PROFILE_REL_TYPE).build();
-    }
-
     /**
      * @param organizationSid
      * @param responseType
@@ -168,9 +158,9 @@ public class OrganizationsEndpoint extends SecuredEndpoint {
             return status(NOT_FOUND).build();
         } else {
             Response.ResponseBuilder ok = Response.ok();
-            ProfileAssociation profileAssociationByTargetSid = profileAssociationsDao.getProfileAssociationByTargetSid(organizationSid);
-            if (profileAssociationByTargetSid != null) {
-                LinkHeader profileLink = composeLink(profileAssociationByTargetSid.getProfileSid(), info);
+            Profile associatedProfile = profileService.retrieveProfileForTarget(organizationSid);
+            if (associatedProfile != null) {
+                LinkHeader profileLink = profileService.composeProfileLink(associatedProfile.getSid(), info, ProfileJsonEndpoint.class);
                 ok.header(ProfileEndpoint.LINK_HEADER, profileLink.toString());
             }
             if (APPLICATION_XML_TYPE == responseType) {
