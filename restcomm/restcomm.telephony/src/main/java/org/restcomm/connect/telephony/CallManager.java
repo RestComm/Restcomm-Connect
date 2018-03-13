@@ -49,7 +49,7 @@ import org.restcomm.connect.commons.telephony.ProxyRule;
 import org.restcomm.connect.commons.util.DNSUtils;
 import org.restcomm.connect.commons.util.SdpUtils;
 import org.restcomm.connect.commons.util.UriUtils;
-import org.restcomm.connect.core.service.CoreServices;
+import org.restcomm.connect.core.service.RestcommConnectServiceProvider;
 import org.restcomm.connect.core.service.number.NumberSelectionResult;
 import org.restcomm.connect.core.service.number.NumberSelectorService;
 import org.restcomm.connect.dao.AccountsDao;
@@ -269,7 +269,7 @@ public final class CallManager extends RestcommUntypedActor {
         this.sms = sms;
         this.sipFactory = factory;
         this.storage = storage;
-        numberSelector = CoreServices.getInstance().getNumberSelector();
+        numberSelector = RestcommConnectServiceProvider.getInstance().provideNumberSelectorService();
         final Configuration runtime = configuration.subset("runtime-settings");
         final Configuration outboundProxyConfig = runtime.subset("outbound-proxy");
         SipURI outboundIntf = outboundInterface("udp");

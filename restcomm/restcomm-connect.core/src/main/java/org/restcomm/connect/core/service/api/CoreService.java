@@ -19,12 +19,12 @@
  * 02110-1301 USA, or see the FSF site: http://www.fsf.org.
  */
 
-package org.restcomm.connect.core.service;
+package org.restcomm.connect.core.service.api;
 
 /**
  * @author guilherme.jansen@telestax.com
  */
-public abstract class CoreService {
+public interface CoreService {
 
 
 }

@@ -1,5 +1,7 @@
 package org.restcomm.connect.application;
 
+import static org.restcomm.connect.dao.entities.Profile.DEFAULT_PROFILE_SID;
+
 import java.io.IOException;
 import java.net.UnknownHostException;
 import java.sql.SQLException;
@@ -34,7 +36,7 @@ import org.restcomm.connect.commons.dao.Sid;
 import org.restcomm.connect.commons.loader.ObjectFactory;
 import org.restcomm.connect.commons.loader.ObjectInstantiationException;
 import org.restcomm.connect.commons.util.DNSUtils;
-import org.restcomm.connect.core.service.CoreServices;
+import org.restcomm.connect.core.service.RestcommConnectServiceProvider;
 import org.restcomm.connect.dao.DaoManager;
 import org.restcomm.connect.dao.entities.InstanceId;
 import org.restcomm.connect.dao.entities.Organization;
@@ -61,7 +63,6 @@ import akka.actor.ActorSystem;
 import akka.actor.Props;
 import akka.actor.UntypedActor;
 import akka.actor.UntypedActorFactory;
-import static org.restcomm.connect.dao.entities.Profile.DEFAULT_PROFILE_SID;
 import scala.concurrent.ExecutionContext;
 
 /**
@@ -401,8 +402,8 @@ public final class Bootstrapper extends SipServlet implements SipServletListener
             IdentityContext identityContext = new IdentityContext(xml);
             context.setAttribute(IdentityContext.class.getName(), identityContext);
 
-            // init CoreServices
-            CoreServices.getInstance().startServices(storage);
+            // Initialize CoreServices
+            RestcommConnectServiceProvider.getInstance().startServices(storage);
 
             // Create the media gateway.
 
