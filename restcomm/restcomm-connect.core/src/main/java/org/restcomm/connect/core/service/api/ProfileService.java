@@ -25,9 +25,23 @@ import javax.ws.rs.core.UriInfo;
 import org.restcomm.connect.dao.entities.Profile;
 
 public interface ProfileService {
+    /**
+     * @param accountSid
+     * @return
+     */
     Profile retrieveEffectiveProfile(String accountSid);
 
+    /**
+     * @param targetSid
+     * @param info
+     * @param resource
+     * @return
+     */
     LinkHeader composeProfileLink(String targetSid, UriInfo info, Class resource);
 
+    /**
+     * @param targetSid
+     * @return
+     */
     Profile retrieveProfileForTarget(String targetSid);
 }

@@ -43,8 +43,6 @@ import javax.ws.rs.core.UriInfo;
 import org.apache.commons.configuration.Configuration;
 import org.joda.time.DateTime;
 import org.restcomm.connect.commons.dao.Sid;
-import org.restcomm.connect.dao.DaoManager;
-import org.restcomm.connect.dao.ProfileAssociationsDao;
 import org.restcomm.connect.dao.entities.Organization;
 import org.restcomm.connect.dao.entities.OrganizationList;
 import org.restcomm.connect.dao.entities.Profile;
@@ -94,9 +92,6 @@ public class OrganizationsEndpoint extends SecuredEndpoint {
         super.init(configuration.subset("runtime-settings"));
 
         registerConverters();
-
-        profileAssociationsDao = ((DaoManager) context.getAttribute(DaoManager.class.getName())).getProfileAssociationsDao();
-
 
         // Make sure there is an authenticated account present when this endpoint is used
         // get manager from context or create it if it does not exist

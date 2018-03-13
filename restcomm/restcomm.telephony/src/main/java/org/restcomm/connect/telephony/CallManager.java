@@ -19,21 +19,47 @@
  */
 package org.restcomm.connect.telephony;
 
-import akka.actor.ActorContext;
-import akka.actor.ActorRef;
-import akka.actor.ActorSystem;
-import akka.actor.Props;
-import akka.actor.ReceiveTimeout;
-import akka.actor.UntypedActor;
-import akka.actor.UntypedActorContext;
-import akka.actor.UntypedActorFactory;
-import akka.event.Logging;
-import akka.event.LoggingAdapter;
-import akka.util.Timeout;
+import static akka.pattern.Patterns.ask;
+import static javax.servlet.sip.SipServlet.OUTBOUND_INTERFACES;
+import static javax.servlet.sip.SipServletResponse.SC_ACCEPTED;
+import static javax.servlet.sip.SipServletResponse.SC_BAD_REQUEST;
+import static javax.servlet.sip.SipServletResponse.SC_FORBIDDEN;
+import static javax.servlet.sip.SipServletResponse.SC_NOT_FOUND;
+import static javax.servlet.sip.SipServletResponse.SC_OK;
+import static javax.servlet.sip.SipServletResponse.SC_SERVER_INTERNAL_ERROR;
 
-import com.google.i18n.phonenumbers.NumberParseException;
+import java.io.IOException;
+import java.net.InetAddress;
+import java.net.URI;
+import java.net.URISyntaxException;
+import java.net.UnknownHostException;
+import java.util.ArrayList;
+import java.util.Iterator;
+import java.util.List;
+import java.util.ListIterator;
+import java.util.Map;
+import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.CopyOnWriteArrayList;
+import java.util.concurrent.TimeUnit;
+import java.util.concurrent.atomic.AtomicBoolean;
+import java.util.concurrent.atomic.AtomicInteger;
+import java.util.regex.Pattern;
 
-import gov.nist.javax.sip.header.UserAgent;
+import javax.sdp.SdpParseException;
+import javax.servlet.ServletContext;
+import javax.servlet.sip.Address;
+import javax.servlet.sip.AuthInfo;
+import javax.servlet.sip.ServletParseException;
+import javax.servlet.sip.SipApplicationSession;
+import javax.servlet.sip.SipApplicationSessionEvent;
+import javax.servlet.sip.SipFactory;
+import javax.servlet.sip.SipServletRequest;
+import javax.servlet.sip.SipServletResponse;
+import javax.servlet.sip.SipSession;
+import javax.servlet.sip.SipURI;
+import javax.servlet.sip.TelURL;
+import javax.sip.header.RouteHeader;
+import javax.sip.message.Response;
 
 import org.apache.commons.configuration.Configuration;
 import org.apache.commons.configuration.HierarchicalConfiguration;
@@ -50,8 +76,8 @@ import org.restcomm.connect.commons.util.DNSUtils;
 import org.restcomm.connect.commons.util.SdpUtils;
 import org.restcomm.connect.commons.util.UriUtils;
 import org.restcomm.connect.core.service.RestcommConnectServiceProvider;
+import org.restcomm.connect.core.service.api.NumberSelectorService;
 import org.restcomm.connect.core.service.number.NumberSelectionResult;
-import org.restcomm.connect.core.service.number.NumberSelectorService;
 import org.restcomm.connect.dao.AccountsDao;
 import org.restcomm.connect.dao.ApplicationsDao;
 import org.restcomm.connect.dao.CallDetailRecordsDao;
@@ -104,51 +130,23 @@ import org.restcomm.connect.telephony.api.UpdateCallScript;
 import org.restcomm.connect.telephony.api.util.B2BUAHelper;
 import org.restcomm.connect.telephony.api.util.CallControlHelper;
 
+import com.google.i18n.phonenumbers.NumberParseException;
+
+import akka.actor.ActorContext;
+import akka.actor.ActorRef;
+import akka.actor.ActorSystem;
+import akka.actor.Props;
+import akka.actor.ReceiveTimeout;
+import akka.actor.UntypedActor;
+import akka.actor.UntypedActorContext;
+import akka.actor.UntypedActorFactory;
+import akka.event.Logging;
+import akka.event.LoggingAdapter;
+import akka.util.Timeout;
+import gov.nist.javax.sip.header.UserAgent;
 import scala.concurrent.Await;
 import scala.concurrent.Future;
 import scala.concurrent.duration.Duration;
-
-import javax.sdp.SdpParseException;
-import javax.servlet.ServletContext;
-import javax.servlet.sip.Address;
-import javax.servlet.sip.AuthInfo;
-import javax.servlet.sip.ServletParseException;
-import javax.servlet.sip.SipApplicationSession;
-import javax.servlet.sip.SipApplicationSessionEvent;
-import javax.servlet.sip.SipFactory;
-import javax.servlet.sip.SipServletRequest;
-import javax.servlet.sip.SipServletResponse;
-import javax.servlet.sip.SipSession;
-import javax.servlet.sip.SipURI;
-import javax.servlet.sip.TelURL;
-import javax.sip.header.RouteHeader;
-import javax.sip.message.Response;
-
-import java.io.IOException;
-import java.net.InetAddress;
-import java.net.URI;
-import java.net.URISyntaxException;
-import java.net.UnknownHostException;
-import java.util.ArrayList;
-import java.util.Iterator;
-import java.util.List;
-import java.util.ListIterator;
-import java.util.Map;
-import java.util.concurrent.ConcurrentHashMap;
-import java.util.concurrent.CopyOnWriteArrayList;
-import java.util.concurrent.TimeUnit;
-import java.util.concurrent.atomic.AtomicBoolean;
-import java.util.concurrent.atomic.AtomicInteger;
-import java.util.regex.Pattern;
-
-import static akka.pattern.Patterns.ask;
-import static javax.servlet.sip.SipServlet.OUTBOUND_INTERFACES;
-import static javax.servlet.sip.SipServletResponse.SC_ACCEPTED;
-import static javax.servlet.sip.SipServletResponse.SC_BAD_REQUEST;
-import static javax.servlet.sip.SipServletResponse.SC_FORBIDDEN;
-import static javax.servlet.sip.SipServletResponse.SC_NOT_FOUND;
-import static javax.servlet.sip.SipServletResponse.SC_OK;
-import static javax.servlet.sip.SipServletResponse.SC_SERVER_INTERNAL_ERROR;
 
 /**
  * @author quintana.thomas@gmail.com (Thomas Quintana)

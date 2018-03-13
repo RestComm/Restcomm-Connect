@@ -20,12 +20,31 @@
 
 package org.restcomm.connect.core.service.api;
 
+import java.util.Set;
+
 import org.restcomm.connect.commons.dao.Sid;
+import org.restcomm.connect.core.service.number.SearchModifier;
 import org.restcomm.connect.dao.entities.IncomingPhoneNumber;
 
 
 
 public interface NumberSelectorService {
+    /**
+     * @param phone
+     * @param sourceOrganizationSid
+     * @param destinationOrganizationSid
+     * @return
+     */
     IncomingPhoneNumber searchNumber(String phone,
             Sid sourceOrganizationSid, Sid destinationOrganizationSid);
+
+    /**
+     * @param phone
+     * @param sourceOrganizationSid
+     * @param destinationOrganizationSid
+     * @param modifiers
+     * @return
+     */
+    public IncomingPhoneNumber searchNumber(String phone,
+            Sid sourceOrganizationSid, Sid destinationOrganizationSid, Set<SearchModifier> modifiers);
 }
