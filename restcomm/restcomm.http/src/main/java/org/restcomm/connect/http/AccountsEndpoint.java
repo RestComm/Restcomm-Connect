@@ -27,6 +27,8 @@ import static javax.ws.rs.core.Response.Status.BAD_REQUEST;
 import static javax.ws.rs.core.Response.Status.CONFLICT;
 import static javax.ws.rs.core.Response.Status.NOT_FOUND;
 import static javax.ws.rs.core.Response.Status.PRECONDITION_FAILED;
+import static org.restcomm.connect.http.ProfileEndpoint.PROFILE_REL_TYPE;
+import static org.restcomm.connect.http.ProfileEndpoint.TITLE_PARAM;
 
 import java.net.URI;
 import java.util.ArrayList;
@@ -199,7 +201,7 @@ public class AccountsEndpoint extends SecuredEndpoint {
             Response.ResponseBuilder ok = Response.ok();
             Profile associatedProfile = profileService.retrieveEffectiveProfileByAccountSid(new Sid(accountSid));
             if (associatedProfile != null) {
-                LinkHeader profileLink = profileService.composeProfileLink(new Sid(associatedProfile.getSid()), info, ProfileJsonEndpoint.class);
+                LinkHeader profileLink = composeLink(new Sid(associatedProfile.getSid()), info);
                 ok.header(ProfileEndpoint.LINK_HEADER, profileLink.toString());
             }
             if (APPLICATION_XML_TYPE == responseType) {
@@ -794,6 +796,13 @@ public class AccountsEndpoint extends SecuredEndpoint {
         } else if (!data.containsKey("Password")) {
             throw new NullPointerException("Password can not be null.");
         }
+    }
+
+    public LinkHeader composeLink(Sid targetSid, UriInfo info) {
+        String sid = targetSid.toString();
+        URI uri = info.getBaseUriBuilder().path(ProfileJsonEndpoint.class).path(sid).build();
+        LinkHeader.LinkHeaderBuilder link = LinkHeader.uri(uri).parameter(TITLE_PARAM, "Profiles");
+        return link.rel(PROFILE_REL_TYPE).build();
     }
 
 }
