@@ -20,5 +20,14 @@
 package org.restcomm.connect.commons.util;
 
 public class ClientLoginConstrains {
-    public static char[] NOT_ALLOWED_CHARS = {'?', '=', '@'};
+    private static char[] NOT_ALLOWED_CHARS = {'?', '=', '@'};
+
+    public static boolean isValidClientLogin (final String login) {
+        for (char ch: ClientLoginConstrains.NOT_ALLOWED_CHARS) {
+            if (login.indexOf(ch) > -1) {
+                return false;
+            }
+        }
+        return true;
+    }
 }

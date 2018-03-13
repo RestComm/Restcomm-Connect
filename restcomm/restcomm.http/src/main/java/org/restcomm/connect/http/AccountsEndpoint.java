@@ -819,14 +819,12 @@ public class AccountsEndpoint extends SecuredEndpoint {
         }
 
         String clientLogin = data.getFirst("EmailAddress").split("@")[0];
-        for (char ch: ClientLoginConstrains.NOT_ALLOWED_CHARS) {
-            if (clientLogin.indexOf(ch) > -1) {
-                String msg = String.format("Login %s contains invalid character: %s ",data.getFirst("Login"), ch);
-                if (logger.isDebugEnabled()) {
-                    logger.debug(msg);
-                }
-                throw new IllegalArgumentException(msg);
+        if (!ClientLoginConstrains.isValidClientLogin(clientLogin)) {
+            String msg = String.format("Login %s contains invalid character(s) ",clientLogin);
+            if (logger.isDebugEnabled()) {
+                logger.debug(msg);
             }
+            throw new IllegalArgumentException(msg);
         }
     }
 
