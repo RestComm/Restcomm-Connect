@@ -628,7 +628,7 @@ public final class CallManager extends RestcommUntypedActor {
                 }
 
                 ExtensionController ec = ExtensionController.getInstance();
-                final IExtensionCreateCallRequest er = new CreateCall(fromUser, toUser, "", "", false, 0, CreateCallType.CLIENT, client.getAccountSid(), null, null, null, null, null);
+                final IExtensionCreateCallRequest er = new CreateCall(fromUser, toUser, "", "", false, 0, CreateCallType.CLIENT, client.getAccountSid(), null, null, null, null);
                 ExtensionResponse extRes = ec.executePreOutboundAction(er, extensions);
                 if (extRes.isAllowed()) {
                     long delay = pushNotificationServerHelper.sendPushNotificationIfNeeded(toClient.getPushClientIdentity());
@@ -685,7 +685,7 @@ public final class CallManager extends RestcommUntypedActor {
                 sendNotification(client.getAccountSid(), errMsg, 11002, "info", true);
 
                 ExtensionController ec = ExtensionController.getInstance();
-                IExtensionCreateCallRequest er = new CreateCall(fromUser, toUser, "", "", false, 0, CreateCallType.PSTN, client.getAccountSid(), null, null, null, null, null);
+                IExtensionCreateCallRequest er = new CreateCall(fromUser, toUser, "", "", false, 0, CreateCallType.PSTN, client.getAccountSid(), null, null, null, null);
                 ExtensionResponse extRes = ec.executePreOutboundAction(er, this.extensions);
                 if (extRes.isAllowed()) {
                     if (actAsProxyOut) {
@@ -741,7 +741,7 @@ public final class CallManager extends RestcommUntypedActor {
             // First try to check if the call is for a client
             if (toClient != null) {
                 ExtensionController ec = ExtensionController.getInstance();
-                final IExtensionCreateCallRequest cc = new CreateCall(fromUser, toUser, "", "", false, 0, CreateCallType.CLIENT, toClient.getAccountSid(), null, null, null, null, null);
+                final IExtensionCreateCallRequest cc = new CreateCall(fromUser, toUser, "", "", false, 0, CreateCallType.CLIENT, toClient.getAccountSid(), null, null, null, null);
                 ExtensionResponse extRes = ec.executePreInboundAction(cc, this.extensions);
 
                 if (extRes.isAllowed()) {

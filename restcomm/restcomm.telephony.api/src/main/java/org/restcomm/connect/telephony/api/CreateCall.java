@@ -57,11 +57,12 @@ public final class CreateCall implements IExtensionCreateCallRequest{
     private final MediaAttributes mediaAttributes;
     private String customHeaders;
 
+    //Used for IExtensionCreateCallRequest
     public CreateCall(final String from, final String to, final String username, final String password,
                       final boolean isFromApi, final int timeout, final CreateCallType type, final Sid accountId, final Sid parentCallSid,
-                      final URI statusCallbackUrl, final String statusCallbackMethod, final List<String> statusCallbackEvent, final String customHeader) {
+                      final URI statusCallbackUrl, final String statusCallbackMethod, final List<String> statusCallbackEvent) {
         this(from, to, username, password, isFromApi, timeout, type, accountId, parentCallSid, statusCallbackUrl, statusCallbackMethod,
-                statusCallbackEvent, "", null, new MediaAttributes(), customHeader);
+                statusCallbackEvent, "", null, new MediaAttributes(), null);
     }
 
     public CreateCall(final String from, final String to, final String username, final String password,
