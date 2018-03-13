@@ -105,6 +105,13 @@
 			<version>${project.version}</version>
 			<scope>provided</scope>
 		</dependency>
+		
+		<dependency>
+			<groupId>org.restcomm</groupId>
+			<artifactId>restcomm-connect.core</artifactId>
+			<version>${project.version}</version>
+			<scope>provided</scope>
+		</dependency>
 
 		<dependency>
 			<groupId>com.cloudhopper</groupId>

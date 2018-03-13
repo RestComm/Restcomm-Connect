@@ -16,7 +16,7 @@
  *  You should have received a copy of the GNU Affero General Public License
  *  along with this program.  If not, see <http://www.gnu.org/licenses/>
  */
-package org.restcomm.connect.interpreter;
+package org.restcomm.connect.core.service.number.api;
 
 /**
  * @author maria-farooq@live.com (Maria Farooq)

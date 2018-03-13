@@ -92,6 +92,14 @@ Will return single organization resource
 /{Version}/Organizations(.json)/{OrganizationSid}
 ----
 
+====== Response Headers
+[cols=",",options="header",]
+|==============================================================================================
+|Header |Description
+|Link | a link to the effective Profile document with attribute "rel" set to "related"
+|==============================================================================================
+
+
 .Read Organization Example
 ====
 curl -X GET "https://{accountSid}:{authToken}@mycompany.restcomm.com/restcomm/2012-04-24/Organizations/{OrganizationSid}"
