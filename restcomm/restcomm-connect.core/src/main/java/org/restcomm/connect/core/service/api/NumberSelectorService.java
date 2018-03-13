@@ -20,9 +20,12 @@
 
 package org.restcomm.connect.core.service.api;
 
+import java.util.Arrays;
+import java.util.HashSet;
 import java.util.Set;
 
 import org.restcomm.connect.commons.dao.Sid;
+import org.restcomm.connect.core.service.number.NumberSelectionResult;
 import org.restcomm.connect.core.service.number.SearchModifier;
 import org.restcomm.connect.dao.entities.IncomingPhoneNumber;
 
@@ -47,4 +50,41 @@ public interface NumberSelectorService {
      */
     IncomingPhoneNumber searchNumber(String phone,
             Sid sourceOrganizationSid, Sid destinationOrganizationSid, Set<SearchModifier> modifiers);
+
+    /**
+     * The main logic is: -Find a perfect match in DB using different formats.
+     * -If not matched, use available Regexes in the organization. -If not
+     * matched, try with the special * match.
+     *
+     * @param phone
+     * @param sourceOrganizationSid
+     * @param destinationOrganizationSid
+     * @return
+     */
+    NumberSelectionResult searchNumberWithResult(String phone,
+            Sid sourceOrganizationSid, Sid destinationOrganizationSid);
+
+    /**
+     * The main logic is: -Find a perfect match in DB using different formats.
+     * -If not matched, use available Regexes in the organization. -If not
+     * matched, try with the special * match.
+     *
+     * @param phone
+     * @param sourceOrganizationSid
+     * @param destinationOrganizationSid
+     * @param modifiers
+     * @return
+     */
+    NumberSelectionResult searchNumberWithResult(String phone,
+            Sid sourceOrganizationSid, Sid destinationOrganizationSid, Set<SearchModifier> modifiers);
+
+    /**
+     *
+     * @param result whether the call should be rejected depending on results
+     * found
+     * @param srcOrg
+     * @param destOrg
+     * @return
+     */
+    boolean isFailedCall(NumberSelectionResult result, Sid srcOrg, Sid destOrg);
 }
