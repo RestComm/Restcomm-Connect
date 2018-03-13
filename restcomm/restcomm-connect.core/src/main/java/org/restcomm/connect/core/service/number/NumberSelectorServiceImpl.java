@@ -32,13 +32,13 @@ import java.util.regex.Pattern;
 
 import org.apache.log4j.Logger;
 import org.restcomm.connect.commons.dao.Sid;
-import org.restcomm.connect.core.service.api.CoreService;
 import org.restcomm.connect.dao.IncomingPhoneNumbersDao;
 import org.restcomm.connect.dao.entities.IncomingPhoneNumber;
 import org.restcomm.connect.dao.entities.IncomingPhoneNumberFilter;
 
 import com.google.i18n.phonenumbers.NumberParseException;
 import com.google.i18n.phonenumbers.PhoneNumberUtil;
+import org.restcomm.connect.core.service.api.NumberSelectorService;
 
 /**
  * This Service will be used in different protocol scenarios to find if some
@@ -53,13 +53,13 @@ import com.google.i18n.phonenumbers.PhoneNumberUtil;
  * yet, then null values are allowed, but Regexes will not be evaluated in these
  * cases.
  */
-public class NumberSelectorService implements CoreService {
+public class NumberSelectorServiceImpl implements NumberSelectorService {
 
-    private static Logger logger = Logger.getLogger(NumberSelectorService.class);
+    private static Logger logger = Logger.getLogger(NumberSelectorServiceImpl.class);
 
     private IncomingPhoneNumbersDao numbersDao;
 
-    public NumberSelectorService(IncomingPhoneNumbersDao numbersDao) {
+    public NumberSelectorServiceImpl(IncomingPhoneNumbersDao numbersDao) {
         this.numbersDao = numbersDao;
     }
 
@@ -202,6 +202,7 @@ public class NumberSelectorService implements CoreService {
      * @param destinationOrganizationSid
      * @return
      */
+    @Override
     public IncomingPhoneNumber searchNumber(String phone,
             Sid sourceOrganizationSid, Sid destinationOrganizationSid) {
         return searchNumber(phone, sourceOrganizationSid, destinationOrganizationSid, new HashSet<>(Arrays.asList(SearchModifier.ORG_COMPLIANT)));

@@ -37,7 +37,7 @@ import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
 import org.restcomm.connect.commons.dao.Sid;
-import org.restcomm.connect.core.service.number.NumberSelectorService;
+import org.restcomm.connect.core.service.number.NumberSelectorServiceImpl;
 import org.restcomm.connect.dao.IncomingPhoneNumbersDao;
 import org.restcomm.connect.dao.entities.IncomingPhoneNumber;
 import org.restcomm.connect.dao.entities.IncomingPhoneNumberFilter;
@@ -62,7 +62,7 @@ public class NumberSelectorServiceTest {
         when(numDao.getTotalIncomingPhoneNumbers((IncomingPhoneNumberFilter) any())).
                 thenReturn(0,0,0);
         InOrder inOrder = inOrder(numDao);
-        NumberSelectorService service = new NumberSelectorService(numDao);
+        NumberSelectorServiceImpl service = new NumberSelectorServiceImpl(numDao);
 
         IncomingPhoneNumber found = service.searchNumber(number, srcSid, destSid);
 
@@ -85,7 +85,7 @@ public class NumberSelectorServiceTest {
         when(numDao.getIncomingPhoneNumbersByFilter((IncomingPhoneNumberFilter) any())).
                 thenReturn(numbers);
         InOrder inOrder = inOrder(numDao);
-        NumberSelectorService service = new NumberSelectorService(numDao);
+        NumberSelectorServiceImpl service = new NumberSelectorServiceImpl(numDao);
 
         IncomingPhoneNumber found = service.searchNumber(number, srcSid, destSid);
 
@@ -111,7 +111,7 @@ public class NumberSelectorServiceTest {
         when(numDao.getIncomingPhoneNumbersByFilter((IncomingPhoneNumberFilter) any())).
                 thenReturn(emptyList, numbers);
         InOrder inOrder = inOrder(numDao);
-        NumberSelectorService service = new NumberSelectorService(numDao);
+        NumberSelectorServiceImpl service = new NumberSelectorServiceImpl(numDao);
 
         IncomingPhoneNumber found = service.searchNumber("1234", srcSid, destSid);
 
@@ -137,7 +137,7 @@ public class NumberSelectorServiceTest {
         when(numDao.getIncomingPhoneNumbersByFilter((IncomingPhoneNumberFilter) any())).
                 thenReturn(emptyList, numbers);
         InOrder inOrder = inOrder(numDao);
-        NumberSelectorService service = new NumberSelectorService(numDao);
+        NumberSelectorServiceImpl service = new NumberSelectorServiceImpl(numDao);
 
         IncomingPhoneNumber found = service.searchNumber("+1234", srcSid, destSid);
 
@@ -162,7 +162,7 @@ public class NumberSelectorServiceTest {
         when(numDao.getIncomingPhoneNumbersByFilter((IncomingPhoneNumberFilter) any())).
                 thenReturn(numbers);
         InOrder inOrder = inOrder(numDao);
-        NumberSelectorService service = new NumberSelectorService(numDao);
+        NumberSelectorServiceImpl service = new NumberSelectorServiceImpl(numDao);
 
         IncomingPhoneNumber found = service.searchNumber(number, srcSid, destSid);
 
@@ -191,7 +191,7 @@ public class NumberSelectorServiceTest {
         when(numDao.getIncomingPhoneNumbersRegex((IncomingPhoneNumberFilter) any())).
                 thenReturn(emptyList);
         InOrder inOrder = inOrder(numDao);
-        NumberSelectorService service = new NumberSelectorService(numDao);
+        NumberSelectorServiceImpl service = new NumberSelectorServiceImpl(numDao);
 
         IncomingPhoneNumber found = service.searchNumber(number, srcSid, destSid);
 
@@ -219,7 +219,7 @@ public class NumberSelectorServiceTest {
         when(numDao.getIncomingPhoneNumbersRegex((IncomingPhoneNumberFilter) any())).
                 thenReturn(numbers);
         InOrder inOrder = inOrder(numDao);
-        NumberSelectorService service = new NumberSelectorService(numDao);
+        NumberSelectorServiceImpl service = new NumberSelectorServiceImpl(numDao);
 
         IncomingPhoneNumber found = service.searchNumber("1234", srcSid, destSid);
 
@@ -250,7 +250,7 @@ public class NumberSelectorServiceTest {
         when(numDao.getIncomingPhoneNumbersRegex((IncomingPhoneNumberFilter) any())).
                 thenReturn(numbers);
         InOrder inOrder = inOrder(numDao);
-        NumberSelectorService service = new NumberSelectorService(numDao);
+        NumberSelectorServiceImpl service = new NumberSelectorServiceImpl(numDao);
 
         IncomingPhoneNumber found = service.searchNumber("1234", srcSid, destSid);
 
@@ -296,7 +296,7 @@ public class NumberSelectorServiceTest {
         when(numDao.getIncomingPhoneNumbersRegex((IncomingPhoneNumberFilter) any())).
                 thenReturn(numbers);
         InOrder inOrder = inOrder(numDao);
-        NumberSelectorService service = new NumberSelectorService(numDao);
+        NumberSelectorServiceImpl service = new NumberSelectorServiceImpl(numDao);
 
         IncomingPhoneNumber found = service.searchNumber("987456", srcSid, destSid);
 
@@ -328,7 +328,7 @@ public class NumberSelectorServiceTest {
         when(numDao.getIncomingPhoneNumbersRegex((IncomingPhoneNumberFilter) any())).
                 thenReturn(numbers);
         InOrder inOrder = inOrder(numDao);
-        NumberSelectorService service = new NumberSelectorService(numDao);
+        NumberSelectorServiceImpl service = new NumberSelectorServiceImpl(numDao);
 
         IncomingPhoneNumber found = service.searchNumber("1234", srcSid, destSid);
 
@@ -359,7 +359,7 @@ public class NumberSelectorServiceTest {
         when(numDao.getIncomingPhoneNumbersRegex((IncomingPhoneNumberFilter) any())).
                 thenReturn(numbers);
         InOrder inOrder = inOrder(numDao);
-        NumberSelectorService service = new NumberSelectorService(numDao);
+        NumberSelectorServiceImpl service = new NumberSelectorServiceImpl(numDao);
 
         IncomingPhoneNumber found = service.searchNumber("7788", srcSid, destSid);
 
@@ -390,7 +390,7 @@ public class NumberSelectorServiceTest {
         when(numDao.getIncomingPhoneNumbersRegex((IncomingPhoneNumberFilter) any())).
                 thenReturn(numbers);
         InOrder inOrder = inOrder(numDao);
-        NumberSelectorService service = new NumberSelectorService(numDao);
+        NumberSelectorServiceImpl service = new NumberSelectorServiceImpl(numDao);
 
         IncomingPhoneNumber found = service.searchNumber("1234", srcSid, destSid);
 
@@ -421,7 +421,7 @@ public class NumberSelectorServiceTest {
         when(numDao.getIncomingPhoneNumbersByFilter((IncomingPhoneNumberFilter) any())).
                 thenReturn(numbers);
         InOrder inOrder = inOrder(numDao);
-        NumberSelectorService service = new NumberSelectorService(numDao);
+        NumberSelectorServiceImpl service = new NumberSelectorServiceImpl(numDao);
 
         IncomingPhoneNumber found = service.searchNumber(number, srcSid, destSid);
 

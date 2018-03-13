@@ -26,7 +26,6 @@ import javax.ws.rs.core.UriInfo;
 
 import org.apache.log4j.Logger;
 import org.restcomm.connect.commons.dao.Sid;
-import org.restcomm.connect.core.service.api.CoreService;
 import org.restcomm.connect.dao.DaoManager;
 import org.restcomm.connect.dao.entities.Account;
 import org.restcomm.connect.dao.entities.Profile;
@@ -34,9 +33,10 @@ import org.restcomm.connect.dao.entities.ProfileAssociation;
 
 import com.sun.jersey.core.header.LinkHeader;
 import com.sun.jersey.core.header.LinkHeader.LinkHeaderBuilder;
+import org.restcomm.connect.core.service.api.ProfileService;
 
-public class ProfileService implements CoreService {
-    private static Logger logger = Logger.getLogger(ProfileService.class);
+public class ProfileServiceImpl implements ProfileService {
+    private static Logger logger = Logger.getLogger(ProfileServiceImpl.class);
 
     private static String DEFAULT_PROFILE_SID = Profile.DEFAULT_PROFILE_SID;
     private static final String PROFILE_REL_TYPE = "related";
@@ -44,7 +44,7 @@ public class ProfileService implements CoreService {
 
     private final DaoManager daoManager;
 
-    public ProfileService(DaoManager daoManager) {
+    public ProfileServiceImpl(DaoManager daoManager) {
         super();
         this.daoManager = daoManager;
     }
@@ -53,7 +53,8 @@ public class ProfileService implements CoreService {
      * @param accountSid
      * @return will return associated profile of provided accountSid
      */
-    public Profile retrieveProfileByAccountSid(String accountSid) {
+    @Override
+    public Profile retrieveEffectiveProfile(String accountSid) {
         Profile profile = null;
         Sid currentAccount = new Sid(accountSid);
         Account lastAccount = null;
@@ -120,6 +121,7 @@ public class ProfileService implements CoreService {
      * @param resource
      * @return
      */
+    @Override
     public LinkHeader composeProfileLink(String targetSid, UriInfo info, Class resource) {
         String sid = targetSid.toString();
         URI uri = info.getBaseUriBuilder().path(resource).path(sid).build();
