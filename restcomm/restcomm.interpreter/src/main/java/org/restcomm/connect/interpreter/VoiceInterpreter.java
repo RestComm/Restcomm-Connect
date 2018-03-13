@@ -125,6 +125,7 @@ import javax.servlet.sip.SipServletMessage;
 import javax.servlet.sip.SipServletRequest;
 import javax.servlet.sip.SipServletResponse;
 import javax.servlet.sip.SipSession;
+import javax.servlet.sip.SipURI;
 import java.io.IOException;
 import java.math.BigDecimal;
 import java.net.MalformedURLException;
@@ -2376,14 +2377,13 @@ public class VoiceInterpreter extends BaseVoiceInterpreter {
 
                 String callee = to;
 
+                //Extract and pass custom headers for Dial Client and Dial Number
+                String customHeaders = getCustomHeaders(to);
+
+                //Get Callee after removing any custom headers (this way there will be no impact on the Extensions execution)
+                callee = customHeaders != null ? to.substring(0, to.indexOf("?")) : to;
+
                 if (Nouns.client.equals(child.name())) {
-                    //Extract and pass custom headers for Dial Client and Dial Number
-                    //No need to support Dial SIP because custom headers are already in the SIP URI
-                    String customHeaders = getCustomHeaders(to);
-
-                    //Get Callee after removing any custom headers (this way there will be no impact on the Extensions execution)
-                    callee = customHeaders != null ? to.substring(0, to.indexOf("?")) : to;
-
                     if (call != null && callInfo != null) {
                         create = new CreateCall(e164(callerId(verb)), e164(callee), null, null, callInfo.isFromApi(), timeout(verb),
                                 CreateCallType.CLIENT, accountId, callInfo.sid(), statusCallback, statusCallbackMethod, statusCallbackEvent, mediaAttributes, customHeaders);
@@ -2392,13 +2392,6 @@ public class VoiceInterpreter extends BaseVoiceInterpreter {
                                 CreateCallType.CLIENT, accountId, null, statusCallback, statusCallbackMethod, statusCallbackEvent, mediaAttributes, customHeaders);
                     }
                 } else if (Nouns.number.equals(child.name())) {
-                    //Extract and pass custom headers for Dial Client and Dial Number
-                    //No need to support Dial SIP because custom headers are already in the SIP URI
-                    String customHeaders = getCustomHeaders(to);
-
-                    //Get Callee after removing any custom headers (this way there will be no impact on the Extensions execution)
-                    callee = customHeaders != null ? to.substring(0, to.indexOf("?")) : to;
-
                     if (call != null && callInfo != null) {
                         create = new CreateCall(e164(callerId(verb)), e164(callee), null, null, callInfo.isFromApi(), timeout(verb),
                                 CreateCallType.PSTN, accountId, callInfo.sid(), statusCallback, statusCallbackMethod, statusCallbackEvent, customHeaders);
@@ -2409,10 +2402,10 @@ public class VoiceInterpreter extends BaseVoiceInterpreter {
                 } else if (Nouns.uri.equals(child.name())) {
                     if (call != null && callInfo != null) {
                         create = new CreateCall(e164(callerId(verb)), e164(callee), null, null, callInfo.isFromApi(), timeout(verb),
-                                CreateCallType.SIP, accountId, callInfo.sid(), statusCallback, statusCallbackMethod, statusCallbackEvent, mediaAttributes, null);
+                                CreateCallType.SIP, accountId, callInfo.sid(), statusCallback, statusCallbackMethod, statusCallbackEvent, mediaAttributes, customHeaders);
                     } else {
                         create = new CreateCall(e164(callerId(verb)), e164(callee), null, null, false, timeout(verb),
-                                CreateCallType.SIP, accountId, null, statusCallback, statusCallbackMethod, statusCallbackEvent, mediaAttributes, null);
+                                CreateCallType.SIP, accountId, null, statusCallback, statusCallbackMethod, statusCallbackEvent, mediaAttributes, customHeaders);
                     }
                 } else if (Nouns.SIP.equals(child.name())) {
                     // https://bitbucket.org/telestax/telscale-restcomm/issue/132/implement-twilio-sip-out
@@ -2438,10 +2431,10 @@ public class VoiceInterpreter extends BaseVoiceInterpreter {
                     }
                     if (call != null && callInfo != null) {
                         create = new CreateCall(e164(callerId(verb)), e164(callee), username, password, false, timeout(verb),
-                                CreateCallType.SIP, accountId, callInfo.sid(), statusCallback, statusCallbackMethod, statusCallbackEvent, mediaAttributes, null);
+                                CreateCallType.SIP, accountId, callInfo.sid(), statusCallback, statusCallbackMethod, statusCallbackEvent, mediaAttributes, customHeaders);
                     } else {
                         create = new CreateCall(e164(callerId(verb)), e164(callee), username, password, false, timeout(verb),
-                                CreateCallType.SIP, accountId, null, statusCallback, statusCallbackMethod, statusCallbackEvent, mediaAttributes, null);
+                                CreateCallType.SIP, accountId, null, statusCallback, statusCallbackMethod, statusCallbackEvent, mediaAttributes, customHeaders);
                     }
                 }
                 callManager.tell(create, source);

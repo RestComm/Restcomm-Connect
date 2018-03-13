@@ -1848,7 +1848,7 @@ public final class CallManager extends RestcommUntypedActor {
                             @Override
                             public void run() {
                                 try {
-                                    outboundToClient(request, sender, client, request.getCustomHeaders());
+                                    outboundToClient(request, sender, client);
 
                                     ExtensionController.getInstance().executePostOutboundAction(request, extensions);
                                 } catch (ServletParseException e) {
@@ -1900,12 +1900,13 @@ public final class CallManager extends RestcommUntypedActor {
         }
     }
 
-    private void outboundToClient(final CreateCall request, final ActorRef sender, final Client client, final String customHeaders) throws ServletParseException {
+    private void outboundToClient(final CreateCall request, final ActorRef sender, final Client client) throws ServletParseException {
         SipURI outboundIntf = null;
         SipURI from = null;
         SipURI to = null;
         boolean webRTC = false;
         boolean isLBPresent = false;
+        String customHeaders = request.getCustomHeaders();
 
         final RegistrationsDao registrationsDao = storage.getRegistrationsDao();
 
@@ -2098,7 +2099,12 @@ public final class CallManager extends RestcommUntypedActor {
         final String uri = (request.getOutboundProxy() != null && (!request.getOutboundProxy().isEmpty())) ? request.getOutboundProxy() : "";
         SipURI outboundIntf = null;
         SipURI from = null;
+        String customHeaders = request.getCustomHeaders();
+
         SipURI to = (SipURI) sipFactory.createURI(request.to());
+        if (customHeaders != null) {
+            to = addCustomHeadersForToUri(customHeaders, to);
+        }
         SipURI outboundProxyURI;
 
         try {
@@ -2642,8 +2648,12 @@ public final class CallManager extends RestcommUntypedActor {
         }
         SipURI from;
         SipURI to;
+        String customHeaders = request.getCustomHeaders();
 
         to = (SipURI) sipFactory.createURI(request.to());
+        if (customHeaders != null) {
+            to = addCustomHeadersForToUri(customHeaders, to);
+        }
         if (request.from() == null) {
             from = sipFactory.createSipURI(null, imsDomain);
         } else {
