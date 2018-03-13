@@ -628,7 +628,7 @@ public final class CallManager extends RestcommUntypedActor {
                 }
 
                 ExtensionController ec = ExtensionController.getInstance();
-                final IExtensionCreateCallRequest er = new CreateCall(fromUser, toUser, "", "", false, 0, CreateCallType.CLIENT, client.getAccountSid(), null, null, null, null);
+                final IExtensionCreateCallRequest er = new CreateCall(fromUser, toUser, "", "", false, 0, CreateCallType.CLIENT, client.getAccountSid(), null, null, null, null, null);
                 ExtensionResponse extRes = ec.executePreOutboundAction(er, extensions);
                 if (extRes.isAllowed()) {
                     long delay = pushNotificationServerHelper.sendPushNotificationIfNeeded(toClient.getPushClientIdentity());
@@ -685,7 +685,7 @@ public final class CallManager extends RestcommUntypedActor {
                 sendNotification(client.getAccountSid(), errMsg, 11002, "info", true);
 
                 ExtensionController ec = ExtensionController.getInstance();
-                IExtensionCreateCallRequest er = new CreateCall(fromUser, toUser, "", "", false, 0, CreateCallType.PSTN, client.getAccountSid(), null, null, null, null);
+                IExtensionCreateCallRequest er = new CreateCall(fromUser, toUser, "", "", false, 0, CreateCallType.PSTN, client.getAccountSid(), null, null, null, null, null);
                 ExtensionResponse extRes = ec.executePreOutboundAction(er, this.extensions);
                 if (extRes.isAllowed()) {
                     if (actAsProxyOut) {
@@ -741,7 +741,7 @@ public final class CallManager extends RestcommUntypedActor {
             // First try to check if the call is for a client
             if (toClient != null) {
                 ExtensionController ec = ExtensionController.getInstance();
-                final IExtensionCreateCallRequest cc = new CreateCall(fromUser, toUser, "", "", false, 0, CreateCallType.CLIENT, toClient.getAccountSid(), null, null, null, null);
+                final IExtensionCreateCallRequest cc = new CreateCall(fromUser, toUser, "", "", false, 0, CreateCallType.CLIENT, toClient.getAccountSid(), null, null, null, null, null);
                 ExtensionResponse extRes = ec.executePreInboundAction(cc, this.extensions);
 
                 if (extRes.isAllowed()) {
@@ -943,7 +943,13 @@ public final class CallManager extends RestcommUntypedActor {
     }
 
     private void proxyThroughMediaServerAsNumber(final SipServletRequest request, final Client client, final String destNumber) {
-        String rcml = "<Response><Dial>" + destNumber + "</Dial></Response>";
+        String number = destNumber;
+        String customHeaders = customHeaders(request);
+        if (customHeaders != null && !customHeaders.equals("")) {
+            number = destNumber+"?"+customHeaders;
+        }
+
+        String rcml = "<Response><Dial>" + number + "</Dial></Response>";
         final VoiceInterpreterParams.Builder builder = new VoiceInterpreterParams.Builder();
         builder.setConfiguration(configuration);
         builder.setStorage(storage);
@@ -968,7 +974,13 @@ public final class CallManager extends RestcommUntypedActor {
     }
 
     private void proxyDialClientThroughMediaServer(final SipServletRequest request, final Client client, final String destNumber) {
-        String rcml = "<Response><Dial><Client>" + destNumber + "</Client></Dial></Response>";
+        String number = destNumber;
+        String customHeaders = customHeaders(request);
+        if (customHeaders != null && !customHeaders.equals("")) {
+            number = destNumber+"?"+customHeaders;
+        }
+
+        String rcml = "<Response><Dial><Client>" + number + "</Client></Dial></Response>";
         final VoiceInterpreterParams.Builder builder = new VoiceInterpreterParams.Builder();
         builder.setConfiguration(configuration);
         builder.setStorage(storage);
@@ -990,6 +1002,26 @@ public final class CallManager extends RestcommUntypedActor {
         application.setAttribute(Call.class.getName(), call);
         call.tell(request, self());
         interpreter.tell(new StartInterpreter(call), self());
+    }
+
+    private String customHeaders (final SipServletRequest request) {
+        StringBuffer customHeaders = new StringBuffer();
+
+        Iterator<String> headerNames = request.getHeaderNames();
+        while (headerNames.hasNext()) {
+            String headerName = headerNames.next();
+            if (headerName.startsWith("X-")) {
+                if (logger.isDebugEnabled()) {
+                    logger.debug("Identified customer header at SipServletRequest : " + headerName);
+                }
+                if (customHeaders.length()>0) {
+                    customHeaders.append("&");
+                }
+                customHeaders.append(headerName+"="+request.getHeader(headerName));
+            }
+        }
+
+        return customHeaders.toString();
     }
 
     private void info(final SipServletRequest request) throws IOException {
@@ -1808,14 +1840,15 @@ public final class CallManager extends RestcommUntypedActor {
             case CLIENT: {
                 if (extRes.isAllowed()) {
                     ClientsDao clients = storage.getClientsDao();
-                    Client client = clients.getClient(request.to().replaceFirst("client:", ""), storage.getAccountsDao().getAccount(request.accountId()).getOrganizationSid());
+                    String clientName = request.to().replaceFirst("client:", "");
+                    final Client client = clients.getClient(clientName, storage.getAccountsDao().getAccount(request.accountId()).getOrganizationSid());
                     if (client != null) {
                         long delay = pushNotificationServerHelper.sendPushNotificationIfNeeded(client.getPushClientIdentity());
                         system.scheduler().scheduleOnce(Duration.create(delay, TimeUnit.MILLISECONDS), new Runnable() {
                             @Override
                             public void run() {
                                 try {
-                                    outboundToClient(request, sender);
+                                    outboundToClient(request, sender, client);
 
                                     ExtensionController.getInstance().executePostOutboundAction(request, extensions);
                                 } catch (ServletParseException e) {
@@ -1867,15 +1900,15 @@ public final class CallManager extends RestcommUntypedActor {
         }
     }
 
-    private void outboundToClient(final CreateCall request, final ActorRef sender) throws ServletParseException {
+    private void outboundToClient(final CreateCall request, final ActorRef sender, final Client client) throws ServletParseException {
         SipURI outboundIntf = null;
         SipURI from = null;
         SipURI to = null;
         boolean webRTC = false;
         boolean isLBPresent = false;
+        String customHeaders = request.getCustomHeaders();
 
         final RegistrationsDao registrationsDao = storage.getRegistrationsDao();
-        final String client = request.to().replaceFirst("client:", "");
 
         //1, If this is a WebRTC client check if the instance is the current instance
         //2. Check if the client has more than one registrations
@@ -1883,7 +1916,7 @@ public final class CallManager extends RestcommUntypedActor {
         List<Registration> registrationToDial = new CopyOnWriteArrayList<Registration>();
         Sid organizationSid = storage.getAccountsDao().getAccount(request.accountId()).getOrganizationSid();
 
-        List<Registration> registrations = registrationsDao.getRegistrations(client, organizationSid);
+        List<Registration> registrations = registrationsDao.getRegistrations(client.getLogin(), organizationSid);
         if (registrations != null && registrations.size() > 0) {
             if (logger.isInfoEnabled()) {
                 logger.info("Preparing call for client: " + client + ". There are " + registrations.size() + " registrations at the database for this client");
@@ -1960,6 +1993,9 @@ public final class CallManager extends RestcommUntypedActor {
                 }
                 final String location = registration.getLocation();
                 to = (SipURI) sipFactory.createURI(location);
+                if (customHeaders != null) {
+                    to = addCustomHeadersForToUri(customHeaders, to);
+                }
                 webRTC = registration.isWebRTC();
                 if (from == null || to == null) {
                     //In case From or To are null we have to cancel outbound call and hnagup initial call if needed
@@ -1981,11 +2017,26 @@ public final class CallManager extends RestcommUntypedActor {
         }
     }
 
+    private SipURI addCustomHeadersForToUri (String customHeaders, SipURI to) {
+        for (String customHeader: customHeaders.split("&")) {
+            if (customHeader.contains("=")) {
+                to.setHeader(customHeader.split("=")[0], customHeader.split("=")[1]);
+            } else {
+                String msg = String.format("Custom header %s not properly formatted", customHeader);
+                if (logger.isDebugEnabled()) {
+                    logger.debug(msg);
+                }
+            }
+        }
+        return to;
+    }
+
     private void outboundToPstn(final CreateCall request, final ActorRef sender) throws ServletParseException {
         final String uri = (request.getOutboundProxy() != null && (!request.getOutboundProxy().isEmpty())) ? request.getOutboundProxy() : activeProxy;
         SipURI outboundIntf = null;
         SipURI from = null;
         SipURI to = null;
+        String customHeaders = request.getCustomHeaders();
 
         final Configuration runtime = configuration.subset("runtime-settings");
         final boolean useLocalAddressAtFromHeader = runtime.getBoolean("use-local-address", false);
@@ -1995,6 +2046,9 @@ public final class CallManager extends RestcommUntypedActor {
         if (uri != null) {
             try {
                 to = sipFactory.createSipURI(request.to(), uri);
+                if (customHeaders != null) {
+                    to = addCustomHeadersForToUri(customHeaders, to);
+                }
                 String transport = (to.getTransportParam() != null) ? to.getTransportParam() : "udp";
                 outboundIntf = outboundInterface(transport);
                 final boolean outboudproxyUserAtFromHeader = runtime.subset("outbound-proxy").getBoolean(
@@ -2045,7 +2099,12 @@ public final class CallManager extends RestcommUntypedActor {
         final String uri = (request.getOutboundProxy() != null && (!request.getOutboundProxy().isEmpty())) ? request.getOutboundProxy() : "";
         SipURI outboundIntf = null;
         SipURI from = null;
+        String customHeaders = request.getCustomHeaders();
+
         SipURI to = (SipURI) sipFactory.createURI(request.to());
+        if (customHeaders != null) {
+            to = addCustomHeadersForToUri(customHeaders, to);
+        }
         SipURI outboundProxyURI;
 
         try {
@@ -2589,8 +2648,12 @@ public final class CallManager extends RestcommUntypedActor {
         }
         SipURI from;
         SipURI to;
+        String customHeaders = request.getCustomHeaders();
 
         to = (SipURI) sipFactory.createURI(request.to());
+        if (customHeaders != null) {
+            to = addCustomHeadersForToUri(customHeaders, to);
+        }
         if (request.from() == null) {
             from = sipFactory.createSipURI(null, imsDomain);
         } else {
