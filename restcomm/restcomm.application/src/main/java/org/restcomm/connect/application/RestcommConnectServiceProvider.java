@@ -21,7 +21,6 @@
 package org.restcomm.connect.application;
 
 import javax.servlet.ServletContext;
-import org.apache.log4j.Logger;
 import org.restcomm.connect.core.service.api.NumberSelectorService;
 import org.restcomm.connect.core.service.api.ProfileService;
 import org.restcomm.connect.core.service.number.NumberSelectorServiceImpl;
