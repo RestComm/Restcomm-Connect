@@ -36,83 +36,83 @@ import com.sun.jersey.core.header.LinkHeader;
 import com.sun.jersey.core.header.LinkHeader.LinkHeaderBuilder;
 
 public class ProfileService implements CoreService {
-	private static Logger logger = Logger.getLogger(ProfileService.class);
+    private static Logger logger = Logger.getLogger(ProfileService.class);
 
-	private static String DEFAULT_PROFILE_SID = Profile.DEFAULT_PROFILE_SID;
+    private static String DEFAULT_PROFILE_SID = Profile.DEFAULT_PROFILE_SID;
     private static final String PROFILE_REL_TYPE = "related";
     private static final String TITLE_PARAM = "title";
 
-	private final DaoManager daoManager;
+    private final DaoManager daoManager;
 
-	public ProfileService(DaoManager daoManager) {
-		super();
-		this.daoManager = daoManager;
-	}
+    public ProfileService(DaoManager daoManager) {
+        super();
+        this.daoManager = daoManager;
+    }
 
-	/**
-	 * @param accountSid
-	 * @return will return associated profile of provided accountSid
-	 */
-	public Profile retrieveProfileByAccountSid(String accountSid) {
-		Profile profile = null;
-		Sid currentAccount = new Sid(accountSid);
-		Account lastAccount = null;
+    /**
+     * @param accountSid
+     * @return will return associated profile of provided accountSid
+     */
+    public Profile retrieveProfileByAccountSid(String accountSid) {
+        Profile profile = null;
+        Sid currentAccount = new Sid(accountSid);
+        Account lastAccount = null;
 
-		// try to find profile in account hierarchy
-		do {
-			profile = retrieveProfileForTarget(currentAccount.toString());
-			if (profile == null) {
-				lastAccount = daoManager.getAccountsDao().getAccount(currentAccount);
-				if (lastAccount != null) {
-					currentAccount = lastAccount.getParentSid();
-				} else {
-					throw new RuntimeException("account not found!!!");
-				}
-			}
-		} while (profile == null && currentAccount != null);
+        // try to find profile in account hierarchy
+        do {
+            profile = retrieveProfileForTarget(currentAccount.toString());
+            if (profile == null) {
+                lastAccount = daoManager.getAccountsDao().getAccount(currentAccount);
+                if (lastAccount != null) {
+                    currentAccount = lastAccount.getParentSid();
+                } else {
+                    throw new RuntimeException("account not found!!!");
+                }
+            }
+        } while (profile == null && currentAccount != null);
 
-		// if profile is not found in account hierarchy,try org
-		if (profile == null && lastAccount != null) {
-			Sid organizationSid = lastAccount.getOrganizationSid();
-			profile = retrieveProfileForTarget(organizationSid.toString());
-		}
+        // if profile is not found in account hierarchy,try org
+        if (profile == null && lastAccount != null) {
+            Sid organizationSid = lastAccount.getOrganizationSid();
+            profile = retrieveProfileForTarget(organizationSid.toString());
+        }
 
-		// finally try with default profile
-		if (profile == null) {
-			try {
-				profile = daoManager.getProfilesDao().getProfile(DEFAULT_PROFILE_SID);
-			} catch (SQLException ex) {
-				throw new RuntimeException(ex);
-			}
-		}
+        // finally try with default profile
+        if (profile == null) {
+            try {
+                profile = daoManager.getProfilesDao().getProfile(DEFAULT_PROFILE_SID);
+            } catch (SQLException ex) {
+                throw new RuntimeException(ex);
+            }
+        }
 
-		if (logger.isDebugEnabled()) {
-			logger.debug("Returning profile:" + profile);
-		}
+        if (logger.isDebugEnabled()) {
+            logger.debug("Returning profile:" + profile);
+        }
 
-		return profile;
-	}
+        return profile;
+    }
 
-	/**
-	 * @param targetSid
-	 * @return will return associated profile of provided target (account or
-	 *         organization)
-	 */
-	public Profile retrieveProfileForTarget(String targetSid) {
-		ProfileAssociation assoc = daoManager.getProfileAssociationsDao().getProfileAssociationByTargetSid(targetSid);
-		Profile profile = null;
-		if (assoc != null) {
-			try {
-				profile = daoManager.getProfilesDao().getProfile(assoc.getProfileSid().toString());
-			} catch (SQLException ex) {
-				throw new RuntimeException("problem retrieving profile", ex);
-			}
-		}
-		if (logger.isDebugEnabled()) {
-			logger.debug("Returning profile:" + profile);
-		}
-		return profile;
-	}
+    /**
+     * @param targetSid
+     * @return will return associated profile of provided target (account or
+     *         organization)
+     */
+    public Profile retrieveProfileForTarget(String targetSid) {
+        ProfileAssociation assoc = daoManager.getProfileAssociationsDao().getProfileAssociationByTargetSid(targetSid);
+        Profile profile = null;
+        if (assoc != null) {
+            try {
+                profile = daoManager.getProfilesDao().getProfile(assoc.getProfileSid().toString());
+            } catch (SQLException ex) {
+                throw new RuntimeException("problem retrieving profile", ex);
+            }
+        }
+        if (logger.isDebugEnabled()) {
+            logger.debug("Returning profile:" + profile);
+        }
+        return profile;
+    }
 
     /**
      * @param targetSid
