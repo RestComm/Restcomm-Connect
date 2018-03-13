@@ -36,7 +36,6 @@ import java.net.MalformedURLException;
 import java.nio.charset.Charset;
 import java.nio.file.Path;
 import java.nio.file.Paths;
-import java.security.Principal;
 import java.util.ArrayList;
 import javax.annotation.PostConstruct;
 import javax.servlet.ServletContext;
@@ -48,13 +47,13 @@ import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
 import javax.ws.rs.core.Response.ResponseBuilder;
 import javax.ws.rs.core.Response.Status;
-import static javax.ws.rs.core.Response.status;
 import javax.ws.rs.core.SecurityContext;
 import javax.ws.rs.core.UriInfo;
 import org.apache.commons.configuration.Configuration;
 import org.apache.commons.io.IOUtils;
 import org.apache.log4j.Logger;
 import org.restcomm.connect.commons.dao.Sid;
+import org.restcomm.connect.core.service.RestcommConnectServiceProvider;
 import org.restcomm.connect.dao.AccountsDao;
 import org.restcomm.connect.dao.DaoManager;
 import org.restcomm.connect.dao.OrganizationsDao;
@@ -68,6 +67,8 @@ import org.restcomm.connect.dao.entities.ProfileAssociation;
 import org.restcomm.connect.http.exceptionmappers.CustomReasonPhraseType;
 import org.restcomm.connect.http.security.AccountPrincipal;
 import org.restcomm.connect.http.security.RCSecContext;
+import static javax.ws.rs.core.Response.status;
+import org.restcomm.connect.core.service.api.ProfileService;
 
 public class ProfileEndpoint {
 
@@ -94,12 +95,11 @@ public class ProfileEndpoint {
     private ProfileAssociationsDao profileAssociationsDao;
     private AccountsDao accountsDao;
     private OrganizationsDao organizationsDao;
-
+    protected ProfileService profileService;
     private JsonNode schemaJson;
     private JsonSchema profileSchema;
 
 
-    private ProfileService pService = null;
 
     public ProfileEndpoint() {
         super();
@@ -108,9 +108,9 @@ public class ProfileEndpoint {
     @PostConstruct
     void init() {
         rootConfiguration = (Configuration) context.getAttribute(Configuration.class.getName());
-        pService = (ProfileService) context.getAttribute(ProfileService.class.getName());
         runtimeConfiguration = rootConfiguration.subset("runtime-settings");
         final DaoManager storage = (DaoManager) context.getAttribute(DaoManager.class.getName());
+        profileService = RestcommConnectServiceProvider.getInstance().provideProfileService();
         profileAssociationsDao = storage.getProfileAssociationsDao();
         this.accountsDao = storage.getAccountsDao();
         this.organizationsDao = storage.getOrganizationsDao();
@@ -357,18 +357,12 @@ public class ProfileEndpoint {
         }
     }
 
-    //TODO replace with actual service itn when ready
-    interface ProfileService {
-
-        Profile retrieveEffectiveProfile(String sid);
-    }
-
     private void checkProfileAccess(String profileSid, SecurityContext secCtx) {
         RCSecContext ctx = (RCSecContext) secCtx;
         AccountPrincipal userPrincipal = (AccountPrincipal) ctx.getUserPrincipal();
         if (!userPrincipal.isSuperAdmin()) {
 
-            Profile effectiveProfile = pService.retrieveEffectiveProfile(userPrincipal.getIdentityContext().getAccountKey().getAccount().toString());
+            Profile effectiveProfile = profileService.retrieveEffectiveProfile(userPrincipal.getIdentityContext().getAccountKey().getAccount().toString());
             if (!effectiveProfile.getSid().equals(profileSid)) {
                 CustomReasonPhraseType stat = new CustomReasonPhraseType(Response.Status.FORBIDDEN, "Profile not liked");
                 throw new WebApplicationException(status(stat).build());
