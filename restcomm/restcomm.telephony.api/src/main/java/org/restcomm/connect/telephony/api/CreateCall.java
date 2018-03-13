@@ -65,6 +65,15 @@ public final class CreateCall implements IExtensionCreateCallRequest{
                 statusCallbackEvent, "", null, new MediaAttributes(), null);
     }
 
+    //Used to create CreateCall objects (CallsEndpoint, UssdPushEndpoint, VI)
+    public CreateCall(final String from, final String to, final String username, final String password,
+                      final boolean isFromApi, final int timeout, final CreateCallType type, final Sid accountId, final Sid parentCallSid,
+                      final URI statusCallbackUrl, final String statusCallbackMethod, final List<String> statusCallbackEvent, final String customHeaders) {
+        this(from, to, username, password, isFromApi, timeout, type, accountId, parentCallSid, statusCallbackUrl, statusCallbackMethod,
+                statusCallbackEvent, "", null, new MediaAttributes(), customHeaders);
+    }
+
+    //Used to create CreateCall objects with MediaAttributes (VI)
     public CreateCall(final String from, final String to, final String username, final String password,
                       final boolean isFromApi, final int timeout, final CreateCallType type, final Sid accountId, final Sid parentCallSid,
                       final URI statusCallbackUrl, final String statusCallbackMethod, final List<String> statusCallbackEvent, final MediaAttributes mediaAttributes, final String customHeaders) {
