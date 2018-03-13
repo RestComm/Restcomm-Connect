@@ -125,7 +125,6 @@ import javax.servlet.sip.SipServletMessage;
 import javax.servlet.sip.SipServletRequest;
 import javax.servlet.sip.SipServletResponse;
 import javax.servlet.sip.SipSession;
-import javax.servlet.sip.SipURI;
 import java.io.IOException;
 import java.math.BigDecimal;
 import java.net.MalformedURLException;
