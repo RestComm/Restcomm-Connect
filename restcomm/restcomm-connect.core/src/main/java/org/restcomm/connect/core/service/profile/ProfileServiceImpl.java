@@ -54,14 +54,14 @@ public class ProfileServiceImpl implements ProfileService {
      * @return will return associated profile of provided accountSid
      */
     @Override
-    public Profile retrieveEffectiveProfileByAccountSid(String accountSid) {
+    public Profile retrieveEffectiveProfileByAccountSid(Sid accountSid) {
         Profile profile = null;
-        Sid currentAccount = new Sid(accountSid);
+        Sid currentAccount = accountSid;
         Account lastAccount = null;
 
         // try to find profile in account hierarchy
         do {
-            profile = retrieveExplicitlyAssociatedProfile(currentAccount.toString());
+            profile = retrieveExplicitlyAssociatedProfile(currentAccount);
             if (profile == null) {
                 lastAccount = daoManager.getAccountsDao().getAccount(currentAccount);
                 if (lastAccount != null) {
@@ -75,7 +75,7 @@ public class ProfileServiceImpl implements ProfileService {
         // if profile is not found in account hierarchy,try org
         if (profile == null && lastAccount != null) {
             Sid organizationSid = lastAccount.getOrganizationSid();
-            profile = retrieveExplicitlyAssociatedProfile(organizationSid.toString());
+            profile = retrieveExplicitlyAssociatedProfile(organizationSid);
         }
 
         // finally try with default profile
@@ -98,9 +98,9 @@ public class ProfileServiceImpl implements ProfileService {
      * @param organizationSid
      * @return will return associated profile of provided organization sid
      */
-    public Profile retrieveEffectiveProfileByOrganizationSid(String organizationSid) {
+    public Profile retrieveEffectiveProfileByOrganizationSid(Sid organizationSid) {
         Profile profile = null;
-        profile = retrieveExplicitlyAssociatedProfile(organizationSid.toString());
+        profile = retrieveExplicitlyAssociatedProfile(organizationSid);
 
         // finally try with default profile
         if (profile == null) {
@@ -122,8 +122,8 @@ public class ProfileServiceImpl implements ProfileService {
      *         organization)
      */
     @Override
-    public Profile retrieveExplicitlyAssociatedProfile(String targetSid) {
-        ProfileAssociation assoc = daoManager.getProfileAssociationsDao().getProfileAssociationByTargetSid(targetSid);
+    public Profile retrieveExplicitlyAssociatedProfile(Sid targetSid) {
+        ProfileAssociation assoc = daoManager.getProfileAssociationsDao().getProfileAssociationByTargetSid(targetSid.toString());
         Profile profile = null;
         if (assoc != null) {
             try {
@@ -145,7 +145,7 @@ public class ProfileServiceImpl implements ProfileService {
      * @return
      */
     @Override
-    public LinkHeader composeProfileLink(String targetSid, UriInfo info, Class resource) {
+    public LinkHeader composeProfileLink(Sid targetSid, UriInfo info, Class resource) {
         String sid = targetSid.toString();
         URI uri = info.getBaseUriBuilder().path(resource).path(sid).build();
         LinkHeaderBuilder link = LinkHeader.uri(uri).parameter(TITLE_PARAM, "Profiles");

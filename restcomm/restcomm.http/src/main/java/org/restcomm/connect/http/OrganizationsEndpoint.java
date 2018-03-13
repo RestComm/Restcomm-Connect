@@ -152,9 +152,9 @@ public class OrganizationsEndpoint extends SecuredEndpoint {
             return status(NOT_FOUND).build();
         } else {
             Response.ResponseBuilder ok = Response.ok();
-            Profile associatedProfile = profileService.retrieveEffectiveProfileByOrganizationSid(organizationSid);
+            Profile associatedProfile = profileService.retrieveEffectiveProfileByOrganizationSid(new Sid(organizationSid));
             if (associatedProfile != null) {
-                LinkHeader profileLink = profileService.composeProfileLink(associatedProfile.getSid(), info, ProfileJsonEndpoint.class);
+                LinkHeader profileLink = profileService.composeProfileLink(new Sid(associatedProfile.getSid()), info, ProfileJsonEndpoint.class);
                 ok.header(ProfileEndpoint.LINK_HEADER, profileLink.toString());
             }
             if (APPLICATION_XML_TYPE == responseType) {

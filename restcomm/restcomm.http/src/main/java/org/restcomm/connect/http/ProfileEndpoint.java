@@ -359,7 +359,7 @@ public class ProfileEndpoint {
     private void checkProfileAccess(String profileSid, SecurityContext secCtx) {
         AccountPrincipal userPrincipal = (AccountPrincipal) secCtx.getUserPrincipal();
         if (!userPrincipal.isSuperAdmin()) {
-            String accountSid = userPrincipal.getIdentityContext().getAccountKey().getAccount().getSid().toString();
+            Sid accountSid = userPrincipal.getIdentityContext().getAccountKey().getAccount().getSid();
             Profile effectiveProfile = profileService.retrieveEffectiveProfileByAccountSid(accountSid);
             if (!effectiveProfile.getSid().equals(profileSid)) {
                 CustomReasonPhraseType stat = new CustomReasonPhraseType(Response.Status.FORBIDDEN, "Profile not linked");

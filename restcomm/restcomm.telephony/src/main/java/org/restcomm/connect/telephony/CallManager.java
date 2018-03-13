@@ -77,7 +77,7 @@ import org.restcomm.connect.commons.util.SdpUtils;
 import org.restcomm.connect.commons.util.UriUtils;
 import org.restcomm.connect.core.service.RestcommConnectServiceProvider;
 import org.restcomm.connect.core.service.api.NumberSelectorService;
-import org.restcomm.connect.core.service.number.NumberSelectionResult;
+import org.restcomm.connect.core.service.number.api.NumberSelectionResult;
 import org.restcomm.connect.dao.AccountsDao;
 import org.restcomm.connect.dao.ApplicationsDao;
 import org.restcomm.connect.dao.CallDetailRecordsDao;
