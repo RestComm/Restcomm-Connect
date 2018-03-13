@@ -76,7 +76,6 @@ public class OrganizationsEndpoint extends SecuredEndpoint {
     protected final String MSG_DOMAIN_NAME_NOT_AVAILABLE = "This domain name is not available. Please, choose a different name and try again.";
     protected String SUB_DOMAIN_NAME_VALIDATION_PATTERN="[A-Za-z0-9\\-]{1,255}";
     protected Pattern pattern;
-    private ProfileAssociationsDao profileAssociationsDao;
 
     protected OrganizationListConverter listConverter;
 
