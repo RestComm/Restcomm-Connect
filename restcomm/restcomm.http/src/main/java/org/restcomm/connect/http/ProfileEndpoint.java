@@ -388,7 +388,7 @@ public class ProfileEndpoint {
                 Profile profile = new Profile(profileSid.toString(), profileStr, new Date(), new Date());
                 profilesDao.addProfile(profile);
                 URI location = info.getBaseUriBuilder().path(this.getClass()).path(profileSid.toString()).build();
-                Profile createdProfile = profilesDao.getProfile(profileStr);
+                Profile createdProfile = profilesDao.getProfile(profileSid.toString());
                 response = getProfileBuilder(createdProfile, info).status(Status.CREATED).location(location).build();
             } else {
                 response = Response.status(Response.Status.BAD_REQUEST).entity(report.toString()).build();
