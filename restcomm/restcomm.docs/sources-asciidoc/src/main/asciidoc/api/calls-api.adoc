@@ -125,6 +125,13 @@ You must first create a RestComm client. In the example below, the Restcomm clie
 curl -X POST https://ACae6e420f425248d6a26948c17a9e2acf:77f8c12cc7b8f8423e5c38b035249166@127.0.0.1:8080/restcomm/2012-04-24/Accounts/ACae6e420f425248d6a26948c17a9e2acf/Calls.json -d "From=+16175551212" -d "To=client:alice" -d "Url=http://127.0.0.1:8080/restcomm/demos/hello-play.xml"
 ....
 
+This Client URI may contain URI params to declare propietary SIP headers to be 
+included in the outgoing INVITE message.
+
+----
+curl -X POST https://ACae6e420f425248d6a26948c17a9e2acf:77f8c12cc7b8f8423e5c38b035249166@127.0.0.1:8080/restcomm/2012-04-24/Accounts/ACae6e420f425248d6a26948c17a9e2acf/Calls.json -d "From=+16175551212" -d "To=client:alice?X-Custom-Header1=1234&X-Custom-Header2=432" -d "Url=http://127.0.0.1:8080/restcomm/demos/hello-play.xml"
+----
+
 == Calling a DID number
 
 The above example shows how to make a call to a SIP number. If you want to make a call to a DID number, you must can connect Restcomm to a DID provisioning service provider. The quickest way is to use RestComm AMI on Amazon Cloud. Get a list of all available calls. This will return all the available calls linked to the account SID

@@ -19,6 +19,11 @@
  */
 package org.restcomm.connect.http;
 
+import java.util.List;
+import java.util.Set;
+import javax.servlet.ServletContext;
+import javax.servlet.http.HttpServletRequest;
+import javax.ws.rs.core.Context;
 import org.apache.commons.configuration.Configuration;
 import org.apache.commons.lang.NotImplementedException;
 import org.apache.log4j.Logger;

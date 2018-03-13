@@ -50,6 +50,7 @@ import org.joda.time.DateTime;
 import org.restcomm.connect.commons.configuration.RestcommConfiguration;
 import org.restcomm.connect.commons.configuration.sets.RcmlserverConfigurationSet;
 import org.restcomm.connect.commons.dao.Sid;
+import org.restcomm.connect.commons.util.ClientLoginConstrains;
 import org.restcomm.connect.dao.ClientsDao;
 import org.restcomm.connect.dao.DaoManager;
 import org.restcomm.connect.dao.IncomingPhoneNumbersDao;
@@ -60,7 +61,7 @@ import org.restcomm.connect.dao.entities.AccountList;
 import org.restcomm.connect.dao.entities.Client;
 import org.restcomm.connect.dao.entities.IncomingPhoneNumber;
 import org.restcomm.connect.dao.entities.Organization;
-import org.restcomm.connect.dao.entities.Profile;
+import org.restcomm.connect.dao.entities.ProfileAssociation;
 import org.restcomm.connect.dao.entities.RestCommResponse;
 import org.restcomm.connect.extension.api.ApiRequest;
 import org.restcomm.connect.extension.controller.ExtensionController;
@@ -77,13 +78,33 @@ import org.restcomm.connect.identity.passwords.PasswordValidatorFactory;
 import org.restcomm.connect.provisioning.number.api.PhoneNumberProvisioningManager;
 import org.restcomm.connect.provisioning.number.api.PhoneNumberProvisioningManagerProvider;
 
-import com.google.gson.Gson;
-import com.google.gson.GsonBuilder;
-import com.sun.jersey.core.header.LinkHeader;
-import com.sun.jersey.core.util.MultivaluedMapImpl;
-import com.thoughtworks.xstream.XStream;
+import javax.annotation.PostConstruct;
+import javax.mail.internet.AddressException;
+import javax.mail.internet.InternetAddress;
+import javax.servlet.ServletContext;
+import javax.servlet.http.HttpServletRequest;
+import javax.ws.rs.WebApplicationException;
+import javax.ws.rs.core.MediaType;
+import javax.ws.rs.core.MultivaluedMap;
+import javax.ws.rs.core.Response;
+import javax.ws.rs.core.UriInfo;
+import java.net.URI;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Map;
+
+import static javax.ws.rs.core.MediaType.APPLICATION_JSON;
+import static javax.ws.rs.core.MediaType.APPLICATION_JSON_TYPE;
+import static javax.ws.rs.core.MediaType.APPLICATION_XML;
+import static javax.ws.rs.core.MediaType.APPLICATION_XML_TYPE;
+import static javax.ws.rs.core.Response.Status.BAD_REQUEST;
+import static javax.ws.rs.core.Response.Status.CONFLICT;
+import static javax.ws.rs.core.Response.Status.NOT_FOUND;
+import static javax.ws.rs.core.Response.Status.PRECONDITION_FAILED;
 import static javax.ws.rs.core.Response.ok;
 import static javax.ws.rs.core.Response.status;
+import static org.restcomm.connect.http.ProfileEndpoint.PROFILE_REL_TYPE;
+import static org.restcomm.connect.http.ProfileEndpoint.TITLE_PARAM;
 
 /**
  * @author quintana.thomas@gmail.com (Thomas Quintana)
@@ -204,10 +225,10 @@ public class AccountsEndpoint extends SecuredEndpoint {
                 LinkHeader profileLink = composeLink(new Sid(associatedProfile.getSid()), info);
                 ok.header(ProfileEndpoint.LINK_HEADER, profileLink.toString());
             }
-            if (APPLICATION_XML_TYPE == responseType) {
+            if (APPLICATION_XML_TYPE.equals(responseType)) {
                 final RestCommResponse response = new RestCommResponse(account);
                 return ok.type(APPLICATION_XML).entity(xstream.toXML(response)).build();
-            } else if (APPLICATION_JSON_TYPE == responseType) {
+            } else if (APPLICATION_JSON_TYPE.equals(responseType)) {
                 return ok.type(APPLICATION_JSON).entity(gson.toJson(account)).build();
             } else {
                 return null;
@@ -373,10 +394,10 @@ public class AccountsEndpoint extends SecuredEndpoint {
                 }
             }
 
-            if (APPLICATION_XML_TYPE == responseType) {
+            if (APPLICATION_XML_TYPE.equals(responseType)) {
                 final RestCommResponse response = new RestCommResponse(new AccountList(accounts));
                 return ok(xstream.toXML(response), APPLICATION_XML).build();
-            } else if (APPLICATION_JSON_TYPE == responseType) {
+            } else if (APPLICATION_JSON_TYPE.equals(responseType)) {
                 return ok(gson.toJson(accounts), APPLICATION_JSON).build();
             } else {
                 return null;
@@ -447,9 +468,9 @@ public class AccountsEndpoint extends SecuredEndpoint {
 
             executePostApiAction(apiRequest);
 
-            if (APPLICATION_JSON_TYPE == responseType) {
+            if (APPLICATION_JSON_TYPE.equals(responseType)) {
                 return ok(gson.toJson(account), APPLICATION_JSON).build();
-            } else if (APPLICATION_XML_TYPE == responseType) {
+            } else if (APPLICATION_XML_TYPE.equals(responseType)) {
                 final RestCommResponse response = new RestCommResponse(account);
                 return ok(xstream.toXML(response), APPLICATION_XML).build();
             } else {
@@ -609,9 +630,9 @@ public class AccountsEndpoint extends SecuredEndpoint {
             accountsDao.updateAccount(modifiedAccount);
 
 
-            if (APPLICATION_JSON_TYPE == responseType) {
+            if (APPLICATION_JSON_TYPE.equals(responseType)) {
                 return ok(gson.toJson(modifiedAccount), APPLICATION_JSON).build();
-            } else if (APPLICATION_XML_TYPE == responseType) {
+            } else if (APPLICATION_XML_TYPE.equals(responseType)) {
                 final RestCommResponse response = new RestCommResponse(modifiedAccount);
                 return ok(xstream.toXML(response), APPLICATION_XML).build();
             } else {
@@ -706,9 +727,9 @@ public class AccountsEndpoint extends SecuredEndpoint {
             }
         }
 
-        if (APPLICATION_JSON_TYPE == responseType) {
+        if (APPLICATION_JSON_TYPE.equals(responseType)) {
             return ok(gson.toJson(modifiedAccount), APPLICATION_JSON).build();
-        } else if (APPLICATION_XML_TYPE == responseType) {
+        } else if (APPLICATION_XML_TYPE.equals(responseType)) {
             final RestCommResponse response = new RestCommResponse(modifiedAccount);
             return ok(xstream.toXML(response), APPLICATION_XML).build();
         } else {
@@ -795,6 +816,27 @@ public class AccountsEndpoint extends SecuredEndpoint {
             throw new NullPointerException("Email address can not be null.");
         } else if (!data.containsKey("Password")) {
             throw new NullPointerException("Password can not be null.");
+        }
+
+        String emailAddress = data.getFirst("EmailAddress");
+        try {
+            InternetAddress emailAddr = new InternetAddress(emailAddress);
+            emailAddr.validate();
+        } catch (AddressException ex) {
+            String msg = String.format("Provided email address %s is not valid",emailAddress);
+            if (logger.isDebugEnabled()) {
+                logger.debug(msg);
+            }
+            throw new IllegalArgumentException(msg);
+        }
+
+        String clientLogin = data.getFirst("EmailAddress").split("@")[0];
+        if (!ClientLoginConstrains.isValidClientLogin(clientLogin)) {
+            String msg = String.format("Login %s contains invalid character(s) ",clientLogin);
+            if (logger.isDebugEnabled()) {
+                logger.debug(msg);
+            }
+            throw new IllegalArgumentException(msg);
         }
     }
 
