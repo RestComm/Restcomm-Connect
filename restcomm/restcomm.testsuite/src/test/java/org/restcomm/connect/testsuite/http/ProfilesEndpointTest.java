@@ -102,7 +102,8 @@ public class ProfilesEndpointTest extends EndpointTest {
 
     	JsonArray jsonArray = new JsonParser().parse(responseBody).getAsJsonArray();
     	assertNotNull(jsonArray);
-    	assertEquals(1, jsonArray.size());
+    	//as we have one default and one secondary profile and based on other tests creating profiles, we may have more
+    	assertTrue(jsonArray.size()>=2);
     }
 
     /**
@@ -562,7 +563,8 @@ public class ProfilesEndpointTest extends EndpointTest {
     	WebResourceLinkHeaders linkHeaders = accountEndopintResponse.getLinks();
     	LinkHeader linkHeader = linkHeaders.getLink(RestcommProfilesTool.PROFILE_REL_TYPE);
     	logger.info("linkHeader after deleteing profile: "+linkHeader);
-    	assertNull(linkHeader);
+    	assertNotNull(linkHeader);
+    	assertTrue(linkHeader.getUri().toString().contains(DEFAULT_PROFILE_SID));
     }
 
     @Test

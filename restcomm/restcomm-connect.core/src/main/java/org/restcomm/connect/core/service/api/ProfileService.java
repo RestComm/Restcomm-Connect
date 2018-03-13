@@ -27,21 +27,28 @@ import org.restcomm.connect.dao.entities.Profile;
 public interface ProfileService {
     /**
      * @param accountSid
-     * @return
+     * @return  will return associated profile of provided account sid
      */
-    Profile retrieveEffectiveProfile(String accountSid);
+    Profile retrieveEffectiveProfileByAccountSid(String accountSid);
 
     /**
      * @param targetSid
      * @param info
      * @param resource
-     * @return
+     * @return LinkHeader
      */
     LinkHeader composeProfileLink(String targetSid, UriInfo info, Class resource);
 
     /**
-     * @param targetSid
-     * @return
+     * @param organizationSid
+     * @return  will return associated profile of provided organization sid
      */
-    Profile retrieveProfileForTarget(String targetSid);
+    Profile retrieveEffectiveProfileByOrganizationSid(String organizationSid);
+
+    /**
+     * @param targetSid
+     * @return will return explicitly associated profile of provided target (account or
+     *         organization) will return null if no profile is explicitly assigned to the target resource.
+     */
+    Profile retrieveExplicitlyAssociatedProfile(String targetSid);
 }

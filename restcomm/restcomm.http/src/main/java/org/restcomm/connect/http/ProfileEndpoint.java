@@ -360,7 +360,7 @@ public class ProfileEndpoint {
         AccountPrincipal userPrincipal = (AccountPrincipal) secCtx.getUserPrincipal();
         if (!userPrincipal.isSuperAdmin()) {
 
-            Profile effectiveProfile = profileService.retrieveEffectiveProfile(userPrincipal.getIdentityContext().getAccountKey().getAccount().toString());
+            Profile effectiveProfile = profileService.retrieveEffectiveProfileByAccountSid(userPrincipal.getIdentityContext().getAccountKey().getAccount().toString());
             if (!effectiveProfile.getSid().equals(profileSid)) {
                 CustomReasonPhraseType stat = new CustomReasonPhraseType(Response.Status.FORBIDDEN, "Profile not linked");
                 throw new WebApplicationException(status(stat).build());
@@ -386,7 +386,7 @@ public class ProfileEndpoint {
                 Profile profile = new Profile(profileSid.toString(), profileStr, new Date(), new Date());
                 profilesDao.addProfile(profile);
                 URI location = info.getBaseUriBuilder().path(this.getClass()).path(profileSid.toString()).build();
-                Profile createdProfile = profilesDao.getProfile(profileStr);
+                Profile createdProfile = profilesDao.getProfile(profileSid.toString());
                 response = getProfileBuilder(createdProfile, info).status(Status.CREATED).location(location).build();
             } else {
                 response = Response.status(Response.Status.BAD_REQUEST).entity(report.toString()).build();

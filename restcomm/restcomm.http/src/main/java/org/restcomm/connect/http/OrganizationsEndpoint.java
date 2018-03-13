@@ -152,7 +152,7 @@ public class OrganizationsEndpoint extends SecuredEndpoint {
             return status(NOT_FOUND).build();
         } else {
             Response.ResponseBuilder ok = Response.ok();
-            Profile associatedProfile = profileService.retrieveProfileForTarget(organizationSid);
+            Profile associatedProfile = profileService.retrieveEffectiveProfileByOrganizationSid(organizationSid);
             if (associatedProfile != null) {
                 LinkHeader profileLink = profileService.composeProfileLink(associatedProfile.getSid(), info, ProfileJsonEndpoint.class);
                 ok.header(ProfileEndpoint.LINK_HEADER, profileLink.toString());
