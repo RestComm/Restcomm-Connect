@@ -47,7 +47,7 @@ import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
 import javax.ws.rs.core.Response.ResponseBuilder;
 import javax.ws.rs.core.Response.Status;
-import static javax.ws.rs.core.Response.status;
+import javax.ws.rs.core.SecurityContext;
 import javax.ws.rs.core.UriInfo;
 import org.apache.commons.configuration.Configuration;
 import org.apache.commons.io.IOUtils;
@@ -64,6 +64,9 @@ import org.restcomm.connect.dao.entities.Profile;
 import static org.restcomm.connect.dao.entities.Profile.DEFAULT_PROFILE_SID;
 import org.restcomm.connect.dao.entities.ProfileAssociation;
 import org.restcomm.connect.http.exceptionmappers.CustomReasonPhraseType;
+import org.restcomm.connect.http.security.AccountPrincipal;
+import static javax.ws.rs.core.Response.status;
+import org.restcomm.connect.core.service.api.ProfileService;
 
 public class ProfileEndpoint {
 
@@ -90,9 +93,11 @@ public class ProfileEndpoint {
     private ProfileAssociationsDao profileAssociationsDao;
     private AccountsDao accountsDao;
     private OrganizationsDao organizationsDao;
-
+    protected ProfileService profileService;
     private JsonNode schemaJson;
     private JsonSchema profileSchema;
+
+
 
     public ProfileEndpoint() {
         super();
@@ -103,6 +108,7 @@ public class ProfileEndpoint {
         rootConfiguration = (Configuration) context.getAttribute(Configuration.class.getName());
         runtimeConfiguration = rootConfiguration.subset("runtime-settings");
         final DaoManager storage = (DaoManager) context.getAttribute(DaoManager.class.getName());
+        profileService = (ProfileService)context.getAttribute(ProfileService.class.getName());
         profileAssociationsDao = storage.getProfileAssociationsDao();
         this.accountsDao = storage.getAccountsDao();
         this.organizationsDao = storage.getOrganizationsDao();
@@ -256,7 +262,8 @@ public class ProfileEndpoint {
             if (report.isSuccess()) {
                 Profile profile = new Profile(profileSid, profileStr, new Date(), new Date());
                 profilesDao.updateProfile(profile);
-                return getProfile(profileSid, info);
+                Profile updatedProfile = profilesDao.getProfile(profileSid);
+                return getProfileBuilder(updatedProfile, info).build();
             } else {
                 return Response.status(Response.Status.BAD_REQUEST).entity(report.toString()).build();
             }
@@ -328,11 +335,10 @@ public class ProfileEndpoint {
         }
     }
 
-    public ResponseBuilder getProfileBuilder(String profileSid, UriInfo info) {
-        Profile profile = checkProfileExists(profileSid);
+    public ResponseBuilder getProfileBuilder(Profile profile , UriInfo info) {
         try {
             Response.ResponseBuilder ok = Response.ok(profile.getProfileDocument());
-            List<ProfileAssociation> profileAssociationsByProfileSid = profileAssociationsDao.getProfileAssociationsByProfileSid(profileSid);
+            List<ProfileAssociation> profileAssociationsByProfileSid = profileAssociationsDao.getProfileAssociationsByProfileSid(profile.getSid());
             for (ProfileAssociation assoc : profileAssociationsByProfileSid) {
                 LinkHeader composeLink = composeLink(assoc.getTargetSid(), info);
                 ok.header(LINK_HEADER, composeLink.toString());
@@ -349,8 +355,22 @@ public class ProfileEndpoint {
         }
     }
 
-    public Response getProfile(String profileSid, UriInfo info) {
-        return getProfileBuilder(profileSid, info).build();
+    private void checkProfileAccess(String profileSid, SecurityContext secCtx) {
+        AccountPrincipal userPrincipal = (AccountPrincipal) secCtx.getUserPrincipal();
+        if (!userPrincipal.isSuperAdmin()) {
+            Sid accountSid = userPrincipal.getIdentityContext().getAccountKey().getAccount().getSid();
+            Profile effectiveProfile = profileService.retrieveEffectiveProfileByAccountSid(accountSid);
+            if (!effectiveProfile.getSid().equals(profileSid)) {
+                CustomReasonPhraseType stat = new CustomReasonPhraseType(Response.Status.FORBIDDEN, "Profile not linked");
+                throw new WebApplicationException(status(stat).build());
+            }
+        }
+    }
+
+    public Response getProfile(String profileSid, UriInfo info, SecurityContext secCtx) {
+        Profile profile = checkProfileExists(profileSid);
+        checkProfileAccess(profileSid, secCtx);
+        return getProfileBuilder(profile, info).build();
     }
 
     public Response createProfile(InputStream body, UriInfo info) {
@@ -365,7 +385,8 @@ public class ProfileEndpoint {
                 Profile profile = new Profile(profileSid.toString(), profileStr, new Date(), new Date());
                 profilesDao.addProfile(profile);
                 URI location = info.getBaseUriBuilder().path(this.getClass()).path(profileSid.toString()).build();
-                response = getProfileBuilder(profileSid.toString(), info).status(Status.CREATED).location(location).build();
+                Profile createdProfile = profilesDao.getProfile(profileSid.toString());
+                response = getProfileBuilder(createdProfile, info).status(Status.CREATED).location(location).build();
             } else {
                 response = Response.status(Response.Status.BAD_REQUEST).entity(report.toString()).build();
             }

@@ -36,6 +36,7 @@ import javax.ws.rs.core.HttpHeaders;
 import javax.ws.rs.core.MediaType;
 import static javax.ws.rs.core.MediaType.APPLICATION_JSON;
 import javax.ws.rs.core.Response;
+import javax.ws.rs.core.SecurityContext;
 import javax.ws.rs.core.UriInfo;
 import org.restcomm.connect.commons.annotations.concurrency.ThreadSafe;
 import static org.restcomm.connect.http.ProfileEndpoint.PROFILE_CONTENT_TYPE;
@@ -66,9 +67,10 @@ public class ProfileJsonEndpoint extends ProfileEndpoint {
     @Path("/{profileSid}")
     @GET
     @Produces({PROFILE_CONTENT_TYPE, MediaType.APPLICATION_JSON})
+    @PermitAll
     public Response getProfileAsJson(@PathParam("profileSid") final String profileSid,
-            @Context UriInfo info) {
-        return getProfile(profileSid, info);
+            @Context UriInfo info, @Context SecurityContext secCtx) {
+        return getProfile(profileSid, info, secCtx);
     }
 
     @Path("/{profileSid}")

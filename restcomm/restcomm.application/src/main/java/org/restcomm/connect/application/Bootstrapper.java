@@ -1,5 +1,7 @@
 package org.restcomm.connect.application;
 
+import static org.restcomm.connect.dao.entities.Profile.DEFAULT_PROFILE_SID;
+
 import java.io.IOException;
 import java.net.UnknownHostException;
 import java.sql.SQLException;
@@ -41,7 +43,6 @@ import org.restcomm.connect.dao.entities.Profile;
 import org.restcomm.connect.dao.entities.shiro.ShiroResources;
 import org.restcomm.connect.extension.controller.ExtensionBootstrapper;
 import org.restcomm.connect.identity.IdentityContext;
-import org.restcomm.connect.interpreter.NumberSelectorService;
 import org.restcomm.connect.monitoringservice.MonitoringService;
 import org.restcomm.connect.mrb.api.StartMediaResourceBroker;
 import org.restcomm.connect.mscontrol.api.MediaServerControllerFactory;
@@ -61,7 +62,6 @@ import akka.actor.ActorSystem;
 import akka.actor.Props;
 import akka.actor.UntypedActor;
 import akka.actor.UntypedActorFactory;
-import static org.restcomm.connect.dao.entities.Profile.DEFAULT_PROFILE_SID;
 import scala.concurrent.ExecutionContext;
 
 /**
@@ -401,8 +401,8 @@ public final class Bootstrapper extends SipServlet implements SipServletListener
             IdentityContext identityContext = new IdentityContext(xml);
             context.setAttribute(IdentityContext.class.getName(), identityContext);
 
-            //init NumberSelectorService
-            context.setAttribute(NumberSelectorService.class.getName(), new NumberSelectorService(storage.getIncomingPhoneNumbersDao()));
+            // Initialize CoreServices
+            RestcommConnectServiceProvider.getInstance().startServices(context);
 
             // Create the media gateway.
 
