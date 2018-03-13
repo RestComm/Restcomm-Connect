@@ -20,9 +20,6 @@
 
 package org.restcomm.connect.core.service.api;
 
-import com.sun.jersey.core.header.LinkHeader;
-import javax.ws.rs.core.UriInfo;
-
 import org.restcomm.connect.commons.dao.Sid;
 import org.restcomm.connect.dao.entities.Profile;
 
@@ -32,14 +29,6 @@ public interface ProfileService {
      * @return  will return associated profile of provided account sid
      */
     Profile retrieveEffectiveProfileByAccountSid(Sid accountSid);
-
-    /**
-     * @param targetSid
-     * @param info
-     * @param resource
-     * @return LinkHeader
-     */
-    LinkHeader composeProfileLink(Sid targetSid, UriInfo info, Class resource);
 
     /**
      * @param organizationSid

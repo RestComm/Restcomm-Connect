@@ -19,28 +19,20 @@
  */
 package org.restcomm.connect.core.service.profile;
 
-import java.net.URI;
 import java.sql.SQLException;
-
-import javax.ws.rs.core.UriInfo;
 
 import org.apache.log4j.Logger;
 import org.restcomm.connect.commons.dao.Sid;
+import org.restcomm.connect.core.service.api.ProfileService;
 import org.restcomm.connect.dao.DaoManager;
 import org.restcomm.connect.dao.entities.Account;
 import org.restcomm.connect.dao.entities.Profile;
 import org.restcomm.connect.dao.entities.ProfileAssociation;
 
-import com.sun.jersey.core.header.LinkHeader;
-import com.sun.jersey.core.header.LinkHeader.LinkHeaderBuilder;
-import org.restcomm.connect.core.service.api.ProfileService;
-
 public class ProfileServiceImpl implements ProfileService {
     private static Logger logger = Logger.getLogger(ProfileServiceImpl.class);
 
     private static String DEFAULT_PROFILE_SID = Profile.DEFAULT_PROFILE_SID;
-    private static final String PROFILE_REL_TYPE = "related";
-    private static final String TITLE_PARAM = "title";
 
     private final DaoManager daoManager;
 
@@ -136,19 +128,5 @@ public class ProfileServiceImpl implements ProfileService {
             logger.debug("Returning profile:" + profile);
         }
         return profile;
-    }
-
-    /**
-     * @param targetSid
-     * @param info
-     * @param resource
-     * @return
-     */
-    @Override
-    public LinkHeader composeProfileLink(Sid targetSid, UriInfo info, Class resource) {
-        String sid = targetSid.toString();
-        URI uri = info.getBaseUriBuilder().path(resource).path(sid).build();
-        LinkHeaderBuilder link = LinkHeader.uri(uri).parameter(TITLE_PARAM, "Profiles");
-        return link.rel(PROFILE_REL_TYPE).build();
     }
 }
