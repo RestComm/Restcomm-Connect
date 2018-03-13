@@ -55,25 +55,26 @@ public final class CreateCall implements IExtensionCreateCallRequest{
     private Map<String,ArrayList<String>> outboundProxyHeaders;
     private boolean allowed = true;
     private final MediaAttributes mediaAttributes;
+    private String customHeaders;
 
     public CreateCall(final String from, final String to, final String username, final String password,
                       final boolean isFromApi, final int timeout, final CreateCallType type, final Sid accountId, final Sid parentCallSid,
-                      final URI statusCallbackUrl, final String statusCallbackMethod, final List<String> statusCallbackEvent) {
+                      final URI statusCallbackUrl, final String statusCallbackMethod, final List<String> statusCallbackEvent, final String customHeader) {
         this(from, to, username, password, isFromApi, timeout, type, accountId, parentCallSid, statusCallbackUrl, statusCallbackMethod,
-                statusCallbackEvent, "", null, new MediaAttributes());
+                statusCallbackEvent, "", null, new MediaAttributes(), customHeader);
     }
 
     public CreateCall(final String from, final String to, final String username, final String password,
                       final boolean isFromApi, final int timeout, final CreateCallType type, final Sid accountId, final Sid parentCallSid,
-                      final URI statusCallbackUrl, final String statusCallbackMethod, final List<String> statusCallbackEvent, final MediaAttributes mediaAttributes) {
+                      final URI statusCallbackUrl, final String statusCallbackMethod, final List<String> statusCallbackEvent, final MediaAttributes mediaAttributes, final String customHeaders) {
         this(from, to, username, password, isFromApi, timeout, type, accountId, parentCallSid, statusCallbackUrl, statusCallbackMethod,
-                statusCallbackEvent, "", null, mediaAttributes);
+                statusCallbackEvent, "", null, mediaAttributes, customHeaders);
     }
 
     public CreateCall(final String from, final String to, final String username, final String password,
                       final boolean isFromApi, final int timeout, final CreateCallType type, final Sid accountId, final Sid parentCallSid,
                       final URI statusCallbackUrl, final String statusCallbackMethod, final List<String> statusCallbackEvent,
-                      final String outboundProxy, final Map<String,ArrayList<String>> outboundProxyHeaders, final MediaAttributes mediaAttributes) {
+                      final String outboundProxy, final Map<String,ArrayList<String>> outboundProxyHeaders, final MediaAttributes mediaAttributes, final String customHeaders) {
         super();
         this.from = from;
         this.to = to;
@@ -90,6 +91,7 @@ public final class CreateCall implements IExtensionCreateCallRequest{
         this.outboundProxy = outboundProxy;
         this.outboundProxyHeaders = outboundProxyHeaders;
         this.mediaAttributes = mediaAttributes;
+        this.customHeaders = customHeaders;
     }
 
     public String from() {
@@ -293,7 +295,7 @@ public final class CreateCall implements IExtensionCreateCallRequest{
 
     /**
      * IExtensionRequest
-     * @param set allowed
+     * @param allowed
      */
     @Override
     public void setAllowed(boolean allowed) {
@@ -307,5 +309,9 @@ public final class CreateCall implements IExtensionCreateCallRequest{
 
     public MediaAttributes mediaAttributes() {
         return mediaAttributes;
+    }
+
+    public String getCustomHeaders () {
+        return customHeaders;
     }
 }

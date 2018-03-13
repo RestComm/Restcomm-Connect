@@ -42,6 +42,7 @@ import static javax.ws.rs.core.Response.status;
 import org.apache.commons.configuration.Configuration;
 import org.restcomm.connect.commons.annotations.concurrency.NotThreadSafe;
 import org.restcomm.connect.commons.dao.Sid;
+import org.restcomm.connect.commons.util.ClientLoginConstrains;
 import org.restcomm.connect.dao.AccountsDao;
 import org.restcomm.connect.dao.ClientsDao;
 import org.restcomm.connect.dao.DaoManager;
@@ -252,9 +253,13 @@ public abstract class ClientsEndpoint extends SecuredEndpoint {
         } else if (!data.containsKey("Password")) {
             throw new NullPointerException("Password can not be null.");
         }
-        // https://github.com/RestComm/Restcomm-Connect/issues/1979
-        if (data.getFirst("Login").contains("@")) {
-            throw new IllegalArgumentException("Login contains invalid character: @ "+data.getFirst("Login"));
+        // https://github.com/RestComm/Restcomm-Connect/issues/1979 && https://telestax.atlassian.net/browse/RESTCOMM-1797
+        if (!ClientLoginConstrains.isValidClientLogin(data.getFirst("Login"))) {
+            String msg = String.format("Login %s contains invalid character(s)",data.getFirst("Login"));
+            if (logger.isDebugEnabled()) {
+                logger.debug(msg);
+            }
+            throw new IllegalArgumentException(msg);
         }
     }
 

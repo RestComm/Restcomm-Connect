@@ -125,6 +125,7 @@ import javax.servlet.sip.SipServletMessage;
 import javax.servlet.sip.SipServletRequest;
 import javax.servlet.sip.SipServletResponse;
 import javax.servlet.sip.SipSession;
+import javax.servlet.sip.SipURI;
 import java.io.IOException;
 import java.math.BigDecimal;
 import java.net.MalformedURLException;
@@ -2365,35 +2366,46 @@ public class VoiceInterpreter extends BaseVoiceInterpreter {
                     }
                 }
                 fetchMediaAttributes(child);
-                String callee;
+
+                //Get To
+                String to;
                 if(video(child) != null){
-                    callee = child.attribute("name").value();
+                    to = child.attribute("name").value();
                 } else {
-                    callee = child.text();
+                    to = child.text();
                 }
+
+                String callee = to;
+
+                //Extract and pass custom headers for Dial Client and Dial Number
+                String customHeaders = getCustomHeaders(to);
+
+                //Get Callee after removing any custom headers (this way there will be no impact on the Extensions execution)
+                callee = customHeaders != null ? to.substring(0, to.indexOf("?")) : to;
+
                 if (Nouns.client.equals(child.name())) {
                     if (call != null && callInfo != null) {
                         create = new CreateCall(e164(callerId(verb)), e164(callee), null, null, callInfo.isFromApi(), timeout(verb),
-                                CreateCallType.CLIENT, accountId, callInfo.sid(), statusCallback, statusCallbackMethod, statusCallbackEvent, mediaAttributes);
+                                CreateCallType.CLIENT, accountId, callInfo.sid(), statusCallback, statusCallbackMethod, statusCallbackEvent, mediaAttributes, customHeaders);
                     } else {
                         create = new CreateCall(e164(callerId(verb)), e164(callee), null, null, false, timeout(verb),
-                                CreateCallType.CLIENT, accountId, null, statusCallback, statusCallbackMethod, statusCallbackEvent, mediaAttributes);
+                                CreateCallType.CLIENT, accountId, null, statusCallback, statusCallbackMethod, statusCallbackEvent, mediaAttributes, customHeaders);
                     }
                 } else if (Nouns.number.equals(child.name())) {
                     if (call != null && callInfo != null) {
-                        create = new CreateCall(e164(callerId(verb)), e164(child.text()), null, null, callInfo.isFromApi(), timeout(verb),
-                                CreateCallType.PSTN, accountId, callInfo.sid(), statusCallback, statusCallbackMethod, statusCallbackEvent);
+                        create = new CreateCall(e164(callerId(verb)), e164(callee), null, null, callInfo.isFromApi(), timeout(verb),
+                                CreateCallType.PSTN, accountId, callInfo.sid(), statusCallback, statusCallbackMethod, statusCallbackEvent, customHeaders);
                     } else {
-                        create = new CreateCall(e164(callerId(verb)), e164(child.text()), null, null, false, timeout(verb),
-                                CreateCallType.PSTN, accountId, null, statusCallback, statusCallbackMethod, statusCallbackEvent);
+                        create = new CreateCall(e164(callerId(verb)), e164(callee), null, null, false, timeout(verb),
+                                CreateCallType.PSTN, accountId, null, statusCallback, statusCallbackMethod, statusCallbackEvent, customHeaders);
                     }
                 } else if (Nouns.uri.equals(child.name())) {
                     if (call != null && callInfo != null) {
                         create = new CreateCall(e164(callerId(verb)), e164(callee), null, null, callInfo.isFromApi(), timeout(verb),
-                                CreateCallType.SIP, accountId, callInfo.sid(), statusCallback, statusCallbackMethod, statusCallbackEvent, mediaAttributes);
+                                CreateCallType.SIP, accountId, callInfo.sid(), statusCallback, statusCallbackMethod, statusCallbackEvent, mediaAttributes, customHeaders);
                     } else {
                         create = new CreateCall(e164(callerId(verb)), e164(callee), null, null, false, timeout(verb),
-                                CreateCallType.SIP, accountId, null, statusCallback, statusCallbackMethod, statusCallbackEvent, mediaAttributes);
+                                CreateCallType.SIP, accountId, null, statusCallback, statusCallbackMethod, statusCallbackEvent, mediaAttributes, customHeaders);
                     }
                 } else if (Nouns.SIP.equals(child.name())) {
                     // https://bitbucket.org/telestax/telscale-restcomm/issue/132/implement-twilio-sip-out
@@ -2419,10 +2431,10 @@ public class VoiceInterpreter extends BaseVoiceInterpreter {
                     }
                     if (call != null && callInfo != null) {
                         create = new CreateCall(e164(callerId(verb)), e164(callee), username, password, false, timeout(verb),
-                                CreateCallType.SIP, accountId, callInfo.sid(), statusCallback, statusCallbackMethod, statusCallbackEvent, mediaAttributes);
+                                CreateCallType.SIP, accountId, callInfo.sid(), statusCallback, statusCallbackMethod, statusCallbackEvent, mediaAttributes, customHeaders);
                     } else {
                         create = new CreateCall(e164(callerId(verb)), e164(callee), username, password, false, timeout(verb),
-                                CreateCallType.SIP, accountId, null, statusCallback, statusCallbackMethod, statusCallbackEvent, mediaAttributes);
+                                CreateCallType.SIP, accountId, null, statusCallback, statusCallbackMethod, statusCallbackEvent, mediaAttributes, customHeaders);
                     }
                 }
                 callManager.tell(create, source);
@@ -2455,6 +2467,16 @@ public class VoiceInterpreter extends BaseVoiceInterpreter {
                 }
             }
         }
+    }
+
+    private String getCustomHeaders(final String to) {
+        String customHeaders = null;
+
+        if (to.contains("?")) {
+            customHeaders = to.substring(to.indexOf("?")+1, to.length());
+        }
+
+        return customHeaders;
     }
 
     private final class Forking extends AbstractDialAction {
