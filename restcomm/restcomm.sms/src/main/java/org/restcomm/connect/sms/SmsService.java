@@ -19,14 +19,25 @@
  */
 package org.restcomm.connect.sms;
 
-import akka.actor.ActorRef;
-import akka.actor.ActorSystem;
-import akka.actor.Props;
-import akka.actor.UntypedActor;
-import akka.actor.UntypedActorContext;
-import akka.actor.UntypedActorFactory;
-import akka.event.Logging;
-import akka.event.LoggingAdapter;
+import static javax.servlet.sip.SipServletResponse.SC_FORBIDDEN;
+import static javax.servlet.sip.SipServletResponse.SC_NOT_FOUND;
+
+import java.io.IOException;
+import java.math.BigDecimal;
+import java.net.URI;
+import java.net.URISyntaxException;
+import java.util.Currency;
+import java.util.List;
+import java.util.concurrent.TimeUnit;
+
+import javax.servlet.ServletConfig;
+import javax.servlet.ServletContext;
+import javax.servlet.sip.SipApplicationSession;
+import javax.servlet.sip.SipFactory;
+import javax.servlet.sip.SipServlet;
+import javax.servlet.sip.SipServletRequest;
+import javax.servlet.sip.SipServletResponse;
+import javax.servlet.sip.SipURI;
 
 import org.apache.commons.configuration.Configuration;
 import org.joda.time.DateTime;
@@ -37,7 +48,7 @@ import org.restcomm.connect.commons.faulttolerance.RestcommUntypedActor;
 import org.restcomm.connect.commons.push.PushNotificationServerHelper;
 import org.restcomm.connect.commons.util.UriUtils;
 import org.restcomm.connect.core.service.RestcommConnectServiceProvider;
-import org.restcomm.connect.core.service.number.NumberSelectorService;
+import org.restcomm.connect.core.service.api.NumberSelectorService;
 import org.restcomm.connect.dao.AccountsDao;
 import org.restcomm.connect.dao.ApplicationsDao;
 import org.restcomm.connect.dao.ClientsDao;
@@ -77,27 +88,15 @@ import org.restcomm.connect.telephony.api.util.B2BUAHelper;
 import org.restcomm.connect.telephony.api.util.CallControlHelper;
 import org.restcomm.smpp.parameter.TlvSet;
 
+import akka.actor.ActorRef;
+import akka.actor.ActorSystem;
+import akka.actor.Props;
+import akka.actor.UntypedActor;
+import akka.actor.UntypedActorContext;
+import akka.actor.UntypedActorFactory;
+import akka.event.Logging;
+import akka.event.LoggingAdapter;
 import scala.concurrent.duration.Duration;
-
-import javax.servlet.ServletConfig;
-import javax.servlet.ServletContext;
-import javax.servlet.sip.SipApplicationSession;
-import javax.servlet.sip.SipFactory;
-import javax.servlet.sip.SipServlet;
-import javax.servlet.sip.SipServletRequest;
-import javax.servlet.sip.SipServletResponse;
-import javax.servlet.sip.SipURI;
-
-import java.io.IOException;
-import java.math.BigDecimal;
-import java.net.URI;
-import java.net.URISyntaxException;
-import java.util.Currency;
-import java.util.List;
-import java.util.concurrent.TimeUnit;
-
-import static javax.servlet.sip.SipServletResponse.SC_FORBIDDEN;
-import static javax.servlet.sip.SipServletResponse.SC_NOT_FOUND;
 
 /**
  * @author quintana.thomas@gmail.com (Thomas Quintana)
