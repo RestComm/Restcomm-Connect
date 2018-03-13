@@ -346,7 +346,7 @@ public class ProfilesEndpointTest extends EndpointTest {
 		/*
 		 * link a profile to an account
 		 */
-    	HttpResponse response = RestcommProfilesTool.getInstance().linkProfileWithOverride(deploymentUrl.toString(), SUPER_ADMIN_ACCOUNT_SID, AUTH_TOKEN, DEFAULT_PROFILE_SID, SUPER_ADMIN_ACCOUNT_SID, RestcommProfilesTool.AssociatedResourceType.ACCOUNT);
+    	HttpResponse response = RestcommProfilesTool.getInstance().linkProfileWithOverride(deploymentUrl.toString(), SUPER_ADMIN_ACCOUNT_SID, AUTH_TOKEN, SECONDARY_PROFILE_SID, SUPER_ADMIN_ACCOUNT_SID, RestcommProfilesTool.AssociatedResourceType.ACCOUNT);
     	logger.info("HttpResponse: "+response);
     	assertEquals(200, response.getStatusLine().getStatusCode());
 
@@ -362,12 +362,12 @@ public class ProfilesEndpointTest extends EndpointTest {
     	LinkHeader linkHeader = linkHeaders.getLink(RestcommProfilesTool.PROFILE_REL_TYPE);
     	logger.info("accountEndopintResponse WebResourceLinkHeaders linkHeader: "+linkHeader);
     	assertNotNull(linkHeader);
-    	assertTrue(linkHeader.getUri().toString().contains(DEFAULT_PROFILE_SID));
+    	assertTrue(linkHeader.getUri().toString().contains(SECONDARY_PROFILE_SID));
 
     	/*
 		 * unlink a profile from an account
 		 */
-    	response = RestcommProfilesTool.getInstance().unLinkProfileWithOverride(deploymentUrl.toString(), SUPER_ADMIN_ACCOUNT_SID, AUTH_TOKEN, DEFAULT_PROFILE_SID, SUPER_ADMIN_ACCOUNT_SID, RestcommProfilesTool.AssociatedResourceType.ACCOUNT);
+    	response = RestcommProfilesTool.getInstance().unLinkProfileWithOverride(deploymentUrl.toString(), SUPER_ADMIN_ACCOUNT_SID, AUTH_TOKEN, SECONDARY_PROFILE_SID, SUPER_ADMIN_ACCOUNT_SID, RestcommProfilesTool.AssociatedResourceType.ACCOUNT);
     	logger.info("HttpResponse: "+response);
     	assertEquals(200, response.getStatusLine().getStatusCode());
 
@@ -381,7 +381,8 @@ public class ProfilesEndpointTest extends EndpointTest {
     	logger.info("accountEndopintResponse WebResourceLinkHeaders: "+linkHeaders);
     	linkHeader = linkHeaders.getLink(RestcommProfilesTool.PROFILE_REL_TYPE);
     	logger.info("accountEndopintResponse WebResourceLinkHeaders linkHeader: "+linkHeader);
-    	assertNull(linkHeader);
+    	assertNotNull(linkHeader);
+    	assertTrue(linkHeader.getUri().toString().contains(DEFAULT_PROFILE_SID));
     }
 
     /**
