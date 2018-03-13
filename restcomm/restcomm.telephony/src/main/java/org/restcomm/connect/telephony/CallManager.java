@@ -2018,7 +2018,14 @@ public final class CallManager extends RestcommUntypedActor {
 
     private SipURI addCustomHeadersForToUri (String customHeaders, SipURI to) {
         for (String customHeader: customHeaders.split("&")) {
-            to.setHeader(customHeader.split("=")[0], customHeader.split("=")[1]);
+            if (customHeader.contains("=")) {
+                to.setHeader(customHeader.split("=")[0], customHeader.split("=")[1]);
+            } else {
+                String msg = String.format("Custom header %s not properly formatted", customHeader);
+                if (logger.isDebugEnabled()) {
+                    logger.debug(msg);
+                }
+            }
         }
         return to;
     }

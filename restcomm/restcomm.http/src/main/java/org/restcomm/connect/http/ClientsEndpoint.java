@@ -256,14 +256,12 @@ public abstract class ClientsEndpoint extends SecuredEndpoint {
             throw new NullPointerException("Password can not be null.");
         }
         // https://github.com/RestComm/Restcomm-Connect/issues/1979 && https://telestax.atlassian.net/browse/RESTCOMM-1797
-        for (char ch: ClientLoginConstrains.NOT_ALLOWED_CHARS) {
-            if (data.getFirst("Login").indexOf(ch) > -1) {
-                String msg = String.format("Login %s contains invalid character: %s ",data.getFirst("Login"), ch);
-                if (logger.isDebugEnabled()) {
-                    logger.debug(msg);
-                }
-                throw new IllegalArgumentException(msg);
+        if (!ClientLoginConstrains.isValidClientLogin(data.getFirst("Login"))) {
+            String msg = String.format("Login %s contains invalid character(s)",data.getFirst("Login"));
+            if (logger.isDebugEnabled()) {
+                logger.debug(msg);
             }
+            throw new IllegalArgumentException(msg);
         }
     }
 
