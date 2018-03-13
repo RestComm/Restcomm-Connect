@@ -563,7 +563,8 @@ public class ProfilesEndpointTest extends EndpointTest {
     	WebResourceLinkHeaders linkHeaders = accountEndopintResponse.getLinks();
     	LinkHeader linkHeader = linkHeaders.getLink(RestcommProfilesTool.PROFILE_REL_TYPE);
     	logger.info("linkHeader after deleteing profile: "+linkHeader);
-    	assertNull(linkHeader);
+    	assertNotNull(linkHeader);
+    	assertTrue(linkHeader.getUri().toString().contains(DEFAULT_PROFILE_SID));
     }
 
     @Test
