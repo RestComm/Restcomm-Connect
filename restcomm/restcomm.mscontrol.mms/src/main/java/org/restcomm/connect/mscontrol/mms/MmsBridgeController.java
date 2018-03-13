@@ -384,16 +384,14 @@ public class MmsBridgeController extends MediaServerController {
             if(logger.isInfoEnabled()) {
                 logger.info("Start recording bridged call");
             }
-            String finishOnKey = "1234567890*#";
             int maxLength = 3600;
-            int timeout = 5;
 
             this.recording = Boolean.TRUE;
             this.recordStarted = DateTime.now();
             this.recordingRequest = message;
 
             // Tell media group to start recording
-            Record record = new Record(message.getRecordingUri(), timeout, maxLength, finishOnKey, MediaAttributes.MediaType.AUDIO_ONLY);
+            Record record = new Record(message.getRecordingUri(), maxLength, MediaAttributes.MediaType.AUDIO_ONLY);
             this.mediaGroup.tell(record, self);
         }
     }

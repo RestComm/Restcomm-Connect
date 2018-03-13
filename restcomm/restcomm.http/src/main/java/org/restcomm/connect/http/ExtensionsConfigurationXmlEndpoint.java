@@ -30,33 +30,35 @@ import javax.ws.rs.PathParam;
 import javax.ws.rs.QueryParam;
 import javax.ws.rs.core.MultivaluedMap;
 import javax.ws.rs.core.Response;
-
 import org.restcomm.connect.commons.dao.Sid;
 
-import static javax.ws.rs.core.MediaType.APPLICATION_XML_TYPE;
 import static org.restcomm.connect.http.security.AccountPrincipal.SUPER_ADMIN_ROLE;
 
 import javax.annotation.security.RolesAllowed;
+import javax.ws.rs.Produces;
+import javax.ws.rs.core.MediaType;
 
 @Path("/ExtensionsConfiguration")
 @RolesAllowed(SUPER_ADMIN_ROLE)
 public class ExtensionsConfigurationXmlEndpoint extends ExtensionsConfigurationEndpoint {
-
     @Path("/{extensionId}")
     @GET
+    @Produces({MediaType.APPLICATION_XML, MediaType.APPLICATION_JSON})
     public Response getConfigurationAsXml(@PathParam("extensionId") final String extension, @QueryParam("AccountSid") Sid accountSid) {
-        return getConfiguration(extension, accountSid, APPLICATION_XML_TYPE);
+        return getConfiguration(extension, accountSid, retrieveMediaType());
     }
 
     @POST
+    @Produces({MediaType.APPLICATION_XML, MediaType.APPLICATION_JSON})
     public Response postConfigurationAsXml(final MultivaluedMap<String, String> data) {
-        return postConfiguration(data, APPLICATION_XML_TYPE);
+        return postConfiguration(data, retrieveMediaType());
     }
 
     @Path("/{extensionSid}")
     @POST
+    @Produces({MediaType.APPLICATION_XML, MediaType.APPLICATION_JSON})
     public Response updateConfigurationAsXml(@PathParam("extensionSid") final String extensionSid,
                                                   final MultivaluedMap<String, String> data) {
-        return updateConfiguration(extensionSid, data, APPLICATION_XML_TYPE);
+        return updateConfiguration(extensionSid, data, retrieveMediaType());
     }
 }

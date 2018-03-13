@@ -21,39 +21,40 @@
 
 package org.restcomm.connect.http;
 
-import static javax.ws.rs.core.MediaType.APPLICATION_JSON;
-import static javax.ws.rs.core.MediaType.APPLICATION_JSON_TYPE;
-import static javax.ws.rs.core.MediaType.APPLICATION_XML;
-import static javax.ws.rs.core.MediaType.APPLICATION_XML_TYPE;
-import static javax.ws.rs.core.Response.Status.*;
-import static javax.ws.rs.core.Response.ok;
-import static javax.ws.rs.core.Response.status;
-
+import com.google.gson.Gson;
+import com.google.gson.GsonBuilder;
+import com.thoughtworks.xstream.XStream;
 import java.io.BufferedReader;
 import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.net.URI;
 import java.net.URL;
 import java.util.Arrays;
-// import java.util.HashMap;
 import java.util.List;
-
 import javax.annotation.PostConstruct;
 import javax.servlet.ServletContext;
 import javax.ws.rs.core.Context;
 import javax.ws.rs.core.MediaType;
+import static javax.ws.rs.core.MediaType.APPLICATION_JSON;
+import static javax.ws.rs.core.MediaType.APPLICATION_JSON_TYPE;
+import static javax.ws.rs.core.MediaType.APPLICATION_XML;
+import static javax.ws.rs.core.MediaType.APPLICATION_XML_TYPE;
 import javax.ws.rs.core.MultivaluedMap;
 import javax.ws.rs.core.Response;
-
+import static javax.ws.rs.core.Response.Status.*;
+import static javax.ws.rs.core.Response.ok;
+import static javax.ws.rs.core.Response.status;
+import org.apache.commons.configuration.Configuration;
 import org.apache.http.HttpEntity;
 import org.apache.http.HttpResponse;
-// import org.apache.http.auth.AuthScope;
-// import org.apache.http.auth.Credentials;
-// import org.apache.http.auth.UsernamePasswordCredentials;
 import org.apache.http.client.HttpClient;
 import org.apache.http.client.methods.HttpGet;
 import org.apache.http.impl.client.HttpClientBuilder;
+import org.apache.log4j.Logger;
+import org.joda.time.DateTime;
 import org.restcomm.connect.commons.annotations.concurrency.NotThreadSafe;
+import org.restcomm.connect.commons.dao.Sid;
+import org.restcomm.connect.commons.util.StringUtils;
 import org.restcomm.connect.dao.AccountsDao;
 import org.restcomm.connect.dao.DaoManager;
 import org.restcomm.connect.dao.GeolocationDao;
@@ -62,22 +63,10 @@ import org.restcomm.connect.dao.entities.Geolocation;
 import org.restcomm.connect.dao.entities.Geolocation.GeolocationType;
 import org.restcomm.connect.dao.entities.GeolocationList;
 import org.restcomm.connect.dao.entities.RestCommResponse;
-import org.restcomm.connect.commons.dao.Sid;
 import org.restcomm.connect.http.converter.ClientListConverter;
 import org.restcomm.connect.http.converter.GeolocationConverter;
 import org.restcomm.connect.http.converter.GeolocationListConverter;
 import org.restcomm.connect.http.converter.RestCommResponseConverter;
-import org.restcomm.connect.commons.util.StringUtils;
-
-import org.apache.commons.configuration.Configuration;
-// import org.apache.http.HttpException;
-import org.apache.log4j.Logger;
-// import org.apache.shiro.authz.AuthorizationException;
-import org.joda.time.DateTime;
-
-import com.google.gson.Gson;
-import com.google.gson.GsonBuilder;
-import com.thoughtworks.xstream.XStream;
 /**
  * @author <a href="mailto:fernando.mendioroz@telestax.com"> Fernando Mendioroz </a>
  *
@@ -160,10 +149,10 @@ public abstract class GeolocationEndpoint extends SecuredEndpoint {
             } catch (final Exception exception) {
                 return status(UNAUTHORIZED).build();
             }
-            if (APPLICATION_XML_TYPE == responseType) {
+            if (APPLICATION_XML_TYPE.equals(responseType)) {
                 final RestCommResponse response = new RestCommResponse(geolocation);
                 return ok(xstream.toXML(response), APPLICATION_XML).build();
-            } else if (APPLICATION_JSON_TYPE == responseType) {
+            } else if (APPLICATION_JSON_TYPE.equals(responseType)) {
                 return ok(gson.toJson(geolocation), APPLICATION_JSON).build();
             } else {
                 return null;
@@ -180,10 +169,10 @@ public abstract class GeolocationEndpoint extends SecuredEndpoint {
             return status(UNAUTHORIZED).build();
         }
         final List<Geolocation> geolocations = dao.getGeolocations(new Sid(accountSid));
-        if (APPLICATION_XML_TYPE == responseType) {
+        if (APPLICATION_XML_TYPE.equals(responseType)) {
             final RestCommResponse response = new RestCommResponse(new GeolocationList(geolocations));
             return ok(xstream.toXML(response), APPLICATION_XML).build();
-        } else if (APPLICATION_JSON_TYPE == responseType) {
+        } else if (APPLICATION_JSON_TYPE.equals(responseType)) {
             return ok(gson.toJson(geolocations), APPLICATION_JSON).build();
         } else {
             return null;
@@ -331,10 +320,10 @@ public abstract class GeolocationEndpoint extends SecuredEndpoint {
 
         if (geolocation.getResponseStatus() != null
             && geolocation.getResponseStatus().equals(responseStatus.Rejected.toString())) {
-            if (APPLICATION_XML_TYPE == responseType) {
+            if (APPLICATION_XML_TYPE.equals(responseType)) {
                 final RestCommResponse response = new RestCommResponse(geolocation);
                 return ok(xstream.toXML(response), APPLICATION_XML).build();
-            } else if (APPLICATION_JSON_TYPE == responseType) {
+            } else if (APPLICATION_JSON_TYPE.equals(responseType)) {
                 return ok(gson.toJson(geolocation), APPLICATION_JSON).build();
             } else {
                 return null;
@@ -343,10 +332,10 @@ public abstract class GeolocationEndpoint extends SecuredEndpoint {
 
             dao.addGeolocation(geolocation);
 
-            if (APPLICATION_XML_TYPE == responseType) {
+            if (APPLICATION_XML_TYPE.equals(responseType)) {
                 final RestCommResponse response = new RestCommResponse(geolocation);
                 return ok(xstream.toXML(response), APPLICATION_XML).build();
-            } else if (APPLICATION_JSON_TYPE == responseType) {
+            } else if (APPLICATION_JSON_TYPE.equals(responseType)) {
                 return ok(gson.toJson(geolocation), APPLICATION_JSON).build();
             } else {
                 return null;
@@ -556,10 +545,10 @@ public abstract class GeolocationEndpoint extends SecuredEndpoint {
 
             geolocation = update(geolocation, data);
             dao.updateGeolocation(geolocation);
-            if (APPLICATION_XML_TYPE == responseType) {
+            if (APPLICATION_XML_TYPE.equals(responseType)) {
                 final RestCommResponse response = new RestCommResponse(geolocation);
                 return ok(xstream.toXML(response), APPLICATION_XML).build();
-            } else if (APPLICATION_JSON_TYPE == responseType) {
+            } else if (APPLICATION_JSON_TYPE.equals(responseType)) {
                 return ok(gson.toJson(geolocation), APPLICATION_JSON).build();
             } else {
                 return null;
