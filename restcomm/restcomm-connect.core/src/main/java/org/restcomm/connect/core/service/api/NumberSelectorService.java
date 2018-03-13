@@ -45,6 +45,6 @@ public interface NumberSelectorService {
      * @param modifiers
      * @return
      */
-    public IncomingPhoneNumber searchNumber(String phone,
+    IncomingPhoneNumber searchNumber(String phone,
             Sid sourceOrganizationSid, Sid destinationOrganizationSid, Set<SearchModifier> modifiers);
 }
