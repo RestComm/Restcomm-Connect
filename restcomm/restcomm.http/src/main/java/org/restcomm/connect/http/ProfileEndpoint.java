@@ -362,7 +362,7 @@ public class ProfileEndpoint {
         AccountPrincipal userPrincipal = (AccountPrincipal) ctx.getUserPrincipal();
         if (!userPrincipal.isSuperAdmin()) {
 
-            Profile effectiveProfile = profileService.retrieveEffectiveProfile(userPrincipal.getIdentityContext().getAccountKey().getAccount().toString());
+            Profile effectiveProfile = profileService.retrieveEffectiveProfileByAccountSid(userPrincipal.getIdentityContext().getAccountKey().getAccount().toString());
             if (!effectiveProfile.getSid().equals(profileSid)) {
                 CustomReasonPhraseType stat = new CustomReasonPhraseType(Response.Status.FORBIDDEN, "Profile not liked");
                 throw new WebApplicationException(status(stat).build());
