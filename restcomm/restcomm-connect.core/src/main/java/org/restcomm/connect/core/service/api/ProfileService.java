@@ -29,7 +29,7 @@ public interface ProfileService {
      * @param accountSid
      * @return
      */
-    Profile retrieveEffectiveProfile(String accountSid);
+    Profile retrieveEffectiveProfileByAccountSid(String accountSid);
 
     /**
      * @param targetSid
@@ -40,8 +40,15 @@ public interface ProfileService {
     LinkHeader composeProfileLink(String targetSid, UriInfo info, Class resource);
 
     /**
-     * @param targetSid
+     * @param organizationSid
      * @return
      */
-    Profile retrieveProfileForTarget(String targetSid);
+    Profile retrieveEffectiveProfileByOrganizationSid(String organizationSid);
+
+    /**
+     * @param targetSid
+     * @return will return associated profile of provided target (account or
+     *         organization)
+     */
+    Profile retrieveExplicitlyAssociatedProfile(String targetSid);
 }
