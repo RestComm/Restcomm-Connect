@@ -54,14 +54,14 @@ public class ProfileServiceImpl implements ProfileService {
      * @return will return associated profile of provided accountSid
      */
     @Override
-    public Profile retrieveEffectiveProfile(String accountSid) {
+    public Profile retrieveEffectiveProfileByAccountSid(String accountSid) {
         Profile profile = null;
         Sid currentAccount = new Sid(accountSid);
         Account lastAccount = null;
 
         // try to find profile in account hierarchy
         do {
-            profile = retrieveProfileForTarget(currentAccount.toString());
+            profile = retrieveExplicitlyAssociatedProfile(currentAccount.toString());
             if (profile == null) {
                 lastAccount = daoManager.getAccountsDao().getAccount(currentAccount);
                 if (lastAccount != null) {
@@ -75,7 +75,7 @@ public class ProfileServiceImpl implements ProfileService {
         // if profile is not found in account hierarchy,try org
         if (profile == null && lastAccount != null) {
             Sid organizationSid = lastAccount.getOrganizationSid();
-            profile = retrieveProfileForTarget(organizationSid.toString());
+            profile = retrieveExplicitlyAssociatedProfile(organizationSid.toString());
         }
 
         // finally try with default profile
@@ -95,11 +95,34 @@ public class ProfileServiceImpl implements ProfileService {
     }
 
     /**
+     * @param organizationSid
+     * @return will return associated profile of provided organization sid
+     */
+    public Profile retrieveEffectiveProfileByOrganizationSid(String organizationSid) {
+        Profile profile = null;
+        profile = retrieveExplicitlyAssociatedProfile(organizationSid.toString());
+
+        // finally try with default profile
+        if (profile == null) {
+            try {
+                profile = daoManager.getProfilesDao().getProfile(DEFAULT_PROFILE_SID);
+            } catch (SQLException ex) {
+                throw new RuntimeException(ex);
+            }
+        }
+        if (logger.isDebugEnabled()) {
+            logger.debug("Returning profile:" + profile);
+        }
+        return profile;
+    }
+
+    /**
      * @param targetSid
      * @return will return associated profile of provided target (account or
      *         organization)
      */
-    public Profile retrieveProfileForTarget(String targetSid) {
+    @Override
+    public Profile retrieveExplicitlyAssociatedProfile(String targetSid) {
         ProfileAssociation assoc = daoManager.getProfileAssociationsDao().getProfileAssociationByTargetSid(targetSid);
         Profile profile = null;
         if (assoc != null) {
