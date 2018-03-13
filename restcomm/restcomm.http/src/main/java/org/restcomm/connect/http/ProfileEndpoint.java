@@ -66,7 +66,6 @@ import static org.restcomm.connect.dao.entities.Profile.DEFAULT_PROFILE_SID;
 import org.restcomm.connect.dao.entities.ProfileAssociation;
 import org.restcomm.connect.http.exceptionmappers.CustomReasonPhraseType;
 import org.restcomm.connect.http.security.AccountPrincipal;
-import org.restcomm.connect.http.security.RCSecContext;
 import static javax.ws.rs.core.Response.status;
 import org.restcomm.connect.core.service.api.ProfileService;
 
@@ -358,13 +357,12 @@ public class ProfileEndpoint {
     }
 
     private void checkProfileAccess(String profileSid, SecurityContext secCtx) {
-        RCSecContext ctx = (RCSecContext) secCtx;
-        AccountPrincipal userPrincipal = (AccountPrincipal) ctx.getUserPrincipal();
+        AccountPrincipal userPrincipal = (AccountPrincipal) secCtx.getUserPrincipal();
         if (!userPrincipal.isSuperAdmin()) {
 
             Profile effectiveProfile = profileService.retrieveEffectiveProfile(userPrincipal.getIdentityContext().getAccountKey().getAccount().toString());
             if (!effectiveProfile.getSid().equals(profileSid)) {
-                CustomReasonPhraseType stat = new CustomReasonPhraseType(Response.Status.FORBIDDEN, "Profile not liked");
+                CustomReasonPhraseType stat = new CustomReasonPhraseType(Response.Status.FORBIDDEN, "Profile not linked");
                 throw new WebApplicationException(status(stat).build());
             }
         }
