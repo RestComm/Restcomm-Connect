@@ -27,7 +27,6 @@ import org.apache.shiro.authz.SimpleRole;
 import org.apache.shiro.authz.permission.WildcardPermissionResolver;
 import org.restcomm.connect.commons.dao.Sid;
 import org.restcomm.connect.core.service.RestcommConnectServiceProvider;
-import org.restcomm.connect.core.service.profile.ProfileService;
 import org.restcomm.connect.dao.AccountsDao;
 import org.restcomm.connect.dao.DaoManager;
 import org.restcomm.connect.dao.OrganizationsDao;
@@ -51,6 +50,7 @@ import javax.servlet.http.HttpServletRequest;
 import javax.ws.rs.core.Context;
 import java.util.List;
 import java.util.Set;
+import org.restcomm.connect.core.service.api.ProfileService;
 
 
 /**

@@ -23,8 +23,6 @@ import static javax.ws.rs.core.MediaType.APPLICATION_JSON;
 import static javax.ws.rs.core.MediaType.APPLICATION_JSON_TYPE;
 import static javax.ws.rs.core.MediaType.APPLICATION_XML;
 import static javax.ws.rs.core.MediaType.APPLICATION_XML_TYPE;
-import static javax.ws.rs.core.Response.ok;
-import static javax.ws.rs.core.Response.status;
 import static javax.ws.rs.core.Response.Status.BAD_REQUEST;
 import static javax.ws.rs.core.Response.Status.CONFLICT;
 import static javax.ws.rs.core.Response.Status.NOT_FOUND;
@@ -82,6 +80,8 @@ import com.google.gson.GsonBuilder;
 import com.sun.jersey.core.header.LinkHeader;
 import com.sun.jersey.core.util.MultivaluedMapImpl;
 import com.thoughtworks.xstream.XStream;
+import static javax.ws.rs.core.Response.ok;
+import static javax.ws.rs.core.Response.status;
 
 /**
  * @author quintana.thomas@gmail.com (Thomas Quintana)
@@ -197,7 +197,7 @@ public class AccountsEndpoint extends SecuredEndpoint {
             return status(NOT_FOUND).build();
         } else {
             Response.ResponseBuilder ok = Response.ok();
-            Profile associatedProfile = profileService.retrieveProfileByAccountSid(accountSid);
+            Profile associatedProfile = profileService.retrieveEffectiveProfile(accountSid);
             if (associatedProfile != null) {
                 LinkHeader profileLink = profileService.composeProfileLink(associatedProfile.getSid(), info, ProfileJsonEndpoint.class);
                 ok.header(ProfileEndpoint.LINK_HEADER, profileLink.toString());
