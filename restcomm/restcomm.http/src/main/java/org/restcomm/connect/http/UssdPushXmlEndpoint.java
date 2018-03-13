@@ -19,11 +19,12 @@
  */
 package org.restcomm.connect.http;
 
-import static javax.ws.rs.core.MediaType.APPLICATION_XML_TYPE;
 
 import javax.ws.rs.POST;
 import javax.ws.rs.Path;
 import javax.ws.rs.PathParam;
+import javax.ws.rs.Produces;
+import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.MultivaluedMap;
 import javax.ws.rs.core.Response;
 
@@ -35,7 +36,8 @@ import javax.ws.rs.core.Response;
 public class UssdPushXmlEndpoint extends UssdPushEndpoint{
 
     @POST
+    @Produces({MediaType.APPLICATION_XML, MediaType.APPLICATION_JSON})
     public Response putCall(@PathParam("accountSid") final String accountSid, final MultivaluedMap<String, String> data) {
-        return putCall(accountSid, data, APPLICATION_XML_TYPE);
+        return putCall(accountSid, data, retrieveMediaType());
     }
 }
