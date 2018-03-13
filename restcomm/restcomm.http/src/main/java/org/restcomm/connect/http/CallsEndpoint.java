@@ -367,7 +367,7 @@ public abstract class CallsEndpoint extends SecuredEndpoint {
 
         String customHeaders = getCustomHeaders(to);
 
-        if (customHeaders != null && !to.contains("@")) {
+        if (customHeaders != null) {
             to = (customHeaders != null) ? to.substring(0, to.indexOf("?")) : to;
             data.remove(to);
             data.putSingle("To", to);
@@ -403,7 +403,7 @@ public abstract class CallsEndpoint extends SecuredEndpoint {
         try {
             if (to.contains("@")) {
                 create = new CreateCall(from, to, username, password, true, timeout, CreateCallType.SIP,
-                        accountId, null, statusCallback, statusCallbackMethod, statusCallbackEvent, null);
+                        accountId, null, statusCallback, statusCallbackMethod, statusCallbackEvent, customHeaders);
             } else if (to.startsWith("client")) {
                 create = new CreateCall(from, to, username, password, true, timeout, CreateCallType.CLIENT,
                         accountId, null, statusCallback, statusCallbackMethod, statusCallbackEvent, customHeaders);
