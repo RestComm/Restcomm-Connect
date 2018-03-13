@@ -230,6 +230,7 @@ public class NumberSelectorServiceImpl implements NumberSelectorService {
      * @param destOrg
      * @return
      */
+    @Override
     public boolean isFailedCall(NumberSelectionResult result, Sid srcOrg, Sid destOrg) {
         boolean failCall = false;
 
@@ -253,6 +254,7 @@ public class NumberSelectorServiceImpl implements NumberSelectorService {
      * @param destinationOrganizationSid
      * @return
      */
+    @Override
     public NumberSelectionResult searchNumberWithResult(String phone,
             Sid sourceOrganizationSid, Sid destinationOrganizationSid){
         return searchNumberWithResult(phone, sourceOrganizationSid, destinationOrganizationSid, new HashSet<>(Arrays.asList(SearchModifier.ORG_COMPLIANT)));
@@ -269,6 +271,7 @@ public class NumberSelectorServiceImpl implements NumberSelectorService {
      * @param modifiers
      * @return
      */
+    @Override
     public NumberSelectionResult searchNumberWithResult(String phone,
             Sid sourceOrganizationSid, Sid destinationOrganizationSid, Set<SearchModifier> modifiers) {
         if (logger.isDebugEnabled()) {
@@ -382,7 +385,7 @@ public class NumberSelectorServiceImpl implements NumberSelectorService {
      * @param regexSet The set of regexes to evaluate against given numbers
      * @return the first regex matching any number in list, null if no match
      */
-    public NumberSelectionResult findFirstMatchingRegex(List<String> numberQueries, Set<IncomingPhoneNumber> regexSet
+    private NumberSelectionResult findFirstMatchingRegex(List<String> numberQueries, Set<IncomingPhoneNumber> regexSet
     ) {
         NumberSelectionResult matchedRegex = new NumberSelectionResult(null, false, null);
         try {
