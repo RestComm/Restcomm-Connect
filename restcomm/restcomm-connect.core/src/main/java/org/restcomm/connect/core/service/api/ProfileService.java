@@ -22,6 +22,8 @@ package org.restcomm.connect.core.service.api;
 
 import com.sun.jersey.core.header.LinkHeader;
 import javax.ws.rs.core.UriInfo;
+
+import org.restcomm.connect.commons.dao.Sid;
 import org.restcomm.connect.dao.entities.Profile;
 
 public interface ProfileService {
@@ -29,7 +31,7 @@ public interface ProfileService {
      * @param accountSid
      * @return  will return associated profile of provided account sid
      */
-    Profile retrieveEffectiveProfileByAccountSid(String accountSid);
+    Profile retrieveEffectiveProfileByAccountSid(Sid accountSid);
 
     /**
      * @param targetSid
@@ -37,18 +39,18 @@ public interface ProfileService {
      * @param resource
      * @return LinkHeader
      */
-    LinkHeader composeProfileLink(String targetSid, UriInfo info, Class resource);
+    LinkHeader composeProfileLink(Sid targetSid, UriInfo info, Class resource);
 
     /**
      * @param organizationSid
      * @return  will return associated profile of provided organization sid
      */
-    Profile retrieveEffectiveProfileByOrganizationSid(String organizationSid);
+    Profile retrieveEffectiveProfileByOrganizationSid(Sid organizationSid);
 
     /**
      * @param targetSid
      * @return will return explicitly associated profile of provided target (account or
      *         organization) will return null if no profile is explicitly assigned to the target resource.
      */
-    Profile retrieveExplicitlyAssociatedProfile(String targetSid);
+    Profile retrieveExplicitlyAssociatedProfile(Sid targetSid);
 }

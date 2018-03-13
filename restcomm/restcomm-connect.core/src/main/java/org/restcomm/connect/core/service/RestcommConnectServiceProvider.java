@@ -20,7 +20,6 @@
  */
 package org.restcomm.connect.core.service;
 
-import org.apache.log4j.Logger;
 import org.restcomm.connect.core.service.api.NumberSelectorService;
 import org.restcomm.connect.core.service.api.ProfileService;
 import org.restcomm.connect.core.service.number.NumberSelectorServiceImpl;
@@ -32,8 +31,6 @@ import org.restcomm.connect.dao.DaoManager;
  * @author Maria
  */
 public class RestcommConnectServiceProvider {
-
-    private static final Logger logger = Logger.getLogger(RestcommConnectServiceProvider.class);
     private static RestcommConnectServiceProvider instance = null;
 
     // core services

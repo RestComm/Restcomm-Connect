@@ -23,8 +23,8 @@ package org.restcomm.connect.core.service.api;
 import java.util.Set;
 
 import org.restcomm.connect.commons.dao.Sid;
-import org.restcomm.connect.core.service.number.NumberSelectionResult;
-import org.restcomm.connect.core.service.number.SearchModifier;
+import org.restcomm.connect.core.service.number.api.NumberSelectionResult;
+import org.restcomm.connect.core.service.number.api.SearchModifier;
 import org.restcomm.connect.dao.entities.IncomingPhoneNumber;
 
 

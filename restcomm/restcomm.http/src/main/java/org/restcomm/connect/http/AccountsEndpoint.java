@@ -197,9 +197,9 @@ public class AccountsEndpoint extends SecuredEndpoint {
             return status(NOT_FOUND).build();
         } else {
             Response.ResponseBuilder ok = Response.ok();
-            Profile associatedProfile = profileService.retrieveEffectiveProfileByAccountSid(accountSid);
+            Profile associatedProfile = profileService.retrieveEffectiveProfileByAccountSid(new Sid(accountSid));
             if (associatedProfile != null) {
-                LinkHeader profileLink = profileService.composeProfileLink(associatedProfile.getSid(), info, ProfileJsonEndpoint.class);
+                LinkHeader profileLink = profileService.composeProfileLink(new Sid(associatedProfile.getSid()), info, ProfileJsonEndpoint.class);
                 ok.header(ProfileEndpoint.LINK_HEADER, profileLink.toString());
             }
             if (APPLICATION_XML_TYPE == responseType) {
