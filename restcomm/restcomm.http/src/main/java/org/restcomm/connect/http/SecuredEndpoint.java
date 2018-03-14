@@ -19,11 +19,6 @@
  */
 package org.restcomm.connect.http;
 
-import java.util.List;
-import java.util.Set;
-import javax.servlet.ServletContext;
-import javax.servlet.http.HttpServletRequest;
-import javax.ws.rs.core.Context;
 import org.apache.commons.configuration.Configuration;
 import org.apache.commons.lang.NotImplementedException;
 import org.apache.log4j.Logger;
@@ -48,6 +43,13 @@ import org.restcomm.connect.identity.AuthOutcome;
 import org.restcomm.connect.identity.IdentityContext;
 import org.restcomm.connect.identity.UserIdentityContext;
 import org.restcomm.connect.identity.shiro.RestcommRoles;
+
+import javax.servlet.ServletContext;
+import javax.servlet.http.HttpServletRequest;
+import javax.ws.rs.core.Context;
+import java.util.List;
+import java.util.Set;
+import org.restcomm.connect.core.service.api.ProfileService;
 
 
 /**
@@ -83,6 +85,7 @@ public abstract class SecuredEndpoint extends AbstractEndpoint {
 
     //List of extensions for RestAPI
     protected List<RestcommExtensionGeneric> extensions;
+    protected ProfileService profileService;
 
     public SecuredEndpoint() {
         super();
@@ -107,6 +110,7 @@ public abstract class SecuredEndpoint extends AbstractEndpoint {
                 logger.info("RestAPI extensions: "+(extensions != null ? extensions.size() : "0"));
             }
         }
+        profileService = (ProfileService)context.getAttribute(ProfileService.class.getName());
     }
 
     /**

@@ -22,9 +22,9 @@ package org.restcomm.connect.http;
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
 import com.sun.jersey.core.header.LinkHeader;
-import com.sun.jersey.core.header.LinkHeader.LinkHeaderBuilder;
 import com.sun.jersey.core.util.MultivaluedMapImpl;
 import com.thoughtworks.xstream.XStream;
+
 import org.apache.commons.configuration.Configuration;
 import org.apache.shiro.crypto.hash.Md5Hash;
 import org.joda.time.DateTime;
@@ -42,7 +42,6 @@ import org.restcomm.connect.dao.entities.AccountList;
 import org.restcomm.connect.dao.entities.Client;
 import org.restcomm.connect.dao.entities.IncomingPhoneNumber;
 import org.restcomm.connect.dao.entities.Organization;
-import org.restcomm.connect.dao.entities.ProfileAssociation;
 import org.restcomm.connect.dao.entities.RestCommResponse;
 import org.restcomm.connect.extension.api.ApiRequest;
 import org.restcomm.connect.extension.controller.ExtensionController;
@@ -84,6 +83,7 @@ import static javax.ws.rs.core.Response.Status.NOT_FOUND;
 import static javax.ws.rs.core.Response.Status.PRECONDITION_FAILED;
 import static javax.ws.rs.core.Response.ok;
 import static javax.ws.rs.core.Response.status;
+import org.restcomm.connect.dao.entities.Profile;
 import static org.restcomm.connect.http.ProfileEndpoint.PROFILE_REL_TYPE;
 import static org.restcomm.connect.http.ProfileEndpoint.TITLE_PARAM;
 
@@ -177,13 +177,6 @@ public class AccountsEndpoint extends SecuredEndpoint {
         return new Account(sid, now, now, emailAddress, friendlyName, accountSid, type, status, authToken, role, uri, organizationSid);
     }
 
-    public LinkHeader composeLink(Sid targetSid, UriInfo info) {
-        String sid = targetSid.toString();
-        URI uri = info.getBaseUriBuilder().path(ProfileJsonEndpoint.class).path(sid).build();
-        LinkHeaderBuilder link = LinkHeader.uri(uri).parameter(TITLE_PARAM, "Profiles");
-        return link.rel(PROFILE_REL_TYPE).build();
-    }
-
     protected Response getAccount(final String accountSid, final MediaType responseType, UriInfo info) {
         //First check if the account has the required permissions in general, this way we can fail fast and avoid expensive DAO operations
         Account account = null;
@@ -208,9 +201,9 @@ public class AccountsEndpoint extends SecuredEndpoint {
             return status(NOT_FOUND).build();
         } else {
             Response.ResponseBuilder ok = Response.ok();
-            ProfileAssociation profileAssociationByTargetSid = profileAssociationsDao.getProfileAssociationByTargetSid(accountSid);
-            if (profileAssociationByTargetSid != null) {
-                LinkHeader profileLink = composeLink(profileAssociationByTargetSid.getProfileSid(), info);
+            Profile associatedProfile = profileService.retrieveEffectiveProfileByAccountSid(account.getSid());
+            if (associatedProfile != null) {
+                LinkHeader profileLink = composeLink(new Sid(associatedProfile.getSid()), info);
                 ok.header(ProfileEndpoint.LINK_HEADER, profileLink.toString());
             }
             if (APPLICATION_XML_TYPE.equals(responseType)) {
@@ -826,6 +819,13 @@ public class AccountsEndpoint extends SecuredEndpoint {
             }
             throw new IllegalArgumentException(msg);
         }
+    }
+
+    public LinkHeader composeLink(Sid targetSid, UriInfo info) {
+        String sid = targetSid.toString();
+        URI uri = info.getBaseUriBuilder().path(ProfileJsonEndpoint.class).path(sid).build();
+        LinkHeader.LinkHeaderBuilder link = LinkHeader.uri(uri).parameter(TITLE_PARAM, "Profiles");
+        return link.rel(PROFILE_REL_TYPE).build();
     }
 
 }
