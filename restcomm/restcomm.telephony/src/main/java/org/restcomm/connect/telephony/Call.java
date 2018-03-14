@@ -1079,7 +1079,12 @@ public final class Call extends RestcommUntypedActor implements TransitionEndLis
         private void addHeadersToMessage(SipServletRequest message, Map<String, String> headers, String keyPrepend) {
             try {
                 for (Map.Entry<String, String> entry : headers.entrySet()) {
-                    String headerName = keyPrepend + entry.getKey();
+                    String headerName = null;
+                    if (entry.getKey().startsWith("X-")) {
+                        headerName = entry.getKey();
+                    } else {
+                        headerName = keyPrepend + entry.getKey();
+                    }
                     message.addHeader(headerName , entry.getValue());
                 }
             } catch (IllegalArgumentException iae) {

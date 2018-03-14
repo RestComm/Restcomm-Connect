@@ -22,19 +22,22 @@ package org.restcomm.connect.http;
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
 import com.sun.jersey.core.header.LinkHeader;
-import com.sun.jersey.core.header.LinkHeader.LinkHeaderBuilder;
 import com.sun.jersey.core.util.MultivaluedMapImpl;
 import com.thoughtworks.xstream.XStream;
+
 import org.apache.commons.configuration.Configuration;
 import org.apache.shiro.crypto.hash.Md5Hash;
 import org.joda.time.DateTime;
 import org.restcomm.connect.commons.configuration.RestcommConfiguration;
 import org.restcomm.connect.commons.configuration.sets.RcmlserverConfigurationSet;
 import org.restcomm.connect.commons.dao.Sid;
+import org.restcomm.connect.commons.util.ClientLoginConstrains;
 import org.restcomm.connect.dao.ClientsDao;
 import org.restcomm.connect.dao.DaoManager;
 import org.restcomm.connect.dao.IncomingPhoneNumbersDao;
+import org.restcomm.connect.dao.ProfileAssociationsDao;
 import org.restcomm.connect.dao.entities.Account;
+import org.restcomm.connect.dao.entities.Account.Status;
 import org.restcomm.connect.dao.entities.AccountList;
 import org.restcomm.connect.dao.entities.Client;
 import org.restcomm.connect.dao.entities.IncomingPhoneNumber;
@@ -47,6 +50,7 @@ import org.restcomm.connect.http.client.rcmlserver.RcmlserverNotifications;
 import org.restcomm.connect.http.converter.AccountConverter;
 import org.restcomm.connect.http.converter.AccountListConverter;
 import org.restcomm.connect.http.converter.RestCommResponseConverter;
+import org.restcomm.connect.http.exceptionmappers.CustomReasonPhraseType;
 import org.restcomm.connect.http.exceptions.InsufficientPermission;
 import org.restcomm.connect.http.exceptions.PasswordTooWeak;
 import org.restcomm.connect.identity.passwords.PasswordValidator;
@@ -55,8 +59,11 @@ import org.restcomm.connect.provisioning.number.api.PhoneNumberProvisioningManag
 import org.restcomm.connect.provisioning.number.api.PhoneNumberProvisioningManagerProvider;
 
 import javax.annotation.PostConstruct;
+import javax.mail.internet.AddressException;
+import javax.mail.internet.InternetAddress;
 import javax.servlet.ServletContext;
 import javax.servlet.http.HttpServletRequest;
+import javax.ws.rs.WebApplicationException;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.MultivaluedMap;
 import javax.ws.rs.core.Response;
@@ -65,7 +72,6 @@ import java.net.URI;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
-import javax.ws.rs.WebApplicationException;
 
 import static javax.ws.rs.core.MediaType.APPLICATION_JSON;
 import static javax.ws.rs.core.MediaType.APPLICATION_JSON_TYPE;
@@ -77,12 +83,9 @@ import static javax.ws.rs.core.Response.Status.NOT_FOUND;
 import static javax.ws.rs.core.Response.Status.PRECONDITION_FAILED;
 import static javax.ws.rs.core.Response.ok;
 import static javax.ws.rs.core.Response.status;
-import org.restcomm.connect.dao.ProfileAssociationsDao;
-import org.restcomm.connect.dao.entities.Account.Status;
-import org.restcomm.connect.dao.entities.ProfileAssociation;
+import org.restcomm.connect.dao.entities.Profile;
 import static org.restcomm.connect.http.ProfileEndpoint.PROFILE_REL_TYPE;
 import static org.restcomm.connect.http.ProfileEndpoint.TITLE_PARAM;
-import org.restcomm.connect.http.exceptionmappers.CustomReasonPhraseType;
 
 /**
  * @author quintana.thomas@gmail.com (Thomas Quintana)
@@ -174,13 +177,6 @@ public class AccountsEndpoint extends SecuredEndpoint {
         return new Account(sid, now, now, emailAddress, friendlyName, accountSid, type, status, authToken, role, uri, organizationSid);
     }
 
-    public LinkHeader composeLink(Sid targetSid, UriInfo info) {
-        String sid = targetSid.toString();
-        URI uri = info.getBaseUriBuilder().path(ProfileJsonEndpoint.class).path(sid).build();
-        LinkHeaderBuilder link = LinkHeader.uri(uri).parameter(TITLE_PARAM, "Profiles");
-        return link.rel(PROFILE_REL_TYPE).build();
-    }
-
     protected Response getAccount(final String accountSid, final MediaType responseType, UriInfo info) {
         //First check if the account has the required permissions in general, this way we can fail fast and avoid expensive DAO operations
         Account account = null;
@@ -205,15 +201,15 @@ public class AccountsEndpoint extends SecuredEndpoint {
             return status(NOT_FOUND).build();
         } else {
             Response.ResponseBuilder ok = Response.ok();
-            ProfileAssociation profileAssociationByTargetSid = profileAssociationsDao.getProfileAssociationByTargetSid(accountSid);
-            if (profileAssociationByTargetSid != null) {
-                LinkHeader profileLink = composeLink(profileAssociationByTargetSid.getProfileSid(), info);
+            Profile associatedProfile = profileService.retrieveEffectiveProfileByAccountSid(account.getSid());
+            if (associatedProfile != null) {
+                LinkHeader profileLink = composeLink(new Sid(associatedProfile.getSid()), info);
                 ok.header(ProfileEndpoint.LINK_HEADER, profileLink.toString());
             }
-            if (APPLICATION_XML_TYPE == responseType) {
+            if (APPLICATION_XML_TYPE.equals(responseType)) {
                 final RestCommResponse response = new RestCommResponse(account);
                 return ok.type(APPLICATION_XML).entity(xstream.toXML(response)).build();
-            } else if (APPLICATION_JSON_TYPE == responseType) {
+            } else if (APPLICATION_JSON_TYPE.equals(responseType)) {
                 return ok.type(APPLICATION_JSON).entity(gson.toJson(account)).build();
             } else {
                 return null;
@@ -379,10 +375,10 @@ public class AccountsEndpoint extends SecuredEndpoint {
                 }
             }
 
-            if (APPLICATION_XML_TYPE == responseType) {
+            if (APPLICATION_XML_TYPE.equals(responseType)) {
                 final RestCommResponse response = new RestCommResponse(new AccountList(accounts));
                 return ok(xstream.toXML(response), APPLICATION_XML).build();
-            } else if (APPLICATION_JSON_TYPE == responseType) {
+            } else if (APPLICATION_JSON_TYPE.equals(responseType)) {
                 return ok(gson.toJson(accounts), APPLICATION_JSON).build();
             } else {
                 return null;
@@ -453,9 +449,9 @@ public class AccountsEndpoint extends SecuredEndpoint {
 
             executePostApiAction(apiRequest);
 
-            if (APPLICATION_JSON_TYPE == responseType) {
+            if (APPLICATION_JSON_TYPE.equals(responseType)) {
                 return ok(gson.toJson(account), APPLICATION_JSON).build();
-            } else if (APPLICATION_XML_TYPE == responseType) {
+            } else if (APPLICATION_XML_TYPE.equals(responseType)) {
                 final RestCommResponse response = new RestCommResponse(account);
                 return ok(xstream.toXML(response), APPLICATION_XML).build();
             } else {
@@ -615,9 +611,9 @@ public class AccountsEndpoint extends SecuredEndpoint {
             accountsDao.updateAccount(modifiedAccount);
 
 
-            if (APPLICATION_JSON_TYPE == responseType) {
+            if (APPLICATION_JSON_TYPE.equals(responseType)) {
                 return ok(gson.toJson(modifiedAccount), APPLICATION_JSON).build();
-            } else if (APPLICATION_XML_TYPE == responseType) {
+            } else if (APPLICATION_XML_TYPE.equals(responseType)) {
                 final RestCommResponse response = new RestCommResponse(modifiedAccount);
                 return ok(xstream.toXML(response), APPLICATION_XML).build();
             } else {
@@ -712,9 +708,9 @@ public class AccountsEndpoint extends SecuredEndpoint {
             }
         }
 
-        if (APPLICATION_JSON_TYPE == responseType) {
+        if (APPLICATION_JSON_TYPE.equals(responseType)) {
             return ok(gson.toJson(modifiedAccount), APPLICATION_JSON).build();
-        } else if (APPLICATION_XML_TYPE == responseType) {
+        } else if (APPLICATION_XML_TYPE.equals(responseType)) {
             final RestCommResponse response = new RestCommResponse(modifiedAccount);
             return ok(xstream.toXML(response), APPLICATION_XML).build();
         } else {
@@ -802,6 +798,34 @@ public class AccountsEndpoint extends SecuredEndpoint {
         } else if (!data.containsKey("Password")) {
             throw new NullPointerException("Password can not be null.");
         }
+
+        String emailAddress = data.getFirst("EmailAddress");
+        try {
+            InternetAddress emailAddr = new InternetAddress(emailAddress);
+            emailAddr.validate();
+        } catch (AddressException ex) {
+            String msg = String.format("Provided email address %s is not valid",emailAddress);
+            if (logger.isDebugEnabled()) {
+                logger.debug(msg);
+            }
+            throw new IllegalArgumentException(msg);
+        }
+
+        String clientLogin = data.getFirst("EmailAddress").split("@")[0];
+        if (!ClientLoginConstrains.isValidClientLogin(clientLogin)) {
+            String msg = String.format("Login %s contains invalid character(s) ",clientLogin);
+            if (logger.isDebugEnabled()) {
+                logger.debug(msg);
+            }
+            throw new IllegalArgumentException(msg);
+        }
+    }
+
+    public LinkHeader composeLink(Sid targetSid, UriInfo info) {
+        String sid = targetSid.toString();
+        URI uri = info.getBaseUriBuilder().path(ProfileJsonEndpoint.class).path(sid).build();
+        LinkHeader.LinkHeaderBuilder link = LinkHeader.uri(uri).parameter(TITLE_PARAM, "Profiles");
+        return link.rel(PROFILE_REL_TYPE).build();
     }
 
 }

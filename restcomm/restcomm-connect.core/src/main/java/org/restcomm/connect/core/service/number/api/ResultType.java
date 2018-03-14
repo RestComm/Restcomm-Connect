@@ -1,4 +1,5 @@
 /*
+/*
  * TeleStax, Open Source Cloud Communications
  * Copyright 2011-2014, Telestax Inc and individual contributors
  * by the @authors tag.
@@ -17,25 +18,8 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>
  *
  */
-package org.restcomm.connect.http;
+package org.restcomm.connect.core.service.number.api;
 
-import static javax.ws.rs.core.MediaType.APPLICATION_JSON_TYPE;
-
-import javax.ws.rs.POST;
-import javax.ws.rs.Path;
-import javax.ws.rs.PathParam;
-import javax.ws.rs.core.MultivaluedMap;
-import javax.ws.rs.core.Response;
-
-/**
- * @author <a href="mailto:gvagenas@gmail.com">gvagenas</a>
- *
- */
-@Path("/Accounts/{accountSid}/UssdPush.json")
-public class UssdPushJsonEndpoint extends UssdPushEndpoint {
-
-    @POST
-    public Response putCall(@PathParam("accountSid") final String accountSid, final MultivaluedMap<String, String> data) {
-        return putCall(accountSid, data, APPLICATION_JSON_TYPE);
-    }
+public enum ResultType {
+    REGULAR, REGEX, STAR;
 }
