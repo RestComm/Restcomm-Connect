@@ -47,11 +47,9 @@ import javax.ws.rs.core.UriInfo;
 import org.apache.commons.configuration.Configuration;
 import org.joda.time.DateTime;
 import org.restcomm.connect.commons.dao.Sid;
-import org.restcomm.connect.dao.DaoManager;
-import org.restcomm.connect.dao.ProfileAssociationsDao;
 import org.restcomm.connect.dao.entities.Organization;
 import org.restcomm.connect.dao.entities.OrganizationList;
-import org.restcomm.connect.dao.entities.ProfileAssociation;
+import org.restcomm.connect.dao.entities.Profile;
 import org.restcomm.connect.dao.entities.RestCommResponse;
 import org.restcomm.connect.dns.DnsProvisioningManager;
 import org.restcomm.connect.dns.DnsProvisioningManagerProvider;
@@ -75,7 +73,6 @@ public class OrganizationsEndpoint extends SecuredEndpoint {
     protected final String MSG_DOMAIN_NAME_NOT_AVAILABLE = "This domain name is not available. Please, choose a different name and try again.";
     protected String SUB_DOMAIN_NAME_VALIDATION_PATTERN="[A-Za-z0-9\\-]{1,255}";
     protected Pattern pattern;
-    private ProfileAssociationsDao profileAssociationsDao;
 
     protected OrganizationListConverter listConverter;
 
@@ -94,9 +91,6 @@ public class OrganizationsEndpoint extends SecuredEndpoint {
         super.init(configuration.subset("runtime-settings"));
 
         registerConverters();
-
-        profileAssociationsDao = ((DaoManager) context.getAttribute(DaoManager.class.getName())).getProfileAssociationsDao();
-
 
         // Make sure there is an authenticated account present when this endpoint is used
         // get manager from context or create it if it does not exist
@@ -121,13 +115,6 @@ public class OrganizationsEndpoint extends SecuredEndpoint {
         xstream.registerConverter(converter);
         xstream.registerConverter(listConverter);
         xstream.registerConverter(new RestCommResponseConverter(configuration));
-    }
-
-    public LinkHeader composeLink(Sid targetSid, UriInfo info) {
-        String sid = targetSid.toString();
-        URI uri = info.getBaseUriBuilder().path(ProfileJsonEndpoint.class).path(sid).build();
-        LinkHeader.LinkHeaderBuilder link = LinkHeader.uri(uri).parameter(TITLE_PARAM, "Profiles");
-        return link.rel(PROFILE_REL_TYPE).build();
     }
 
     /**
@@ -164,9 +151,9 @@ public class OrganizationsEndpoint extends SecuredEndpoint {
             return status(NOT_FOUND).build();
         } else {
             Response.ResponseBuilder ok = Response.ok();
-            ProfileAssociation profileAssociationByTargetSid = profileAssociationsDao.getProfileAssociationByTargetSid(organizationSid);
-            if (profileAssociationByTargetSid != null) {
-                LinkHeader profileLink = composeLink(profileAssociationByTargetSid.getProfileSid(), info);
+            Profile associatedProfile = profileService.retrieveEffectiveProfileByOrganizationSid(new Sid(organizationSid));
+            if (associatedProfile != null) {
+                LinkHeader profileLink = composeLink(new Sid(associatedProfile.getSid()), info);
                 ok.header(ProfileEndpoint.LINK_HEADER, profileLink.toString());
             }
             if (APPLICATION_XML_TYPE.equals(responseType)) {
@@ -272,5 +259,12 @@ public class OrganizationsEndpoint extends SecuredEndpoint {
                 return null;
             }
         }
+    }
+
+    public LinkHeader composeLink(Sid targetSid, UriInfo info) {
+        String sid = targetSid.toString();
+        URI uri = info.getBaseUriBuilder().path(ProfileJsonEndpoint.class).path(sid).build();
+        LinkHeader.LinkHeaderBuilder link = LinkHeader.uri(uri).parameter(TITLE_PARAM, "Profiles");
+        return link.rel(PROFILE_REL_TYPE).build();
     }
 }
