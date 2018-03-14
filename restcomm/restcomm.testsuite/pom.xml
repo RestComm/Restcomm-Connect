@@ -143,6 +143,20 @@
                 <version>${shrinkwrap.resolver.version}</version>
                 <scope>compile</scope>
         </dependency>
+        
+        <dependency>
+                <groupId>org.jboss.shrinkwrap.resolver</groupId>
+                <artifactId>shrinkwrap-resolver-api-maven</artifactId>
+                <version>${shrinkwrap.resolver.version}</version>
+                <scope>compile</scope>
+        </dependency>        
+
+        <dependency>
+                <groupId>org.jboss.shrinkwrap.resolver</groupId>
+                <artifactId>shrinkwrap-resolver-api-maven-archive</artifactId>
+                <version>${shrinkwrap.resolver.version}</version>
+                <scope>compile</scope>
+        </dependency>   
 
         <dependency>
                 <groupId>org.jboss.shrinkwrap.resolver</groupId>
