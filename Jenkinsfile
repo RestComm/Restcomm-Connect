@@ -1,6 +1,6 @@
 
 def runTestsuite(exludedGroups = "org.restcomm.connect.commons.annotations.BrokenTests",groups = "", forkCount=1, profile="defaultProfile") {
-        sh "mvn -f restcomm/restcomm.testsuite/pom.xml  install -DskipUTs=false  -Dmaven.test.failure.ignore=true -Dmaven.test.redirectTestOutputToFile=true -Dfailsafe.rerunFailingTestsCount=1 -P $profile -Dgroups=\"$groups\" -DexcludedGroups=\"$exludedGroups\""
+        sh "mvn -f restcomm/restcomm.testsuite/pom.xml  install -DskipUTs=false  -Dmaven.test.failure.ignore=true -Dmaven.test.redirectTestOutputToFile=true -Dfailsafe.rerunFailingTestsCount=1 -P $profile -DforkCount=\"$forkCount\" -Dgroups=\"$groups\" -DexcludedGroups=\"$exludedGroups\""
 }
 
 
