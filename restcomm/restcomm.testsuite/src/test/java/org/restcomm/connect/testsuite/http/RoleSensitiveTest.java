@@ -129,9 +129,11 @@ public class RoleSensitiveTest extends EndpointTest {
                 .asSingle(WebArchive.class);
         archive = archive.merge(restcommArchive);
         archive.delete("/WEB-INF/sip.xml");
+archive.delete("/WEB-INF/web.xml");
         archive.delete("/WEB-INF/conf/restcomm.xml");
         archive.delete("/WEB-INF/data/hsql/restcomm.script");
         archive.addAsWebInfResource("sip.xml");
+        archive.addAsWebInfResource("web.xml");
         archive.addAsWebInfResource("restcomm_roles_permissions.xml", "conf/restcomm.xml");
         archive.addAsWebInfResource("restcomm.script_roles_test", "data/hsql/restcomm.script");
         logger.info("Packaged Test App");

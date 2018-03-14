@@ -337,10 +337,12 @@ public class DialRecordingS3UploadAnswerDelayTest {
 				.asSingle(WebArchive.class);
 		archive = archive.merge(restcommArchive);
 		archive.delete("/WEB-INF/sip.xml");
+archive.delete("/WEB-INF/web.xml");
 		archive.delete("/WEB-INF/conf/restcomm.xml");
 		archive.delete("/WEB-INF/data/hsql/restcomm.script");
 		archive.delete("/WEB-INF/classes/application.conf");
 		archive.addAsWebInfResource("sip.xml");
+        archive.addAsWebInfResource("web.xml");
 		archive.addAsWebInfResource("restcomm_recording_s3_upload-delay.xml", "conf/restcomm.xml");
 		archive.addAsWebInfResource("restcomm.script_dialTest_new", "data/hsql/restcomm.script");
 		archive.addAsWebInfResource("akka_application.conf", "classes/application.conf");
