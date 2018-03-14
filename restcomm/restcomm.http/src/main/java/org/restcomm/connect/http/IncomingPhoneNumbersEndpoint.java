@@ -19,31 +19,36 @@
  */
 package org.restcomm.connect.http;
 
+import com.google.gson.Gson;
+import com.google.gson.GsonBuilder;
+import com.google.i18n.phonenumbers.NumberParseException;
+import com.google.i18n.phonenumbers.NumberParseException.ErrorType;
+import com.google.i18n.phonenumbers.PhoneNumberUtil;
+import com.google.i18n.phonenumbers.PhoneNumberUtil.PhoneNumberFormat;
+import com.google.i18n.phonenumbers.Phonenumber.PhoneNumber;
+import com.thoughtworks.xstream.XStream;
+import java.net.URI;
+import java.util.ArrayList;
+import java.util.List;
+import javax.annotation.PostConstruct;
+import javax.servlet.ServletContext;
+import javax.ws.rs.core.Context;
+import javax.ws.rs.core.MediaType;
 import static javax.ws.rs.core.MediaType.APPLICATION_JSON;
 import static javax.ws.rs.core.MediaType.APPLICATION_JSON_TYPE;
 import static javax.ws.rs.core.MediaType.APPLICATION_XML;
 import static javax.ws.rs.core.MediaType.APPLICATION_XML_TYPE;
-import static javax.ws.rs.core.Response.noContent;
-import static javax.ws.rs.core.Response.ok;
-import static javax.ws.rs.core.Response.status;
+import javax.ws.rs.core.MultivaluedMap;
+import javax.ws.rs.core.Response;
 import static javax.ws.rs.core.Response.Status.BAD_REQUEST;
 import static javax.ws.rs.core.Response.Status.FORBIDDEN;
 import static javax.ws.rs.core.Response.Status.INTERNAL_SERVER_ERROR;
 import static javax.ws.rs.core.Response.Status.NOT_FOUND;
 import static javax.ws.rs.core.Response.Status.OK;
-
-import java.net.URI;
-import java.util.ArrayList;
-import java.util.List;
-
-import javax.annotation.PostConstruct;
-import javax.servlet.ServletContext;
-import javax.ws.rs.core.Context;
-import javax.ws.rs.core.MediaType;
-import javax.ws.rs.core.MultivaluedMap;
-import javax.ws.rs.core.Response;
+import static javax.ws.rs.core.Response.noContent;
+import static javax.ws.rs.core.Response.ok;
+import static javax.ws.rs.core.Response.status;
 import javax.ws.rs.core.UriInfo;
-
 import org.apache.commons.configuration.Configuration;
 import org.joda.time.DateTime;
 import org.restcomm.connect.commons.annotations.concurrency.NotThreadSafe;
@@ -69,15 +74,6 @@ import org.restcomm.connect.provisioning.number.api.PhoneNumberParameters;
 import org.restcomm.connect.provisioning.number.api.PhoneNumberProvisioningManager;
 import org.restcomm.connect.provisioning.number.api.PhoneNumberProvisioningManagerProvider;
 import org.restcomm.connect.provisioning.number.api.PhoneNumberType;
-
-import com.google.gson.Gson;
-import com.google.gson.GsonBuilder;
-import com.google.i18n.phonenumbers.NumberParseException;
-import com.google.i18n.phonenumbers.NumberParseException.ErrorType;
-import com.google.i18n.phonenumbers.PhoneNumberUtil;
-import com.google.i18n.phonenumbers.PhoneNumberUtil.PhoneNumberFormat;
-import com.google.i18n.phonenumbers.Phonenumber.PhoneNumber;
-import com.thoughtworks.xstream.XStream;
 
 /**
  * @author quintana.thomas@gmail.com (Thomas Quintana)
@@ -257,9 +253,9 @@ public abstract class IncomingPhoneNumbersEndpoint extends SecuredEndpoint {
                     return status(BAD_REQUEST).build();
                 }
                 secure(operatedAccount, incomingPhoneNumber.getAccountSid(), SecuredType.SECURED_STANDARD);
-                if (APPLICATION_JSON_TYPE == responseType) {
+                if (APPLICATION_JSON_TYPE.equals(responseType)) {
                     return ok(gson.toJson(incomingPhoneNumber), APPLICATION_JSON).build();
-                } else if (APPLICATION_XML_TYPE == responseType) {
+                } else if (APPLICATION_XML_TYPE.equals(responseType)) {
                     final RestCommResponse response = new RestCommResponse(incomingPhoneNumber);
                     return ok(xstream.toXML(response), APPLICATION_XML).build();
                 } else {
@@ -279,9 +275,9 @@ public abstract class IncomingPhoneNumbersEndpoint extends SecuredEndpoint {
             countries = new ArrayList<String>();
             countries.add("US");
         }
-        if (APPLICATION_JSON_TYPE == responseType) {
+        if (APPLICATION_JSON_TYPE.equals(responseType)) {
             return ok(gson.toJson(countries), APPLICATION_JSON).build();
-        } else if (APPLICATION_XML_TYPE == responseType) {
+        } else if (APPLICATION_XML_TYPE.equals(responseType)) {
             final RestCommResponse response = new RestCommResponse(new AvailableCountriesList(countries));
             return ok(xstream.toXML(response), APPLICATION_XML).build();
         } else {
@@ -333,9 +329,9 @@ public abstract class IncomingPhoneNumbersEndpoint extends SecuredEndpoint {
             listConverter.setPageSize(limit);
             listConverter.setPathUri("/" + getApiVersion(null) + "/" + info.getPath());
 
-            if (APPLICATION_JSON_TYPE == responseType) {
+            if (APPLICATION_JSON_TYPE.equals(responseType)) {
                 return ok(gson.toJson(new IncomingPhoneNumberList(incomingPhoneNumbers)), APPLICATION_JSON).build();
-            } else if (APPLICATION_XML_TYPE == responseType) {
+            } else if (APPLICATION_XML_TYPE.equals(responseType)) {
                 final RestCommResponse response = new RestCommResponse(new IncomingPhoneNumberList(incomingPhoneNumbers));
                 return ok(xstream.toXML(response), APPLICATION_XML).build();
             } else {
@@ -428,9 +424,9 @@ public abstract class IncomingPhoneNumbersEndpoint extends SecuredEndpoint {
                         incomingPhoneNumber.setPhoneNumber(phoneNumber.getPhoneNumber());
                     }
                     dao.addIncomingPhoneNumber(incomingPhoneNumber);
-                    if (APPLICATION_JSON_TYPE == responseType) {
+                    if (APPLICATION_JSON_TYPE.equals(responseType)) {
                         return ok(gson.toJson(incomingPhoneNumber), APPLICATION_JSON).build();
-                    } else if (APPLICATION_XML_TYPE == responseType) {
+                    } else if (APPLICATION_XML_TYPE.equals(responseType)) {
                         final RestCommResponse response = new RestCommResponse(incomingPhoneNumber);
                         return ok(xstream.toXML(response), APPLICATION_XML).build();
                     }
@@ -457,9 +453,9 @@ public abstract class IncomingPhoneNumbersEndpoint extends SecuredEndpoint {
             updated = updateNumberAtPhoneNumberProvisioningManager(incomingPhoneNumber, organizationsDao.getOrganization(operatedAccount.getOrganizationSid()));
             if(updated) {
                 dao.updateIncomingPhoneNumber(update(incomingPhoneNumber, data));
-                if (APPLICATION_JSON_TYPE == responseType) {
+                if (APPLICATION_JSON_TYPE.equals(responseType)) {
                     return ok(gson.toJson(incomingPhoneNumber), APPLICATION_JSON).build();
-                } else if (APPLICATION_XML_TYPE == responseType) {
+                } else if (APPLICATION_XML_TYPE.equals(responseType)) {
                     final RestCommResponse response = new RestCommResponse(incomingPhoneNumber);
                     return ok(xstream.toXML(response), APPLICATION_XML).build();
                 } else {

@@ -23,6 +23,20 @@ import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
 import com.thoughtworks.xstream.XStream;
 
+
+import javax.annotation.PostConstruct;
+import javax.ws.rs.core.MediaType;
+import static javax.ws.rs.core.MediaType.APPLICATION_JSON;
+import static javax.ws.rs.core.MediaType.APPLICATION_JSON_TYPE;
+import static javax.ws.rs.core.MediaType.APPLICATION_XML;
+import static javax.ws.rs.core.MediaType.APPLICATION_XML_TYPE;
+import javax.ws.rs.core.MultivaluedMap;
+import javax.ws.rs.core.Response;
+import static javax.ws.rs.core.Response.Status.BAD_REQUEST;
+import static javax.ws.rs.core.Response.Status.NOT_ACCEPTABLE;
+import static javax.ws.rs.core.Response.Status.NOT_FOUND;
+import static javax.ws.rs.core.Response.ok;
+import static javax.ws.rs.core.Response.status;
 import org.apache.commons.configuration.Configuration;
 import org.joda.time.DateTime;
 import org.restcomm.connect.commons.dao.Sid;
@@ -33,21 +47,6 @@ import org.restcomm.connect.extension.api.ConfigurationException;
 import org.restcomm.connect.extension.api.ExtensionConfiguration;
 import org.restcomm.connect.http.converter.ExtensionConfigurationConverter;
 import org.restcomm.connect.http.converter.RestCommResponseConverter;
-
-import javax.annotation.PostConstruct;
-import javax.ws.rs.core.MediaType;
-import javax.ws.rs.core.MultivaluedMap;
-import javax.ws.rs.core.Response;
-
-import static javax.ws.rs.core.MediaType.APPLICATION_JSON;
-import static javax.ws.rs.core.MediaType.APPLICATION_JSON_TYPE;
-import static javax.ws.rs.core.MediaType.APPLICATION_XML;
-import static javax.ws.rs.core.MediaType.APPLICATION_XML_TYPE;
-import static javax.ws.rs.core.Response.Status.BAD_REQUEST;
-import static javax.ws.rs.core.Response.Status.NOT_ACCEPTABLE;
-import static javax.ws.rs.core.Response.Status.NOT_FOUND;
-import static javax.ws.rs.core.Response.ok;
-import static javax.ws.rs.core.Response.status;
 
 /**
  * Created by gvagenas on 12/10/2016.
@@ -128,10 +127,10 @@ public class  ExtensionsConfigurationEndpoint extends SecuredEndpoint {
         if (extensionConfiguration == null) {
             return status(NOT_FOUND).build();
         } else {
-            if (APPLICATION_XML_TYPE == responseType) {
+            if (APPLICATION_XML_TYPE.equals(responseType)) {
                 final RestCommResponse response = new RestCommResponse(extensionConfiguration);
                 return ok(xstream.toXML(response), APPLICATION_XML).build();
-            } else if (APPLICATION_JSON_TYPE == responseType) {
+            } else if (APPLICATION_JSON_TYPE.equals(responseType)) {
                 return ok(gson.toJson(extensionConfiguration), APPLICATION_JSON).build();
             } else {
                 return null;
@@ -201,9 +200,9 @@ public class  ExtensionsConfigurationEndpoint extends SecuredEndpoint {
             }
         }
 
-        if (APPLICATION_JSON_TYPE == responseType) {
+        if (APPLICATION_JSON_TYPE.equals(responseType)) {
             return ok(gson.toJson(extensionConfiguration), APPLICATION_JSON).build();
-        } else if (APPLICATION_XML_TYPE == responseType) {
+        } else if (APPLICATION_XML_TYPE.equals(responseType)) {
             final RestCommResponse response = new RestCommResponse(extensionConfiguration);
             return ok(xstream.toXML(response), APPLICATION_XML).build();
         } else {
@@ -245,9 +244,9 @@ public class  ExtensionsConfigurationEndpoint extends SecuredEndpoint {
             return status(NOT_ACCEPTABLE).entity(exception.getMessage()).build();
         }
 
-        if (APPLICATION_JSON_TYPE == responseType) {
+        if (APPLICATION_JSON_TYPE.equals(responseType)) {
             return ok(gson.toJson(updatedExtensionConfiguration), APPLICATION_JSON).build();
-        } else if (APPLICATION_XML_TYPE == responseType) {
+        } else if (APPLICATION_XML_TYPE.equals(responseType)) {
             final RestCommResponse response = new RestCommResponse(updatedExtensionConfiguration);
             return ok(xstream.toXML(response), APPLICATION_XML).build();
         } else {

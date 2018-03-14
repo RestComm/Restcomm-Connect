@@ -181,7 +181,8 @@
                 <module>restcomm.monitoring.service</module>
                 <module>restcomm.tts.awspolly</module>
 		<module>restcomm.sdr.api</module>
-  </modules>
+		<module>restcomm-connect.core</module>
+	</modules>
 
 	<dependencyManagement>
 		<dependencies>
