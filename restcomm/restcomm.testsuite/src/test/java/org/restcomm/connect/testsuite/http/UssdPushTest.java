@@ -304,9 +304,11 @@ public class UssdPushTest {
                 .asSingle(WebArchive.class);
         archive = archive.merge(restcommArchive);
         archive.delete("/WEB-INF/sip.xml");
+archive.delete("/WEB-INF/web.xml");
         archive.delete("/WEB-INF/conf/restcomm.xml");
         archive.delete("/WEB-INF/data/hsql/restcomm.script");
         archive.addAsWebInfResource("sip.xml");
+        archive.addAsWebInfResource("web.xml");
         archive.addAsWebInfResource("org/restcomm/connect/ussd/restcomm_conf_ussd_push.xml", "conf/restcomm.xml");
         archive.addAsWebInfResource("org/restcomm/connect/ussd/restcomm.script_ussdPullTest", "data/hsql/restcomm.script");
         archive.addAsWebResource("org/restcomm/connect/ussd/ussd-rcml.xml");

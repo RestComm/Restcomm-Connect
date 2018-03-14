@@ -269,10 +269,12 @@ public class UsageRecordsTest {
                 .asSingle(WebArchive.class);
         archive = archive.merge(restcommArchive);
         archive.delete("/WEB-INF/sip.xml");
+archive.delete("/WEB-INF/web.xml");
         archive.delete("/WEB-INF/conf/restcomm.xml");
         archive.delete("/WEB-INF/data/hsql/restcomm.script");
         // archive.delete("/WEB-INF/data/hsql/restcomm.properties");
         archive.addAsWebInfResource("sip.xml");
+        archive.addAsWebInfResource("web.xml");
         archive.addAsWebInfResource("restcomm.xml", "conf/restcomm.xml");
         archive.addAsWebInfResource("restcomm_with_Data_UsageRecords.script", "data/hsql/restcomm.script");
         // archive.addAsWebInfResource("restcomm.properties", "data/hsql/restcomm.properties");

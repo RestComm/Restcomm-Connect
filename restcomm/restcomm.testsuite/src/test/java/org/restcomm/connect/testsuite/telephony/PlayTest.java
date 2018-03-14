@@ -178,9 +178,11 @@ public class PlayTest {
                 .asSingle(WebArchive.class);
         archive = archive.merge(restcommArchive);;
         archive.delete("/WEB-INF/sip.xml");
+archive.delete("/WEB-INF/web.xml");
         archive.delete("/WEB-INF/conf/restcomm.xml");
         archive.delete("/WEB-INF/data/hsql/restcomm.script");
         archive.addAsWebInfResource("sip.xml");
+        archive.addAsWebInfResource("web.xml");
         archive.addAsWebInfResource("restcomm-embeddedMMS.xml", "conf/restcomm.xml");
         archive.addAsWebInfResource("restcomm.script_playTest", "data/hsql/restcomm.script");
         archive.addAsWebResource("hello-play.xml");

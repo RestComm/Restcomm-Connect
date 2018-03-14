@@ -140,9 +140,11 @@ public class AccountsEndpointClosingTest extends EndpointTest {
                 .asSingle(WebArchive.class);
         archive = archive.merge(restcommArchive);
         archive.delete("/WEB-INF/sip.xml");
+archive.delete("/WEB-INF/web.xml");
         archive.delete("/WEB-INF/conf/restcomm.xml");
         archive.delete("/WEB-INF/data/hsql/restcomm.script");
         archive.addAsWebInfResource("sip.xml");
+        archive.addAsWebInfResource("web.xml");
         archive.addAsWebInfResource("restcomm-accountRemoval.xml", "conf/restcomm.xml");
         archive.addAsWebInfResource("restcomm.script_account_removal_test", "data/hsql/restcomm.script");
         logger.info("Packaged Test App");

@@ -121,9 +121,11 @@ public class RvdProjectsMigratorDisabled {
                 .asSingle(WebArchive.class);
         archive = archive.merge(restcommArchive);
         archive.delete("/WEB-INF/sip.xml");
+archive.delete("/WEB-INF/web.xml");
         archive.delete("/WEB-INF/conf/restcomm.xml");
         archive.delete("/WEB-INF/data/hsql/restcomm.script");
         archive.addAsWebInfResource("sip.xml");
+        archive.addAsWebInfResource("web.xml");
         archive.addAsWebInfResource("restcomm_workspaceMigrationDisabled.xml", "conf/restcomm.xml");
         archive.addAsWebInfResource("restcomm.script_projectMigratorWorkspaceMigratedTest", "data/hsql/restcomm.script");
         String source = "src/test/resources/workspace-migration-scenarios/migrated";
