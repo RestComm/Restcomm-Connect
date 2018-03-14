@@ -153,7 +153,7 @@ public class ProfileServiceTest {
 
     /**
      * case 4: given: a profile is NOT explicitly assigned to an account nor to its parent or grand parent, but its associated to its organization
-     * calling retrieveEffectiveProfileByAccountSid by account sid SHOULD return DEFAULT profile
+     * calling retrieveEffectiveProfileByAccountSid by account sid SHOULD return that profile
      * @throws SQLException 
      */
     @Test
