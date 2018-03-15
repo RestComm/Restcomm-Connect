@@ -511,7 +511,7 @@ public final class CallManager extends RestcommUntypedActor {
         final SipURI fromUri = (SipURI) request.getFrom().getURI();
         final String fromUser = fromUri.getUser();
         final SipURI toUri = (SipURI) request.getTo().getURI();
-        final String toUser = CallControlHelper.getUserSipId(request, useTo);
+        String toUser = CallControlHelper.getUserSipId(request, useTo);
         final String ruri = ((SipURI) request.getRequestURI()).getHost();
         final String toHost = toUri.getHost();
         final String toHostIpAddress = DNSUtils.getByName(toHost).getHostAddress();
@@ -694,6 +694,13 @@ public final class CallManager extends RestcommUntypedActor {
                 // log to console and to notification engine
                 String errMsg = "A Restcomm Client is trying to call a Number/DID that is not registered with Restcomm";
                 sendNotification(client.getAccountSid(), errMsg, 11002, "info", true);
+
+                if(useSbc) {
+                    toUser = toUser+"@"+ruri;
+                    if (logger.isDebugEnabled()) {
+                        logger.debug("CallManager: use-sbc is true, overriding webrtc toUser to " + toUser);
+                    }
+                }
 
                 ExtensionController ec = ExtensionController.getInstance();
                 IExtensionCreateCallRequest er = new CreateCall(fromUser, toUser, "", "", false, 0, CreateCallType.PSTN, client.getAccountSid(), null, null, null, null);
