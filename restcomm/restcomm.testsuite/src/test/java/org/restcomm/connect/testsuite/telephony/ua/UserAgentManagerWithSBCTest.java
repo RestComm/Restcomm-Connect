@@ -19,9 +19,21 @@
  */
 package org.restcomm.connect.testsuite.telephony.ua;
 
-import gov.nist.javax.sip.address.SipUri;
-import gov.nist.javax.sip.header.HeaderExt;
-import gov.nist.javax.sip.message.SIPResponse;
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertNotNull;
+import static org.junit.Assert.assertTrue;
+
+import java.net.URL;
+import java.text.ParseException;
+import java.util.HashMap;
+import java.util.Map;
+import java.util.logging.Logger;
+
+import javax.sip.InvalidArgumentException;
+import javax.sip.RequestEvent;
+import javax.sip.address.SipURI;
+import javax.sip.message.Response;
+
 import org.cafesip.sipunit.Credential;
 import org.cafesip.sipunit.SipPhone;
 import org.cafesip.sipunit.SipRequest;
@@ -36,31 +48,18 @@ import org.junit.After;
 import org.junit.Before;
 import org.junit.BeforeClass;
 import org.junit.Test;
+import org.junit.experimental.categories.Category;
 import org.junit.runner.RunWith;
 import org.restcomm.connect.commons.Version;
-import org.restcomm.connect.testsuite.tools.MonitoringServiceTool;
-
-import javax.sip.InvalidArgumentException;
-import javax.sip.RequestEvent;
-import javax.sip.address.SipURI;
-import javax.sip.header.Header;
-import javax.sip.message.Response;
-import java.net.URL;
-import java.text.ParseException;
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.Map;
-import java.util.logging.Logger;
-
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertNotNull;
-import static org.junit.Assert.assertTrue;
-import org.junit.experimental.categories.Category;
 import org.restcomm.connect.commons.annotations.ParallelClassTests;
 import org.restcomm.connect.commons.annotations.WithInMinsTests;
 import org.restcomm.connect.testsuite.NetworkPortAssigner;
 import org.restcomm.connect.testsuite.WebArchiveUtil;
 //import org.restcomm.connect.telephony.Version;
+import org.restcomm.connect.testsuite.tools.MonitoringServiceTool;
+
+import gov.nist.javax.sip.address.SipUri;
+import gov.nist.javax.sip.message.SIPResponse;
 
 /**
  * @author quintana.thomas@gmail.com (Thomas Quintana)
