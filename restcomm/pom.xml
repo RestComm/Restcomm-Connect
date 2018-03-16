@@ -96,7 +96,7 @@
         <mobicents.mgcp.impl.version>6.0.23</mobicents.mgcp.impl.version>
         <javamail.version>1.4</javamail.version>
         <servletapi.version>2.5</servletapi.version>
-        <sipservletapi.version>3.2.0-97</sipservletapi.version>
+        <sipservletapi.version>3.2.0-98</sipservletapi.version>
         <staxapi.version>1.0.1</staxapi.version>
         <staximpl.version>1.2.0</staximpl.version>
         <servlet-api.version>7.0.50</servlet-api.version>
@@ -771,7 +771,7 @@
                                 <Implementation-URL>${manifest.url}</Implementation-URL>
                                 <SVN-Revision>${buildNumber}</SVN-Revision>
                             </instructions>
-                        </configuration>                        
+                        </configuration>
                     </execution>
                 </executions>
                 <configuration>
@@ -788,7 +788,7 @@
                         <SVN-Revision>${buildNumber}</SVN-Revision>
                     </instructions>
                 </configuration>
-            </plugin>                    
+            </plugin>
         </plugins>
         <pluginManagement>
             <plugins>
