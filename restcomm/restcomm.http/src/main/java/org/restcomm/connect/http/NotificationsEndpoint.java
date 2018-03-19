@@ -24,35 +24,30 @@ import com.google.gson.GsonBuilder;
 import com.thoughtworks.xstream.XStream;
 import java.text.ParseException;
 import java.util.ArrayList;
-
 import java.util.List;
-
-import static javax.ws.rs.core.MediaType.*;
-
 import javax.annotation.PostConstruct;
 import javax.servlet.ServletContext;
 import javax.ws.rs.core.Context;
 import javax.ws.rs.core.MediaType;
+import static javax.ws.rs.core.MediaType.*;
 import javax.ws.rs.core.Response;
-
 import static javax.ws.rs.core.Response.*;
 import static javax.ws.rs.core.Response.Status.*;
 import javax.ws.rs.core.UriInfo;
-
 import org.apache.commons.configuration.Configuration;
 import org.restcomm.connect.commons.annotations.concurrency.NotThreadSafe;
 import org.restcomm.connect.commons.configuration.RestcommConfiguration;
+import org.restcomm.connect.commons.dao.Sid;
+import org.restcomm.connect.dao.DaoManager;
+import org.restcomm.connect.dao.NotificationsDao;
+import org.restcomm.connect.dao.entities.Account;
+import org.restcomm.connect.dao.entities.Notification;
+import org.restcomm.connect.dao.entities.NotificationFilter;
+import org.restcomm.connect.dao.entities.NotificationList;
+import org.restcomm.connect.dao.entities.RestCommResponse;
 import org.restcomm.connect.http.converter.NotificationConverter;
 import org.restcomm.connect.http.converter.NotificationListConverter;
 import org.restcomm.connect.http.converter.RestCommResponseConverter;
-import org.restcomm.connect.dao.DaoManager;
-import org.restcomm.connect.dao.NotificationsDao;
-import org.restcomm.connect.dao.entities.Notification;
-import org.restcomm.connect.dao.entities.NotificationList;
-import org.restcomm.connect.dao.entities.RestCommResponse;
-import org.restcomm.connect.commons.dao.Sid;
-import org.restcomm.connect.dao.entities.Account;
-import org.restcomm.connect.dao.entities.NotificationFilter;
 
 /**
  * @author quintana.thomas@gmail.com (Thomas Quintana)
@@ -104,9 +99,9 @@ public abstract class NotificationsEndpoint extends SecuredEndpoint {
             return status(NOT_FOUND).build();
         } else {
             secure(operatedAccount, notification.getAccountSid(), SecuredType.SECURED_STANDARD);
-            if (APPLICATION_JSON_TYPE == responseType) {
+            if (APPLICATION_JSON_TYPE.equals(responseType)) {
                 return ok(gson.toJson(notification), APPLICATION_JSON).build();
-            } else if (APPLICATION_XML_TYPE == responseType) {
+            } else if (APPLICATION_XML_TYPE.equals(responseType)) {
                 final RestCommResponse response = new RestCommResponse(notification);
                 return ok(xstream.toXML(response), APPLICATION_XML).build();
             } else {
@@ -203,10 +198,10 @@ public abstract class NotificationsEndpoint extends SecuredEndpoint {
         listConverter.setPageSize(Integer.parseInt(pageSize));
         listConverter.setPathUri(info.getRequestUri().getPath());
 
-        if (APPLICATION_XML_TYPE == responseType) {
+        if (APPLICATION_XML_TYPE.equals(responseType)) {
             final RestCommResponse response = new RestCommResponse(new NotificationList(cdrs));
             return ok(xstream.toXML(response), APPLICATION_XML).build();
-        } else if (APPLICATION_JSON_TYPE == responseType) {
+        } else if (APPLICATION_JSON_TYPE.equals(responseType)) {
             return ok(gson.toJson(new NotificationList(cdrs)), APPLICATION_JSON).build();
         } else {
             return null;

@@ -312,7 +312,7 @@ public class DialForkTest {
         JsonObject metrics = MonitoringServiceTool.getInstance().getMetrics(deploymentUrl.toString(), adminAccountSid, adminAuthToken);
         int liveCalls = MonitoringServiceTool.getInstance().getStatistics(deploymentUrl.toString(), adminAccountSid, adminAuthToken);
         int liveCallsArraySize = MonitoringServiceTool.getInstance().getLiveCallsArraySize(deploymentUrl.toString(), adminAccountSid, adminAuthToken);
-        assertTrue(liveCalls == 2);
+        assertEquals(2, liveCalls);
         assertEquals(2, liveCallsArraySize);
 
         henriqueCall.listenForDisconnect();

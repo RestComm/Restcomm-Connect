@@ -19,31 +19,30 @@
  */
 package org.restcomm.connect.http;
 
-import static javax.ws.rs.core.MediaType.APPLICATION_JSON;
-import static javax.ws.rs.core.MediaType.APPLICATION_JSON_TYPE;
-import static javax.ws.rs.core.MediaType.APPLICATION_XML;
-import static javax.ws.rs.core.MediaType.APPLICATION_XML_TYPE;
-import static javax.ws.rs.core.Response.ok;
-import static javax.ws.rs.core.Response.status;
-import static javax.ws.rs.core.Response.Status.BAD_REQUEST;
-import static javax.ws.rs.core.Response.Status.NOT_FOUND;
-import static javax.ws.rs.core.Response.Status.UNAUTHORIZED;
-
+import com.google.gson.Gson;
+import com.google.gson.GsonBuilder;
+import com.thoughtworks.xstream.XStream;
 import java.text.ParseException;
 import java.util.List;
-
 import javax.annotation.PostConstruct;
 import javax.servlet.ServletContext;
 import javax.ws.rs.core.Context;
 import javax.ws.rs.core.MediaType;
+import static javax.ws.rs.core.MediaType.APPLICATION_JSON;
+import static javax.ws.rs.core.MediaType.APPLICATION_JSON_TYPE;
+import static javax.ws.rs.core.MediaType.APPLICATION_XML;
+import static javax.ws.rs.core.MediaType.APPLICATION_XML_TYPE;
 import javax.ws.rs.core.Response;
+import static javax.ws.rs.core.Response.Status.BAD_REQUEST;
+import static javax.ws.rs.core.Response.Status.NOT_FOUND;
+import static javax.ws.rs.core.Response.Status.UNAUTHORIZED;
+import static javax.ws.rs.core.Response.ok;
+import static javax.ws.rs.core.Response.status;
 import javax.ws.rs.core.UriInfo;
-
 import org.apache.commons.configuration.Configuration;
 import org.apache.shiro.authz.AuthorizationException;
 import org.restcomm.connect.commons.annotations.concurrency.NotThreadSafe;
-import org.restcomm.connect.http.converter.ConferenceDetailRecordConverter;
-import org.restcomm.connect.http.converter.ConferenceDetailRecordListConverter;
+import org.restcomm.connect.commons.dao.Sid;
 import org.restcomm.connect.dao.ConferenceDetailRecordsDao;
 import org.restcomm.connect.dao.DaoManager;
 import org.restcomm.connect.dao.entities.Account;
@@ -51,11 +50,8 @@ import org.restcomm.connect.dao.entities.ConferenceDetailRecord;
 import org.restcomm.connect.dao.entities.ConferenceDetailRecordFilter;
 import org.restcomm.connect.dao.entities.ConferenceDetailRecordList;
 import org.restcomm.connect.dao.entities.RestCommResponse;
-import org.restcomm.connect.commons.dao.Sid;
-
-import com.google.gson.Gson;
-import com.google.gson.GsonBuilder;
-import com.thoughtworks.xstream.XStream;
+import org.restcomm.connect.http.converter.ConferenceDetailRecordConverter;
+import org.restcomm.connect.http.converter.ConferenceDetailRecordListConverter;
 
 /**
  * @author quintana.thomas@gmail.com (Thomas Quintana)
@@ -114,10 +110,10 @@ public abstract class ConferencesEndpoint extends SecuredEndpoint {
             } catch (final AuthorizationException exception) {
                 return status(UNAUTHORIZED).build();
             }
-            if (APPLICATION_XML_TYPE == responseType) {
+            if (APPLICATION_XML_TYPE.equals(responseType)) {
                 final RestCommResponse response = new RestCommResponse(cdr);
                 return ok(xstream.toXML(response), APPLICATION_XML).build();
-            } else if (APPLICATION_JSON_TYPE == responseType) {
+            } else if (APPLICATION_JSON_TYPE.equals(responseType)) {
                 return ok(gson.toJson(cdr), APPLICATION_JSON).build();
             } else {
                 return null;
@@ -184,10 +180,10 @@ public abstract class ConferencesEndpoint extends SecuredEndpoint {
         listConverter.setPageSize(Integer.parseInt(pageSize));
         listConverter.setPathUri("/"+getApiVersion(null)+"/"+info.getPath());
 
-        if (APPLICATION_XML_TYPE == responseType) {
+        if (APPLICATION_XML_TYPE.equals(responseType)) {
             final RestCommResponse response = new RestCommResponse(new ConferenceDetailRecordList(cdrs));
             return ok(xstream.toXML(response), APPLICATION_XML).build();
-        } else if (APPLICATION_JSON_TYPE == responseType) {
+        } else if (APPLICATION_JSON_TYPE.equals(responseType)) {
             return ok(gson.toJson(new ConferenceDetailRecordList(cdrs)), APPLICATION_JSON).build();
         } else {
             return null;

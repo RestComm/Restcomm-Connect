@@ -38,6 +38,7 @@ import javax.servlet.sip.SipURI;
 
 import akka.actor.ActorSystem;
 import org.apache.commons.configuration.Configuration;
+import org.joda.time.DateTime;
 import org.restcomm.connect.commons.dao.Sid;
 import org.restcomm.connect.commons.faulttolerance.RestcommUntypedActor;
 import org.restcomm.connect.commons.patterns.Observe;
@@ -49,6 +50,7 @@ import org.restcomm.connect.dao.DaoManager;
 import org.restcomm.connect.dao.RegistrationsDao;
 import org.restcomm.connect.dao.entities.Client;
 import org.restcomm.connect.dao.entities.Registration;
+import org.restcomm.connect.dao.entities.SmsMessage;
 import org.restcomm.connect.sms.api.GetLastSmsRequest;
 import org.restcomm.connect.sms.api.SmsSessionAttribute;
 import org.restcomm.connect.sms.api.SmsSessionInfo;
@@ -232,6 +234,10 @@ public final class SmsSession extends RestcommUntypedActor {
         } else if (SmsSessionAttribute.class.equals(klass)) {
             final SmsSessionAttribute attribute = (SmsSessionAttribute) message;
             attributes.put(attribute.name(), attribute.value());
+            Object record = attributes.get("record");
+            if (record != null) {
+                system.eventStream().publish(record);
+            }
         } else if (SmsSessionRequest.class.equals(klass)) {
             outbound(message);
         } else if (message instanceof SipServletRequest) {
@@ -243,14 +249,33 @@ public final class SmsSession extends RestcommUntypedActor {
         }
     }
 
+    @Override
+    public void postStop() {
+        super.postStop();
+        Object record = attributes.get("record");
+        if (record != null) {
+            system.eventStream().publish(record);
+        }
+    }
+
     private void response(final Object message) {
         final SipServletResponse response = (SipServletResponse) message;
         final int status = response.getStatus();
         final SmsSessionInfo info = info();
         SmsSessionResponse result = null;
+        Object record = info.attributes().get("record");
         if (SipServletResponse.SC_ACCEPTED == status || SipServletResponse.SC_OK == status) {
+            if (record != null) {
+                record = ((SmsMessage)record).setDateSent(DateTime.now());
+                record = ((SmsMessage)record).setStatus(SmsMessage.Status.SENT);
+                info.attributes().put("record", record);
+            }
             result = new SmsSessionResponse(info, true);
         } else {
+            if (record != null) {
+                record = ((SmsMessage)record).setStatus(SmsMessage.Status.FAILED);
+                info.attributes().put("record", record);
+            }
             result = new SmsSessionResponse(info, false);
         }
         // Notify the observers.
@@ -389,6 +414,11 @@ public final class SmsSession extends RestcommUntypedActor {
             // Notify the observers.
             final SmsSessionInfo info = info();
             final SmsSessionResponse error = new SmsSessionResponse(info, false);
+            Object record = info.attributes().get("record");
+            if (record != null) {
+                record = ((SmsMessage)record).setStatus(SmsMessage.Status.FAILED);
+                info.attributes().put("record", record);
+            }
             for (final ActorRef observer : observers) {
                 observer.tell(error, self());
             }

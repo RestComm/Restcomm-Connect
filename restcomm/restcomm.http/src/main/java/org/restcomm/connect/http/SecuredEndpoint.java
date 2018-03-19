@@ -49,6 +49,7 @@ import javax.servlet.http.HttpServletRequest;
 import javax.ws.rs.core.Context;
 import java.util.List;
 import java.util.Set;
+import org.restcomm.connect.core.service.api.ProfileService;
 
 
 /**
@@ -84,6 +85,7 @@ public abstract class SecuredEndpoint extends AbstractEndpoint {
 
     //List of extensions for RestAPI
     protected List<RestcommExtensionGeneric> extensions;
+    protected ProfileService profileService;
 
     public SecuredEndpoint() {
         super();
@@ -108,6 +110,7 @@ public abstract class SecuredEndpoint extends AbstractEndpoint {
                 logger.info("RestAPI extensions: "+(extensions != null ? extensions.size() : "0"));
             }
         }
+        profileService = (ProfileService)context.getAttribute(ProfileService.class.getName());
     }
 
     /**

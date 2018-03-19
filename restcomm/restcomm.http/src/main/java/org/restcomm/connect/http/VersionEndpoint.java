@@ -23,25 +23,23 @@ package org.restcomm.connect.http;
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
 import com.thoughtworks.xstream.XStream;
+import javax.annotation.PostConstruct;
+import javax.servlet.ServletContext;
+import javax.ws.rs.core.Context;
+import javax.ws.rs.core.MediaType;
+import static javax.ws.rs.core.MediaType.*;
+import javax.ws.rs.core.Response;
+import static javax.ws.rs.core.Response.ok;
 import org.apache.commons.configuration.Configuration;
 import org.apache.log4j.Logger;
 import org.restcomm.connect.commons.Version;
 import org.restcomm.connect.commons.VersionEntity;
 import org.restcomm.connect.commons.annotations.concurrency.ThreadSafe;
-import org.restcomm.connect.http.converter.RestCommResponseConverter;
-import org.restcomm.connect.http.converter.VersionConverter;
 import org.restcomm.connect.dao.DaoManager;
 import org.restcomm.connect.dao.UsageDao;
 import org.restcomm.connect.dao.entities.RestCommResponse;
-
-import javax.annotation.PostConstruct;
-import javax.servlet.ServletContext;
-import javax.ws.rs.core.Context;
-import javax.ws.rs.core.MediaType;
-import javax.ws.rs.core.Response;
-
-import static javax.ws.rs.core.MediaType.*;
-import static javax.ws.rs.core.Response.ok;
+import org.restcomm.connect.http.converter.RestCommResponseConverter;
+import org.restcomm.connect.http.converter.VersionConverter;
 
 /**
  * @author <a href="mailto:gvagenas@gmail.com">gvagenas</a>

@@ -22,6 +22,10 @@ Since the Profile configuration is expected to grow as required, the Profile ent
 is defined by a JSON schema, rather than regular properties, representing a 
 document used as generic container.
 
+All Profiles REST API is only accesible by SuperAdmin credentials. With the exception
+of reading the associated Profile, where all Roles are allowed if the queried profile
+is associated with the requesting Account credentials.
+
 === Profile Resource URI
 
 */2012-04-24/Profiles/\{ProfileSid}*
@@ -43,7 +47,7 @@ document used as generic container.
 
 === Supported Operations
 
-*HTTP GET.* Returns the representation of a Profile resource.
+*HTTP GET.* Returns the representation of a Profile resource. All roles are allowed.
 
 ==== Response Status
 [cols=",",options="header",]
