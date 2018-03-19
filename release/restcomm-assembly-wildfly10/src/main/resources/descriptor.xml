@@ -24,7 +24,7 @@
         </fileSet>           
         <fileSet>
             <!-- here we override some jboss/sipservlets files -->
-            <directory>${project.basedir}/src/main/resources/assembly-resources</directory>
+            <directory>${project.build.directory}/classes/assembly-resources</directory>
             <outputDirectory>/</outputDirectory>
         </fileSet>                
     </fileSets>
