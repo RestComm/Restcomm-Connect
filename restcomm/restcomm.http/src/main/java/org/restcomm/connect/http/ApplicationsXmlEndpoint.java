@@ -21,25 +21,23 @@
 
 package org.restcomm.connect.http;
 
-import static javax.ws.rs.core.MediaType.APPLICATION_JSON_TYPE;
-import static javax.ws.rs.core.MediaType.APPLICATION_XML_TYPE;
-import static javax.ws.rs.core.Response.ok;
-
 import javax.ws.rs.DELETE;
 import javax.ws.rs.GET;
 import javax.ws.rs.POST;
 import javax.ws.rs.PUT;
 import javax.ws.rs.Path;
 import javax.ws.rs.PathParam;
+import javax.ws.rs.Produces;
 import javax.ws.rs.core.Context;
+import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.MultivaluedMap;
 import javax.ws.rs.core.Response;
+import static javax.ws.rs.core.Response.ok;
 import javax.ws.rs.core.UriInfo;
-
 import org.restcomm.connect.commons.annotations.concurrency.ThreadSafe;
+import org.restcomm.connect.commons.dao.Sid;
 import org.restcomm.connect.dao.entities.Account;
 import org.restcomm.connect.dao.entities.Application;
-import org.restcomm.connect.commons.dao.Sid;
 
 /**
  * @author guilherme.jansen@telestax.com
@@ -63,59 +61,38 @@ public class ApplicationsXmlEndpoint extends ApplicationsEndpoint {
     }
 
     @GET
+    @Produces({MediaType.APPLICATION_XML, MediaType.APPLICATION_JSON})
     public Response getApplications(@PathParam("accountSid") final String accountSid, @Context UriInfo uriInfo) {
-        return getApplications(accountSid, APPLICATION_XML_TYPE, uriInfo );
+        return getApplications(accountSid, retrieveMediaType(), uriInfo );
     }
 
     @Path("/{sid}")
     @GET
+    @Produces({MediaType.APPLICATION_XML, MediaType.APPLICATION_JSON})
     public Response getApplicationAsXml(@PathParam("accountSid") final String accountSid, @PathParam("sid") final String sid) {
-        return getApplication(accountSid, sid, APPLICATION_XML_TYPE);
-    }
-
-    @Path("/{sid}.json")
-    @GET
-    public Response getApplicationAsJson(@PathParam("accountSid") final String accountSid, @PathParam("sid") final String sid) {
-        return getApplication(accountSid, sid, APPLICATION_JSON_TYPE);
+        return getApplication(accountSid, sid, retrieveMediaType());
     }
 
     @POST
+    @Produces({MediaType.APPLICATION_XML, MediaType.APPLICATION_JSON})
     public Response putApplication(@PathParam("accountSid") String accountSid, final MultivaluedMap<String, String> data) {
-        return putApplication(accountSid, data, APPLICATION_XML_TYPE);
-    }
-
-    @Path("/{sid}.json")
-    @POST
-    public Response updateApplicationAsJsonPost(@PathParam("accountSid") final String accountSid,
-            @PathParam("sid") final String sid, final MultivaluedMap<String, String> data) {
-        return updateApplication(accountSid, sid, data, APPLICATION_JSON_TYPE);
+        return putApplication(accountSid, data, retrieveMediaType());
     }
 
     @Path("/{sid}")
     @POST
+    @Produces({MediaType.APPLICATION_XML, MediaType.APPLICATION_JSON})
     public Response updateApplicationAsXmlPost(@PathParam("accountSid") final String accountSid,
             @PathParam("sid") final String sid, final MultivaluedMap<String, String> data) {
-        return updateApplication(accountSid, sid, data, APPLICATION_XML_TYPE);
-    }
-
-    @Path("/{sid}.json")
-    @PUT
-    public Response updateApplicationAsJsonPut(@PathParam("accountSid") final String accountSid,
-            @PathParam("sid") final String sid, final MultivaluedMap<String, String> data) {
-        return updateApplication(accountSid, sid, data, APPLICATION_JSON_TYPE);
+        return updateApplication(accountSid, sid, data, retrieveMediaType());
     }
 
     @Path("/{sid}")
     @PUT
+    @Produces({MediaType.APPLICATION_XML, MediaType.APPLICATION_JSON})
     public Response updateApplicationAsXmlPut(@PathParam("accountSid") final String accountSid,
             @PathParam("sid") final String sid, final MultivaluedMap<String, String> data) {
-        return updateApplication(accountSid, sid, data, APPLICATION_XML_TYPE);
-    }
-
-    @Path("/{sid}.json")
-    @DELETE
-    public Response deleteApplicationAsJson(@PathParam("accountSid") final String accountSid, @PathParam("sid") final String sid) {
-        return deleteApplication(accountSid, sid);
+        return updateApplication(accountSid, sid, data, retrieveMediaType());
     }
 
     @Path("/{sid}")

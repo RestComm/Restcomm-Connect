@@ -367,6 +367,7 @@ public class SmsEndpointTest {
         //webInfResources.put("restcomm.script_SmsTest", "data/hsql/restcomm.script");
         webInfResources.put("akka_application.conf", "classes/application.conf");
         webInfResources.put("sip.xml", "sip.xml");
+        webInfResources.put("web.xml", "web.xml");
 
         Map<String, String> replacements = new HashMap();
         //replace mediaport 2727

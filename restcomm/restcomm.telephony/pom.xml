@@ -164,14 +164,15 @@
             <artifactId>restcomm-connect.extension.controller</artifactId>
             <version>${project.version}</version>
         </dependency>
-		<dependency>
-			<groupId>org.restcomm</groupId>
-			<artifactId>restcomm-connect.extension.controller</artifactId>
-			<version>${project.version}</version>
-		</dependency>
+
         <dependency>
             <groupId>org.restcomm</groupId>
             <artifactId>restcomm-connect.http</artifactId>
+            <version>${project.version}</version>
+        </dependency>
+        <dependency>
+            <groupId>org.restcomm</groupId>
+            <artifactId>restcomm-connect.core</artifactId>
             <version>${project.version}</version>
         </dependency>
     

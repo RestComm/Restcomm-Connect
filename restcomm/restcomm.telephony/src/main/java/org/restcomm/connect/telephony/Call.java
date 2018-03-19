@@ -70,6 +70,7 @@ import org.restcomm.connect.commons.fsm.Action;
 import org.restcomm.connect.commons.fsm.FiniteStateMachine;
 import org.restcomm.connect.commons.fsm.State;
 import org.restcomm.connect.commons.fsm.Transition;
+import org.restcomm.connect.commons.fsm.TransitionEndListener;
 import org.restcomm.connect.commons.fsm.TransitionFailedException;
 import org.restcomm.connect.commons.fsm.TransitionNotFoundException;
 import org.restcomm.connect.commons.fsm.TransitionRollbackException;
@@ -111,6 +112,7 @@ import org.restcomm.connect.telephony.api.BridgeStateChanged;
 import org.restcomm.connect.telephony.api.CallFail;
 import org.restcomm.connect.telephony.api.CallHoldStateChange;
 import org.restcomm.connect.telephony.api.CallInfo;
+import org.restcomm.connect.telephony.api.CallInfoStreamEvent;
 import org.restcomm.connect.telephony.api.CallResponse;
 import org.restcomm.connect.telephony.api.CallStateChanged;
 import org.restcomm.connect.telephony.api.Cancel;
@@ -147,7 +149,7 @@ import scala.concurrent.duration.Duration;
  *
  */
 @Immutable
-public final class Call extends RestcommUntypedActor {
+public final class Call extends RestcommUntypedActor implements TransitionEndListener {
 
     // Logging
     private final LoggingAdapter logger = Logging.getLogger(getContext().system(), this);
@@ -291,17 +293,18 @@ public final class Call extends RestcommUntypedActor {
         }
     };
 
-    public Call(final SipFactory factory, final MediaServerControllerFactory mediaSessionControllerFactory, final Configuration configuration,
+    public Call(final Sid accountSid, final SipFactory factory, final MediaServerControllerFactory mediaSessionControllerFactory, final Configuration configuration,
     final URI statusCallback, final String statusCallbackMethod, final List<String> statusCallbackEvent) {
-        this(factory, mediaSessionControllerFactory, configuration, statusCallback, statusCallbackMethod,
+        this(accountSid, factory, mediaSessionControllerFactory, configuration, statusCallback, statusCallbackMethod,
                 statusCallbackEvent, null);
     }
 
-    public Call(final SipFactory factory, final MediaServerControllerFactory mediaSessionControllerFactory, final Configuration configuration,
+    public Call(final Sid accountSid, final SipFactory factory, final MediaServerControllerFactory mediaSessionControllerFactory, final Configuration configuration,
                 final URI statusCallback, final String statusCallbackMethod, final List<String> statusCallbackEvent, Map<String, ArrayList<String>> headers)
     {
         super();
         final ActorRef source = self();
+        this.accountId = accountSid;
         this.statusCallback = statusCallback;
         this.statusCallbackMethod = statusCallbackMethod;
         this.statusCallbackEvent = statusCallbackEvent;
@@ -407,6 +410,7 @@ public final class Call extends RestcommUntypedActor {
 
         // FSM
         this.fsm = new FiniteStateMachine(this.uninitialized, transitions);
+        this.fsm.addTransitionEndListener(this);
 
         // SIP runtime stuff.
         this.factory = factory;
@@ -466,7 +470,7 @@ public final class Call extends RestcommUntypedActor {
         return !isInbound();
     }
 
-    private CallResponse<CallInfo> info() {
+    private CallInfo info() {
         try {
             final String from;
             if(actAsImsUa) {
@@ -481,8 +485,7 @@ public final class Call extends RestcommUntypedActor {
             } else {
                 to = ((TelURL) this.to).getPhoneNumber();
             }
-            final CallInfo info = new CallInfo(id, accountId, external, type, direction, created, forwardedFrom, name, from, to, invite, lastResponse, webrtc, muted, isFromApi, callUpdatedTime, mediaAttributes);
-            return new CallResponse<CallInfo>(info);
+            return new CallInfo(id, accountId, external, type, direction, created, forwardedFrom, name, from, to, invite, lastResponse, webrtc, muted, isFromApi, callUpdatedTime, mediaAttributes);
         } catch (Exception e) {
             if (logger.isInfoEnabled()) {
                 logger.info("Problem during preparing call info, exception {}",e);
@@ -750,6 +753,16 @@ public final class Call extends RestcommUntypedActor {
         }
     }
 
+    @Override
+    public void onTransitionEnd(State was, State is, Object event) {
+        CallInfo callInfo = info();
+        if (callInfo != null) {
+            getContext().system()
+                    .eventStream()
+                    .publish(new CallInfoStreamEvent(callInfo));
+        }
+    }
+
     private void onStopWaiting(StopWaiting message, ActorRef sender) throws Exception {
         if(is(waitingForAnswer)) {
             sendInviteOk();
@@ -800,7 +813,7 @@ public final class Call extends RestcommUntypedActor {
     // received
     private void sendCallInfoToObservers() {
         for (final ActorRef observer : this.observers) {
-            observer.tell(info(), self());
+            observer.tell(new CallResponse(info()), self());
         }
     }
 
@@ -1055,7 +1068,12 @@ public final class Call extends RestcommUntypedActor {
         private void addHeadersToMessage(SipServletRequest message, Map<String, String> headers, String keyPrepend) {
             try {
                 for (Map.Entry<String, String> entry : headers.entrySet()) {
-                    String headerName = keyPrepend + entry.getKey();
+                    String headerName = null;
+                    if (entry.getKey().startsWith("X-")) {
+                        headerName = entry.getKey();
+                    } else {
+                        headerName = keyPrepend + entry.getKey();
+                    }
                     message.addHeader(headerName , entry.getValue());
                 }
             } catch (IllegalArgumentException iae) {
@@ -1902,7 +1920,7 @@ public final class Call extends RestcommUntypedActor {
     }
 
     private void onGetCallInfo(GetCallInfo message, ActorRef sender) throws Exception {
-        sender.tell(info(), self());
+        sender.tell(new CallResponse(info()), self());
     }
 
     private void onInitializeOutbound(InitializeOutbound message, ActorRef self, ActorRef sender) throws Exception {

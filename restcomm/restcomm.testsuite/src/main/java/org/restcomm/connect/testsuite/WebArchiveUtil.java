@@ -12,7 +12,7 @@ import org.apache.commons.io.FileUtils;
 import org.apache.commons.io.IOUtils;
 import org.jboss.shrinkwrap.api.ShrinkWrap;
 import org.jboss.shrinkwrap.api.spec.WebArchive;
-import org.jboss.shrinkwrap.resolver.api.maven.archive.ShrinkWrapMaven;
+import org.jboss.shrinkwrap.resolver.api.maven.Maven;
 import org.restcomm.connect.commons.Version;
 
 public class WebArchiveUtil {
@@ -49,6 +49,7 @@ public class WebArchiveUtil {
         webInfResources.put(dbScript, "data/hsql/restcomm.script");
         webInfResources.put("akka_application.conf", "classes/application.conf");
         webInfResources.put("sip.xml", "/sip.xml");
+        webInfResources.put("web.xml", "web.xml");
         return createWebArchiveNoGw(webInfResources, resources, replacements);
     }
 
@@ -59,7 +60,7 @@ public class WebArchiveUtil {
     ) {
 
         WebArchive archive = ShrinkWrap.create(WebArchive.class, "restcomm.war");
-        final WebArchive restcommArchive = ShrinkWrapMaven.resolver()
+        final WebArchive restcommArchive = Maven.resolver()
                 .resolve(mavenApp).withoutTransitivity()
                 .asSingle(WebArchive.class);
         archive = archive.merge(restcommArchive);
