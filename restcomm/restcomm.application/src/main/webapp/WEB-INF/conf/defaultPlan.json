@@ -1,0 +1,16 @@
+{
+    "featureEnablement": {
+        "DIDPurchase": {},
+        "subaccountsCreation": {},
+        "outboundPSTN": {},
+        "inboundPSTN": {},
+        "outboundSMS": {},
+        "inboundSMS": {},
+        "asr": {},
+        "USSD": {
+        	"provider": "default"
+        },
+        "inboundUSSD": {},
+        "outboundUSSD": {}
+    }
+}

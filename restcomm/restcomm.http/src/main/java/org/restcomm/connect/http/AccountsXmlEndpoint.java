@@ -19,19 +19,24 @@
  */
 package org.restcomm.connect.http;
 
-import org.restcomm.connect.commons.annotations.concurrency.ThreadSafe;
-
 import javax.ws.rs.Consumes;
 import javax.ws.rs.GET;
 import javax.ws.rs.POST;
 import javax.ws.rs.PUT;
 import javax.ws.rs.Path;
 import javax.ws.rs.PathParam;
+import javax.ws.rs.core.Context;
 import javax.ws.rs.core.MultivaluedMap;
 import javax.ws.rs.core.Response;
+import javax.ws.rs.core.UriInfo;
 
 import static javax.ws.rs.core.MediaType.APPLICATION_FORM_URLENCODED;
-import static javax.ws.rs.core.MediaType.APPLICATION_XML_TYPE;
+import static org.restcomm.connect.http.security.AccountPrincipal.SUPER_ADMIN_ROLE;
+
+import javax.annotation.security.RolesAllowed;
+import javax.ws.rs.Produces;
+import javax.ws.rs.core.MediaType;
+import org.restcomm.connect.commons.annotations.concurrency.ThreadSafe;
 
 /**
  * @author quintana.thomas@gmail.com (Thomas Quintana)
@@ -53,36 +58,51 @@ public final class AccountsXmlEndpoint extends AccountsEndpoint {
 
     @Path("/{accountSid}")
     @GET
-    public Response getAccountAsXml(@PathParam("accountSid") final String accountSid) {
-        return getAccount(accountSid, APPLICATION_XML_TYPE);
+    @Produces({MediaType.APPLICATION_XML, MediaType.APPLICATION_JSON})
+    public Response getAccountAsXml(@PathParam("accountSid") final String accountSid,
+            @Context UriInfo info) {
+        return getAccount(accountSid, retrieveMediaType(), info);
     }
 
     @GET
-    public Response getAccounts() {
-        return getAccounts(APPLICATION_XML_TYPE);
+    @Produces({MediaType.APPLICATION_XML, MediaType.APPLICATION_JSON})
+    public Response getAccounts(@Context UriInfo info) {
+        return getAccounts(info, retrieveMediaType());
     }
 
     @Consumes(APPLICATION_FORM_URLENCODED)
     @POST
+    @Produces({MediaType.APPLICATION_XML, MediaType.APPLICATION_JSON})
     public Response putAccount(final MultivaluedMap<String, String> data) {
-        return putAccount(data, APPLICATION_XML_TYPE);
+        return putAccount(data, retrieveMediaType());
     }
 
     //The {accountSid} could be the email address of the account we need to update. Later we check if this is SID or EMAIL
     @Path("/{accountSid}")
     @Consumes(APPLICATION_FORM_URLENCODED)
     @POST
+    @Produces({MediaType.APPLICATION_XML, MediaType.APPLICATION_JSON})
     public Response updateAccountAsXmlPost(@PathParam("accountSid") final String accountSid,
             final MultivaluedMap<String, String> data) {
-        return updateAccount(accountSid, data, APPLICATION_XML_TYPE);
+        return updateAccount(accountSid, data, retrieveMediaType());
     }
 
     //The {accountSid} could be the email address of the account we need to update. Later we check if this is SID or EMAIL
     @Path("/{accountSid}")
     @Consumes(APPLICATION_FORM_URLENCODED)
     @PUT
+    @Produces({MediaType.APPLICATION_XML, MediaType.APPLICATION_JSON})
     public Response updateAccountAsXmlPut(@PathParam("accountSid") final String accountSid,
             final MultivaluedMap<String, String> data) {
-        return updateAccount(accountSid, data, APPLICATION_XML_TYPE);
+        return updateAccount(accountSid, data, retrieveMediaType());
+    }
+
+    @Path("/migrate/{accountSid}")
+    @Consumes(APPLICATION_FORM_URLENCODED)
+    @POST
+    @RolesAllowed(SUPER_ADMIN_ROLE)
+    @Produces({MediaType.APPLICATION_XML, MediaType.APPLICATION_JSON})
+    public Response migrateAccount(@PathParam("accountSid") final String accountSid, final MultivaluedMap<String, String> data) {
+        return migrateAccountOrganization(accountSid, data, retrieveMediaType());
     }
 }

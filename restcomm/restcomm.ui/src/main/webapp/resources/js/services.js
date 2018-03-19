@@ -39,7 +39,7 @@ rcServices.factory('SessionService', function() {
   }
 });
 
-rcServices.factory('AuthService',function(RCommAccounts,$http, $location, SessionService, md5, Notifications, $q, IdentityConfig, KeycloakAuth){
+rcServices.factory('AuthService',function(RCommAccounts,$http, $location, SessionService, md5, Notifications, $q){
     var account = null;
     var uninitialized = null;
 
@@ -71,8 +71,7 @@ rcServices.factory('AuthService',function(RCommAccounts,$http, $location, Sessio
     //
     //  - rejected:
     //      MISSING_ACCOUNT_SID,
-    //      KEYCLCOAK_NO_LINKED_ACCOUNT
-    //      KEYCLOAK_INSTANCE_NOT_REGISTERED
+
     //      RESTCOMM_ACCOUNT_NOT_INITIALIZED - applies to Restcomm auth mode
     //      RESTCOMM_AUTH_FAILED - could not authenticate to Restcomm
     //      RESTCOMM_NOT_AUTHENTICATED - the user is not authenticated and there are no cached credentials. Applies to restcomm auth mode
@@ -80,61 +79,27 @@ rcServices.factory('AuthService',function(RCommAccounts,$http, $location, Sessio
     //
     //  - resolved: returns a valid Restcomm account for the logged user
     function checkAccess() {
-        //var role; // undefined - it should be provided as a function parameter
-        if (IdentityConfig.securedByKeycloak()) {
-            if (!KeycloakAuth.loggedIn) {
-                throw "KEYCLOAK_NOT_LOGGED_IN"; // this normally won't be thrown as keycloak adapter is supposed to detect it and redirect automatically
-            }
-            var username = getUsername();  // since we're logged in, there MUST be a username available
-            var promisedAccount = $q.defer();
-            if (!account) {
-                $http({method:'GET', url:'restcomm/2012-04-24/Accounts.json/' + encodeURIComponent(username), headers: {Authorization: 'Bearer ' + KeycloakAuth.authz.token}})
-                .success(function (data,status) {
-                    // TODO we need to handle UNINITIALIZED accounts
-                    promisedAccount.resolve(data);
-                })
-                .error(function (data,status) {
-                    promisedAccount.reject('KEYCLCOAK_NO_LINKED_ACCOUNT'); // TODO is this the proper error code ? Maybe we should judge by the HTTP status code.
-                });
-            } else {
-                promisedAccount.resolve(account);
-            }
-
-            // when the account becomes available, make sure the username/email_address match
-            return promisedAccount.promise.then(function (fetchedAccount) {
-                if (username.toLowerCase() == fetchedAccount.email_address.toLowerCase()) {
-                    setActiveAccount(fetchedAccount);
-                }
-            });
-            // if chained promisedAccount is rejected the returned promise is rejected too since to error callback was defined
-
-        } else
-        if (IdentityConfig.securedByRestcomm()) {
-            if (!!getAccountSid()) { // get account sid from js application (not from session storage) - if F5 is pressed this is lost
-                if (!isUninitialized())
-                    return;
-                 else
-                    throw 'RESTCOMM_ACCOUNT_NOT_INITIALIZED';
-            } else {
-                // maybe we have stored the credentials in the session storage
-                var creds = SessionService.getStoredCredentials();
-                if (creds) {
-                    return login(creds.sid, creds.token, true).then(function (status) {
-                        if (status == 'OK')
-                            return account;
-                        else if (status == 'UNINITIALIZED')
-                            throw 'RESTCOMM_ACCOUNT_NOT_INITIALIZED';
-                        else
-                            throw 'UNKNOWN_ERROR';
-                    }, function (status) {
-                        throw 'RESTCOMM_AUTH_FAILED';
-                    });
-                } else
-                    throw 'RESTCOMM_NOT_AUTHENTICATED';
-            }
+        if (!!getAccountSid()) { // get account sid from js application (not from session storage) - if F5 is pressed this is lost
+            if (!isUninitialized())
+                return;
+             else
+                throw 'RESTCOMM_ACCOUNT_NOT_INITIALIZED';
         } else {
-            // looks like the instance is not yet registered to keycloak although Restcomm is configured to use it
-            throw "KEYCLOAK_INSTANCE_NOT_REGISTERED";
+            // maybe we have stored the credentials in the session storage
+            var creds = SessionService.getStoredCredentials();
+            if (creds) {
+                return login(creds.sid, creds.token, true).then(function (status) {
+                    if (status == 'OK')
+                        return account;
+                    else if (status == 'UNINITIALIZED')
+                        throw 'RESTCOMM_ACCOUNT_NOT_INITIALIZED';
+                    else
+                        throw 'UNKNOWN_ERROR';
+                }, function (status) {
+                    throw 'RESTCOMM_AUTH_FAILED';
+                });
+            } else
+                throw 'RESTCOMM_NOT_AUTHENTICATED';
         }
         return deferred.promise;
     }
@@ -169,22 +134,22 @@ rcServices.factory('AuthService',function(RCommAccounts,$http, $location, Sessio
         method:"GET",
         url:"/restcomm/2012-04-24/Accounts.json/" + encodeURIComponent(username),
         headers:{Authorization: auth_header}
-      }).success(function(data, status, headers, config) {
-          if (status == 200) {
+      }).then(function(response) {
+          if (response.status === 200) {
             //if(data.date_created && data.date_created == data.date_updated) {
-            if(data.status) {
-              if(data.status == 'uninitialized') {
-                setActiveAccount(data);
+            if(response.data.status) {
+              if(response.data.status === 'uninitialized') {
+                setActiveAccount(response.data);
                 deferred.resolve("UNINITIALIZED");
                 return;
               }
-              else if(data.status == 'suspended') {
+              else if(response.data.status === 'suspended') {
                 clearActiveAccount();
                 deferred.reject('SUSPENDED');
                 return;
               }
-              else if (data.status == 'active') {
-                setActiveAccount(data);
+              else if (response.data.status === 'active') {
+                setActiveAccount(response.data);
                 deferred.resolve('OK');
                 return;
               }
@@ -194,8 +159,8 @@ rcServices.factory('AuthService',function(RCommAccounts,$http, $location, Sessio
           clearActiveAccount();
           deferred.reject('UNKNOWN_ERROR');
           return;
-        }).
-        error(function(data) {
+        },
+        function(response) {
           clearActiveAccount();
           deferred.reject('AUTH_ERROR');
           return;
@@ -205,11 +170,7 @@ rcServices.factory('AuthService',function(RCommAccounts,$http, $location, Sessio
 
     function logout() {
         clearActiveAccount();
-        if (IdentityConfig.securedByKeycloak())
-            keycloakLogout(); // keycloak logout - defined in restcomm.js
-        else {
-            $http.get('/restcomm/2012-04-24/Logout'); // TODO should we wait for a response before moving to login view ?
-        }
+        $http.get('/restcomm/2012-04-24/Logout'); // TODO should we wait for a response before moving to login view ?
     }
 
     // Returns a promise
@@ -228,38 +189,28 @@ rcServices.factory('AuthService',function(RCommAccounts,$http, $location, Sessio
         headers: {
             Authorization: auth_header,
             'Content-Type': 'application/x-www-form-urlencoded'
-        }}).
-        success(function(account) {
-          setActiveAccount(account);
-          deferred.resolve();
-        }).
-        error(function(data) {
-          clearActiveAccount();
-          deferred.reject('PASSWORD_UPDATE_FAILED');
-        });
+        }}).then(
+          function(response) {
+            setActiveAccount(response.data);
+            deferred.resolve();
+          },
+          function(response) {
+            clearActiveAccount();
+            deferred.reject('PASSWORD_UPDATE_FAILED');
+          });
         return deferred.promise;
     }
 
 
-    // applies to Restcomm authorization (not keycloak)
     function onAuthError() {
-        if (IdentityConfig.securedByRestcomm()) {
-            SessionService.unset('sid');
-            account = null;
-            //$state.go("public.login");
-            $location.path('/login').search('returnTo', $location.path());
-        }
+        SessionService.unset('sid');
+        account = null;
+        //$state.go("public.login");
+        $location.path('/login').search('returnTo', $location.path());
     }
 
     function onError403() {
         Notifications.error("Unauthorized access.");
-    }
-
-    // Returns the username (email address) for the logged  user. It's only available when keycloak is used for authorization.
-    function getUsername() {
-        if (IdentityConfig.securedByKeycloak() && KeycloakAuth.loggedIn)
-            return KeycloakAuth.authz.tokenParsed.preferred_username;
-        return null;
     }
 
     // public interface
@@ -276,56 +227,6 @@ rcServices.factory('AuthService',function(RCommAccounts,$http, $location, Sessio
         updatePassword: updatePassword
     }
 });
-
-// IdentityConfig service constructor. See restcomm.js. This service is created early before the rcMod angular module is initialized and is accessible as a 'constant' service.
-function IdentityConfig(server, instance,$q) {
-    var This = this;
-    this.server = server;
-    this.instance = instance;
-
-    // is an identity server configured in Restcomm ?
-    function identityServerConfigured () {
-        return !!This.server && (!!This.server.authServerUrl);
-    }
-    // True is Restcomm is configured to use an authorization server and an identity instance is already in place
-    function securedByKeycloak () {
-        return identityServerConfigured() && (!!This.instance) && (!!This.instance.name);
-    }
-    // True if Restcomm is used for authorization (legacy mode). No keycloak needs to be present.
-    function securedByRestcomm() {
-        return !identityServerConfigured();
-    }
-    // returns identity instance if applicable (as a promise) or null if not (as null, not promise)
-    // Returns:
-    //  resolved:
-    //      - identity instance object
-    //  rejected:
-    //      - KEYCLOAK_INSTANCE_NOT_REGISTERED
-    //  not-applicable - Restcomm does not use keycloak for external authorization
-    //      - null
-    function getIdentity() {
-        if (!identityServerConfigured())
-            return null;
-        var deferred = $q.defer();
-        if (!!This.instance && !!This.instance.name)
-            deferred.resolve(This.instance);
-        else
-            deferred.reject("KEYCLOAK_INSTANCE_NOT_REGISTERED");
-        return deferred.promise;
-    }
-
-    // Public interface
-
-    this.identityServerConfigured = identityServerConfigured;
-    this.securedByKeycloak = securedByKeycloak;
-    this.securedByRestcomm = securedByRestcomm;
-    this.getIdentity = getIdentity;
-}
-
-// KeycloakAuth service is manually initialized in restcomm.js
-//angular.module('rcApp').factory('KeycloakAuth', function() {
-//  return keycloakAuth;
-//});
 
 rcServices.factory('Notifications', function($rootScope, $timeout, $log) {
   // time (in ms) the notifications are shown
@@ -443,7 +344,7 @@ uiModalDialog.factory('$dialog', ['$rootScope', '$uibModal', function ($rootScop
  * Easily make use of Angular UI Modal as Dialogs.
  */
 uiModalDialog.run(["$templateCache", function (e) {
-  e.put("template/dialog/message.html", '<div class="modal-header">   <h3 class="no-margins">{{ title }}</h3></div><div class="modal-body">  <p>{{ message }}</p></div><div class="modal-footer">    <button ng-repeat="btn in buttons" ng-click="close(btn.result)" class=btn ng-class="btn.cssClass">{{ btn.label }}</button></div>')
+  e.put("template/dialog/message.html", '<div class="modal-header">   <h3 class="no-margins">{{ title }}</h3></div><div class="modal-body">  <p>{{ message }}</p></div><div class="modal-footer">    <button ng-repeat="btn in buttons" ng-attr-id="{{ btn.id ? btn.id : \'mod-btn-\' + $index }}" ng-click="close(btn.result)" class=btn ng-class="btn.cssClass">{{ btn.label }}</button></div>')
 }]);
 
 
@@ -670,9 +571,74 @@ rcServices.factory('RCommLogsTranscriptions', function($resource) {
   );
 });
 
-rcServices.factory('RCommApps', function($resource) {
-	  return $resource('/restcomm-rvd/services/projects');
+rcServices.factory('RCommApplications', function($resource) {
+    return $resource('/restcomm/2012-04-24/Accounts/:accountSid/Applications/:applicationSid.json', {
+        accountSid: '@accountSid',
+        applicationSid: '@applicationSid'
+    },{
+        save: {
+            method: "POST",
+            headers : {
+              'Content-Type': 'application/x-www-form-urlencoded'
+            }
+        }
+    }
+    /*,
+    {
+        get: {
+            url: '/restcomm/2012-04-24/Accounts/:accountSid/Applications/:applicationSid.json',
+            applicationSid: '@applicationSid'
+        }
+    }*/);
 });
+
+rcServices.factory('RvdProjects', function($resource) {
+    return $resource('/restcomm-rvd/services/projects/:applicationSid', {
+            applicationSid: '@applicationSid'
+        }, {
+            create: {method: 'PUT'}
+        }
+    ); // TODO use 'rvdUrl' value from PublicConfig service here to determine 'restcomm-rvd' prefix
+});
+
+rcServices.factory('RvdProjectTemplates', function($resource) {
+  return $resource('/restcomm-rvd/api/templates/:templateId', {}, {
+    query: {
+      method: 'GET',
+      isArray: false
+    }
+  });
+});
+
+rcServices.factory('RvdProjectImporter', function($q, Upload) {
+    return {
+        // imports a single rvd project from the .zip package using a 'file' structure generated by ng-file-drop
+        import: function(file, nameOverride) {
+            var deferred = $q.defer();
+            Upload.upload({
+                url: '/restcomm-rvd/services/projects' + (nameOverride ? ("?name="+nameOverride) : ""),
+                data: {file: file}
+            }).progress(function(evt) {
+                //console.log('percent: ' + parseInt(100.0 * evt.loaded / evt.total));
+            }).success(function(data, status, headers, config) {
+                deferred.resolve(data[0]);
+            }).error(function(data, status, headers, config) {
+                if (status == 400 && data && data.exception && data.exception.className == "UnsupportedProjectVersion") {
+                    console.log(data.exception.message);
+                    deferred.reject("Cannot import application. " + data.exception.message);
+                } else {
+                    console.log(data);
+                    deferred.reject("Error importing application");
+                }
+            });
+
+            return deferred.promise;
+        }
+    }
+});
+
+http://this:8080/restcomm-rvd/services/projects/AP1f854cbe88ef400183c8a5eec3bd1d69
+
 
 rcServices.factory('RCVersion', function($resource) {
    return $resource('/restcomm/2012-04-24/Accounts/:accountSid/Version.:format', {
@@ -736,22 +702,6 @@ rcServices.factory('RCommJMX', function($resource) {
   );
 });
 
-rcServices.factory('RCommIdentityInstances', function ($resource,$http) {
-    var instance = {};
-    instance.resource = $resource('/restcomm/2012-04-24/Identity/Instances');
-    instance.register = function (data, authorizationHeader) {
-        var headers =  {'Content-Type': 'application/x-www-form-urlencoded'};
-        if (authorizationHeader)
-            headers.Authorization = authorizationHeader;
-        return $http({
-            method:'POST',
-            url:'/restcomm/2012-04-24/Identity/Instances',
-            headers: headers,
-            data:$.param(data)
-        });
-    }
-    return instance;
-});
 
 /**
 * Young service to host all functionality regarding applications and projects. Gradually, functionality
@@ -788,12 +738,65 @@ rcServices.factory('PublicConfig', function ($http) {
     return config;
 });
 
-/*
- * RAS Services
- */
-// RAS related configuration options. At some point this this should be returned from the server
-// rasApiKey: the Public key
-// rasToken: the Token
-rcServices.value("rappManagerConfig", {rasHost: "apps.restcomm.com", rasApiKey:"dae21e48184703e41ec0e42929800ed3", rasToken:"c7ba2a69395eb7b05a291f58bb75402f"});
+rcServices.factory('FileRetriever', function (Blob, FileSaver, $http) {
+    // Returns a promise.
+    // resolved: nothing is returned - the file has been saved normally
+    // rejected: ERROR_RETRIEVING_FILE - either an HTTP, or empty file returned
+    function download(downloadUrl, filename, contentType) {
+        contentType = contentType || 'application/zip'; // contentType defaults to application/zip
+        // returns a promise
+	    return $http({
+	        method: 'GET',
+	        url: downloadUrl,
+            headers: { accept: contentType },
+	        responseType: 'arraybuffer',
+            cache: false,
+            transformResponse: function(data, headers) {
+                var zip = null;
+                if (data) {
+                    zip = new Blob([data], {
+                        type: contentType
+                    });
+                }
+                var result = {blob: zip};
+                return result;
+            }
+	    }).then(function (response) {
+            if (response.data.blob) {
+                FileSaver.saveAs(response.data.blob, filename);
+                return;
+            } else
+                throw 'ERROR_RETRIEVING_FILE';
+	    }, function () {
+	        throw 'ERROR_RETRIEVING_FILE';
+	    });
+	}
 
+	return {
+	    download: download
+	}
+});
 
+// Temporarily stores current url (part that follows #) so that user can later be navigated back to it after login. It is used when a user gets an authentication error while accessing some part of the UI.
+rcServices.factory('urlStateTracker', function () {
+    var oldUrl;
+    var urlStateTracker = {};
+
+    // stores the current url (which it takes from angular $location service. Note. $location is NOT INJECTED below)
+    urlStateTracker.remember = function ($location) {
+        //console.log("remembering state " + $location.url() );
+        oldUrl = $location.url();
+    }
+
+    urlStateTracker.recall = function () {
+        if (!!oldUrl) {
+            var ret = oldUrl;
+            oldUrl = "";
+            return ret;
+        }
+        else
+            return "";
+    }
+
+    return urlStateTracker;
+});

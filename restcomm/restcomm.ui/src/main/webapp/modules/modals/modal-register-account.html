@@ -17,8 +17,8 @@
                 <input id="new-account-email" class="form-control" ng-model="newAccount.email" type="email" placeholder="labs@restcomm.org" autofocus required />
             </dd>
             <dt>Password</dt>
-            <dd style="position:relative">
-                <div ng-show="newAccount.password" class="password-strength" ng-password-strength="newAccount.password" strength="pwdStrength" css-mode="bootstrap" inner-class="progress-bar" inner-class-prefix="progress-bar-" style="padding: inherit;">
+            <dd class="password-in-modal">
+                <div ng-show="newAccount.password" class="password-strength" ng-password-strength="newAccount.password" strength="pwdStrength" css-mode="bootstrap" inner-class="progress-bar" inner-class-prefix="progress-bar-">
                     <uib-progressbar value="pwdStrength"></uib-progressbar>
                 </div>
                 <input id="new-account-password" class="form-control" ng-class="{'password-transparent' : newAccount.password}" name="new-account-password" ng-model="newAccount.password" equals="{{newAccount.passwordConfirmation}}" type="password" placeholder="mySafeP@ssw0rD!" required />
@@ -30,20 +30,20 @@
             </dd>
             <dt>Role</dt>
             <dd>
-                <select ng-model='newAccount.role' class="form-control">
-                    <option value="Administrator" ng-hide="currentAccount.role!='Administrator'">Administrator</option>
+                <select id="new-account-role" ng-model="newAccount.role" class="form-control">
+                    <option value="Administrator" ng-hide="loggedAccount.role !== 'Administrator'">Administrator</option>
                     <option value="Developer">Developer</option>
                 </select>
             </dd>
             <dt>Status</dt>
             <dd>
-                <select class="form-control" ng-init="newAccount.status = statuses[1]" ng-model="newAccount.status" ng-options="status for status in statuses">
+                <select id="new-account-status" class="form-control" ng-init="newAccount.status = statuses[1]" ng-model="newAccount.status" ng-options="status for status in statuses">
                 </select>
             </dd>
         </dl>
     </form>
 </div>
 <div class="modal-footer">
-    <button class="btn btn-default" ng-click="cancel()">Cancel</button>
-    <button class="btn btn-primary" ng-disabled="pwdStrength < 50 || newAccountForm.$invalid" ng-click="createAccount(newAccount)">Register</button>
+    <button id="register-sub-account-cancel" class="btn btn-default" ng-click="cancel()">Cancel</button>
+    <button id="register-sub-account-confirm" class="btn btn-primary" ng-disabled="pwdStrength < 50 || newAccountForm.$invalid" ng-click="createAccount(newAccount)">Register</button>
 </div>

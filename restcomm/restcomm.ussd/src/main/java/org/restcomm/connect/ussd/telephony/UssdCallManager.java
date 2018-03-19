@@ -19,34 +19,17 @@
  */
 package org.restcomm.connect.ussd.telephony;
 
-import akka.actor.ActorRef;
-import akka.actor.Props;
-import akka.actor.UntypedActor;
-import akka.actor.UntypedActorFactory;
-import akka.event.Logging;
-import akka.event.LoggingAdapter;
-import org.apache.commons.configuration.Configuration;
-import org.restcomm.connect.commons.configuration.RestcommConfiguration;
-import org.restcomm.connect.commons.configuration.sets.RcmlserverConfigurationSet;
-import org.restcomm.connect.commons.dao.Sid;
-import org.restcomm.connect.commons.faulttolerance.RestcommUntypedActor;
-import org.restcomm.connect.commons.util.UriUtils;
-import org.restcomm.connect.dao.AccountsDao;
-import org.restcomm.connect.dao.ApplicationsDao;
-import org.restcomm.connect.dao.DaoManager;
-import org.restcomm.connect.dao.IncomingPhoneNumbersDao;
-import org.restcomm.connect.dao.entities.Account;
-import org.restcomm.connect.dao.entities.Application;
-import org.restcomm.connect.dao.entities.IncomingPhoneNumber;
-import org.restcomm.connect.http.client.rcmlserver.resolver.RcmlserverResolver;
-import org.restcomm.connect.interpreter.StartInterpreter;
-import org.restcomm.connect.telephony.api.CallManagerResponse;
-import org.restcomm.connect.telephony.api.CreateCall;
-import org.restcomm.connect.telephony.api.ExecuteCallScript;
-import org.restcomm.connect.telephony.api.InitializeOutbound;
-import org.restcomm.connect.telephony.api.util.CallControlHelper;
-import org.restcomm.connect.ussd.interpreter.UssdInterpreter;
-import org.restcomm.connect.ussd.interpreter.UssdInterpreterParams;
+import static javax.servlet.sip.SipServlet.OUTBOUND_INTERFACES;
+import static javax.servlet.sip.SipServletResponse.SC_BAD_REQUEST;
+import static javax.servlet.sip.SipServletResponse.SC_FORBIDDEN;
+import static javax.servlet.sip.SipServletResponse.SC_NOT_FOUND;
+import static javax.servlet.sip.SipServletResponse.SC_OK;
+
+import java.io.IOException;
+import java.net.URI;
+import java.net.URISyntaxException;
+import java.util.List;
+import java.util.regex.Pattern;
 
 import javax.servlet.ServletContext;
 import javax.servlet.sip.ServletParseException;
@@ -55,12 +38,47 @@ import javax.servlet.sip.SipFactory;
 import javax.servlet.sip.SipServletRequest;
 import javax.servlet.sip.SipServletResponse;
 import javax.servlet.sip.SipURI;
-import java.io.IOException;
-import java.util.List;
-import java.util.regex.Pattern;
 
-import static javax.servlet.sip.SipServlet.OUTBOUND_INTERFACES;
-import static javax.servlet.sip.SipServletResponse.*;
+import org.apache.commons.configuration.Configuration;
+import org.joda.time.DateTime;
+import org.restcomm.connect.commons.configuration.RestcommConfiguration;
+import org.restcomm.connect.commons.configuration.sets.RcmlserverConfigurationSet;
+import org.restcomm.connect.commons.dao.Sid;
+import org.restcomm.connect.commons.faulttolerance.RestcommUntypedActor;
+import org.restcomm.connect.commons.util.UriUtils;
+import org.restcomm.connect.core.service.api.NumberSelectorService;
+import org.restcomm.connect.dao.AccountsDao;
+import org.restcomm.connect.dao.ApplicationsDao;
+import org.restcomm.connect.dao.DaoManager;
+import org.restcomm.connect.dao.NotificationsDao;
+import org.restcomm.connect.dao.common.OrganizationUtil;
+import org.restcomm.connect.dao.entities.Account;
+import org.restcomm.connect.dao.entities.Application;
+import org.restcomm.connect.dao.entities.IncomingPhoneNumber;
+import org.restcomm.connect.dao.entities.Notification;
+import org.restcomm.connect.extension.api.ExtensionResponse;
+import org.restcomm.connect.extension.api.ExtensionType;
+import org.restcomm.connect.extension.api.IExtensionFeatureAccessRequest;
+import org.restcomm.connect.extension.api.RestcommExtensionGeneric;
+import org.restcomm.connect.extension.controller.ExtensionController;
+import org.restcomm.connect.http.client.rcmlserver.resolver.RcmlserverResolver;
+import org.restcomm.connect.interpreter.SIPOrganizationUtil;
+import org.restcomm.connect.interpreter.StartInterpreter;
+import org.restcomm.connect.telephony.api.CallManagerResponse;
+import org.restcomm.connect.telephony.api.CreateCall;
+import org.restcomm.connect.telephony.api.ExecuteCallScript;
+import org.restcomm.connect.telephony.api.FeatureAccessRequest;
+import org.restcomm.connect.telephony.api.InitializeOutbound;
+import org.restcomm.connect.telephony.api.util.CallControlHelper;
+import org.restcomm.connect.ussd.interpreter.UssdInterpreter;
+import org.restcomm.connect.ussd.interpreter.UssdInterpreterParams;
+
+import akka.actor.ActorRef;
+import akka.actor.Props;
+import akka.actor.UntypedActor;
+import akka.actor.UntypedActorFactory;
+import akka.event.Logging;
+import akka.event.LoggingAdapter;
 
 /**
  * @author <a href="mailto:gvagenas@gmail.com">gvagenas</a>
@@ -71,26 +89,27 @@ public class UssdCallManager extends RestcommUntypedActor {
     static final int WARNING_NOTIFICATION = 1;
     static final Pattern PATTERN = Pattern.compile("[\\*#0-9]{1,12}");
 
+    static final int ACCOUNT_NOT_ACTIVE_FAILURE_RESPONSE_CODE = SC_FORBIDDEN;
+
     private final Configuration configuration;
     private final ServletContext context;
     private final SipFactory sipFactory;
     private final DaoManager storage;
-    private CreateCall createCallRequest;
     private final String ussdGatewayUri;
     private final String ussdGatewayUsername;
     private final String ussdGatewayPassword;
-
+    private final NumberSelectorService numberSelector;
+    private final LoggingAdapter logger = Logging.getLogger(getContext().system(), this);
+    //List of extensions for UssdCallManager
+    List<RestcommExtensionGeneric> extensions;
+    private CreateCall createCallRequest;
     // configurable switch whether to use the To field in a SIP header to determine the callee address
     // alternatively the Request URI can be used
     private boolean useTo;
 
-    private final LoggingAdapter logger = Logging.getLogger(getContext().system(), this);
-
     /**
      * @param configuration
      * @param context
-     * @param conferences
-     * @param sms
      * @param factory
      * @param storage
      */
@@ -105,6 +124,9 @@ public class UssdCallManager extends RestcommUntypedActor {
         this.ussdGatewayUri = ussdGatewayConfig.getString("ussd-gateway-uri");
         this.ussdGatewayUsername = ussdGatewayConfig.getString("ussd-gateway-user");
         this.ussdGatewayPassword = ussdGatewayConfig.getString("ussd-gateway-password");
+        numberSelector = (NumberSelectorService)context.getAttribute(NumberSelectorService.class.getName());
+
+        extensions = ExtensionController.getInstance().getExtensions(ExtensionType.FeatureAccessControl);
     }
 
     private ActorRef ussdCall() {
@@ -167,7 +189,6 @@ public class UssdCallManager extends RestcommUntypedActor {
     }
 
     private void invite(final Object message) throws Exception {
-        final ActorRef self = self();
         final SipServletRequest request = (SipServletRequest) message;
         // Make sure we handle re-invites properly.
         if (!request.isInitial()) {
@@ -179,7 +200,36 @@ public class UssdCallManager extends RestcommUntypedActor {
         final AccountsDao accounts = storage.getAccountsDao();
         final ApplicationsDao applications = storage.getApplicationsDao();
         final String toUser = CallControlHelper.getUserSipId(request, useTo);
-        if (redirectToHostedVoiceApp(self, request, accounts, applications, toUser)) {
+        final SipURI fromUri = (SipURI) request.getFrom().getURI();
+
+        Sid sourceOrganizationSid = OrganizationUtil.getOrganizationSidBySipURIHost(storage, fromUri);
+        Sid destOrg = SIPOrganizationUtil.searchOrganizationBySIPRequest(storage.getOrganizationsDao(), request);
+
+        IncomingPhoneNumber number = getIncomingPhoneNumber(toUser, sourceOrganizationSid, destOrg);
+
+        if (number != null) {
+            Account numAccount = accounts.getAccount(number.getAccountSid());
+            if (!numAccount.getStatus().equals(Account.Status.ACTIVE)) {
+                //reject call since the number belongs to an an account which is not ACTIVE
+                final SipServletResponse response = request.createResponse(ACCOUNT_NOT_ACTIVE_FAILURE_RESPONSE_CODE, "Account is not Active");
+                response.send();
+
+                String msg = String.format("Restcomm rejects this USSD Session because number's %s account %s is not ACTIVE, current state %s", number.getPhoneNumber(), numAccount.getSid(), numAccount.getStatus());
+                if (logger.isDebugEnabled()) {
+                    logger.debug(msg);
+                }
+                sendNotification(msg, 11005, "Error", true);
+                return;
+            }
+        }
+
+        if(logger.isDebugEnabled()) {
+            logger.debug("sourceOrganizationSid: " + sourceOrganizationSid);
+        }
+        if(sourceOrganizationSid == null){
+            logger.error("Null Organization: fromUri: "+fromUri);
+        }
+        if (redirectToHostedVoiceApp(request, accounts, applications, number)) {
             return;
         }
 
@@ -188,28 +238,33 @@ public class UssdCallManager extends RestcommUntypedActor {
         response.send();
     }
 
+    private IncomingPhoneNumber getIncomingPhoneNumber(String phone, Sid sourceOrganizationSid, Sid destOrg) {
+        IncomingPhoneNumber number = numberSelector.searchNumber(phone, sourceOrganizationSid, destOrg);
+
+        return number;
+    }
+
     /**
      * Try to locate a hosted voice app corresponding to the callee/To address. If one is found, begin execution, otherwise
      * return false;
      *
-     * @param self
      * @param request
      * @param accounts
      * @param applications
-     * @param id
      * @throws Exception
      */
-    private boolean redirectToHostedVoiceApp(final ActorRef self, final SipServletRequest request, final AccountsDao accounts,
-                                             final ApplicationsDao applications, String id) throws Exception {
+    private boolean redirectToHostedVoiceApp(final SipServletRequest request, final AccountsDao accounts,
+                                             final ApplicationsDao applications, IncomingPhoneNumber number) throws Exception {
         boolean isFoundHostedApp = false;
 
-        final IncomingPhoneNumbersDao numbersDao = storage.getIncomingPhoneNumbersDao();
-        IncomingPhoneNumber number = null;
+        // This is a USSD Invite
+        if (number != null) {
 
-        if (request.getContentType().equals("application/vnd.3gpp.ussd+xml")) {
-            // This is a USSD Invite
-            number = numbersDao.getIncomingPhoneNumber(id);
-            if (number != null) {
+            ExtensionController ec = ExtensionController.getInstance();
+            IExtensionFeatureAccessRequest far = new FeatureAccessRequest(FeatureAccessRequest.Feature.INBOUND_USSD, number.getAccountSid());
+            ExtensionResponse er = ec.executePreInboundAction(far, extensions);
+
+            if (er.isAllowed()) {
                 final UssdInterpreterParams.Builder builder = new UssdInterpreterParams.Builder();
                 builder.setConfiguration(configuration);
                 builder.setStorage(storage);
@@ -240,21 +295,105 @@ public class UssdCallManager extends RestcommUntypedActor {
                 final Props props = UssdInterpreter.props(builder.build());
                 final ActorRef ussdInterpreter = getContext().actorOf(props);
                 final ActorRef ussdCall = ussdCall();
-                ussdCall.tell(request, self);
+                ussdCall.tell(request, self());
 
-                ussdInterpreter.tell(new StartInterpreter(ussdCall), self);
+                ussdInterpreter.tell(new StartInterpreter(ussdCall), self());
 
                 SipApplicationSession applicationSession = request.getApplicationSession();
                 applicationSession.setAttribute("UssdCall", "true");
                 applicationSession.setAttribute(UssdInterpreter.class.getName(), ussdInterpreter);
                 applicationSession.setAttribute(UssdCall.class.getName(), ussdCall);
                 isFoundHostedApp = true;
+                ec.executePostInboundAction(far, extensions);
             } else {
-                logger.info("USSD Number registration NOT FOUND");
-                request.createResponse(SipServletResponse.SC_NOT_FOUND).send();
+                if (logger.isDebugEnabled()) {
+                    final String errMsg = "Inbound USSD session is not Allowed";
+                    logger.debug(errMsg);
+                }
+                String errMsg = "Inbound USSD session to Number: " + number.getPhoneNumber()
+                        + " is not allowed";
+
+                sendNotification(errMsg, 11001, "warning", true);
+                final SipServletResponse resp = request.createResponse(SC_FORBIDDEN, "Inbound USSD session is not Allowed");
+                resp.send();
+                ec.executePostInboundAction(far, extensions);
+                return false;
+            }
+        } else {
+            logger.info("USSD Number registration NOT FOUND");
+            request.createResponse(SipServletResponse.SC_NOT_FOUND).send();
+        }
+
+        return isFoundHostedApp;
+    }
+
+    private void sendNotification(String errMessage, int errCode, String errType, boolean createNotification) {
+        NotificationsDao notifications = storage.getNotificationsDao();
+        Notification notification;
+
+        if (errType == "warning") {
+            logger.warning(errMessage); // send message to console
+            if (createNotification) {
+                notification = notification(WARNING_NOTIFICATION, errCode, errMessage);
+                notifications.addNotification(notification);
+            }
+        } else if (errType == "error") {
+            logger.error(errMessage); // send message to console
+            if (createNotification) {
+                notification = notification(ERROR_NOTIFICATION, errCode, errMessage);
+                notifications.addNotification(notification);
+            }
+        } else if (errType == "info") {
+            if(logger.isInfoEnabled()) {
+                logger.info(errMessage); // send message to console
             }
         }
-        return isFoundHostedApp;
+    }
+
+    private Notification notification(final int log, final int error, final String message) {
+        String version = configuration.subset("runtime-settings").getString("api-version");
+        Sid accountId = new Sid("ACae6e420f425248d6a26948c17a9e2acf");
+        //        Sid callSid = new Sid("CA00000000000000000000000000000000");
+        final Notification.Builder builder = Notification.builder();
+        final Sid sid = Sid.generate(Sid.Type.NOTIFICATION);
+        builder.setSid(sid);
+        // builder.setAccountSid(accountId);
+        builder.setAccountSid(accountId);
+        //        builder.setCallSid(callSid);
+        builder.setApiVersion(version);
+        builder.setLog(log);
+        builder.setErrorCode(error);
+        final String base = configuration.subset("runtime-settings").getString("error-dictionary-uri");
+        StringBuilder buffer = new StringBuilder();
+        buffer.append(base);
+        if (!base.endsWith("/")) {
+            buffer.append("/");
+        }
+        buffer.append(error).append(".html");
+        final URI info = URI.create(buffer.toString());
+        builder.setMoreInfo(info);
+        builder.setMessageText(message);
+        final DateTime now = DateTime.now();
+        builder.setMessageDate(now);
+        try {
+            builder.setRequestUrl(new URI(""));
+        } catch (URISyntaxException e) {
+            e.printStackTrace();
+        }
+        /**
+         * if (response != null) { builder.setRequestUrl(request.getUri()); builder.setRequestMethod(request.getMethod());
+         * builder.setRequestVariables(request.getParametersAsString()); }
+         **/
+
+        builder.setRequestMethod("");
+        builder.setRequestVariables("");
+        buffer = new StringBuilder();
+        buffer.append("/").append(version).append("/Accounts/");
+        buffer.append(accountId.toString()).append("/Notifications/");
+        buffer.append(sid.toString());
+        final URI uri = URI.create(buffer.toString());
+        builder.setUri(uri);
+        return builder.build();
     }
 
     private void processRequest(SipServletRequest request) throws IOException {

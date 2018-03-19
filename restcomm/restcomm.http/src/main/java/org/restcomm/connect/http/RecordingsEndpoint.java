@@ -22,6 +22,26 @@ package org.restcomm.connect.http;
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
 import com.thoughtworks.xstream.XStream;
+import java.io.File;
+import java.net.URI;
+import java.text.ParseException;
+import java.util.ArrayList;
+import java.util.List;
+import javax.annotation.PostConstruct;
+import javax.servlet.ServletContext;
+import javax.ws.rs.core.Context;
+import javax.ws.rs.core.MediaType;
+import static javax.ws.rs.core.MediaType.APPLICATION_JSON;
+import static javax.ws.rs.core.MediaType.APPLICATION_JSON_TYPE;
+import static javax.ws.rs.core.MediaType.APPLICATION_XML;
+import static javax.ws.rs.core.MediaType.APPLICATION_XML_TYPE;
+import javax.ws.rs.core.Response;
+import static javax.ws.rs.core.Response.Status.BAD_REQUEST;
+import static javax.ws.rs.core.Response.Status.NOT_FOUND;
+import static javax.ws.rs.core.Response.ok;
+import static javax.ws.rs.core.Response.status;
+import static javax.ws.rs.core.Response.temporaryRedirect;
+import javax.ws.rs.core.UriInfo;
 import org.apache.commons.configuration.Configuration;
 import org.restcomm.connect.commons.amazonS3.RecordingSecurityLevel;
 import org.restcomm.connect.commons.amazonS3.S3AccessTool;
@@ -38,28 +58,6 @@ import org.restcomm.connect.dao.entities.RestCommResponse;
 import org.restcomm.connect.http.converter.RecordingConverter;
 import org.restcomm.connect.http.converter.RecordingListConverter;
 import org.restcomm.connect.http.converter.RestCommResponseConverter;
-
-import javax.annotation.PostConstruct;
-import javax.servlet.ServletContext;
-import javax.ws.rs.core.Context;
-import javax.ws.rs.core.MediaType;
-import javax.ws.rs.core.Response;
-import javax.ws.rs.core.UriInfo;
-import java.io.File;
-import java.net.URI;
-import java.text.ParseException;
-import java.util.ArrayList;
-import java.util.List;
-
-import static javax.ws.rs.core.MediaType.APPLICATION_JSON;
-import static javax.ws.rs.core.MediaType.APPLICATION_JSON_TYPE;
-import static javax.ws.rs.core.MediaType.APPLICATION_XML;
-import static javax.ws.rs.core.MediaType.APPLICATION_XML_TYPE;
-import static javax.ws.rs.core.Response.Status.BAD_REQUEST;
-import static javax.ws.rs.core.Response.Status.NOT_FOUND;
-import static javax.ws.rs.core.Response.ok;
-import static javax.ws.rs.core.Response.status;
-import static javax.ws.rs.core.Response.temporaryRedirect;
 
 /**
  * @author quintana.thomas@gmail.com (Thomas Quintana)
@@ -134,9 +132,9 @@ public abstract class RecordingsEndpoint extends SecuredEndpoint {
             return status(NOT_FOUND).build();
         } else {
             secure(operatedAccount, recording.getAccountSid(), SecuredType.SECURED_STANDARD);
-            if (APPLICATION_JSON_TYPE == responseType) {
+            if (APPLICATION_JSON_TYPE.equals(responseType)) {
                 return ok(gson.toJson(recording), APPLICATION_JSON).build();
-            } else if (APPLICATION_XML_TYPE == responseType) {
+            } else if (APPLICATION_XML_TYPE.equals(responseType)) {
                 final RestCommResponse response = new RestCommResponse(recording);
                 return ok(xstream.toXML(response), APPLICATION_XML).build();
             } else {
@@ -231,10 +229,10 @@ public abstract class RecordingsEndpoint extends SecuredEndpoint {
         listConverter.setPageSize(Integer.parseInt(pageSize));
         listConverter.setPathUri(info.getRequestUri().getPath());
 
-        if (APPLICATION_XML_TYPE == responseType) {
+        if (APPLICATION_XML_TYPE.equals(responseType)) {
             final RestCommResponse response = new RestCommResponse(new RecordingList(cdrs));
             return ok(xstream.toXML(response), APPLICATION_XML).build();
-        } else if (APPLICATION_JSON_TYPE == responseType) {
+        } else if (APPLICATION_JSON_TYPE.equals(responseType)) {
             return ok(gson.toJson(new RecordingList(cdrs)), APPLICATION_JSON).build();
         } else {
             return null;
@@ -245,9 +243,9 @@ public abstract class RecordingsEndpoint extends SecuredEndpoint {
         secure(accountsDao.getAccount(accountSid), "RestComm:Read:Recordings");
 
         final List<Recording> recordings = dao.getRecordingsByCall(new Sid(callSid));
-        if (APPLICATION_JSON_TYPE == responseType) {
+        if (APPLICATION_JSON_TYPE.equals(responseType)) {
             return ok(gson.toJson(recordings), APPLICATION_JSON).build();
-        } else if (APPLICATION_XML_TYPE == responseType) {
+        } else if (APPLICATION_XML_TYPE.equals(responseType)) {
             final RestCommResponse response = new RestCommResponse(new RecordingList(recordings));
             return ok(xstream.toXML(response), APPLICATION_XML).build();
         } else {
@@ -255,7 +253,7 @@ public abstract class RecordingsEndpoint extends SecuredEndpoint {
         }
     }
 
-    protected Response getRecordingWav (String accountSid, String sid) {
+    protected Response getRecordingFile (String accountSid, String sid) {
         Account operatedAccount = accountsDao.getAccount(accountSid);
 //        secure(operatedAccount, "RestComm:Read:Recordings");
 
@@ -270,13 +268,18 @@ public abstract class RecordingsEndpoint extends SecuredEndpoint {
             URI recordingUri = null;
             try {
                 if (recording.getS3Uri() != null) {
-                    recordingUri = s3AccessTool.getPublicUrl(recording.getSid() + ".wav");
+                    String fileExtension = recording.getS3Uri().toString().endsWith("wav") ? ".wav" : ".mp4";
+                    recordingUri = s3AccessTool.getPublicUrl(recording.getSid() + fileExtension);
                     if (securityLevel.equals(RecordingSecurityLevel.REDIRECT)) {
                         return temporaryRedirect(recordingUri).build();
                     } else {
                         String contentType = recordingUri.toURL().openConnection().getContentType();
                         if (contentType == null || contentType.isEmpty()) {
-                            contentType = "audio/x-wav";
+                            if (fileExtension.equals(".wav")) {
+                                contentType = "audio/x-wav";
+                            } else {
+                                contentType = "video/mp4";
+                            }
                         }
                         //Fetch recording and serve it from here
                         return ok(recordingUri.toURL().openStream(), contentType).build();
@@ -288,19 +291,29 @@ public abstract class RecordingsEndpoint extends SecuredEndpoint {
                     if (!path.endsWith("/")) {
                         path += "/";
                     }
-                    path += sid.toString() + ".wav";
+                    String fileExtension = ".wav";
+                    if (recording.getFileUri() != null) {
+                        fileExtension = recording.getFileUri().toString().endsWith("wav") ? ".wav" : ".mp4";
+                    }
+                    path += sid.toString() + fileExtension;
 
                     File recordingFile = new File(URI.create(path));
                     if (recordingFile.exists()) {
                         //Fetch recording and serve it from here
-                        return ok(recordingFile, "audio/x-wav").build();
+                        String contentType;
+                        if (fileExtension.equals(".wav")) {
+                            contentType = "audio/x-wav";
+                        } else {
+                            contentType = "video/mp4";
+                        }
+                        return ok(recordingFile, contentType).build();
                     } else {
                         return status(NOT_FOUND).build();
                     }
                 }
             } catch (Exception e) {
                 if (logger.isInfoEnabled()) {
-                    logger.info("Problem during preparation of Recording wav file link, ",e);
+                    logger.info("Problem during preparation of Recording file link, ", e);
                 }
             }
         }

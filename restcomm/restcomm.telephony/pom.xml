@@ -4,7 +4,7 @@
 	<parent>
 		<groupId>org.restcomm</groupId>
 		<artifactId>restcomm-connect</artifactId>
-		<version>8.2.0-SNAPSHOT</version>
+		<version>8.3.1-SNAPSHOT</version>
 	</parent>
 
 	<artifactId>restcomm-connect.telephony</artifactId>
@@ -64,9 +64,20 @@
 		<dependency>
 			<groupId>org.mobicents.servlet.sip</groupId>
 			<artifactId>sip-servlets-spec</artifactId>
-			<version>${sipservletapi.version}</version>
 			<scope>provided</scope>
 		</dependency>
+                
+		<dependency>
+			<groupId>org.apache.tomcat</groupId>
+			<artifactId>tomcat-jasper</artifactId>
+			<scope>provided</scope>
+		</dependency>
+                
+		<dependency>
+			<groupId>org.mobicents.servlet.sip.containers</groupId>
+			<artifactId>sip-servlets-catalina-7</artifactId>
+			<scope>provided</scope>
+		</dependency>                            
 
 		<dependency>
 			<groupId>javax.servlet</groupId>
@@ -136,6 +147,13 @@
 		</dependency>
 
 		<dependency>
+			<groupId>org.restcomm</groupId>
+			<artifactId>restcomm-connect.sdr.api</artifactId>
+			<version>${project.version}</version>
+			<scope>provided</scope>
+		</dependency>
+
+		<dependency>
 			<groupId>javax.sip</groupId>
 			<artifactId>jain-sip-ri</artifactId>
 			<version>${sip-ri.version}</version>
@@ -146,67 +164,28 @@
             <artifactId>restcomm-connect.extension.controller</artifactId>
             <version>${project.version}</version>
         </dependency>
-		<dependency>
-			<groupId>org.restcomm</groupId>
-			<artifactId>restcomm-connect.extension.controller</artifactId>
-			<version>${project.version}</version>
-		</dependency>
+
         <dependency>
             <groupId>org.restcomm</groupId>
             <artifactId>restcomm-connect.http</artifactId>
             <version>${project.version}</version>
         </dependency>
-
-    </dependencies>
+        <dependency>
+            <groupId>org.restcomm</groupId>
+            <artifactId>restcomm-connect.core</artifactId>
+            <version>${project.version}</version>
+        </dependency>
+    
+		<dependency>
+			<groupId>org.mockito</groupId>
+			<artifactId>mockito-core</artifactId>
+			<version>${mockito-core.version}</version>
+			<scope>test</scope>
+		</dependency>
+  </dependencies>
 
 	<build>
 		<plugins>
-			<plugin>
-				<artifactId>maven-resources-plugin</artifactId>
-				<version>2.5</version>
-				<executions>
-					<execution>
-						<id>copy-resources</id>
-						<!-- here the phase you need -->
-						<phase>process-resources</phase>
-						<goals>
-							<goal>copy-resources</goal>
-						</goals>
-						<configuration>
-							<outputDirectory>${basedir}/target/classes/org/mobicents/servlet/restcomm/telephony</outputDirectory>
-							<resources>
-								<resource>
-									<directory>src/main/resources/org/mobicents/servlet/restcomm/telephony</directory>
-									<includes>
-										<include>version.properties</include>
-									</includes>
-									<filtering>true</filtering>
-								</resource>
-							</resources>
-						</configuration>
-					</execution>
-					<execution>
-						<id>copy-test-resources</id>
-						<!-- here the phase you need -->
-						<phase>process-test-resources</phase>
-						<goals>
-							<goal>copy-resources</goal>
-						</goals>
-						<configuration>
-							<outputDirectory>${basedir}/target/test-classes/org/mobicents/servlet/restcomm/telephony</outputDirectory>
-							<resources>
-								<resource>
-									<directory>src/main/resources/org/mobicents/servlet/restcomm/telephony</directory>
-									<includes>
-										<include>version.properties</include>
-									</includes>
-									<filtering>true</filtering>
-								</resource>
-							</resources>
-						</configuration>
-					</execution>
-				</executions>
-			</plugin>
 			<plugin>
 				<groupId>org.apache.maven.plugins</groupId>
 				<artifactId>maven-surefire-plugin</artifactId>

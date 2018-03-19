@@ -67,6 +67,7 @@ import java.util.Comparator;
 import java.util.List;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
+import org.restcomm.connect.dao.entities.IncomingPhoneNumberFilter;
 
 /**
  * This class was designed to be used with exclusivity by {@link RvdProjectsMigrator}, once that
@@ -318,7 +319,8 @@ public class RvdProjectsMigrationHelper {
         try {
 
             if (dids == null) {
-                dids = didsDao.getAllIncomingPhoneNumbers();
+                IncomingPhoneNumberFilter.Builder filterBuilder = IncomingPhoneNumberFilter.Builder.builder();
+                dids = didsDao.getIncomingPhoneNumbersByFilter(filterBuilder.build());
             }
         } catch (Exception e) {
             throw new RvdProjectsMigrationException(
@@ -345,7 +347,7 @@ public class RvdProjectsMigrationHelper {
                                     did.getUssdFallbackMethod(), did.getUssdApplicationSid(),
                                     did.getReferUrl(), did.getReferMethod(), did.getReferApplicationSid(),
                                     did.isVoiceCapable(),
-                                    did.isSmsCapable(), did.isMmsCapable(), did.isFaxCapable(), did.isPureSip());
+                                    did.isSmsCapable(), did.isMmsCapable(), did.isFaxCapable(), did.isPureSip(), did.getOrganizationSid());
                             didsDao.updateIncomingPhoneNumber(updateSmsDid);
                             dids.set(i, updateSmsDid);
                             amountUpdated++;
@@ -367,7 +369,7 @@ public class RvdProjectsMigrationHelper {
                                     did.getUssdFallbackUrl(), did.getUssdFallbackMethod(), ussdApplicationSid,
                                     did.getReferUrl(), did.getReferMethod(), did.getReferApplicationSid(),
                                     did.isVoiceCapable(), did.isSmsCapable(), did.isMmsCapable(), did.isFaxCapable(),
-                                    did.isPureSip());
+                                    did.isPureSip(), did.getOrganizationSid());
                             didsDao.updateIncomingPhoneNumber(updateUssdDid);
                             dids.set(i, updateUssdDid);
                             amountUpdated++;
@@ -389,7 +391,7 @@ public class RvdProjectsMigrationHelper {
                                     did.getUssdFallbackUrl(), did.getUssdFallbackMethod(), did.getUssdApplicationSid(),
                                     did.getReferUrl(), did.getReferMethod(), did.getReferApplicationSid(),
                                     did.isVoiceCapable(), did.isSmsCapable(), did.isMmsCapable(), did.isFaxCapable(),
-                                    did.isPureSip());
+                                    did.isPureSip(), did.getOrganizationSid());
                             didsDao.updateIncomingPhoneNumber(updateVoiceDid);
                             dids.set(i, updateVoiceDid);
                             amountUpdated++;

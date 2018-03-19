@@ -45,21 +45,26 @@ import org.jboss.arquillian.junit.Arquillian;
 import org.jboss.arquillian.test.api.ArquillianResource;
 import org.jboss.shrinkwrap.api.ShrinkWrap;
 import org.jboss.shrinkwrap.api.spec.WebArchive;
-import org.jboss.shrinkwrap.resolver.api.maven.archive.ShrinkWrapMaven;
+import org.jboss.shrinkwrap.resolver.api.maven.Maven;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.BeforeClass;
 import org.junit.Test;
+import org.junit.FixMethodOrder;
+import org.junit.runners.MethodSorters;
+import org.junit.experimental.categories.Category;
 import org.junit.runner.RunWith;
 
 import com.google.gson.JsonObject;
 import org.restcomm.connect.commons.Version;
+import org.restcomm.connect.commons.annotations.FeatureAltTests;
 
 /**
  * @author <a href="mailto:gvagenas@gmail.com">gvagenas</a>
  *
  */
 @RunWith(Arquillian.class)
+@FixMethodOrder(MethodSorters.NAME_ASCENDING)
 public class UssdPushTest {
 
     private final static Logger logger = Logger.getLogger(CreateCallsTest.class.getName());
@@ -130,7 +135,7 @@ public class UssdPushTest {
 
         String from = "+15126002188";
         String to = "bob";
-        String rcmlUrl = "http://127.0.0.1:8080/restcomm/ussd-rcml.xml";
+        String rcmlUrl = deploymentUrl.toString() + "/ussd-rcml.xml";
 
         JsonObject callResult = RestcommUssdPushTool.getInstance().createUssdPush(deploymentUrl.toString(), adminAccountSid,
                 adminAuthToken, from, to, rcmlUrl);
@@ -168,6 +173,7 @@ public class UssdPushTest {
     }
     
     @Test
+    @Category(FeatureAltTests.class)
     public void createUssdPushTestNotifyOnlyFromIsRestcomm() throws InterruptedException, SipException, ParseException {
 
         SipCall bobCall = bobPhone.createSipCall();
@@ -178,7 +184,7 @@ public class UssdPushTest {
 
         String from = "Restcomm";
         String to = "bob";
-        String rcmlUrl = "http://127.0.0.1:8080/restcomm/ussd-rcml.xml";
+        String rcmlUrl = deploymentUrl.toString() + "/ussd-rcml.xml";
 
         JsonObject callResult = RestcommUssdPushTool.getInstance().createUssdPush(deploymentUrl.toString(), adminAccountSid,
                 adminAuthToken, from, to, rcmlUrl);
@@ -226,7 +232,7 @@ public class UssdPushTest {
 
         String from = "+15126002188";
         String to = "bob";
-        String rcmlUrl = "http://127.0.0.1:8080/restcomm/ussd-rcml-collect.xml";
+        String rcmlUrl = deploymentUrl.toString() + "/ussd-rcml-collect.xml";
 
         JsonObject callResult = RestcommUssdPushTool.getInstance().createUssdPush(deploymentUrl.toString(), adminAccountSid,
                 adminAuthToken, from, to, rcmlUrl);
@@ -293,14 +299,16 @@ public class UssdPushTest {
     public static WebArchive createWebArchiveNoGw() {
         logger.info("Packaging Test App");
         WebArchive archive = ShrinkWrap.create(WebArchive.class, "restcomm.war");
-        final WebArchive restcommArchive = ShrinkWrapMaven.resolver()
+        final WebArchive restcommArchive = Maven.resolver()
                 .resolve("org.restcomm:restcomm-connect.application:war:" + version).withoutTransitivity()
                 .asSingle(WebArchive.class);
         archive = archive.merge(restcommArchive);
         archive.delete("/WEB-INF/sip.xml");
+archive.delete("/WEB-INF/web.xml");
         archive.delete("/WEB-INF/conf/restcomm.xml");
         archive.delete("/WEB-INF/data/hsql/restcomm.script");
         archive.addAsWebInfResource("sip.xml");
+        archive.addAsWebInfResource("web.xml");
         archive.addAsWebInfResource("org/restcomm/connect/ussd/restcomm_conf_ussd_push.xml", "conf/restcomm.xml");
         archive.addAsWebInfResource("org/restcomm/connect/ussd/restcomm.script_ussdPullTest", "data/hsql/restcomm.script");
         archive.addAsWebResource("org/restcomm/connect/ussd/ussd-rcml.xml");

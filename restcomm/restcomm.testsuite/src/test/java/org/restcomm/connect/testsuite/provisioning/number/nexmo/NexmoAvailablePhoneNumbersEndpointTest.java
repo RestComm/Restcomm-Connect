@@ -35,9 +35,12 @@ import org.jboss.arquillian.junit.Arquillian;
 import org.jboss.arquillian.test.api.ArquillianResource;
 import org.jboss.shrinkwrap.api.ShrinkWrap;
 import org.jboss.shrinkwrap.api.spec.WebArchive;
-import org.jboss.shrinkwrap.resolver.api.maven.archive.ShrinkWrapMaven;
+import org.jboss.shrinkwrap.resolver.api.maven.Maven;
 import org.junit.Rule;
 import org.junit.Test;
+import org.junit.FixMethodOrder;
+import org.junit.runners.MethodSorters;
+import org.junit.experimental.categories.Category;
 import org.junit.runner.RunWith;
 
 import com.github.tomakehurst.wiremock.junit.WireMockRule;
@@ -48,12 +51,14 @@ import com.sun.jersey.api.client.ClientResponse;
 import com.sun.jersey.api.client.WebResource;
 import com.sun.jersey.api.client.filter.HTTPBasicAuthFilter;
 import org.restcomm.connect.commons.Version;
+import org.restcomm.connect.commons.annotations.FeatureAltTests;
 
 /**
  * @author <a href="mailto:jean.deruelle@telestax.com">Jean Deruelle</a>
  */
 
 @RunWith(Arquillian.class)
+@FixMethodOrder(MethodSorters.NAME_ASCENDING)
 public class NexmoAvailablePhoneNumbersEndpointTest {
     private final static Logger logger = Logger.getLogger(NexmoAvailablePhoneNumbersEndpointTest.class.getName());
 
@@ -145,6 +150,7 @@ public class NexmoAvailablePhoneNumbersEndpointTest {
      * available local phone numbers in the United States in the 510 area code.
      */
     @Test
+    @Category(FeatureAltTests.class)
     public void testSearchUSLocalPhoneNumbersWith501AreaCode() {
         stubFor(get(urlMatching("/nexmo/number/search/.*/.*/US\\?pattern=1501&search_pattern=0"))
                 .willReturn(aResponse()
@@ -179,6 +185,7 @@ public class NexmoAvailablePhoneNumbersEndpointTest {
      * available local phone numbers in the United States in the 510 area code.
      */
     @Test
+    @Category(FeatureAltTests.class)
     public void testSearchCALocalPhoneNumbersWith450AreaCode() {
         stubFor(get(urlMatching("/nexmo/number/search/.*/.*/CA\\?pattern=1450&search_pattern=0"))
                 .willReturn(aResponse()
@@ -276,14 +283,16 @@ public class NexmoAvailablePhoneNumbersEndpointTest {
         logger.info("Packaging Test App");
         logger.info("version " + version);
         WebArchive archive = ShrinkWrap.create(WebArchive.class, "restcomm.war");
-        final WebArchive restcommArchive = ShrinkWrapMaven.resolver()
+        final WebArchive restcommArchive = Maven.resolver()
                 .resolve("org.restcomm:restcomm-connect.application:war:" + version).withoutTransitivity()
                 .asSingle(WebArchive.class);
         archive = archive.merge(restcommArchive);
         archive.delete("/WEB-INF/sip.xml");
+archive.delete("/WEB-INF/web.xml");
         archive.delete("/WEB-INF/conf/restcomm.xml");
         archive.delete("/WEB-INF/data/hsql/restcomm.script");
         archive.addAsWebInfResource("sip.xml");
+        archive.addAsWebInfResource("web.xml");
         archive.addAsWebInfResource("restcomm_nexmo_test.xml", "conf/restcomm.xml");
         archive.addAsWebInfResource("restcomm.script_dialTest", "data/hsql/restcomm.script");
         logger.info("Packaged Test App");

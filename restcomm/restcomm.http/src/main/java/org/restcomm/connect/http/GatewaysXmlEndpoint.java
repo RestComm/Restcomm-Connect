@@ -19,18 +19,20 @@
  */
 package org.restcomm.connect.http;
 
-import static javax.ws.rs.core.MediaType.*;
 import static javax.ws.rs.core.Response.*;
+import static org.restcomm.connect.http.security.AccountPrincipal.SUPER_ADMIN_ROLE;
 
+import javax.annotation.security.RolesAllowed;
 import javax.ws.rs.DELETE;
 import javax.ws.rs.GET;
 import javax.ws.rs.POST;
 import javax.ws.rs.PUT;
 import javax.ws.rs.Path;
 import javax.ws.rs.PathParam;
+import javax.ws.rs.Produces;
+import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.MultivaluedMap;
 import javax.ws.rs.core.Response;
-
 import org.restcomm.connect.commons.annotations.concurrency.ThreadSafe;
 import org.restcomm.connect.commons.dao.Sid;
 
@@ -39,6 +41,7 @@ import org.restcomm.connect.commons.dao.Sid;
  */
 @Path("/Accounts/{accountSid}/Management/Gateways")
 @ThreadSafe
+@RolesAllowed(SUPER_ADMIN_ROLE)
 public final class GatewaysXmlEndpoint extends GatewaysEndpoint {
     public GatewaysXmlEndpoint() {
         super();
@@ -50,61 +53,42 @@ public final class GatewaysXmlEndpoint extends GatewaysEndpoint {
         return ok().build();
     }
 
-    @Path("/{sid}.json")
-    @DELETE
-    public Response deleteGatewayAsJson(@PathParam("accountSid") final String accountSid, @PathParam("sid") final String sid) {
-        return deleteGateway(accountSid, sid);
-    }
-
     @Path("/{sid}")
     @DELETE
     public Response deleteGatewayAsXml(@PathParam("accountSid") final String accountSid, @PathParam("sid") final String sid) {
         return deleteGateway(accountSid, sid);
     }
 
-    @Path("/{sid}.json")
-    @GET
-    public Response getGatewayAsJson(@PathParam("accountSid") final String accountSid, @PathParam("sid") final String sid) {
-        return getGateway(accountSid, sid, APPLICATION_JSON_TYPE);
-    }
-
     @Path("/{sid}")
     @GET
+    @Produces({MediaType.APPLICATION_XML, MediaType.APPLICATION_JSON})
     public Response getGatewayAsXml(@PathParam("accountSid") final String accountSid, @PathParam("sid") final String sid) {
-        return getGateway(accountSid, sid, APPLICATION_XML_TYPE);
+        return getGateway(accountSid, sid, retrieveMediaType());
     }
 
     @GET
+    @Produces({MediaType.APPLICATION_XML, MediaType.APPLICATION_JSON})
     public Response getGatewaysList(@PathParam("accountSid") final String accountSid) {
-        return getGateways(accountSid, APPLICATION_XML_TYPE);
+        return getGateways(accountSid, retrieveMediaType());
     }
 
     @POST
+    @Produces({MediaType.APPLICATION_XML, MediaType.APPLICATION_JSON})
     public Response createGateway(@PathParam("accountSid") final String accountSid, final MultivaluedMap<String, String> data) {
-        return putGateway(accountSid, data, APPLICATION_XML_TYPE);
-    }
-
-    @Path("/{sid}.json")
-    @POST
-    public Response updateGatewayAsJsonPost(@PathParam("accountSid") final String accountSid, @PathParam("sid") final String sid, final MultivaluedMap<String, String> data) {
-        return updateGateway(accountSid, sid, data, APPLICATION_JSON_TYPE);
-    }
-
-    @Path("/{sid}.json")
-    @PUT
-    public Response updateGatewayAsJsonPut(@PathParam("accountSid") final String accountSid, @PathParam("sid") final String sid, final MultivaluedMap<String, String> data) {
-        return updateGateway(accountSid, sid, data, APPLICATION_JSON_TYPE);
+        return putGateway(accountSid, data, retrieveMediaType());
     }
 
     @Path("/{sid}")
     @POST
+    @Produces({MediaType.APPLICATION_XML, MediaType.APPLICATION_JSON})
     public Response updateGatewayAsXmlPost(@PathParam("accountSid") final String accountSid, @PathParam("sid") final String sid, final MultivaluedMap<String, String> data) {
-        return updateGateway(accountSid, sid, data, APPLICATION_XML_TYPE);
+        return updateGateway(accountSid, sid, data, retrieveMediaType());
     }
 
     @Path("/{sid}")
     @PUT
+    @Produces({MediaType.APPLICATION_XML, MediaType.APPLICATION_JSON})
     public Response updateGatewayAsXmlPut(@PathParam("accountSid") final String accountSid, @PathParam("sid") final String sid, final MultivaluedMap<String, String> data) {
-        return updateGateway(accountSid, sid, data, APPLICATION_XML_TYPE);
+        return updateGateway(accountSid, sid, data, retrieveMediaType());
     }
 }

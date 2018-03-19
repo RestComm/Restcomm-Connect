@@ -29,9 +29,17 @@ Accounts and sub-accounts are useful for things like segmenting phone numbers an
 
 * Account Resource URI. */2012-04-24/Accounts/\{EmailAddress}*
 
+==== Response Headers
+[cols=",",options="header",]
+|==============================================================================================
+|Header |Description
+|Link | a link to the effective Profile document with attribute "rel" set to "related"
+|==============================================================================================
+
+
 **HTTP POST/PUT**. Modifies an Account resource and returns the representation, including the properties above. Below you will find a list of optional parameters.
 
-=== Request Parameters
+==== Request Parameters
 
 [cols=",",options="header",]
 |==============================================================================================
@@ -39,6 +47,77 @@ Accounts and sub-accounts are useful for things like segmenting phone numbers an
 |FriendlyName |A description of this account, up to 64 characters long.
 |Status |The status of this account. Possible values are active, suspended, and closed.
 |Password |A password that will be used to generate the AuthToken for the new Account resource.
+|==============================================================================================
+
+=== Account Status transitions
+
+When the Status of an account is modified by invoking the POST method, different
+business constraints will be applied:
+
+
+* The given Status will be applied to the given Account, and all the subaccount
+tree.
+
+=== Uninitialized Account Status
+The following conditions will be honored for an Uninitialized account:
+
+* When a new account is created, this Status is the default.
+* An Uninitialized account will reject its Credentials to be used for any REST API invocation.
+* An Uninitialized account will reject any Voice/SMS/USSD traffic. In addition, any
+client registration related to the account, will be rejected.
+* To activate an uninitialized account, a password reset is necessary.
+
+=== Active Account Status
+The following conditions will be honored for an Active account:
+
+* An Active account will allow its Credentials to be used for any REST API invocation.
+* An Active account will allow any Voice/SMS/USSD traffic. In addition, any
+client registration related to the account, will be allowed.
+
+=== Suspended Account Status
+The following conditions will be honored for a suspended account:
+
+* A Suspended account will reject its Credentials to be used for any REST API invocation.
+* A Suspended account will reject any Voice/SMS/USSD traffic. In addition, any
+client registration related to the accoutn, will be rejected.
+* A Suspended accounts may be reactivate by changing the Status to Active again.
+
+=== Closed Account Status
+The following conditions will be honored for a Closed account:
+
+* A Closed account will reject its Credentials to be used for any REST API invocation.
+* A Closed account will reject any Voice/SMS/USSD traffic. In addition, any
+client registration related to the accoutn, will be rejected.
+* When an account is closed, all related resources are removed.
+* Any modification over a Closed account will be rejected. This means a closed
+account can't be reactivated
+
+=== Account Migration to new Organization
+
+Account Migration operation can be used to migrate a top level account to a new organization.
+In the process, all child accounts will also be migrated.
+
+* Account Migration Resource URI */2012-04-24/Accounts/migrate/\{AccountSid}*
+* Method *HTTP POST*
+* The operation is allowed for Super Admin only
+* The account to migrate must be a top level account (child of Super Admin)
+
+==== Request Parameters
+[cols=",",options="header",]
+|==============================================================================================
+|Parameter |Description
+|Organization |The new Organization SID or Domain Name to move the account. *Required*
+|==============================================================================================
+
+==== Response Status
+[cols=",",options="header",]
+|==============================================================================================
+|Status |Description
+|200 OK |Migration operation completed successfully
+|403 Forbidden |Only Super Admin is allowed for the migrate operation
+|412 Precondition Failed |Target Organization SID or Domain Name is missing
+|404 Not Found |Target Account SID is missing
+|400 Bad Request |Target Account is not a top level account or target account is already in the new organization
 |==============================================================================================
 
 **Get information about the default account.**
@@ -118,6 +197,7 @@ The above commands will print an output similar to the one below:
 |Status |The status of this account. Default is active, possible values are active, suspended, and closed.
 |Password(Required) |A password that will be used to generate the AuthToken for the new Account resource.
 |Role(Required) |The security role that this Account resource will use. If no role is provided then the role of the account resource creating this will be inherited to the new Account resource and may compromise the system.
+|OrganizationSid |Sid of organization, in case you want to create this account under a different account than its parent account. By default each new account will inherit its parent's organization. Please note only Super Admins have right to create an account under a different organization.
 |==============================================================================================================================================================================================================================
 
 
@@ -137,10 +217,16 @@ curl -X GET https://[primarySid]:[primaryAuthToken]@127.0.0.1:8080/restcomm/2012
 curl -X GET https://[primarySid]:[primaryAuthToken]@127.0.0.1:8080/restcomm/2012-04-24/Accounts/
 ----
 
-Here is an example of how to createa a **sub-account**. The sub-account will inherit the same permissions has the Administrator's account.
+Here is an example of how to create a **sub-account**. The sub-account will inherit the same permissions has the Administrator's account.
 
 ....
 curl -X POST https://administrator%40company.com:77f8c12cc7b8f8423e5c38b035249166@127.0.0.1:8080/restcomm/2012-04-24/Accounts/ -d "FriendlyName=MySubAccount" -d "EmailAddress=test@telestax.com" -d "Password=restcomm"
+....
+
+Here is an example of creating an account under a specific organization.
+
+....
+curl -X POST https://<Sid>:<authToken>@<restcommAdress>/restcomm/2012-04-24/Accounts/ -d "FriendlyName=MySubAccount" -d "EmailAddress=test@telestax.com" -d "Password=restcomm" -d "OrganizationSid=<OrganizationSid>"
 ....
 
 

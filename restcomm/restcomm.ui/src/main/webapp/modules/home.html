@@ -1,0 +1,76 @@
+<div class="announcement-banner" ng-hide="true">
+  <p>
+    <i class="fa fa-lightbulb-o"></i> &nbsp;
+    <strong>New Feature!</strong>
+    Visual Designer templates help you getting started with creating your applications.
+    <strong><a href="#/application-templates">Try it!</a></strong>
+    <i class="fa fa-times pull-right"></i>
+  </p>
+</div>
+
+<div class="row cards">
+  <div class="col-md-6 col-xs-12 card">
+    <div class="card-content">
+      <h5 class="text-center text-muted">Power up with Restcomm Cloud plans</h5>
+      <img src="resources/img/v2/restcomm-cloud.png" width="80px" class="card-logo-tl">
+      <br>
+      <h4 class="card-title text-center"><strong>Coming Soon!</strong></h4>
+      <div class="card-body text-center">
+        <p>
+          Contact us and be the first<br>
+          to try the <img src="resources/img/v2/restcomm-one-letters.svg" height="13px" class="inline-img"> Cloud plans!
+        </p>
+        <br>
+        <a href="https://www.restcomm.com/contact/" target="_blank" class="btn-link text-center">Contact us</a>
+      </div>
+    </div>
+    <div class="card-content">
+      <!--
+      <h4 class="card-title"><i class="fa fa-calendar"></i> Upcoming Events</h4>
+      <div class="card-body">
+        <ui-carousel slides="ctrl.slides" slides-to-show="1" autoplay="true" autoplay-speed="5000" arrows="false" dots="true">
+          <carousel-item>
+            <div ng-bind-html="item"></div>
+          </carousel-item>
+        </ui-carousel>
+      </div>
+      -->
+      <div class="analytics-summary" ng-click="$root.goTo('/dashboard')" ng-include="'modules/dashboard.html'" ng-init="showSmallCharts()"></div>
+    </div>
+  </div>
+  <div class="col-md-6 col-xs-12 card">
+    <div class="card-content">
+      <h3 class="card-title text-center">
+        Get started with <img src="resources/img/v2/restcomm-one-letters.svg" height="20px" class="inline-img"> <br>
+        Visual Designer Templates!</h3>
+      <div class="card-body">
+        <br>
+        <p>
+          Create sophisticated telecom apps including voice, video and messaging features in a quick and easy way using our drag and drop tools.
+        </p>
+        <p>
+          You can start from scratch or use one of the many templates available.
+        </p>
+        <br>
+        <p><i class="fa fa-lightbulb-o fa-2x card-tip"></i>
+           <span>  Once you are ready, test and use them with our WebRTC Demo App!</span>
+        </p>
+        <br>
+        <div class="text-center"><a ng-href="#/application-templates" class="btn-link">Visit the Template Gallery</a></div>
+      </div>
+    </div>
+    <div class="card-content">
+      <h4 class="card-title">&nbsp;</h4>
+      <div class="card-body">
+        <p>
+          Restcomm WebRTC Demo client is a full fledged WebRTC Client that enables fast and convenient set up of
+          Restcomm platform over web interface, providing WebRTC Audio and Video calls along with messaging capabilities.
+        </p>
+        <br>
+        <div class="text-center"><img src="resources/img/v2/restcommone-webrtc-demo.svg" width="200">
+          <a ng-href="/olympus" target="_blank" class="btn btn-danger btn-lg rc-btn webrtc-login">Login</a>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>

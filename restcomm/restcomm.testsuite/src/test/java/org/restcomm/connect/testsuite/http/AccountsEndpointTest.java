@@ -1,12 +1,16 @@
 package org.restcomm.connect.testsuite.http;
 
-import com.google.gson.JsonObject;
-import com.google.gson.JsonParser;
-import com.sun.jersey.api.client.Client;
-import com.sun.jersey.api.client.ClientResponse;
-import com.sun.jersey.api.client.UniformInterfaceException;
-import com.sun.jersey.api.client.WebResource;
-import com.sun.jersey.core.util.MultivaluedMapImpl;
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertFalse;
+import static org.junit.Assert.assertNotNull;
+import static org.junit.Assert.assertNull;
+import static org.junit.Assert.assertTrue;
+
+import java.net.URL;
+
+import javax.sip.address.SipURI;
+import javax.ws.rs.core.MultivaluedMap;
+
 import org.apache.log4j.Logger;
 import org.apache.shiro.crypto.hash.Md5Hash;
 import org.cafesip.sipunit.SipPhone;
@@ -18,24 +22,31 @@ import org.jboss.arquillian.junit.Arquillian;
 import org.jboss.arquillian.test.api.ArquillianResource;
 import org.jboss.shrinkwrap.api.ShrinkWrap;
 import org.jboss.shrinkwrap.api.spec.WebArchive;
-import org.jboss.shrinkwrap.resolver.api.maven.archive.ShrinkWrapMaven;
+import org.jboss.shrinkwrap.resolver.api.maven.Maven;
 import org.junit.After;
 import org.junit.Assert;
 import org.junit.BeforeClass;
 import org.junit.Ignore;
 import org.junit.Test;
+import org.junit.FixMethodOrder;
+import org.junit.runners.MethodSorters;
 import org.junit.runner.RunWith;
 import org.restcomm.connect.commons.Version;
 
-import javax.sip.address.SipURI;
-import javax.ws.rs.core.MultivaluedMap;
-import java.net.URL;
-
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertFalse;
-import static org.junit.Assert.assertNotNull;
-import static org.junit.Assert.assertNull;
-import static org.junit.Assert.assertTrue;
+import com.google.gson.JsonArray;
+import com.google.gson.JsonObject;
+import com.google.gson.JsonParser;
+import com.sun.jersey.api.client.Client;
+import com.sun.jersey.api.client.ClientResponse;
+import com.sun.jersey.api.client.UniformInterfaceException;
+import com.sun.jersey.api.client.WebResource;
+import com.sun.jersey.core.util.MultivaluedMapImpl;
+import org.junit.FixMethodOrder;
+import org.junit.experimental.categories.Category;
+import org.junit.runners.MethodSorters;
+import org.restcomm.connect.commons.annotations.FeatureAltTests;
+import org.restcomm.connect.commons.annotations.FeatureExpTests;
+import org.restcomm.connect.commons.annotations.UnstableTests;
 
 /**
  * @author <a href="mailto:gvagenas@gmail.com">gvagenas</a>
@@ -44,6 +55,7 @@ import static org.junit.Assert.assertTrue;
  */
 
 @RunWith(Arquillian.class)
+@FixMethodOrder(MethodSorters.NAME_ASCENDING)
 public class AccountsEndpointTest extends EndpointTest {
     private final static Logger logger = Logger.getLogger(AccountsEndpointTest.class.getName());
 
@@ -65,6 +77,8 @@ public class AccountsEndpointTest extends EndpointTest {
     private String childAuthToken ="77f8c12cc7b8f8423e5c38b035249166";
 
     private String createdUsernanme = "created@company.com";
+    private String createdUsernanme2 = "created2@company.com";
+    private String createdUsernanme3 = "created3@company.com";
     private String createdAccountSid = "AC5ee3b351401804c2d064a33f762146fb";
     private String createdPassword = "RestComm12";
     private String createdAuthToken = "28f96b0fea1f9e33646f42026abdf305";
@@ -94,6 +108,15 @@ public class AccountsEndpointTest extends EndpointTest {
 
     private String commonAuthToken = "77f8c12cc7b8f8423e5c38b035249166";
 
+    private String organizationSid1 = "ORafbe225ad37541eba518a74248f0ac4c";
+    private String organizationSid2 = "ORafbe225ad37541eba518a74248f0ac4d";
+    private String organizationSid3 = "ORafbe225ad37541eba518a74248f0ac4e";
+
+    private String organization1DomainName = "127.0.0.1";
+    private String organization2DomainName = "org1.restcomm.com";
+    private String organization3DomainName = "org2.restcomm.com";
+
+
     static SipStackTool tool1;
 
     SipStack thinhSipStack;
@@ -115,7 +138,7 @@ public class AccountsEndpointTest extends EndpointTest {
         if (thinhPhone != null) {
             thinhPhone.dispose();
         }
-        if (thinhSipStack != null) {
+        if (thinhSipStack != null && thinhSipStack.getSipProvider().getListeningPoints().length>0) {
             thinhSipStack.dispose();
         }
         Thread.sleep(1000);
@@ -130,6 +153,7 @@ public class AccountsEndpointTest extends EndpointTest {
     }
 
     @Test
+    @Category(FeatureExpTests.class)
     public void testGetAccountAccess(){
         // check non-existent user receives a 401
         ClientResponse response = RestcommAccountsTool.getInstance().getAccountResponse(deploymentUrl.toString(), "nonexisting@company.com", "badpassword", adminAccountSid);
@@ -140,6 +164,7 @@ public class AccountsEndpointTest extends EndpointTest {
     }
 
     @Test
+    @Category(FeatureExpTests.class)
     public void testGetAccountByFriendlyName() {
         // Try to get Account using admin friendly name and user email address
         int code = 0;
@@ -161,56 +186,79 @@ public class AccountsEndpointTest extends EndpointTest {
                 adminAuthToken, createdUsernanme);
         assertTrue(getAccountResponse.get("sid").getAsString().equals(createdAccountSid));
         assertEquals(createdAuthToken, getAccountResponse.get("auth_token").getAsString());
+        logger.info("createAccountResponse: "+createAccountResponse);
         assertTrue(createAccountResponse.get("sid").getAsString().equals(createdAccountSid));
         assertEquals(createdAuthToken, createAccountResponse.get("auth_token").getAsString());
     }
 
+    @Test @Category(FeatureExpTests.class)
+    public void testCreateAccountWithInvalidChars() {
+
+        String username1 = "my?account@company.com";
+        String username2 = "my@account@company.com";
+        String username3 = "my=account@company.com";
+        String password = "RestCom1233@";
+
+        JsonObject createAccountResponse = RestcommAccountsTool.getInstance().createAccount(deploymentUrl.toString(),
+                adminUsername, adminAuthToken, username1, password);
+        assertNull(createAccountResponse);
+
+        createAccountResponse = RestcommAccountsTool.getInstance().createAccount(deploymentUrl.toString(),
+                adminUsername, adminAuthToken, username2, password);
+        assertNull(createAccountResponse);
+
+        createAccountResponse = RestcommAccountsTool.getInstance().createAccount(deploymentUrl.toString(),
+                adminUsername, adminAuthToken, username3, password);
+        assertNull(createAccountResponse);
+    }
+
     @Test
+    @Category(UnstableTests.class)
     public void testCreateAccountWithJapaneseChars() {
         String friendlyName = "NTTアドバンステクノロジ";
+        String userName = "japaneseChars@company.com";
         JsonObject createAccountResponse = RestcommAccountsTool.getInstance().createAccount(deploymentUrl.toString(),
-                adminUsername, adminAuthToken, createdUsernanme, createdPassword, friendlyName);
+                adminUsername, adminAuthToken, userName, createdPassword, friendlyName);
+        String createdsid = createAccountResponse.get("sid").getAsString();
         JsonObject getAccountResponse = RestcommAccountsTool.getInstance().getAccount(deploymentUrl.toString(), adminUsername,
-                adminAuthToken, createdUsernanme);
-        assertTrue(getAccountResponse.get("sid").getAsString().equals(createdAccountSid));
-        assertEquals(createdAuthToken, getAccountResponse.get("auth_token").getAsString());
-        assertEquals(createdAccountSid, createAccountResponse.get("sid").getAsString());
-        assertEquals(createdAuthToken, createAccountResponse.get("auth_token").getAsString());
-        assertEquals(friendlyName, createAccountResponse.get("friendly_name").getAsString());
+                adminAuthToken, createdsid);
+        assertEquals(getAccountResponse.get("auth_token").getAsString(), createAccountResponse.get("auth_token").getAsString());
+        assertEquals(getAccountResponse.get("friendly_name").getAsString(), createAccountResponse.get("friendly_name").getAsString());
     }
 
     @Test
     public void testUpdateAccount() {
+        //update friendlyname and role, no password, no status update!!
         JsonObject updateAccountResponse = RestcommAccountsTool.getInstance().updateAccount(deploymentUrl.toString(),
-                adminUsername, adminAuthToken, updatedAccountSid, "updated2", "Restcomm2", null, "Developer", "active" );
+                adminUsername, adminAuthToken, updatedAccountSid, "updated2", null, null, "Developer", null );
         JsonObject getAccountResponse = RestcommAccountsTool.getInstance().getAccount(deploymentUrl.toString(),
                 adminUsername, adminAuthToken, updatedUsername);
 
         assertEquals("FriendlyName field is not updated",  "updated2", updateAccountResponse.get("friendly_name").getAsString());
-        assertEquals("AuthToken field is not updated", new Md5Hash("Restcomm2").toString(), updateAccountResponse.get("auth_token").getAsString());
-        assertEquals("Status field is not updated", "active", updateAccountResponse.get("status").getAsString());
+        assertEquals("Status field should remain uninitialized", "uninitialized", updateAccountResponse.get("status").getAsString());
         assertEquals("Role field is not updated", "Developer", updateAccountResponse.get("role").getAsString());
 
         assertEquals("FriendlyName field is not updated",  "updated2", getAccountResponse.get("friendly_name").getAsString());
-        assertEquals("AuthToken field is not updated", new Md5Hash("Restcomm2").toString(), getAccountResponse.get("auth_token").getAsString());
-        assertEquals("Status field is not updated", "active", getAccountResponse.get("status").getAsString());
+        assertEquals("Status field should remain uninitialized", "uninitialized", getAccountResponse.get("status").getAsString());
         assertEquals("Role field is not updated", "Developer", updateAccountResponse.get("role").getAsString());
 
         // role update test revert it back to Administrator
+        //update friendlyname, role, and authtoken, no status update!!
         updateAccountResponse = RestcommAccountsTool.getInstance().updateAccount(deploymentUrl.toString(),
-                adminUsername, adminAuthToken, updatedAccountSid, "updated3", "Restcomm2", null, "Administrator", "active" );
+                adminUsername, adminAuthToken, updatedAccountSid, "updated3", "Restcomm2", "Restcomm2", "Administrator", null );
          getAccountResponse = RestcommAccountsTool.getInstance().getAccount(deploymentUrl.toString(),
                 adminUsername, adminAuthToken, updatedUsername);
 
          assertEquals("FriendlyName field is not updated",  "updated3", updateAccountResponse.get("friendly_name").getAsString());
          assertEquals("AuthToken field is not updated", new Md5Hash("Restcomm2").toString(), updateAccountResponse.get("auth_token").getAsString());
-         assertEquals("Status field is not updated", "active", updateAccountResponse.get("status").getAsString());
+         assertEquals("Changing password must activate account", "active", updateAccountResponse.get("status").getAsString());
          assertEquals("Role field is not updated", "Administrator", updateAccountResponse.get("role").getAsString());
 
         assertEquals("FriendlyName field is not updated",  "updated3", getAccountResponse.get("friendly_name").getAsString());
         assertEquals("AuthToken field is not updated", new Md5Hash("Restcomm2").toString(), getAccountResponse.get("auth_token").getAsString());
-        assertEquals("Status field is not updated", "active", getAccountResponse.get("status").getAsString());
+        assertEquals("Changing password must activate account", "active",getAccountResponse.get("status").getAsString());
         assertEquals("Role field is not updated", "Administrator", getAccountResponse.get("role").getAsString());
+        // role update test revert it back to Administrator
     }
 
     @Test
@@ -223,75 +271,65 @@ public class AccountsEndpointTest extends EndpointTest {
     }
 
     @Test
+    @Category(FeatureAltTests.class)
     public void testUpdateAccountStatusAllCapital() {
         JsonObject updateAccountResponse = RestcommAccountsTool.getInstance().updateAccount(deploymentUrl.toString(),
-                adminUsername, adminAuthToken, updatedAccountSid, "updated2", "Restcomm2", null, "Developer", "ACTIVE" );
+                adminUsername, adminAuthToken, updatedAccountSid, null, null, null, null, "ACTIVE" );
         JsonObject getAccountResponse = RestcommAccountsTool.getInstance().getAccount(deploymentUrl.toString(),
                 adminUsername, adminAuthToken, updatedUsername);
 
-        assertEquals("FriendlyName field is not updated",  "updated2", updateAccountResponse.get("friendly_name").getAsString());
-        assertEquals("AuthToken field is not updated", new Md5Hash("Restcomm2").toString(), updateAccountResponse.get("auth_token").getAsString());
         assertEquals("Status field is not updated", "active", updateAccountResponse.get("status").getAsString());
-        assertEquals("Role field is not updated", "Developer", updateAccountResponse.get("role").getAsString());
-
-        assertEquals("FriendlyName field is not updated",  "updated2", getAccountResponse.get("friendly_name").getAsString());
-        assertEquals("AuthToken field is not updated", new Md5Hash("Restcomm2").toString(), getAccountResponse.get("auth_token").getAsString());
         assertEquals("Status field is not updated", "active", getAccountResponse.get("status").getAsString());
-        assertEquals("Role field is not updated", "Developer", updateAccountResponse.get("role").getAsString());
 
         // role update test revert it back to Administrator
         updateAccountResponse = RestcommAccountsTool.getInstance().updateAccount(deploymentUrl.toString(),
-                adminUsername, adminAuthToken, updatedAccountSid, "updated3", "Restcomm2", null, "Administrator", "active" );
+                adminUsername, adminAuthToken, updatedAccountSid, "updated3", "Restcomm2", null, "Administrator", null );
         getAccountResponse = RestcommAccountsTool.getInstance().getAccount(deploymentUrl.toString(),
                 adminUsername, adminAuthToken, updatedUsername);
 
         assertEquals("FriendlyName field is not updated",  "updated3", updateAccountResponse.get("friendly_name").getAsString());
         assertEquals("AuthToken field is not updated", new Md5Hash("Restcomm2").toString(), updateAccountResponse.get("auth_token").getAsString());
-        assertEquals("Status field is not updated", "active", updateAccountResponse.get("status").getAsString());
         assertEquals("Role field is not updated", "Administrator", updateAccountResponse.get("role").getAsString());
 
         assertEquals("FriendlyName field is not updated",  "updated3", getAccountResponse.get("friendly_name").getAsString());
         assertEquals("AuthToken field is not updated", new Md5Hash("Restcomm2").toString(), getAccountResponse.get("auth_token").getAsString());
-        assertEquals("Status field is not updated", "active", getAccountResponse.get("status").getAsString());
         assertEquals("Role field is not updated", "Administrator", getAccountResponse.get("role").getAsString());
     }
 
     @Test
     public void testUpdateAccountByEmail() {
         JsonObject updateAccountResponse = RestcommAccountsTool.getInstance().updateAccount(deploymentUrl.toString(),
-                adminUsername, adminAuthToken, updatedUsername, "updated2", "Restcomm2", null, "Developer", "active" );
+                adminUsername, adminAuthToken, updatedUsername, "updated2", "Restcomm2", null, "Developer", null );
         JsonObject getAccountResponse = RestcommAccountsTool.getInstance().getAccount(deploymentUrl.toString(),
                 adminUsername, adminAuthToken, updatedUsername);
 
         assertEquals("FriendlyName field is not updated",  "updated2", updateAccountResponse.get("friendly_name").getAsString());
         assertEquals("AuthToken field is not updated", new Md5Hash("Restcomm2").toString(), updateAccountResponse.get("auth_token").getAsString());
-        assertEquals("Status field is not updated", "active", updateAccountResponse.get("status").getAsString());
         assertEquals("Role field is not updated", "Developer", updateAccountResponse.get("role").getAsString());
 
         assertEquals("FriendlyName field is not updated",  "updated2", getAccountResponse.get("friendly_name").getAsString());
         assertEquals("AuthToken field is not updated", new Md5Hash("Restcomm2").toString(), getAccountResponse.get("auth_token").getAsString());
-        assertEquals("Status field is not updated", "active", getAccountResponse.get("status").getAsString());
         assertEquals("Role field is not updated", "Developer", updateAccountResponse.get("role").getAsString());
 
         // role update test revert it back to Administrator
         updateAccountResponse = RestcommAccountsTool.getInstance().updateAccount(deploymentUrl.toString(),
-                adminUsername, adminAuthToken, updatedAccountSid, "updated3", "Restcomm2", null, "Administrator", "active" );
+                adminUsername, adminAuthToken, updatedAccountSid, "updated3", "Restcomm2", null, "Administrator", null );
         getAccountResponse = RestcommAccountsTool.getInstance().getAccount(deploymentUrl.toString(),
                 adminUsername, adminAuthToken, updatedUsername);
 
         assertEquals("FriendlyName field is not updated",  "updated3", updateAccountResponse.get("friendly_name").getAsString());
         assertEquals("AuthToken field is not updated", new Md5Hash("Restcomm2").toString(), updateAccountResponse.get("auth_token").getAsString());
-        assertEquals("Status field is not updated", "active", updateAccountResponse.get("status").getAsString());
         assertEquals("Role field is not updated", "Administrator", updateAccountResponse.get("role").getAsString());
 
         assertEquals("FriendlyName field is not updated",  "updated3", getAccountResponse.get("friendly_name").getAsString());
         assertEquals("AuthToken field is not updated", new Md5Hash("Restcomm2").toString(), getAccountResponse.get("auth_token").getAsString());
-        assertEquals("Status field is not updated", "active", getAccountResponse.get("status").getAsString());
         assertEquals("Role field is not updated", "Administrator", getAccountResponse.get("role").getAsString());
     }
 
     // special account-update policy when updating roles
-    @Test public void testUpdateAccountRoleAccessControl() {
+    @Test
+    @Category(FeatureExpTests.class)
+    public void testUpdateAccountRoleAccessControl() {
         // non-admins should not be able to change their role
         ClientResponse response = RestcommAccountsTool.getInstance().updateAccountResponse(deploymentUrl.toString(),
                 updatedRoleUsername, updateRoleAuthToken, updatedRoleAccountSid, null, null, null, "Administrator", null );
@@ -307,7 +345,9 @@ public class AccountsEndpointTest extends EndpointTest {
 
     }
 
-    @Test public void testCreateAccountAccess(){
+    @Test
+    @Category(FeatureExpTests.class)
+    public void testCreateAccountAccess(){
         // 'unprivilaged should not be able to create accounts and receive a 403
         ClientResponse response = RestcommAccountsTool.getInstance().createAccountResponse(deploymentUrl.toString(),
                 unprivilegedUsername, unprivilegedAuthToken, "notcreated@company.com", "not-created-password");
@@ -315,6 +355,7 @@ public class AccountsEndpointTest extends EndpointTest {
     }
 
     @Test
+    @Category(FeatureExpTests.class)
     public void testCreateAdministratorAccountFails() {
         JsonObject createAccountResponse = RestcommAccountsTool.getInstance().createAccount(deploymentUrl.toString(),
                 adminUsername, adminAuthToken, "administrator@company.com", "RestComm12");
@@ -322,6 +363,7 @@ public class AccountsEndpointTest extends EndpointTest {
     }
 
     @Test
+    @Category(FeatureExpTests.class)
     public void testCreateAccountTwiceFails() {
         ClientResponse createResponse1 = RestcommAccountsTool.getInstance().createAccountResponse(deploymentUrl.toString(), adminUsername, adminAuthToken,
                 "twice@company.com", "RestComm12");
@@ -338,6 +380,7 @@ public class AccountsEndpointTest extends EndpointTest {
      * @throws Exception
      */
     @Test
+    @Category(UnstableTests.class)
     public void testCreateAccountCheckClientExisted() throws Exception {
         try {
             String thinhContact = "sip:lyhungthinh@127.0.0.1:5090";
@@ -354,7 +397,7 @@ public class AccountsEndpointTest extends EndpointTest {
             assertNotNull(clientOfAccount);
 
             CreateClientsTool.getInstance().updateClientVoiceUrl(deploymentUrl.toString(), subAccountResponse,
-                    clientOfAccount.get("sid").getAsString(), "http://127.0.0.1:8080/restcomm/demos/welcome.xml",
+                    clientOfAccount.get("sid").getAsString(), deploymentUrl.toString() + "/demos/welcome.xml",
                     adminUsername, adminPassword);
 
             JsonObject clientOfAccountUpdated = CreateClientsTool.getInstance().getClientOfAccount(deploymentUrl.toString(),
@@ -375,6 +418,7 @@ public class AccountsEndpointTest extends EndpointTest {
     }
 
     @Test
+    @Category(FeatureExpTests.class)
     public void testCreateAccountFourthLevelFails() {
         ClientResponse response = RestcommAccountsTool.getInstance().createAccountResponse(deploymentUrl.toString(), "grandchild@company.com", commonAuthToken, "fourthlevelAccount@company.com", "RestComm12");
         assertEquals(400, response.getStatus());
@@ -382,6 +426,7 @@ public class AccountsEndpointTest extends EndpointTest {
     }
 
     @Test
+    @Category(UnstableTests.class)
     public void testUpdateAccountCheckClient() throws Exception {
         try {
             String thinhContact = "sip:lyhungthinh2@127.0.0.1:5090";
@@ -423,6 +468,7 @@ public class AccountsEndpointTest extends EndpointTest {
     }
 
     @Test
+    @Category(UnstableTests.class)
     public void testCloseAccountCheckClient() throws Exception {
         try {
             String thinhContact = "sip:lyhungthinh3@127.0.0.1:5090";
@@ -523,6 +569,7 @@ public class AccountsEndpointTest extends EndpointTest {
     }
 
     @Test
+    @Category(FeatureExpTests.class)
     public void testGetAccountsAccess() {
         ClientResponse response = RestcommAccountsTool.getInstance().getAccountsResponse(deploymentUrl.toString(), guestUsername, guestAuthToken);
         assertEquals("Guest account should get get a 403 when retrieving accounts", 403, response.getStatus());
@@ -568,19 +615,175 @@ public class AccountsEndpointTest extends EndpointTest {
         assertEquals(200, response.getStatus());
     }
 
+    @Test
+    @Category(FeatureExpTests.class)
+    public void createAccountInSpecificOrganizationPermissionTest() {
+    	// child should not be able to create account in specified org that it does not belong to
+    	ClientResponse clientResponse = RestcommAccountsTool.getInstance().createAccountResponse(deploymentUrl.toString(),
+                childUsername, childAuthToken, createdUsernanme, createdPassword, null, organizationSid2);
+    	assertEquals(403, clientResponse.getStatus());
+
+    }
+
+    @Test
+    public void createAccountInSpecificOrganizationRoleTest() {
+    	// child should be able to create account in specified org that it belong to
+    	ClientResponse clientResponse = RestcommAccountsTool.getInstance().createAccountResponse(deploymentUrl.toString(),
+                childUsername, childAuthToken, createdUsernanme2, createdPassword, null, organizationSid1);
+    	assertEquals(200, clientResponse.getStatus());
+
+    	//super admin should be able to create account in specified org
+    	clientResponse = RestcommAccountsTool.getInstance().createAccountResponse(deploymentUrl.toString(),
+                adminUsername, adminAuthToken, createdUsernanme3, createdPassword, null, organizationSid2);
+    	assertEquals(200, clientResponse.getStatus());
+
+    }
+
+    @Test
+    @Category(FeatureExpTests.class)
+    public void createAccountInSpecificOrganizationInvalidRequestTest() {
+
+    	//super admin tries to create account with invalid organization Sid
+    	ClientResponse clientResponse = RestcommAccountsTool.getInstance().createAccountResponse(deploymentUrl.toString(),
+                adminUsername, adminAuthToken, createdUsernanme3, createdPassword, null, "blabla");
+    	assertEquals(400, clientResponse.getStatus());
+
+    	//super admin tries to create account with organization Sid that does not exists
+    	clientResponse = RestcommAccountsTool.getInstance().createAccountResponse(deploymentUrl.toString(),
+                adminUsername, adminAuthToken, createdUsernanme3, createdPassword, null, "ORafbe225ad37541eba518a74248f01234");
+    	assertEquals(400, clientResponse.getStatus());
+    }
+
+    @Test
+    @Category({UnstableTests.class, FeatureAltTests.class})
+    //Using aaa prefix to enforce order, so this can be executed under the assumptions
+    //of initial db script, rather than depending on execution order of diff
+    //test cases
+    public void aaatestGetAccountsOfASpecificOrganization() {
+    	//getAccounts without any parameters
+        ClientResponse response = RestcommAccountsTool.getInstance().getAccountsResponse(deploymentUrl.toString(), adminUsername, adminAuthToken);
+        if(logger.isDebugEnabled())
+        	logger.debug("getAccounts without filter Response: "+response);
+        assertEquals(200, response.getStatus());
+
+        //getAccounts with null Filter
+        JsonArray accountsArray = RestcommAccountsTool.getInstance().getAccountsWithFilterResponse(deploymentUrl.toString(), adminUsername, adminAuthToken, null, null);
+        if(logger.isDebugEnabled())
+        	logger.debug("getAccounts With null Filter Response: "+accountsArray);
+        assertEquals(8, accountsArray.size());
+
+        //getAccounts with organizationSid Filter
+        accountsArray = RestcommAccountsTool.getInstance().getAccountsWithFilterResponse(deploymentUrl.toString(), adminUsername, adminAuthToken, organizationSid1, null);
+        if(logger.isDebugEnabled())
+        	logger.debug("getAccounts With organizationSid Filter Response: "+accountsArray);
+        assertEquals(24, accountsArray.size());
+
+        //getAccounts with organizationSid Filter
+        accountsArray = RestcommAccountsTool.getInstance().getAccountsWithFilterResponse(deploymentUrl.toString(), adminUsername, adminAuthToken, organizationSid2, null);
+        if(logger.isDebugEnabled())
+        	logger.debug("getAccounts With organizationSid Filter Response: "+accountsArray);
+        //should be 1 account that belongs to this org
+        assertEquals(1, accountsArray.size());
+
+        //getAccounts with organizationSid Filter
+        accountsArray = RestcommAccountsTool.getInstance().getAccountsWithFilterResponse(deploymentUrl.toString(), adminUsername, adminAuthToken, organizationSid3, null);
+        if(logger.isDebugEnabled())
+        	logger.debug("getAccounts With organizationSid Filter Response: "+accountsArray);
+        //should be 0, as no account belongs to this org
+        assertEquals(0, accountsArray.size());
+
+        //getAccounts with domainName Filter
+        accountsArray = RestcommAccountsTool.getInstance().getAccountsWithFilterResponse(deploymentUrl.toString(), adminUsername, adminAuthToken, null, organization2DomainName);
+        if(logger.isDebugEnabled())
+        	logger.debug("getAccounts With domainName Filter Response: "+accountsArray);
+        //should be 1 account
+        assertEquals(1, accountsArray.size());
+    }
+
+    @Test
+    public void testUpdateAccountStatusSuspended() {
+        final String sidMaster = "ACbdf00000000000000000000000000000";
+        final String sidChild1 = "ACbdf00000000000000000000000000001";
+        final String sidChild2 = "ACbdf00000000000000000000000000002";
+        final String sidGrandchild1 = "ACbdf00000000000000000000000000011";
+        final String sidGrandchild2 = "ACbdf00000000000000000000000000012";
+        //final String sidGreatGrandchild1 = "ACbdf00000000000000000000000000111";
+        //final String sidGreatGrandchild2 = "ACbdf00000000000000000000000000112";
+
+        //change master account status to suspended
+        JsonObject updateAccountResponse = RestcommAccountsTool.getInstance().updateAccount(deploymentUrl.toString(),
+                adminUsername, adminAuthToken, sidMaster, null, null, null, null, "suspended" );
+
+        //collect data from account tree to check status replication
+        JsonObject getAccountResponse1 = RestcommAccountsTool.getInstance().getAccount(deploymentUrl.toString(),
+                adminUsername, adminAuthToken, sidChild1);
+        JsonObject getAccountResponse2 = RestcommAccountsTool.getInstance().getAccount(deploymentUrl.toString(),
+                adminUsername, adminAuthToken, sidChild2);
+        JsonObject getAccountResponse3 = RestcommAccountsTool.getInstance().getAccount(deploymentUrl.toString(),
+                adminUsername, adminAuthToken, sidGrandchild1);
+        JsonObject getAccountResponse4 = RestcommAccountsTool.getInstance().getAccount(deploymentUrl.toString(),
+                adminUsername, adminAuthToken, sidGrandchild2);
+        //JsonObject getAccountResponse5 = RestcommAccountsTool.getInstance().getAccount(deploymentUrl.toString(),
+        //        adminUsername, adminAuthToken, sidGreatGrandchild1);
+        //JsonObject getAccountResponse6 = RestcommAccountsTool.getInstance().getAccount(deploymentUrl.toString(),
+        //        adminUsername, adminAuthToken, sidGreatGrandchild2);
+
+        //check master account status
+        assertEquals("Master account status is not updated",  "suspended", updateAccountResponse.get("status").getAsString());
+
+        //check account tree status
+        assertEquals("Child 1 account status is not updated",  "suspended", getAccountResponse1.get("status").getAsString());
+        assertEquals("Child 2 account status is not updated",  "suspended", getAccountResponse2.get("status").getAsString());
+        assertEquals("Grandchild 1 account status is not updated",  "suspended", getAccountResponse3.get("status").getAsString());
+        assertEquals("Grandchild 2 account status is not updated",  "suspended", getAccountResponse4.get("status").getAsString());
+        //assertEquals("Great-grandchild 1 account status is not updated",  "suspended", getAccountResponse5.get("status").getAsString());
+        //assertEquals("Great-grandchild 2 account status is not updated",  "suspended", getAccountResponse6.get("status").getAsString());
+
+        //revert master account status to active
+        updateAccountResponse = RestcommAccountsTool.getInstance().updateAccount(deploymentUrl.toString(),
+                adminUsername, adminAuthToken, sidMaster, null, null, null, null, "active" );
+
+        //collect data from account tree to check status replication
+        getAccountResponse1 = RestcommAccountsTool.getInstance().getAccount(deploymentUrl.toString(),
+                adminUsername, adminAuthToken, sidChild1);
+        getAccountResponse2 = RestcommAccountsTool.getInstance().getAccount(deploymentUrl.toString(),
+                adminUsername, adminAuthToken, sidChild2);
+        getAccountResponse3 = RestcommAccountsTool.getInstance().getAccount(deploymentUrl.toString(),
+                adminUsername, adminAuthToken, sidGrandchild1);
+        getAccountResponse4 = RestcommAccountsTool.getInstance().getAccount(deploymentUrl.toString(),
+                adminUsername, adminAuthToken, sidGrandchild2);
+        //getAccountResponse5 = RestcommAccountsTool.getInstance().getAccount(deploymentUrl.toString(),
+        //        adminUsername, adminAuthToken, sidGreatGrandchild1);
+        //getAccountResponse6 = RestcommAccountsTool.getInstance().getAccount(deploymentUrl.toString(),
+        //        adminUsername, adminAuthToken, sidGreatGrandchild2);
+
+        //check master account status
+        assertEquals("Master account status is not updated",  "active", updateAccountResponse.get("status").getAsString());
+
+        //check account tree status
+        assertEquals("Child 1 account status is not updated",  "active", getAccountResponse1.get("status").getAsString());
+        assertEquals("Child 2 account status is not updated",  "active", getAccountResponse2.get("status").getAsString());
+        assertEquals("Grandchild 1 account status is not updated",  "active", getAccountResponse3.get("status").getAsString());
+        assertEquals("Grandchild 2 account status is not updated",  "active", getAccountResponse4.get("status").getAsString());
+        //assertEquals("Great-grandchild 1 account status is not updated",  "active", getAccountResponse5.get("status").getAsString());
+        //assertEquals("Great-grandchild 2 account status is not updated",  "active", getAccountResponse6.get("status").getAsString());
+    }
+
     @Deployment(name = "ClientsEndpointTest", managed = true, testable = false)
     public static WebArchive createWebArchiveNoGw() {
         logger.info("Packaging Test App");
         logger.info("version");
         WebArchive archive = ShrinkWrap.create(WebArchive.class, "restcomm.war");
-        final WebArchive restcommArchive = ShrinkWrapMaven.resolver()
+        final WebArchive restcommArchive = Maven.resolver()
                 .resolve("org.restcomm:restcomm-connect.application:war:" + version).withoutTransitivity()
                 .asSingle(WebArchive.class);
         archive = archive.merge(restcommArchive);
         archive.delete("/WEB-INF/sip.xml");
+archive.delete("/WEB-INF/web.xml");
         archive.delete("/WEB-INF/conf/restcomm.xml");
         archive.delete("/WEB-INF/data/hsql/restcomm.script");
         archive.addAsWebInfResource("sip.xml");
+        archive.addAsWebInfResource("web.xml");
         archive.addAsWebInfResource("restcomm.xml", "conf/restcomm.xml");
         archive.addAsWebInfResource("restcomm.script_accounts_test", "data/hsql/restcomm.script");
         logger.info("Packaged Test App");

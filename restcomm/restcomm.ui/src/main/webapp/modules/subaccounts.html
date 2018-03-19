@@ -1,169 +1,84 @@
-<rc-page-title icon="user" title="SubAccounts" sub-title=""></rc-page-title>
+<div class="row accounts-tabs-mobile visible-sm visible-xs">
+    <div class="col-xs-5"><a href="#/profile/{{sid}}"><i class="fa fa-user"></i></a></div>
+    <div class="col-xs-5 col-xs-offset-2 active"><a href="#/subaccounts"><i class="fa fa-users"></i></a></div>
+</div>
+
 <div class="row">
-    <div class="col-md-12">
-        <div ng-show="subAccountsList.length > 0"
-			class="record-filter-div pull-right">
-            <form class="form-horizontal" role="form">
-                <!--<div class="form-inline">-->
-                <div class="row">
-                    <div class="col-sm-3">
-                        <div class="input-group">
-                            <span class="input-group-addon">Sid</span>
-                            <input type="text"
-								class="input-sm form-control" placeholder="Sid"
-								ng-model="search.sid" />
-                        </div>
-                    </div>
-                    <div class="col-sm-3">
-                        <div class="input-group">
-                            <span class="input-group-addon">Name</span>
-                            <input type="text"
-								class="input-sm form-control" placeholder="Friendly Name"
-								ng-model="search.friendly_name" />
-                        </div>
-                    </div>
-                    <div class="col-sm-3">
-                        <div class="input-group">
-                            <span class="input-group-addon">Role</span>
-                            <input type="text"
-								class="input-sm form-control" placeholder="Role"
-								ng-model="search.role" />
-                        </div>
-                    </div>
-                    <div class="col-sm-3">
-                        <div class="input-group">
-                            <span class="input-group-addon">Status</span>
-                            <select class="form-control" ng-model="statusFilter">
-                                <option value="Any">Any</option>
-                                <option value="ACTIVE">ACTIVE</option>
-                                <option value="CLOSED">CLOSED</option>
-                                <option value="SUSPENDED">SUSPENDED</option>
-                            </select>
-                        </div>
-                    </div>
-                </div>
-                <button class="btn btn-default hidden" disabled>
-                    <i class="fa fa-filter"></i> Filter
-				
-                </button>
-            </form>
+    <div class="col-md-2 accounts-tabs hidden-sm hidden-xs">
+        <div class=""><a href="#/profile/{{sid}}">Main Account</a></div>
+        <div class="active"><a href="#/subaccounts">Sub Accounts</a></div>
+    </div>
+    <div class="col-md-10">
+        <div class="row">
+            <div class="col-md-4 col-xs-6">
+                <form class="search-form">
+                    <i class="fa fa-search search-icon"></i>
+                    <input name="q" type="text" size="40" placeholder="Search..." ng-model="search.friendly_name">
+                </form>
+            </div>
+            <div  class="col-md-4 col-md-offset-4 col-xs-6">
+                <button id="register-sub-account" class="rc-btn btn-primary pull-right hidden-xs" ng-click="showRegisterAccountModal()"><b>+</b> New Account</button>
+                <button id="register-sub-account-mobile" class="rc-btn btn-primary rc-btn-sm pull-right visible-xs" ng-click="showRegisterAccountModal()"><b>+</b> New Account</button>
+            </div>
         </div>
-        <table
-			ng-show="(subAccountsList | orderBy:predicate:reverse | filter:search| filter:paginate).length > 0"
-			class="table table-striped table-hover" ng-cloak>
+        <hr>
+
+        <div ng-hide="filtered.length > 0" class="jumbotron rc-no-items">
+            <h1><i class="fa fa-users"></i> </h1>
+            <h2>No Sub Accounts</h2>
+            <h5>Why don't you get some friends in?</h5>
+        </div>
+
+        <table ng-show="(subAccountsList | filter:search).length > 0" class="table table-hover rc-list sub-accounts-list" ng-cloak>
             <thead>
-                <th class="width-5pc"
-					style="border-bottom: 3px solid #428bca; text-align: center;">SID
-                    <span
-					class="pull-right">
-                        <button
-							style="border-style: solid; border-color: #DCDCDC; border-width: 0px; background-color: #fff;"
-							ng-click="order('sid')" ;toggleD=!toggleD;reverse=toggleD">
-                            <i
-								ng-class="{'fa fa-chevron-up':toggleD,'fa fa-chevron-down':!toggleD}"></i>
-                        </button>
-                    </span>
-                </th>
-                <th class="width-5pc"
-					style="border-bottom: 3px solid #428bca; text-align: center;">FRIENDLY
-					NAME
-                    <span class="pull-right">
-                        <button
-							style="border-style: solid; border-color: #DCDCDC; border-width: 0px; background-color: #fff;"
-							ng-click="order('friendly_name')"
-							;toggleD=!toggleD;reverse=toggleD">
-                            <i
-								ng-class="{'fa fa-chevron-up':toggleD,'fa fa-chevron-down':!toggleD}"></i>
-                        </button>
-                    </span>
-                </th>
-                <th class="width-10pc"
-					style="border-bottom: 3px solid #428bca; text-align: center;">ROLE
-                    <span
-					class="pull-right">
-                        <button
-							style="border-style: solid; border-color: #DCDCDC; border-width: 0px; background-color: #fff;"
-							ng-click="order('role')" ;toggleD=!toggleD;reverse=toggleD">
-                            <i
-								ng-class="{'fa fa-chevron-up':toggleD,'fa fa-chevron-down':!toggleD}"></i>
-                        </button>
-                    </span>
-                </th>
-                <th class="width-10pc"
-                    style="border-bottom: 3px solid #428bca; text-align: center;">STATUS
-                    <span
-                            class="pull-right">
-                        <button
-                                style="border-style: solid; border-color: #DCDCDC; border-width: 0px; background-color: #fff;"
-                                ng-click="order('status')" ;toggleD=!toggleD;reverse=toggleD">
-                            <i
-                                    ng-class="{'fa fa-chevron-up':toggleD,'fa fa-chevron-down':!toggleD}"></i>
-                        </button>
-                    </span>
-                </th>
+            <th class="sub-accounts-list-name" rc-list-sort by="predicate" order="'friendly_name'" reverse="reverse">Name</th>
+            <th class="sub-accounts-list-account-sid">Account SID</th>
+            <th class="sub-accounts-list-role hidden-xs" rc-list-sort by="predicate" order="'role'" reverse="reverse">Role</th>
+            <th class="sub-accounts-list-status" rc-list-sort by="predicate" order="'status'" reverse="reverse">Status</th>
+            <th class="sub-accounts-list-action"></th>
             </thead>
             <tbody>
-                <tr ng-hide="subAccount.sid == sid"
-					ng-repeat="subAccount in filtered = (subAccountsList | filter:search | orderBy:predicate:reverse) | startFrom:(currentPage-1)*entryLimit | limitTo:entryLimit">
-                    <td>
-                        <div class="text-center"><a href="#/profile/{{subAccount.sid}}">{{ subAccount.sid }}</a></div>
-                    </td>
-                    <td>
-                        <div class="text-center"
-							title="{{ notification.message_text }}">{{
-							subAccount.friendly_name}}</div>
-                    </td>
-                    <td>
-                        <div class="text-center"
-							title="{{ notification.message_text }}">{{
-							subAccount.role}}</div>
-                    </td>
-                    <td>
-                        <div class="text-center text-muted"
-                             title="{{ notification.message_text }}" style="text-transform: uppercase">{{
-                            subAccount.status}}</div>
-                    </td>
-                </tr>
+            <tr class="sub-accounts-row" ng-repeat="subAccount in filtered = (subAccountsList | filter:search | orderBy:predicate:reverse) | startFrom:(currentPage-1)*entryLimit | limitTo:entryLimit" ng-click="$root.goTo('/profile/' + subAccount.sid)">
+                <td class="sub-accounts-list-name">
+                    <div class="account-logo">{{ subAccount.friendly_name  | limitTo : 1 | uppercase }}</div>
+                    <div class="fit-to-size"><a href="#/profile/{{subAccount.sid}}">{{ subAccount.friendly_name }}</a></div>
+                    <small><small class="visible-xs">{{ subAccount.role }}</small></small>
+                </td>
+                <td class="sub-accounts-list-account-sid">
+                    <div class="fit-to-size">{{ subAccount.sid }}</div>
+                </td>
+                <td class="sub-accounts-list-role hidden-xs">
+                    <div class="fit-to-size">{{ subAccount.role }}</div>
+                </td>
+                <td class="sub-accounts-list-status">
+                    <div class="account-status-{{ subAccount.status }}-text">{{ subAccount.status }}</div>
+                </td>
+                <td class="sub-accounts-list-action visible-xs">
+                    <div><i class="fa fa-chevron-right"></i></div>
+                </td>
+            </tr>
             </tbody>
             <tfoot>
-                <td colspan=1>
-                    <small class="pull-left">{{filtered.length}} Account{{ filtered.length == 1 ? "" : "s" }}</small>
-                </td>
-                <td colspan=1>
-                    <form class="form-inline text-center">
-                        <h6>Items / Page</h6>
-                        <div class="btn-group buttons-per-page"
-							data-toggle="buttons-radio">
-                            <button type="button" class="btn btn-default btn-sm"
-								ng-class="entryLimit == 10 ? 'active' : ''"
-								ng-click="setEntryLimit(10)">10</button>
-                            <button type="button" class="btn btn-default btn-sm"
-								ng-class="entryLimit == 25 ? 'active' : ''"
-								ng-click="setEntryLimit(25)">25</button>
-                            <button type="button" class="btn btn-default btn-sm"
-								ng-class="entryLimit == 50 ? 'active' : ''"
-								ng-click="setEntryLimit(50)">50</button>
-                        </div>
-                    </form>
-                </td>
-                <td colspan=2>
-                    <uib-pagination total-items="totalItems"
-						ng-model="currentPage" max-size="maxSize" boundary-links="true"
-						items-per-page="entryLimit"
-						class="pagination pagination-sm pull-right"></uib-pagination>
-                </td>
+            <td colspan="4">
+                <div class="row">
+                    <div class="col-md-4">
+                        <small class="rc-list-summary">{{ filtered.length }} Account{{ filtered.length == 1 ? "" : "s" }}</small>
+                    </div>
+                    <div class="col-md-4">
+                        <form class="form-inline text-center">
+                            <div class="btn-group buttons-per-page">
+                                <button type="button" class="btn btn-sm" ng-class="{'active':entryLimit === 10}" ng-click="setEntryLimit(10)">10</button>
+                                <button type="button" class="btn btn-sm" ng-class="{'active':entryLimit === 25}" ng-click="setEntryLimit(25)">25</button>
+                                <button type="button" class="btn btn-sm" ng-class="{'active':entryLimit === 50}" ng-click="setEntryLimit(50)">50</button>
+                            </div>
+                        </form>
+                    </div>
+                    <div class="col-md-4">
+                        <ul uib-pagination class="pagination pagination-sm pull-right" ng-change="pageChanged()" total-items="filtered.length" items-per-page="entryLimit" ng-model="currentPage" data-boundary-links="true" data-current-page="currentPage" max-size="maxSize" previous-text="<" next-text=">" first-text="<<" last-text=">>"></ul>
+                    </div>
+                </div>
+            </td>
             </tfoot>
         </table>
-        <div ng-hide="(subAccountsList | filter:search).length > 0"
-			class="jumbotron no-records-alert">
-            <h2>
-                <i class="fa fa-exclamation-circle"></i> No Account
-                <span
-					ng-show="subAccountsList.length == 0"></span>
-                <span
-					ng-show="subAccountsList.length > 0"> matching query</span>. 
-                <small></small>
-            </h2>
-        </div>
     </div>
 </div>

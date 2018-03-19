@@ -24,28 +24,28 @@ fetchExternalResources() {
 
     	echo "Checking required libraries ..."
 
-    	if [ -f $RESTCOMM_HOME/standalone/deployments/restcomm.war/WEB-INF/lib/dlgmsc-5.0-alpha.jar ]; then
+    	if [ -f $RESTCOMM_HOME/standalone/deployments/restcomm.war/WEB-INF/lib/dialogic309-3.2-snapshot-jboss.jar ]; then
     		echo "JSR309 library ready"
     	else
     		echo "Downloading JSR309 library ..."
     		cd $RESTCOMM_HOME/standalone/deployments/restcomm.war/WEB-INF/lib
-    		wget -O dlgmsc-5.0-alpha.jar https://www.dialogic.com/files/jsr-309/4.1/dlgmsc-5.0-alpha.jar
+    		wget -O dialogic309-3.2-snapshot-jboss.jar https://www.dialogic.com/files/jsr-309/3.2GA/3.2Snapshot/dialogic309-3.2-snapshot-jboss.jar
 		fi
 
-		if [ -f $RESTCOMM_HOME/standalone/deployments/restcomm.war/WEB-INF/lib/dlgcsmiltypes-4.1.429.jar ]; then
+		if [ -f $RESTCOMM_HOME/standalone/deployments/restcomm.war/WEB-INF/lib/dialogicsmiltypes-3.2-GA-14621.jar ]; then
     		echo "SMIL Types library ready"
     	else
     		echo "Downloading SMIL Types library ..."
     		cd $RESTCOMM_HOME/standalone/deployments/restcomm.war/WEB-INF/lib
-    		wget -O dlgcsmiltypes-4.1.429.jar https://www.dialogic.com/files/jsr-309/4.1/dlgcsmiltypes-4.1.429.jar
+    		wget -O dialogicsmiltypes-3.2-GA-14621.jar https://www.dialogic.com/files/jsr-309/3.2GA/dialogicsmiltypes-3.2-GA-14621.jar
 		fi
 
-		if [ -f $RESTCOMM_HOME/standalone/deployments/restcomm.war/WEB-INF/lib/msmltypes-4.1.429.jar ]; then
+		if [ -f $RESTCOMM_HOME/standalone/deployments/restcomm.war/WEB-INF/lib/dialogicmsmltypes-3.2-GA-14621.jar ]; then
     		echo "MSML Types library ready"
     	else
     		echo "Downloading SMIL Types library ..."
     		cd $RESTCOMM_HOME/standalone/deployments/restcomm.war/WEB-INF/lib
-    		wget -O msmltypes-4.1.429.jar https://www.dialogic.com/files/jsr-309/4.1/msmltypes-4.1.429.jar
+    		wget -O dialogicmsmltypes-3.2-GA-14621.jar https://www.dialogic.com/files/jsr-309/3.2GA/dialogicmsmltypes-3.2-GA-14621.jar
 		fi
 	fi
 }

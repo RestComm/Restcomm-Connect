@@ -20,21 +20,19 @@
  */
 package org.restcomm.connect.mrb;
 
-import akka.actor.ActorRef;
-import akka.actor.Props;
-import akka.actor.UntypedActor;
-import akka.actor.UntypedActorFactory;
-import akka.event.Logging;
-import akka.event.LoggingAdapter;
-import jain.protocol.ip.mgcp.CreateProviderException;
-import jain.protocol.ip.mgcp.JainMgcpProvider;
-import jain.protocol.ip.mgcp.JainMgcpStack;
+import java.net.URI;
+import java.net.UnknownHostException;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+
 import org.apache.commons.configuration.Configuration;
 import org.joda.time.DateTime;
 import org.mobicents.protocols.mgcp.stack.JainMgcpStackImpl;
 import org.restcomm.connect.commons.dao.Sid;
 import org.restcomm.connect.commons.faulttolerance.RestcommUntypedActor;
 import org.restcomm.connect.commons.loader.ObjectFactory;
+import org.restcomm.connect.commons.util.DNSUtils;
 import org.restcomm.connect.dao.CallDetailRecordsDao;
 import org.restcomm.connect.dao.ConferenceDetailRecordsDao;
 import org.restcomm.connect.dao.DaoManager;
@@ -51,12 +49,15 @@ import org.restcomm.connect.mrb.api.MediaGatewayForConference;
 import org.restcomm.connect.mrb.api.StartMediaResourceBroker;
 import org.restcomm.connect.telephony.api.ConferenceStateChanged;
 
-import java.net.InetAddress;
-import java.net.URI;
-import java.net.UnknownHostException;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
+import akka.actor.ActorRef;
+import akka.actor.Props;
+import akka.actor.UntypedActor;
+import akka.actor.UntypedActorFactory;
+import akka.event.Logging;
+import akka.event.LoggingAdapter;
+import jain.protocol.ip.mgcp.CreateProviderException;
+import jain.protocol.ip.mgcp.JainMgcpProvider;
+import jain.protocol.ip.mgcp.JainMgcpStack;
 
 /**
  * @author maria.farooq@telestax.com (Maria Farooq)
@@ -68,6 +69,7 @@ public class MediaResourceBrokerGeneric extends RestcommUntypedActor {
     protected Configuration configuration;
     protected DaoManager storage;
     protected ClassLoader loader;
+    protected ActorRef monitoringService;
     protected ActorRef localMediaGateway;
     protected String localMsId;
     protected Map<String, ActorRef> mediaGatewayMap;
@@ -112,6 +114,7 @@ public class MediaResourceBrokerGeneric extends RestcommUntypedActor {
         this.configuration = message.configuration();
         this.storage = message.storage();
         this.loader = message.loader();
+        this.monitoringService = message.getMonitoringService();
 
         localMediaServerEntity = uploadLocalMediaServersInDataBase();
         bindMGCPStack(localMediaServerEntity.getLocalIpAddress(), localMediaServerEntity.getLocalPort());
@@ -126,7 +129,7 @@ public class MediaResourceBrokerGeneric extends RestcommUntypedActor {
      * @throws UnknownHostException
      */
     protected void bindMGCPStack(String ip, int port) throws UnknownHostException {
-        mgcpStack = new JainMgcpStackImpl(InetAddress.getByName(ip), port);
+        mgcpStack = new JainMgcpStackImpl(DNSUtils.getByName(ip), port);
         try {
             mgcpProvider = mgcpStack.createProvider();
         } catch (final CreateProviderException exception) {
@@ -168,13 +171,13 @@ public class MediaResourceBrokerGeneric extends RestcommUntypedActor {
             logger.info("turnOnMediaGateway local ip: "+localMediaServerEntity.getLocalIpAddress()+" local port: "+localMediaServerEntity.getLocalPort()
             +" remote ip: "+mediaServerEntity.getRemoteIpAddress()+" remote port: "+mediaServerEntity.getRemotePort());
 
-        builder.setLocalIP(InetAddress.getByName(localMediaServerEntity.getLocalIpAddress()));
+        builder.setLocalIP(DNSUtils.getByName(localMediaServerEntity.getLocalIpAddress()));
         builder.setLocalPort(localMediaServerEntity.getLocalPort());
-        builder.setRemoteIP(InetAddress.getByName(mediaServerEntity.getRemoteIpAddress()));
+        builder.setRemoteIP(DNSUtils.getByName(mediaServerEntity.getRemoteIpAddress()));
         builder.setRemotePort(mediaServerEntity.getRemotePort());
 
         if (mediaServerEntity.getExternalAddress() != null) {
-            builder.setExternalIP(InetAddress.getByName(mediaServerEntity.getExternalAddress()));
+            builder.setExternalIP(DNSUtils.getByName(mediaServerEntity.getExternalAddress()));
             builder.setUseNat(true);
         } else {
             builder.setUseNat(false);
@@ -183,6 +186,7 @@ public class MediaResourceBrokerGeneric extends RestcommUntypedActor {
         builder.setTimeout(Long.parseLong(mediaServerEntity.getResponseTimeout()));
         builder.setStack(mgcpStack);
         builder.setProvider(mgcpProvider);
+        builder.setMonitoringService(monitoringService);
 
         final PowerOnMediaGateway powerOn = builder.build();
         gateway.tell(powerOn, null);

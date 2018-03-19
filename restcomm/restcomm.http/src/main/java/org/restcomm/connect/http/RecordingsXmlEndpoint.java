@@ -19,17 +19,15 @@
  */
 package org.restcomm.connect.http;
 
-import org.restcomm.connect.commons.annotations.concurrency.ThreadSafe;
-
 import javax.ws.rs.GET;
 import javax.ws.rs.Path;
 import javax.ws.rs.PathParam;
+import javax.ws.rs.Produces;
 import javax.ws.rs.core.Context;
+import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
 import javax.ws.rs.core.UriInfo;
-
-import static javax.ws.rs.core.MediaType.APPLICATION_JSON_TYPE;
-import static javax.ws.rs.core.MediaType.APPLICATION_XML_TYPE;
+import org.restcomm.connect.commons.annotations.concurrency.ThreadSafe;
 
 /**
  * @author quintana.thomas@gmail.com (Thomas Quintana)
@@ -41,26 +39,30 @@ public final class RecordingsXmlEndpoint extends RecordingsEndpoint {
         super();
     }
 
-    @Path("/{sid}.json")
-    @GET
-    public Response getRecordingAsJson(@PathParam("accountSid") final String accountSid, @PathParam("sid") final String sid) {
-        return getRecording(accountSid, sid, APPLICATION_JSON_TYPE);
-    }
-
     @Path("/{sid}.wav")
     @GET
+    @Produces({MediaType.APPLICATION_XML, MediaType.APPLICATION_JSON})
     public Response getRecordingAsWav(@PathParam("accountSid") final String accountSid, @PathParam("sid") final String sid) {
-        return getRecordingWav(accountSid, sid);
+        return getRecordingFile(accountSid, sid);
+    }
+
+    @Path("/{sid}.mp4")
+    @GET
+    @Produces({MediaType.APPLICATION_XML, MediaType.APPLICATION_JSON})
+    public Response getRecordingAsMp4(@PathParam("accountSid") final String accountSid, @PathParam("sid") final String sid) {
+        return getRecordingFile(accountSid, sid);
     }
 
     @Path("/{sid}")
     @GET
+    @Produces({MediaType.APPLICATION_XML, MediaType.APPLICATION_JSON})
     public Response getRecordingAsXml(@PathParam("accountSid") final String accountSid, @PathParam("sid") final String sid) {
-        return getRecording(accountSid, sid, APPLICATION_XML_TYPE);
+        return getRecording(accountSid, sid, retrieveMediaType());
     }
 
     @GET
+    @Produces({MediaType.APPLICATION_XML, MediaType.APPLICATION_JSON})
     public Response getRecordings(@PathParam("accountSid") final String accountSid, @Context UriInfo info) {
-        return getRecordings(accountSid, info, APPLICATION_XML_TYPE);
+        return getRecordings(accountSid, info, retrieveMediaType());
     }
 }

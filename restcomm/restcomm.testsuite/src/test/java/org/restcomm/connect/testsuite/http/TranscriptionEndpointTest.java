@@ -28,16 +28,21 @@ import org.jboss.arquillian.container.test.api.Deployment;
 import org.jboss.arquillian.junit.Arquillian;
 import org.jboss.shrinkwrap.api.ShrinkWrap;
 import org.jboss.shrinkwrap.api.spec.WebArchive;
-import org.jboss.shrinkwrap.resolver.api.maven.archive.ShrinkWrapMaven;
+import org.jboss.shrinkwrap.resolver.api.maven.Maven;
 import static org.junit.Assert.assertTrue;
 import org.junit.Test;
+import org.junit.FixMethodOrder;
+import org.junit.runners.MethodSorters;
+import org.junit.experimental.categories.Category;
 import org.junit.runner.RunWith;
+import org.restcomm.connect.commons.annotations.FeatureAltTests;
 
 /**
  * @author <a href="mailto:n.congvu@gmail.com">vunguyen</a>
  *
  */
 @RunWith(Arquillian.class)
+@FixMethodOrder(MethodSorters.NAME_ASCENDING)
 public class TranscriptionEndpointTest extends EndpointTest{
     private static Logger logger = Logger.getLogger(TranscriptionEndpointTest.class);
 
@@ -58,6 +63,7 @@ public class TranscriptionEndpointTest extends EndpointTest{
     }
 
     @Test
+    @Category(FeatureAltTests.class)
     public void getTranscriptionListUsingPageSize() {
         JsonObject firstPage = TranscriptionEndpointTool.getInstance().getTranscriptionList(deploymentUrl.toString(), adminAccountSid,
                 adminAuthToken, null, 10, true);
@@ -82,6 +88,7 @@ public class TranscriptionEndpointTest extends EndpointTest{
     }
 
     @Test
+    @Category(FeatureAltTests.class)
     public void getTranscriptionListFilteredByStartTime() {
         Map<String, String> filters = new HashMap<String, String>();
         filters.put("StartTime", "2013-11-30 16:28:33.403000000");
@@ -95,6 +102,7 @@ public class TranscriptionEndpointTest extends EndpointTest{
     }
 
     @Test
+    @Category(FeatureAltTests.class)
     public void getTranscriptionListFilteredByEndTime() {
         Map<String, String> filters = new HashMap<String, String>();
         filters.put("EndTime", "2013-10-30 16:28:33.403000000");
@@ -108,6 +116,7 @@ public class TranscriptionEndpointTest extends EndpointTest{
     }
 
     @Test
+    @Category(FeatureAltTests.class)
     public void getTranscriptionListFilteredByTranscriptionText() {
         Map<String, String> filters = new HashMap<String, String>();
         filters.put("TranscriptionText", "RestComm");
@@ -124,14 +133,16 @@ public class TranscriptionEndpointTest extends EndpointTest{
     public static WebArchive createWebArchiveNoGw() {
         logger.info("Packaging Test App");
         WebArchive archive = ShrinkWrap.create(WebArchive.class, "restcomm.war");
-        final WebArchive restcommArchive = ShrinkWrapMaven.resolver()
+        final WebArchive restcommArchive = Maven.resolver()
                 .resolve("org.restcomm:restcomm-connect.application:war:" + version).withoutTransitivity()
                 .asSingle(WebArchive.class);
         archive = archive.merge(restcommArchive);
         archive.delete("/WEB-INF/sip.xml");
+archive.delete("/WEB-INF/web.xml");
         archive.delete("/WEB-INF/conf/restcomm.xml");
         archive.delete("/WEB-INF/data/hsql/restcomm.script");
         archive.addAsWebInfResource("sip.xml");
+        archive.addAsWebInfResource("web.xml");
         archive.addAsWebInfResource("restcomm.xml", "conf/restcomm.xml");
         archive.addAsWebInfResource("restcomm_with_Data.script", "data/hsql/restcomm.script");
         logger.info("Packaged Test App");

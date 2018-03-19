@@ -28,7 +28,6 @@ import akka.actor.UntypedActorContext;
 import akka.actor.UntypedActorFactory;
 import akka.event.Logging;
 import akka.event.LoggingAdapter;
-
 import org.apache.commons.configuration.Configuration;
 import org.apache.http.HttpStatus;
 import org.apache.http.NameValuePair;
@@ -53,6 +52,11 @@ import org.restcomm.connect.dao.entities.Notification;
 import org.restcomm.connect.email.EmailService;
 import org.restcomm.connect.email.api.EmailRequest;
 import org.restcomm.connect.email.api.Mail;
+import org.restcomm.connect.extension.api.ExtensionResponse;
+import org.restcomm.connect.extension.api.ExtensionType;
+import org.restcomm.connect.extension.api.IExtensionFeatureAccessRequest;
+import org.restcomm.connect.extension.api.RestcommExtensionGeneric;
+import org.restcomm.connect.extension.controller.ExtensionController;
 import org.restcomm.connect.http.client.Downloader;
 import org.restcomm.connect.http.client.DownloaderResponse;
 import org.restcomm.connect.http.client.HttpRequestDescriptor;
@@ -69,6 +73,7 @@ import org.restcomm.connect.telephony.api.Answer;
 import org.restcomm.connect.telephony.api.CallInfo;
 import org.restcomm.connect.telephony.api.CallResponse;
 import org.restcomm.connect.telephony.api.CallStateChanged;
+import org.restcomm.connect.telephony.api.FeatureAccessRequest;
 import org.restcomm.connect.telephony.api.GetCallInfo;
 import org.restcomm.connect.ussd.commons.UssdInfoRequest;
 import org.restcomm.connect.ussd.commons.UssdMessageType;
@@ -77,7 +82,6 @@ import org.restcomm.connect.ussd.commons.UssdRestcommResponse;
 import javax.servlet.sip.SipServletRequest;
 import javax.servlet.sip.SipServletResponse;
 import javax.servlet.sip.SipSession;
-
 import java.io.IOException;
 import java.math.BigDecimal;
 import java.net.URI;
@@ -92,7 +96,9 @@ import java.util.Set;
 import java.util.concurrent.LinkedBlockingQueue;
 import java.util.regex.Pattern;
 
-import static org.restcomm.connect.interpreter.rcml.Verbs.*;
+import static org.restcomm.connect.interpreter.rcml.Verbs.ussdCollect;
+import static org.restcomm.connect.interpreter.rcml.Verbs.ussdLanguage;
+import static org.restcomm.connect.interpreter.rcml.Verbs.ussdMessage;
 
 /**
  * @author <a href="mailto:gvagenas@gmail.com">gvagenas</a>
@@ -174,6 +180,9 @@ public class UssdInterpreter extends RestcommUntypedActor {
     private boolean receivedBye;
     private boolean sentBye;
 
+    //List of extensions for UssdInterpreter
+    List<RestcommExtensionGeneric> extensions;
+
     public UssdInterpreter(final UssdInterpreterParams params) {
         super();
         final ActorRef source = self();
@@ -243,6 +252,8 @@ public class UssdInterpreter extends RestcommUntypedActor {
 
         receivedBye = false;
         sentBye = false;
+
+        extensions = ExtensionController.getInstance().getExtensions(ExtensionType.FeatureAccessControl);
     }
 
     public static Props props(final UssdInterpreterParams params) {
@@ -545,27 +556,34 @@ public class UssdInterpreter extends RestcommUntypedActor {
             }
         } else if (DownloaderResponse.class.equals(klass)) {
             final DownloaderResponse response = (DownloaderResponse) message;
-
-            int sc = response.get().getStatusCode();
-            //processingInfoRequest
             if (logger.isDebugEnabled()) {
-                logger.debug("Rcml URI : " + response.get().getURI() + "response success=" + response.succeeded()
-                    + ", statusCode=" + response.get().getStatusCode()+" state="+state);
+                logger.debug("Rcml DownloaderResponse success=" + response.succeeded());
             }
             //FIXME: what if these ifblocks arent in downloadingRcml?
             if (response.succeeded()) {
+                int sc = response.get().getStatusCode();
+                //processingInfoRequest
+                if (logger.isDebugEnabled()) {
+                    logger.debug("Rcml DownloaderResponse URI : " + response.get().getURI()
+                        + ", statusCode=" + response.get().getStatusCode()+" state="+state);
+                }
                 if(HttpStatus.SC_OK == sc){
                     fsm.transition(message, ready);
                 } else if (HttpStatus.SC_NOT_FOUND == sc){
                     fsm.transition(message, notFound);
                 }
             } else {
+                if (logger.isDebugEnabled()) {
+                    logger.debug("Rcml DownloaderResponse error : " + response.error()
+                        + ", cause=" +
+                        ((response.cause() != null) ? response.cause().getMessage() : ""));
+                }
                 if (downloadingRcml.equals(state) && fallbackUrl!=null) {
                     fsm.transition(message, downloadingFallbackRcml);
                 } else {
                     //unexpected response
                     if(!sentBye && !receivedBye){
-                        sendBye("UssdInterpreter Stopping. Unexpected State when receiving DownloaderResponse");
+                        sendBye("UssdInterpreter Stopping. Unexpected State when receiving DownloaderResponse " + response.error());
                         sentBye = true;
                     }
                     fsm.transition(message, finished);
@@ -578,6 +596,27 @@ public class UssdInterpreter extends RestcommUntypedActor {
             fsm.transition(message, cancelling);
         } else if (Tag.class.equals(klass)) {
             final Tag verb = (Tag) message;
+
+            ExtensionController ec = ExtensionController.getInstance();
+            IExtensionFeatureAccessRequest far = new FeatureAccessRequest(FeatureAccessRequest.Feature.OUTBOUND_USSD, accountId);
+            ExtensionResponse er = ec.executePreOutboundAction(far, extensions);
+
+            if (!er.isAllowed()) {
+                if (logger.isDebugEnabled()) {
+                    final String errMsg = "Outbound USSD session is not Allowed";
+                    logger.debug(errMsg);
+                }
+                String errMsg = "Outbound USSD session is not Allowed";
+
+                final Notification notification = notification(WARNING_NOTIFICATION, 11001, errMsg);
+                final NotificationsDao notifications = storage.getNotificationsDao();
+                notifications.addNotification(notification);
+
+                sendBye(errMsg);
+                ec.executePostOutboundAction(far, extensions);
+                return;
+            }
+
             if (ussdLanguage.equals(verb.name())) {
                 if (ussdLanguageTag == null) {
                     ussdLanguageTag = verb;

@@ -34,7 +34,6 @@ import org.apache.http.client.methods.CloseableHttpResponse;
 import org.apache.http.client.methods.HttpGet;
 import org.apache.http.client.methods.HttpPost;
 import org.apache.http.client.methods.HttpUriRequest;
-import org.apache.http.client.utils.HttpClientUtils;
 import org.apache.http.client.utils.URIBuilder;
 import org.apache.http.impl.client.CloseableHttpClient;
 import org.restcomm.connect.commons.common.http.CustomHttpClientBuilder;
@@ -53,6 +52,10 @@ import java.io.UnsupportedEncodingException;
 import java.net.URI;
 import java.net.URISyntaxException;
 import java.util.List;
+import org.apache.http.client.config.RequestConfig;
+import org.apache.http.client.protocol.HttpClientContext;
+import org.apache.http.protocol.BasicHttpContext;
+import org.apache.http.protocol.HttpContext;
 
 /**
  * @author quintana.thomas@gmail.com (Thomas Quintana)
@@ -61,65 +64,66 @@ public final class Downloader extends RestcommUntypedActor {
 
     public static final int LOGGED_RESPONSE_MAX_SIZE = 100;
 
+    private CloseableHttpClient client = null;
+
     // Logger.
     private final LoggingAdapter logger = Logging.getLogger(getContext().system(), this);
 
-    public Downloader() {
+    public Downloader () {
         super();
+        client = (CloseableHttpClient) CustomHttpClientBuilder.buildDefaultClient(RestcommConfiguration.getInstance().getMain());
     }
 
-    public HttpResponseDescriptor fetch(final HttpRequestDescriptor descriptor) throws IllegalArgumentException, IOException,
+
+    public HttpResponseDescriptor fetch (final HttpRequestDescriptor descriptor) throws IllegalArgumentException, IOException,
             URISyntaxException, XMLStreamException {
         int code = -1;
         HttpRequest request = null;
         CloseableHttpResponse response = null;
         HttpRequestDescriptor temp = descriptor;
-        CloseableHttpClient client = null;
         HttpResponseDescriptor responseDescriptor = null;
         HttpResponseDescriptor rawResponseDescriptor = null;
         try {
-        do {
-                client = (CloseableHttpClient) CustomHttpClientBuilder.build(RestcommConfiguration.getInstance().getMain());
-    //            client.getParams().setParameter(ClientPNames.COOKIE_POLICY, CookiePolicy.BROWSER_COMPATIBILITY);
-//            client.getParams().setParameter("http.protocol.content-charset", "UTF-8");
-            request = request(temp);
+            do {
+                request = request(temp);
                 request.setHeader("http.protocol.content-charset", "UTF-8");
-
-            response = client.execute((HttpUriRequest) request);
-            code = response.getStatusLine().getStatusCode();
-            if (isRedirect(code)) {
-                final Header header = response.getFirstHeader(HttpHeaders.LOCATION);
-                if (header != null) {
-                    final String location = header.getValue();
-                    final URI uri = URI.create(location);
-                    temp = new HttpRequestDescriptor(uri, temp.getMethod(), temp.getParameters());
-                    continue;
+                if (descriptor.getTimeout() > 0){
+                    HttpContext httpContext = new BasicHttpContext();
+                    httpContext.setAttribute(HttpClientContext.REQUEST_CONFIG, RequestConfig.custom().
+                    setConnectTimeout(descriptor.getTimeout()).
+                    setSocketTimeout(descriptor.getTimeout()).
+                    setConnectionRequestTimeout(descriptor.getTimeout()).build());
+                    response = client.execute((HttpUriRequest) request, httpContext);
                 } else {
-                    break;
+                    response = client.execute((HttpUriRequest) request);
                 }
-            }
+                code = response.getStatusLine().getStatusCode();
+                if (isRedirect(code)) {
+                    final Header header = response.getFirstHeader(HttpHeaders.LOCATION);
+                    if (header != null) {
+                        final String location = header.getValue();
+                        final URI uri = URI.create(location);
+                        temp = new HttpRequestDescriptor(uri, temp.getMethod(), temp.getParameters());
+                        continue;
+                    } else {
+                        break;
+                    }
+                }
 //                HttpResponseDescriptor httpResponseDescriptor = response(request, response);
                 rawResponseDescriptor = response(request, response);
                 responseDescriptor = validateXML(rawResponseDescriptor);
-        } while (isRedirect(code));
-        if (isHttpError(code)) {
-            // TODO - usually this part of code is not reached. Error codes are part of error responses that do not pass validateXML above and an exception is thrown. We need to re-thing this
-            String requestUrl = request.getRequestLine().getUri();
-            String errorReason = response.getStatusLine().getReasonPhrase();
-            String httpErrorMessage = String.format(
-                    "Problem while fetching http resource: %s \n Http status code: %d \n Http status message: %s", requestUrl,
-                    code, errorReason);
-            logger.warning(httpErrorMessage);
-        }
-        } catch (IllegalArgumentException | URISyntaxException | IOException e) {
-            if(logger.isDebugEnabled()){
-                // https://github.com/RestComm/Restcomm-Connect/issues/1419 Moving to DEBUG level to avoid polluting the logs
-                logger.debug("Issue during HTTP request execution: "+e.getCause());
+            } while (isRedirect(code));
+            if (isHttpError(code)) {
+                // TODO - usually this part of code is not reached. Error codes are part of error responses that do not pass validateXML above and an exception is thrown. We need to re-thing this
+                String requestUrl = request.getRequestLine().getUri();
+                String errorReason = response.getStatusLine().getReasonPhrase();
+                String httpErrorMessage = String.format(
+                        "Problem while fetching http resource: %s \n Http status code: %d \n Http status message: %s", requestUrl,
+                        code, errorReason);
+                logger.warning(httpErrorMessage);
             }
-            HttpClientUtils.closeQuietly(client);
-            client = null;
         } catch (Exception e) {
-            logger.warning("Problem while trying to download RCML: {}", e);
+            logger.warning("Problem while trying to download RCML from {}, exception: {}", request.getRequestLine(), e);
             String statusInfo = "n/a";
             String responseInfo = "n/a";
             if (response != null) {
@@ -132,22 +136,22 @@ public final class Downloader extends RestcommUntypedActor {
                     }
                 }
             }
-            logger.warning(String.format("Problem while trying to download RCML. URL: %s, Status: %s, Response: %s ", request.getRequestLine(),  statusInfo, responseInfo));
+            logger.warning(String.format("Problem while trying to download RCML. URL: %s, Status: %s, Response: %s ", request.getRequestLine(), statusInfo, responseInfo));
             throw e; // re-throw
         } finally {
-            response.close();
-            HttpClientUtils.closeQuietly(client);
-            client = null;
+            if (response != null) {
+                response.close();
+            }
         }
         return responseDescriptor;
     }
 
-    private boolean isRedirect(final int code) {
+    private boolean isRedirect (final int code) {
         return HttpStatus.SC_MOVED_PERMANENTLY == code || HttpStatus.SC_MOVED_TEMPORARILY == code
                 || HttpStatus.SC_SEE_OTHER == code || HttpStatus.SC_TEMPORARY_REDIRECT == code;
     }
 
-    private boolean isHttpError(final int code) {
+    private boolean isHttpError (final int code) {
         return (code >= 400);
     }
 
@@ -167,14 +171,14 @@ public final class Downloader extends RestcommUntypedActor {
     }
 
     @Override
-    public void onReceive(final Object message) throws Exception {
+    public void onReceive (final Object message) throws Exception {
         final Class<?> klass = message.getClass();
         final ActorRef self = self();
         final ActorRef sender = sender();
         if (HttpRequestDescriptor.class.equals(klass)) {
             final HttpRequestDescriptor request = (HttpRequestDescriptor) message;
-            if(logger.isDebugEnabled()){
-                logger.debug("New HttpRequestDescriptor, method: "+request.getMethod()+" URI: "+request.getUri()+" parameters: "+request.getParametersAsString());
+            if (logger.isDebugEnabled()) {
+                logger.debug("New HttpRequestDescriptor, method: " + request.getMethod() + " URI: " + request.getUri() + " parameters: " + request.getParametersAsString());
             }
             DownloaderResponse response = null;
             try {
@@ -186,13 +190,13 @@ public final class Downloader extends RestcommUntypedActor {
                 sender.tell(response, self);
             } else {
                 if (logger.isInfoEnabled()) {
-                    logger.info("DownloaderResponse wont be send because sender is :"+ (sender.isTerminated() ? "terminated" : "null"));
+                    logger.info("DownloaderResponse wont be send because sender is :" + (sender.isTerminated() ? "terminated" : "null"));
                 }
             }
         }
     }
 
-    public HttpUriRequest request(final HttpRequestDescriptor descriptor) throws IllegalArgumentException, URISyntaxException,
+    public HttpUriRequest request (final HttpRequestDescriptor descriptor) throws IllegalArgumentException, URISyntaxException,
             UnsupportedEncodingException {
         final URI uri = descriptor.getUri();
         final String method = descriptor.getMethod();
@@ -201,12 +205,12 @@ public final class Downloader extends RestcommUntypedActor {
             URI result = null;
             if (query != null && !query.isEmpty()) {
                 result = new URIBuilder()
-                .setScheme(uri.getScheme())
-                .setHost(uri.getHost())
-                .setPort(uri.getPort())
-                .setPath(uri.getPath())
-                .setQuery(query)
-                .build();
+                        .setScheme(uri.getScheme())
+                        .setHost(uri.getHost())
+                        .setPort(uri.getPort())
+                        .setPath(uri.getPath())
+                        .setQuery(query)
+                        .build();
             } else {
                 result = uri;
             }
@@ -221,7 +225,7 @@ public final class Downloader extends RestcommUntypedActor {
         }
     }
 
-    private HttpResponseDescriptor response(final HttpRequest request, final HttpResponse response) throws IOException {
+    private HttpResponseDescriptor response (final HttpRequest request, final HttpResponse response) throws IOException {
         final HttpResponseDescriptor.Builder builder = HttpResponseDescriptor.builder();
         final URI uri = URI.create(request.getRequestLine().getUri());
         builder.setURI(uri);
@@ -232,17 +236,17 @@ public final class Downloader extends RestcommUntypedActor {
         if (entity != null) {
             InputStream stream = entity.getContent();
             try {
-            final Header contentEncoding = entity.getContentEncoding();
-            if (contentEncoding != null) {
-                builder.setContentEncoding(contentEncoding.getValue());
-            }
-            final Header contentType = entity.getContentType();
-            if (contentType != null) {
-                builder.setContentType(contentType.getValue());
-            }
+                final Header contentEncoding = entity.getContentEncoding();
+                if (contentEncoding != null) {
+                    builder.setContentEncoding(contentEncoding.getValue());
+                }
+                final Header contentType = entity.getContentType();
+                if (contentType != null) {
+                    builder.setContentType(contentType.getValue());
+                }
                 builder.setContent(StringUtils.toString(stream));
-            builder.setContentLength(entity.getContentLength());
-            builder.setIsChunked(entity.isChunked());
+                builder.setContentLength(entity.getContentLength());
+                builder.setIsChunked(entity.isChunked());
             } finally {
                 stream.close();
             }
@@ -251,8 +255,8 @@ public final class Downloader extends RestcommUntypedActor {
     }
 
     @Override
-    public void postStop() {
-        if(logger.isDebugEnabled()){
+    public void postStop () {
+        if (logger.isDebugEnabled()) {
             logger.debug("Downloader at post stop");
         }
         super.postStop();

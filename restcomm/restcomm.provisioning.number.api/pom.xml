@@ -3,7 +3,7 @@
   <parent>
     <groupId>org.restcomm</groupId>
     <artifactId>restcomm-connect</artifactId>
-    <version>8.2.0-SNAPSHOT</version>
+    <version>8.3.1-SNAPSHOT</version>
   </parent>
   <artifactId>restcomm-connect.provisioning.number.api</artifactId>
   
@@ -14,6 +14,12 @@
 	  <artifactId>restcomm-connect.commons</artifactId>
 	  <version>${project.version}</version>
 	</dependency>
+        
+		<dependency>
+			<groupId>org.apache.tomcat</groupId>
+			<artifactId>tomcat-coyote</artifactId>
+			<scope>provided</scope>
+		</dependency>     
 	
   </dependencies>
   <build>

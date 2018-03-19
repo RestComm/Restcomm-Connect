@@ -20,7 +20,8 @@
 package org.restcomm.connect.dao.mybatis;
 
 import static org.junit.Assert.assertTrue;
-
+import static org.junit.Assert.assertEquals;
+        
 import java.io.FileInputStream;
 import java.io.InputStream;
 import java.math.BigDecimal;
@@ -42,11 +43,15 @@ import org.restcomm.connect.dao.entities.CallDetailRecord;
 import org.restcomm.connect.dao.entities.CallDetailRecordFilter;
 
 import junit.framework.Assert;
+import org.junit.Rule;
+import org.junit.rules.TestName;
 
 /**
  * @author quintana.thomas@gmail.com (Thomas Quintana)
  */
 public class CallDetailRecordsDaoTest extends DaoTest {
+    @Rule public TestName name = new TestName();
+    
     private static MybatisDaoManager manager;
 
     public CallDetailRecordsDaoTest() {
@@ -55,7 +60,8 @@ public class CallDetailRecordsDaoTest extends DaoTest {
 
     @Before
     public void before() throws Exception {
-        sandboxRoot = createTempDir("cdrTest");
+        //use testmethod name to further ensure uniqueness of tmp dir
+        sandboxRoot = createTempDir("cdrTest" + name.getMethodName());
         String mybatisFilesPath = getClass().getResource("/callDetailRecordsDao").getFile();
         setupSandbox(mybatisFilesPath, sandboxRoot);
 
@@ -364,11 +370,11 @@ public class CallDetailRecordsDaoTest extends DaoTest {
         builder.setUri(url);
         CallDetailRecord cdr = builder.build();
         final CallDetailRecordsDao cdrs = manager.getCallDetailRecordsDao();
+        int beforeAdding = cdrs.getCallDetailRecordsByEndTime(now).size();
         // Create a new CDR in the data store.
         cdrs.addCallDetailRecord(cdr);
-        // Validate the results.
-        assertTrue(cdrs.getCallDetailRecordsByEndTime(now).size() == 1);
-        assertTrue(cdrs.getCallDetailRecordsByStarTimeAndEndTime(now).size() == 1);
+        // Validate the results, including the ones matching in the script(10)
+        assertEquals(beforeAdding + 1, cdrs.getCallDetailRecordsByEndTime(now).size());
         // Delete the CDR.
         cdrs.removeCallDetailRecord(sid);
         // Validate that the CDRs were removed.

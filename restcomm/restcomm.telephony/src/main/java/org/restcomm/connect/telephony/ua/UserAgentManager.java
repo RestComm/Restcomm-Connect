@@ -33,6 +33,8 @@ import org.restcomm.connect.commons.util.DigestAuthentication;
 import org.restcomm.connect.dao.ClientsDao;
 import org.restcomm.connect.dao.DaoManager;
 import org.restcomm.connect.dao.RegistrationsDao;
+import org.restcomm.connect.dao.common.OrganizationUtil;
+import org.restcomm.connect.dao.entities.Account;
 import org.restcomm.connect.dao.entities.Client;
 import org.restcomm.connect.dao.entities.Registration;
 import org.restcomm.connect.monitoringservice.MonitoringService;
@@ -63,7 +65,11 @@ import java.util.UUID;
 
 import static java.lang.Integer.parseInt;
 import static javax.servlet.sip.SipServlet.OUTBOUND_INTERFACES;
-import static javax.servlet.sip.SipServletResponse.*;
+import static javax.servlet.sip.SipServletResponse.SC_BUSY_EVERYWHERE;
+import static javax.servlet.sip.SipServletResponse.SC_BUSY_HERE;
+import static javax.servlet.sip.SipServletResponse.SC_OK;
+import static javax.servlet.sip.SipServletResponse.SC_PROXY_AUTHENTICATION_REQUIRED;
+import static javax.servlet.sip.SipServletResponse.SC_UNAUTHORIZED;
 import static org.restcomm.connect.commons.util.HexadecimalUtils.toHex;
 
 /**
@@ -140,7 +146,7 @@ public final class UserAgentManager extends RestcommUntypedActor {
                 if (logger.isInfoEnabled())
                     logger.info("Will remove WebRTC client: "+result.getLocation());
                 registrations.removeRegistration(result);
-                monitoringService.tell(new UserRegistration(result.getUserName(), result.getLocation(), false), self());
+                monitoringService.tell(new UserRegistration(result.getUserName(), result.getLocation(), false, result.getOrganizationSid()), self());
             } else {
                 final DateTime expires = result.getDateExpires();
                 if (expires.isBeforeNow() || expires.isEqualNow()) {
@@ -148,7 +154,7 @@ public final class UserAgentManager extends RestcommUntypedActor {
                         logger.info("Registration: " + result.getLocation() + " expired and will be removed now");
                     }
                     registrations.removeRegistration(result);
-                    monitoringService.tell(new UserRegistration(result.getUserName(), result.getLocation(), false), self());
+                    monitoringService.tell(new UserRegistration(result.getUserName(), result.getLocation(), false, result.getOrganizationSid()), self());
                     monitoringService.tell(new GetCall(result.getLocation()), self());
                 } else {
                     final DateTime updated = result.getDateUpdated();
@@ -159,7 +165,7 @@ public final class UserAgentManager extends RestcommUntypedActor {
                             logger.info("Registration: " + result.getLocation() + " didn't respond to OPTIONS and will be removed now");
                         }
                         registrations.removeRegistration(result);
-                        monitoringService.tell(new UserRegistration(result.getUserName(), result.getLocation(), false), self());
+                        monitoringService.tell(new UserRegistration(result.getUserName(), result.getLocation(), false, result.getOrganizationSid()), self());
                         monitoringService.tell(new GetCall(result.getLocation()), self());
                     }
                 }
@@ -302,7 +308,7 @@ public final class UserAgentManager extends RestcommUntypedActor {
                 } else if(authenticateUsers) { // https://github.com/Mobicents/RestComm/issues/29 Allow disabling of SIP authentication
                     final String authorization = request.getHeader("Proxy-Authorization");
                     if (authorization != null) {
-                      if (permitted(authorization, method)) {
+                      if (permitted(authorization, method, (SipURI) request.getFrom().getURI())) {
                           register(message);
                       } else {
                           SipServletResponse response = ((SipServletRequest) message).createResponse(javax.servlet.sip.SipServletResponse.SC_FORBIDDEN); //Issue #935, Send 403 FORBIDDEN instead of issuing 407 again and again
@@ -317,7 +323,11 @@ public final class UserAgentManager extends RestcommUntypedActor {
             }
         } else if (message instanceof SipServletResponse) {
             SipServletResponse response = (SipServletResponse) message;
-            if (response.getStatus()>400 && response.getMethod().equalsIgnoreCase("OPTIONS")) {
+            int responseStatusCode = response.getStatus();
+            if (responseStatusCode > 400
+                    // https://telestax.atlassian.net/browse/RESTCOMM-1582: Fix for User Agent that reply with BUSY when they are in a call
+                    && (responseStatusCode != SC_BUSY_HERE && responseStatusCode != SC_BUSY_EVERYWHERE)
+                    && response.getMethod().equalsIgnoreCase("OPTIONS")) {
                 removeRegistration(response);
             } else if (actAsImsUa && response.getMethod().equalsIgnoreCase(REGISTER)) {
                 proxyResponseFromIms(message, response);
@@ -341,7 +351,10 @@ public final class UserAgentManager extends RestcommUntypedActor {
             logger.debug("Error response for the OPTIONS to: "+location+" will remove registration");
         }
         final RegistrationsDao regDao = storage.getRegistrationsDao();
-        List<Registration> registrations = regDao.getRegistrations(user);
+        List<Registration> registrations = regDao.getRegistrationsByLocation(user, "%"+location.getHost()+":"+location.getPort());
+        if(logger.isDebugEnabled()) {
+            logger.debug("Resultant registrations of given criteria, that will be removed are:"+registrations);
+        }
         if (registrations != null) {
             Iterator<Registration> iter = registrations.iterator();
             SipURI regLocation = null;
@@ -380,7 +393,7 @@ public final class UserAgentManager extends RestcommUntypedActor {
                     }
 
                     regDao.removeRegistration(reg);
-                    monitoringService.tell(new UserRegistration(reg.getUserName(), reg.getLocation(), false), self());
+                    monitoringService.tell(new UserRegistration(reg.getUserName(), reg.getLocation(), false, reg.getOrganizationSid()), self());
                     monitoringService.tell(new GetCall(reg.getLocation()), self());
                 } else {
                     if (logger.isDebugEnabled()) {
@@ -403,7 +416,7 @@ public final class UserAgentManager extends RestcommUntypedActor {
         uri.setPort(port);
     }
 
-    private boolean permitted(final String authorization, final String method) {
+    private boolean permitted(final String authorization, final String method, SipURI sipURI) {
         final Map<String, String> map = toMap(authorization);
         final String user = map.get("username").trim();
         final String algorithm = map.get("algorithm");
@@ -415,7 +428,10 @@ public final class UserAgentManager extends RestcommUntypedActor {
         final String qop = map.get("qop");
         final String response = map.get("response");
         final ClientsDao clients = storage.getClientsDao();
-        final Client client = clients.getClient(user);
+        final Client client = clients.getClient(user, OrganizationUtil.getOrganizationSidBySipURIHost(storage, sipURI));
+        if (client != null && storage.getAccountsDao().getAccount(client.getAccountSid()).getStatus() != Account.Status.ACTIVE) {
+            return false;
+        }
         if (client != null && Client.ENABLED == client.getStatus()) {
             //NB: we should have an extra password column to allow both plaintext and digested password
             //since we arent going to support plaintext, were going to just assume first password will always be empty
@@ -477,10 +493,18 @@ public final class UserAgentManager extends RestcommUntypedActor {
             }
         }
         final RegistrationsDao registrations = storage.getRegistrationsDao();
-        Registration registration = registrations.getRegistration(((SipURI)response.getTo().getURI()).getUser());
+        SipURI toUri = (SipURI)response.getTo().getURI();
+        String location = "%"+toUri.getHost()+":"+toUri.getPort();
+        List<Registration> registrationList = registrations.getRegistrationsByLocation(toUri.getUser(), location);
         //Registration here shouldn't be null. Update it
-        registration = registration.updated();
-        registrations.updateRegistration(registration);
+        if(registrationList != null && !registrationList.isEmpty()){
+            Registration registration = registrationList.get(0).updated();
+            registrations.updateRegistration(registration);
+        }else{
+            if (logger.isDebugEnabled()) {
+                logger.debug(String.format("UAM pong: Could not find any registration for %s Location %s", toUri.getUser(), location));
+            }
+        }
     }
 
     private SipURI outboundInterface(String toTransport) {
@@ -553,31 +577,7 @@ public final class UserAgentManager extends RestcommUntypedActor {
             patch(uri, ip, port);
         }
 
-        final StringBuffer buffer = new StringBuffer();
-        if (((SipURI)request.getRequestURI()).isSecure()) {
-            buffer.append("sips:");
-        } else {
-            buffer.append("sip:");
-        }
-        buffer.append(normalize(user)).append("@").append(uri.getHost()).append(":").append(uri.getPort());
-        // https://bitbucket.org/telestax/telscale-restcomm/issue/142/restcomm-support-for-other-transports-than
-        if (transport != null) {
-            buffer.append(";transport=").append(transport);
-        }
-
-        Iterator<String> extraParameterNames = uri.getParameterNames();
-        while (extraParameterNames.hasNext()) {
-            String paramName = extraParameterNames.next();
-            if (!paramName.equalsIgnoreCase("transport")) {
-                String paramValue = uri.getParameter(paramName);
-                buffer.append(";");
-                buffer.append(paramName);
-                buffer.append("=");
-                buffer.append(paramValue);
-            }
-        }
-
-        final String address = buffer.toString();
+        final String address = createAddress(request);
         // Prepare the response.
         final SipServletResponse response = request.createResponse(SC_OK);
         // Update the data store.
@@ -594,19 +594,20 @@ public final class UserAgentManager extends RestcommUntypedActor {
 
         boolean webRTC = isWebRTC(transport, ua);
 
-        final Registration registration = new Registration(sid, instanceId, now, now, aor, name, user, ua, ttl, address, webRTC, isLBPresent);
+        Sid organizationSid = OrganizationUtil.getOrganizationSidBySipURIHost(storage, to);
+        final Registration registration = new Registration(sid, instanceId, now, now, aor, name, user, ua, ttl, address, webRTC, isLBPresent, organizationSid);
         final RegistrationsDao registrations = storage.getRegistrationsDao();
 
         if (ttl == 0) {
             // Remove Registration if ttl=0
             registrations.removeRegistration(registration);
             response.setHeader("Expires", "0");
-            monitoringService.tell(new UserRegistration(user, address, false), self());
+            monitoringService.tell(new UserRegistration(user, address, false, organizationSid), self());
             if(logger.isInfoEnabled()) {
                 logger.info("The user agent manager unregistered " + user + " at address "+address+":"+port);
             }
         } else {
-            monitoringService.tell(new UserRegistration(user, address, true), self());
+            monitoringService.tell(new UserRegistration(user, address, true, organizationSid), self());
             if (registrations.hasRegistration(registration)) {
                 // Update Registration if exists
                 registrations.updateRegistration(registration);
@@ -651,6 +652,49 @@ public final class UserAgentManager extends RestcommUntypedActor {
         } catch (Exception e) {
             logger.error("Exception while trying to setInvalidateWhenReady(true) after sent response to register : "+response.toString()+" exception: "+e);
         }
+    }
+
+    private String createAddress(SipServletRequest request) throws ServletParseException {
+
+        final Address contact = request.getAddressHeader("Contact");
+        final SipURI uri = (SipURI) contact.getURI();
+        final SipURI to = (SipURI) request.getTo().getURI();
+        final String user = to.getUser().trim();
+
+        String transport = (uri.getTransportParam()==null?request.getParameter("transport"):uri.getTransportParam()); //Issue #935, take transport of initial request-uri if contact-uri has no transport parameter
+        //If RURI is secure (SIPS) then pick TLS for transport - https://github.com/RestComm/Restcomm-Connect/issues/1956
+        if (((SipURI)request.getRequestURI()).isSecure()) {
+            transport = "tls";
+        }
+        if (transport == null && !request.getInitialTransport().equalsIgnoreCase("udp")) {
+            //Issue1068, if Contact header or RURI doesn't specify transport, check InitialTransport from
+            transport = request.getInitialTransport();
+        }
+
+        final StringBuffer buffer = new StringBuffer();
+        if (((SipURI)request.getRequestURI()).isSecure()) {
+            buffer.append("sips:");
+        } else {
+            buffer.append("sip:");
+        }
+        buffer.append(normalize(user)).append("@").append(uri.getHost()).append(":").append(uri.getPort());
+        // https://bitbucket.org/telestax/telscale-restcomm/issue/142/restcomm-support-for-other-transports-than
+        if (transport != null) {
+            buffer.append(";transport=").append(transport);
+        }
+
+        Iterator<String> extraParameterNames = uri.getParameterNames();
+        while (extraParameterNames.hasNext()) {
+            String paramName = extraParameterNames.next();
+            if (!paramName.equalsIgnoreCase("transport")) {
+                String paramValue = uri.getParameter(paramName);
+                buffer.append(";");
+                buffer.append(paramName);
+                buffer.append("=");
+                buffer.append(paramValue);
+            }
+        }
+        return buffer.toString();
     }
 
     /**
@@ -774,19 +818,20 @@ public final class UserAgentManager extends RestcommUntypedActor {
             if (ua == null)
                 ua = "GenericUA";
             boolean webRTC = isWebRTC(transport, ua);
-            final Registration registration = new Registration(sid, RestcommConfiguration.getInstance().getMain().getInstanceId(), now, now, aor, name, user, ua, ttl, address, webRTC, isLBPresent);
+            Sid organizationSid = OrganizationUtil.getOrganizationSidBySipURIHost(storage, to);
+            final Registration registration = new Registration(sid, RestcommConfiguration.getInstance().getMain().getInstanceId(), now, now, aor, name, user, ua, ttl, address, webRTC, isLBPresent, organizationSid);
             final RegistrationsDao registrations = storage.getRegistrationsDao();
 
             if (ttl == 0) {
                 // Remove Registration if ttl=0
                 registrations.removeRegistration(registration);
                 incomingLegResposne.setHeader("Expires", "0");
-                monitoringService.tell(new UserRegistration(user, address, false), self());
+                monitoringService.tell(new UserRegistration(user, address, false, organizationSid), self());
                 if(logger.isInfoEnabled()) {
                     logger.info("The user agent manager unregistered " + user + " at address "+address+":"+port);
                 }
             } else {
-                monitoringService.tell(new UserRegistration(user, address, true), self());
+                monitoringService.tell(new UserRegistration(user, address, true, organizationSid), self());
                 if (registrations.hasRegistration(registration)) {
                     // Update Registration if exists
                     registrations.updateRegistration(registration);

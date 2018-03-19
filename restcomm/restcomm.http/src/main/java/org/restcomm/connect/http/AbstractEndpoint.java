@@ -22,16 +22,16 @@ package org.restcomm.connect.http;
 import com.google.i18n.phonenumbers.NumberParseException;
 import com.google.i18n.phonenumbers.PhoneNumberUtil;
 import com.google.i18n.phonenumbers.Phonenumber.PhoneNumber;
+import java.math.BigInteger;
+import java.net.URI;
+import javax.ws.rs.HeaderParam;
+import javax.ws.rs.core.MediaType;
+import javax.ws.rs.core.MultivaluedMap;
 import org.apache.commons.configuration.Configuration;
+import org.joda.time.DateTime;
 import org.restcomm.connect.commons.annotations.concurrency.NotThreadSafe;
 import org.restcomm.connect.commons.dao.Sid;
 import org.restcomm.connect.commons.util.StringUtils;
-
-import javax.ws.rs.core.MediaType;
-import javax.ws.rs.core.MultivaluedMap;
-import java.net.URI;
-import java.math.BigInteger;
-import org.joda.time.DateTime;
 
 /**
  * @author quintana.thomas@gmail.com (Thomas Quintana)
@@ -39,12 +39,23 @@ import org.joda.time.DateTime;
  */
 @NotThreadSafe
 public abstract class AbstractEndpoint {
+
     private String defaultApiVersion;
     protected Configuration configuration;
     protected String baseRecordingsPath;
 
+    @HeaderParam("Accept")
+    String accept;
+
     public AbstractEndpoint() {
         super();
+    }
+
+    protected MediaType retrieveMediaType() {
+        if (accept.contains("json")) {
+             return MediaType.APPLICATION_JSON_TYPE;
+        }
+        return MediaType.APPLICATION_XML_TYPE;
     }
 
     protected void init(final Configuration configuration) {

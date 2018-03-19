@@ -37,25 +37,33 @@ import org.jboss.arquillian.junit.Arquillian;
 import org.jboss.arquillian.test.api.ArquillianResource;
 import org.jboss.shrinkwrap.api.ShrinkWrap;
 import org.jboss.shrinkwrap.api.spec.WebArchive;
-import org.jboss.shrinkwrap.resolver.api.maven.archive.ShrinkWrapMaven;
+import org.jboss.shrinkwrap.resolver.api.maven.Maven;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.BeforeClass;
 import org.junit.Ignore;
 import org.junit.Test;
+import org.junit.FixMethodOrder;
+import org.junit.runners.MethodSorters;
+import org.junit.experimental.categories.Category;
 import org.junit.runner.RunWith;
 import org.mobicents.arquillian.mediaserver.api.EmbeddedMediaserver;
 import org.mobicents.arquillian.mediaserver.api.MgcpEventListener;
 import org.mobicents.arquillian.mediaserver.api.annotations.Mediaserver;
 import org.mobicents.commtesting.MgcpUnit;
 import org.restcomm.connect.commons.Version;
+import org.restcomm.connect.commons.annotations.FeatureAltTests;
+import org.restcomm.connect.commons.annotations.SequentialClassTests;
+import org.restcomm.connect.commons.annotations.WithInSecsTests;
 
 /**
  * @author Amit Bhayani
- * 
+ *
  */
 @Ignore //The mss-arquillian mms extension needs update
 @RunWith(Arquillian.class)
+@FixMethodOrder(MethodSorters.NAME_ASCENDING)
+@Category(value={FeatureAltTests.class, SequentialClassTests.class})
 public class PlayTest {
 
     private final static Logger logger = Logger.getLogger(PlayTest.class.getName());
@@ -86,7 +94,7 @@ public class PlayTest {
     private String dialPlay = "sip:+12223334444@127.0.0.1:5080";
 
     /**
-     * 
+     *
      */
     public PlayTest() {
         // TODO Auto-generated constructor stub
@@ -130,7 +138,7 @@ public class PlayTest {
 
         final SipCall bobCall = bobPhone.createSipCall();
         bobCall.initiateOutgoingCall(bobContact, dialPlay, null, body, "application", "sdp", null, null);
-        
+
         assertLastOperationSuccess(bobCall);
         assertTrue(bobCall.waitOutgoingCallResponse(5 * 1000));
         int responseBob = bobCall.getLastReceivedResponse().getStatusCode();
@@ -145,7 +153,7 @@ public class PlayTest {
         assertEquals(Response.OK, bobCall.getLastReceivedResponse().getStatusCode());
         bobCall.sendInviteOkAck();
         assertTrue(!(bobCall.getLastReceivedResponse().getStatusCode() >= 400));
-        
+
         // Start a new thread for bob to wait disconnect
         new Thread(new Runnable() {
             @Override
@@ -153,7 +161,7 @@ public class PlayTest {
                 assertTrue(bobCall.waitForDisconnect(30 * 1000));
             }
         }).start();
-        
+
         try {
             Thread.sleep(10 * 1000);
         } catch (final InterruptedException exception) {
@@ -165,14 +173,16 @@ public class PlayTest {
     public static WebArchive createWebArchiveNoGw() {
         logger.info("Packaging Test App");
         WebArchive archive = ShrinkWrap.create(WebArchive.class, "restcomm.war");
-        final WebArchive restcommArchive = ShrinkWrapMaven.resolver()
+        final WebArchive restcommArchive = Maven.resolver()
                 .resolve("org.restcomm:restcomm-connect.application:war:" + version).withoutTransitivity()
                 .asSingle(WebArchive.class);
         archive = archive.merge(restcommArchive);;
         archive.delete("/WEB-INF/sip.xml");
+archive.delete("/WEB-INF/web.xml");
         archive.delete("/WEB-INF/conf/restcomm.xml");
         archive.delete("/WEB-INF/data/hsql/restcomm.script");
         archive.addAsWebInfResource("sip.xml");
+        archive.addAsWebInfResource("web.xml");
         archive.addAsWebInfResource("restcomm-embeddedMMS.xml", "conf/restcomm.xml");
         archive.addAsWebInfResource("restcomm.script_playTest", "data/hsql/restcomm.script");
         archive.addAsWebResource("hello-play.xml");

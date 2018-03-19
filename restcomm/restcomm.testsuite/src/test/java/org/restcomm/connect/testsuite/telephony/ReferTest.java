@@ -36,12 +36,14 @@ import org.jboss.arquillian.junit.Arquillian;
 import org.jboss.arquillian.test.api.ArquillianResource;
 import org.jboss.shrinkwrap.api.ShrinkWrap;
 import org.jboss.shrinkwrap.api.spec.WebArchive;
-import org.jboss.shrinkwrap.resolver.api.maven.archive.ShrinkWrapMaven;
+import org.jboss.shrinkwrap.resolver.api.maven.Maven;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.BeforeClass;
 import org.junit.Rule;
 import org.junit.Test;
+import org.junit.FixMethodOrder;
+import org.junit.runners.MethodSorters;
 import org.junit.runner.RunWith;
 import org.restcomm.connect.commons.Version;
 import org.restcomm.connect.testsuite.http.RestcommCallsTool;
@@ -71,12 +73,19 @@ import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertNull;
 import static org.junit.Assert.assertTrue;
+import org.junit.experimental.categories.Category;
+import org.restcomm.connect.commons.annotations.FeatureAltTests;
+import org.restcomm.connect.commons.annotations.FeatureExpTests;
+import org.restcomm.connect.commons.annotations.SequentialClassTests;
+import org.restcomm.connect.commons.annotations.WithInMinsTests;
 
 /**
  * Test for SIP Refer support according to the RFC5589 spec in order to provide call transfer capabilities to deskphone
  * sip clients that use SIP Refer to implement call transfer.
  */
 @RunWith(Arquillian.class)
+@FixMethodOrder(MethodSorters.NAME_ASCENDING)
+@Category(value={WithInMinsTests.class, SequentialClassTests.class})
 public class ReferTest {
 
     private final static Logger logger = Logger.getLogger(ReferTest.class.getName());
@@ -555,6 +564,7 @@ public class ReferTest {
     }
 
     @Test
+    @Category(FeatureAltTests.class)
     public void testTransferHangupByBob() throws ParseException, InterruptedException, MalformedURLException, SipException {
 
         stubFor(get(urlPathEqualTo("/1111"))
@@ -725,7 +735,7 @@ public class ReferTest {
         assertEquals(Response.OK, bobCall.getLastReceivedResponse().getStatusCode());
         assertTrue(bobCall.sendInviteOkAck());
 
-        assertTrue(georgeCall.waitForIncomingCall(5000));
+        assertTrue(georgeCall.waitForIncomingCall(6000));
         assertTrue(georgeCall.sendIncomingCallResponse(Response.TRYING, "George-Trying", 3600));
         assertTrue(georgeCall.sendIncomingCallResponse(Response.RINGING, "George-Ringing", 3600));
 
@@ -807,6 +817,7 @@ public class ReferTest {
     }
 
     @Test
+    @Category(FeatureExpTests.class)
     public void testTransferWithAbsentReferUrlAndApplication() throws ParseException, InterruptedException, MalformedURLException, SipException {
 
         stubFor(get(urlPathEqualTo("/1111"))
@@ -869,6 +880,7 @@ public class ReferTest {
     }
 
     @Test
+    @Category(FeatureExpTests.class)
     public void testTransferWithOutOfDialogRefer() throws ParseException, InterruptedException, MalformedURLException, SipException {
 
         stubFor(get(urlPathEqualTo("/1111"))
@@ -933,6 +945,7 @@ public class ReferTest {
 
     private String dialJoeRcml = "<Response><Dial><Client>joe</Client></Dial></Response>";
     @Test
+    @Category(FeatureExpTests.class)
     public void testTransferIncorrectReferTarget() throws ParseException, InterruptedException, MalformedURLException, SipException {
 
         stubFor(get(urlPathEqualTo("/1111"))
@@ -1005,17 +1018,19 @@ public class ReferTest {
     public static WebArchive createWebArchiveNoGw() {
         logger.info("Packaging Test App");
         WebArchive archive = ShrinkWrap.create(WebArchive.class, "restcomm.war");
-        final WebArchive restcommArchive = ShrinkWrapMaven.resolver()
+        final WebArchive restcommArchive = Maven.resolver()
                 .resolve("org.restcomm:restcomm-connect.application:war:" + version).withoutTransitivity()
                 .asSingle(WebArchive.class);
         archive = archive.merge(restcommArchive);
         archive.delete("/WEB-INF/sip.xml");
+archive.delete("/WEB-INF/web.xml");
         archive.delete("/WEB-INF/conf/restcomm.xml");
         archive.delete("/WEB-INF/data/hsql/restcomm.script");
         archive.delete("/WEB-INF/classes/application.conf");
         archive.addAsWebInfResource("sip.xml");
+        archive.addAsWebInfResource("web.xml");
         archive.addAsWebInfResource("restcomm_calllifecycle.xml", "conf/restcomm.xml");
-        archive.addAsWebInfResource("restcomm.script_referMessageTest", "data/hsql/restcomm.script");
+        archive.addAsWebInfResource("restcomm.script_ReferMessageTest", "data/hsql/restcomm.script");
         archive.addAsWebInfResource("akka_application.conf", "classes/application.conf");
         logger.info("Packaged Test App");
         return archive;

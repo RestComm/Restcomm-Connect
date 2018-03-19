@@ -175,6 +175,8 @@ public abstract class AbstractMockMediaGateway extends RestcommUntypedActor {
             request(message, sender);
         } else if (message instanceof JainMgcpResponseEvent) {
             response(message, sender);
+        } else {
+            throw new IllegalArgumentException("Unsupported operation !!!");
         }
     }
 

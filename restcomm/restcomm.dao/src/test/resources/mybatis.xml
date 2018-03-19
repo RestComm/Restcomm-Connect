@@ -9,7 +9,8 @@
       <transactionManager type="JDBC"/>
       <dataSource type="POOLED">
         <property name="driver" value="org.hsqldb.jdbcDriver"/>
-        <property name="url" value="jdbc:hsqldb:file:./src/test/resources/data/restcomm;create=true;hsqldb.write_delay=false;shutdown=true"/>
+        <!--keep data in maven target so git ignores changes-->
+        <property name="url" value="jdbc:hsqldb:file:./target/test-classes/data/restcomm;create=true;hsqldb.write_delay=false;shutdown=true"/>
         <property name="username" value="sa"/>
         <property name="password" value=""/>
       </dataSource>
@@ -18,25 +19,26 @@
   
   
   <mappers>
-    <mapper resource="accounts.xml"/>
-    <mapper resource="applications.xml"/>
-    <mapper resource="available-phone-numbers.xml"/>
-    <mapper resource="call-detail-records.xml"/>
-    <mapper resource="conference-detail-records.xml"/>    
-    <mapper resource="clients.xml"/>
-    <mapper resource="http-cookies.xml"/>
-    <mapper resource="incoming-phone-numbers.xml"/>
-    <mapper resource="notifications.xml"/>
-    <mapper resource="outgoing-caller-ids.xml"/>
-    <mapper resource="registrations.xml"/>
-    <mapper resource="recordings.xml"/>
-    <mapper resource="sand-boxes.xml"/>
-    <mapper resource="short-codes.xml"/>
-    <mapper resource="sms-messages.xml"/>
-    <mapper resource="transcriptions.xml"/>
-    <mapper resource="gateways.xml"/>
-    <mapper resource="announcements.xml"/>
-    <mapper resource="extensions-configuration.xml"/>
-    <mapper resource="geolocation.xml"/>
+    <mapper resource="org/restcomm/connect/dao/mybatis/accounts.xml"/>
+    <mapper resource="org/restcomm/connect/dao/mybatis/applications.xml"/>
+    <mapper resource="org/restcomm/connect/dao/mybatis/available-phone-numbers.xml"/>
+    <mapper resource="org/restcomm/connect/dao/mybatis/call-detail-records.xml"/>
+    <mapper resource="org/restcomm/connect/dao/mybatis/conference-detail-records.xml"/>    
+    <mapper resource="org/restcomm/connect/dao/mybatis/clients.xml"/>
+    <mapper resource="org/restcomm/connect/dao/mybatis/http-cookies.xml"/>
+    <mapper resource="org/restcomm/connect/dao/mybatis/incoming-phone-numbers.xml"/>
+    <mapper resource="org/restcomm/connect/dao/mybatis/notifications.xml"/>
+    <mapper resource="org/restcomm/connect/dao/mybatis/outgoing-caller-ids.xml"/>
+    <mapper resource="org/restcomm/connect/dao/mybatis/registrations.xml"/>
+    <mapper resource="org/restcomm/connect/dao/mybatis/recordings.xml"/>
+    <mapper resource="org/restcomm/connect/dao/mybatis/sand-boxes.xml"/>
+    <mapper resource="org/restcomm/connect/dao/mybatis/short-codes.xml"/>
+    <mapper resource="org/restcomm/connect/dao/mybatis/sms-messages.xml"/>
+    <mapper resource="org/restcomm/connect/dao/mybatis/transcriptions.xml"/>
+    <mapper resource="org/restcomm/connect/dao/mybatis/gateways.xml"/>
+    <mapper resource="org/restcomm/connect/dao/mybatis/announcements.xml"/>
+    <mapper resource="org/restcomm/connect/dao/mybatis/extensions-configuration.xml"/>
+    <mapper resource="org/restcomm/connect/dao/mybatis/geolocation.xml"/>
+    <mapper resource="org/restcomm/connect/dao/mybatis/organization.xml"/>    
   </mappers>
 </configuration>

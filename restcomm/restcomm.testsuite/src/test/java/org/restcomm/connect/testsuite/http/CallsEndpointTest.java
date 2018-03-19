@@ -14,13 +14,17 @@ import org.jboss.arquillian.junit.Arquillian;
 import org.jboss.arquillian.test.api.ArquillianResource;
 import org.jboss.shrinkwrap.api.ShrinkWrap;
 import org.jboss.shrinkwrap.api.spec.WebArchive;
-import org.jboss.shrinkwrap.resolver.api.maven.archive.ShrinkWrapMaven;
+import org.jboss.shrinkwrap.resolver.api.maven.Maven;
 import org.junit.Test;
+import org.junit.FixMethodOrder;
+import org.junit.runners.MethodSorters;
+import org.junit.experimental.categories.Category;
 import org.junit.runner.RunWith;
 
 import com.google.gson.JsonArray;
 import com.google.gson.JsonObject;
 import org.restcomm.connect.commons.Version;
+import org.restcomm.connect.commons.annotations.FeatureAltTests;
 
 /**
  * @author <a href="mailto:gvagenas@gmail.com">gvagenas</a>
@@ -28,6 +32,7 @@ import org.restcomm.connect.commons.Version;
  */
 
 @RunWith(Arquillian.class)
+@FixMethodOrder(MethodSorters.NAME_ASCENDING)
 public class CallsEndpointTest {
     private final static Logger logger = Logger.getLogger(CallsEndpointTest.class.getName());
 
@@ -78,6 +83,7 @@ public class CallsEndpointTest {
     }
 
     @Test
+    @Category(FeatureAltTests.class)
     public void getCallsListUsingPageSize() {
         JsonObject firstPage = (JsonObject) RestcommCallsTool.getInstance().getCalls(deploymentUrl.toString(), adminAccountSid,
                 adminAuthToken, null, 100, true);
@@ -107,6 +113,7 @@ public class CallsEndpointTest {
     }
 
     @Test
+    @Category(FeatureAltTests.class)
     public void getCallsListFilteredByStatus() {
         Map<String, String> filters = new HashMap<String, String>();
         filters.put("Status", "in-progress");
@@ -127,6 +134,7 @@ public class CallsEndpointTest {
     }
 
     @Test
+    @Category(FeatureAltTests.class)
     public void getCallsListFilteredBySender() {
         Map<String, String> filters = new HashMap<String, String>();
         filters.put("From", "3021097%");
@@ -145,6 +153,7 @@ public class CallsEndpointTest {
     }
 
     @Test
+    @Category(FeatureAltTests.class)
     public void getCallsListFilteredByRecipient() {
         Map<String, String> filters = new HashMap<String, String>();
         filters.put("To", "1512600%");
@@ -160,6 +169,7 @@ public class CallsEndpointTest {
     }
 
     @Test
+    @Category(FeatureAltTests.class)
     public void getCallsListFilteredByStartTime() {
         Map<String, String> filters = new HashMap<String, String>();
         filters.put("StartTime", "2013-08-23 14:30:07.820000000");
@@ -175,6 +185,7 @@ public class CallsEndpointTest {
     }
 
     @Test
+    @Category(FeatureAltTests.class)
     public void getCallsListFilteredByParentCallSid() {
         Map<String, String> filters = new HashMap<String, String>();
         filters.put("ParentCallSid", "CA01a09068a1f348269b6670ef599a6e57");
@@ -186,6 +197,7 @@ public class CallsEndpointTest {
     }
 
     @Test
+    @Category(FeatureAltTests.class)
     public void getCallsListFilteredUsingMultipleFilters() {
         Map<String, String> filters = new HashMap<String, String>();
         filters.put("StartTime", "2013-08-23 14:30:07.820000000");
@@ -205,6 +217,7 @@ public class CallsEndpointTest {
     }
 
     @Test
+    @Category(FeatureAltTests.class)
     public void getCallsListIncludingSubAccounts() {
         Map<String, String> filters = new HashMap<String, String>();
         filters.put("SubAccounts", "true");
@@ -260,14 +273,16 @@ public class CallsEndpointTest {
     public static WebArchive createWebArchiveNoGw() {
         logger.info("Packaging Test App");
         WebArchive archive = ShrinkWrap.create(WebArchive.class, "restcomm.war");
-        final WebArchive restcommArchive = ShrinkWrapMaven.resolver()
+        final WebArchive restcommArchive = Maven.resolver()
                 .resolve("org.restcomm:restcomm-connect.application:war:" + version).withoutTransitivity()
                 .asSingle(WebArchive.class);
         archive = archive.merge(restcommArchive);
         archive.delete("/WEB-INF/sip.xml");
+archive.delete("/WEB-INF/web.xml");
         archive.delete("/WEB-INF/conf/restcomm.xml");
         archive.delete("/WEB-INF/data/hsql/restcomm.script");
         archive.addAsWebInfResource("sip.xml");
+        archive.addAsWebInfResource("web.xml");
         archive.addAsWebInfResource("restcomm.xml", "conf/restcomm.xml");
         archive.addAsWebInfResource("restcomm_with_Data.script", "data/hsql/restcomm.script");
         logger.info("Packaged Test App");

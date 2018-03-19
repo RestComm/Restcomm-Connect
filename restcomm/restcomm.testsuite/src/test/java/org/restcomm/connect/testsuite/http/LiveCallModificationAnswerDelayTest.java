@@ -1,8 +1,20 @@
 package org.restcomm.connect.testsuite.http;
 
-import com.github.tomakehurst.wiremock.junit.WireMockRule;
-import com.google.gson.JsonArray;
-import com.google.gson.JsonObject;
+import static com.github.tomakehurst.wiremock.client.WireMock.aResponse;
+import static com.github.tomakehurst.wiremock.client.WireMock.get;
+import static com.github.tomakehurst.wiremock.client.WireMock.post;
+import static com.github.tomakehurst.wiremock.client.WireMock.stubFor;
+import static com.github.tomakehurst.wiremock.client.WireMock.urlPathEqualTo;
+import static org.cafesip.sipunit.SipAssert.assertLastOperationSuccess;
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertNotNull;
+import static org.junit.Assert.assertTrue;
+
+import java.net.URL;
+
+import javax.sip.address.SipURI;
+import javax.sip.message.Response;
+
 import org.apache.log4j.Logger;
 import org.cafesip.sipunit.Credential;
 import org.cafesip.sipunit.SipCall;
@@ -15,36 +27,30 @@ import org.jboss.arquillian.junit.Arquillian;
 import org.jboss.arquillian.test.api.ArquillianResource;
 import org.jboss.shrinkwrap.api.ShrinkWrap;
 import org.jboss.shrinkwrap.api.spec.WebArchive;
-import org.jboss.shrinkwrap.resolver.api.maven.archive.ShrinkWrapMaven;
+import org.jboss.shrinkwrap.resolver.api.maven.Maven;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.BeforeClass;
-import org.junit.Ignore;
 import org.junit.Rule;
 import org.junit.Test;
+import org.junit.FixMethodOrder;
+import org.junit.runners.MethodSorters;
+import org.junit.experimental.categories.Category;
 import org.junit.runner.RunWith;
 import org.restcomm.connect.commons.Version;
-import org.restcomm.connect.commons.dao.Sid;
-import org.restcomm.connect.testsuite.tools.MonitoringServiceTool;
+import org.restcomm.connect.commons.annotations.FeatureAltTests;
+import org.restcomm.connect.commons.annotations.UnstableTests;
 
-import javax.sip.address.SipURI;
-import javax.sip.message.Response;
-import java.net.URL;
-
-import static com.github.tomakehurst.wiremock.client.WireMock.aResponse;
-import static com.github.tomakehurst.wiremock.client.WireMock.get;
-import static com.github.tomakehurst.wiremock.client.WireMock.post;
-import static com.github.tomakehurst.wiremock.client.WireMock.stubFor;
-import static com.github.tomakehurst.wiremock.client.WireMock.urlPathEqualTo;
-import static org.cafesip.sipunit.SipAssert.assertLastOperationSuccess;
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertNotNull;
-import static org.junit.Assert.assertTrue;
+import com.github.tomakehurst.wiremock.junit.WireMockRule;
+import com.google.gson.JsonArray;
+import com.google.gson.JsonObject;
 
 /**
  * @author <a href="mailto:gvagenas@gmail.com">gvagenas</a>
  */
 @RunWith(Arquillian.class)
+@FixMethodOrder(MethodSorters.NAME_ASCENDING)
+@Category({FeatureAltTests.class, UnstableTests.class})
 public class LiveCallModificationAnswerDelayTest {
 
     private final static Logger logger = Logger.getLogger(CreateCallsTest.class.getName());
@@ -143,7 +149,7 @@ public class LiveCallModificationAnswerDelayTest {
 
         String from = "+15126002188";
         String to = bobContact;
-        String rcmlUrl = "http://127.0.0.1:8080/restcomm/dial-number-entry.xml";
+        String rcmlUrl = deploymentUrl.toString() + "/dial-number-entry.xml";
 
         JsonObject callResult = (JsonObject) RestcommCallsTool.getInstance().createCall(deploymentUrl.toString(), adminAccountSid,
                 adminAuthToken, from, to, rcmlUrl);
@@ -195,7 +201,7 @@ public class LiveCallModificationAnswerDelayTest {
 
         String from = "+15126002188";
         String to = bobContact;
-        String rcmlUrl = "http://127.0.0.1:8080/restcomm/dial-number-entry.xml";
+        String rcmlUrl = deploymentUrl.toString() + "/dial-number-entry.xml";
 
         JsonObject callResult = (JsonObject) RestcommCallsTool.getInstance().createCall(deploymentUrl.toString(), adminAccountSid,
                 adminAuthToken, from, to, rcmlUrl);
@@ -254,7 +260,7 @@ public class LiveCallModificationAnswerDelayTest {
 
         String from = "+15126002188";
         String to = bobContact;
-        String rcmlUrl = "http://127.0.0.1:8080/restcomm/dial-number-entry-lcm.xml";
+        String rcmlUrl = deploymentUrl.toString() + "/dial-number-entry-lcm.xml";
 
         JsonObject callResult = (JsonObject) RestcommCallsTool.getInstance().createCall(deploymentUrl.toString(), adminAccountSid,
                 adminAuthToken, from, to, rcmlUrl);
@@ -301,7 +307,7 @@ public class LiveCallModificationAnswerDelayTest {
 
         String from = "+15126002188";
         String to = bobContact;
-        String rcmlUrl = "http://127.0.0.1:8080/restcomm/dial-number-entry.xml";
+        String rcmlUrl = deploymentUrl.toString() + "/dial-number-entry.xml";
 
         JsonObject callResult = (JsonObject) RestcommCallsTool.getInstance().createCall(deploymentUrl.toString(), adminAccountSid,
                 adminAuthToken, from, to, rcmlUrl);
@@ -328,7 +334,7 @@ public class LiveCallModificationAnswerDelayTest {
 
         Thread.sleep(10000);
         System.out.println("\n ******************** \nAbout to redirect the call\n ********************\n");
-        rcmlUrl = "http://127.0.0.1:8080/restcomm/dial-client-entry.xml";
+        rcmlUrl = deploymentUrl.toString() + "/dial-client-entry.xml";
 
         callResult = RestcommCallsTool.getInstance().modifyCall(deploymentUrl.toString(), adminAccountSid, adminAuthToken,
                 callSid, null, rcmlUrl);
@@ -364,7 +370,7 @@ public class LiveCallModificationAnswerDelayTest {
             "\t  <Conference muted=\"true\" startConferenceOnEnter=\"false\" beep=\"false\">Conf1234</Conference>\n" +
             "\t</Dial>\n" +
             "</Response>";
-    @Test
+    @Test @Category(UnstableTests.class)
     // Redirect a call to a different URL using the Live Call Modification API. Non-regression test for issue:
     // https://bitbucket.org/telestax/telscale-restcomm/issue/139
     // TODO: This test is expected to fail because of issue https://bitbucket.org/telestax/telscale-restcomm/issue/192
@@ -436,7 +442,7 @@ public class LiveCallModificationAnswerDelayTest {
 
         Thread.sleep(10000);
         System.out.println("\n ******************** \nAbout to redirect the call\n ********************\n");
-        String rcmlUrl = "http://127.0.0.1:8080/restcomm/dial-client-entry.xml";
+        String rcmlUrl = deploymentUrl.toString() + "/dial-client-entry.xml";
 
         JsonObject callResult = RestcommCallsTool.getInstance().modifyCall(deploymentUrl.toString(), adminAccountSid, adminAuthToken,
                 callSid, null, rcmlUrl);
@@ -478,7 +484,7 @@ public class LiveCallModificationAnswerDelayTest {
             "\t\t<Conference startConferenceOnEnter=\"false\" waitUrl=\"/restcomm/music/rock/nickleus_-_original_guitar_song_200907251723.wav\">HoldConf1234</Conference>\n" +
             "\t</Dial>\n" +
             "</Response>";
-    @Test
+    @Test @Category(UnstableTests.class)
     public void holdCall() throws Exception {
         stubFor(get(urlPathEqualTo("/1111"))
                 .willReturn(aResponse()
@@ -605,7 +611,7 @@ public class LiveCallModificationAnswerDelayTest {
 
         String from = "+15126002188";
         String to = bobContact;
-        String rcmlUrl = "http://127.0.0.1:8080/restcomm/dial-number-entry.xml";
+        String rcmlUrl = deploymentUrl.toString() + "/dial-number-entry.xml";
 
         JsonObject callResult = (JsonObject) RestcommCallsTool.getInstance().createCall(deploymentUrl.toString(), adminAccountSid,
                 adminAuthToken, from, to, rcmlUrl);
@@ -632,7 +638,7 @@ public class LiveCallModificationAnswerDelayTest {
 
         Thread.sleep(10000);
         System.out.println("\n ******************** \nAbout to redirect the call\n ********************\n");
-        rcmlUrl = "http://127.0.0.1:8080/restcomm/dial-client-entry.xml";
+        rcmlUrl = deploymentUrl.toString() + "/dial-client-entry.xml";
 
         //String invalidCallSid = Sid.generate(Sid.Type.CALL).toString();
         // restcomm-connect/1907
@@ -958,14 +964,16 @@ public class LiveCallModificationAnswerDelayTest {
     public static WebArchive createWebArchiveNoGw() {
         logger.info("Packaging Test App");
         WebArchive archive = ShrinkWrap.create(WebArchive.class, "restcomm.war");
-        final WebArchive restcommArchive = ShrinkWrapMaven.resolver()
+        final WebArchive restcommArchive = Maven.resolver()
                 .resolve("org.restcomm:restcomm-connect.application:war:" + version).withoutTransitivity()
                 .asSingle(WebArchive.class);
         archive = archive.merge(restcommArchive);
         archive.delete("/WEB-INF/sip.xml");
+archive.delete("/WEB-INF/web.xml");
         archive.delete("/WEB-INF/conf/restcomm.xml");
         archive.delete("/WEB-INF/data/hsql/restcomm.script");
         archive.addAsWebInfResource("sip.xml");
+        archive.addAsWebInfResource("web.xml");
         archive.addAsWebInfResource("restcomm-delay.xml", "conf/restcomm.xml");
         archive.addAsWebInfResource("restcomm.script_dialTest", "data/hsql/restcomm.script");
         archive.addAsWebResource("dial-number-entry.xml");

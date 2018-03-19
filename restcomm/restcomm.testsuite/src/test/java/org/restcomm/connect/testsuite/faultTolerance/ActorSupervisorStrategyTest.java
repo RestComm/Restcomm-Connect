@@ -10,6 +10,8 @@ import com.typesafe.config.ConfigFactory;
 import org.junit.AfterClass;
 import org.junit.BeforeClass;
 import org.junit.Test;
+import org.junit.FixMethodOrder;
+import org.junit.runners.MethodSorters;
 import org.restcomm.connect.commons.faulttolerance.RestcommUntypedActor;
 import scala.concurrent.Await;
 import scala.concurrent.Future;

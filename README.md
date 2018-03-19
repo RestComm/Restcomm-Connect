@@ -21,7 +21,7 @@ Downloads
 ========
 
 Use [the Docker image](http://documentation.telestax.com/connect/configuration/docker/Restcomm%20-%20Docker%20Quick%20Start%20Guide.html#restcomm-docker/). It only takes a few minutes to set it up and running.
-Alternatively, you can download the [Binary zip](https://github.com/RestComm/Restcomm-Connect/releases/latest) as well
+Alternatively, you can download the [Binary zip](https://www.restcomm.com/downloads/) as well
 
 Documentation
 ========
@@ -29,7 +29,7 @@ Read the [Online RestComm Documentation](http://documentation.telestax.com/conne
 
 Want to Contribute ? 
 ========
-[See our Contributors Guide](https://github.com/RestComm/RestComm-Connect/CONTRIBUTING.asciidoc) and [How to build RestComm From Source](http://docs.telestax.com/restcomm-mobicents-building-from-source/) and [![Join the chat at https://gitter.im/RestComm/Restcomm-Connect](https://badges.gitter.im/RestComm/Restcomm-Connect.svg)](https://gitter.im/RestComm/Restcomm-Connect?utm_source=badge&utm_medium=badge&utm_campaign=pr-badge&utm_content=badge)
+[See our Contributors Guide](CONTRIBUTING.asciidoc) and [How to build RestComm From Source](http://docs.telestax.com/restcomm-mobicents-building-from-source/) and [![Join the chat at https://gitter.im/RestComm/Restcomm-Connect](https://badges.gitter.im/RestComm/Restcomm-Connect.svg)](https://gitter.im/RestComm/Restcomm-Connect?utm_source=badge&utm_medium=badge&utm_campaign=pr-badge&utm_content=badge)
 
 
 Issue Tracking and Roadmap
@@ -46,13 +46,13 @@ License
 
 RestComm is lead by [TeleStax](http://www.telestax.com/), Inc. and developed collaboratively by a community of individual and enterprise contributors.
 
-RestComm is licensed under dual license policy. The default license is the Free Open Source GNU Affero GPL v3.0. Alternatively a commercial license can be obtained from Telestax ([contact form](http://www.telestax.com/contactus/#InquiryForm))
+RestComm is licensed under dual license policy. The default license is the Free Open Source GNU Affero GPL v3.0. Alternatively a commercial license can be obtained from Telestax ([contact form](https://www.restcomm.com/contact/))
 
 [![FOSSA Status](https://app.fossa.io/api/projects/git%2Bhttps%3A%2F%2Fgithub.com%2FRestComm%2FRestcomm-Connect.svg?type=large)](https://app.fossa.io/projects/git%2Bhttps%3A%2F%2Fgithub.com%2FRestComm%2FRestcomm-Connect?ref=badge_large)
 
 Continuous Integration and Delivery
 ========
-[![RestComm Continuous Job](http://www.cloudbees.com/sites/default/files/Button-Built-on-CB-1.png)](https://mobicents.ci.cloudbees.com/job/RestComm/)
+[![RestComm Continuous Job]](https://cxs.restcomm.com/view/Restcomm/job/UPS_RestComm/)
 
 Acknowledgements
 ========

@@ -29,6 +29,7 @@ import org.restcomm.connect.commons.dao.Sid;
 import org.restcomm.connect.commons.util.UriUtils;
 import org.restcomm.connect.dao.DaoUtils;
 import org.restcomm.connect.dao.RecordingsDao;
+import org.restcomm.connect.dao.entities.MediaAttributes;
 import org.restcomm.connect.dao.entities.Recording;
 import org.restcomm.connect.dao.entities.RecordingFilter;
 import scala.concurrent.ExecutionContext;
@@ -44,6 +45,7 @@ import java.util.concurrent.Callable;
 
 /**
  * @author quintana.thomas@gmail.com (Thomas Quintana)
+ * @author maria-farooq@live.com (Maria Farooq)
  */
 @ThreadSafe
 public final class MybatisRecordingsDao implements RecordingsDao {
@@ -72,23 +74,24 @@ public final class MybatisRecordingsDao implements RecordingsDao {
     }
 
     @Override
-    public void addRecording(Recording recording) {
+    public void addRecording(Recording recording, MediaAttributes.MediaType mediaType) {
+        final String fileExtension = mediaType.equals(MediaAttributes.MediaType.AUDIO_ONLY) ? ".wav" : ".mp4";
         if (s3AccessTool != null && ec != null) {
             final String recordingSid = recording.getSid().toString();
-            URI s3Uri = s3AccessTool.getS3Uri(recordingPath+"/"+recordingSid+".wav");
-                    //s3AccessTool.uploadFile(recordingPath+"/"+recording.getSid().toString()+".wav");
+            URI s3Uri = s3AccessTool.getS3Uri(recordingPath+"/"+recordingSid+fileExtension);
+            //s3AccessTool.uploadFile(recordingPath+"/"+recording.getSid().toString()+fileExtension);
             if (s3Uri != null) {
                 recording = recording.setS3Uri(s3Uri);
             }
             Future<Boolean> f = Futures.future(new Callable<Boolean>() {
                 @Override
                 public Boolean call () throws Exception {
-                    return s3AccessTool.uploadFile(recordingPath+"/"+recordingSid+".wav");
+                    return s3AccessTool.uploadFile(recordingPath+"/"+recordingSid+fileExtension);
                 }
             }, ec);
         }
         String fileUrl = String.format("/restcomm/%s/Accounts/%s/Recordings/%s",recording.getApiVersion(),recording.getAccountSid(),recording.getSid());
-        recording = recording.updateFileUri(generateLocalFileUri(fileUrl));
+        recording = recording.updateFileUri(generateLocalFileUri(fileUrl, fileExtension));
         final SqlSession session = sessions.openSession();
         try {
             session.insert(namespace + "addRecording", toMap(recording));
@@ -98,11 +101,11 @@ public final class MybatisRecordingsDao implements RecordingsDao {
         }
     }
 
-    public URI generateLocalFileUri(String recordingRelativeUri) {
+    public URI generateLocalFileUri(String recordingRelativeUri, String fileExtension) {
         URI uriToResolve = null;
         try {
-            //For local stored recordings, add .wav suffix to the URI
-            uriToResolve = new URI(recordingRelativeUri+".wav");
+            //For local stored recordings, add .wav/.mp4 suffix to the URI
+            uriToResolve = new URI(recordingRelativeUri+fileExtension);
         } catch (URISyntaxException e) {}
         return UriUtils.resolve(uriToResolve);
     }
@@ -217,6 +220,7 @@ public final class MybatisRecordingsDao implements RecordingsDao {
         }
     }
 
+    @Override
     public void updateRecording(final Recording recording) {
         final SqlSession session = sessions.openSession();
         try {
@@ -262,7 +266,7 @@ public final class MybatisRecordingsDao implements RecordingsDao {
         String fileUri = (String) map.get("file_uri");
         if (fileUri == null || fileUri.isEmpty()) {
             String file = String.format("/restcomm/%s/Accounts/%s/Recordings/%s",apiVersion,accountSid,sid);
-            fileUri = generateLocalFileUri(file).toString();
+            fileUri = generateLocalFileUri(file, ".wav").toString();
         }
 
         // fileUri: http://192.168.1.190:8080/restcomm/2012-04-24/Accounts/ACae6e420f425248d6a26948c17a9e2acf/Recordings/RE4c9c09908b60402c8c0a77e24313f27d.wav
@@ -274,7 +278,7 @@ public final class MybatisRecordingsDao implements RecordingsDao {
             dateUpdated = DateTime.now();
             String tempUri = fileUri;
             String file = String.format("/restcomm/%s/Accounts/%s/Recordings/%s",apiVersion,accountSid,sid);
-            fileUri = generateLocalFileUri(file).toString();
+            String fileExtension = null;
             URI oldS3Uri = null;
             try {
                 oldS3Uri = new URI(tempUri);
@@ -286,12 +290,18 @@ public final class MybatisRecordingsDao implements RecordingsDao {
                 String bucketName = tempS3Uri.split(",")[0].trim();
                 String folder = tempS3Uri.split(",")[1].trim();
                 String filename = tempS3Uri.split(",")[2].trim();
+                fileExtension = filename.contains(".wav") ? ".wav" : ".mp4";
                 StringBuffer bucket = new StringBuffer();
                 bucket.append(bucketName);
                 if (folder != null && !folder.isEmpty())
                     bucket.append("/").append(folder);
                 s3Uri =  s3AccessTool.getS3client().getUrl(bucket.toString(), filename).toString();
             }
+            if (fileExtension == null) {
+                // assuming as WAV since previous attempt to obtain fileExtension failed
+                fileExtension = ".wav";
+            }
+            fileUri = generateLocalFileUri(file, fileExtension).toString();
         }
         recording = new Recording(sid, dateCreated, dateUpdated, accountSid, callSid, duration, apiVersion, uri, DaoUtils.readUri(fileUri), DaoUtils.readUri(s3Uri));
         if (update) {

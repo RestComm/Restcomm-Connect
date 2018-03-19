@@ -22,8 +22,9 @@ package org.restcomm.connect.telephony.api;
 import javax.servlet.sip.SipURI;
 
 import org.restcomm.connect.commons.annotations.concurrency.Immutable;
-import org.restcomm.connect.dao.DaoManager;
 import org.restcomm.connect.commons.dao.Sid;
+import org.restcomm.connect.dao.DaoManager;
+import org.restcomm.connect.dao.entities.MediaAttributes;
 import org.restcomm.connect.commons.telephony.CreateCallType;
 
 /**
@@ -48,6 +49,7 @@ public final class InitializeOutbound {
     private final DaoManager daoManager;
     private Sid parentCallSid;
     private final boolean webrtc;
+    private final MediaAttributes mediaAttributes;
 
     //IMS parameters
     private boolean outboundToIms;
@@ -57,16 +59,22 @@ public final class InitializeOutbound {
     public InitializeOutbound(final String name, final SipURI from, final SipURI to, final String username,
             final String password, final long timeout, final boolean isFromApi, final String apiVersion,
             final Sid accountId, final CreateCallType type, final DaoManager daoManager, final boolean webrtc,
-            final boolean outboundToIms, final String imsProxyAddress, final int imsProxyPort) {
-        this(name, from, to, username, password, timeout, isFromApi, apiVersion, accountId, type, daoManager, webrtc);
+            final boolean outboundToIms, final String imsProxyAddress, final int imsProxyPort, final MediaAttributes mediaAttributes) {
+        this(name, from, to, username, password, timeout, isFromApi, apiVersion, accountId, type, daoManager, webrtc, mediaAttributes);
         this.outboundToIms = outboundToIms;
         this.imsProxyAddress = imsProxyAddress;
         this.imsProxyPort = imsProxyPort;
     }
 
     public InitializeOutbound(final String name, final SipURI from, final SipURI to, final String username,
+                              final String password, final long timeout, final boolean isFromApi, final String apiVersion,
+                              final Sid accountId, final CreateCallType type, final DaoManager daoManager, final boolean webrtc) {
+        this(name, from, to, username, password, timeout, isFromApi, apiVersion, accountId, type, daoManager, webrtc, new MediaAttributes());
+    }
+
+    public InitializeOutbound(final String name, final SipURI from, final SipURI to, final String username,
             final String password, final long timeout, final boolean isFromApi, final String apiVersion,
-            final Sid accountId, final CreateCallType type, final DaoManager daoManager, final boolean webrtc) {
+            final Sid accountId, final CreateCallType type, final DaoManager daoManager, final boolean webrtc, final MediaAttributes mediaAttributes) {
         super();
         this.name = name;
         this.from = from;
@@ -80,7 +88,10 @@ public final class InitializeOutbound {
         this.type = type;
         this.daoManager = daoManager;
         this.webrtc = webrtc;
-        outboundToIms = false;
+        this.outboundToIms = outboundToIms;
+        this.imsProxyAddress = imsProxyAddress;
+        this.imsProxyPort = imsProxyPort;
+        this.mediaAttributes = mediaAttributes;
     }
 
     public String name() {
@@ -151,4 +162,5 @@ public final class InitializeOutbound {
         return imsProxyPort;
     }
 
+    public MediaAttributes getMediaAttributes() { return mediaAttributes; }
 }

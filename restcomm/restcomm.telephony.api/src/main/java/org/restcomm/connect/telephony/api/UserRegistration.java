@@ -20,6 +20,8 @@
  */
 package org.restcomm.connect.telephony.api;
 
+import org.restcomm.connect.commons.dao.Sid;
+
 /**
  * @author <a href="mailto:gvagenas@gmail.com">gvagenas</a>
  *
@@ -28,11 +30,13 @@ public class UserRegistration {
     private final String user;
     private final String address;
     private final Boolean registered;
+    private final Sid organizationsSid;
 
-    public UserRegistration(final String user, final String address, final Boolean registered) {
+    public UserRegistration(final String user, final String address, final Boolean registered, final Sid organizationsSid) {
         this.user = user;
         this.address = address;
         this.registered = registered;
+        this.organizationsSid = organizationsSid;
     }
 
     public String getUser() {
@@ -45,5 +49,13 @@ public class UserRegistration {
 
     public Boolean getRegistered() {
         return registered;
+    }
+
+    public Sid getOrganizationsSid() {
+        return organizationsSid;
+    }
+
+    public String getUserPlusOrganizationsSid() {
+        return user+":"+organizationsSid;
     }
 }

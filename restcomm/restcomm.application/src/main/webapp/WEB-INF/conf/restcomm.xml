@@ -31,6 +31,124 @@
 		<conference-entry-audio>beep.wav</conference-entry-audio>
 		<conference-exit-audio>alert.wav</conference-exit-audio>
 
+		<!-- ASR Supported Languages -->
+		<asr-languages default="en-US">
+			<language>af-ZA</language>
+			<language>id-ID</language>
+			<language>ms-MY</language>
+			<language>ca-ES</language>
+			<language>cs-CZ</language>
+			<language>da-DK</language>
+			<language>de-DE</language>
+			<language>en-AU</language>
+			<language>en-CA</language>
+			<language>en-GB</language>
+			<language>en-IN</language>
+			<language>en-IE</language>
+			<language>en-NZ</language>
+			<language>en-PH</language>
+			<language>en-ZA</language>
+			<language>en-US</language>
+			<language>es-AR</language>
+			<language>es-BO</language>
+			<language>es-CL</language>
+			<language>es-CO</language>
+			<language>es-CR</language>
+			<language>es-EC</language>
+			<language>es-SV</language>
+			<language>es-ES</language>
+			<language>es-US</language>
+			<language>es-GT</language>
+			<language>es-HN</language>
+			<language>es-MX</language>
+			<language>es-NI</language>
+			<language>es-PA</language>
+			<language>es-PY</language>
+			<language>es-PE</language>
+			<language>es-PR</language>
+			<language>es-DO</language>
+			<language>es-UY</language>
+			<language>es-VE</language>
+			<language>eu-ES</language>
+			<language>fil-PH</language>
+			<language>fr-CA</language>
+			<language>fr-FR</language>
+			<language>gl-ES</language>
+			<language>hr-HR</language>
+			<language>zu-ZA</language>
+			<language>is-IS</language>
+			<language>it-IT</language>
+			<language>lt-LT</language>
+			<language>hu-HU</language>
+			<language>nl-NL</language>
+			<language>nb-NO</language>
+			<language>pl-PL</language>
+			<language>pt-BR</language>
+			<language>pt-PT</language>
+			<language>ro-RO</language>
+			<language>sk-SK</language>
+			<language>sl-SI</language>
+			<language>fi-FI</language>
+			<language>sv-SE</language>
+			<language>vi-VN</language>
+			<language>tr-TR</language>
+			<language>el-GR</language>
+			<language>bg-BG</language>
+			<language>ru-RU</language>
+			<language>sr-RS</language>
+			<language>uk-UA</language>
+			<language>he-IL</language>
+			<language>ar-IL</language>
+			<language>ar-JO</language>
+			<language>ar-AE</language>
+			<language>ar-BH</language>
+			<language>ar-DZ</language>
+			<language>ar-SA</language>
+			<language>ar-IQ</language>
+			<language>ar-KW</language>
+			<language>ar-MA</language>
+			<language>ar-TN</language>
+			<language>ar-OM</language>
+			<language>ar-PS</language>
+			<language>ar-QA</language>
+			<language>ar-LB</language>
+			<language>ar-EG</language>
+			<language>fa-IR</language>
+			<language>hi-IN</language>
+			<language>th-TH</language>
+			<language>ko-KR</language>
+			<language>cmn-Hant-TW</language>
+			<language>yue-Hant-HK</language>
+			<language>ja-JP</language>
+			<language>cmn-Hans-HK</language>
+			<language>cmn-Hans-CN</language>
+		</asr-languages>
+
+		<!--
+		Timeouts description:
+
+		wit: waiting time to detect user input (gather timeout)
+		We fire failure event if we haven't received any user input during wit timeout. 
+		This timeout is very similar to fdt (First Digit Timer) for DTMF
+
+		pst: amount of silence necessary after the end of speech (gather timeout)
+		We stop speech recognition if user has suspended input for pst timeout. We fire success event if we have recognized something. We return failure event if we haven't recognized anything.
+		This timeout is very similar to idt (Inter Digit Timer) for DTMF
+
+		mrt: maximum recognition time
+		We stop speech recognition on pst timeout after user started input.We fire success event if we have recognized something. We return failure event if we haven't recognized anything.
+		-->
+		<!-- Default Gathering Timeout. Also is used as default WIT and PST in ASR -->
+		<default-gathering-timeout>5</default-gathering-timeout>
+		<!-- ASR Maximum Recognition Time -->
+		<asr-mrt-timeout>60</asr-mrt-timeout>
+
+		<!-- Speech to text drivers -->
+		<!--mg-asr-drivers default="driver1">
+			<driver>driver1</driver>
+			<driver>driver2</driver>
+		</mg-asr-drivers-->
+
 		<!-- Cache settings. -->
 		<cache-path>${restcomm:home}/cache</cache-path>
 		<cache-uri>/restcomm/cache</cache-uri>
@@ -208,6 +326,49 @@
 			<gmlc-password></gmlc-password>
 		</gmlc>
 
+		<!-- dns-provisioning: configuration is used to proform CRUD operations for organizations, i.e creating new domains under restcomm
+			
+		class: represents the DNS provisioning manager class 
+		e.g org.restcomm.connect.telscale.dns.route53.Route53DnsProvisioningManager
+		A developer can provide customer Class for any DNS server as long as it implements 
+		org.restcomm.connect.dns.DnsProvisioningManager
+		
+		enabled: by default dns provisioning is disabled
+		which means during organization api CRUD operations, restcomm will not send any requests to DNS server.
+		-->
+		<dns-provisioning class="" enabled="false">
+			
+			<!-- aws-route53 specific config for dns provisioning
+			restcomm-a-record-value: is address to which DNS Server will route traffic
+				In a cluster, it can be public ip of loadbalancer or alias/domainName of a DNS entity (ELB etc)
+			restcomm-srv-record-value: restcomm server destination for srv record (e.g. sip.restcomm.com)
+			region: the region to be used by the client. This will be used to determine both the 
+				service endpoint (eg: https://sns.us-west-1.amazonaws.com) and signing region (eg: us-west-1) for requests.
+			ttl: time to live in seconds
+			hosted-zone-id: The ID of the hosted zone that contains the resource record sets that you want to change.
+				for example hosted zone id of domain restcomm.com, this can be get from aws management console 
+			is-alias: Set this configuration to true if above restcomm-a-record-value is an alias and not a IP-address/domain-name.
+				default value is false.
+				read more about aliases here http://docs.aws.amazon.com/Route53/latest/DeveloperGuide/resource-record-sets-choosing-alias-non-alias.html
+			alias-target: if restcomm-a-record-value is and alias and is-alias is set to true: we need to provide further configuration for:
+				evaluate-target-health: boolean to either evaluate target health or not, default is false
+				hosted-zone-id: of the alias
+			-->
+			<aws-route53>
+				<restcomm-a-record-value></restcomm-a-record-value>
+        		<restcomm-srv-record-value></restcomm-srv-record-value>
+				<access-key></access-key>
+				<secret-key></secret-key>
+				<region></region>
+				<ttl>3600</ttl>
+				<hosted-zone-id></hosted-zone-id>
+				<is-alias></is-alias>
+				<alias-target>
+                  <evaluate-target-health>boolean</evaluate-target-health>
+                  <hosted-zone-id>string</hosted-zone-id>
+               </alias-target>
+			</aws-route53>
+		</dns-provisioning>
 		<!-- Each permission is represented as three columns Domain:Action:Target
 			Possible actions are Create, Read, Modify, Delete. -->
 		<security-roles>
@@ -234,6 +395,11 @@
 				<permission>RestComm:*:Geolocation</permission>
 			</role>
 		</security-roles>
+		<!-- conference-timeout is allowed life of a conference in restcomm
+				after that all participants will be asked to leave and conference will be closed.
+				default value is 14400 seconds/(4 hours).
+				Please provide value in seconds -->
+		<conference-timeout>14400</conference-timeout>
 	</runtime-settings>
 
 	<!--Bandwidth Provisioning API Configuration class: BandwidthNumberProvisioningManager
@@ -366,6 +532,8 @@
 			<timeout>5</timeout>
 		</media-server>
 	</mscontrol>
+	<!-- dns-util specifies a class that will be used for implementation of ip resolution. -->
+	<dns-util class="java.net.InetAddress"/>
 
 	<!-- The media server manager is responsible for managing the media servers
 		in use by RestComm. The default way to control media servers is using the
@@ -399,7 +567,7 @@
             <remote-address>127.0.0.1</remote-address>
             <remote-port>2427</remote-port>
             <response-timeout>500</response-timeout>
-            <external-address><null/></external-address>
+            <external-address></external-address>
             <rtp-timeout>60</rtp-timeout>
             <rtp-timeout-timer-start-time>im</rtp-timeout-timer-start-time>
         </mgcp-server>
@@ -408,6 +576,10 @@
 	</media-server-manager>
 	<!-- Adjust http client behaviour for outgoing requests -->
 	<http-client>
+		<!--
+			Timeout setting in millis for most outgoing http requests including those for RCML. If the application server
+			is RVD make sure this value is greater than externalServiceTimeout defined in rvd.xml.
+		-->
 		<response-timeout>6000</response-timeout>
 		<!-- Control peer certificate verification for https connections. Two modes are supported:
 			'allowall' : Disables peer certificate verification. Use it when testing.
@@ -418,6 +590,16 @@
 		<use-hostname-to-resolve-relative-url>true</use-hostname-to-resolve-relative-url>
 		<!-- Optionally provide the hostname to be used, otherwise Java will try to get the hostname of the machine JVM is running -->
 		<hostname></hostname>
+		<!-- HTTP Connection Pooling configuration -set to default/example values for now, commented- -->
+		<!--
+		<connection-request-timeout>2000</connection-request-timeout>
+		<max-conn-total>200</max-conn-total>
+		<max-conn-per-route>2</max-conn-per-route>
+		<connection-time-to-live>30000</connection-time-to-live>
+		<routes-host>127.0.0.1,www.restcomm.org</routes-host>
+		<routes-port>8099,80</routes-port>
+		<routes-conn>5,10</routes-conn>
+		-->
 	</http-client>
 
 	<!-- Control notifications sent to rcmlserver (RVD)

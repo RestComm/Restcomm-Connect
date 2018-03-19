@@ -53,6 +53,8 @@ public interface CallDetailRecordsDao {
 
     List<CallDetailRecord> getCallDetailRecordsByConferenceSid(Sid conferenceSid);
 
+    List<CallDetailRecord> getRunningCallDetailRecordsByConferenceSid(Sid conferenceSid);
+
     Integer getTotalRunningCallDetailRecordsByConferenceSid(Sid conferenceSid);
 
     List<CallDetailRecord> getCallDetailRecordsByInstanceId(Sid instanceId);

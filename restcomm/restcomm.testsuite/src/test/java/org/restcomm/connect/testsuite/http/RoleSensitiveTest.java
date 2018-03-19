@@ -20,22 +20,27 @@
 
 package org.restcomm.connect.testsuite.http;
 
-import com.sun.jersey.api.client.Client;
-import com.sun.jersey.api.client.ClientResponse;
-import com.sun.jersey.api.client.WebResource;
-import com.sun.jersey.core.util.MultivaluedMapImpl;
+import javax.ws.rs.core.MediaType;
+import javax.ws.rs.core.MultivaluedMap;
+
 import org.apache.log4j.Logger;
 import org.jboss.arquillian.container.test.api.Deployment;
 import org.jboss.arquillian.junit.Arquillian;
 import org.jboss.shrinkwrap.api.ShrinkWrap;
 import org.jboss.shrinkwrap.api.spec.WebArchive;
-import org.jboss.shrinkwrap.resolver.api.maven.archive.ShrinkWrapMaven;
-import org.junit.Test;
+import org.jboss.shrinkwrap.resolver.api.maven.Maven;
 import org.junit.Assert;
+import org.junit.Test;
+import org.junit.FixMethodOrder;
+import org.junit.runners.MethodSorters;
+import org.junit.experimental.categories.Category;
 import org.junit.runner.RunWith;
+import org.restcomm.connect.commons.annotations.FeatureExpTests;
 
-import javax.ws.rs.core.MediaType;
-import javax.ws.rs.core.MultivaluedMap;
+import com.sun.jersey.api.client.Client;
+import com.sun.jersey.api.client.ClientResponse;
+import com.sun.jersey.api.client.WebResource;
+import com.sun.jersey.core.util.MultivaluedMapImpl;
 
 /**
  * Selective testing (relies on accounts endpoint only) that involves accounts, roles and permissions.
@@ -43,6 +48,7 @@ import javax.ws.rs.core.MultivaluedMap;
  * @author Orestis Tsakiridis
  */
 @RunWith(Arquillian.class)
+@FixMethodOrder(MethodSorters.NAME_ASCENDING)
 public class RoleSensitiveTest extends EndpointTest {
     protected final static Logger logger = Logger.getLogger(RoleSensitiveTest.class);
 
@@ -63,6 +69,7 @@ public class RoleSensitiveTest extends EndpointTest {
     static String guestAuthToken = "77f8c12cc7b8f8423e5c38b035249166";
 
     @Test
+    @Category(FeatureExpTests.class)
     public void testSinglePermissionAccess() {
         // user can read his account
         Client jersey = getClient(userUsername, userAuthToken);
@@ -78,6 +85,7 @@ public class RoleSensitiveTest extends EndpointTest {
     }
 
     @Test
+    @Category(FeatureExpTests.class)
     public void testSiblingAccountPermissionAccess() {
         // user cannot read sibling account although he has Accounts:Read permission
         Client jersey = getClient(userUsername, userAuthToken);
@@ -102,6 +110,7 @@ public class RoleSensitiveTest extends EndpointTest {
     }
 
     @Test
+    @Category(FeatureExpTests.class)
     public void testNoPermissions() {
         // guest cannot read his account
         Client jersey = getClient(guestUsername, guestAuthToken);
@@ -115,14 +124,16 @@ public class RoleSensitiveTest extends EndpointTest {
         logger.info("Packaging Test App");
         logger.info("version");
         WebArchive archive = ShrinkWrap.create(WebArchive.class, "restcomm.war");
-        final WebArchive restcommArchive = ShrinkWrapMaven.resolver()
+        final WebArchive restcommArchive = Maven.resolver()
                 .resolve("org.restcomm:restcomm-connect.application:war:" + version).withoutTransitivity()
                 .asSingle(WebArchive.class);
         archive = archive.merge(restcommArchive);
         archive.delete("/WEB-INF/sip.xml");
+archive.delete("/WEB-INF/web.xml");
         archive.delete("/WEB-INF/conf/restcomm.xml");
         archive.delete("/WEB-INF/data/hsql/restcomm.script");
         archive.addAsWebInfResource("sip.xml");
+        archive.addAsWebInfResource("web.xml");
         archive.addAsWebInfResource("restcomm_roles_permissions.xml", "conf/restcomm.xml");
         archive.addAsWebInfResource("restcomm.script_roles_test", "data/hsql/restcomm.script");
         logger.info("Packaged Test App");

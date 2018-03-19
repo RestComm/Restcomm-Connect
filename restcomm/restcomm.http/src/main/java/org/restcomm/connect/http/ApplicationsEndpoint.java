@@ -21,9 +21,27 @@
 
 package org.restcomm.connect.http;
 
+import com.google.gson.FieldNamingPolicy;
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
 import com.thoughtworks.xstream.XStream;
+import java.net.URI;
+import java.util.List;
+import javax.annotation.PostConstruct;
+import javax.servlet.ServletContext;
+import javax.ws.rs.core.Context;
+import javax.ws.rs.core.MediaType;
+import static javax.ws.rs.core.MediaType.APPLICATION_JSON;
+import static javax.ws.rs.core.MediaType.APPLICATION_JSON_TYPE;
+import static javax.ws.rs.core.MediaType.APPLICATION_XML;
+import static javax.ws.rs.core.MediaType.APPLICATION_XML_TYPE;
+import javax.ws.rs.core.MultivaluedMap;
+import javax.ws.rs.core.Response;
+import static javax.ws.rs.core.Response.Status.BAD_REQUEST;
+import static javax.ws.rs.core.Response.Status.NOT_FOUND;
+import static javax.ws.rs.core.Response.ok;
+import static javax.ws.rs.core.Response.status;
+import javax.ws.rs.core.UriInfo;
 import org.apache.commons.configuration.Configuration;
 import org.restcomm.connect.commons.annotations.concurrency.NotThreadSafe;
 import org.restcomm.connect.commons.dao.Sid;
@@ -33,28 +51,12 @@ import org.restcomm.connect.dao.DaoManager;
 import org.restcomm.connect.dao.entities.Account;
 import org.restcomm.connect.dao.entities.Application;
 import org.restcomm.connect.dao.entities.ApplicationList;
+import org.restcomm.connect.dao.entities.ApplicationNumberSummary;
 import org.restcomm.connect.dao.entities.RestCommResponse;
 import org.restcomm.connect.http.converter.ApplicationConverter;
 import org.restcomm.connect.http.converter.ApplicationListConverter;
+import org.restcomm.connect.http.converter.ApplicationNumberSummaryConverter;
 import org.restcomm.connect.http.converter.RestCommResponseConverter;
-
-import javax.annotation.PostConstruct;
-import javax.servlet.ServletContext;
-import javax.ws.rs.core.Context;
-import javax.ws.rs.core.MediaType;
-import javax.ws.rs.core.MultivaluedMap;
-import javax.ws.rs.core.Response;
-import java.net.URI;
-import java.util.List;
-
-import static javax.ws.rs.core.MediaType.APPLICATION_JSON;
-import static javax.ws.rs.core.MediaType.APPLICATION_JSON_TYPE;
-import static javax.ws.rs.core.MediaType.APPLICATION_XML;
-import static javax.ws.rs.core.MediaType.APPLICATION_XML_TYPE;
-import static javax.ws.rs.core.Response.Status.BAD_REQUEST;
-import static javax.ws.rs.core.Response.Status.NOT_FOUND;
-import static javax.ws.rs.core.Response.ok;
-import static javax.ws.rs.core.Response.status;
 
 /**
  * @author guilherme.jansen@telestax.com
@@ -84,6 +86,7 @@ public class ApplicationsEndpoint extends SecuredEndpoint {
         final ApplicationConverter converter = new ApplicationConverter(configuration);
         final GsonBuilder builder = new GsonBuilder();
         builder.registerTypeAdapter(Application.class, converter);
+        builder.setFieldNamingPolicy(FieldNamingPolicy.LOWER_CASE_WITH_UNDERSCORES); // if custom converter is not provided, rename camelCase to camel_case. Needed for serializing ApplicationNumberSummary and hopefully other entities too at some point.
         builder.setPrettyPrinting();
         gson = builder.create();
         xstream = new XStream();
@@ -91,6 +94,8 @@ public class ApplicationsEndpoint extends SecuredEndpoint {
         xstream.registerConverter(converter);
         xstream.registerConverter(new ApplicationListConverter(configuration));
         xstream.registerConverter(new RestCommResponseConverter(configuration));
+        xstream.registerConverter(new ApplicationNumberSummaryConverter());
+        xstream.alias("Number",ApplicationNumberSummary.class);
     }
 
     private Application createFrom(final Sid accountSid, final MultivaluedMap<String, String> data) {
@@ -133,10 +138,10 @@ public class ApplicationsEndpoint extends SecuredEndpoint {
             return status(NOT_FOUND).build();
         } else {
             secure(account, application.getAccountSid(), SecuredType.SECURED_APP);
-            if (APPLICATION_XML_TYPE == responseType) {
+            if (APPLICATION_XML_TYPE.equals(responseType)) {
                 final RestCommResponse response = new RestCommResponse(application);
                 return ok(xstream.toXML(response), APPLICATION_XML).build();
-            } else if (APPLICATION_JSON_TYPE == responseType) {
+            } else if (APPLICATION_JSON_TYPE.equals(responseType)) {
                 return ok(gson.toJson(application), APPLICATION_JSON).build();
             } else {
                 return null;
@@ -144,15 +149,21 @@ public class ApplicationsEndpoint extends SecuredEndpoint {
         }
     }
 
-    protected Response getApplications(final String accountSid, final MediaType responseType) {
+    protected Response getApplications(final String accountSid, final MediaType responseType, UriInfo uriInfo) {
         Account account;
         account = accountsDao.getAccount(accountSid);
         secure(account, "RestComm:Read:Applications", SecuredType.SECURED_APP);
-        final List<Application> applications = dao.getApplications(account.getSid());
-        if (APPLICATION_XML_TYPE == responseType) {
+        // shall we also return number information with the application ?
+        boolean includeNumbers = false;
+        String tmp = uriInfo.getQueryParameters().getFirst("includeNumbers");
+        if (tmp != null && tmp.equalsIgnoreCase("true"))
+            includeNumbers = true;
+
+        final List<Application> applications = dao.getApplicationsWithNumbers(account.getSid());
+        if (APPLICATION_XML_TYPE.equals(responseType)) {
             final RestCommResponse response = new RestCommResponse(new ApplicationList(applications));
             return ok(xstream.toXML(response), APPLICATION_XML).build();
-        } else if (APPLICATION_JSON_TYPE == responseType) {
+        } else if (APPLICATION_JSON_TYPE.equals(responseType)) {
             return ok(gson.toJson(applications), APPLICATION_JSON).build();
         } else {
             return null;
@@ -185,10 +196,10 @@ public class ApplicationsEndpoint extends SecuredEndpoint {
         dao.addApplication(application);
 
 
-        if (APPLICATION_XML_TYPE == responseType) {
+        if (APPLICATION_XML_TYPE.equals(responseType)) {
             final RestCommResponse response = new RestCommResponse(application);
             return ok(xstream.toXML(response), APPLICATION_XML).build();
-        } else if (APPLICATION_JSON_TYPE == responseType) {
+        } else if (APPLICATION_JSON_TYPE.equals(responseType)) {
             return ok(gson.toJson(application), APPLICATION_JSON).build();
         } else {
             return null;
@@ -212,10 +223,10 @@ public class ApplicationsEndpoint extends SecuredEndpoint {
             secure(account, application.getAccountSid(), SecuredType.SECURED_APP);
             final Application applicationUpdate = update(application, data);
             dao.updateApplication(applicationUpdate);
-            if (APPLICATION_XML_TYPE == responseType) {
+            if (APPLICATION_XML_TYPE.equals(responseType)) {
                 final RestCommResponse response = new RestCommResponse(applicationUpdate);
                 return ok(xstream.toXML(response), APPLICATION_XML).build();
-            } else if (APPLICATION_JSON_TYPE == responseType) {
+            } else if (APPLICATION_JSON_TYPE.equals(responseType)) {
                 return ok(gson.toJson(applicationUpdate), APPLICATION_JSON).build();
             } else {
                 return null;

@@ -20,13 +20,15 @@
 
 package org.restcomm.connect.http;
 
-import static javax.ws.rs.core.MediaType.*;
+import static org.restcomm.connect.http.security.AccountPrincipal.SUPER_ADMIN_ROLE;
 
+import javax.annotation.security.RolesAllowed;
 import javax.ws.rs.GET;
 import javax.ws.rs.Path;
 import javax.ws.rs.PathParam;
+import javax.ws.rs.Produces;
+import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
-
 import org.restcomm.connect.commons.annotations.concurrency.ThreadSafe;
 
 /**
@@ -35,25 +37,29 @@ import org.restcomm.connect.commons.annotations.concurrency.ThreadSafe;
  */
 @Path("/Accounts/{accountSid}/OutboundProxy")
 @ThreadSafe
+@RolesAllowed(SUPER_ADMIN_ROLE)
 public class OutboundProxyXmlEndpoint extends OutboundProxyEndpoint {
     public OutboundProxyXmlEndpoint() {
         super();
     }
 
     @GET
+    @Produces({MediaType.APPLICATION_XML, MediaType.APPLICATION_JSON})
     public Response getProxies(@PathParam("accountSid") final String accountSid) {
-        return getProxies(accountSid, APPLICATION_XML_TYPE);
+        return getProxies(accountSid, retrieveMediaType());
     }
 
     @GET
     @Path("/switchProxy")
+    @Produces({MediaType.APPLICATION_XML, MediaType.APPLICATION_JSON})
     public Response switchProxy(@PathParam("accountSid") final String accountSid) {
-        return switchProxy(accountSid, APPLICATION_XML_TYPE);
+        return switchProxy(accountSid, retrieveMediaType());
     }
 
     @GET
     @Path("/getActiveProxy")
+    @Produces({MediaType.APPLICATION_XML, MediaType.APPLICATION_JSON})
     public Response getActiveProxy(@PathParam("accountSid") final String accountSid) {
-        return getActiveProxy(accountSid, APPLICATION_XML_TYPE);
+        return getActiveProxy(accountSid, retrieveMediaType());
     }
 }

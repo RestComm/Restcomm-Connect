@@ -21,51 +21,27 @@
 
 package org.restcomm.connect.mscontrol.jsr309;
 
-import java.io.File;
-import java.io.IOException;
-import java.io.Serializable;
-import java.net.URI;
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.HashSet;
-import java.util.List;
-import java.util.Map;
-import java.util.Set;
 
-import javax.media.mscontrol.EventType;
-import javax.media.mscontrol.MediaEvent;
-import javax.media.mscontrol.MediaEventListener;
-import javax.media.mscontrol.MediaSession;
-import javax.media.mscontrol.MsControlException;
-import javax.media.mscontrol.MsControlFactory;
-import javax.media.mscontrol.Parameter;
-import javax.media.mscontrol.Parameters;
-import javax.media.mscontrol.join.Joinable.Direction;
-import javax.media.mscontrol.mediagroup.MediaGroup;
-import javax.media.mscontrol.mediagroup.Player;
-import javax.media.mscontrol.mediagroup.PlayerEvent;
-import javax.media.mscontrol.mediagroup.Recorder;
-import javax.media.mscontrol.mediagroup.RecorderEvent;
-import javax.media.mscontrol.mediagroup.SpeechDetectorConstants;
-import javax.media.mscontrol.mediagroup.signals.SignalDetector;
-import javax.media.mscontrol.mediagroup.signals.SignalDetectorEvent;
-import javax.media.mscontrol.mixer.MediaMixer;
-import javax.media.mscontrol.networkconnection.CodecPolicy;
-import javax.media.mscontrol.networkconnection.NetworkConnection;
-import javax.media.mscontrol.networkconnection.SdpPortManager;
-import javax.media.mscontrol.networkconnection.SdpPortManagerEvent;
-import javax.media.mscontrol.resource.RTC;
-import javax.sound.sampled.UnsupportedAudioFileException;
+import javax.media.mscontrol.mediagroup.CodecConstants;
+import org.apache.commons.lang.StringUtils;
+import org.restcomm.connect.dao.entities.MediaAttributes;
 
+import akka.actor.ActorRef;
+import akka.event.Logging;
+import akka.event.LoggingAdapter;
 import org.apache.commons.configuration.Configuration;
-import org.joda.time.DateTime;
-import org.restcomm.connect.dao.DaoManager;
-import org.restcomm.connect.dao.RecordingsDao;
-import org.restcomm.connect.dao.entities.Recording;
+
 import org.restcomm.connect.commons.dao.Sid;
 import org.restcomm.connect.commons.fsm.FiniteStateMachine;
 import org.restcomm.connect.commons.fsm.State;
 import org.restcomm.connect.commons.fsm.Transition;
+import org.restcomm.connect.commons.patterns.Observe;
+import org.restcomm.connect.commons.patterns.Observing;
+import org.restcomm.connect.commons.patterns.StopObserving;
+import org.restcomm.connect.commons.util.WavUtils;
+import org.restcomm.connect.dao.DaoManager;
+import org.restcomm.connect.dao.RecordingsDao;
+import org.restcomm.connect.dao.entities.Recording;
 import org.restcomm.connect.mscontrol.api.MediaServerController;
 import org.restcomm.connect.mscontrol.api.MediaServerInfo;
 import org.restcomm.connect.mscontrol.api.exceptions.MediaServerControllerException;
@@ -91,14 +67,41 @@ import org.restcomm.connect.mscontrol.api.messages.StopMediaGroup;
 import org.restcomm.connect.mscontrol.api.messages.StopRecording;
 import org.restcomm.connect.mscontrol.api.messages.Unmute;
 import org.restcomm.connect.mscontrol.api.messages.UpdateMediaSession;
-import org.restcomm.connect.commons.patterns.Observe;
-import org.restcomm.connect.commons.patterns.Observing;
-import org.restcomm.connect.commons.patterns.StopObserving;
-import org.restcomm.connect.commons.util.WavUtils;
 
-import akka.actor.ActorRef;
-import akka.event.Logging;
-import akka.event.LoggingAdapter;
+import javax.media.mscontrol.EventType;
+import javax.media.mscontrol.MediaEvent;
+import javax.media.mscontrol.MediaEventListener;
+import javax.media.mscontrol.MediaSession;
+import javax.media.mscontrol.MsControlException;
+import javax.media.mscontrol.MsControlFactory;
+import javax.media.mscontrol.Parameter;
+import javax.media.mscontrol.Parameters;
+import javax.media.mscontrol.join.Joinable.Direction;
+import javax.media.mscontrol.mediagroup.MediaGroup;
+import javax.media.mscontrol.mediagroup.Player;
+import javax.media.mscontrol.mediagroup.PlayerEvent;
+import javax.media.mscontrol.mediagroup.Recorder;
+import javax.media.mscontrol.mediagroup.RecorderEvent;
+import javax.media.mscontrol.mediagroup.SpeechDetectorConstants;
+import javax.media.mscontrol.mediagroup.signals.SignalDetector;
+import javax.media.mscontrol.mediagroup.signals.SignalDetectorEvent;
+import javax.media.mscontrol.mixer.MediaMixer;
+import javax.media.mscontrol.networkconnection.CodecPolicy;
+import javax.media.mscontrol.networkconnection.NetworkConnection;
+import javax.media.mscontrol.networkconnection.SdpPortManager;
+import javax.media.mscontrol.networkconnection.SdpPortManagerEvent;
+import javax.media.mscontrol.resource.RTC;
+import javax.sound.sampled.UnsupportedAudioFileException;
+import java.io.File;
+import java.io.IOException;
+import java.io.Serializable;
+import java.net.URI;
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.HashSet;
+import java.util.List;
+import java.util.Map;
+import java.util.Set;
 
 /**
  * @author Henrique Rosa (henrique.rosa@telestax.com)
@@ -122,8 +125,6 @@ public class Jsr309CallController extends MediaServerController {
     private final State failed;
 
     // JSR-309 runtime stuff
-    private static final String[] CODEC_POLICY_AUDIO = new String[] { "audio" };
-
     private final MsControlFactory msControlFactory;
     private final MediaServerInfo mediaServerInfo;
     private MediaSession mediaSession;
@@ -155,8 +156,8 @@ public class Jsr309CallController extends MediaServerController {
     private Boolean recording;
     private Boolean playing;
     private Boolean collecting;
-    private DateTime recordStarted;
     private DaoManager daoManager;
+    private MediaAttributes.MediaType recordingMediaType;
 
     // Runtime Setting
     private Configuration runtimeSettings;
@@ -218,6 +219,7 @@ public class Jsr309CallController extends MediaServerController {
         this.recording = Boolean.FALSE;
         this.playing = Boolean.FALSE;
         this.collecting = Boolean.FALSE;
+        this.recordingMediaType = null;
     }
 
     private boolean is(State state) {
@@ -496,7 +498,7 @@ public class Jsr309CallController extends MediaServerController {
     }
 
     private void onCloseMediaSession(CloseMediaSession message, ActorRef self, ActorRef sender) throws Exception {
-        if (is(active) || is(initializing) || is(updatingMediaSession)) {
+        if (is(active) || is(initializing) || is(updatingMediaSession) || is(pending)) {
             fsm.transition(message, inactive);
         }
     }
@@ -574,10 +576,9 @@ public class Jsr309CallController extends MediaServerController {
             if(logger.isInfoEnabled()) {
                 logger.info("Start recording call");
             }
-            this.recordStarted = DateTime.now();
 
             // Tell media group to start recording
-            final Record record = new Record(recordingUri, 5, 3600, "1234567890*#");
+            final Record record = new Record(recordingUri, 5, 3600, "1234567890*#", MediaAttributes.MediaType.AUDIO_ONLY);
             onRecord(record, self, sender);
         }
     }
@@ -710,9 +711,26 @@ public class Jsr309CallController extends MediaServerController {
                 // TODO set as definitive media group parameter - handled by RestComm
                 params.put(Recorder.START_BEEP, Boolean.FALSE);
 
+                // Video parameters
+                if (MediaAttributes.MediaType.AUDIO_VIDEO.equals(message.media()) ||
+                        MediaAttributes.MediaType.VIDEO_ONLY.equals(message.media())) {
+                    params.put(Recorder.VIDEO_CODEC, CodecConstants.H264);
+                    String sVideoFMTP = "profile=" + "66";
+                    sVideoFMTP += ";level=" + "3.1";
+                    sVideoFMTP += ";width=" + "1280";
+                    sVideoFMTP += ";height=" + "720";
+                    sVideoFMTP += ";framerate=" + "15";
+                    params.put(Recorder.VIDEO_FMTP, sVideoFMTP);
+                    params.put(Recorder.VIDEO_MAX_BITRATE, 2000);
+                    if (MediaAttributes.MediaType.AUDIO_VIDEO.equals(message.media())) {
+                        params.put(Recorder.AUDIO_CODEC, CodecConstants.AMR);
+                    }
+                }
+
                 this.recorderListener.setEndOnKey(message.endInputKey());
                 this.recorderListener.setRemote(sender);
                 this.mediaGroup.getRecorder().record(message.destination(), rtcs, params);
+                this.recordingMediaType = message.media();
                 this.recording = Boolean.TRUE;
             } catch (MsControlException e) {
                 logger.error("Recording failed: " + e.getMessage());
@@ -743,6 +761,11 @@ public class Jsr309CallController extends MediaServerController {
         if (is(active)) {
             try {
                 // join call leg to bridge
+                // overlay configuration
+                MediaAttributes ma = message.mediaAttributes();
+                if (!StringUtils.isEmpty(ma.getVideoOverlay())) {
+                    mediaSession.setAttribute("CAPTION", ma.getVideoOverlay());
+                }
                 this.bridge = sender;
                 this.mediaMixer = (MediaMixer) message.getEndpoint();
                 this.networkConnection.join(Direction.DUPLEX, mediaMixer);
@@ -776,32 +799,30 @@ public class Jsr309CallController extends MediaServerController {
                         logger.error("Could not measure recording duration: " + e.getMessage(), e);
                         duration = 0.0;
                     }
-                    if (duration.equals(0.0)) {
-                        if(logger.isInfoEnabled()) {
+                    if (!duration.equals(0.0)) {
+                        if (logger.isInfoEnabled()) {
+                            logger.info("Call wraping up recording. File already exists, length: " + (new File(recordingUri).length()));
+                        }
+
+                        final Recording.Builder builder = Recording.builder();
+                        builder.setSid(recordingSid);
+                        builder.setAccountSid(accountId);
+                        builder.setCallSid(callId);
+                        builder.setDuration(duration);
+                        builder.setApiVersion(runtimeSettings.getString("api-version"));
+                        StringBuilder buffer = new StringBuilder();
+                        buffer.append("/").append(runtimeSettings.getString("api-version")).append("/Accounts/")
+                                .append(accountId.toString());
+                        buffer.append("/Recordings/").append(recordingSid.toString());
+                        builder.setUri(URI.create(buffer.toString()));
+                        final Recording recording = builder.build();
+                        RecordingsDao recordsDao = daoManager.getRecordingsDao();
+                        recordsDao.addRecording(recording, recordingMediaType);
+                    } else {
+                        if (logger.isInfoEnabled()) {
                             logger.info("Call wraping up recording. File doesn't exist since duration is 0");
                         }
-                        final DateTime end = DateTime.now();
-                        duration = new Double((end.getMillis() - recordStarted.getMillis()) / 1000);
-                    } else {
-                        if(logger.isInfoEnabled()) {
-                            logger.info("Call wraping up recording. File already exists, length: "
-                                + (new File(recordingUri).length()));
-                        }
                     }
-                    final Recording.Builder builder = Recording.builder();
-                    builder.setSid(recordingSid);
-                    builder.setAccountSid(accountId);
-                    builder.setCallSid(callId);
-                    builder.setDuration(duration);
-                    builder.setApiVersion(runtimeSettings.getString("api-version"));
-                    StringBuilder buffer = new StringBuilder();
-                    buffer.append("/").append(runtimeSettings.getString("api-version")).append("/Accounts/")
-                            .append(accountId.toString());
-                    buffer.append("/Recordings/").append(recordingSid.toString());
-                    builder.setUri(URI.create(buffer.toString()));
-                    final Recording recording = builder.build();
-                    RecordingsDao recordsDao = daoManager.getRecordingsDao();
-                    recordsDao.addRecording(recording);
                 }
             }
 
@@ -846,6 +867,9 @@ public class Jsr309CallController extends MediaServerController {
         @Override
         public void execute(Object message) throws Exception {
             try {
+                CreateMediaSession msg = (CreateMediaSession) message;
+                MediaAttributes mediaAttributes = msg.mediaAttributes();
+
                 // Create media session
                 mediaSession = msControlFactory.createMediaSession();
 
@@ -863,12 +887,18 @@ public class Jsr309CallController extends MediaServerController {
                 // Distinguish between WebRTC and SIP calls
                 Parameters sdpParameters = mediaSession.createParameters();
                 Map<String, String> configurationData = new HashMap<String, String>();
-                configurationData.put("webrtc", webrtc ? "yes" : "no");
+                if (webrtc) {
+                    configurationData.put("webrtc", "yes");
+                    // Enable DTLS, ICE Lite and RTCP feedback
+                    configurationData.put("Supported", "dlgc-encryption-dtls, dlgc-ice, dlgc-rtcp-feedback-audiovideo");
+                } else {
+                    configurationData.put("webrtc", "no");
+                }
                 sdpParameters.put(SdpPortManager.SIP_HEADERS, configurationData);
                 networkConnection.setParameters(sdpParameters);
 
                 CodecPolicy codecPolicy = new CodecPolicy();
-                codecPolicy.setMediaTypeCapabilities(CODEC_POLICY_AUDIO);
+                codecPolicy.setMediaTypeCapabilities(mediaAttributes.getMediaType().getCodecPolicy());
 
                 networkConnection.getSdpPortManager().setCodecPolicy(codecPolicy);
                 networkConnection.getSdpPortManager().addListener(sdpListener);
@@ -881,7 +911,6 @@ public class Jsr309CallController extends MediaServerController {
                 fsm.transition(e, failed);
             }
         }
-
     }
 
     private final class UpdatingMediaSession extends AbstractAction {

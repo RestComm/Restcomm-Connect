@@ -17,14 +17,12 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>
  *
  */
-
 package org.restcomm.connect.http.client.rcmlserver;
 
 import com.google.gson.Gson;
 import com.google.gson.JsonObject;
 import org.apache.commons.lang.StringUtils;
 import org.apache.http.HttpResponse;
-import org.apache.http.client.HttpClient;
 import org.apache.http.client.methods.HttpPost;
 import org.apache.http.entity.ContentType;
 import org.apache.http.entity.StringEntity;
@@ -35,23 +33,43 @@ import org.restcomm.connect.commons.configuration.sets.RcmlserverConfigurationSe
 import org.restcomm.connect.commons.util.SecurityUtils;
 import org.restcomm.connect.commons.util.UriUtils;
 import org.restcomm.connect.dao.entities.Account;
-import org.restcomm.connect.http.exceptions.RcmlserverNotifyError;
 
-import java.io.IOException;
 import java.net.URI;
 import java.net.URISyntaxException;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
+import org.apache.http.client.config.RequestConfig;
+import org.apache.http.client.protocol.HttpClientContext;
+import org.apache.http.concurrent.FutureCallback;
+import org.apache.http.impl.nio.client.CloseableHttpAsyncClient;
+import org.apache.http.protocol.BasicHttpContext;
+import org.apache.http.protocol.HttpContext;
+import org.restcomm.connect.dao.entities.Account.Status;
 
 /**
- * Utility class that handles notification submission to rcmlserver (typically RVD)
+ * Utility class that handles notification submission to rcmlserver (typically
+ * RVD)
  *
  * @author otsakir@gmail.com - Orestis Tsakiridis
  */
 public class RcmlserverApi {
+
     static final Logger logger = Logger.getLogger(RcmlserverApi.class.getName());
 
     enum NotificationType {
-        accountClosed
+        accountClosed, accountSuspended,
+        accountActivated, accountUninitialized,
+        accountInactivated
+    }
+
+    private static final Map<Status,NotificationType> status2NotMap = new HashMap();
+    static {
+        status2NotMap.put(Status.CLOSED, NotificationType.accountClosed);
+        status2NotMap.put(Status.ACTIVE, NotificationType.accountActivated);
+        status2NotMap.put(Status.SUSPENDED, NotificationType.accountSuspended);
+        status2NotMap.put(Status.INACTIVE, NotificationType.accountInactivated);
+        status2NotMap.put(Status.UNINITIALIZED, NotificationType.accountUninitialized);
     }
 
     URI apiUrl;
@@ -61,14 +79,13 @@ public class RcmlserverApi {
     public RcmlserverApi(MainConfigurationSet mainConfig, RcmlserverConfigurationSet rcmlserverConfig) {
         try {
             // if there is no baseUrl configured we use the resolver to guess the location of the rcml server and the path
-            if ( StringUtils.isEmpty(rcmlserverConfig.getBaseUrl()) ) {
+            if (StringUtils.isEmpty(rcmlserverConfig.getBaseUrl())) {
                 // resolve() should be run lazily to work. Make sure this constructor is invoked after the JBoss connectors have been set up.
                 apiUrl = UriUtils.resolve(new URI(rcmlserverConfig.getApiPath()));
-            }
-            // if baseUrl has been configured, concat baseUrl and path to find the location of rcml server. No resolving here.
+            } // if baseUrl has been configured, concat baseUrl and path to find the location of rcml server. No resolving here.
             else {
                 String path = rcmlserverConfig.getApiPath();
-                apiUrl = new URI(rcmlserverConfig.getBaseUrl() + (path != null ? path : "") );
+                apiUrl = new URI(rcmlserverConfig.getBaseUrl() + (path != null ? path : ""));
             }
         } catch (URISyntaxException e) {
             throw new RuntimeException(e);
@@ -77,38 +94,55 @@ public class RcmlserverApi {
         this.mainConfig = mainConfig;
     }
 
-    public void transmitNotifications(List<JsonObject> notifications, String notifierUsername, String notifierPassword) throws RcmlserverNotifyError {
+    class RCMLCallback implements FutureCallback<HttpResponse> {
+
+        @Override
+        public void completed(HttpResponse t) {
+            logger.debug("RVD notification sent");
+        }
+
+        @Override
+        public void failed(Exception excptn) {
+            logger.error("RVD notification failed", excptn);
+        }
+
+        @Override
+        public void cancelled() {
+            logger.debug("RVD notification cancelled");
+        }
+
+    }
+
+    public void transmitNotifications(List<JsonObject> notifications, String notifierUsername, String notifierPassword) {
         String notificationUrl = apiUrl + "/notifications";
         HttpPost request = new HttpPost(notificationUrl);
         String authHeader;
         authHeader = SecurityUtils.buildBasicAuthHeader(notifierUsername, notifierPassword);
-        request.setHeader("Authorization", authHeader );
+        request.setHeader("Authorization", authHeader);
         Gson gson = new Gson();
         String json = gson.toJson(notifications);
         request.setEntity(new StringEntity(json, ContentType.APPLICATION_JSON));
         Integer totalTimeout = rcmlserverConfig.getTimeout() + notifications.size() * rcmlserverConfig.getTimeoutPerNotification();
-        HttpClient httpClient = CustomHttpClientBuilder.build(mainConfig, totalTimeout);
-        try {
-            logger.info("Will transmit a set of " + notifications.size() + " notifications and wait at most for " + totalTimeout);
-            HttpResponse response = httpClient.execute(request);
-            if (response.getStatusLine().getStatusCode() != 200) {
-                throw new RcmlserverNotifyError();
-            }
-            logger.info("Transmitted a set of " + notifications.size() + " notification(s) to rcmlserver");
-        } catch (IOException e) {
-            // TODO throw serious exception if the error signifies problem reaching rcmlserver that would affect subsequent
-            // request too
-            throw new RcmlserverNotifyError("Transmission of " + notifications.size() + " notifications failed.",e);
+        CloseableHttpAsyncClient httpClient = CustomHttpClientBuilder.buildCloseableHttpAsyncClient(mainConfig);
+        if (logger.isDebugEnabled()) {
+            logger.debug("Will transmit a set of " +
+                    notifications.size() + " "
+                    + "notifications and wait at most for " +
+                    totalTimeout);
         }
+        HttpContext httpContext = new BasicHttpContext();
+        httpContext.setAttribute(HttpClientContext.REQUEST_CONFIG, RequestConfig.custom().
+                setConnectTimeout(totalTimeout).
+                setSocketTimeout(totalTimeout).
+                setConnectionRequestTimeout(totalTimeout).build());
+        httpClient.execute(request, httpContext, new RCMLCallback());
     }
 
-    public JsonObject buildAccountClosingNotification(Account closedAccount) {
+    public JsonObject buildAccountStatusNotification(Account account) {
         JsonObject jsonObject = new JsonObject();
-        jsonObject.addProperty("type", NotificationType.accountClosed.toString());
-        jsonObject.addProperty("accountSid", closedAccount.getSid().toString());
+        jsonObject.addProperty("type", status2NotMap.get(account.getStatus()).toString());
+        jsonObject.addProperty("accountSid", account.getSid().toString());
         return jsonObject;
     }
-
-
 
 }

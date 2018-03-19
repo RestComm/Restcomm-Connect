@@ -31,6 +31,7 @@ import java.util.Locale;
 
 import javax.ws.rs.core.MultivaluedMap;
 
+import junit.framework.Assert;
 import org.apache.http.client.ClientProtocolException;
 import org.apache.log4j.Logger;
 import org.jboss.arquillian.container.test.api.Deployer;
@@ -39,9 +40,11 @@ import org.jboss.arquillian.junit.Arquillian;
 import org.jboss.arquillian.test.api.ArquillianResource;
 import org.jboss.shrinkwrap.api.ShrinkWrap;
 import org.jboss.shrinkwrap.api.spec.WebArchive;
-import org.jboss.shrinkwrap.resolver.api.maven.archive.ShrinkWrapMaven;
+import org.jboss.shrinkwrap.resolver.api.maven.Maven;
 import org.junit.After;
 import org.junit.Test;
+import org.junit.FixMethodOrder;
+import org.junit.runners.MethodSorters;
 import org.junit.runner.RunWith;
 import org.restcomm.connect.commons.Version;
 import org.restcomm.connect.commons.dao.Sid;
@@ -49,11 +52,14 @@ import org.restcomm.connect.commons.dao.Sid;
 import com.google.gson.JsonArray;
 import com.google.gson.JsonObject;
 import com.sun.jersey.core.util.MultivaluedMapImpl;
+import org.junit.experimental.categories.Category;
+import org.restcomm.connect.commons.annotations.UnstableTests;
 
 /**
  * @author guilherme.jansen@telestax.com
  */
 @RunWith(Arquillian.class)
+@FixMethodOrder(MethodSorters.NAME_ASCENDING)
 public class ApplicationsEndpointTest {
 
     private final static Logger logger = Logger.getLogger(ApplicationsEndpointTest.class);
@@ -74,6 +80,7 @@ public class ApplicationsEndpointTest {
     }
 
     @Test
+    @Category(UnstableTests.class)
     public void testCreateAndGetApplication() throws ParseException, IllegalArgumentException, ClientProtocolException,
             IOException {
         // Define application attributes
@@ -115,6 +122,20 @@ public class ApplicationsEndpointTest {
         assertTrue(applicationJson.get("voice_caller_id_lookup").getAsString().equals(voiceCallerIdLookup));
         assertTrue(applicationJson.get("rcml_url").getAsString().equals(rcmlUrl));
         assertTrue(applicationJson.get("kind").getAsString().equals(kind));
+    }
+
+    @Test
+    public void testGetApplicationAndNumbers() throws ParseException, IllegalArgumentException, IOException {
+        // Define application attributes
+        String friendlyName, voiceCallerIdLookup, rcmlUrl, kind;
+
+        // Test asserts via GET to a single application
+        JsonArray applicationJson = RestcommApplicationsTool.getInstance().getApplications(deploymentUrl.toString(), adminUsername,
+                adminAuthToken, adminAccountSid, true);
+        Assert.assertNotNull(applicationJson.get(0).getAsJsonObject().get("numbers"));
+        JsonObject number = applicationJson.get(0).getAsJsonObject().get("numbers").getAsJsonArray().get(0).getAsJsonObject();
+        Assert.assertEquals("+1240",number.get("phone_number").getAsString());
+        Assert.assertEquals("AP73926e7113fa4d95981aa96b76eca854", number.get("voice_application_sid").getAsString());
     }
 
     @Test
@@ -209,16 +230,18 @@ public class ApplicationsEndpointTest {
         logger.info("Packaging Test App");
         logger.info("version");
         WebArchive archive = ShrinkWrap.create(WebArchive.class, "restcomm.war");
-        final WebArchive restcommArchive = ShrinkWrapMaven.resolver()
+        final WebArchive restcommArchive = Maven.resolver()
                 .resolve("org.restcomm:restcomm-connect.application:war:" + version).withoutTransitivity()
                 .asSingle(WebArchive.class);
         archive = archive.merge(restcommArchive);
         archive.delete("/WEB-INF/sip.xml");
+archive.delete("/WEB-INF/web.xml");
         archive.delete("/WEB-INF/conf/restcomm.xml");
         archive.delete("/WEB-INF/data/hsql/restcomm.script");
         archive.addAsWebInfResource("sip.xml");
+        archive.addAsWebInfResource("web.xml");
         archive.addAsWebInfResource("restcomm.xml", "conf/restcomm.xml");
-        archive.addAsWebInfResource("restcomm.script", "data/hsql/restcomm.script");
+        archive.addAsWebInfResource("restcomm.script-applications", "data/hsql/restcomm.script");
         logger.info("Packaged Test App");
         return archive;
     }

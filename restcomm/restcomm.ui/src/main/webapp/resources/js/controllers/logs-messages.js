@@ -7,12 +7,15 @@ rcMod.controller('LogsMessagesCtrl', function ($scope, $resource, $timeout, $uib
   $scope.Math = window.Math;
 
   $scope.sid = SessionService.get("sid");
-  
+
+  // search toggle only on mobile view
+  $scope.showSearchToggle = window.outerWidth <= 768;
+
   // default search values
   $scope.search = {
     local_only: true,
     sub_accounts: false
-  }
+  };
 
   // pagination support ----------------------------------------------------------------------------------------------
 
@@ -63,10 +66,15 @@ rcMod.controller('LogsMessagesCtrl', function ($scope, $resource, $timeout, $uib
     var params = $scope.search ? createSearchParams($scope.search) : {LocalOnly: true};
     RCommLogsMessages.search($.extend({accountSid: $scope.sid, Page: page, PageSize: $scope.entryLimit}, params), function(data) {
       $scope.messagesLogsList = data.messages;
-      $scope.totalMessage = data.total;
+      $scope.totalMessages = data.total;
       $scope.noOfPages = data.num_pages;
+      $scope.start = parseInt(data.start) + 1;
+      $scope.end = parseInt(data.end);
+      if ($scope.end != $scope.totalMessages) {
+        ++$scope.end;
+      }
     });
-  }
+  };
   
   var createSearchParams = function(search) {
     var params = {};

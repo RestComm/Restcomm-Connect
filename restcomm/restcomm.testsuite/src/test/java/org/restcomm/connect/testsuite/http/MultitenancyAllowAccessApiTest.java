@@ -18,7 +18,7 @@
  * Software Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA
  * 02110-1301 USA, or see the FSF site: http://www.fsf.org.
  */
-	
+
 package org.restcomm.connect.testsuite.http;
 
 import static org.junit.Assert.assertTrue;
@@ -36,20 +36,26 @@ import org.jboss.arquillian.junit.Arquillian;
 import org.jboss.arquillian.test.api.ArquillianResource;
 import org.jboss.shrinkwrap.api.ShrinkWrap;
 import org.jboss.shrinkwrap.api.spec.WebArchive;
-import org.jboss.shrinkwrap.resolver.api.maven.archive.ShrinkWrapMaven;
+import org.jboss.shrinkwrap.resolver.api.maven.Maven;
 import org.junit.Test;
+import org.junit.FixMethodOrder;
+import org.junit.runners.MethodSorters;
+import org.junit.experimental.categories.Category;
 import org.junit.runner.RunWith;
 
 import org.restcomm.connect.commons.Version;
+import org.restcomm.connect.commons.annotations.FeatureAltTests;
+import org.restcomm.connect.commons.annotations.UnstableTests;
 import wiremock.org.apache.http.client.ClientProtocolException;
 
 /**
  * The aim of this scenario is to ensure that an account can manage its own information and the information from its sub
  * accounts. Accounts and Applications endpoints are tested separately due its particularities.
- * 
+ *
  * @author guilherme.jansen@telestax.com
  */
 @RunWith(Arquillian.class)
+@FixMethodOrder(MethodSorters.NAME_ASCENDING)
 public class MultitenancyAllowAccessApiTest {
 
     private final static Logger logger = Logger.getLogger(MultitenancyAllowAccessApiTest.class);
@@ -75,16 +81,16 @@ public class MultitenancyAllowAccessApiTest {
     private final static String jsonExtension = ".json";
 
     private enum Endpoint {
-        
+
         INCOMING_PHONE_NUMBERS("IncomingPhoneNumbers", true, false, true, true, new HashMap<String,String>(){{ put("PhoneNumber","1111"); put("AreaCode","100"); }}, "PNff22dc8d1cdf4d449d666ac09f0bb110", "PN9f9cf955aeb94ebb9d2e09cead5683a4"),
-        CALLS("Calls", true, false, false, false, null, "CA9aa1b61e9b864477a820d5c1c9d9bb7d", "CAc6a057e16aa74cb0923c538725ffcf01"), 
-        SMS_MESSAGES("SMS/Messages", true, false, false, false, null, "SMa272937700b3461bb5d68a3569c61bf1", "SMa272937700b3461bb5d68a3569c61bf2"), 
+        CALLS("Calls", true, false, false, false, null, "CA9aa1b61e9b864477a820d5c1c9d9bb7d", "CAc6a057e16aa74cb0923c538725ffcf01"),
+        SMS_MESSAGES("SMS/Messages", true, false, false, false, null, "SMa272937700b3461bb5d68a3569c61bf1", "SMa272937700b3461bb5d68a3569c61bf2"),
         CLIENTS("Clients", true, true, true, true, new HashMap<String,String>(){{ put("Login","test"); put("Password","Restcomm12"); }}, "CLe95ba029114147c9a9aa42becd0518c0", "CL9bfcb54ead2b44e6bae03f337967a249"),
         OUTGOING_CALLER_IDS("OutgoingCallerIds", true, true, false, true, new HashMap<String,String>(){{ put("PhoneNumber","1111"); }}, "PNfa413fdbf3944932b37bef4bd661c7f7", "PN5a33fa8232d84578af023b1e81e30f67"),
         RECORDINGS("Recordings", true, false, false, false, null, "REacaffdf107da4dc3926e37bddfff44ed", "REacaffdf107da4dc3926e37bddfff44ee"),
         TRANSCRIPTIONS("Transcriptions", true, false, false, true, null, "TRacaffdf107da4dc3926e37bddfff44ee", "TRacaffdf107da4dc3926e37bddfff44ed"),
         NOTIFICATIONS("Notifications", true, false, false, false, null, "NO8927433ce9514b70ac0a76cd36601b9e", "NO8927433ce9514b70ac0a76cd36601b9d");
-        
+
         String name;
         boolean get;
         boolean postList;
@@ -93,7 +99,7 @@ public class MultitenancyAllowAccessApiTest {
         HashMap<String, String> postParams;
         String elementSameAccount;
         String elementSubaccount;
-        
+
         Endpoint(String name, boolean get, boolean postList, boolean postElement, boolean delete, HashMap<String,String> postParams, String elementSameAccount, String elementSubaccount){
             this.name = name;
             this.get = get;
@@ -104,7 +110,7 @@ public class MultitenancyAllowAccessApiTest {
             this.elementSameAccount = elementSameAccount;
             this.elementSubaccount = elementSubaccount;
         }
-        
+
     }
 
     @Test
@@ -121,6 +127,7 @@ public class MultitenancyAllowAccessApiTest {
     }
 
     @Test
+    @Category(FeatureAltTests.class)
     public void getListSubaccount() throws ClientProtocolException, IOException {
         String baseUrl = deploymentUrl.toString() + apiPath + subaccountaAccountSid + "/";
         for (Endpoint endpoint : Endpoint.values()) {
@@ -134,6 +141,7 @@ public class MultitenancyAllowAccessApiTest {
     }
 
     @Test
+    @Category(UnstableTests.class)
     public void postListSameAccount() throws ClientProtocolException, IOException {
         String baseUrl = deploymentUrl.toString() + apiPath + primaryAccountSid + "/";
         for (Endpoint endpoint : Endpoint.values()) {
@@ -148,6 +156,7 @@ public class MultitenancyAllowAccessApiTest {
     }
 
     @Test
+    @Category(FeatureAltTests.class)
     public void postListSubaccount() throws ClientProtocolException, IOException {
         Endpoint endpoints[] = modifyPostParameters("2");
         String baseUrl = deploymentUrl.toString() + apiPath + subaccountaAccountSid + "/";
@@ -163,7 +172,11 @@ public class MultitenancyAllowAccessApiTest {
     }
 
     @Test
-    public void getElementSameAccount() throws ClientProtocolException, IOException {
+    @Category(UnstableTests.class)
+    /**
+     * using aaa prefix to ensure order and prevent sideeffects
+     */
+    public void aaagetElementSameAccount() throws ClientProtocolException, IOException {
         String baseUrl = deploymentUrl.toString() + apiPath + primaryAccountSid + "/";
         for (Endpoint endpoint : Endpoint.values()) {
             if (endpoint.get) {
@@ -176,7 +189,8 @@ public class MultitenancyAllowAccessApiTest {
     }
 
     @Test
-    public void getElementSubaccount() throws ClientProtocolException, IOException {
+    @Category({UnstableTests.class, FeatureAltTests.class})
+    public void aaagetElementSubaccount() throws ClientProtocolException, IOException {
         String baseUrl = deploymentUrl.toString() + apiPath + subaccountaAccountSid + "/";
         for (Endpoint endpoint : Endpoint.values()) {
             if (endpoint.get) {
@@ -189,7 +203,11 @@ public class MultitenancyAllowAccessApiTest {
     }
 
     @Test
-    public void postElementSameAccount() throws ClientProtocolException, IOException {
+    @Category(UnstableTests.class)
+    /**
+     * using aaa prefix to ensure order and prevent sideeffects
+     */
+    public void aaapostElementSameAccount() throws ClientProtocolException, IOException {
         Endpoint endpoints[] = modifyPostParameters("3");
         String baseUrl = deploymentUrl.toString() + apiPath + primaryAccountSid + "/";
         for (Endpoint endpoint : endpoints) {
@@ -204,7 +222,11 @@ public class MultitenancyAllowAccessApiTest {
     }
 
     @Test
-    public void postElementSubaccount() throws ClientProtocolException, IOException {
+    @Category(FeatureAltTests.class)
+    /**
+     * using aaa prefix to ensure order and prevent sideeffects
+     */
+    public void aaapostElementSubaccount() throws ClientProtocolException, IOException {
         Endpoint endpoints[] = modifyPostParameters("4");
         String baseUrl = deploymentUrl.toString() + apiPath + subaccountaAccountSid + "/";
         for (Endpoint endpoint : endpoints) {
@@ -232,6 +254,7 @@ public class MultitenancyAllowAccessApiTest {
     }
 
     @Test
+    @Category(FeatureAltTests.class)
     public void deleteElementSubaccount() throws ClientProtocolException, IOException {
         String baseUrl = deploymentUrl.toString() + apiPath + subaccountaAccountSid + "/";
         for (Endpoint endpoint : Endpoint.values()) {
@@ -245,20 +268,23 @@ public class MultitenancyAllowAccessApiTest {
     }
 
     @Test
-    public void accountsApi() throws ClientProtocolException, IOException {
+    /**
+     * using aaa prefix to ensure order and prevent sideeffects
+     */
+    public void aaaaccountsApi() throws ClientProtocolException, IOException {
         // Same account
         String baseUrl = deploymentUrl.toString() + apiPath.substring(0, apiPath.length()-1);
         int statusCode = RestcommMultitenancyTool.getInstance().get(baseUrl + jsonExtension, primaryUsername, accountsPassword);
-        assertTrue(statusCode == httpOk);
+        Assert.assertEquals(httpOk, statusCode);
         statusCode = RestcommMultitenancyTool.getInstance().post(baseUrl + jsonExtension, primaryUsername, accountsPassword, new HashMap<String,String>(){{ put("EmailAddress","test@test.com"); put("Password","RestComm12");}});
         Assert.assertEquals(httpOk, statusCode);
-        
+
         // Sub account
         baseUrl = deploymentUrl.toString() + apiPath.substring(0, apiPath.length()-1);
         statusCode = RestcommMultitenancyTool.getInstance().get(baseUrl + jsonExtension + "/" + subaccountbAccountSid, primaryUsername, accountsPassword);
-        assertTrue(statusCode == httpOk);
+        Assert.assertEquals(httpOk, statusCode);
         statusCode = RestcommMultitenancyTool.getInstance().post(baseUrl + "/" + subaccountbAccountSid, primaryUsername, accountsPassword, new HashMap<String,String>(){{ put("EmailAddress","test2@test.com"); put("Password","RestComm12");}});
-        assertTrue(statusCode == httpOk);
+        Assert.assertEquals(httpOk, statusCode);
         Map<String,String> updateParams = new HashMap<String,String>();
         updateParams.put("Status", "closed");
         statusCode = RestcommMultitenancyTool.getInstance().update(baseUrl + jsonExtension + "/" + subaccountbAccountSid, primaryUsername, accountsPassword,updateParams);
@@ -308,14 +334,16 @@ public class MultitenancyAllowAccessApiTest {
     @Deployment(name = "MultitenancyAllowAccessApiTest", managed = true, testable = false)
     public static WebArchive createWebArchiveNoGw() {
         WebArchive archive = ShrinkWrap.create(WebArchive.class, "restcomm.war");
-        final WebArchive restcommArchive = ShrinkWrapMaven.resolver()
+        final WebArchive restcommArchive = Maven.resolver()
                 .resolve("org.restcomm:restcomm-connect.application:war:" + version).withoutTransitivity()
                 .asSingle(WebArchive.class);
         archive = archive.merge(restcommArchive);
         archive.delete("/WEB-INF/sip.xml");
+archive.delete("/WEB-INF/web.xml");
         archive.delete("/WEB-INF/conf/restcomm.xml");
         archive.delete("/WEB-INF/data/hsql/restcomm.script");
         archive.addAsWebInfResource("sip.xml");
+        archive.addAsWebInfResource("web.xml");
         archive.addAsWebInfResource("restcomm.xml", "conf/restcomm.xml");
         archive.addAsWebInfResource("restcomm.script_multitenancyTest", "data/hsql/restcomm.script");
         return archive;

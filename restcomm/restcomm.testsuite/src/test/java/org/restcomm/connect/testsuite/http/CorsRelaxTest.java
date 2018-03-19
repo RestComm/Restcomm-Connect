@@ -31,8 +31,11 @@ import org.jboss.arquillian.junit.Arquillian;
 import org.jboss.arquillian.test.api.ArquillianResource;
 import org.jboss.shrinkwrap.api.ShrinkWrap;
 import org.jboss.shrinkwrap.api.spec.WebArchive;
-import org.jboss.shrinkwrap.resolver.api.maven.archive.ShrinkWrapMaven;
+import org.jboss.shrinkwrap.resolver.api.maven.Maven;
+import org.junit.Ignore;
 import org.junit.Test;
+import org.junit.FixMethodOrder;
+import org.junit.runners.MethodSorters;
 import org.junit.runner.RunWith;
 import org.restcomm.connect.commons.Version;
 
@@ -44,8 +47,15 @@ import java.net.URL;
  * Currently it only tests Accounts endpoint where CORS-relax logic has been applied
  *
  * @author otsakir@gmail.com - Orestis Tsakiridis
+ * 
+ * It was written for the case when restcomm should accept CORS requests and return the appropriate headers.
+ * Initially that would happen if restcomm would be in a different domain from RVD. 
+ * Later, we decided to put everything (restcomm and RVD) behind the same domain.
+ * So, relaxing CORS restrictions is not really needed
  */
 @RunWith(Arquillian.class)
+@FixMethodOrder(MethodSorters.NAME_ASCENDING)
+@Ignore
 public class CorsRelaxTest extends EndpointTest {
     private final static Logger logger = Logger.getLogger(CorsRelaxTest.class.getName());
 
@@ -87,14 +97,16 @@ public class CorsRelaxTest extends EndpointTest {
         logger.info("Packaging Test App");
         logger.info("version");
         WebArchive archive = ShrinkWrap.create(WebArchive.class, "restcomm.war");
-        final WebArchive restcommArchive = ShrinkWrapMaven.resolver()
+        final WebArchive restcommArchive = Maven.resolver()
                 .resolve("org.restcomm:restcomm-connect.application:war:" + version).withoutTransitivity()
                 .asSingle(WebArchive.class);
         archive = archive.merge(restcommArchive);
         archive.delete("/WEB-INF/sip.xml");
+archive.delete("/WEB-INF/web.xml");
         archive.delete("/WEB-INF/conf/restcomm.xml");
         archive.delete("/WEB-INF/data/hsql/restcomm.script");
         archive.addAsWebInfResource("sip.xml");
+        archive.addAsWebInfResource("web.xml");
         archive.addAsWebInfResource("restcomm-corsRelax.xml", "conf/restcomm.xml");
         archive.addAsWebInfResource("restcomm.script", "data/hsql/restcomm.script");
         logger.info("Packaged Test App");

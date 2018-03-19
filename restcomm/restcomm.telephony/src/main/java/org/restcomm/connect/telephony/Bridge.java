@@ -33,6 +33,7 @@ import org.restcomm.connect.commons.fsm.Transition;
 import org.restcomm.connect.commons.patterns.Observe;
 import org.restcomm.connect.commons.patterns.Observing;
 import org.restcomm.connect.commons.patterns.StopObserving;
+import org.restcomm.connect.dao.entities.MediaAttributes;
 import org.restcomm.connect.mscontrol.api.MediaServerControllerFactory;
 import org.restcomm.connect.mscontrol.api.messages.CreateMediaSession;
 import org.restcomm.connect.mscontrol.api.messages.JoinCall;
@@ -83,7 +84,10 @@ public class Bridge extends RestcommUntypedActor {
     // Observer pattern
     private final List<ActorRef> observers;
 
-    public Bridge(MediaServerControllerFactory factory) {
+    // Media
+    private final MediaAttributes mediaAttributes;
+
+    public Bridge(MediaServerControllerFactory factory, final MediaAttributes mediaAttributes) {
         final ActorRef source = self();
 
         // Media Server Controller
@@ -120,6 +124,9 @@ public class Bridge extends RestcommUntypedActor {
 
         // Observer pattern
         this.observers = new ArrayList<ActorRef>(3);
+
+        // Media
+        this.mediaAttributes = mediaAttributes;
     }
 
     private boolean is(final State state) {
@@ -271,7 +278,7 @@ public class Bridge extends RestcommUntypedActor {
             mscontroller.tell(observe, super.source);
 
             // Initialize the MS Controller
-            final CreateMediaSession createMediaSession = new CreateMediaSession();
+            final CreateMediaSession createMediaSession = new CreateMediaSession(mediaAttributes);
             mscontroller.tell(createMediaSession, super.source);
         }
 
