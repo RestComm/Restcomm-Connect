@@ -2,7 +2,9 @@
 
 [[play]]
 == Play
-The *Play* verb is used to play an audio file to the remote party.
+The *Play* verb is used to play an audio or video* file to the remote party.
+
+IMPORTANT: * Video files are supported only when Restcomm is configured to use Dialogic's PowerMedia XMS media server.
 
 === Play Attributes
 
@@ -64,6 +66,39 @@ The Restcomm Media Server is capable of
         
         All benchmark tests where done on Amazon EC2 cloud instances.
 
+=== Supported Video* Formats
+IMPORTANT: * Video files are supported only when Restcomm is configured to use Dialogic's PowerMedia XMS media server.
+[cols=",",options="header",]
+|=============================
+|MIME type |Description
+|video/mp4 |mp4 format audio/video
+|=============================
+
+=== Media Server Video File Format
+Technical Specification and Capacity
+
+Restcomm Connect along with Dialogic's PowerMedia XMS is capable of
+
+*     Video Codecs :
+
+        H.264
+
+*     Audio Codecs :
+
+        AMR-NB
+
+        AMR-WB
+
+*     Multimedia File Formats :
+
+        MP4 Container
+
+*     Signaling and control :
+
+        Java Media Control API(JSR-309)
+
+Find more information about Dialogic's PowerMedia XMS https://www.dialogic.com/en/products/media-server-software/xms.aspx[here.]
+
 = How to Convert a Wav File to the Correct Bitrate
 
 You can use a software call ffmpeg as follows:
@@ -76,11 +111,17 @@ ffmpeg -i source_file.wav -acodec pcm_s16le -ac 1 -ar 8000 result_file.wav
 === Nesting
 The <Play> verb can not have any other verbs or nouns nested. Only a URL.
 
-=== Basic example
-For an example of how to use the *<Play>* verb see below.
+=== Basic examples
+For examples of how to use the *<Play>* verb see below.
 
 ----
 <Response>
 <Play>http://foobar.com/demo.wav</Play>
+</Response>
+----
+
+----
+<Response>
+<Play>http://foobar.com/demo.mp4</Play>
 </Response>
 ----

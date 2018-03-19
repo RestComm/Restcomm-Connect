@@ -86,4 +86,15 @@ public final class Verbs {
             return true;
         return email.equals(name);
     }
+
+    /**
+     * if 200 ok delay is enabled we need to answer only the calls
+     * which are having any further call enabler verbs in their RCML.
+     * @return
+     */
+    public static boolean isThisVerbCallEnabler(Tag verb){
+        if(Verbs.play.equals(verb.name()) || Verbs.say.equals(verb.name()) || Verbs.gather.equals(verb.name()) || Verbs.record.equals(verb.name()) || Verbs.redirect.equals(verb.name()))
+            return true;
+        return false;
+    }
 }

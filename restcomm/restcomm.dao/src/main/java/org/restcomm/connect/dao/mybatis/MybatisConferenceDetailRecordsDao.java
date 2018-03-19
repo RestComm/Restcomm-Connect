@@ -34,6 +34,7 @@ import org.restcomm.connect.dao.ConferenceDetailRecordsDao;
 import org.restcomm.connect.dao.DaoUtils;
 import org.restcomm.connect.dao.entities.ConferenceDetailRecord;
 import org.restcomm.connect.dao.entities.ConferenceDetailRecordFilter;
+import org.restcomm.connect.dao.entities.ConferenceRecordCountFilter;
 
 /**
  * @author maria-farooq@live.com (Maria Farooq)
@@ -87,6 +88,18 @@ public final class MybatisConferenceDetailRecordsDao implements ConferenceDetail
             session.close();
         }
 
+    }
+
+
+    @Override
+    public Integer countByFilter(ConferenceRecordCountFilter filter) {
+        final SqlSession session = sessions.openSession();
+        try {
+            final Integer total = session.selectOne(namespace + "countByFilter", filter);
+            return total;
+        } finally {
+            session.close();
+        }
     }
 
     @Override
@@ -180,6 +193,17 @@ public final class MybatisConferenceDetailRecordsDao implements ConferenceDetail
         try {
             session.update(namespace + "updateModeratorPresent", toMap(cdr));
             session.commit();
+        } finally {
+            session.close();
+        }
+    }
+
+    @Override
+    public boolean completeConferenceDetailRecord(Map params) {
+        final SqlSession session = sessions.openSession();
+        try {
+            session.selectOne(namespace + "completeConferenceDetailRecord", params);
+            return (boolean)params.get("completed");
         } finally {
             session.close();
         }

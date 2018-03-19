@@ -50,9 +50,9 @@ import javax.media.mscontrol.resource.RTC;
 import javax.sound.sampled.UnsupportedAudioFileException;
 
 import org.apache.commons.configuration.Configuration;
-import org.joda.time.DateTime;
 import org.restcomm.connect.dao.DaoManager;
 import org.restcomm.connect.dao.RecordingsDao;
+import org.restcomm.connect.dao.entities.MediaAttributes;
 import org.restcomm.connect.dao.entities.Recording;
 import org.restcomm.connect.commons.dao.Sid;
 import org.restcomm.connect.commons.fsm.FiniteStateMachine;
@@ -114,7 +114,6 @@ public class Jsr309BridgeController extends MediaServerController {
 
     // Media Operations
     private Boolean recording;
-    private DateTime recordingStarted;
     private StartRecording recordingRequest;
 
     // Observers
@@ -233,7 +232,6 @@ public class Jsr309BridgeController extends MediaServerController {
                 }
 
                 recording = Boolean.FALSE;
-                recordingStarted = null;
                 recordingRequest = null;
 
                 super.remote.tell(response, self());
@@ -256,30 +254,30 @@ public class Jsr309BridgeController extends MediaServerController {
                 duration = 0.0;
             }
 
-            if (duration.equals(0.0)) {
+            if (!duration.equals(0.0)) {
+                if(logger.isInfoEnabled()) {
+                    logger.info("Call wraping up recording. File already exists, length: " + (new File(recordingUri).length()));
+                }
+
+                final Recording.Builder builder = Recording.builder();
+                builder.setSid(recordingSid);
+                builder.setAccountSid(accountId);
+                builder.setCallSid(callId);
+                builder.setDuration(duration);
+                builder.setApiVersion(runtimeSettings.getString("api-version"));
+                StringBuilder buffer = new StringBuilder();
+                buffer.append("/").append(runtimeSettings.getString("api-version")).append("/Accounts/")
+                        .append(accountId.toString());
+                buffer.append("/Recordings/").append(recordingSid.toString());
+                builder.setUri(URI.create(buffer.toString()));
+                final Recording recording = builder.build();
+                RecordingsDao recordsDao = daoManager.getRecordingsDao();
+                recordsDao.addRecording(recording, MediaAttributes.MediaType.AUDIO_ONLY);
+            } else {
                 if(logger.isInfoEnabled()) {
                     logger.info("Call wraping up recording. File doesn't exist since duration is 0");
                 }
-                final DateTime end = DateTime.now();
-                duration = new Double((end.getMillis() - recordingStarted.getMillis()) / 1000);
-            } else if(logger.isInfoEnabled()) {
-                logger.info("Call wraping up recording. File already exists, length: " + (new File(recordingUri).length()));
             }
-
-            final Recording.Builder builder = Recording.builder();
-            builder.setSid(recordingSid);
-            builder.setAccountSid(accountId);
-            builder.setCallSid(callId);
-            builder.setDuration(duration);
-            builder.setApiVersion(runtimeSettings.getString("api-version"));
-            StringBuilder buffer = new StringBuilder();
-            buffer.append("/").append(runtimeSettings.getString("api-version")).append("/Accounts/")
-                    .append(accountId.toString());
-            buffer.append("/Recordings/").append(recordingSid.toString());
-            builder.setUri(URI.create(buffer.toString()));
-            final Recording recording = builder.build();
-            RecordingsDao recordsDao = daoManager.getRecordingsDao();
-            recordsDao.addRecording(recording);
         }
 
     }
@@ -423,7 +421,6 @@ public class Jsr309BridgeController extends MediaServerController {
                 this.mediaGroup.getRecorder().record(message.getRecordingUri(), rtcs, params);
 
                 this.recording = Boolean.TRUE;
-                this.recordingStarted = DateTime.now();
                 this.recordingRequest = message;
             } catch (MsControlException e) {
                 logger.error("Recording failed: " + e.getMessage());
@@ -445,6 +442,9 @@ public class Jsr309BridgeController extends MediaServerController {
         @Override
         public void execute(Object message) throws Exception {
             try {
+                CreateMediaSession msg = (CreateMediaSession) message;
+                MediaAttributes mediaAttributes = msg.mediaAttributes();
+
                 // Create media session
                 mediaSession = msControlFactory.createMediaSession();
 
@@ -452,15 +452,17 @@ public class Jsr309BridgeController extends MediaServerController {
                 mediaGroup = mediaSession.createMediaGroup(MediaGroup.PLAYER_RECORDER_SIGNALDETECTOR);
                 mediaGroup.getRecorder().addListener(recorderListener);
 
-                // Set default conference video resolution to 720p
-                // mediaSession.setAttribute("CONFERENCE_VIDEO_SIZE", "720p");
+                if (!MediaAttributes.MediaType.AUDIO_ONLY.equals(mediaAttributes.getMediaType())) {
+                    // video only or audio and video (video only is controlled by codec policy)
+                    configureVideoMediaSession(mediaAttributes);
+                    Parameters mixerParams = createMixerParams();
+                    mediaMixer = mediaSession.createMediaMixer(MediaMixer.AUDIO_VIDEO, mixerParams);
+                } else {
+                    // audio only
+                    Parameters mixerParams = createMixerParams();
+                    mediaMixer = mediaSession.createMediaMixer(MediaMixer.AUDIO, mixerParams);
+                }
 
-                // Allow only two participants and one media group
-                Parameters mixerParams = mediaSession.createParameters();
-                mixerParams.put(MediaMixer.MAX_PORTS, 3);
-
-                // Create the bridge
-                mediaMixer = mediaSession.createMediaMixer(MediaMixer.AUDIO, mixerParams);
                 mediaMixer.addListener(mixerAllocationListener);
                 mediaMixer.confirm();
                 // Wait for event confirmation before sending response to the conference
@@ -468,6 +470,18 @@ public class Jsr309BridgeController extends MediaServerController {
                 // Move to a failed state, cleaning all resources and closing media session
                 fsm.transition(e, failed);
             }
+        }
+
+        private void configureVideoMediaSession(final MediaAttributes mediaAttributes) {
+            // resolution configuration
+            mediaSession.setAttribute("NC_VIDEO_SIZE", mediaAttributes.getVideoResolution().toString());
+        }
+
+        private Parameters createMixerParams() {
+            // Allow only two participants and one media group
+            Parameters mixerParams = mediaSession.createParameters();
+            mixerParams.put(MediaMixer.MAX_PORTS, 3);
+            return mixerParams;
         }
 
     }

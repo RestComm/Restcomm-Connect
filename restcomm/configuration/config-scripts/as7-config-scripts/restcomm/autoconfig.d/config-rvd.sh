@@ -41,26 +41,52 @@ updateMaxMediaFileSize() {
     fi
 }
 
+# $1 is RVD_HTTP_TIMEOUT
+updateHttpTimeout() {
+  if [ -z $1 ]; then
+      xmlstarlet ed -P -d "/rvd/defaultHttpTimeout" "$RVD_XML_FILE" > ${RVD_XML_FILE}_tmp
+      mv ${RVD_XML_FILE}_tmp ${RVD_XML_FILE}
+      echo "disabled defaultHttpTimeout option";
+  else
+      matchesCount=`xmlstarlet sel -t -v "count(/rvd/defaultHttpTimeout)" "$RVD_XML_FILE"`
+      if [ $matchesCount -ge 1 ]; then
+          xmlstarlet ed -P -u "/rvd/defaultHttpTimeout" -v "$1" "$RVD_XML_FILE" > ${RVD_XML_FILE}_tmp
+          mv ${RVD_XML_FILE}_tmp ${RVD_XML_FILE}
+      else
+          xmlstarlet ed -P -s "/rvd" -t elem -n "defaultHttpTimeout" -v "$1" "$RVD_XML_FILE" > ${RVD_XML_FILE}_tmp
+          mv ${RVD_XML_FILE}_tmp ${RVD_XML_FILE}
+      fi
+      echo "set defaultHttpTimeout to $1"
+  fi
+}
+
 # MAIN
 
-if [ -z "$RESTCOMM_HOME" ]
-then
-    echo "RESTCOMM_HOME env variable not set. Aborting."
-    exit 1
-fi
-if [ ! -f "$RVD_XML_FILE" ]
-then
-    echo "rvd.xml not found. Aborting."
-    return
-fi
-
-echo "Configuring RVD"
-
-if [[ "$RVD_VIDEO_SUPPORT" = true || "$RVD_VIDEO_SUPPORT" = TRUE || "$RVD_VIDEO_SUPPORT" = True ]] ; then
-    updateVideoSupport true
+if [[ "$RVD_UNDEPLOY" = true || "$RVD_UNDEPLOY" = TRUE || "$RVD_UNDEPLOY" = True ]]; then
+    echo "Skipping RVD configuration since it's not deployed"
 else
-    updateVideoSupport false
-fi
-updateMaxMediaFileSize "$RVD_MAX_MEDIA_FILE_SIZE"
-echo "Updated rvd.xml"
+    if [ -z "$RESTCOMM_HOME" ]
+    then
+        echo "RESTCOMM_HOME env variable not set. Aborting."
+        exit 1
+    fi
+    if [ ! -f "$RVD_XML_FILE" ]
+    then
+        echo "rvd.xml not found. Aborting."
+        return
+    fi
 
+    echo "Configuring RVD"
+
+    if [[ "$RVD_VIDEO_SUPPORT" = true || "$RVD_VIDEO_SUPPORT" = TRUE || "$RVD_VIDEO_SUPPORT" = True ]] ; then
+        updateVideoSupport true
+    else
+        updateVideoSupport false
+    fi
+    updateMaxMediaFileSize "$RVD_MAX_MEDIA_FILE_SIZE"
+
+    updateHttpTimeout "$RVD_HTTP_TIMEOUT"
+
+
+    echo "Updated rvd.xml"
+fi

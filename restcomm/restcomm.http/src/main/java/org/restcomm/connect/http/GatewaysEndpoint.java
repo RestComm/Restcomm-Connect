@@ -4,6 +4,22 @@ import akka.actor.ActorRef;
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
 import com.thoughtworks.xstream.XStream;
+import java.net.URI;
+import java.util.List;
+import javax.annotation.PostConstruct;
+import javax.servlet.ServletContext;
+import javax.ws.rs.core.Context;
+import javax.ws.rs.core.MediaType;
+import static javax.ws.rs.core.MediaType.APPLICATION_JSON;
+import static javax.ws.rs.core.MediaType.APPLICATION_JSON_TYPE;
+import static javax.ws.rs.core.MediaType.APPLICATION_XML;
+import static javax.ws.rs.core.MediaType.APPLICATION_XML_TYPE;
+import javax.ws.rs.core.MultivaluedMap;
+import javax.ws.rs.core.Response;
+import static javax.ws.rs.core.Response.Status.BAD_REQUEST;
+import static javax.ws.rs.core.Response.Status.NOT_FOUND;
+import static javax.ws.rs.core.Response.ok;
+import static javax.ws.rs.core.Response.status;
 import org.apache.commons.configuration.Configuration;
 import org.restcomm.connect.commons.annotations.concurrency.ThreadSafe;
 import org.restcomm.connect.commons.dao.Sid;
@@ -16,24 +32,6 @@ import org.restcomm.connect.http.converter.GatewayConverter;
 import org.restcomm.connect.http.converter.GatewayListConverter;
 import org.restcomm.connect.http.converter.RestCommResponseConverter;
 import org.restcomm.connect.telephony.api.RegisterGateway;
-
-import javax.annotation.PostConstruct;
-import javax.servlet.ServletContext;
-import javax.ws.rs.core.Context;
-import javax.ws.rs.core.MediaType;
-import javax.ws.rs.core.MultivaluedMap;
-import javax.ws.rs.core.Response;
-import java.net.URI;
-import java.util.List;
-
-import static javax.ws.rs.core.MediaType.APPLICATION_JSON;
-import static javax.ws.rs.core.MediaType.APPLICATION_JSON_TYPE;
-import static javax.ws.rs.core.MediaType.APPLICATION_XML;
-import static javax.ws.rs.core.MediaType.APPLICATION_XML_TYPE;
-import static javax.ws.rs.core.Response.Status.BAD_REQUEST;
-import static javax.ws.rs.core.Response.Status.NOT_FOUND;
-import static javax.ws.rs.core.Response.ok;
-import static javax.ws.rs.core.Response.status;
 
 @ThreadSafe
 public class GatewaysEndpoint extends SecuredEndpoint {
@@ -92,18 +90,14 @@ public class GatewaysEndpoint extends SecuredEndpoint {
     }
 
     protected Response getGateway(final String accountSid, final String sid, final MediaType responseType) {
-        //following 2 things are enough to grant access: 1. a valid authentication token is present. 2 it is a super admin.
-        checkAuthenticatedAccount();
-        allowOnlySuperAdmin();
-//        secure(accountsDao.getAccount(accountSid), "RestComm:Read:Gateways");
         final Gateway gateway = dao.getGateway(new Sid(sid));
         if (gateway == null) {
             return status(NOT_FOUND).build();
         } else {
-            if (APPLICATION_XML_TYPE == responseType) {
+            if (APPLICATION_XML_TYPE.equals(responseType)) {
                 final RestCommResponse response = new RestCommResponse(gateway);
                 return ok(xstream.toXML(response), APPLICATION_XML).build();
-            } else if (APPLICATION_JSON_TYPE == responseType) {
+            } else if (APPLICATION_JSON_TYPE.equals(responseType)) {
                 return ok(gson.toJson(gateway), APPLICATION_JSON).build();
             } else {
                 return null;
@@ -112,15 +106,11 @@ public class GatewaysEndpoint extends SecuredEndpoint {
     }
 
     protected Response getGateways(final String accountSid, final MediaType responseType) {
-        //following 2 things are enough to grant access: 1. a valid authentication token is present. 2 it is a super admin.
-        checkAuthenticatedAccount();
-        allowOnlySuperAdmin();
-//        secure(accountsDao.getAccount(accountSid), "RestComm:Read:Gateways");
         final List<Gateway> gateways = dao.getGateways();
-        if (APPLICATION_XML_TYPE == responseType) {
+        if (APPLICATION_XML_TYPE.equals(responseType)) {
             final RestCommResponse response = new RestCommResponse(new GatewayList(gateways));
             return ok(xstream.toXML(response), APPLICATION_XML).build();
-        } else if (APPLICATION_JSON_TYPE == responseType) {
+        } else if (APPLICATION_JSON_TYPE.equals(responseType)) {
             return ok(gson.toJson(gateways), APPLICATION_JSON).build();
         } else {
             return null;
@@ -128,10 +118,7 @@ public class GatewaysEndpoint extends SecuredEndpoint {
     }
 
     protected Response putGateway(final String accountSid, final MultivaluedMap<String, String> data, final MediaType responseType) {
-        //following 2 things are enough to grant access: 1. a valid authentication token is present. 2 it is a super admin.
-        checkAuthenticatedAccount();
-        allowOnlySuperAdmin();
-//        secure(accountsDao.getAccount(accountSid), "RestComm:Create:Gateways");
+
         try {
             validate(data);
         } catch (final RuntimeException exception) {
@@ -143,10 +130,10 @@ public class GatewaysEndpoint extends SecuredEndpoint {
             proxyManager = (ActorRef) context.getAttribute("org.restcomm.connect.telephony.proxy.ProxyManager");
         }
         proxyManager.tell(new RegisterGateway(gateway), null);
-        if (APPLICATION_XML_TYPE == responseType) {
+        if (APPLICATION_XML_TYPE.equals(responseType)) {
             final RestCommResponse response = new RestCommResponse(gateway);
             return ok(xstream.toXML(response), APPLICATION_XML).build();
-        } else if (APPLICATION_JSON_TYPE == responseType) {
+        } else if (APPLICATION_JSON_TYPE.equals(responseType)) {
             return ok(gson.toJson(gateway), APPLICATION_JSON).build();
         } else {
             return null;
@@ -154,20 +141,17 @@ public class GatewaysEndpoint extends SecuredEndpoint {
     }
 
     protected Response updateGateway(final String accountSid, final String sid, final MultivaluedMap<String, String> data, final MediaType responseType) {
-        //following 2 things are enough to grant access: 1. a valid authentication token is present. 2 it is a super admin.
-        checkAuthenticatedAccount();
-        allowOnlySuperAdmin();
-//        secure(accountsDao.getAccount(accountSid), "RestComm:Modify:Gateways");
+
         Gateway gateway = dao.getGateway(new Sid(sid));
         if (gateway == null) {
             return status(NOT_FOUND).build();
         } else {
             dao.updateGateway(update(gateway, data));
             gateway = dao.getGateway(new Sid(sid));
-            if (APPLICATION_XML_TYPE == responseType) {
+            if (APPLICATION_XML_TYPE.equals(responseType)) {
                 final RestCommResponse response = new RestCommResponse(gateway);
                 return ok(xstream.toXML(response), APPLICATION_XML).build();
-            } else if (APPLICATION_JSON_TYPE == responseType) {
+            } else if (APPLICATION_JSON_TYPE.equals(responseType)) {
                 return ok(gson.toJson(gateway), APPLICATION_JSON).build();
             } else {
                 return null;

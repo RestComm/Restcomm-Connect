@@ -26,6 +26,22 @@ import com.google.i18n.phonenumbers.PhoneNumberUtil;
 import com.google.i18n.phonenumbers.PhoneNumberUtil.PhoneNumberFormat;
 import com.google.i18n.phonenumbers.Phonenumber.PhoneNumber;
 import com.thoughtworks.xstream.XStream;
+import java.net.URI;
+import java.util.List;
+import javax.annotation.PostConstruct;
+import javax.servlet.ServletContext;
+import javax.ws.rs.core.Context;
+import javax.ws.rs.core.MediaType;
+import static javax.ws.rs.core.MediaType.APPLICATION_JSON;
+import static javax.ws.rs.core.MediaType.APPLICATION_JSON_TYPE;
+import static javax.ws.rs.core.MediaType.APPLICATION_XML;
+import static javax.ws.rs.core.MediaType.APPLICATION_XML_TYPE;
+import javax.ws.rs.core.MultivaluedMap;
+import javax.ws.rs.core.Response;
+import static javax.ws.rs.core.Response.Status.BAD_REQUEST;
+import static javax.ws.rs.core.Response.Status.NOT_FOUND;
+import static javax.ws.rs.core.Response.ok;
+import static javax.ws.rs.core.Response.status;
 import org.apache.commons.configuration.Configuration;
 import org.joda.time.DateTime;
 import org.restcomm.connect.commons.annotations.concurrency.NotThreadSafe;
@@ -39,24 +55,6 @@ import org.restcomm.connect.dao.entities.RestCommResponse;
 import org.restcomm.connect.http.converter.OutgoingCallerIdConverter;
 import org.restcomm.connect.http.converter.OutgoingCallerIdListConverter;
 import org.restcomm.connect.http.converter.RestCommResponseConverter;
-
-import javax.annotation.PostConstruct;
-import javax.servlet.ServletContext;
-import javax.ws.rs.core.Context;
-import javax.ws.rs.core.MediaType;
-import javax.ws.rs.core.MultivaluedMap;
-import javax.ws.rs.core.Response;
-import java.net.URI;
-import java.util.List;
-
-import static javax.ws.rs.core.MediaType.APPLICATION_JSON;
-import static javax.ws.rs.core.MediaType.APPLICATION_JSON_TYPE;
-import static javax.ws.rs.core.MediaType.APPLICATION_XML;
-import static javax.ws.rs.core.MediaType.APPLICATION_XML_TYPE;
-import static javax.ws.rs.core.Response.Status.BAD_REQUEST;
-import static javax.ws.rs.core.Response.Status.NOT_FOUND;
-import static javax.ws.rs.core.Response.ok;
-import static javax.ws.rs.core.Response.status;
 
 /**
  * @author quintana.thomas@gmail.com (Thomas Quintana)
@@ -122,9 +120,9 @@ public abstract class OutgoingCallerIdsEndpoint extends SecuredEndpoint {
             return status(NOT_FOUND).build();
         } else {
             secure(operatedAccount, outgoingCallerId.getAccountSid(), SecuredType.SECURED_STANDARD);
-            if (APPLICATION_JSON_TYPE == responseType) {
+            if (APPLICATION_JSON_TYPE.equals(responseType)) {
                 return ok(gson.toJson(outgoingCallerId), APPLICATION_JSON).build();
-            } else if (APPLICATION_XML_TYPE == responseType) {
+            } else if (APPLICATION_XML_TYPE.equals(responseType)) {
                 final RestCommResponse response = new RestCommResponse(outgoingCallerId);
                 return ok(xstream.toXML(response), APPLICATION_XML).build();
             } else {
@@ -136,9 +134,9 @@ public abstract class OutgoingCallerIdsEndpoint extends SecuredEndpoint {
     protected Response getCallerIds(final String accountSid, final MediaType responseType) {
         secure(accountsDao.getAccount(accountSid), "RestComm:Read:OutgoingCallerIds");
         final List<OutgoingCallerId> outgoingCallerIds = dao.getOutgoingCallerIds(new Sid(accountSid));
-        if (APPLICATION_JSON_TYPE == responseType) {
+        if (APPLICATION_JSON_TYPE.equals(responseType)) {
             return ok(gson.toJson(outgoingCallerIds), APPLICATION_JSON).build();
-        } else if (APPLICATION_XML_TYPE == responseType) {
+        } else if (APPLICATION_XML_TYPE.equals(responseType)) {
             final RestCommResponse response = new RestCommResponse(new OutgoingCallerIdList(outgoingCallerIds));
             return ok(xstream.toXML(response), APPLICATION_XML).build();
         } else {
@@ -156,9 +154,9 @@ public abstract class OutgoingCallerIdsEndpoint extends SecuredEndpoint {
         }
         final OutgoingCallerId outgoingCallerId = createFrom(new Sid(accountSid), data);
         dao.addOutgoingCallerId(outgoingCallerId);
-        if (APPLICATION_JSON_TYPE == responseType) {
+        if (APPLICATION_JSON_TYPE.equals(responseType)) {
             return ok(gson.toJson(outgoingCallerId), APPLICATION_JSON).build();
-        } else if (APPLICATION_XML_TYPE == responseType) {
+        } else if (APPLICATION_XML_TYPE.equals(responseType)) {
             final RestCommResponse response = new RestCommResponse(outgoingCallerId);
             return ok(xstream.toXML(response), APPLICATION_XML).build();
         } else {
@@ -180,9 +178,9 @@ public abstract class OutgoingCallerIdsEndpoint extends SecuredEndpoint {
                 outgoingCallerId = outgoingCallerId.setFriendlyName(friendlyName);
             }
             dao.updateOutgoingCallerId(outgoingCallerId);
-            if (APPLICATION_JSON_TYPE == responseType) {
+            if (APPLICATION_JSON_TYPE.equals(responseType)) {
                 return ok(gson.toJson(outgoingCallerId), APPLICATION_JSON).build();
-            } else if (APPLICATION_XML_TYPE == responseType) {
+            } else if (APPLICATION_XML_TYPE.equals(responseType)) {
                 final RestCommResponse response = new RestCommResponse(outgoingCallerId);
                 return ok(xstream.toXML(response), APPLICATION_XML).build();
             } else {

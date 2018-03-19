@@ -26,6 +26,7 @@ import com.sun.jersey.api.client.ClientResponse;
 import com.sun.jersey.api.client.WebResource;
 import com.sun.jersey.core.util.MultivaluedMapImpl;
 import junit.framework.Assert;
+
 import org.apache.log4j.Logger;
 import org.jboss.arquillian.container.test.api.Deployer;
 import org.jboss.arquillian.container.test.api.Deployment;
@@ -33,29 +34,33 @@ import org.jboss.arquillian.junit.Arquillian;
 import org.jboss.arquillian.test.api.ArquillianResource;
 import org.jboss.shrinkwrap.api.ShrinkWrap;
 import org.jboss.shrinkwrap.api.spec.WebArchive;
-import org.jboss.shrinkwrap.resolver.api.maven.archive.ShrinkWrapMaven;
+import org.jboss.shrinkwrap.resolver.api.maven.Maven;
 import org.junit.Before;
 import org.junit.Rule;
 import org.junit.Test;
+import org.junit.FixMethodOrder;
+import org.junit.runners.MethodSorters;
 import org.junit.runner.RunWith;
 import org.restcomm.connect.commons.Version;
 
 import javax.ws.rs.core.MultivaluedMap;
+
 import java.net.URL;
 
 import static com.github.tomakehurst.wiremock.client.WireMock.aResponse;
 import static com.github.tomakehurst.wiremock.client.WireMock.containing;
-import static com.github.tomakehurst.wiremock.client.WireMock.equalToJson;
 import static com.github.tomakehurst.wiremock.client.WireMock.post;
 import static com.github.tomakehurst.wiremock.client.WireMock.postRequestedFor;
 import static com.github.tomakehurst.wiremock.client.WireMock.stubFor;
 import static com.github.tomakehurst.wiremock.client.WireMock.urlMatching;
 import static com.github.tomakehurst.wiremock.client.WireMock.verify;
+import org.junit.Ignore;
 
 /**
  * @author otsakir@gmail.com - Orestis Tsakiridis
  */
 @RunWith(Arquillian.class)
+@FixMethodOrder(MethodSorters.NAME_ASCENDING)
 public class AccountsEndpointClosingTest extends EndpointTest {
     private final static Logger logger = Logger.getLogger(AccountsEndpointClosingTest.class.getName());
 
@@ -70,7 +75,7 @@ public class AccountsEndpointClosingTest extends EndpointTest {
     String toplevelKey = "77f8c12cc7b8f8423e5c38b035249166";
 
     @Rule
-    public WireMockRule wireMockRule = new WireMockRule(8089);
+    public WireMockRule wireMockRule = new WireMockRule(8090);
 
     @Before
     public void before() {
@@ -80,6 +85,7 @@ public class AccountsEndpointClosingTest extends EndpointTest {
     // verify that acount-removal notifications are sent to the application server (RVD)
     @Test
     public void removeAccountAndSendNotifications() throws InterruptedException {
+
         String closedParentSid = "ACA1000000000000000000000000000000";
         Client jersey = getClient(toplevelSid, toplevelKey);
         WebResource resource = jersey.resource( getResourceUrl("/2012-04-24/Accounts.json/" + closedParentSid) );
@@ -129,14 +135,16 @@ public class AccountsEndpointClosingTest extends EndpointTest {
         logger.info("Packaging Test App");
         logger.info("version");
         WebArchive archive = ShrinkWrap.create(WebArchive.class, "restcomm.war");
-        final WebArchive restcommArchive = ShrinkWrapMaven.resolver()
+        final WebArchive restcommArchive = Maven.resolver()
                 .resolve("org.restcomm:restcomm-connect.application:war:" + version).withoutTransitivity()
                 .asSingle(WebArchive.class);
         archive = archive.merge(restcommArchive);
         archive.delete("/WEB-INF/sip.xml");
+archive.delete("/WEB-INF/web.xml");
         archive.delete("/WEB-INF/conf/restcomm.xml");
         archive.delete("/WEB-INF/data/hsql/restcomm.script");
         archive.addAsWebInfResource("sip.xml");
+        archive.addAsWebInfResource("web.xml");
         archive.addAsWebInfResource("restcomm-accountRemoval.xml", "conf/restcomm.xml");
         archive.addAsWebInfResource("restcomm.script_account_removal_test", "data/hsql/restcomm.script");
         logger.info("Packaged Test App");

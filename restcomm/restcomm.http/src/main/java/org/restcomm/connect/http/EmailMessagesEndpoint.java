@@ -10,6 +10,17 @@ import akka.actor.UntypedActorFactory;
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
 import com.thoughtworks.xstream.XStream;
+import javax.annotation.PostConstruct;
+import javax.servlet.ServletContext;
+import javax.ws.rs.core.Context;
+import javax.ws.rs.core.MediaType;
+import static javax.ws.rs.core.MediaType.*;
+import javax.ws.rs.core.MultivaluedMap;
+import javax.ws.rs.core.Response;
+import static javax.ws.rs.core.Response.Status.BAD_REQUEST;
+import static javax.ws.rs.core.Response.Status.INTERNAL_SERVER_ERROR;
+import static javax.ws.rs.core.Response.ok;
+import static javax.ws.rs.core.Response.status;
 import org.apache.commons.configuration.Configuration;
 import org.apache.log4j.Logger;
 import org.joda.time.DateTime;
@@ -26,19 +37,6 @@ import org.restcomm.connect.email.api.EmailResponse;
 import org.restcomm.connect.email.api.Mail;
 import org.restcomm.connect.http.converter.EmailMessageConverter;
 import org.restcomm.connect.http.converter.RestCommResponseConverter;
-
-import javax.annotation.PostConstruct;
-import javax.servlet.ServletContext;
-import javax.ws.rs.core.Context;
-import javax.ws.rs.core.MediaType;
-import javax.ws.rs.core.MultivaluedMap;
-import javax.ws.rs.core.Response;
-
-import static javax.ws.rs.core.MediaType.*;
-import static javax.ws.rs.core.Response.Status.BAD_REQUEST;
-import static javax.ws.rs.core.Response.Status.INTERNAL_SERVER_ERROR;
-import static javax.ws.rs.core.Response.ok;
-import static javax.ws.rs.core.Response.status;
 
 
 /**
@@ -153,9 +151,9 @@ public class EmailMessagesEndpoint extends SecuredEndpoint {
 
             final ActorRef observer = observer();
             mailerService.tell(new Observe(observer), observer);
-            if (APPLICATION_JSON_TYPE == responseType) {
+            if (APPLICATION_JSON_TYPE.equals(responseType)) {
                 return ok(gson.toJson(emailMsg), APPLICATION_JSON).build();
-            } else if (APPLICATION_XML_TYPE == responseType) {
+            } else if (APPLICATION_XML_TYPE.equals(responseType)) {
                 final RestCommResponse response = new RestCommResponse(emailMsg);
                 return ok(xstream.toXML(response), APPLICATION_XML).build();
             } else {

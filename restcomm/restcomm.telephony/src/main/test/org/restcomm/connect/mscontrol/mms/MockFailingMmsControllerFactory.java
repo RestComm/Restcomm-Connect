@@ -55,21 +55,18 @@ public class MockFailingMmsControllerFactory implements MediaServerControllerFac
     }
 
     @Override
-    public ActorRef provideCallController() {
-        final Props props = new Props(this.callControllerFactory);
-        return system.actorOf(props);
+    public Props provideCallControllerProps() {
+        return new Props(this.callControllerFactory);
     }
 
     @Override
-    public ActorRef provideConferenceController() {
-        final Props props = new Props(this.conferenceControllerFactory);
-        return system.actorOf(props);
+    public Props provideConferenceControllerProps() {
+        return new Props(this.conferenceControllerFactory);
     }
 
     @Override
-    public ActorRef provideBridgeController() {
-        final Props props = new Props(this.bridgeControllerFactory);
-        return system.actorOf(props);
+    public Props provideBridgeControllerProps() {
+        return new Props(this.bridgeControllerFactory);
     }
 
     private final class CallControllerFactory implements UntypedActorFactory {

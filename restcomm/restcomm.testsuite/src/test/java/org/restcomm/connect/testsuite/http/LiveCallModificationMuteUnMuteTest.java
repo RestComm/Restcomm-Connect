@@ -8,7 +8,6 @@ import static org.cafesip.sipunit.SipAssert.assertLastOperationSuccess;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertTrue;
-import static org.junit.Assert.fail;
 
 import java.net.URL;
 
@@ -24,15 +23,18 @@ import org.jboss.arquillian.junit.Arquillian;
 import org.jboss.arquillian.test.api.ArquillianResource;
 import org.jboss.shrinkwrap.api.ShrinkWrap;
 import org.jboss.shrinkwrap.api.spec.WebArchive;
-import org.jboss.shrinkwrap.resolver.api.maven.archive.ShrinkWrapMaven;
+import org.jboss.shrinkwrap.resolver.api.maven.Maven;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.BeforeClass;
-import org.junit.Ignore;
 import org.junit.Rule;
 import org.junit.Test;
+import org.junit.FixMethodOrder;
+import org.junit.runners.MethodSorters;
+import org.junit.experimental.categories.Category;
 import org.junit.runner.RunWith;
 import org.restcomm.connect.commons.Version;
+import org.restcomm.connect.commons.annotations.FeatureAltTests;
 
 import com.github.tomakehurst.wiremock.junit.WireMockRule;
 import com.google.gson.JsonArray;
@@ -44,6 +46,7 @@ import com.google.gson.JsonObject;
  *
  */
 @RunWith(Arquillian.class)
+@FixMethodOrder(MethodSorters.NAME_ASCENDING)
 public class LiveCallModificationMuteUnMuteTest {
 
     private final static Logger logger = Logger.getLogger(CreateCallsTest.class.getName());
@@ -131,6 +134,7 @@ public class LiveCallModificationMuteUnMuteTest {
      * @throws Exception
      */
     @Test
+    @Category(FeatureAltTests.class)
     public void muteUnmuteInProgressConferenceParticipant() throws Exception {
     	stubFor(get(urlPathEqualTo("/1111"))
                 .willReturn(aResponse()
@@ -214,14 +218,16 @@ public class LiveCallModificationMuteUnMuteTest {
     public static WebArchive createWebArchiveNoGw() {
         logger.info("Packaging Test App");
         WebArchive archive = ShrinkWrap.create(WebArchive.class, "restcomm.war");
-        final WebArchive restcommArchive = ShrinkWrapMaven.resolver()
+        final WebArchive restcommArchive = Maven.resolver()
                 .resolve("org.restcomm:restcomm-connect.application:war:" + version).withoutTransitivity()
                 .asSingle(WebArchive.class);
         archive = archive.merge(restcommArchive);
         archive.delete("/WEB-INF/sip.xml");
+archive.delete("/WEB-INF/web.xml");
         archive.delete("/WEB-INF/conf/restcomm.xml");
         archive.delete("/WEB-INF/data/hsql/restcomm.script");
         archive.addAsWebInfResource("sip.xml");
+        archive.addAsWebInfResource("web.xml");
         archive.addAsWebInfResource("restcomm.xml", "conf/restcomm.xml");
         archive.addAsWebInfResource("restcomm.script_dialTest", "data/hsql/restcomm.script");
         archive.addAsWebResource("dial-number-entry.xml");

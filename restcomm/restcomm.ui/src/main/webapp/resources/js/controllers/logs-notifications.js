@@ -7,11 +7,14 @@ rcMod.controller('LogsNotificationsCtrl', function ($scope, $resource, $timeout,
   $scope.Math = window.Math;
 
   $scope.sid = SessionService.get("sid");
-  
+
+  // search toggle only on mobile view
+  $scope.showSearchToggle = window.outerWidth <= 768;
+
   // default search values
   $scope.search = {
     sub_accounts: false
-  }
+  };
 
   // pagination support ----------------------------------------------------------------------------------------------
 
@@ -73,8 +76,13 @@ rcMod.controller('LogsNotificationsCtrl', function ($scope, $resource, $timeout,
     var params = $scope.search ? createSearchParams($scope.search) : {LocalOnly: true};
     RCommLogsNotifications.search($.extend({accountSid: $scope.sid, Page: page, PageSize: $scope.entryLimit}, params), function(data) {
       $scope.notificationsLogsList = data.notifications;
-      $scope.totalNotification = data.total;
+      $scope.totalNotifications = data.total;
       $scope.noOfPages = data.num_pages;
+      $scope.start = parseInt(data.start) + 1;
+      $scope.end = parseInt(data.end);
+      if ($scope.end != $scope.totalNotifications) {
+        ++$scope.end;
+      }
     });
   }
 

@@ -1,7 +1,7 @@
 package org.restcomm.connect.testsuite.telephony;
 
-import akka.actor.ActorRef;
 import com.github.tomakehurst.wiremock.junit.WireMockRule;
+import com.google.gson.JsonObject;
 import org.apache.log4j.Logger;
 import org.cafesip.sipunit.Credential;
 import org.cafesip.sipunit.SipCall;
@@ -13,31 +13,37 @@ import org.jboss.arquillian.junit.Arquillian;
 import org.jboss.arquillian.test.api.ArquillianResource;
 import org.jboss.shrinkwrap.api.ShrinkWrap;
 import org.jboss.shrinkwrap.api.spec.WebArchive;
-import org.jboss.shrinkwrap.resolver.api.maven.archive.ShrinkWrapMaven;
+import org.jboss.shrinkwrap.resolver.api.maven.Maven;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.BeforeClass;
 import org.junit.Rule;
 import org.junit.Test;
+import org.junit.FixMethodOrder;
+import org.junit.runners.MethodSorters;
 import org.junit.runner.RunWith;
 import org.restcomm.connect.commons.Version;
-import org.restcomm.connect.mgcp.MediaSession;
-import org.restcomm.connect.mgcp.MockMediaGateway;
+import org.restcomm.connect.monitoringservice.MonitoringMetrics;
+import org.restcomm.connect.testsuite.tools.MonitoringServiceTool;
 
 import javax.sip.message.Response;
 import java.net.URL;
 import java.text.ParseException;
-import java.util.Map;
 
 import static org.cafesip.sipunit.SipAssert.assertLastOperationSuccess;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertTrue;
+import org.junit.experimental.categories.Category;
+import org.restcomm.connect.commons.annotations.SequentialClassTests;
+import org.restcomm.connect.commons.annotations.WithInMinsTests;
 
 /**
  * Created by gvagenas on 6/15/16.
  */
 @RunWith(Arquillian.class)
+@FixMethodOrder(MethodSorters.NAME_ASCENDING)
+@Category(SequentialClassTests.class)
 public class TestMgcpOperations {
 
     private final static Logger logger = Logger.getLogger(TestDialVerbPartOne.class.getName());
@@ -153,6 +159,7 @@ public class TestMgcpOperations {
         bobPhone.addUpdateCredential(c);
 
         final SipCall bobCall = bobPhone.createSipCall();
+        bobCall.listenForDisconnect();
         bobCall.initiateOutgoingCall(bobContact, "sip:1234@127.0.0.1:5080", null, body, "application", "sdp", null, null);
         assertLastOperationSuccess(bobCall);
         assertTrue(bobCall.waitForAuthorisation(5000));
@@ -171,29 +178,81 @@ public class TestMgcpOperations {
         bobCall.sendInviteOkAck();
         assertTrue(!(bobCall.getLastReceivedResponse().getStatusCode() >= 400));
 
-        bobCall.listenForDisconnect();
+        Thread.sleep(500);
+
+        JsonObject metrics = MonitoringServiceTool.getInstance().getMetrics(deploymentUrl.toString(),adminAccountSid, adminAuthToken);
+        assertNotNull(metrics);
+        int mgcpEndpoints = metrics.getAsJsonObject("Metrics").get("MgcpEndpoints").getAsInt();
+        int mgcpConnections = metrics.getAsJsonObject("Metrics").get("MgcpConnections").getAsInt();
+        int liveCalls = metrics.getAsJsonObject("Metrics").get("LiveCalls").getAsInt();
+
+        logger.info("MgcpEndpoints: "+mgcpEndpoints);
+        logger.info("MgcpConnections: "+mgcpConnections);
+        logger.info("LiveCalls: "+liveCalls);
+//        int liveCallsArraySize = metrics.getAsJsonArray("LiveCallDetails").size();
+//        logger.info("LiveCallsArraySize: "+liveCallsArraySize);
+//        assertTrue(liveCalls==0);
+//        assertTrue(liveCallsArraySize==0);
+//        int maxConcurrentCalls = metrics.getAsJsonObject("Metrics").get("MaximumConcurrentCalls").getAsInt();
+//        int maxConcurrentIncomingCalls = metrics.getAsJsonObject("Metrics").get("MaximumConcurrentIncomingCalls").getAsInt();
+//        int maxConcurrentOutgoingCalls = metrics.getAsJsonObject("Metrics").get("MaximumConcurrentIncomingCalls").getAsInt();
+//        assertTrue(maxConcurrentCalls==0);
+//        assertTrue(maxConcurrentIncomingCalls==0);
+//        assertTrue(maxConcurrentOutgoingCalls==0);
+
+
+
         assertTrue(bobCall.waitForDisconnect(10000));
 
-        Map<MediaSession, ActorRef> endpoints = MockMediaGateway.getEndpointsMap();
-        assertNotNull(endpoints);
-        assertTrue(endpoints.size() == 0);
+        Thread.sleep(1000);
+
+        metrics = MonitoringServiceTool.getInstance().getMetrics(deploymentUrl.toString(),adminAccountSid, adminAuthToken);
+        assertNotNull(metrics);
+        mgcpEndpoints = metrics.getAsJsonObject("Metrics").get("MgcpEndpoints").getAsInt();
+        mgcpConnections = metrics.getAsJsonObject("Metrics").get("MgcpConnections").getAsInt();
+        liveCalls = metrics.getAsJsonObject("Metrics").get("LiveCalls").getAsInt();
+
+        logger.info("MgcpEndpoints at the end: "+mgcpEndpoints);
+        logger.info("MgcpConnections at the end: "+mgcpConnections);
+        logger.info("Live calls at the end: "+liveCalls);
+
+
+        int ivrEndpoints;
+        int confEndpoints;
+        int bridgeEndpoints;
+        int packetRelayEndpoints;
+        if (mgcpEndpoints > 0) {
+            bridgeEndpoints = metrics.getAsJsonObject("Metrics").get(MonitoringMetrics.COUNTERS_MAP_MGCP_ENDPOINTS_BRIDGE).getAsInt();
+            ivrEndpoints = metrics.getAsJsonObject("Metrics").get(MonitoringMetrics.COUNTERS_MAP_MGCP_ENDPOINTS_IVR).getAsInt();
+            confEndpoints = metrics.getAsJsonObject("Metrics").get(MonitoringMetrics.COUNTERS_MAP_MGCP_ENDPOINTS_CONFERENCE).getAsInt();
+            packetRelayEndpoints = metrics.getAsJsonObject("Metrics").get(MonitoringMetrics.COUNTERS_MAP_MGCP_ENDPOINTS_PACKETRELAY).getAsInt();
+            logger.info("IVR Endpoints: "+ivrEndpoints);
+            logger.info("Bridge Endpoints: "+bridgeEndpoints);
+            logger.info("Conference Endpoints: "+confEndpoints);
+            logger.info("PacketRelay Endpoints: "+packetRelayEndpoints);
+        }
+        assertEquals(0, liveCalls);
+        assertEquals(0, mgcpEndpoints);
+        assertEquals(0, mgcpConnections);
     }
 
 
-    @Deployment(name = "TestDialVerbPartOne", managed = true, testable = false)
+    @Deployment(name = "TestMgcpOperations", managed = true, testable = false)
     public static WebArchive createWebArchiveNoGw() {
         logger.info("Packaging Test App");
         WebArchive archive = ShrinkWrap.create(WebArchive.class, "restcomm.war");
-        final WebArchive restcommArchive = ShrinkWrapMaven.resolver()
+        final WebArchive restcommArchive = Maven.resolver()
                 .resolve("org.restcomm:restcomm-connect.application:war:" + version).withoutTransitivity()
                 .asSingle(WebArchive.class);
         archive = archive.merge(restcommArchive);
         archive.delete("/WEB-INF/sip.xml");
+archive.delete("/WEB-INF/web.xml");
         archive.delete("/WEB-INF/conf/restcomm.xml");
-//        archive.delete("/WEB-INF/data/hsql/restcomm.script");
+        archive.delete("/WEB-INF/data/hsql/restcomm.script");
         archive.addAsWebInfResource("sip.xml");
+        archive.addAsWebInfResource("web.xml");
         archive.addAsWebInfResource("restcomm.xml", "conf/restcomm.xml");
-//        archive.addAsWebInfResource("restcomm.script_dialTest_new", "data/hsql/restcomm.script");
+        archive.addAsWebInfResource("restcomm.script_mgcpoperations", "data/hsql/restcomm.script");
         logger.info("Packaged Test App");
         return archive;
     }

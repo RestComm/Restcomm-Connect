@@ -4,7 +4,7 @@
 	<parent>
 		<groupId>org.restcomm</groupId>
 		<artifactId>restcomm-connect</artifactId>
-		<version>8.2.0-SNAPSHOT</version>
+		<version>8.3.1-SNAPSHOT</version>
 	</parent>
 
 	<artifactId>restcomm-connect.application</artifactId>
@@ -65,9 +65,14 @@
 		<dependency>
 			<groupId>org.mobicents.servlet.sip</groupId>
 			<artifactId>sip-servlets-spec</artifactId>
-			<version>${sipservletapi.version}</version>
 			<scope>provided</scope>
 		</dependency>
+                
+		<dependency>
+			<groupId>org.mobicents.servlet.sip.containers</groupId>
+			<artifactId>sip-servlets-catalina-7</artifactId>
+			<scope>provided</scope>
+		</dependency>                
 
 		<dependency>
 			<groupId>javax.servlet</groupId>
@@ -258,6 +263,25 @@
 		<dependency>
 			<groupId>org.restcomm</groupId>
 			<artifactId>restcomm-connect.mrb.api</artifactId>
+			<version>${project.version}</version>
+		</dependency>
+
+
+		<dependency>
+			<groupId>org.restcomm</groupId>
+			<artifactId>restcomm-connect.dns.api</artifactId>
+			<version>${project.version}</version>
+		</dependency>
+
+		<dependency>
+			<groupId>org.restcomm</groupId>
+			<artifactId>restcomm-connect.sdr.api</artifactId>
+			<version>${project.version}</version>
+		</dependency>
+		
+		<dependency>
+			<groupId>org.restcomm</groupId>
+			<artifactId>restcomm-connect.core</artifactId>
 			<version>${project.version}</version>
 		</dependency>
 

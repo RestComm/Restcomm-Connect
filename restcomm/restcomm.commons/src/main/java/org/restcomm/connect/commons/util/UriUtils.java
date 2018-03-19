@@ -1,23 +1,31 @@
+/*
+ * TeleStax, Open Source Cloud Communications
+ * Copyright 2011-2014, Telestax Inc and individual contributors
+ * by the @authors tag.
+ *
+ * This program is free software: you can redistribute it and/or modify
+ * under the terms of the GNU Affero General Public License as
+ * published by the Free Software Foundation; either version 3 of
+ * the License, or (at your option) any later version.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU Affero General Public License for more details.
+ *
+ * You should have received a copy of the GNU Affero General Public License
+ * along with this program.  If not, see <http://www.gnu.org/licenses/>
+ *
+ */
 package org.restcomm.connect.commons.util;
 
-import java.lang.management.ManagementFactory;
 import java.net.InetAddress;
 import java.net.URI;
 import java.net.URISyntaxException;
 import java.net.UnknownHostException;
-import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.List;
-import java.util.Set;
 
-import javax.management.AttributeNotFoundException;
-import javax.management.InstanceNotFoundException;
-import javax.management.MBeanException;
-import javax.management.MBeanServer;
-import javax.management.MalformedObjectNameException;
-import javax.management.ObjectName;
-import javax.management.Query;
-import javax.management.ReflectionException;
 
 import org.apache.log4j.Logger;
 import org.restcomm.connect.commons.HttpConnector;
@@ -27,14 +35,15 @@ import org.restcomm.connect.commons.annotations.concurrency.ThreadSafe;
 
 /**
  * Utility class to manipulate URI.
+ *
  * @author Henrique Rosa
  */
 @ThreadSafe
 public final class UriUtils {
 
     private static Logger logger = Logger.getLogger(UriUtils.class);
-    private static HttpConnector httpConnector;
-    private static HttpConnectorList httpConnectorList;
+    private static HttpConnector selectedConnector = null;
+
     /**
      * Default constructor.
      */
@@ -44,6 +53,7 @@ public final class UriUtils {
 
     /**
      * Resolves a relative URI.
+     *
      * @param base The base of the URI
      * @param uri The relative URI.
      * @return The absolute URI
@@ -51,87 +61,41 @@ public final class UriUtils {
     public static URI resolve(final URI base, final URI uri) {
         if (base.equals(uri)) {
             return uri;
+        } else if (!uri.isAbsolute()) {
+            return base.resolve(uri);
         } else {
-            if (!uri.isAbsolute()) {
-                return base.resolve(uri);
-            } else {
-                return uri;
-            }
+            return uri;
         }
     }
 
-    private static HttpConnectorList getHttpConnectors() throws MalformedObjectNameException,NullPointerException, UnknownHostException, AttributeNotFoundException,
-    InstanceNotFoundException, MBeanException, ReflectionException {
-        MBeanServer mbs = ManagementFactory.getPlatformMBeanServer();
-
-        Set<ObjectName> jbossObjs = mbs.queryNames(new ObjectName("jboss.as:socket-binding-group=standard-sockets,socket-binding=http*"), null);
-        Set<ObjectName> tomcatObjs = mbs.queryNames(new ObjectName("*:type=Connector,*"), Query.match(Query.attr("protocol"), Query.value("HTTP/1.1")));
-
-        ArrayList<HttpConnector> endPoints = new ArrayList<HttpConnector>();
-        if (jbossObjs != null && jbossObjs.size() > 0) {
-            for (Iterator<ObjectName> i = jbossObjs.iterator(); i.hasNext();) {
-                ObjectName obj = i.next();
-                Boolean bound = (Boolean) mbs.getAttribute(obj, "bound");
-//                Boolean bound = Boolean.getBoolean(mbs.getAttribute(obj, "bound").toString());
-                if (bound) {
-                    String scheme = mbs.getAttribute(obj, "name").toString().replaceAll("\"", "");
-                    Integer port = (Integer) mbs.getAttribute(obj, "boundPort");
-                    String address = ((String)mbs.getAttribute(obj, "boundAddress")).replaceAll("\"", "");
-                    if(logger.isInfoEnabled()) {
-                        logger.info("Jboss Http Connector: "+scheme+"://"+address+":"+port);
-                    }
-                    HttpConnector httpConnector = new HttpConnector(scheme, address, port, scheme.equalsIgnoreCase("https"));
-                    endPoints.add(httpConnector);
-                }            }
-        } else if (tomcatObjs != null && tomcatObjs.size() > 0) {
-            for (Iterator<ObjectName> i = tomcatObjs.iterator(); i.hasNext();) {
-                ObjectName obj = i.next();
-                String scheme = mbs.getAttribute(obj, "scheme").toString().replaceAll("\"", "");
-                String port = obj.getKeyProperty("port").replaceAll("\"", "");
-                String address = obj.getKeyProperty("address").replaceAll("\"", "");
-                if(logger.isInfoEnabled()){
-                    logger.info("Tomcat Http Connector: "+scheme+"://"+address+":"+port);
-                }
-                HttpConnector httpConnector = new HttpConnector(scheme, address, Integer.parseInt(port), scheme.equalsIgnoreCase("https"));
-                endPoints.add(httpConnector);
-            }
+    /**
+     * Will query different JMX MBeans for a list of runtime connectors.
+     *
+     * JBoss discovery will be used first, then Tomcat.
+     *
+     *
+     * @return the list of connectors found
+     */
+    private static HttpConnectorList getHttpConnectors() throws Exception {
+        logger.info("Searching HTTP connectors.");
+        HttpConnectorList httpConnectorList = null;
+        //find Jboss first as is typical setup
+        httpConnectorList = new JBossConnectorDiscover().findConnectors();
+        if (httpConnectorList == null || httpConnectorList.getConnectors().isEmpty()) {
+            //if not found try tomcat
+            httpConnectorList = new TomcatConnectorDiscover().findConnectors();
         }
-        if (endPoints.isEmpty()) {
-            logger.error("Coundn't discover any Http Interfaces");
-        }
-        httpConnectorList = new HttpConnectorList(endPoints);
         return httpConnectorList;
     }
 
     /**
      * Resolves a relative URI.
+     *
      * @param uri The relative URI
      * @return The absolute URI
      */
     public static URI resolve(final URI uri) {
-        if (httpConnector == null) {
-            if (httpConnectorList == null) {
-                try {
-                    httpConnectorList = getHttpConnectors();
-                } catch (MalformedObjectNameException | AttributeNotFoundException | InstanceNotFoundException
-                        | NullPointerException | UnknownHostException | MBeanException | ReflectionException exception) {
-                    logger.error("Exception during HTTP Connectors discovery: ", exception);
-                }
-            }
-            if (httpConnectorList != null && !httpConnectorList.getConnectors().isEmpty()) {
-                List<HttpConnector> connectors = httpConnectorList.getConnectors();
-                Iterator<HttpConnector> iterator = connectors.iterator();
-                while (iterator.hasNext()) {
-                    HttpConnector connector = iterator.next();
-                    if (connector.isSecure()) {
-                        httpConnector = connector;
-                    }
-                }
-                if (httpConnector == null) {
-                    httpConnector = connectors.get(0);
-                }
-            }
-        }
+        getHttpConnector();
 
 // Since this is a relative URL that we are trying to resolve, we don't care about the public URL.
 //        //HttpConnector address could be a local address while the request came from a public address
@@ -146,18 +110,18 @@ public final class UriUtils {
             restcommAddress = RestcommConfiguration.getInstance().getMain().getHostname();
             if (restcommAddress == null || restcommAddress.isEmpty()) {
                 try {
-                    InetAddress addr = InetAddress.getByName(httpConnector.getAddress());
+                    InetAddress addr = DNSUtils.getByName(selectedConnector.getAddress());
                     restcommAddress = addr.getCanonicalHostName();
                 } catch (UnknownHostException e) {
-                    logger.error("Unable to resolve: " + httpConnector + " to hostname: " + e);
-                    restcommAddress = httpConnector.getAddress();
+                    logger.error("Unable to resolve: " + selectedConnector + " to hostname: " + e);
+                    restcommAddress = selectedConnector.getAddress();
                 }
             }
         } else {
-            restcommAddress = httpConnector.getAddress();
+            restcommAddress = selectedConnector.getAddress();
         }
 
-        String base = httpConnector.getScheme()+"://" + restcommAddress + ":" + httpConnector.getPort();
+        String base = selectedConnector.getScheme() + "://" + restcommAddress + ":" + selectedConnector.getPort();
         try {
             return resolve(new URI(base), uri);
         } catch (URISyntaxException e) {
@@ -165,15 +129,46 @@ public final class UriUtils {
         }
     }
 
-    public static HttpConnectorList getHttpConnectorList() {
-        if (httpConnectorList == null) {
-            try{
-                getHttpConnectors();
-            }catch(Exception e){
-                //TODO: handle exceptions properly
-                logger.error("Problem during the retrieval of HTTP Connectors "+e);
+    /**
+     * For historical reasons this method never returns null, and instead
+     * throws a RuntimeException.
+     *
+     * TODO review all clients of this method to check for null instead of
+     * throwing RuntimeException
+     *
+     * @return The selected connector with Secure preference.
+     * @throws RuntimeException if no connector is found for some reason
+     */
+    public static HttpConnector getHttpConnector() throws RuntimeException {
+        if (selectedConnector == null) {
+            try {
+
+                HttpConnectorList httpConnectorList = getHttpConnectors();
+
+                if (httpConnectorList != null && !httpConnectorList.getConnectors().isEmpty()) {
+                    List<HttpConnector> connectors = httpConnectorList.getConnectors();
+                    Iterator<HttpConnector> iterator = connectors.iterator();
+                    while (iterator.hasNext()) {
+                        HttpConnector connector = iterator.next();
+                        //take secure conns with preference
+                        if (connector.isSecure()) {
+                            selectedConnector = connector;
+                        }
+                    }
+                    if (selectedConnector == null) {
+                        //if not secure,take the first one
+                        selectedConnector = connectors.get(0);
+                    }
+                }
+
+                if (selectedConnector == null) {
+                    //pervent logic to go further
+                    throw new RuntimeException("No HttpConnector found");
+                }
+            } catch (Exception e) {
+                throw new RuntimeException("Exception during HTTP Connectors discovery: ", e);
             }
         }
-        return httpConnectorList;
+        return selectedConnector;
     }
 }

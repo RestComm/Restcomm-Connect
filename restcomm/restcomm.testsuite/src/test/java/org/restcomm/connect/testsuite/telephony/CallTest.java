@@ -37,14 +37,18 @@ import org.jboss.arquillian.junit.Arquillian;
 import org.jboss.arquillian.test.api.ArquillianResource;
 import org.jboss.shrinkwrap.api.ShrinkWrap;
 import org.jboss.shrinkwrap.api.spec.WebArchive;
-import org.jboss.shrinkwrap.resolver.api.maven.archive.ShrinkWrapMaven;
+import org.jboss.shrinkwrap.resolver.api.maven.Maven;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.BeforeClass;
 import org.junit.Ignore;
 import org.junit.Test;
+import org.junit.FixMethodOrder;
+import org.junit.runners.MethodSorters;
+import org.junit.experimental.categories.Category;
 import org.junit.runner.RunWith;
 import org.restcomm.connect.commons.Version;
+import org.restcomm.connect.commons.annotations.SequentialClassTests;
 //import org.restcomm.connect.telephony.Version;
 
 /**
@@ -52,6 +56,8 @@ import org.restcomm.connect.commons.Version;
  */
 @Ignore
 @RunWith(Arquillian.class)
+@FixMethodOrder(MethodSorters.NAME_ASCENDING)
+@Category(value={SequentialClassTests.class})
 public final class CallTest {
     private static final String version = Version.getVersion();
     private static final byte[] bytes = new byte[] { 118, 61, 48, 13, 10, 111, 61, 117, 115, 101, 114, 49, 32, 53, 51, 54, 53,
@@ -391,14 +397,16 @@ public final class CallTest {
     @Deployment(name = "CallTest", managed = false, testable = false)
     public static WebArchive createWebArchive() {
         WebArchive archive = ShrinkWrap.create(WebArchive.class, "restcomm.war");
-        final WebArchive restcommArchive = ShrinkWrapMaven.resolver()
+        final WebArchive restcommArchive = Maven.resolver()
                 .resolve("org.restcomm:restcomm-connect.application:war:" + version).withoutTransitivity()
                 .asSingle(WebArchive.class);
         archive = archive.merge(restcommArchive);
         archive.delete("/WEB-INF/sip.xml");
+archive.delete("/WEB-INF/web.xml");
         archive.delete("/WEB-INF/conf/restcomm.xml");
         archive.delete("/WEB-INF/data/hsql/restcomm.script");
         archive.addAsWebInfResource("sip.xml");
+        archive.addAsWebInfResource("web.xml");
         archive.addAsWebInfResource("restcomm.xml", "conf/restcomm.xml");
         archive.addAsWebInfResource("restcomm.script", "data/hsql/restcomm.script");
         archive.addAsWebResource("redirect-sms-entry.xml");

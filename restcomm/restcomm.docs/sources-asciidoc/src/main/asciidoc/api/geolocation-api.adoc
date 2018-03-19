@@ -17,10 +17,10 @@ terms of API.
 The use cases this API aims covering are:
 
 1. Notify Restcomm the current location of client X or certain
-MSISDN (e.g. iWatch cardio activity alarm 2015 TADHack Chicago winner-,
+MSISDN/IMSI (e.g. iWatch cardio activity alarm 2015 TADHack Chicago winner-,
 E911, friend/family finder, etc.).
 
-2. Notify Restcomm if client X or certain MSISDN enters or exits a
+2. Notify Restcomm if client X or certain MSISDN or IMSI enters or exits a
 geofence. Use cases like mobile advertising use cases apply to this type of Geolocation service.
 
 3. Notify Restcomm if client X is within N meters from client Y. Many use cases apply to this type of Geolocation service, namely:
@@ -328,7 +328,7 @@ created or updated
 |PARAMETER |DESCRIPTION
 
 
-|DeviceIdentifier |The target E.164 phone number or device identity of
+|DeviceIdentifier |The target E.164 (MSISDN) or E.212 (IMSI) phone number or device identity of
 this Geolocation service.
 
 

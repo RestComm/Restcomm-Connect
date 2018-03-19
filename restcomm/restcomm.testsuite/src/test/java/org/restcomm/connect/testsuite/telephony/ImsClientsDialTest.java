@@ -1,21 +1,38 @@
 package org.restcomm.connect.testsuite.telephony;
 
-import static org.cafesip.sipunit.SipAssert.assertLastOperationSuccess;
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertNotNull;
-import static org.junit.Assert.assertTrue;
-import static org.junit.Assert.assertFalse;
-import static org.junit.Assert.fail;
-
-import java.net.URL;
-import java.sql.SQLException;
-import java.text.ParseException;
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
-import java.util.concurrent.ExecutorService;
-import java.util.concurrent.Executors;
+import com.github.tomakehurst.wiremock.junit.WireMockRule;
+import com.google.gson.JsonObject;
+import org.apache.log4j.Logger;
+import org.cafesip.sipunit.Credential;
+import org.cafesip.sipunit.SipCall;
+import org.cafesip.sipunit.SipPhone;
+import org.cafesip.sipunit.SipRequest;
+import org.cafesip.sipunit.SipStack;
+import org.cafesip.sipunit.SipTransaction;
+import org.jboss.arquillian.container.mss.extension.SipStackTool;
+import org.jboss.arquillian.container.test.api.Deployer;
+import org.jboss.arquillian.container.test.api.Deployment;
+import org.jboss.arquillian.junit.Arquillian;
+import org.jboss.arquillian.test.api.ArquillianResource;
+import org.jboss.shrinkwrap.api.spec.WebArchive;
+import org.junit.After;
+import org.junit.Before;
+import org.junit.BeforeClass;
+import org.junit.Rule;
+import org.junit.Test;
+import org.junit.FixMethodOrder;
+import org.junit.runners.MethodSorters;
+import org.junit.experimental.categories.Category;
+import org.junit.runner.RunWith;
+import org.restcomm.connect.commons.Version;
+import org.restcomm.connect.commons.annotations.FeatureAltTests;
+import org.restcomm.connect.commons.annotations.ParallelClassTests;
+import org.restcomm.connect.commons.annotations.UnstableTests;
+import org.restcomm.connect.testsuite.NetworkPortAssigner;
+import org.restcomm.connect.testsuite.WebArchiveUtil;
+import org.restcomm.connect.testsuite.http.RestcommCallsTool;
+import org.restcomm.connect.testsuite.telephony.security.DigestServerAuthenticationMethod;
+import org.restcomm.connect.testsuite.tools.MonitoringServiceTool;
 
 import javax.sip.Dialog;
 import javax.sip.InvalidArgumentException;
@@ -38,35 +55,23 @@ import javax.sip.header.ViaHeader;
 import javax.sip.header.WWWAuthenticateHeader;
 import javax.sip.message.Request;
 import javax.sip.message.Response;
+import java.net.URL;
+import java.sql.SQLException;
+import java.text.ParseException;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
 
-import org.apache.log4j.Logger;
-import org.cafesip.sipunit.Credential;
-import org.cafesip.sipunit.SipCall;
-import org.cafesip.sipunit.SipPhone;
-import org.cafesip.sipunit.SipRequest;
-import org.cafesip.sipunit.SipStack;
-import org.cafesip.sipunit.SipTransaction;
-import org.jboss.arquillian.container.mss.extension.SipStackTool;
-import org.jboss.arquillian.container.test.api.Deployer;
-import org.jboss.arquillian.container.test.api.Deployment;
-import org.jboss.arquillian.junit.Arquillian;
-import org.jboss.arquillian.test.api.ArquillianResource;
-import org.jboss.shrinkwrap.api.ShrinkWrap;
-import org.jboss.shrinkwrap.api.spec.WebArchive;
-import org.jboss.shrinkwrap.resolver.api.maven.archive.ShrinkWrapMaven;
-import org.junit.After;
-import org.junit.Before;
-import org.junit.BeforeClass;
-import org.junit.Rule;
-import org.junit.Test;
-import org.junit.runner.RunWith;
-import org.restcomm.connect.commons.Version;
-import org.restcomm.connect.testsuite.http.RestcommCallsTool;
-import org.restcomm.connect.testsuite.telephony.security.DigestServerAuthenticationMethod;
-import org.restcomm.connect.testsuite.tools.MonitoringServiceTool;
-
-import com.github.tomakehurst.wiremock.junit.WireMockRule;
-import com.google.gson.JsonObject;
+import static org.cafesip.sipunit.SipAssert.assertLastOperationSuccess;
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertFalse;
+import static org.junit.Assert.assertNotNull;
+import static org.junit.Assert.assertTrue;
+import static org.junit.Assert.fail;
 
 /**
  * Test for clients with or without VoiceURL (Bitbucket issue 115). Clients without VoiceURL can dial anything.
@@ -74,6 +79,8 @@ import com.google.gson.JsonObject;
  * @author <a href="mailto:gvagenas@gmail.com">gvagenas</a>
  */
 @RunWith(Arquillian.class)
+@FixMethodOrder(MethodSorters.NAME_ASCENDING)
+@Category(value={FeatureAltTests.class, ParallelClassTests.class})
 public class ImsClientsDialTest {
 
     private static final String version = Version.getVersion();
@@ -92,8 +99,11 @@ public class ImsClientsDialTest {
     @ArquillianResource
     URL deploymentUrl;
 
+    private static int mediaPort = NetworkPortAssigner.retrieveNextPortByFile();
+
+    private static int mockPort = NetworkPortAssigner.retrieveNextPortByFile();
     @Rule
-    public WireMockRule wireMockRule = new WireMockRule(8090); // No-args constructor defaults to port 8080
+    public WireMockRule wireMockRule = new WireMockRule(mockPort);
 
     private static SipStackTool tool1;
     private static SipStackTool tool2;
@@ -106,17 +116,20 @@ public class ImsClientsDialTest {
     // Maria is a Restcomm Client **without** VoiceURL. This Restcomm Client can dial anything.
     private SipStack augustSipStack;
     private SipPhone augustPhone;
-    private String augustContact = "sip:august@127.0.0.1:5092";
+    private static String augustPort = String.valueOf(NetworkPortAssigner.retrieveNextPortByFile());
+    private String augustContact = "sip:august@127.0.0.1:" + augustPort;
     private boolean isAugustRegistered = false;
 
     private SipStack bobSipStack;
     private SipPhone bobPhone;
-    private String bobContact = "sip:bob@bob.com:5095";
+    private static String bobPort = String.valueOf(NetworkPortAssigner.retrieveNextPortByFile());
+    private String bobContact = "sip:bob@bob.com:" + bobPort;
     private boolean isBobRegistered = false;
 
     private SipStack juliusSipStack;
     private SipPhone juliusPhone;
-    private String juliusContact = "sip:julius@127.0.0.1:5094";
+    private static String juliusPort = String.valueOf(NetworkPortAssigner.retrieveNextPortByFile());
+    private String juliusContact = "sip:julius@127.0.0.1:" + juliusPort;
     private boolean isJuliusRegistered = false;
 
     private SipStack imsSipStack;
@@ -125,13 +138,18 @@ public class ImsClientsDialTest {
     private SipPhone imsJuliusPhone;
     private SipPhone imsBobPhone;
 
-    private String imsContact = "sip:127.0.0.1";
+    private static String imsPort = String.valueOf(NetworkPortAssigner.retrieveNextPortByFile());
+    private String imsContact = "sip:127.0.0.1:" + imsPort;
 
     private SipPhone pstnPhone;
-    private String pstnContact = "sip:"+pstnNumber+"@127.0.0.1:5060";
+    private String pstnContact = "sip:" + pstnNumber + "@127.0.0.1:" + imsPort;
 
     private String adminAccountSid = "AC27f2dd02ab51ba5d5a9ff7fc5537a09a";
     private String adminAuthToken = "77f8c12cc7b8f8423e5c38b035249166";
+
+    private static int restcommPort = 5080;
+    private static int restcommHTTPPort = 8080;
+    private static String restcommContact = "127.0.0.1:" + restcommPort;
 
     @BeforeClass
     public static void beforeClass() throws Exception {
@@ -143,30 +161,45 @@ public class ImsClientsDialTest {
         Class.forName("org.hsqldb.jdbc.JDBCDriver");
     }
 
+    public static void reconfigurePorts() {
+        if (System.getProperty("arquillian_sip_port") != null) {
+            restcommPort = Integer.valueOf(System.getProperty("arquillian_sip_port"));
+            restcommContact = "127.0.0.1:" + restcommPort;
+        }
+        if (System.getProperty("arquillian_http_port") != null) {
+            restcommHTTPPort = Integer.valueOf(System.getProperty("arquillian_http_port"));
+        }
+    }
+
+
     @Before
     public void before() throws Exception {
 
-        imsSipStack = tool1.initializeSipStack(SipStack.PROTOCOL_UDP, "127.0.0.1", "5060", "127.0.0.1:5080");
+        imsSipStack = tool1.initializeSipStack(SipStack.PROTOCOL_UDP, "127.0.0.1", imsPort, restcommContact);
 
-        augustSipStack = tool2.initializeSipStack(SipStack.PROTOCOL_UDP, "127.0.0.1", "5092", "127.0.0.1:5080");
-        augustPhone = augustSipStack.createSipPhone("127.0.0.1", SipStack.PROTOCOL_UDP, 5080, augustContact);
-        imsAugustPhone = imsSipStack.createSipPhone("127.0.0.1", SipStack.PROTOCOL_UDP, 5080, augustContact);
+        augustSipStack = tool2.initializeSipStack(SipStack.PROTOCOL_UDP, "127.0.0.1", augustPort, restcommContact);
+        augustPhone = augustSipStack.createSipPhone("127.0.0.1", SipStack.PROTOCOL_UDP, restcommPort, augustContact);
+        imsAugustPhone = imsSipStack.createSipPhone("127.0.0.1", SipStack.PROTOCOL_UDP, restcommPort, augustContact);
         imsAugustPhone.setLoopback(true);
+        imsAugustPhone.setPassThroughRegisterRequests(true);
 
-        imsAugustPhone2 = imsSipStack.createSipPhone("127.0.0.1", SipStack.PROTOCOL_UDP, 5080, "sip:august@ims.com");
+        imsAugustPhone2 = imsSipStack.createSipPhone("127.0.0.1", SipStack.PROTOCOL_UDP, restcommPort, "sip:august@ims.com");
         imsAugustPhone2.setLoopback(true);
+        imsAugustPhone2.setPassThroughRegisterRequests(true);
 
-        juliusSipStack = tool3.initializeSipStack(SipStack.PROTOCOL_UDP, "127.0.0.1", "5094", "127.0.0.1:5080");
-        juliusPhone = juliusSipStack.createSipPhone("127.0.0.1", SipStack.PROTOCOL_UDP, 5080, juliusContact);
-        imsJuliusPhone = imsSipStack.createSipPhone("127.0.0.1", SipStack.PROTOCOL_UDP, 5080, juliusContact);
+        juliusSipStack = tool3.initializeSipStack(SipStack.PROTOCOL_UDP, "127.0.0.1", juliusPort, restcommContact);
+        juliusPhone = juliusSipStack.createSipPhone("127.0.0.1", SipStack.PROTOCOL_UDP, restcommPort, juliusContact);
+        imsJuliusPhone = imsSipStack.createSipPhone("127.0.0.1", SipStack.PROTOCOL_UDP, restcommPort, juliusContact);
         imsJuliusPhone.setLoopback(true);
+        imsJuliusPhone.setPassThroughRegisterRequests(true);
 
-        bobSipStack = tool4.initializeSipStack(SipStack.PROTOCOL_UDP, "127.0.0.1", "5095", "127.0.0.1:5080");
-        bobPhone = bobSipStack.createSipPhone("127.0.0.1", SipStack.PROTOCOL_UDP, 5080, bobContact);
-        imsBobPhone = imsSipStack.createSipPhone("127.0.0.1", SipStack.PROTOCOL_UDP, 5080, bobContact);
+        bobSipStack = tool4.initializeSipStack(SipStack.PROTOCOL_UDP, "127.0.0.1", bobPort, restcommContact);
+        bobPhone = bobSipStack.createSipPhone("127.0.0.1", SipStack.PROTOCOL_UDP, restcommPort, bobContact);
+        imsBobPhone = imsSipStack.createSipPhone("127.0.0.1", SipStack.PROTOCOL_UDP, restcommPort, bobContact);
         imsBobPhone.setLoopback(true);
+        imsBobPhone.setPassThroughRegisterRequests(true);
 
-        pstnPhone = imsSipStack.createSipPhone("127.0.0.1", SipStack.PROTOCOL_UDP, 5080, pstnContact);
+        pstnPhone = imsSipStack.createSipPhone("127.0.0.1", SipStack.PROTOCOL_UDP, restcommPort, pstnContact);
 
         if(isAugustRegistered){
             unregisterAugust();
@@ -224,7 +257,7 @@ public class ImsClientsDialTest {
     @Test
     public void testRegisterClients() throws ParseException, InterruptedException, SQLException {
         logger.info("testRegisterClients");
-        SipURI uri = augustSipStack.getAddressFactory().createSipURI(null, "127.0.0.1:5080");
+        SipURI uri = augustSipStack.getAddressFactory().createSipURI(null, restcommContact);
 
         ExecutorService executorService = Executors.newSingleThreadExecutor();
         executorService.execute(new Runnable() {
@@ -294,15 +327,15 @@ public class ImsClientsDialTest {
             }
         });
         assertTrue(augustPhone.unregister(augustContact, 0));
-        Thread.sleep(500);
-        assertTrue(MonitoringServiceTool.getInstance().getRegisteredUsers(deploymentUrl.toString(),adminAccountSid, adminAuthToken)==0);
+        Thread.sleep(1000);
+        assertEquals(0,MonitoringServiceTool.getInstance().getRegisteredUsers(deploymentUrl.toString(),adminAccountSid, adminAuthToken));
         isAugustRegistered = false;
     }
 
     @Test
     public void testRegisterClientForbidden() throws ParseException, InterruptedException, SQLException {
         logger.info("testRegisterClients");
-        SipURI uri = augustSipStack.getAddressFactory().createSipURI(null, "127.0.0.1:5080");
+        SipURI uri = augustSipStack.getAddressFactory().createSipURI(null, restcommContact);
 
         ExecutorService executorService = Executors.newSingleThreadExecutor();
         executorService.execute(new Runnable() {
@@ -351,7 +384,7 @@ public class ImsClientsDialTest {
     @Test
     public void testReRegisterClientForbidden() throws ParseException, InterruptedException, SQLException {
         logger.info("testRegisterClients");
-        SipURI uri = augustSipStack.getAddressFactory().createSipURI(null, "127.0.0.1:5080");
+        SipURI uri = augustSipStack.getAddressFactory().createSipURI(null, restcommContact);
 
         ExecutorService executorService = Executors.newSingleThreadExecutor();
         executorService.execute(new Runnable() {
@@ -432,7 +465,7 @@ public class ImsClientsDialTest {
     public void testReRegisterClientForbidden2() throws ParseException, InterruptedException, SQLException, InvalidArgumentException {
         try{
         logger.info("testReRegisterImsClientForbidden");
-        SipURI uri = augustSipStack.getAddressFactory().createSipURI(null, "127.0.0.1:5080");
+        SipURI uri = augustSipStack.getAddressFactory().createSipURI(null, restcommContact);
 
         ExecutorService executorService = Executors.newSingleThreadExecutor();
         executorService.execute(new Runnable() {
@@ -471,13 +504,13 @@ public class ImsClientsDialTest {
                 "from_tag");
         CallIdHeader callId = (CallIdHeader)augustSipStack.getHeaderFactory().createHeader("Call-ID", "12345");
         CSeqHeader cseq = augustSipStack.getHeaderFactory().createCSeqHeader((long)1, "REGISTER");
-        ViaHeader via = augustSipStack.getHeaderFactory().createViaHeader("127.0.0.1", 5092, "wss", "branch_12345");
+        ViaHeader via = augustSipStack.getHeaderFactory().createViaHeader("127.0.0.1", Integer.valueOf(augustPort), "wss", "branch_12345");
         List<Header> vias = new ArrayList<Header>();
         vias.add(via);
         MaxForwardsHeader maxForwards = (MaxForwardsHeader)augustSipStack.getHeaderFactory().createHeader("Max-Forwards", "70");
         Header expires = augustSipStack.getHeaderFactory().createHeader("Expires", "600");
         ContactHeader contact = augustSipStack.getHeaderFactory().createContactHeader(augustSipStack.getAddressFactory().createAddress(
-                augustSipStack.getAddressFactory().createSipURI(null, "august@127.0.0.1:5092")));
+                augustSipStack.getAddressFactory().createSipURI(null, "august@127.0.0.1:" + augustPort)));
 
         Request register = augustSipStack.getMessageFactory().createRequest(uri, "REGISTER", callId, cseq, from, to, vias, maxForwards);
         register.addHeader(expires);
@@ -572,6 +605,7 @@ public class ImsClientsDialTest {
     }
 
     @Test
+    @Category(UnstableTests.class)
     public void testWebRTCClientOutgoingOtherDomain() throws ParseException, InterruptedException, SQLException {
 
         logger.info("testWebRTCClientOutgoingAdisconnect");
@@ -692,6 +726,7 @@ public class ImsClientsDialTest {
     }
 
     @Test
+    @Category(UnstableTests.class)
     public void testWebRTCClientOutgoingBHold() throws SipException, ParseException, InterruptedException, InvalidArgumentException {
 
         logger.info("testWebRTCClientOutgoingBHold");
@@ -770,6 +805,7 @@ public class ImsClientsDialTest {
     }
 
     @Test
+    @Category(UnstableTests.class)
     public void testWebRTCClientIncomingADisconnect() throws InterruptedException, ParseException {
         logger.info("testWebRTCClientIncomingADisconnect");
 
@@ -817,6 +853,7 @@ public class ImsClientsDialTest {
     }
 
     @Test
+    @Category(UnstableTests.class)
     public void testWebRTCClientIncomingBusy() throws InterruptedException, ParseException {
         logger.info("testWebRTCClientIncomingBusy");
 
@@ -847,6 +884,7 @@ public class ImsClientsDialTest {
     }
 
     @Test
+    @Category(UnstableTests.class)
     public void testWebRTCClientIncomingAHold() throws SipException, InterruptedException, ParseException, InvalidArgumentException {
         logger.info("testWebRTCClientIncomingAHold");
 
@@ -923,6 +961,7 @@ public class ImsClientsDialTest {
     }
 
     @Test
+    @Category(UnstableTests.class)
     public void testWebRTCClientIncomingBHold() throws SipException, InvalidArgumentException, InterruptedException, ParseException {
         logger.info("testWebRTCClientIncomingBHold");
 
@@ -1001,6 +1040,7 @@ public class ImsClientsDialTest {
     }
 
     @Test
+    @Category(UnstableTests.class)
     public void testWebRTCClientIncomingRequestTimeout() throws InterruptedException, ParseException {
         logger.info("testWebRTCClientIncomingRequestTimeout");
 
@@ -1046,7 +1086,9 @@ public class ImsClientsDialTest {
         unregisterAugust();
     }
 
-    @Test //Non regression test for issue https://github.com/RestComm/Restcomm-Connect/issues/1042 - Support WebRTC clients to dial out through MediaServer
+    @Test
+    @Category(UnstableTests.class)
+    //Non regression test for issue https://github.com/RestComm/Restcomm-Connect/issues/1042 - Support WebRTC clients to dial out through MediaServer
     public void testWebRTCClientOutgoingBusy() throws ParseException, InterruptedException {
 
         logger.info("testWebRTCClientOutgoingBusy");
@@ -1074,7 +1116,9 @@ public class ImsClientsDialTest {
         unregisterAugust();
     }
 
-    @Test //Non regression test for issue https://github.com/RestComm/Restcomm-Connect/issues/1042 - Support WebRTC clients to dial out through MediaServer
+    @Test
+    @Category(UnstableTests.class)
+    //Non regression test for issue https://github.com/RestComm/Restcomm-Connect/issues/1042 - Support WebRTC clients to dial out through MediaServer
     public void testUnregisteredWebRTCClientOutgoing() throws ParseException, InterruptedException {
         logger.info("testUnregisteredWebRTCClientOutgoing");
 
@@ -1087,7 +1131,7 @@ public class ImsClientsDialTest {
 
         // August initiates a call to pstn
         final SipCall augustCall = augustPhone.createSipCall();
-        URI uri1 = augustSipStack.getAddressFactory().createURI("sip:127.0.0.1:5080");
+        URI uri1 = augustSipStack.getAddressFactory().createURI("sip:" + restcommContact);
         SipURI sipURI = (SipURI) uri1;
         sipURI.setLrParam();
         Address address = augustSipStack.getAddressFactory().createAddress(uri1);
@@ -1113,6 +1157,7 @@ public class ImsClientsDialTest {
     }
 
     @Test
+    @Category(UnstableTests.class)
     public void testUnregisteredWebRTCClientIncoming() throws InterruptedException, ParseException {
         logger.info("testUnregisteredWebRTCClientIncoming");
 
@@ -1134,7 +1179,9 @@ public class ImsClientsDialTest {
         assertEquals(0, filteredCallsByStatusObject.get("calls").getAsJsonArray().size());
     }
 
-    @Test //Non regression test for issue https://github.com/RestComm/Restcomm-Connect/issues/1042 - Support WebRTC clients to dial out through MediaServer
+    @Test
+    @Category(UnstableTests.class)
+    //Non regression test for issue https://github.com/RestComm/Restcomm-Connect/issues/1042 - Support WebRTC clients to dial out through MediaServer
     public void testWebRTCClientOutgoingRequestTimeout() throws ParseException, InterruptedException {
 
         logger.info("testWebRTCClientOutgoingRequestTimeout");
@@ -1274,7 +1321,7 @@ public class ImsClientsDialTest {
     }
 
     private void registerAugust() throws ParseException, InterruptedException{
-        SipURI uri = augustSipStack.getAddressFactory().createSipURI(null, "127.0.0.1:5080");
+        SipURI uri = augustSipStack.getAddressFactory().createSipURI(null, restcommContact);
 
         ExecutorService executorService = Executors.newSingleThreadExecutor();
         executorService.execute(new Runnable() {
@@ -1310,7 +1357,7 @@ public class ImsClientsDialTest {
     }
 
     private void registerBob() throws ParseException, InterruptedException{
-        SipURI uri = bobSipStack.getAddressFactory().createSipURI(null, "127.0.0.1:5080");
+        SipURI uri = bobSipStack.getAddressFactory().createSipURI(null, restcommContact);
 
         ExecutorService executorService = Executors.newSingleThreadExecutor();
         executorService.execute(new Runnable() {
@@ -1359,7 +1406,7 @@ public class ImsClientsDialTest {
         replaceHeaders.add(userAgentHeader.toString());
 
         // August initiates a call to pstn
-        URI uri1 = augustSipStack.getAddressFactory().createURI("sip:127.0.0.1:5080");
+        URI uri1 = augustSipStack.getAddressFactory().createURI("sip:" + restcommContact);
         SipURI sipURI = (SipURI) uri1;
         sipURI.setLrParam();
         Address address = augustSipStack.getAddressFactory().createAddress(uri1);
@@ -1424,7 +1471,7 @@ public class ImsClientsDialTest {
         replaceHeaders.add(userAgentHeader.toString());
 
         // Bob initiates a call to pstn
-        URI uri1 = bobSipStack.getAddressFactory().createURI("sip:127.0.0.1:5080");
+        URI uri1 = bobSipStack.getAddressFactory().createURI("sip:" + restcommContact);
         SipURI sipURI = (SipURI) uri1;
         sipURI.setLrParam();
         Address address = bobSipStack.getAddressFactory().createAddress(uri1);
@@ -1482,14 +1529,14 @@ public class ImsClientsDialTest {
 
         // Create outgoing call with pstn phone
         ArrayList<String> replaceHeaders = new ArrayList<String>();
-        URI uri1 = augustSipStack.getAddressFactory().createURI("sip:august@127.0.0.1:5080");
+        URI uri1 = augustSipStack.getAddressFactory().createURI("sip:august@" + restcommContact);
         SipURI sipURI = (SipURI) uri1;
         sipURI.setLrParam();
         Address address = augustSipStack.getAddressFactory().createAddress(uri1);
         ToHeader toHeader = augustSipStack.getHeaderFactory().createToHeader(address, null);
         replaceHeaders.add(toHeader.toString());
 
-        pstnCall.initiateOutgoingCall(pstnContact, "sip:127.0.0.1:5080", null, body, "application", "sdp", null, replaceHeaders);
+        pstnCall.initiateOutgoingCall(pstnContact, "sip:" + restcommContact, null, body, "application", "sdp", null, replaceHeaders);
         assertLastOperationSuccess(pstnCall);
         assertTrue(pstnCall.waitOutgoingCallResponse(5 * 1000));
         int responsePstn = pstnCall.getLastReceivedResponse().getStatusCode();
@@ -1500,29 +1547,41 @@ public class ImsClientsDialTest {
             assertEquals(Response.RINGING, pstnCall.getLastReceivedResponse().getStatusCode());
         }
 
-        assertTrue(pstnCall.waitOutgoingCallResponse(5 * 1000));
-        assertEquals(Response.OK, pstnCall.getLastReceivedResponse().getStatusCode());
-        assertTrue(pstnCall.sendInviteOkAck());
     }
 
     @Deployment(name = "ImsClientsDialTest", managed = true, testable = false)
     public static WebArchive createWebArchiveNoGw() {
-        WebArchive archive = ShrinkWrap.create(WebArchive.class, "restcomm.war");
-        final WebArchive restcommArchive = ShrinkWrapMaven.resolver()
-                .resolve("org.restcomm:restcomm-connect.application:war:" + version).withoutTransitivity()
-                .asSingle(WebArchive.class);
-        archive = archive.merge(restcommArchive);
-        archive.delete("/WEB-INF/sip.xml");
-        archive.delete("/WEB-INF/conf/restcomm.xml");
-        archive.delete("/WEB-INF/data/hsql/restcomm.script");
-        archive.addAsWebInfResource("sip-ims.xml", "/sip.xml");
-        archive.addAsWebInfResource("restcomm-ims.xml", "conf/restcomm.xml");
-        archive.addAsWebInfResource("restcomm.script_imsDialTest", "data/hsql/restcomm.script");
-        archive.addAsWebResource("dial-conference-entry.xml");
-        archive.addAsWebResource("dial-fork-entry.xml");
-        archive.addAsWebResource("dial-uri-entry.xml");
-        archive.addAsWebResource("dial-client-entry.xml");
-        archive.addAsWebResource("dial-number-entry.xml");
-        return archive;
+        logger.info("Packaging Test App");
+        reconfigurePorts();
+
+        Map<String, String> webInfResources = new HashMap();
+        webInfResources.put("restcomm-ims.xml", "conf/restcomm.xml");
+        webInfResources.put("restcomm.script_imsDialTest", "data/hsql/restcomm.script");
+        webInfResources.put("sip-ims.xml", "/sip.xml");
+        webInfResources.put("akka_application.conf", "classes/application.conf");
+
+        Map<String, String> replacements = new HashMap();
+        //replace mediaport 2727
+        replacements.put("2727", String.valueOf(mediaPort));
+        replacements.put("8080", String.valueOf(restcommHTTPPort));
+        replacements.put("8090", String.valueOf(mockPort));
+        replacements.put("5080", String.valueOf(restcommPort));
+        replacements.put("5092", String.valueOf(augustPort));
+        replacements.put("5094", String.valueOf(juliusPort));
+        replacements.put("5095", String.valueOf(bobPort));
+        replacements.put("5060", String.valueOf(imsPort));
+        replacements.put("9999", String.valueOf(imsPort));
+
+
+        List<String> resources = new ArrayList(Arrays.asList(
+                "dial-conference-entry.xml",
+                "dial-fork-entry.xml",
+                "dial-number-entry.xml",
+                "dial-client-entry.xml",
+                "dial-uri-entry.xml"
+        ));
+        return WebArchiveUtil.createWebArchiveNoGw(
+                webInfResources, resources,
+                replacements);
     }
 }

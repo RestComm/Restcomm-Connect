@@ -2,13 +2,10 @@ package org.restcomm.connect.testsuite.telephony;
 
 import com.github.tomakehurst.wiremock.junit.WireMockRule;
 import com.github.tomakehurst.wiremock.verification.LoggedRequest;
-import com.google.gson.JsonArray;
-import com.google.gson.JsonObject;
 import gov.nist.javax.sip.header.ContentType;
 import org.apache.log4j.Logger;
 import org.cafesip.sipunit.SipCall;
 import org.cafesip.sipunit.SipPhone;
-import org.cafesip.sipunit.SipRequest;
 import org.cafesip.sipunit.SipStack;
 import org.cafesip.sipunit.SipTransaction;
 import org.jboss.arquillian.container.mss.extension.SipStackTool;
@@ -17,28 +14,24 @@ import org.jboss.arquillian.junit.Arquillian;
 import org.jboss.arquillian.test.api.ArquillianResource;
 import org.jboss.shrinkwrap.api.ShrinkWrap;
 import org.jboss.shrinkwrap.api.spec.WebArchive;
-import org.jboss.shrinkwrap.resolver.api.maven.archive.ShrinkWrapMaven;
+import org.jboss.shrinkwrap.resolver.api.maven.Maven;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.BeforeClass;
 import org.junit.Rule;
 import org.junit.Test;
+import org.junit.FixMethodOrder;
+import org.junit.runners.MethodSorters;
 import org.junit.runner.RunWith;
 import org.restcomm.connect.commons.Version;
-import org.restcomm.connect.testsuite.http.RestcommCallsTool;
 
 import javax.sip.Dialog;
 import javax.sip.SipException;
-import javax.sip.address.SipURI;
-import javax.sip.header.FromHeader;
 import javax.sip.message.Request;
 import javax.sip.message.Response;
-import java.net.MalformedURLException;
 import java.net.URL;
 import java.text.ParseException;
-import java.util.HashMap;
 import java.util.List;
-import java.util.Map;
 
 import static com.github.tomakehurst.wiremock.client.WireMock.aResponse;
 import static com.github.tomakehurst.wiremock.client.WireMock.findAll;
@@ -51,6 +44,10 @@ import static org.cafesip.sipunit.SipAssert.assertLastOperationSuccess;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertTrue;
+import org.junit.experimental.categories.Category;
+import org.restcomm.connect.commons.annotations.FeatureAltTests;
+import org.restcomm.connect.commons.annotations.SequentialClassTests;
+import org.restcomm.connect.commons.annotations.WithInMinsTests;
 
 /**
  * Test for Dial verb. Will test Dial Conference, Dial URI, Dial Client, Dial Number and Dial Fork
@@ -58,6 +55,8 @@ import static org.junit.Assert.assertTrue;
  * @author <a href="mailto:hoan.h.luu@telestax.com">Hoan HL</a>
  */
 @RunWith(Arquillian.class)
+@FixMethodOrder(MethodSorters.NAME_ASCENDING)
+@Category(SequentialClassTests.class)
 public class TestGatherVerb {
     private final static Logger logger = Logger.getLogger(TestDialVerbPartTwo.class.getName());
 
@@ -181,7 +180,7 @@ public class TestGatherVerb {
 
         bobCall.sendInviteOkAck();
         assertTrue(!(bobCall.getLastReceivedResponse().getStatusCode() >= 400));
-        
+
         Thread.sleep(3000);
 
         Dialog dialog = bobCall.getDialog();
@@ -212,6 +211,7 @@ public class TestGatherVerb {
     }
 
     @Test //Test case for github issue 2415
+    @Category(FeatureAltTests.class)
     public synchronized void testDtmfWithSipInfoWith3Number() throws InterruptedException, ParseException {
         stubFor(get(urlPathEqualTo("/1111"))
                 .willReturn(aResponse()
@@ -243,7 +243,7 @@ public class TestGatherVerb {
 
         bobCall.sendInviteOkAck();
         assertTrue(!(bobCall.getLastReceivedResponse().getStatusCode() >= 400));
-        
+
         Thread.sleep(1000);
 
         Dialog dialog = bobCall.getDialog();
@@ -259,7 +259,7 @@ public class TestGatherVerb {
         Request info = null;
         Request info2 = null;
         Request info3 = null;
-        
+
         try {
             info = dialog.createRequest(Request.INFO);
             info2 = dialog.createRequest(Request.INFO);
@@ -296,14 +296,16 @@ public class TestGatherVerb {
     public static WebArchive createWebArchiveNoGw() {
         logger.info("Packaging Test App");
         WebArchive archive = ShrinkWrap.create(WebArchive.class, "restcomm.war");
-        final WebArchive restcommArchive = ShrinkWrapMaven.resolver()
+        final WebArchive restcommArchive = Maven.resolver()
                 .resolve("org.restcomm:restcomm-connect.application:war:" + version).withoutTransitivity()
                 .asSingle(WebArchive.class);
         archive = archive.merge(restcommArchive);
         archive.delete("/WEB-INF/sip.xml");
+archive.delete("/WEB-INF/web.xml");
         archive.delete("/WEB-INF/conf/restcomm.xml");
         archive.delete("/WEB-INF/data/hsql/restcomm.script");
         archive.addAsWebInfResource("sip.xml");
+        archive.addAsWebInfResource("web.xml");
         archive.addAsWebInfResource("restcomm_gather_test.xml", "conf/restcomm.xml");
         archive.addAsWebInfResource("restcomm.script_dialTest_new", "data/hsql/restcomm.script");
         archive.addAsWebResource("hello-play.xml");

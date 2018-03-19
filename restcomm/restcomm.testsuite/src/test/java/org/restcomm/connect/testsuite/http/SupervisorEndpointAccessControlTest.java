@@ -25,10 +25,15 @@ import org.jboss.arquillian.container.test.api.Deployment;
 import org.jboss.arquillian.junit.Arquillian;
 import org.jboss.shrinkwrap.api.ShrinkWrap;
 import org.jboss.shrinkwrap.api.spec.WebArchive;
-import org.jboss.shrinkwrap.resolver.api.maven.archive.ShrinkWrapMaven;
+import org.jboss.shrinkwrap.resolver.api.maven.Maven;
 import org.junit.Assert;
 import org.junit.Test;
+import org.junit.FixMethodOrder;
+import org.junit.runners.MethodSorters;
+import org.junit.experimental.categories.Category;
 import org.junit.runner.RunWith;
+import org.restcomm.connect.commons.annotations.FeatureAltTests;
+import org.restcomm.connect.commons.annotations.FeatureExpTests;
 import org.restcomm.connect.testsuite.tools.MonitoringServiceTool;
 
 import com.google.gson.JsonObject;
@@ -43,6 +48,7 @@ import com.sun.jersey.api.client.filter.HTTPBasicAuthFilter;
  * @author Maria Farooq <dam dam nak nak>
  */
 @RunWith(Arquillian.class)
+@FixMethodOrder(MethodSorters.NAME_ASCENDING)
 public class SupervisorEndpointAccessControlTest extends EndpointTest {
     protected final static Logger logger = Logger.getLogger(SupervisorEndpointAccessControlTest.class);
 
@@ -74,6 +80,7 @@ public class SupervisorEndpointAccessControlTest extends EndpointTest {
      *  Super Admins (but not ancestors) SHOULD be able to access supervisor metrics
      */
     @Test
+    @Category(FeatureAltTests.class)
     public void testSuperAdmin2PermissionTest() {
         JsonObject metrics = MonitoringServiceTool.getInstance().getMetrics(deploymentUrl.toString(), superAdmin2AccountSid, superAdmin2AuthToken);
         Assert.assertNotNull(metrics);
@@ -83,6 +90,7 @@ public class SupervisorEndpointAccessControlTest extends EndpointTest {
      *  Admin should NOT be able to access supervisor metrics
      */
     @Test
+    @Category(FeatureExpTests.class)
     public void testAdminPermissionTest() {
     	Client jerseyClient = Client.create();
         jerseyClient.addFilter(new HTTPBasicAuthFilter(adminAccountSid, adminAccountAuthToken));
@@ -96,6 +104,7 @@ public class SupervisorEndpointAccessControlTest extends EndpointTest {
      *  Developer should NOT be able to access supervisor metrics
      */
     @Test
+    @Category(FeatureExpTests.class)
     public void testDeveloperPermissionTest() {
     	Client jerseyClient = Client.create();
         jerseyClient.addFilter(new HTTPBasicAuthFilter(developerSid, developerAuthToken));
@@ -110,14 +119,16 @@ public class SupervisorEndpointAccessControlTest extends EndpointTest {
         logger.info("Packaging Test App");
         logger.info("version");
         WebArchive archive = ShrinkWrap.create(WebArchive.class, "restcomm.war");
-        final WebArchive restcommArchive = ShrinkWrapMaven.resolver()
+        final WebArchive restcommArchive = Maven.resolver()
                 .resolve("org.restcomm:restcomm-connect.application:war:" + version).withoutTransitivity()
                 .asSingle(WebArchive.class);
         archive = archive.merge(restcommArchive);
         archive.delete("/WEB-INF/sip.xml");
+archive.delete("/WEB-INF/web.xml");
         archive.delete("/WEB-INF/conf/restcomm.xml");
         archive.delete("/WEB-INF/data/hsql/restcomm.script");
         archive.addAsWebInfResource("sip.xml");
+        archive.addAsWebInfResource("web.xml");
         archive.addAsWebInfResource("restcomm_roles_permissions.xml", "conf/restcomm.xml");
         archive.addAsWebInfResource("restcomm.script_supervisor_permission_test", "data/hsql/restcomm.script");
         logger.info("Packaged Test App");

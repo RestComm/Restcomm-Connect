@@ -1,0 +1,19 @@
+<div class="template-item clickable">
+    <div class="item-top">
+        <div class="tag-icons">
+            <i ng-show="template.tags.indexOf('voice') != -1" class="fa fa-microphone"></i>
+            <i ng-show="template.tags.indexOf('sms') != -1" class="fa fa-comment"></i>
+            <i ng-show="template.tags.indexOf('ussd') != -1" class="fa fa-sitemap"></i>
+        </div>
+        <div class="template-body">
+            <!--<span class="template-icon"><i class="fa fa-microphone"></i></span>-->
+            <div class='template-description' title="{{template.description}}">{{template.description}}</div>
+            <div class="template-icon">
+                <i class='fa fa-phone'></i>
+            </div>
+        </div>
+    </div>
+    <div class="item-bottom">
+        <div class="fit-to-size" title="{{template.name}}">{{template.name}}</div>
+    </div>
+</div>

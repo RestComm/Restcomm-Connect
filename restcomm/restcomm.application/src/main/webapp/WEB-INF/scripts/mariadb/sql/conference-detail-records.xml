@@ -7,6 +7,9 @@
     <insert id="addConferenceDetailRecord" parameterType="map">
         call addConferenceDetailRecord( #{sid}, #{date_created}, #{date_updated}, #{account_sid}, #{status}, #{friendly_name}, #{api_version}, #{uri}, #{master_ms_id}, #{master_present} );
     </insert>
+    <select id="completeConferenceDetailRecord" parameterType="map"  statementType="CALLABLE">
+            call completeConferenceDetailRecord( #{sid, mode=IN, jdbcType=VARCHAR}, #{status, mode=IN, jdbcType=VARCHAR}, #{slaveMsId, mode=IN, jdbcType=VARCHAR}, #{dateUpdated, mode=IN, jdbcType=TIMESTAMP}, #{amIMaster, mode=IN, jdbcType=BOOLEAN}, #{completed, mode=OUT, jdbcType=BOOLEAN} );
+    </select>
 	<select id="getConferenceDetailRecord" parameterType="string" resultType="hashmap">
 		SELECT * FROM restcomm_conference_detail_records WHERE sid=#{sid};
 	</select>
@@ -38,6 +41,33 @@
 		</if>
 		;
 	</select>
+        <!-- use artificial condition (1=1) that always evaluates to true to ease 
+        query composition. 
+        All parameters here are optional.
+        For "status" column use "like" operator to allow finding similar states.
+        -->
+        <select id="countByFilter" parameterType="org.restcomm.connect.dao.entities.ConferenceRecordCountFilter" resultType="int">
+		SELECT COUNT(*) FROM restcomm_conference_detail_records WHERE '1' = '1'
+		<if test="accountSid != null">
+                        AND account_sid = #{accountSid}
+		</if>        
+		<if test="status != null">
+			AND status like #{status}
+		</if>
+		<if test="friendlyName != null">
+			AND friendly_name = #{friendlyName}
+		</if>
+		<if test="masterMsId != null">
+		    AND master_ms_id = #{masterMsId}
+		</if>                 
+		<if test="dateCreated != null">
+		    AND date_created &gt;= #{dateCreated}
+		</if>
+		<if test="dateUpdated != null">
+			AND date_updated &lt;= DATE_ADD(#{dateUpdated},INTERVAL 1 DAY) order by date_created
+		</if>
+		;
+	</select>        
 	<select id="getConferenceDetailRecordByUsingFilters" parameterType="org.restcomm.connect.dao.entities.ConferenceDetailRecordFilter" resultType="hashmap">
 		SELECT * FROM restcomm_conference_detail_records AS restcomm_conference_detail_records WHERE account_sid=#{accountSid}
         <if test="status != null">

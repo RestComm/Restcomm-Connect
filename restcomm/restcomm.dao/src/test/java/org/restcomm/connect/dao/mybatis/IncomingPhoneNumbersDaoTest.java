@@ -37,6 +37,7 @@ import org.restcomm.connect.dao.IncomingPhoneNumbersDao;
 import org.restcomm.connect.dao.entities.IncomingPhoneNumber;
 import org.restcomm.connect.dao.entities.IncomingPhoneNumberFilter;
 import org.restcomm.connect.commons.dao.Sid;
+import org.restcomm.connect.dao.entities.SearchFilterMode;
 
 /**
  * @author quintana.thomas@gmail.com (Thomas Quintana)
@@ -90,6 +91,7 @@ public class IncomingPhoneNumbersDaoTest {
         builder.setSmsFallbackMethod(method);
         builder.setSmsApplicationSid(application);
         builder.setUri(url);
+        builder.setOrganizationSid(Sid.generate(Sid.Type.ORGANIZATION));
         IncomingPhoneNumber number = builder.build();
         final IncomingPhoneNumbersDao numbers = manager.getIncomingPhoneNumbersDao();
         // Create a new incoming phone number in the data store.
@@ -135,6 +137,8 @@ public class IncomingPhoneNumbersDaoTest {
         number.setSmsFallbackUrl(url);
         number.setSmsFallbackMethod(method);
         number.setSmsApplicationSid(application);
+        Sid newOrganizationSid = Sid.generate(Sid.Type.ORGANIZATION);
+        number.setOrganizationSid(newOrganizationSid);
         numbers.updateIncomingPhoneNumber(number);
         // Read the updated application from the data store.
         result = numbers.getIncomingPhoneNumber(sid);
@@ -158,22 +162,26 @@ public class IncomingPhoneNumbersDaoTest {
         assertTrue(result.getSmsFallbackMethod().equals(number.getSmsFallbackMethod()));
         assertTrue(result.getSmsApplicationSid().equals(number.getSmsApplicationSid()));
         assertTrue(result.getUri().equals(number.getUri()));
+        assertEquals(newOrganizationSid.toString(), result.getOrganizationSid().toString());
         // Delete the incoming phone number.
         numbers.removeIncomingPhoneNumber(sid);
         // Validate that the incoming phone number was removed.
-        assertTrue(numbers.getIncomingPhoneNumber(sid) == null);
+        assertNull(numbers.getIncomingPhoneNumber(sid));
     }
 
     @Test
     public void applicationFriendlyNameReturned() {
         final IncomingPhoneNumbersDao dao = manager.getIncomingPhoneNumbersDao();
-        IncomingPhoneNumberFilter incomingPhoneNumberFilter = new IncomingPhoneNumberFilter("ACae6e420f425248d6a26948c17a9e2acf", null, null,"phone_number","ASC",50,0);
-        List<IncomingPhoneNumber> phoneNumbers = dao.getIncomingPhoneNumbersByFilter(incomingPhoneNumberFilter);
+        IncomingPhoneNumberFilter.Builder filterBuilder = IncomingPhoneNumberFilter.Builder.builder();
+        filterBuilder.byAccountSid("ACae6e420f425248d6a26948c17a9e2acf");
+        filterBuilder.sortedBy("phone_number", "ASC");
+        filterBuilder.limited(50, 0);
+        List<IncomingPhoneNumber> phoneNumbers = dao.getIncomingPhoneNumbersByFilter(filterBuilder.build());
         Assert.assertEquals("Only a single phone number expected",1, phoneNumbers.size());
         IncomingPhoneNumber number = phoneNumbers.get(0);
-        Assert.assertEquals(number.getVoiceApplicationName(), "app0");
-        Assert.assertEquals(number.getSmsApplicationName(), "app1");
-        Assert.assertEquals(number.getUssdApplicationName(), "app2");
+        Assert.assertEquals("app0", number.getVoiceApplicationName());
+        Assert.assertEquals("app1", number.getSmsApplicationName());
+        Assert.assertEquals("app2", number.getUssdApplicationName());
     }
 
     @Test
@@ -203,18 +211,186 @@ public class IncomingPhoneNumbersDaoTest {
         builder.setSmsFallbackMethod(method);
         builder.setSmsApplicationSid(application);
         builder.setUri(url);
+        builder.setOrganizationSid(Sid.generate(Sid.Type.ORGANIZATION));
         IncomingPhoneNumber number = builder.build();
         final IncomingPhoneNumbersDao numbers = manager.getIncomingPhoneNumbersDao();
         // Create a new incoming phone number in the data store.
         numbers.addIncomingPhoneNumber(number);
         // Read the incoming phone number from the data store.
-        IncomingPhoneNumber result = numbers.getIncomingPhoneNumber("+12223334444");
-        assert (result != null);
-        assertTrue(result.getSid().equals(number.getSid()));
+        IncomingPhoneNumberFilter.Builder filterBuilder = IncomingPhoneNumberFilter.Builder.builder();
+        filterBuilder.byPhoneNumber("+12223334444");
+        filterBuilder.byAccountSid(account.toString());
+        List<IncomingPhoneNumber> incomingPhoneNumbers = numbers.getIncomingPhoneNumbersByFilter(filterBuilder.build());
+        assertNotNull (incomingPhoneNumbers);
+        assertEquals (1, incomingPhoneNumbers.size());
+        IncomingPhoneNumber result = incomingPhoneNumbers.get(0);
+        assertEquals(number.getSid(), result.getSid());
+
+        //use wildcard mode now
+        filterBuilder = IncomingPhoneNumberFilter.Builder.builder();
+        filterBuilder.byPhoneNumber("2223334444");
+        filterBuilder.byAccountSid(account.toString());
+        filterBuilder.usingMode(SearchFilterMode.WILDCARD_MATCH);
+        incomingPhoneNumbers = numbers.getIncomingPhoneNumbersByFilter(filterBuilder.build());
+        assertNotNull (incomingPhoneNumbers);
+        assertEquals (1, incomingPhoneNumbers.size());
+
         // Delete the incoming phone number.
         numbers.removeIncomingPhoneNumber(sid);
         // Validate that the incoming phone number was removed.
-        assertTrue(numbers.getIncomingPhoneNumber(sid) == null);
+        assertNull(numbers.getIncomingPhoneNumber(sid) );
+    }
+
+    @Test
+    public void getByPhoneNumberUAndOrg() {
+        final Sid sid = Sid.generate(Sid.Type.PHONE_NUMBER);
+        Sid account = Sid.generate(Sid.Type.ACCOUNT);
+        Sid org1 = Sid.generate(Sid.Type.ORGANIZATION);
+        final Sid sid2 = Sid.generate(Sid.Type.PHONE_NUMBER);
+        Sid account2 = Sid.generate(Sid.Type.ACCOUNT);
+        Sid org2 = Sid.generate(Sid.Type.ORGANIZATION);
+
+        Sid application = Sid.generate(Sid.Type.APPLICATION);
+        URI url = URI.create("http://127.0.0.1:8080/restcomm/demos/hello-world.xml");
+        String method = "GET";
+        final IncomingPhoneNumber.Builder builder = IncomingPhoneNumber.builder();
+        builder.setSid(sid);
+        builder.setFriendlyName("Incoming Phone Number Test");
+        builder.setAccountSid(account);
+        builder.setPhoneNumber("+12223334444");
+        builder.setApiVersion("2012-04-24");
+        builder.setHasVoiceCallerIdLookup(false);
+        builder.setVoiceUrl(url);
+        builder.setVoiceMethod(method);
+        builder.setVoiceFallbackUrl(url);
+        builder.setVoiceFallbackMethod(method);
+        builder.setStatusCallback(url);
+        builder.setStatusCallbackMethod(method);
+        builder.setVoiceApplicationSid(application);
+        builder.setSmsUrl(url);
+        builder.setSmsMethod(method);
+        builder.setSmsFallbackUrl(url);
+        builder.setSmsFallbackMethod(method);
+        builder.setSmsApplicationSid(application);
+        builder.setUri(url);
+        builder.setOrganizationSid(org1);
+        builder.setPureSip(Boolean.FALSE);
+        IncomingPhoneNumber number = builder.build();
+        final IncomingPhoneNumber.Builder builder2 = IncomingPhoneNumber.builder();
+        builder2.setSid(sid2);
+        builder2.setFriendlyName("Incoming Phone Number Test");
+        builder2.setAccountSid(account2);
+        builder2.setPhoneNumber("+12223334444");
+        builder2.setApiVersion("2012-04-24");
+        builder2.setHasVoiceCallerIdLookup(false);
+        builder2.setVoiceUrl(url);
+        builder2.setVoiceMethod(method);
+        builder2.setVoiceFallbackUrl(url);
+        builder2.setVoiceFallbackMethod(method);
+        builder2.setStatusCallback(url);
+        builder2.setStatusCallbackMethod(method);
+        builder2.setVoiceApplicationSid(application);
+        builder2.setSmsUrl(url);
+        builder2.setSmsMethod(method);
+        builder2.setSmsFallbackUrl(url);
+        builder2.setSmsFallbackMethod(method);
+        builder2.setSmsApplicationSid(application);
+        builder2.setUri(url);
+        builder2.setOrganizationSid(org2);
+        builder2.setPureSip(Boolean.FALSE);
+
+        IncomingPhoneNumber number2 = builder2.build();
+        final IncomingPhoneNumbersDao numbers = manager.getIncomingPhoneNumbersDao();
+        // Create a new incoming phone number in the data store.
+        numbers.addIncomingPhoneNumber(number2);
+        numbers.addIncomingPhoneNumber(number);
+
+
+        // Read the incoming phone number from the data store.
+        IncomingPhoneNumberFilter.Builder filterBuilder = IncomingPhoneNumberFilter.Builder.builder();
+        filterBuilder.byPhoneNumber("+12223334444");
+        filterBuilder.byOrgSid(org2.toString());
+        filterBuilder.byPureSIP(Boolean.FALSE);
+        IncomingPhoneNumberFilter numFilter = filterBuilder.build();
+        List<IncomingPhoneNumber> incomingPhoneNumbers = numbers.getIncomingPhoneNumbersByFilter(numFilter);
+        assertNotNull(incomingPhoneNumbers);
+        assertEquals(1, incomingPhoneNumbers.size());
+        assertEquals(Integer.valueOf(1), numbers.getTotalIncomingPhoneNumbers(numFilter));
+    }
+
+    @Test
+    public void getRegexes() {
+        final Sid sid = Sid.generate(Sid.Type.PHONE_NUMBER);
+        Sid account = Sid.generate(Sid.Type.ACCOUNT);
+        Sid org1 = Sid.generate(Sid.Type.ORGANIZATION);
+        final Sid sid2 = Sid.generate(Sid.Type.PHONE_NUMBER);
+        Sid account2 = Sid.generate(Sid.Type.ACCOUNT);
+        Sid org2 = Sid.generate(Sid.Type.ORGANIZATION);
+
+        Sid application = Sid.generate(Sid.Type.APPLICATION);
+        URI url = URI.create("http://127.0.0.1:8080/restcomm/demos/hello-world.xml");
+        String method = "GET";
+        final IncomingPhoneNumber.Builder builder = IncomingPhoneNumber.builder();
+        builder.setSid(sid);
+        builder.setFriendlyName("Incoming Phone Number Test");
+        builder.setAccountSid(account);
+        builder.setPhoneNumber("+12.*");
+        builder.setApiVersion("2012-04-24");
+        builder.setHasVoiceCallerIdLookup(false);
+        builder.setVoiceUrl(url);
+        builder.setVoiceMethod(method);
+        builder.setVoiceFallbackUrl(url);
+        builder.setVoiceFallbackMethod(method);
+        builder.setStatusCallback(url);
+        builder.setStatusCallbackMethod(method);
+        builder.setVoiceApplicationSid(application);
+        builder.setSmsUrl(url);
+        builder.setSmsMethod(method);
+        builder.setSmsFallbackUrl(url);
+        builder.setSmsFallbackMethod(method);
+        builder.setSmsApplicationSid(application);
+        builder.setUri(url);
+        builder.setOrganizationSid(org1);
+        builder.setPureSip(Boolean.TRUE);
+        IncomingPhoneNumber number = builder.build();
+        final IncomingPhoneNumber.Builder builder2 = IncomingPhoneNumber.builder();
+        builder2.setSid(sid2);
+        builder2.setFriendlyName("Incoming Phone Number Test");
+        builder2.setAccountSid(account2);
+        builder2.setPhoneNumber("+12223334444");
+        builder2.setApiVersion("2012-04-24");
+        builder2.setHasVoiceCallerIdLookup(false);
+        builder2.setVoiceUrl(url);
+        builder2.setVoiceMethod(method);
+        builder2.setVoiceFallbackUrl(url);
+        builder2.setVoiceFallbackMethod(method);
+        builder2.setStatusCallback(url);
+        builder2.setStatusCallbackMethod(method);
+        builder2.setVoiceApplicationSid(application);
+        builder2.setSmsUrl(url);
+        builder2.setSmsMethod(method);
+        builder2.setSmsFallbackUrl(url);
+        builder2.setSmsFallbackMethod(method);
+        builder2.setSmsApplicationSid(application);
+        builder2.setUri(url);
+        builder2.setOrganizationSid(org2);
+        builder2.setPureSip(Boolean.FALSE);
+
+        IncomingPhoneNumber number2 = builder2.build();
+        final IncomingPhoneNumbersDao numbers = manager.getIncomingPhoneNumbersDao();
+        // Create a new incoming phone number in the data store.
+        numbers.addIncomingPhoneNumber(number2);
+        numbers.addIncomingPhoneNumber(number);
+
+
+        // Read the incoming phone number from the data store.
+        IncomingPhoneNumberFilter.Builder filterBuilder = IncomingPhoneNumberFilter.Builder.builder();
+        filterBuilder.byOrgSid(org1.toString());
+        filterBuilder.byPureSIP(Boolean.TRUE);
+        IncomingPhoneNumberFilter numFilter = filterBuilder.build();
+        List<IncomingPhoneNumber> incomingPhoneNumbers = numbers.getIncomingPhoneNumbersRegex(numFilter);
+        assertNotNull(incomingPhoneNumbers);
+        assertEquals(1, incomingPhoneNumbers.size());
     }
 
     @Test
@@ -244,13 +420,14 @@ public class IncomingPhoneNumbersDaoTest {
         builder.setSmsFallbackMethod(method);
         builder.setSmsApplicationSid(application);
         builder.setUri(url);
+        builder.setOrganizationSid(Sid.generate(Sid.Type.ORGANIZATION));
         IncomingPhoneNumber number = builder.build();
         final IncomingPhoneNumbersDao numbers = manager.getIncomingPhoneNumbersDao();
         // Create a new incoming phone number in the data store.
         numbers.addIncomingPhoneNumber(number);
-        assertTrue(numbers.getIncomingPhoneNumbers(account).size() == 1);
+        assertEquals(1, numbers.getIncomingPhoneNumbers(account).size());
         // Delete the incoming phone number.
         numbers.removeIncomingPhoneNumbers(account);
-        assertTrue(numbers.getIncomingPhoneNumbers(account).size() == 0);
+        assertTrue(numbers.getIncomingPhoneNumbers(account).isEmpty());
     }
 }

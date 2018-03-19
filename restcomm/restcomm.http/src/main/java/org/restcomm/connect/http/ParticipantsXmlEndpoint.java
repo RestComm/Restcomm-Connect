@@ -19,18 +19,16 @@
  */
 package org.restcomm.connect.http;
 
-import static javax.ws.rs.core.MediaType.APPLICATION_JSON_TYPE;
-import static javax.ws.rs.core.MediaType.APPLICATION_XML_TYPE;
-
 import javax.ws.rs.GET;
 import javax.ws.rs.POST;
 import javax.ws.rs.Path;
 import javax.ws.rs.PathParam;
+import javax.ws.rs.Produces;
 import javax.ws.rs.core.Context;
+import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.MultivaluedMap;
 import javax.ws.rs.core.Response;
 import javax.ws.rs.core.UriInfo;
-
 import org.restcomm.connect.commons.annotations.concurrency.ThreadSafe;
 
 /**
@@ -43,28 +41,25 @@ public final class ParticipantsXmlEndpoint extends ParticipantsEndpoint {
         super();
     }
 
-    @Path("/{callSid}.json")
-    @GET
-    public Response getParticipantAsJson(@PathParam("accountSid") final String accountSid, @PathParam("conferenceSid") final String conferenceSid, @PathParam("callSid") final String callSid) {
-        return getCall(accountSid, callSid, APPLICATION_JSON_TYPE);
-    }
-
     @Path("/{callSid}")
     @GET
+    @Produces({MediaType.APPLICATION_XML, MediaType.APPLICATION_JSON})
     public Response getParticipantAsXml(@PathParam("accountSid") final String accountSid, @PathParam("conferenceSid") final String conferenceSid, @PathParam("callSid") final String callSid) {
-        return getCall(accountSid, callSid, APPLICATION_XML_TYPE);
+        return getCall(accountSid, callSid, retrieveMediaType());
     }
 
     @GET
+    @Produces({MediaType.APPLICATION_XML, MediaType.APPLICATION_JSON})
     public Response getParticipants(@PathParam("accountSid") final String accountSid, @PathParam("conferenceSid") final String conferenceSid, @Context UriInfo info) {
-        return getCalls(accountSid, conferenceSid, info, APPLICATION_XML_TYPE);
+        return getCalls(accountSid, conferenceSid, info, retrieveMediaType());
     }
 
     @Path("/{callSid}")
     @POST
+    @Produces({MediaType.APPLICATION_XML, MediaType.APPLICATION_JSON})
     public Response modifyCall(@PathParam("accountSid") final String accountSid, @PathParam("conferenceSid") final String conferenceSid, @PathParam("callSid") final String callSid,
             final MultivaluedMap<String, String> data) {
-        return updateCall(accountSid, callSid, data, APPLICATION_XML_TYPE);
+        return updateCall(accountSid, callSid, data, retrieveMediaType());
     }
 
 }

@@ -30,6 +30,7 @@ import akka.event.LoggingAdapter;
 import akka.pattern.AskTimeoutException;
 import akka.util.Timeout;
 import org.apache.commons.configuration.Configuration;
+import org.apache.commons.lang.StringUtils;
 import org.apache.http.HttpStatus;
 import org.apache.http.NameValuePair;
 import org.apache.http.client.ClientProtocolException;
@@ -38,7 +39,6 @@ import org.joda.time.DateTime;
 import org.joda.time.Interval;
 import org.restcomm.connect.asr.AsrResponse;
 import org.restcomm.connect.commons.cache.DiskCacheResponse;
-import org.restcomm.connect.commons.configuration.RestcommConfiguration;
 import org.restcomm.connect.commons.dao.Sid;
 import org.restcomm.connect.commons.fsm.Action;
 import org.restcomm.connect.commons.fsm.FiniteStateMachine;
@@ -54,8 +54,12 @@ import org.restcomm.connect.commons.util.UriUtils;
 import org.restcomm.connect.dao.CallDetailRecordsDao;
 import org.restcomm.connect.dao.NotificationsDao;
 import org.restcomm.connect.dao.entities.CallDetailRecord;
+import org.restcomm.connect.dao.entities.MediaAttributes;
 import org.restcomm.connect.dao.entities.Notification;
 import org.restcomm.connect.email.api.EmailResponse;
+import org.restcomm.connect.extension.api.ExtensionResponse;
+import org.restcomm.connect.extension.api.IExtensionFeatureAccessRequest;
+import org.restcomm.connect.extension.controller.ExtensionController;
 import org.restcomm.connect.fax.FaxResponse;
 import org.restcomm.connect.http.client.DownloaderResponse;
 import org.restcomm.connect.http.client.HttpRequestDescriptor;
@@ -66,6 +70,8 @@ import org.restcomm.connect.interpreter.rcml.Nouns;
 import org.restcomm.connect.interpreter.rcml.ParserFailed;
 import org.restcomm.connect.interpreter.rcml.Tag;
 import org.restcomm.connect.interpreter.rcml.Verbs;
+import org.restcomm.connect.interpreter.rcml.domain.GatherAttributes;
+import org.restcomm.connect.mscontrol.api.messages.CollectedResult;
 import org.restcomm.connect.mscontrol.api.messages.JoinComplete;
 import org.restcomm.connect.mscontrol.api.messages.Left;
 import org.restcomm.connect.mscontrol.api.messages.MediaGroupResponse;
@@ -98,6 +104,7 @@ import org.restcomm.connect.telephony.api.CreateConference;
 import org.restcomm.connect.telephony.api.DestroyCall;
 import org.restcomm.connect.telephony.api.DestroyConference;
 import org.restcomm.connect.telephony.api.Dial;
+import org.restcomm.connect.telephony.api.FeatureAccessRequest;
 import org.restcomm.connect.telephony.api.GetCallInfo;
 import org.restcomm.connect.telephony.api.GetConferenceInfo;
 import org.restcomm.connect.telephony.api.GetRelatedCall;
@@ -108,6 +115,7 @@ import org.restcomm.connect.telephony.api.RemoveParticipant;
 import org.restcomm.connect.telephony.api.StartBridge;
 import org.restcomm.connect.telephony.api.StopBridge;
 import org.restcomm.connect.telephony.api.StopConference;
+import org.restcomm.connect.telephony.api.StopWaiting;
 import org.restcomm.connect.tts.api.SpeechSynthesizerResponse;
 import scala.concurrent.Await;
 import scala.concurrent.Future;
@@ -142,7 +150,7 @@ import static akka.pattern.Patterns.ask;
  * @author pavel.slegr@telestax.com
  * @author maria.farooq@telestax.com
  */
-public final class VoiceInterpreter extends BaseVoiceInterpreter {
+public class VoiceInterpreter extends BaseVoiceInterpreter {
     // Logger.
     private final LoggingAdapter logger = Logging.getLogger(getContext().system(), this);
 
@@ -201,6 +209,7 @@ public final class VoiceInterpreter extends BaseVoiceInterpreter {
     Tag conferenceVerb;
     List<URI> conferenceWaitUris;
     private boolean playMusicForConference = false;
+    private MediaAttributes mediaAttributes;
     //Used for system apps, such as when WebRTC client is dialing out.
     //The rcml will be used instead of download the RCML
     private String rcml;
@@ -222,7 +231,16 @@ public final class VoiceInterpreter extends BaseVoiceInterpreter {
     private String conferenceNameWithAccountAndFriendlyName;
     private Sid callSid;
 
-    private VoiceInterpreter(VoiceInterpreterParams params) {
+    // Controls if VI will wait MS response to move to the next verb
+    protected boolean msResponsePending;
+
+    private boolean callWaitingForAnswer = false;
+
+    private Tag callWaitingForAnswerPendingTag;
+
+    private long timeout;
+
+    public VoiceInterpreter(VoiceInterpreterParams params) {
         super();
         final ActorRef source = self();
         downloadingRcml = new State("downloading rcml", new DownloadingRcml(source), null);
@@ -313,6 +331,9 @@ public final class VoiceInterpreter extends BaseVoiceInterpreter {
         transitions.add(new Transition(finishGathering, ready));
         transitions.add(new Transition(finishGathering, finishGathering));
         transitions.add(new Transition(finishGathering, finished));
+        transitions.add(new Transition(continuousGathering, ready));
+        transitions.add(new Transition(continuousGathering, finishGathering));
+        transitions.add(new Transition(continuousGathering, finished));
         transitions.add(new Transition(creatingSmsSession, finished));
         transitions.add(new Transition(sendingSms, ready));
         transitions.add(new Transition(sendingSms, startDialing));
@@ -349,6 +370,16 @@ public final class VoiceInterpreter extends BaseVoiceInterpreter {
         transitions.add(new Transition(forking, hangingUp));
         transitions.add(new Transition(forking, finished));
         transitions.add(new Transition(forking, ready));
+        transitions.add(new Transition(forking, checkingCache));
+        transitions.add(new Transition(forking, caching));
+        transitions.add(new Transition(forking, faxing));
+        transitions.add(new Transition(forking, sendingEmail));
+        transitions.add(new Transition(forking, pausing));
+        transitions.add(new Transition(forking, synthesizing));
+        transitions.add(new Transition(forking, redirecting));
+        transitions.add(new Transition(forking, processingGatherChildren));
+        transitions.add(new Transition(forking, creatingRecording));
+        transitions.add(new Transition(forking, creatingSmsSession));
         // transitions.add(new Transition(acquiringOutboundCallInfo, joiningCalls));
         transitions.add(new Transition(acquiringOutboundCallInfo, hangingUp));
         transitions.add(new Transition(acquiringOutboundCallInfo, finished));
@@ -357,6 +388,7 @@ public final class VoiceInterpreter extends BaseVoiceInterpreter {
         transitions.add(new Transition(creatingBridge, finishDialing));
         transitions.add(new Transition(initializingBridge, bridging));
         transitions.add(new Transition(initializingBridge, hangingUp));
+        transitions.add(new Transition(initializingBridge, finished));
         transitions.add(new Transition(bridging, bridged));
         transitions.add(new Transition(bridging, finishDialing));
         transitions.add(new Transition(bridged, finishDialing));
@@ -409,6 +441,7 @@ public final class VoiceInterpreter extends BaseVoiceInterpreter {
         transitions.add(new Transition(hangingUp, finished));
         transitions.add(new Transition(hangingUp, finishConferencing));
         transitions.add(new Transition(hangingUp, finishDialing));
+        transitions.add(new Transition(hangingUp, ready));
         transitions.add(new Transition(uninitialized, finished));
         transitions.add(new Transition(notFound, finished));
         // Initialize the FSM.
@@ -443,6 +476,9 @@ public final class VoiceInterpreter extends BaseVoiceInterpreter {
         this.asImsUa = params.isAsImsUa();
         this.imsUaLogin = params.getImsUaLogin();
         this.imsUaPassword = params.getImsUaPassword();
+        this.timeout = params.getTimeout();
+        this.msResponsePending = false;
+        this.mediaAttributes = new MediaAttributes();
     }
 
     public static Props props(final VoiceInterpreterParams params) {
@@ -452,10 +488,6 @@ public final class VoiceInterpreter extends BaseVoiceInterpreter {
                 return new VoiceInterpreter(params);
             }
         });
-    }
-
-    private boolean is(State state) {
-        return this.fsm.state().equals(state);
     }
 
     private Notification notification(final int log, final int error, final String message) {
@@ -521,7 +553,7 @@ public final class VoiceInterpreter extends BaseVoiceInterpreter {
 
         if (logger.isInfoEnabled()) {
             logger.info(" ********** VoiceInterpreter's " + self().path() + " Current State: " + state.toString() + "\n"
-            + ", Processing Message: " + klass.getName());
+            + ", Processing Message: " + klass.getName() + " Sender is: "+sender.path());
         }
 
         if (StartInterpreter.class.equals(klass)) {
@@ -665,7 +697,7 @@ public final class VoiceInterpreter extends BaseVoiceInterpreter {
 
                 Attribute attribute = null;
                 if (verb != null) {
-                    attribute = verb.attribute("action");
+                    attribute = verb.attribute(GatherAttributes.ATTRIBUTE_ACTION);
                 }
 
                 if (attribute == null) {
@@ -692,8 +724,6 @@ public final class VoiceInterpreter extends BaseVoiceInterpreter {
             }
         }
     }
-
-
 
     private void onConferenceStateChanged(Object message) throws TransitionFailedException, TransitionNotFoundException, TransitionRollbackException {
         final ConferenceStateChanged event = (ConferenceStateChanged) message;
@@ -767,6 +797,8 @@ public final class VoiceInterpreter extends BaseVoiceInterpreter {
             fsm.transition(message, finishDialing);
         } else if (is(bridging)) {
             fsm.transition(message, finishDialing);
+        } else if (is(playing) || is(initializingCall)) {
+            fsm.transition(message, finished);
         }
     }
 
@@ -793,7 +825,7 @@ public final class VoiceInterpreter extends BaseVoiceInterpreter {
     }
 
     private void onMediaGroupResponse(Object message) throws TransitionFailedException, TransitionNotFoundException, TransitionRollbackException {
-        final MediaGroupResponse<String> response = (MediaGroupResponse<String>) message;
+        final MediaGroupResponse response = (MediaGroupResponse) message;
         if(logger.isInfoEnabled()) {
             logger.info("MediaGroupResponse, succeeded: " + response.succeeded() + "  " + response.cause());
         }
@@ -803,43 +835,69 @@ public final class VoiceInterpreter extends BaseVoiceInterpreter {
             } else if (is(playing)) {
                 fsm.transition(message, ready);
             } else if (is(creatingRecording)) {
+                if (logger.isInfoEnabled()) {
+                    logger.info("Will move to finishRecording because of MediaGroupResponse");
+                }
                 fsm.transition(message, finishRecording);
-            } // This is either MMS collected digits or SIP INFO DTMF. If the DTMF is from SIP INFO, then more DTMF might
+            }
+            // This is either MMS collected digits or SIP INFO DTMF. If the DTMF is from SIP INFO, then more DTMF might
             // come later
-            else if (is(gathering) || (is(finishGathering) && !super.dtmfReceived)) {
-                final MediaGroupResponse<String> dtmfResponse = (MediaGroupResponse<String>) message;
-                if (sender == call) {
-                    // DTMF using SIP INFO, check if all digits collected here
-                    collectedDigits.append(dtmfResponse.get());
-                    // Collected digits == requested num of digits the complete the collect digits
-                    //Zendesk_34592: if collected digits smaller than numDigits in gather verb
-                    // when timeout on gather occur, garthering cannot move to finishGathering
-                    // If collected digits have finish on key at the end then complete the collect digits
-                    if (collectedDigits.toString().endsWith(finishOnKey)) {
-                        dtmfReceived = true;
-                        fsm.transition(message, finishGathering);
-                    } else {
-                        if (numberOfDigits != Short.MAX_VALUE) {
-                            if (collectedDigits.length() == numberOfDigits) {
-                                dtmfReceived = true;
-                                fsm.transition(message, finishGathering);
+            else if (is(gathering) || is(continuousGathering) || (is(finishGathering) && !super.dtmfReceived)) {
+                final MediaGroupResponse dtmfResponse = (MediaGroupResponse) message;
+                Object data = dtmfResponse.get();
+                if (data instanceof CollectedResult && ((CollectedResult)data).isAsr() && ((CollectedResult)data).isPartial()) {
+                    fsm.transition(message, continuousGathering);
+                } else if (data instanceof CollectedResult && ((CollectedResult)data).isAsr() && !((CollectedResult)data).isPartial() && collectedDigits.length() == 0) {
+                    speechResult = ((CollectedResult)data).getResult();
+                    fsm.transition(message, finishGathering);
+                } else {
+                    if (sender == call) {
+                        // DTMF using SIP INFO, check if all digits collected here
+                        collectedDigits.append(dtmfResponse.get());
+                        // Collected digits == requested num of digits the complete the collect digits
+                        //Zendesk_34592: if collected digits smaller than numDigits in gather verb
+                        // when timeout on gather occur, garthering cannot move to finishGathering
+                        // If collected digits have finish on key at the end then complete the collect digits
+                        if (collectedDigits.toString().endsWith(finishOnKey)) {
+                            dtmfReceived = true;
+                            fsm.transition(message, finishGathering);
+                        } else {
+                            if (numberOfDigits != Short.MAX_VALUE) {
+                                if (collectedDigits.length() == numberOfDigits) {
+                                    dtmfReceived = true;
+                                    fsm.transition(message, finishGathering);
+                                } else {
+                                    dtmfReceived = false;
+                                    return;
+                                }
                             } else {
                                 dtmfReceived = false;
                                 return;
                             }
-                        } else {
-                            dtmfReceived = false;
-                            return;
                         }
+                    } else {
+                        collectedDigits.append(((CollectedResult)data).getResult());
+                        fsm.transition(message, finishGathering);
                     }
-                } else {
-                    collectedDigits.append(dtmfResponse.get());
-                    fsm.transition(message, finishGathering);
                 }
             } else if (is(bridging)) {
                 // Finally proceed with call bridging
+                if (logger.isInfoEnabled()) {
+                    String msg = String.format("About to join calls, inbound call %s, outbound call %s", call, outboundCall);
+                    logger.info(msg);
+                }
                 final JoinCalls bridgeCalls = new JoinCalls(call, outboundCall);
                 bridge.tell(bridgeCalls, self());
+            } else if (msResponsePending) {
+                // Move to next verb once media server completed Play
+                msResponsePending = false;
+                final boolean noBranches = dialBranches == null || dialBranches.size() == 0;
+                final boolean activeParser = parser != null;
+                final boolean noDialAction = action == null;
+                if (noBranches && activeParser && noDialAction) {
+                    final GetNextVerb next = new GetNextVerb();
+                    parser.tell(next, self());
+                }
             }
         } else {
             fsm.transition(message, hangingUp);
@@ -881,65 +939,100 @@ public final class VoiceInterpreter extends BaseVoiceInterpreter {
         if (logger.isDebugEnabled()) {
             logger.debug("Tag received, name: "+verb.name()+", text: "+verb.text());
         }
-        if (playWaitUrlPending) {
-            if (!(Verbs.play.equals(verb.name()) || Verbs.say.equals(verb.name()))) {
-                if (logger.isInfoEnabled()) {
-                    logger.info("Tag for waitUrl is neither Play or Say");
-                }
-                fsm.transition(message, hangingUp);
+
+        // if 200 ok delay is enabled we need to answer only the calls
+        // which are having any further call enabler verbs in their RCML.
+        if(enable200OkDelay && callWaitingForAnswer && Verbs.isThisVerbCallEnabler(verb)){
+            if(logger.isInfoEnabled()) {
+                logger.info("Tag received, but callWaitingForAnswer: will tell call to stop waiting");
             }
-            if (Verbs.say.equals(verb.name())) {
-                fsm.transition(message, checkingCache);
-            } else if (Verbs.play.equals(verb.name())) {
-                fsm.transition(message, caching);
-            }
-            return;
-        }
-        if (CallStateChanged.State.RINGING == callState) {
-            if (Verbs.reject.equals(verb.name())) {
-                fsm.transition(message, rejecting);
-            } else if (Verbs.pause.equals(verb.name())) {
-                fsm.transition(message, pausing);
-            } else {
-                fsm.transition(message, initializingCall);
-            }
-        } else if (Verbs.dial.equals(verb.name())) {
-            action = verb.attribute("action");
-            if (action != null && dialActionExecuted) {
-                //We have a new Dial verb that contains Dial Action URL again.
-                //We set dialActionExecuted to false in order to execute Dial Action again
-                dialActionExecuted = false;
-            }
-            dialRecordAttribute = verb.attribute("record");
-            fsm.transition(message, startDialing);
-        } else if (Verbs.fax.equals(verb.name())) {
-            fsm.transition(message, caching);
-        } else if (Verbs.play.equals(verb.name())) {
-            fsm.transition(message, caching);
-        } else if (Verbs.say.equals(verb.name())) {
-            // fsm.transition(message, synthesizing);
-            fsm.transition(message, checkingCache);
-        } else if (Verbs.gather.equals(verb.name())) {
-            gatherVerb = verb;
-            fsm.transition(message, processingGatherChildren);
-        } else if (Verbs.pause.equals(verb.name())) {
-            fsm.transition(message, pausing);
-        } else if (Verbs.hangup.equals(verb.name())) {
-            if (is(finishDialing)) {
-                fsm.transition(message, finished);
-            } else {
-                fsm.transition(message, hangingUp);
-            }
-        } else if (Verbs.redirect.equals(verb.name())) {
-            fsm.transition(message, redirecting);
-        } else if (Verbs.record.equals(verb.name())) {
-            fsm.transition(message, creatingRecording);
-        } else if (Verbs.sms.equals(verb.name())) {
-            fsm.transition(message, creatingSmsSession);
-        } else if (Verbs.email.equals(verb.name())) {
-            fsm.transition(message, sendingEmail);
+            callWaitingForAnswerPendingTag = verb;
+            call.tell(new StopWaiting(), self());
         } else {
-            invalidVerb(verb);
+            if (playWaitUrlPending) {
+                if (!(Verbs.play.equals(verb.name()) || Verbs.say.equals(verb.name()))) {
+                    if (logger.isInfoEnabled()) {
+                        logger.info("Tag for waitUrl is neither Play or Say");
+                    }
+                    fsm.transition(message, hangingUp);
+                }
+                if (Verbs.say.equals(verb.name())) {
+                    fsm.transition(message, checkingCache);
+                } else if (Verbs.play.equals(verb.name())) {
+                    fsm.transition(message, caching);
+                }
+                return;
+            }
+            if (CallStateChanged.State.RINGING == callState) {
+                if (Verbs.reject.equals(verb.name())) {
+                    fsm.transition(message, rejecting);
+                } else if (Verbs.pause.equals(verb.name())) {
+                    fsm.transition(message, pausing);
+                } else {
+                    fsm.transition(message, initializingCall);
+                }
+            } else if (Verbs.dial.equals(verb.name()) && callState != CallStateChanged.State.COMPLETED) {
+                action = verb.attribute(GatherAttributes.ATTRIBUTE_ACTION);
+                if (action != null && dialActionExecuted) {
+                    //We have a new Dial verb that contains Dial Action URL again.
+                    //We set dialActionExecuted to false in order to execute Dial Action again
+                    dialActionExecuted = false;
+                }
+                dialRecordAttribute = verb.attribute("record");
+                fsm.transition(message, startDialing);
+            } else if (Verbs.fax.equals(verb.name())) {
+                fsm.transition(message, caching);
+            } else if (Verbs.play.equals(verb.name()) && callState != CallStateChanged.State.COMPLETED) {
+                fsm.transition(message, caching);
+            } else if (Verbs.say.equals(verb.name()) && callState != CallStateChanged.State.COMPLETED) {
+                // fsm.transition(message, synthesizing);
+                fsm.transition(message, checkingCache);
+            } else if (Verbs.gather.equals(verb.name()) && callState != CallStateChanged.State.COMPLETED) {
+                gatherVerb = verb;
+                fsm.transition(message, processingGatherChildren);
+            } else if (Verbs.pause.equals(verb.name()) && callState != CallStateChanged.State.COMPLETED) {
+                fsm.transition(message, pausing);
+            } else if (Verbs.hangup.equals(verb.name()) && callState != CallStateChanged.State.COMPLETED) {
+                if (logger.isInfoEnabled()) {
+                    String msg = String.format("Next verb is Hangup, current state is %s , callInfo state %s", fsm.state(), callInfo.state());
+                    logger.info(msg);
+                }
+                if (is(finishDialing)) {
+                    fsm.transition(message, finished);
+                } else {
+                    fsm.transition(message, hangingUp);
+                }
+            } else if (Verbs.redirect.equals(verb.name()) && callState != CallStateChanged.State.COMPLETED) {
+                fsm.transition(message, redirecting);
+            } else if (Verbs.record.equals(verb.name()) && callState != CallStateChanged.State.COMPLETED) {
+                fsm.transition(message, creatingRecording);
+            } else if (Verbs.sms.equals(verb.name())) {
+
+                //Check if Outbound SMS is allowed
+                ExtensionController ec = ExtensionController.getInstance();
+                final IExtensionFeatureAccessRequest far = new FeatureAccessRequest(FeatureAccessRequest.Feature.OUTBOUND_SMS, accountId);
+                ExtensionResponse er = ec.executePreOutboundAction(far, this.extensions);
+
+                if (er.isAllowed()) {
+                    fsm.transition(message, creatingSmsSession);
+                    ec.executePostOutboundAction(far, extensions);
+                } else {
+                    if (logger.isDebugEnabled()) {
+                        final String errMsg = "Outbound SMS is not Allowed";
+                        logger.debug(errMsg);
+                    }
+                    final NotificationsDao notifications = storage.getNotificationsDao();
+                    final Notification notification = notification(WARNING_NOTIFICATION, 11001, "Outbound SMS is now allowed");
+                    notifications.addNotification(notification);
+                    fsm.transition(message, rejecting);
+                    ec.executePostOutboundAction(far, extensions);
+                    return;
+                }
+            } else if (Verbs.email.equals(verb.name())) {
+                fsm.transition(message, sendingEmail);
+            } else {
+                invalidVerb(verb);
+            }
         }
     }
 
@@ -1086,6 +1179,10 @@ public final class VoiceInterpreter extends BaseVoiceInterpreter {
                 logger.debug("statusCode " + response.get().getStatusCode());
         }
         if (response.succeeded() && HttpStatus.SC_OK == response.get().getStatusCode()) {
+            if (continuousGathering.equals(state)) {
+                //no need change state
+                return;
+            }
             if (conferencing.equals(state)) {
                 //This is the downloader response for Conferencing waitUrl
                 if (parser != null) {
@@ -1136,7 +1233,7 @@ public final class VoiceInterpreter extends BaseVoiceInterpreter {
                 outboundCallResponse = event.sipResponse();
             }
         if(logger.isInfoEnabled()){
-            logger.info("VoiceInterpreter received CallStateChanged event: "+event+ " from "+(sender == call? "call" : "outboundCall")+ ", sender path: " + sender.path() +", current VI state: "+fsm.state());
+            logger.info("VoiceInterpreter received CallStateChanged event: "+event+ " from "+(sender == call? "call" : "outboundCall")+ ", sender path: " + sender.path() +", current VI state: "+fsm.state() +" current outboundCall actor is: "+outboundCall);
         }
 
         switch (event.state()) {
@@ -1144,8 +1241,9 @@ public final class VoiceInterpreter extends BaseVoiceInterpreter {
                 //Do nothing
                 break;
             case RINGING:
-                if (is(forking)) {
-                    outboundCall = sender;
+                if (logger.isInfoEnabled()) {
+                    String msg = String.format("Got 180 Ringing from outbound call %s",sender);
+                    logger.info(msg);
                 }
                 break;
             case CANCELED:
@@ -1188,6 +1286,11 @@ public final class VoiceInterpreter extends BaseVoiceInterpreter {
                     } else {
                         if (dialBranches != null && dialBranches.contains(sender)) {
                             removeDialBranch(message, sender);
+                        }
+                        if (dialBranches == null || dialBranches.size() == 0){
+                            // Stop playing the ringing tone from inbound call
+                            msResponsePending = true;
+                            call.tell(new StopMediaGroup(), self());
                         }
                         checkDialBranch(message, sender, action);
                         return;
@@ -1239,11 +1342,22 @@ public final class VoiceInterpreter extends BaseVoiceInterpreter {
                     String msg = String.format("OnCallStateChanged, VI state %s, received %s, is it from inbound call: %s",fsm.state().toString(), callState.toString(), sender.equals(call));
                     logger.info(msg);
                 }
-                if (is(bridging)) {
-                    fsm.transition(message, finishDialing);
-                } else if (is(bridged) && (sender.equals(outboundCall) || outboundCall != null)) {
-                    fsm.transition(message, finishDialing);
-                } else
+                if (is(bridging) || is(bridged)) {
+                    if (sender == outboundCall || sender == call) {
+                        if(logger.isInfoEnabled()) {
+                            String msg = String.format("Received CallStateChanged COMPLETED from call %s, current fsm state %s, will move to finishDialingState ", sender(), fsm.state());
+                            logger.info(msg);
+                        }
+                        fsm.transition(message, finishDialing);
+                    } else {
+                        if (dialBranches != null && dialBranches.contains(sender)) {
+                            removeDialBranch(message, sender);
+                        }
+                        callManager.tell(new DestroyCall(sender()), self());
+                    }
+                    return;
+                }
+                else
                     // changed for https://bitbucket.org/telestax/telscale-restcomm/issue/132/ so that we can do Dial SIP Screening
                     if (is(forking) && ((dialBranches != null && dialBranches.contains(sender)) || outboundCall == null)) {
                         if (!sender.equals(call)) {
@@ -1256,9 +1370,6 @@ public final class VoiceInterpreter extends BaseVoiceInterpreter {
                             fsm.transition(message, finishDialing);
                         }
                     } else if (is(creatingRecording)) {
-                        // Ask callMediaGroup to stop recording so we have the recording file available
-                        // Issue #197: https://telestax.atlassian.net/browse/RESTCOMM-197
-                        call.tell(new StopMediaGroup(), null);
                         fsm.transition(message, finishRecording);
                     } else if ((is(bridged) || is(forking)) && call == sender()) {
                         if (!dialActionExecuted) {
@@ -1286,6 +1397,9 @@ public final class VoiceInterpreter extends BaseVoiceInterpreter {
                 break;
             case WAIT_FOR_ANSWER:
             case IN_PROGRESS:
+                if(call!=null && (call == sender) && event.state().equals(CallStateChanged.State.WAIT_FOR_ANSWER)){
+                    callWaitingForAnswer  = true;
+                }
                 if (is(initializingCall) || is(rejecting)) {
                     if (parser != null) {
                         //This is an inbound call
@@ -1296,9 +1410,13 @@ public final class VoiceInterpreter extends BaseVoiceInterpreter {
                     }
                 } else if (is(forking)) {
                     if (outboundCall == null || !sender.equals(call)) {
+                        if (logger.isInfoEnabled()) {
+                            String msg = String.format("Got CallStateChanged.InProgress while forking, from outbound call %s, will proceed to cancel other branches", sender());
+                            logger.info(msg);
+                        }
                         outboundCall = sender;
+                        fsm.transition(message, acquiringOutboundCallInfo);
                     }
-                    fsm.transition(message, acquiringOutboundCallInfo);
                 } else if (is(conferencing)) {
                     // Call left the conference successfully
                     if (!liveCallModification) {
@@ -1311,6 +1429,12 @@ public final class VoiceInterpreter extends BaseVoiceInterpreter {
                         final GetNextVerb next = new GetNextVerb();
                         parser.tell(next, self());
                     }
+                } else if (enable200OkDelay && sender.equals(call) && event.state().equals(CallStateChanged.State.IN_PROGRESS) && callWaitingForAnswerPendingTag != null) {
+                    if (logger.isInfoEnabled()) {
+                        logger.info("Waiting call is inProgress we can proceed to the pending tag execution");
+                    }
+                    callWaitingForAnswer = false;
+                    onTagMessage(callWaitingForAnswerPendingTag);
                 }
                 // Update the storage for conferencing.
                 if (callRecord != null && !is(initializingCall) && !is(rejecting)) {
@@ -1367,7 +1491,10 @@ public final class VoiceInterpreter extends BaseVoiceInterpreter {
                 if (sender != null && !sender.equals(call)) {
                     callManager.tell(new DestroyCall(sender), self());
                 }
-                if (parser != null) {
+                // VI cannot move to next verb if media still being reproduced by media server
+                // GetNextVerb is skipped while StopMediaGroup request is sent to media server
+                // RCML Parser/VI activity continues when media server successful response is received
+                if (parser != null && !msResponsePending) {
                     final GetNextVerb next = new GetNextVerb();
                     parser.tell(next, self());
                 }
@@ -1483,7 +1610,7 @@ public final class VoiceInterpreter extends BaseVoiceInterpreter {
         final List<NameValuePair> parameters = new ArrayList<NameValuePair>();
         final String callSid = callInfo.sid().toString();
         parameters.add(new BasicNameValuePair("CallSid", callSid));
-        parameters.add(new BasicNameValuePair("InstanceId", RestcommConfiguration.getInstance().getMain().getInstanceId()));
+        parameters.add(new BasicNameValuePair("InstanceId", restcommConfiguration.getMain().getInstanceId()));
         if (outboundCallInfo != null) {
             final String outboundCallSid = outboundCallInfo.sid().toString();
             parameters.add(new BasicNameValuePair("OutboundCallSid", outboundCallSid));
@@ -1608,6 +1735,16 @@ public final class VoiceInterpreter extends BaseVoiceInterpreter {
             }
             return null;
         }
+
+        protected Tag video(final Tag container) {
+            final List<Tag> children = container.children();
+            for (final Tag child : children) {
+                if (Nouns.video.equals(child.name())) {
+                    return child;
+                }
+            }
+            return null;
+        }
     }
 
     private final class InitializingCall extends AbstractAction {
@@ -1644,6 +1781,9 @@ public final class VoiceInterpreter extends BaseVoiceInterpreter {
 
                 // Start dialing.
                 call.tell(new Dial(), source);
+                // Set the timeout period.
+                final UntypedActorContext context = getContext();
+                context.setReceiveTimeout(Duration.create(timeout, TimeUnit.SECONDS));
             } else if (Tag.class.equals(klass)) {
                 // Update the interpreter state.
                 verb = (Tag) message;
@@ -1688,7 +1828,7 @@ public final class VoiceInterpreter extends BaseVoiceInterpreter {
                 // Create a call detail record for the call.
                 final CallDetailRecord.Builder builder = CallDetailRecord.builder();
                 builder.setSid(callInfo.sid());
-                builder.setInstanceId(RestcommConfiguration.getInstance().getMain().getInstanceId());
+                builder.setInstanceId(restcommConfiguration.getInstance().getMain().getInstanceId());
                 builder.setDateCreated(callInfo.dateCreated());
                 builder.setAccountSid(accountId);
                 builder.setTo(callInfo.to());
@@ -1796,7 +1936,7 @@ public final class VoiceInterpreter extends BaseVoiceInterpreter {
                 source.tell(verb, source);
                 return;
             } else if (downloadingRcml.equals(state) || downloadingFallbackRcml.equals(state) || redirecting.equals(state)
-                    || finishGathering.equals(state) || finishRecording.equals(state) || sendingSms.equals(state)
+                    || continuousGathering.equals(state) || finishGathering.equals(state) || finishRecording.equals(state) || sendingSms.equals(state)
                     || finishDialing.equals(state) || finishConferencing.equals(state) || is(forking)) {
                 response = ((DownloaderResponse) message).get();
                 if (parser != null) {
@@ -1966,6 +2106,106 @@ public final class VoiceInterpreter extends BaseVoiceInterpreter {
             }
             return timeLimit;
         }
+
+        protected MediaAttributes.MediaType videoEnabled(final Tag container) {
+            boolean videoEnabled = false;
+            Attribute attribute = container.attribute("enable");
+            if (attribute != null) {
+                final String value = attribute.value();
+                if (value != null && !value.isEmpty()) {
+                    videoEnabled = Boolean.valueOf(value);
+                }
+            }
+            if (videoEnabled) {
+                return MediaAttributes.MediaType.AUDIO_VIDEO;
+            } else {
+                return MediaAttributes.MediaType.AUDIO_ONLY;
+            }
+        }
+
+        protected MediaAttributes.VideoMode videoMode(final Tag container){
+            MediaAttributes.VideoMode videoMode = MediaAttributes.VideoMode.MCU;
+            Attribute attribute = container.attribute("mode");
+            if (attribute != null) {
+                final String value = attribute.value();
+                if (value != null && !value.isEmpty()) {
+                    try {
+                        videoMode = MediaAttributes.VideoMode.getValueOf(value);
+                    } catch (IllegalArgumentException e) {
+                        final NotificationsDao notifications = storage.getNotificationsDao();
+                        final Notification notification = notification(WARNING_NOTIFICATION, 15001, value
+                                + " is not a valid mode value for <Video>");
+                        notifications.addNotification(notification);
+                    }
+                }
+            }
+            return videoMode;
+        }
+
+        protected MediaAttributes.VideoResolution videoResolution(final Tag container) {
+            MediaAttributes.VideoResolution videoResolution = MediaAttributes.VideoResolution.SEVEN_TWENTY_P;
+            Attribute attribute = container.attribute("resolution");
+            if (attribute != null) {
+                final String value = attribute.value();
+                if (value != null && !value.isEmpty()) {
+                    try {
+                        videoResolution = MediaAttributes.VideoResolution.getValueOf(value);
+                    } catch (IllegalArgumentException e) {
+                        final NotificationsDao notifications = storage.getNotificationsDao();
+                        final Notification notification = notification(WARNING_NOTIFICATION, 15002, value
+                                + " is not a valid resolution value for <Video>");
+                        notifications.addNotification(notification);
+                    }
+                }
+            }
+            return videoResolution;
+        }
+
+        protected MediaAttributes.VideoLayout videoLayout(final Tag container) {
+            MediaAttributes.VideoLayout videoLayout = MediaAttributes.VideoLayout.LINEAR;
+            Attribute attribute = container.attribute("layout");
+            if (attribute != null) {
+                final String value = attribute.value();
+                if (value != null && !value.isEmpty()) {
+                    try {
+                        videoLayout = MediaAttributes.VideoLayout.getValueOf(value);
+                    } catch (IllegalArgumentException e) {
+                        final NotificationsDao notifications = storage.getNotificationsDao();
+                        final Notification notification = notification(WARNING_NOTIFICATION, 15003, value
+                                + " is not a valid layout value for <Video>");
+                        notifications.addNotification(notification);
+                    }
+                }
+            }
+            return videoLayout;
+        }
+
+        protected String videoOverlay(final Tag container) {
+            String videoOverlay = null;
+            Attribute attribute = container.attribute("overlay");
+            if (attribute != null) {
+                final String value = attribute.value();
+                if (value != null && !value.isEmpty()) {
+                    videoOverlay = value;
+                }
+            }
+            return videoOverlay;
+        }
+
+        public void fetchMediaAttributes(final Tag container){
+            Tag video = video(container);
+            if(video != null){
+                MediaAttributes.MediaType mediaType = videoEnabled(video);
+                if (!MediaAttributes.MediaType.AUDIO_ONLY.equals(mediaType)) {
+                    final MediaAttributes.VideoMode videoMode = videoMode(video);
+                    final MediaAttributes.VideoResolution videoResolution = videoResolution(video);
+                    final MediaAttributes.VideoLayout videoLayout = videoLayout(video);
+                    final String videoOverlay = videoOverlay(video);
+                    mediaAttributes = new MediaAttributes(mediaType, videoMode, videoResolution, videoLayout,
+                            videoOverlay);
+                }
+            }
+        }
     }
 
     private final class StartDialing extends AbstractDialAction {
@@ -2016,7 +2256,22 @@ public final class VoiceInterpreter extends BaseVoiceInterpreter {
                 // Handle conferencing.
                 final Tag child = conference(verb);
                 if (child != null) {
-                    final String name = child.text();
+                    String name = null;
+                    final Tag grandchild = video(child);
+                    if (grandchild == null) {
+                        name = child.text();
+                    } else {
+                        // Handle video conferencing
+                        Attribute attribute = child.attribute("name");
+                        if (attribute != null && !StringUtils.isEmpty(attribute.toString())) {
+                            name = attribute.value();
+                        } else {
+                            String errorMsg = "Attribute \"name\" not found or \"name\" value is empty inside <Conference> verb.";
+                            logger.error(errorMsg);
+                            throw new Exception(errorMsg);
+                        }
+                        fetchMediaAttributes(child);
+                    }
                     final StringBuilder buffer = new StringBuilder();
                     //conference account should be phone account. i.e account of whoever owns that phone number.
                     //https://github.com/RestComm/Restcomm-Connect/issues/1939
@@ -2030,7 +2285,7 @@ public final class VoiceInterpreter extends BaseVoiceInterpreter {
                     if (callSid == null && callRecord != null) {
                         callSid = callRecord.getSid();
                     }
-                    final CreateConference create = new CreateConference(conferenceNameWithAccountAndFriendlyName, callSid);
+                    final CreateConference create = new CreateConference(conferenceNameWithAccountAndFriendlyName, callSid, mediaAttributes);
                     conferenceCenter.tell(create, source);
                 } else {
                     // Handle forking.
@@ -2109,29 +2364,47 @@ public final class VoiceInterpreter extends BaseVoiceInterpreter {
                         statusCallbackEvent.add("completed");
                     }
                 }
+                fetchMediaAttributes(child);
+
+                //Get To
+                String to;
+                if(video(child) != null){
+                    to = child.attribute("name").value();
+                } else {
+                    to = child.text();
+                }
+
+                String callee = to;
+
+                //Extract and pass custom headers for Dial Client and Dial Number
+                String customHeaders = getCustomHeaders(to);
+
+                //Get Callee after removing any custom headers (this way there will be no impact on the Extensions execution)
+                callee = customHeaders != null ? to.substring(0, to.indexOf("?")) : to;
+
                 if (Nouns.client.equals(child.name())) {
                     if (call != null && callInfo != null) {
-                        create = new CreateCall(e164(callerId(verb)), e164(child.text()), null, null, callInfo.isFromApi(), timeout(verb),
-                                CreateCallType.CLIENT, accountId, callInfo.sid(), statusCallback, statusCallbackMethod, statusCallbackEvent);
+                        create = new CreateCall(e164(callerId(verb)), e164(callee), null, null, callInfo.isFromApi(), timeout(verb),
+                                CreateCallType.CLIENT, accountId, callInfo.sid(), statusCallback, statusCallbackMethod, statusCallbackEvent, mediaAttributes, customHeaders);
                     } else {
-                        create = new CreateCall(e164(callerId(verb)), e164(child.text()), null, null, false, timeout(verb),
-                                CreateCallType.CLIENT, accountId, null, statusCallback, statusCallbackMethod, statusCallbackEvent);
+                        create = new CreateCall(e164(callerId(verb)), e164(callee), null, null, false, timeout(verb),
+                                CreateCallType.CLIENT, accountId, null, statusCallback, statusCallbackMethod, statusCallbackEvent, mediaAttributes, customHeaders);
                     }
                 } else if (Nouns.number.equals(child.name())) {
                     if (call != null && callInfo != null) {
-                        create = new CreateCall(e164(callerId(verb)), e164(child.text()), null, null, callInfo.isFromApi(), timeout(verb),
-                                CreateCallType.PSTN, accountId, callInfo.sid(), statusCallback, statusCallbackMethod, statusCallbackEvent);
+                        create = new CreateCall(e164(callerId(verb)), e164(callee), null, null, callInfo.isFromApi(), timeout(verb),
+                                CreateCallType.PSTN, accountId, callInfo.sid(), statusCallback, statusCallbackMethod, statusCallbackEvent, customHeaders);
                     } else {
-                        create = new CreateCall(e164(callerId(verb)), e164(child.text()), null, null, false, timeout(verb),
-                                CreateCallType.PSTN, accountId, null, statusCallback, statusCallbackMethod, statusCallbackEvent);
+                        create = new CreateCall(e164(callerId(verb)), e164(callee), null, null, false, timeout(verb),
+                                CreateCallType.PSTN, accountId, null, statusCallback, statusCallbackMethod, statusCallbackEvent, customHeaders);
                     }
                 } else if (Nouns.uri.equals(child.name())) {
                     if (call != null && callInfo != null) {
-                        create = new CreateCall(e164(callerId(verb)), e164(child.text()), null, null, callInfo.isFromApi(), timeout(verb),
-                                CreateCallType.SIP, accountId, callInfo.sid(), statusCallback, statusCallbackMethod, statusCallbackEvent);
+                        create = new CreateCall(e164(callerId(verb)), e164(callee), null, null, callInfo.isFromApi(), timeout(verb),
+                                CreateCallType.SIP, accountId, callInfo.sid(), statusCallback, statusCallbackMethod, statusCallbackEvent, mediaAttributes, customHeaders);
                     } else {
-                        create = new CreateCall(e164(callerId(verb)), e164(child.text()), null, null, false, timeout(verb),
-                                CreateCallType.SIP, accountId, null, statusCallback, statusCallbackMethod, statusCallbackEvent);
+                        create = new CreateCall(e164(callerId(verb)), e164(callee), null, null, false, timeout(verb),
+                                CreateCallType.SIP, accountId, null, statusCallback, statusCallbackMethod, statusCallbackEvent, mediaAttributes, customHeaders);
                     }
                 } else if (Nouns.SIP.equals(child.name())) {
                     // https://bitbucket.org/telestax/telscale-restcomm/issue/132/implement-twilio-sip-out
@@ -2148,18 +2421,19 @@ public final class VoiceInterpreter extends BaseVoiceInterpreter {
                             password = child.attribute("password").value();
                         }
                         if (username == null || username.isEmpty()) {
-                            if (storage.getClientsDao().getClient(callInfo.from()) != null) {
+                            final Sid organizationSid = storage.getAccountsDao().getAccount(accountId).getOrganizationSid();
+                            if (storage.getClientsDao().getClient(callInfo.from(), organizationSid) != null) {
                                 username = callInfo.from();
-                                password = storage.getClientsDao().getClient(callInfo.from()).getPassword();
+                                password = storage.getClientsDao().getClient(callInfo.from(), organizationSid).getPassword();
                             }
                         }
                     }
                     if (call != null && callInfo != null) {
-                        create = new CreateCall(e164(callerId(verb)), e164(child.text()), username, password, false, timeout(verb),
-                                CreateCallType.SIP, accountId, callInfo.sid(), statusCallback, statusCallbackMethod, statusCallbackEvent);
+                        create = new CreateCall(e164(callerId(verb)), e164(callee), username, password, false, timeout(verb),
+                                CreateCallType.SIP, accountId, callInfo.sid(), statusCallback, statusCallbackMethod, statusCallbackEvent, mediaAttributes, customHeaders);
                     } else {
-                        create = new CreateCall(e164(callerId(verb)), e164(child.text()), username, password, false, timeout(verb),
-                                CreateCallType.SIP, accountId, null, statusCallback, statusCallbackMethod, statusCallbackEvent);
+                        create = new CreateCall(e164(callerId(verb)), e164(callee), username, password, false, timeout(verb),
+                                CreateCallType.SIP, accountId, null, statusCallback, statusCallbackMethod, statusCallbackEvent, mediaAttributes, customHeaders);
                     }
                 }
                 callManager.tell(create, source);
@@ -2192,6 +2466,16 @@ public final class VoiceInterpreter extends BaseVoiceInterpreter {
                 }
             }
         }
+    }
+
+    private String getCustomHeaders(final String to) {
+        String customHeaders = null;
+
+        if (to.contains("?")) {
+            customHeaders = to.substring(to.indexOf("?")+1, to.length());
+        }
+
+        return customHeaders;
     }
 
     private final class Forking extends AbstractDialAction {
@@ -2229,7 +2513,7 @@ public final class VoiceInterpreter extends BaseVoiceInterpreter {
             path += "ringing.wav";
             URI uri = null;
             try {
-                uri = UriUtils.resolve(new URI(path));
+                uri = resolve(new URI(path));
             } catch (final Exception exception) {
                 final Notification notification = notification(ERROR_NOTIFICATION, 12400, exception.getMessage());
                 final NotificationsDao notifications = storage.getNotificationsDao();
@@ -2254,9 +2538,17 @@ public final class VoiceInterpreter extends BaseVoiceInterpreter {
         @Override
         public void execute(final Object message) throws Exception {
             if (isForking) {
+                if (logger.isInfoEnabled()) {
+                    String msg = String.format("About to cancel Calls in dialBranches and keep outboundCall %s", outboundCall);
+                    logger.info(msg);
+                }
                 dialBranches.remove(outboundCall);
                 for (final ActorRef branch : dialBranches) {
                     branch.tell(new Cancel(), null);
+                    if (logger.isInfoEnabled()) {
+                        String msg = String.format("Canceled outbound Call %s", branch);
+                        logger.info(msg);
+                    }
                 }
                 dialBranches = null;
             }
@@ -2553,6 +2845,9 @@ public final class VoiceInterpreter extends BaseVoiceInterpreter {
                             logger.info("Canceled branch: " + branch.path()+", isTerminated: "+branch.isTerminated());
                         }
                     }
+                    // Stop playing the ringing tone from inbound call
+                    msResponsePending = true;
+                    call.tell(new StopMediaGroup(), self());
                 } else if (outboundCall != null) {
                     outboundCall.tell(new Cancel(), source);
                     call.tell(new Hangup(outboundCallResponse), self());
@@ -2603,31 +2898,9 @@ public final class VoiceInterpreter extends BaseVoiceInterpreter {
                         removeDialBranch(message, sender);
                         return;
                     } else {
-                        // At this point !sender.equal(call)
-                        // Ask the parser for the next action to take.
-                        Attribute attribute = null;
-                        if (verb != null) {
-                            attribute = verb.attribute("action");
+                        if (callState == CallStateChanged.State.IN_PROGRESS) {
+                            call.tell(new Hangup(), self());
                         }
-                        if (attribute == null) {
-                            if (logger.isInfoEnabled()) {
-                                logger.info("At FinishDialing. Sender NOT in the dialBranches, attribute is null, will check for the next verb");
-                            }
-                            final GetNextVerb next = new GetNextVerb();
-                            if (parser != null) {
-                                parser.tell(next, source);
-                            }
-                        } else {
-                            if (logger.isInfoEnabled()) {
-                                logger.info("At FinishDialing. Sender NOT in the dialBranches, attribute is NOT null, will execute Dial Action");
-                            }
-                            executeDialAction(message, outboundCall);
-                        }
-                        dialChildren = null;
-                        if (!sender().equals(outboundCall)) {
-                            callManager.tell(new DestroyCall(sender), self());
-                        }
-                        return;
                     }
                 }
             }
@@ -2699,7 +2972,7 @@ public final class VoiceInterpreter extends BaseVoiceInterpreter {
                 //Adding conference record in DB
                 //For outbound call the CDR will be updated at Call.InProgress()
                 addConferenceStuffInCDR(conferenceSid);
-                final AddParticipant request = new AddParticipant(call);
+                final AddParticipant request = new AddParticipant(call, mediaAttributes);
                 conference.tell(request, source);
             } else {
                 // Ask the parser for the next action to take.
@@ -3211,7 +3484,7 @@ public final class VoiceInterpreter extends BaseVoiceInterpreter {
 
         @Override
         public void execute(Object message) throws Exception {
-            final CreateBridge create = new CreateBridge();
+            final CreateBridge create = new CreateBridge(outboundCallInfo.mediaAttributes());
             bridgeManager.tell(create, super.source);
         }
 
@@ -3275,12 +3548,16 @@ public final class VoiceInterpreter extends BaseVoiceInterpreter {
         @Override
         public void execute(Object message) throws Exception {
             if(logger.isInfoEnabled()) {
-                logger.info("Joining call from:" + callInfo.from() + " to: " + callInfo.to() + " with outboundCall from: "
-                    + outboundCallInfo.from() + " to: " + outboundCallInfo.to());
+                String msg = String.format("Joining call %s from: %s to: %s with outboundCall %s from: %s to: %s", call, callInfo.from(), callInfo.to(), outboundCall, outboundCallInfo.from(), outboundCallInfo.to());
+                logger.info(msg);
             }
             // Check for any Dial verbs with url attributes (call screening url)
             Tag child = dialChildrenWithAttributes.get(outboundCall);
             if (child != null && child.attribute("url") != null) {
+                if (logger.isInfoEnabled()) {
+                    String msg = String.format("Call screening is enabled and will execute for %s", child.attribute("url"));
+                    logger.info(msg);
+                }
                 final ActorRef interpreter = buildSubVoiceInterpreter(child);
                 StartInterpreter start = new StartInterpreter(outboundCall);
                 try {
@@ -3305,6 +3582,10 @@ public final class VoiceInterpreter extends BaseVoiceInterpreter {
                 getContext().stop(interpreter);
             }
 
+            if (logger.isInfoEnabled()) {
+                String msg = String.format("Will ask call %s to stop ringing", call);
+                logger.info(msg);
+            }
             // Stop ringing from inbound call
             final StopMediaGroup stop = new StopMediaGroup();
             call.tell(stop, super.source);

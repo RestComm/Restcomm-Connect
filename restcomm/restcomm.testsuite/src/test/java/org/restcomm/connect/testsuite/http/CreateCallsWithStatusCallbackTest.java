@@ -14,14 +14,19 @@ import org.jboss.arquillian.junit.Arquillian;
 import org.jboss.arquillian.test.api.ArquillianResource;
 import org.jboss.shrinkwrap.api.ShrinkWrap;
 import org.jboss.shrinkwrap.api.spec.WebArchive;
-import org.jboss.shrinkwrap.resolver.api.maven.archive.ShrinkWrapMaven;
+import org.jboss.shrinkwrap.resolver.api.maven.Maven;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.BeforeClass;
 import org.junit.Rule;
 import org.junit.Test;
+import org.junit.FixMethodOrder;
+import org.junit.runners.MethodSorters;
+import org.junit.experimental.categories.Category;
 import org.junit.runner.RunWith;
 import org.restcomm.connect.commons.Version;
+import org.restcomm.connect.commons.annotations.FeatureAltTests;
+import org.restcomm.connect.commons.annotations.UnstableTests;
 import org.restcomm.connect.testsuite.tools.MonitoringServiceTool;
 
 import javax.sip.message.Response;
@@ -44,6 +49,8 @@ import static org.junit.Assert.assertTrue;
  * @author <a href="mailto:gvagenas@gmail.com">gvagenas</a>
  */
 @RunWith(Arquillian.class)
+@FixMethodOrder(MethodSorters.NAME_ASCENDING)
+@Category(FeatureAltTests.class)
 public class CreateCallsWithStatusCallbackTest {
 
     private final static Logger logger = Logger.getLogger(CreateCallsWithStatusCallbackTest.class.getName());
@@ -226,6 +233,7 @@ public class CreateCallsWithStatusCallbackTest {
 
     private String dialNumberWithStatusCallback = "<Response><Dial><Number statusCallback=\"http://127.0.0.1:8090/statusOfDialNumber\" statusCallbackMethod=\"GET\">+131313</Number></Dial></Response>";
     @Test
+    @Category(UnstableTests.class)
     public void createCallNumberWithStatusCallbackInBothTheRequestAndRCML() throws InterruptedException {
 
         stubFor(post(urlPathEqualTo("/1111"))
@@ -386,14 +394,16 @@ public class CreateCallsWithStatusCallbackTest {
     public static WebArchive createWebArchiveNoGw() {
         logger.info("Packaging Test App");
         WebArchive archive = ShrinkWrap.create(WebArchive.class, "restcomm.war");
-        final WebArchive restcommArchive = ShrinkWrapMaven.resolver()
+        final WebArchive restcommArchive = Maven.resolver()
                 .resolve("org.restcomm:restcomm-connect.application:war:" + version).withoutTransitivity()
                 .asSingle(WebArchive.class);
         archive = archive.merge(restcommArchive);
         archive.delete("/WEB-INF/sip.xml");
+archive.delete("/WEB-INF/web.xml");
         archive.delete("/WEB-INF/conf/restcomm.xml");
         archive.delete("/WEB-INF/data/hsql/restcomm.script");
         archive.addAsWebInfResource("sip.xml");
+        archive.addAsWebInfResource("web.xml");
         archive.addAsWebInfResource("restcomm.xml", "conf/restcomm.xml");
         archive.addAsWebInfResource("restcomm.script_dialStatusCallbackTest", "data/hsql/restcomm.script");
         archive.addAsWebInfResource("akka_application.conf", "classes/application.conf");

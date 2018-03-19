@@ -24,6 +24,7 @@ import static com.github.tomakehurst.wiremock.client.WireMock.aResponse;
 import static com.github.tomakehurst.wiremock.client.WireMock.post;
 import static com.github.tomakehurst.wiremock.client.WireMock.stubFor;
 import static com.github.tomakehurst.wiremock.client.WireMock.urlMatching;
+import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
 
 import java.net.URL;
@@ -39,9 +40,12 @@ import org.jboss.arquillian.junit.Arquillian;
 import org.jboss.arquillian.test.api.ArquillianResource;
 import org.jboss.shrinkwrap.api.ShrinkWrap;
 import org.jboss.shrinkwrap.api.spec.WebArchive;
-import org.jboss.shrinkwrap.resolver.api.maven.archive.ShrinkWrapMaven;
+import org.jboss.shrinkwrap.resolver.api.maven.Maven;
 import org.junit.Rule;
 import org.junit.Test;
+import org.junit.FixMethodOrder;
+import org.junit.runners.MethodSorters;
+import org.junit.experimental.categories.Category;
 import org.junit.runner.RunWith;
 
 import com.github.tomakehurst.wiremock.junit.WireMockRule;
@@ -54,12 +58,14 @@ import com.sun.jersey.api.client.WebResource;
 import com.sun.jersey.api.client.filter.HTTPBasicAuthFilter;
 import com.sun.jersey.core.util.MultivaluedMapImpl;
 import org.restcomm.connect.commons.Version;
+import org.restcomm.connect.commons.annotations.FeatureExpTests;
 
 /**
  * @author <a href="mailto:jean.deruelle@telestax.com">Jean Deruelle</a>
  */
 
 @RunWith(Arquillian.class)
+@FixMethodOrder(MethodSorters.NAME_ASCENDING)
 public class NexmoIncomingPhoneNumbersEndpointTest {
     private final static Logger logger = Logger.getLogger(NexmoIncomingPhoneNumbersEndpointTest.class.getName());
 
@@ -184,18 +190,19 @@ public class NexmoIncomingPhoneNumbersEndpointTest {
         ClientResponse clientResponse = webResource.type(MediaType.APPLICATION_FORM_URLENCODED_TYPE).accept("application/json").post(ClientResponse.class, formData);
         Assert.assertEquals(200, clientResponse.getStatus());
         String response = clientResponse.getEntity(String.class);
-        System.out.println(response);
+        logger.info("testDeletePhoneNumberSuccess response for buyNumber: "+response);
         assertTrue(!response.trim().equalsIgnoreCase("[]"));
         JsonParser parser = new JsonParser();
         JsonObject jsonResponse = parser.parse(response).getAsJsonObject();
 
-        System.out.println(jsonResponse.toString());
+        logger.info("testDeletePhoneNumberSuccess jsonResponse for buyNumber: "+jsonResponse.toString());
         assertTrue(NexmoIncomingPhoneNumbersEndpointTestUtils.match(jsonResponse.toString(),NexmoIncomingPhoneNumbersEndpointTestUtils.jSonResultDeletePurchaseNumber));
 
         String phoneNumberSid = jsonResponse.get("sid").getAsString();
         provisioningURL = deploymentUrl + baseURL + "IncomingPhoneNumbers/" + phoneNumberSid + ".json";
         webResource = jerseyClient.resource(provisioningURL);
         clientResponse = webResource.type(MediaType.APPLICATION_FORM_URLENCODED_TYPE).accept("application/json").delete(ClientResponse.class);
+        logger.info("testDeletePhoneNumberSuccess delete response: "+clientResponse);
         assertTrue(clientResponse.getStatus() == 204);
     }
 
@@ -205,6 +212,7 @@ public class NexmoIncomingPhoneNumbersEndpointTest {
      * If Twilio cannot find a phone number to match your request, you will receive an HTTP 400 with Twilio error code 21452.
      */
     @Test
+    @Category(FeatureExpTests.class)
     public void testPurchasePhoneNumberNoPhoneNumberFound() {
         stubFor(post(urlMatching("/nexmo/number/buy/.*/.*/US/14156902868"))
                 .willReturn(aResponse()
@@ -225,7 +233,7 @@ public class NexmoIncomingPhoneNumbersEndpointTest {
         formData.add("FriendlyName", "My Company Line");
         formData.add("VoiceMethod", "GET");
         ClientResponse clientResponse = webResource.type(MediaType.APPLICATION_FORM_URLENCODED_TYPE).accept("application/json").post(ClientResponse.class, formData);
-        Assert.assertEquals(403, clientResponse.getStatus());
+        assertEquals(400, clientResponse.getStatus());
         String response = clientResponse.getEntity(String.class);
         System.out.println(response);
         assertTrue(!response.trim().equalsIgnoreCase("[]"));
@@ -248,7 +256,7 @@ public class NexmoIncomingPhoneNumbersEndpointTest {
                     .withHeader("Content-Type", "application/json")
                     .withBody(NexmoIncomingPhoneNumbersEndpointTestUtils.purchaseNumberSuccessResponse)));
 
-        stubFor(post(urlMatching("/nexmo/number/update/.*/.*/FR/33911067000.*"))
+        stubFor(post(urlMatching("/nexmo/number/update/.*/.*/FR/33911067000.*voiceCallbackValue=%2B33911067000%40127.0.0.1%3A5080.*"))
                 .willReturn(aResponse()
                     .withStatus(200)
                     .withHeader("Content-Type", "application/json")
@@ -311,14 +319,16 @@ public class NexmoIncomingPhoneNumbersEndpointTest {
         logger.info("Packaging Test App");
         logger.info("version");
         WebArchive archive = ShrinkWrap.create(WebArchive.class, "restcomm.war");
-        final WebArchive restcommArchive = ShrinkWrapMaven.resolver()
+        final WebArchive restcommArchive = Maven.resolver()
                 .resolve("org.restcomm:restcomm-connect.application:war:" + version).withoutTransitivity()
                 .asSingle(WebArchive.class);
         archive = archive.merge(restcommArchive);
         archive.delete("/WEB-INF/sip.xml");
+archive.delete("/WEB-INF/web.xml");
         archive.delete("/WEB-INF/conf/restcomm.xml");
         archive.delete("/WEB-INF/data/hsql/restcomm.script");
         archive.addAsWebInfResource("sip.xml");
+        archive.addAsWebInfResource("web.xml");
         archive.addAsWebInfResource("restcomm_nexmo_test.xml", "conf/restcomm.xml");
         archive.addAsWebInfResource("restcomm.script_dialTest", "data/hsql/restcomm.script");
         logger.info("Packaged Test App");

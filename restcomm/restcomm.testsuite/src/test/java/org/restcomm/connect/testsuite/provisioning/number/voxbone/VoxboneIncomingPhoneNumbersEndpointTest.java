@@ -40,9 +40,11 @@ import org.jboss.arquillian.junit.Arquillian;
 import org.jboss.arquillian.test.api.ArquillianResource;
 import org.jboss.shrinkwrap.api.ShrinkWrap;
 import org.jboss.shrinkwrap.api.spec.WebArchive;
-import org.jboss.shrinkwrap.resolver.api.maven.archive.ShrinkWrapMaven;
+import org.jboss.shrinkwrap.resolver.api.maven.Maven;
 import org.junit.Rule;
 import org.junit.Test;
+import org.junit.FixMethodOrder;
+import org.junit.runners.MethodSorters;
 import org.junit.runner.RunWith;
 
 import com.github.tomakehurst.wiremock.junit.WireMockRule;
@@ -54,13 +56,18 @@ import com.sun.jersey.api.client.ClientResponse;
 import com.sun.jersey.api.client.WebResource;
 import com.sun.jersey.api.client.filter.HTTPBasicAuthFilter;
 import com.sun.jersey.core.util.MultivaluedMapImpl;
+import org.junit.experimental.categories.Category;
 import org.restcomm.connect.commons.Version;
+import org.restcomm.connect.commons.annotations.BrokenTests;
+import org.restcomm.connect.commons.annotations.FeatureExpTests;
+import org.restcomm.connect.commons.annotations.UnstableTests;
 
 /**
  * @author <a href="mailto:jean.deruelle@telestax.com">Jean Deruelle</a>
  */
 
 @RunWith(Arquillian.class)
+@FixMethodOrder(MethodSorters.NAME_ASCENDING)
 public class VoxboneIncomingPhoneNumbersEndpointTest {
     private final static Logger logger = Logger.getLogger(VoxboneIncomingPhoneNumbersEndpointTest.class.getName());
 
@@ -76,12 +83,12 @@ public class VoxboneIncomingPhoneNumbersEndpointTest {
     private String adminAccountSid = "ACae6e420f425248d6a26948c17a9e2acf";
     private String adminAuthToken = "77f8c12cc7b8f8423e5c38b035249166";
     private String baseURL = "2012-04-24/Accounts/" + adminAccountSid + "/";
-    
+
     @Rule
     public WireMockRule wireMockRule = new WireMockRule(8090); // No-args constructor defaults to port 8080
-    
+
     /*
-     * Check the list of available Countries 
+     * Check the list of available Countries
      * http://www.voxbone.com/apidoc/resource_InventoryServiceRest.html#path__country.html
      */
     @Test
@@ -110,17 +117,18 @@ public class VoxboneIncomingPhoneNumbersEndpointTest {
         assertTrue(!response.trim().equalsIgnoreCase("[]"));
         JsonParser parser = new JsonParser();
         JsonArray jsonResponse = parser.parse(response).getAsJsonArray();
-        
+
         System.out.println(jsonResponse.toString());
         System.out.println(jsonResponse.size());
-        
+
         assertTrue(jsonResponse.size() == 57);
     }
-    
+
     /*
-     * 
+     *
      */
     @Test
+    @Category(BrokenTests.class)
     public void testPurchaseAndDeletePhoneNumberSuccess() {
         stubFor(put(urlEqualTo("/test/configuration/voiceuri"))
                 .willReturn(aResponse()
@@ -157,7 +165,7 @@ public class VoxboneIncomingPhoneNumbersEndpointTest {
                     .withStatus(200)
                     .withHeader("Content-Type", "application/json")
                     .withBody(VoxboneIncomingPhoneNumbersEndpointTestUtils.cancelDidSuccessResponse)));
-        
+
         // Get Account using admin email address and user email address
     	Client jerseyClient = Client.create();
         jerseyClient.addFilter(new HTTPBasicAuthFilter(adminUsername, adminAuthToken));
@@ -177,17 +185,17 @@ public class VoxboneIncomingPhoneNumbersEndpointTest {
         assertTrue(!response.trim().equalsIgnoreCase("[]"));
         JsonParser parser = new JsonParser();
         JsonObject jsonResponse = parser.parse(response).getAsJsonObject();
-        
+
         System.out.println(jsonResponse.toString());
         assertTrue(VoxboneIncomingPhoneNumbersEndpointTestUtils.match(jsonResponse.toString(),VoxboneIncomingPhoneNumbersEndpointTestUtils.jSonResultPurchaseNumber));
-        
+
         String phoneNumberSid = jsonResponse.get("sid").getAsString();
         provisioningURL = deploymentUrl + baseURL + "IncomingPhoneNumbers/" + phoneNumberSid + ".json";
         webResource = jerseyClient.resource(provisioningURL);
         clientResponse = webResource.type(MediaType.APPLICATION_FORM_URLENCODED_TYPE).accept("application/json").delete(ClientResponse.class);
         assertTrue(clientResponse.getStatus() == 204);
     }
-    
+
     /*
      */
 //    @Test
@@ -197,13 +205,13 @@ public class VoxboneIncomingPhoneNumbersEndpointTest {
 //                    .withStatus(200)
 //                    .withHeader("Content-Type", "application/json")
 //                    .withBody(VoxboneIncomingPhoneNumbersEndpointTestUtils.purchaseNumberSuccessResponse)));
-//        
+//
 //        stubFor(post(urlMatching("/nexmo/number/update/.*/.*/ES/34911067000.*"))
 //                .willReturn(aResponse()
 //                    .withStatus(200)
 //                    .withHeader("Content-Type", "application/json")
 //                    .withBody(VoxboneIncomingPhoneNumbersEndpointTestUtils.purchaseNumberSuccessResponse)));
-//        
+//
 //        stubFor(post(urlMatching("/nexmo/number/cancel/.*/.*/ES/34911067000"))
 //                .willReturn(aResponse()
 //                    .withStatus(200)
@@ -228,23 +236,24 @@ public class VoxboneIncomingPhoneNumbersEndpointTest {
 //        assertTrue(!response.trim().equalsIgnoreCase("[]"));
 //        JsonParser parser = new JsonParser();
 //        JsonObject jsonResponse = parser.parse(response).getAsJsonObject();
-//        
+//
 //        System.out.println(jsonResponse.toString());
 //        assertTrue(VoxboneIncomingPhoneNumbersEndpointTestUtils.match(jsonResponse.toString(),VoxboneIncomingPhoneNumbersEndpointTestUtils.jSonResultDeletePurchaseNumber));
-//        
+//
 //        String phoneNumberSid = jsonResponse.get("sid").getAsString();
 //        provisioningURL = deploymentUrl + baseURL + "IncomingPhoneNumbers/" + phoneNumberSid + ".json";
 //        webResource = jerseyClient.resource(provisioningURL);
 //        clientResponse = webResource.type(MediaType.APPLICATION_FORM_URLENCODED_TYPE).accept("application/json").delete(ClientResponse.class);
 //        assertTrue(clientResponse.getStatus() == 204);
 //    }
-    
+
     /*
      * https://www.twilio.com/docs/api/rest/incoming-phone-numbers#list-post-example-1
      * Purchases a new phone number for your account.
      * If Twilio cannot find a phone number to match your request, you will receive an HTTP 400 with Twilio error code 21452.
      */
     @Test
+    @Category(FeatureExpTests.class)
     public void testPurchasePhoneNumberNoPhoneNumberFound() {
         stubFor(put(urlEqualTo("/test/configuration/voiceuri"))
                 .willReturn(aResponse()
@@ -260,7 +269,7 @@ public class VoxboneIncomingPhoneNumbersEndpointTest {
                 .willReturn(aResponse()
                     .withStatus(400)
                     .withHeader("Content-Type", "application/json")));
-        
+
         // Get Account using admin email address and user email address
         Client jerseyClient = Client.create();
         jerseyClient.addFilter(new HTTPBasicAuthFilter(adminUsername, adminAuthToken));
@@ -294,13 +303,13 @@ public class VoxboneIncomingPhoneNumbersEndpointTest {
 //                    .withStatus(200)
 //                    .withHeader("Content-Type", "application/json")
 //                    .withBody(VoxboneIncomingPhoneNumbersEndpointTestUtils.purchaseNumberSuccessResponse)));
-//        
+//
 //        stubFor(post(urlMatching("/nexmo/number/update/.*/.*/FR/33911067000.*"))
 //                .willReturn(aResponse()
 //                    .withStatus(200)
 //                    .withHeader("Content-Type", "application/json")
 //                    .withBody(VoxboneIncomingPhoneNumbersEndpointTestUtils.purchaseNumberSuccessResponse)));
-//        
+//
 //        stubFor(post(urlMatching("/nexmo/number/cancel/.*/.*/FR/33911067000"))
 //                .willReturn(aResponse()
 //                    .withStatus(200)
@@ -325,7 +334,7 @@ public class VoxboneIncomingPhoneNumbersEndpointTest {
 //        assertTrue(!response.trim().equalsIgnoreCase("[]"));
 //        JsonParser parser = new JsonParser();
 //        JsonObject jsonResponse = parser.parse(response).getAsJsonObject();
-//        
+//
 //        System.out.println(jsonResponse.toString());
 //        assertTrue(VoxboneIncomingPhoneNumbersEndpointTestUtils.match(jsonResponse.toString(),VoxboneIncomingPhoneNumbersEndpointTestUtils.jSonResultUpdatePurchaseNumber));
 //
@@ -346,26 +355,28 @@ public class VoxboneIncomingPhoneNumbersEndpointTest {
 //        jsonResponse = parser.parse(response).getAsJsonObject();
 //        System.out.println(jsonResponse.toString());
 //        assertTrue(VoxboneIncomingPhoneNumbersEndpointTestUtils.match(jsonResponse.toString(),VoxboneIncomingPhoneNumbersEndpointTestUtils.jSonResultUpdateSuccessPurchaseNumber));
-//        
+//
 //        provisioningURL = deploymentUrl + baseURL + "IncomingPhoneNumbers/" + phoneNumberSid + ".json";
 //        webResource = jerseyClient.resource(provisioningURL);
 //        clientResponse = webResource.type(MediaType.APPLICATION_FORM_URLENCODED_TYPE).accept("application/json").delete(ClientResponse.class);
 //        assertTrue(clientResponse.getStatus() == 204);
 //    }
-    
+
     @Deployment(name = "VoxboneIncomingPhoneNumbersEndpointTest", managed = true, testable = false)
     public static WebArchive createWebArchiveNoGw() {
         logger.info("Packaging Test App");
         logger.info("version");
         WebArchive archive = ShrinkWrap.create(WebArchive.class, "restcomm.war");
-        final WebArchive restcommArchive = ShrinkWrapMaven.resolver()
+        final WebArchive restcommArchive = Maven.resolver()
                 .resolve("org.restcomm:restcomm-connect.application:war:" + version).withoutTransitivity()
                 .asSingle(WebArchive.class);
         archive = archive.merge(restcommArchive);
         archive.delete("/WEB-INF/sip.xml");
+archive.delete("/WEB-INF/web.xml");
         archive.delete("/WEB-INF/conf/restcomm.xml");
         archive.delete("/WEB-INF/data/hsql/restcomm.script");
         archive.addAsWebInfResource("sip.xml");
+        archive.addAsWebInfResource("web.xml");
         archive.addAsWebInfResource("restcomm_voxbone_test.xml", "conf/restcomm.xml");
         archive.addAsWebInfResource("restcomm.script_dialTest", "data/hsql/restcomm.script");
         logger.info("Packaged Test App");

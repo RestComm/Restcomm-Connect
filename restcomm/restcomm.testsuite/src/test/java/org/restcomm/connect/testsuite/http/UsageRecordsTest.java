@@ -24,7 +24,6 @@ import static org.junit.Assert.*;
 
 import com.sun.jersey.api.client.UniformInterfaceException;
 import com.google.gson.JsonElement;
-import com.google.gson.JsonArray;
 import com.google.gson.JsonObject;
 
 import org.apache.log4j.Logger;
@@ -33,20 +32,25 @@ import org.jboss.arquillian.junit.Arquillian;
 import org.jboss.arquillian.test.api.ArquillianResource;
 import org.jboss.shrinkwrap.api.ShrinkWrap;
 import org.jboss.shrinkwrap.api.spec.WebArchive;
-import org.jboss.shrinkwrap.resolver.api.maven.archive.ShrinkWrapMaven;
+import org.jboss.shrinkwrap.resolver.api.maven.Maven;
 
 import org.junit.Test;
+import org.junit.FixMethodOrder;
+import org.junit.runners.MethodSorters;
 import org.junit.runner.RunWith;
 import org.restcomm.connect.commons.Version;
-import org.restcomm.connect.testsuite.http.RestcommUsageRecordsTool;
 
 import java.net.URL;
+import org.junit.experimental.categories.Category;
+import org.restcomm.connect.commons.annotations.BrokenTests;
+import org.restcomm.connect.commons.annotations.UnstableTests;
 
 /**
  * @author <a href="mailto:abdulazizali@acm.org">abdulazizali77</a>
  */
 
 @RunWith(Arquillian.class)
+@FixMethodOrder(MethodSorters.NAME_ASCENDING)
 public class UsageRecordsTest {
     private static Logger logger = Logger.getLogger(UsageRecordsTest.class);
 
@@ -82,6 +86,7 @@ public class UsageRecordsTest {
     }
 
     @Test
+    @Category(BrokenTests.class)
     public void getUsageRecordsDaily() {
         JsonElement response = RestcommUsageRecordsTool.getInstance().getUsageRecordsDaily(deploymentUrl.toString(),
                 adminAccountSid, adminAuthToken, "", true);
@@ -120,6 +125,7 @@ public class UsageRecordsTest {
     }
 
     @Test
+    @Category(BrokenTests.class)
     public void getUsageRecordsMonthly() {
         JsonElement response = RestcommUsageRecordsTool.getInstance().getUsageRecordsMonthly(deploymentUrl.toString(),
                 adminAccountSid, adminAuthToken, "", true);
@@ -155,6 +161,7 @@ public class UsageRecordsTest {
     }
 
     @Test
+    @Category(BrokenTests.class)
     public void getUsageRecordsYearly() {
         JsonElement response = RestcommUsageRecordsTool.getInstance().getUsageRecordsYearly(deploymentUrl.toString(),
                 adminAccountSid, adminAuthToken, "", true);
@@ -185,11 +192,12 @@ public class UsageRecordsTest {
         assertTrue(usage_unit.equals("minutes"));
         assertTrue(price_unit.equals("USD"));
         assertTrue(uri.equals("/2012-04-24/Accounts/ACae6e420f425248d6a26948c17a9e2acf/Usage/Records/Yearly.json?Category=Calls&EndDate=2016-01-01&StartDate=2016-12-31"));
-        
+
         //TODO: test other categories
     }
 
     @Test
+    @Category(BrokenTests.class)
     public void getUsageRecordsAlltime() {
         JsonElement response = RestcommUsageRecordsTool.getInstance().getUsageRecordsAllTime(deploymentUrl.toString(),
                 adminAccountSid, adminAuthToken, "", true);
@@ -256,15 +264,17 @@ public class UsageRecordsTest {
     @Deployment(name = "UsageRecordsTest", managed = true, testable = false)
     public static WebArchive createWebArchiveNoGw() {
         WebArchive archive = ShrinkWrap.create(WebArchive.class, "restcomm.war");
-        final WebArchive restcommArchive = ShrinkWrapMaven.resolver()
+        final WebArchive restcommArchive = Maven.resolver()
                 .resolve("org.restcomm:restcomm-connect.application:war:" + version).withoutTransitivity()
                 .asSingle(WebArchive.class);
         archive = archive.merge(restcommArchive);
         archive.delete("/WEB-INF/sip.xml");
+archive.delete("/WEB-INF/web.xml");
         archive.delete("/WEB-INF/conf/restcomm.xml");
         archive.delete("/WEB-INF/data/hsql/restcomm.script");
         // archive.delete("/WEB-INF/data/hsql/restcomm.properties");
         archive.addAsWebInfResource("sip.xml");
+        archive.addAsWebInfResource("web.xml");
         archive.addAsWebInfResource("restcomm.xml", "conf/restcomm.xml");
         archive.addAsWebInfResource("restcomm_with_Data_UsageRecords.script", "data/hsql/restcomm.script");
         // archive.addAsWebInfResource("restcomm.properties", "data/hsql/restcomm.properties");

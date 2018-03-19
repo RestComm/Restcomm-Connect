@@ -21,15 +21,42 @@ package org.restcomm.connect.http;
 
 import akka.actor.ActorRef;
 import akka.pattern.AskTimeoutException;
+import static akka.pattern.Patterns.ask;
 import akka.util.Timeout;
-
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
 import com.google.i18n.phonenumbers.NumberParseException;
 import com.google.i18n.phonenumbers.PhoneNumberUtil;
 import com.google.i18n.phonenumbers.PhoneNumberUtil.PhoneNumberFormat;
 import com.thoughtworks.xstream.XStream;
-
+import java.net.URI;
+import java.net.URL;
+import java.text.ParseException;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.LinkedList;
+import java.util.List;
+import java.util.concurrent.CopyOnWriteArrayList;
+import java.util.concurrent.TimeUnit;
+import javax.annotation.PostConstruct;
+import javax.servlet.ServletContext;
+import javax.servlet.sip.SipServletResponse;
+import javax.ws.rs.core.Context;
+import javax.ws.rs.core.MediaType;
+import static javax.ws.rs.core.MediaType.APPLICATION_JSON;
+import static javax.ws.rs.core.MediaType.APPLICATION_JSON_TYPE;
+import static javax.ws.rs.core.MediaType.APPLICATION_XML;
+import static javax.ws.rs.core.MediaType.APPLICATION_XML_TYPE;
+import javax.ws.rs.core.MultivaluedMap;
+import javax.ws.rs.core.Response;
+import static javax.ws.rs.core.Response.Status.BAD_REQUEST;
+import static javax.ws.rs.core.Response.Status.GONE;
+import static javax.ws.rs.core.Response.Status.INTERNAL_SERVER_ERROR;
+import static javax.ws.rs.core.Response.Status.NOT_ACCEPTABLE;
+import static javax.ws.rs.core.Response.Status.NOT_FOUND;
+import static javax.ws.rs.core.Response.ok;
+import static javax.ws.rs.core.Response.status;
+import javax.ws.rs.core.UriInfo;
 import org.apache.commons.configuration.Configuration;
 import org.restcomm.connect.commons.amazonS3.RecordingSecurityLevel;
 import org.restcomm.connect.commons.annotations.concurrency.NotThreadSafe;
@@ -63,42 +90,9 @@ import org.restcomm.connect.telephony.api.GetCall;
 import org.restcomm.connect.telephony.api.GetCallInfo;
 import org.restcomm.connect.telephony.api.Hangup;
 import org.restcomm.connect.telephony.api.UpdateCallScript;
-
 import scala.concurrent.Await;
 import scala.concurrent.Future;
 import scala.concurrent.duration.Duration;
-
-import javax.annotation.PostConstruct;
-import javax.servlet.ServletContext;
-import javax.servlet.sip.SipServletResponse;
-import javax.ws.rs.core.Context;
-import javax.ws.rs.core.MediaType;
-import javax.ws.rs.core.MultivaluedMap;
-import javax.ws.rs.core.Response;
-import javax.ws.rs.core.UriInfo;
-
-import java.net.URI;
-import java.net.URL;
-import java.text.ParseException;
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.LinkedList;
-import java.util.List;
-import java.util.concurrent.CopyOnWriteArrayList;
-import java.util.concurrent.TimeUnit;
-
-import static akka.pattern.Patterns.ask;
-import static javax.ws.rs.core.MediaType.APPLICATION_JSON;
-import static javax.ws.rs.core.MediaType.APPLICATION_JSON_TYPE;
-import static javax.ws.rs.core.MediaType.APPLICATION_XML;
-import static javax.ws.rs.core.MediaType.APPLICATION_XML_TYPE;
-import static javax.ws.rs.core.Response.Status.BAD_REQUEST;
-import static javax.ws.rs.core.Response.Status.INTERNAL_SERVER_ERROR;
-import static javax.ws.rs.core.Response.Status.NOT_ACCEPTABLE;
-import static javax.ws.rs.core.Response.Status.NOT_FOUND;
-import static javax.ws.rs.core.Response.Status.GONE;
-import static javax.ws.rs.core.Response.ok;
-import static javax.ws.rs.core.Response.status;
 
 //import org.joda.time.DateTime;
 
@@ -175,10 +169,10 @@ public abstract class CallsEndpoint extends SecuredEndpoint {
             return status(NOT_FOUND).build();
         } else {
             secure(account, cdr.getAccountSid(), SecuredType.SECURED_STANDARD);
-            if (APPLICATION_XML_TYPE == responseType) {
+            if (APPLICATION_XML_TYPE.equals(responseType)) {
                 final RestCommResponse response = new RestCommResponse(cdr);
                 return ok(xstream.toXML(response), APPLICATION_XML).build();
-            } else if (APPLICATION_JSON_TYPE == responseType) {
+            } else if (APPLICATION_JSON_TYPE.equals(responseType)) {
                 return ok(gson.toJson(cdr), APPLICATION_JSON).build();
             } else {
                 return null;
@@ -295,10 +289,10 @@ public abstract class CallsEndpoint extends SecuredEndpoint {
         listConverter.setPageSize(Integer.parseInt(pageSize));
         listConverter.setPathUri("/"+getApiVersion(null)+"/"+info.getPath());
 
-        if (APPLICATION_XML_TYPE == responseType) {
+        if (APPLICATION_XML_TYPE.equals(responseType)) {
             final RestCommResponse response = new RestCommResponse(new CallDetailRecordList(cdrs));
             return ok(xstream.toXML(response), APPLICATION_XML).build();
-        } else if (APPLICATION_JSON_TYPE == responseType) {
+        } else if (APPLICATION_JSON_TYPE.equals(responseType)) {
             return ok(gson.toJson(new CallDetailRecordList(cdrs)), APPLICATION_JSON).build();
         } else {
             return null;
@@ -317,7 +311,10 @@ public abstract class CallsEndpoint extends SecuredEndpoint {
                 throw new IllegalArgumentException(exception);
             }
         }
-        final String to = data.getFirst("To");
+        String to = data.getFirst("To");
+        if (to.contains("?")) {
+            to = to.substring(0, to.indexOf("?"));
+        }
         // Only try to normalize phone numbers.
         if (to.startsWith("client")) {
             if (to.split(":").length != 2) {
@@ -342,11 +339,11 @@ public abstract class CallsEndpoint extends SecuredEndpoint {
         } catch (final IllegalArgumentException exception){
             return status(INTERNAL_SERVER_ERROR).entity(buildErrorResponseBody(exception.getMessage(),responseType)).build();
         }
+
         secure(daos.getAccountsDao().getAccount(accountSid), "RestComm:Create:Calls");
+
         try {
             validate(data);
-            if (normalizePhoneNumbers)
-                normalize(data);
         } catch (final RuntimeException exception) {
             return status(BAD_REQUEST).entity(exception.getMessage()).build();
         }
@@ -360,12 +357,29 @@ public abstract class CallsEndpoint extends SecuredEndpoint {
         statusCallbackEvent.add("completed");
 
         final String from = data.getFirst("From").trim();
-        final String to = data.getFirst("To").trim();
+        String to = data.getFirst("To").trim();
         final String username = data.getFirst("Username");
         final String password = data.getFirst("Password");
-        final Integer timeout = getTimeout(data);
+        Integer timeout = getTimeout(data);
+        timeout = timeout != null ? timeout : 30;
         final Timeout expires = new Timeout(Duration.create(60, TimeUnit.SECONDS));
         final URI rcmlUrl = getUrl("Url", data);
+
+        String customHeaders = getCustomHeaders(to);
+
+        if (customHeaders != null) {
+            to = (customHeaders != null) ? to.substring(0, to.indexOf("?")) : to;
+            data.remove(to);
+            data.putSingle("To", to);
+        }
+
+        try {
+            if (normalizePhoneNumbers)
+                normalize(data);
+        } catch (RuntimeException exception) {
+            return status(BAD_REQUEST).entity(exception.getMessage()).build();
+        }
+
 
         try {
             if (data.containsKey("StatusCallback")) {
@@ -385,16 +399,17 @@ public abstract class CallsEndpoint extends SecuredEndpoint {
         }
 
         CreateCall create = null;
+
         try {
             if (to.contains("@")) {
-                create = new CreateCall(from, to, username, password, true, timeout != null ? timeout : 30, CreateCallType.SIP,
-                        accountId, null, statusCallback, statusCallbackMethod, statusCallbackEvent);
+                create = new CreateCall(from, to, username, password, true, timeout, CreateCallType.SIP,
+                        accountId, null, statusCallback, statusCallbackMethod, statusCallbackEvent, customHeaders);
             } else if (to.startsWith("client")) {
-                create = new CreateCall(from, to, username, password, true, timeout != null ? timeout : 30, CreateCallType.CLIENT,
-                        accountId, null, statusCallback, statusCallbackMethod, statusCallbackEvent);
+                create = new CreateCall(from, to, username, password, true, timeout, CreateCallType.CLIENT,
+                        accountId, null, statusCallback, statusCallbackMethod, statusCallbackEvent, customHeaders);
             } else {
-                create = new CreateCall(from, to, username, password, true, timeout != null ? timeout : 30, CreateCallType.PSTN,
-                        accountId, null, statusCallback, statusCallbackMethod, statusCallbackEvent);
+                create = new CreateCall(from, to, username, password, true, timeout, CreateCallType.PSTN,
+                        accountId, null, statusCallback, statusCallbackMethod, statusCallbackEvent, customHeaders);
             }
             create.setCreateCDR(false);
             if (callManager == null)
@@ -428,20 +443,20 @@ public abstract class CallsEndpoint extends SecuredEndpoint {
                                 final URI fallbackUrl = getUrl("FallbackUrl", data);
                                 final String fallbackMethod = getMethod("FallbackMethod", data);
                                 final ExecuteCallScript execute = new ExecuteCallScript(call, accountId, version, url, method,
-                                        fallbackUrl, fallbackMethod);
+                                        fallbackUrl, fallbackMethod, timeout);
                                 callManager.tell(execute, null);
                                 cdrs.add(daos.getCallDetailRecordsDao().getCallDetailRecord(callInfo.sid()));
                             }
                         }
                     }
-                    if (APPLICATION_XML_TYPE == responseType) {
+                    if (APPLICATION_XML_TYPE.equals(responseType)) {
                         if (cdrs.size()==1) {
                             return ok(xstream.toXML(cdrs.get(0)), APPLICATION_XML).build();
                         } else {
                             final RestCommResponse response = new RestCommResponse(new CallDetailRecordList(cdrs));
                             return ok(xstream.toXML(response), APPLICATION_XML).build();
                         }
-                    } else if (APPLICATION_JSON_TYPE == responseType) {
+                    } else if (APPLICATION_JSON_TYPE.equals(responseType)) {
                         if (cdrs.size()==1) {
                             return ok(gson.toJson(cdrs.get(0)), APPLICATION_JSON).build();
                         } else {
@@ -450,9 +465,9 @@ public abstract class CallsEndpoint extends SecuredEndpoint {
                     } else {
                         return null;
                     }
-//                    if (APPLICATION_JSON_TYPE == responseType) {
+//                    if (APPLICATION_JSON_TYPE.equals(responseType)) {
 //                        return ok(gson.toJson(cdrs), APPLICATION_JSON).build();
-//                    } else if (APPLICATION_XML_TYPE == responseType) {
+//                    } else if (APPLICATION_XML_TYPE.equals(responseType)) {
 //                        return ok(xstream.toXML(new RestCommResponse(cdrs)), APPLICATION_XML).build();
 //                    } else {
 //                        return null;
@@ -465,6 +480,16 @@ public abstract class CallsEndpoint extends SecuredEndpoint {
         } catch (final Exception exception) {
             return status(INTERNAL_SERVER_ERROR).entity(exception.getMessage()).build();
         }
+    }
+
+    private String getCustomHeaders(final String to) {
+        String customHeaders = null;
+
+        if (to.contains("?")) {
+            customHeaders = to.substring(to.indexOf("?")+1, to.length());
+        }
+
+        return customHeaders;
     }
 
     // Issue 139: https://bitbucket.org/telestax/telscale-restcomm/issue/139
@@ -482,7 +507,10 @@ public abstract class CallsEndpoint extends SecuredEndpoint {
             cdr = dao.getCallDetailRecord(new Sid(callSid));
 
             if (cdr != null) {
-                secure(account, cdr.getAccountSid(), SecuredType.SECURED_STANDARD);
+                //allow super admin to perform LCM on any call - https://telestax.atlassian.net/browse/RESTCOMM-1171
+                if(!isSuperAdmin()){
+                    secure(account, cdr.getAccountSid(), SecuredType.SECURED_STANDARD);
+                }
             } else {
                 return Response.status(NOT_ACCEPTABLE).build();
             }
@@ -594,9 +622,9 @@ public abstract class CallsEndpoint extends SecuredEndpoint {
             }
         }
 
-        if (APPLICATION_JSON_TYPE == responseType) {
+        if (APPLICATION_JSON_TYPE.equals(responseType)) {
             return ok(gson.toJson(cdr), APPLICATION_JSON).build();
-        } else if (APPLICATION_XML_TYPE == responseType) {
+        } else if (APPLICATION_XML_TYPE.equals(responseType)) {
             return ok(xstream.toXML(new RestCommResponse(cdr)), APPLICATION_XML).build();
         } else {
             return null;
@@ -625,9 +653,9 @@ public abstract class CallsEndpoint extends SecuredEndpoint {
         secure(accountsDao.getAccount(accountSid), "RestComm:Read:Recordings");
 
         final List<Recording> recordings = recordingsDao.getRecordingsByCall(new Sid(callSid));
-        if (APPLICATION_JSON_TYPE == responseType) {
+        if (APPLICATION_JSON_TYPE.equals(responseType)) {
             return ok(gson.toJson(recordings), APPLICATION_JSON).build();
-        } else if (APPLICATION_XML_TYPE == responseType) {
+        } else if (APPLICATION_XML_TYPE.equals(responseType)) {
             final RestCommResponse response = new RestCommResponse(new RecordingList(recordings));
             return ok(xstream.toXML(response), APPLICATION_XML).build();
         } else {

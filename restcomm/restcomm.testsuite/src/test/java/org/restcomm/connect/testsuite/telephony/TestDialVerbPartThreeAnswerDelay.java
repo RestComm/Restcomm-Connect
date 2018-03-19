@@ -10,16 +10,17 @@ import org.jboss.arquillian.container.mss.extension.SipStackTool;
 import org.jboss.arquillian.container.test.api.Deployment;
 import org.jboss.arquillian.junit.Arquillian;
 import org.jboss.arquillian.test.api.ArquillianResource;
-import org.jboss.shrinkwrap.api.ShrinkWrap;
 import org.jboss.shrinkwrap.api.spec.WebArchive;
-import org.jboss.shrinkwrap.resolver.api.maven.archive.ShrinkWrapMaven;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.BeforeClass;
 import org.junit.Rule;
 import org.junit.Test;
+import org.junit.FixMethodOrder;
+import org.junit.runners.MethodSorters;
 import org.junit.runner.RunWith;
 import org.restcomm.connect.commons.Version;
+import org.restcomm.connect.commons.annotations.UnstableTests;
 import org.restcomm.connect.testsuite.telephony.security.DigestServerAuthenticationMethod;
 
 import javax.sip.address.SipURI;
@@ -37,10 +38,17 @@ import static com.github.tomakehurst.wiremock.client.WireMock.containing;
 import static com.github.tomakehurst.wiremock.client.WireMock.get;
 import static com.github.tomakehurst.wiremock.client.WireMock.stubFor;
 import static com.github.tomakehurst.wiremock.client.WireMock.urlPathEqualTo;
+import java.util.HashMap;
+import java.util.Map;
 import static org.cafesip.sipunit.SipAssert.assertLastOperationSuccess;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertTrue;
+import org.junit.experimental.categories.Category;
+import org.restcomm.connect.commons.annotations.FeatureAltTests;
+import org.restcomm.connect.commons.annotations.ParallelClassTests;
+import org.restcomm.connect.testsuite.NetworkPortAssigner;
+import org.restcomm.connect.testsuite.WebArchiveUtil;
 
 /**
  * Test for Dial verb. Will test Dial Conference, Dial URI, Dial Client, Dial Number and Dial Fork
@@ -49,6 +57,8 @@ import static org.junit.Assert.assertTrue;
  * @author jean.deruelle@telestax.com
  */
 @RunWith(Arquillian.class)
+@FixMethodOrder(MethodSorters.NAME_ASCENDING)
+@Category(value={FeatureAltTests.class, ParallelClassTests.class})
 public class TestDialVerbPartThreeAnswerDelay {
     private final static Logger logger = Logger.getLogger(TestDialVerbPartThreeAnswerDelay.class.getName());
 
@@ -66,8 +76,16 @@ public class TestDialVerbPartThreeAnswerDelay {
     private String adminAccountSid = "ACae6e420f425248d6a26948c17a9e2acf";
     private String adminAuthToken = "77f8c12cc7b8f8423e5c38b035249166";
 
+    private static int mediaPort = NetworkPortAssigner.retrieveNextPortByFile();
+
+    private static int mockPort = NetworkPortAssigner.retrieveNextPortByFile();
     @Rule
-    public WireMockRule wireMockRule = new WireMockRule(8090); // No-args constructor defaults to port 8080
+    public WireMockRule wireMockRule = new WireMockRule(mockPort);
+    private String dialSipDialScreeningRcml = "<Response>\n" +
+            "\t<Dial timeLimit=\"10\" timeout=\"10\" action=\"http://127.0.0.1:" + mockPort + "/action\" method=\"GET\">\n" +
+            "\t  <Sip url=\"http://127.0.0.1:" + mockPort + "/screening\" method=\"GET\">sip:alice@127.0.0.1:" + alicePort + "?mycustomheader=foo&myotherheader=bar</Sip>\n" +
+            "\t</Dial>\n" +
+            "</Response>";
 
     private static SipStackTool tool1;
     private static SipStackTool tool2;
@@ -77,17 +95,26 @@ public class TestDialVerbPartThreeAnswerDelay {
     // Bob is a simple SIP Client. Will not register with Restcomm
     private SipStack bobSipStack;
     private SipPhone bobPhone;
-    private String bobContact = "sip:bob@127.0.0.1:5090";
+    private static String bobPort = String.valueOf(NetworkPortAssigner.retrieveNextPortByFile());
+    private String bobContact = "sip:bob@127.0.0.1:" + bobPort;
 
     // Alice is a Restcomm Client with VoiceURL. This Restcomm Client can register with Restcomm and whatever will dial the RCML
     // of the VoiceURL will be executed.
     private SipStack aliceSipStack;
     private SipPhone alicePhone;
-    private String aliceContact = "sip:alice@127.0.0.1:5091";
+    private static String alicePort = String.valueOf(NetworkPortAssigner.retrieveNextPortByFile());
+    private String aliceContact = "sip:alice@127.0.0.1:" + alicePort;
+    private final String actionUrlRcml = "<Dial timeout=\"50\"><Uri>sip:alice@127.0.0.1:" + alicePort + "</Uri></Dial>";
+    private final String dialSipRcml = "<Response><Dial timeLimit=\"10\" timeout=\"10\"><Sip>sip:alice@127.0.0.1:" + alicePort + "?mycustomheader=foo&myotherheader=bar</Sip></Dial></Response>";
 
-    private String dialRestcomm = "sip:1111@127.0.0.1:5080";
+    private final String dialSipAuthRcml = "<Response><Dial timeLimit=\"10\" timeout=\"10\"><Sip username=\"alice\" password=\"1234\">sip:alice@127.0.0.1:" + alicePort + "?mycustomheader=foo&myotherheader=bar</Sip></Dial></Response>";
 
-    private String dialRestcomm_httpError = "sip:6666@127.0.0.1:5080";
+
+    private static int restcommPort = 5080;
+    private static int restcommHTTPPort = 8080;
+    private static String restcommContact = "127.0.0.1:" + restcommPort;
+    private static String dialRestcomm = "sip:1111@" + restcommContact;
+    private String dialRestcomm_httpError = "sip:6666@" + restcommContact;
 
     @BeforeClass
     public static void beforeClass() throws Exception {
@@ -95,13 +122,24 @@ public class TestDialVerbPartThreeAnswerDelay {
         tool2 = new SipStackTool("DialTest3Tool2");
     }
 
+    public static void reconfigurePorts() {
+        if (System.getProperty("arquillian_sip_port") != null) {
+            restcommPort = Integer.valueOf(System.getProperty("arquillian_sip_port"));
+            restcommContact = "127.0.0.1:" + restcommPort;
+            dialRestcomm = "sip:1111@" + restcommContact;
+        }
+        if (System.getProperty("arquillian_http_port") != null) {
+            restcommHTTPPort = Integer.valueOf(System.getProperty("arquillian_http_port"));
+        }
+    }
+
     @Before
     public void before() throws Exception {
-        bobSipStack = tool1.initializeSipStack(SipStack.PROTOCOL_UDP, "127.0.0.1", "5090", "127.0.0.1:5080");
-        bobPhone = bobSipStack.createSipPhone("127.0.0.1", SipStack.PROTOCOL_UDP, 5080, bobContact);
+        bobSipStack = tool1.initializeSipStack(SipStack.PROTOCOL_UDP, "127.0.0.1", bobPort, restcommContact);
+        bobPhone = bobSipStack.createSipPhone("127.0.0.1", SipStack.PROTOCOL_UDP, restcommPort, bobContact);
 
-        aliceSipStack = tool2.initializeSipStack(SipStack.PROTOCOL_UDP, "127.0.0.1", "5091", "127.0.0.1:5080");
-        alicePhone = aliceSipStack.createSipPhone("127.0.0.1", SipStack.PROTOCOL_UDP, 5080, aliceContact);
+        aliceSipStack = tool2.initializeSipStack(SipStack.PROTOCOL_UDP, "127.0.0.1", alicePort, restcommContact);
+        alicePhone = aliceSipStack.createSipPhone("127.0.0.1", SipStack.PROTOCOL_UDP, restcommPort, aliceContact);
     }
 
     @After
@@ -124,9 +162,9 @@ public class TestDialVerbPartThreeAnswerDelay {
         Thread.sleep(2000);
     }
 
-    private String dialSipRcml = "<Response><Dial timeLimit=\"10\" timeout=\"10\"><Sip>sip:alice@127.0.0.1:5091?mycustomheader=foo&myotherheader=bar</Sip></Dial></Response>";
     @Test
 // Non regression test for https://bitbucket.org/telestax/telscale-restcomm/issue/132/implement-twilio-sip-out
+    @Category(UnstableTests.class)
     public synchronized void testDialSip() throws InterruptedException, ParseException {
         stubFor(get(urlPathEqualTo("/1111"))
                 .willReturn(aResponse()
@@ -135,7 +173,7 @@ public class TestDialVerbPartThreeAnswerDelay {
                         .withBody(dialSipRcml)));
 
         // Phone2 register as alice
-        SipURI uri = aliceSipStack.getAddressFactory().createSipURI(null, "127.0.0.1:5080");
+        SipURI uri = aliceSipStack.getAddressFactory().createSipURI(null, restcommContact);
         assertTrue(alicePhone.register(uri, "alice", "1234", aliceContact, 3600, 3600));
 
         // Prepare second phone to receive call
@@ -174,7 +212,7 @@ public class TestDialVerbPartThreeAnswerDelay {
 
         bobCall.sendInviteOkAck();
         assertTrue(!(bobCall.getLastReceivedResponse().getStatusCode() >= 400));
-        
+
         assertTrue(aliceCall.waitForAck(50 * 1000));
 
         Thread.sleep(3000);
@@ -187,7 +225,6 @@ public class TestDialVerbPartThreeAnswerDelay {
     }
 
 
-    private String dialSipAuthRcml = "<Response><Dial timeLimit=\"10\" timeout=\"10\"><Sip username=\"alice\" password=\"1234\">sip:alice@127.0.0.1:5091?mycustomheader=foo&myotherheader=bar</Sip></Dial></Response>";
 //    @Ignore
     @Test
 // Non regression test for https://bitbucket.org/telestax/telscale-restcomm/issue/132/implement-twilio-sip-out
@@ -200,7 +237,7 @@ public class TestDialVerbPartThreeAnswerDelay {
                         .withBody(dialSipAuthRcml)));
 
         // Phone2 register as alice
-        SipURI uri = aliceSipStack.getAddressFactory().createSipURI(null, "127.0.0.1:5080");
+        SipURI uri = aliceSipStack.getAddressFactory().createSipURI(null, restcommContact);
         assertTrue(alicePhone.register(uri, "alice", "1234", aliceContact, 3600, 3600));
 
         // Prepare second phone to receive call
@@ -275,12 +312,7 @@ public class TestDialVerbPartThreeAnswerDelay {
 
         assertTrue(aliceCall.waitForDisconnect(30 * 1000));
     }
-    
-    private String dialSipDialScreeningRcml = "<Response>\n" +
-            "\t<Dial timeLimit=\"10\" timeout=\"10\" action=\"http://127.0.0.1:8090/action\" method=\"GET\">\n" +
-            "\t  <Sip url=\"http://127.0.0.1:8090/screening\" method=\"GET\">sip:alice@127.0.0.1:5091?mycustomheader=foo&myotherheader=bar</Sip>\n" +
-            "\t</Dial>\n" +
-            "</Response>";
+
     private String sipDialUrlActionRcml = "<Response><Hangup/></Response>";
     private String screeningRcml = "<Response><Hangup/></Response>";
     @Test
@@ -306,7 +338,7 @@ public class TestDialVerbPartThreeAnswerDelay {
                         .withBody(sipDialUrlActionRcml)));
 
         // Phone2 register as alice
-        SipURI uri = aliceSipStack.getAddressFactory().createSipURI(null, "127.0.0.1:5080");
+        SipURI uri = aliceSipStack.getAddressFactory().createSipURI(null, restcommContact);
         assertTrue(alicePhone.register(uri, "alice", "1234", aliceContact, 3600, 3600));
 
         // Prepare second phone to receive call
@@ -372,7 +404,7 @@ public class TestDialVerbPartThreeAnswerDelay {
                         .withBody(sipDialUrlActionRcml)));
 
         // Phone2 register as alice
-        SipURI uri = aliceSipStack.getAddressFactory().createSipURI(null, "127.0.0.1:5080");
+        SipURI uri = aliceSipStack.getAddressFactory().createSipURI(null, restcommContact);
         assertTrue(alicePhone.register(uri, "alice", "1234", aliceContact, 3600, 3600));
 
         // Prepare second phone to receive call
@@ -429,7 +461,7 @@ public class TestDialVerbPartThreeAnswerDelay {
                         .withBody(dialClientRcml)));
 
         // Phone2 register as alice
-        SipURI uri = aliceSipStack.getAddressFactory().createSipURI(null, "127.0.0.1:5080");
+        SipURI uri = aliceSipStack.getAddressFactory().createSipURI(null, restcommContact);
         assertTrue(alicePhone.register(uri, "alice", "1234", aliceContact, 3600, 3600));
 
         // Prepare second phone to receive call
@@ -438,7 +470,7 @@ public class TestDialVerbPartThreeAnswerDelay {
 
         // Create outgoing call with first phone
         final SipCall bobCall = bobPhone.createSipCall();
-        bobCall.initiateOutgoingCall(bobContact, "sip:+1111@127.0.0.1:5080", null, body, "application", "sdp", null, null);
+        bobCall.initiateOutgoingCall(bobContact, "sip:+1111@" + restcommContact, null, body, "application", "sdp", null, null);
         assertLastOperationSuccess(bobCall);
         assertTrue(bobCall.waitOutgoingCallResponse(5 * 1000));
         final int response = bobCall.getLastReceivedResponse().getStatusCode();
@@ -481,7 +513,7 @@ public class TestDialVerbPartThreeAnswerDelay {
                         .withBody(dialClientRcml)));
 
         // Phone2 register as alice
-        SipURI uri = aliceSipStack.getAddressFactory().createSipURI(null, "127.0.0.1:5080");
+        SipURI uri = aliceSipStack.getAddressFactory().createSipURI(null, restcommContact);
         assertTrue(alicePhone.register(uri, "alice", "1234", aliceContact, 3600, 3600));
 
         // Prepare second phone to receive call
@@ -490,7 +522,7 @@ public class TestDialVerbPartThreeAnswerDelay {
 
         // Create outgoing call with first phone
         final SipCall bobCall = bobPhone.createSipCall();
-        bobCall.initiateOutgoingCall(bobContact, "sip:2222@127.0.0.1:5080", null, body, "application", "sdp", null, null);
+        bobCall.initiateOutgoingCall(bobContact, "sip:2222@" + restcommContact, null, body, "application", "sdp", null, null);
         assertLastOperationSuccess(bobCall);
         assertTrue(bobCall.waitOutgoingCallResponse(5 * 1000));
         final int response = bobCall.getLastReceivedResponse().getStatusCode();
@@ -512,7 +544,7 @@ public class TestDialVerbPartThreeAnswerDelay {
 
         bobCall.sendInviteOkAck();
         assertTrue(!(bobCall.getLastReceivedResponse().getStatusCode() >= 400));
-        
+
         assertTrue(aliceCall.waitForAck(50 * 1000));
 
         Thread.sleep(3000);
@@ -570,7 +602,7 @@ public class TestDialVerbPartThreeAnswerDelay {
         assertTrue(bobCall.waitForDisconnect(5 * 1000));
         assertTrue(bobCall.respondToDisconnect());
     }
-    
+
     //issue-1759 regression test
     @Test
     public synchronized void testDialWithCustomHeadersHttpError() throws InterruptedException, ParseException {
@@ -608,23 +640,22 @@ public class TestDialVerbPartThreeAnswerDelay {
 
         Thread.sleep(1000);
     }
-    
+
     @Deployment(name = "TestDialVerbPartThreeAnswerDelay", managed = true, testable = false)
     public static WebArchive createWebArchiveNoGw() {
         logger.info("Packaging Test App");
-        WebArchive archive = ShrinkWrap.create(WebArchive.class, "restcomm.war");
-        final WebArchive restcommArchive = ShrinkWrapMaven.resolver()
-                .resolve("org.restcomm:restcomm-connect.application:war:" + version).withoutTransitivity()
-                .asSingle(WebArchive.class);
-        archive = archive.merge(restcommArchive);
-        archive.delete("/WEB-INF/sip.xml");
-        archive.delete("/WEB-INF/conf/restcomm.xml");
-        archive.delete("/WEB-INF/data/hsql/restcomm.script");
-        archive.addAsWebInfResource("sip.xml");
-        archive.addAsWebInfResource("restcomm-delay.xml", "conf/restcomm.xml");
-        archive.addAsWebInfResource("restcomm.script_dialTest_new", "data/hsql/restcomm.script");
-        logger.info("Packaged Test App");
-        return archive;
+        reconfigurePorts();
+
+        Map<String,String> replacements = new HashMap();
+        //replace mediaport 2727
+        replacements.put("2727", String.valueOf(mediaPort));
+        replacements.put("8080", String.valueOf(restcommHTTPPort));
+        replacements.put("8090", String.valueOf(mockPort));
+        replacements.put("5080", String.valueOf(restcommPort));
+        replacements.put("5090", String.valueOf(bobPort));
+        replacements.put("5091", String.valueOf(alicePort));
+
+        return WebArchiveUtil.createWebArchiveNoGw("restcomm-delay.xml", "restcomm.script_dialTest_new", replacements);
     }
 
 }

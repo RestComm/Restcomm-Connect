@@ -20,11 +20,13 @@
 package org.restcomm.connect.dao;
 
 import java.util.List;
+import java.util.Map;
 
 import org.joda.time.DateTime;
+import org.restcomm.connect.commons.dao.Sid;
 import org.restcomm.connect.dao.entities.ConferenceDetailRecord;
 import org.restcomm.connect.dao.entities.ConferenceDetailRecordFilter;
-import org.restcomm.connect.commons.dao.Sid;
+import org.restcomm.connect.dao.entities.ConferenceRecordCountFilter;
 
 /**
  * @author maria-farooq@live.com (Maria Farooq)
@@ -44,6 +46,8 @@ public interface ConferenceDetailRecordsDao {
 
     Integer getTotalConferenceDetailRecords(ConferenceDetailRecordFilter filter);
 
+    Integer countByFilter(ConferenceRecordCountFilter filter);
+
     int addConferenceDetailRecord(ConferenceDetailRecord cdr);
 
     void removeConferenceDetailRecord(Sid sid);
@@ -59,4 +63,16 @@ public interface ConferenceDetailRecordsDao {
     void updateConferenceDetailRecordMasterBridgeEndpointID(ConferenceDetailRecord cdr);
 
     void updateModeratorPresent(ConferenceDetailRecord cdr);
+
+    /**
+     * @param params
+     * {sid, mode=IN, jdbcType=VARCHAR}
+     * {status, mode=IN, jdbcType=VARCHAR}
+     * {slaveMsId, mode=IN, jdbcType=VARCHAR}
+     * {dateUpdated, mode=IN, jdbcType=TIMESTAMP}
+     * {amIMaster, mode=IN, jdbcType=BOOLEAN}
+     * {completed, mode=OUT, jdbcType=BOOLEAN}
+     * @return true/false depending on if calling agent was able to complete the conference or not.
+     */
+    boolean completeConferenceDetailRecord(Map params);
 }

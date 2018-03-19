@@ -19,21 +19,6 @@
  */
 package org.restcomm.connect.dao.mybatis;
 
-import org.apache.ibatis.session.SqlSession;
-import org.apache.ibatis.session.SqlSessionFactory;
-import org.joda.time.DateTime;
-import org.restcomm.connect.dao.exceptions.AccountHierarchyDepthCrossed;
-import org.restcomm.connect.commons.annotations.concurrency.ThreadSafe;
-import org.restcomm.connect.dao.AccountsDao;
-import org.restcomm.connect.dao.entities.Account;
-import org.restcomm.connect.commons.dao.Sid;
-
-import java.net.URI;
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
-
 import static org.restcomm.connect.dao.DaoUtils.readAccountStatus;
 import static org.restcomm.connect.dao.DaoUtils.readAccountType;
 import static org.restcomm.connect.dao.DaoUtils.readDateTime;
@@ -46,8 +31,24 @@ import static org.restcomm.connect.dao.DaoUtils.writeDateTime;
 import static org.restcomm.connect.dao.DaoUtils.writeSid;
 import static org.restcomm.connect.dao.DaoUtils.writeUri;
 
+import java.net.URI;
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+
+import org.apache.ibatis.session.SqlSession;
+import org.apache.ibatis.session.SqlSessionFactory;
+import org.joda.time.DateTime;
+import org.restcomm.connect.commons.annotations.concurrency.ThreadSafe;
+import org.restcomm.connect.commons.dao.Sid;
+import org.restcomm.connect.dao.AccountsDao;
+import org.restcomm.connect.dao.entities.Account;
+import org.restcomm.connect.dao.exceptions.AccountHierarchyDepthCrossed;
+
 /**
  * @author quintana.thomas@gmail.com (Thomas Quintana)
+ * @author maria-farooq@live.com (Maria Farooq)
  */
 @ThreadSafe
 public final class MybatisAccountsDao implements AccountsDao {
@@ -236,6 +237,23 @@ public final class MybatisAccountsDao implements AccountsDao {
         }
     }
 
+    @Override
+    public List<Account> getAccountsByOrganization(final Sid organizationSid) {
+        final SqlSession session = sessions.openSession();
+        try {
+            final List<Map<String, Object>> results = session.selectList(namespace + "getAccountsByOrganization", organizationSid.toString());
+            final List<Account> accounts = new ArrayList<Account>();
+            if (results != null && !results.isEmpty()) {
+                for (final Map<String, Object> result : results) {
+                    accounts.add(toAccount(result));
+                }
+            }
+            return accounts;
+        } finally {
+            session.close();
+        }
+    }
+
     private Account toAccount(final Map<String, Object> map) {
         final Sid sid = readSid(map.get("sid"));
         final DateTime dateCreated = readDateTime(map.get("date_created"));
@@ -248,8 +266,9 @@ public final class MybatisAccountsDao implements AccountsDao {
         final String authToken = readString(map.get("auth_token"));
         final String role = readString(map.get("role"));
         final URI uri = readUri(map.get("uri"));
+        final Sid organizationSid = readSid(map.get("organization_sid"));
         return new Account(sid, dateCreated, dateUpdated, emailAddress, friendlyName, parentSid, type, status, authToken,
-                role, uri);
+                role, uri, organizationSid);
     }
 
     private Map<String, Object> toMap(final Account account) {
@@ -265,6 +284,7 @@ public final class MybatisAccountsDao implements AccountsDao {
         map.put("auth_token", account.getAuthToken());
         map.put("role", account.getRole());
         map.put("uri", writeUri(account.getUri()));
+        map.put("organization_sid", writeSid(account.getOrganizationSid()));
         return map;
     }
 }

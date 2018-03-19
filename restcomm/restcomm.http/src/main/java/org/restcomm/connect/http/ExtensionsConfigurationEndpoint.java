@@ -23,6 +23,20 @@ import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
 import com.thoughtworks.xstream.XStream;
 
+
+import javax.annotation.PostConstruct;
+import javax.ws.rs.core.MediaType;
+import static javax.ws.rs.core.MediaType.APPLICATION_JSON;
+import static javax.ws.rs.core.MediaType.APPLICATION_JSON_TYPE;
+import static javax.ws.rs.core.MediaType.APPLICATION_XML;
+import static javax.ws.rs.core.MediaType.APPLICATION_XML_TYPE;
+import javax.ws.rs.core.MultivaluedMap;
+import javax.ws.rs.core.Response;
+import static javax.ws.rs.core.Response.Status.BAD_REQUEST;
+import static javax.ws.rs.core.Response.Status.NOT_ACCEPTABLE;
+import static javax.ws.rs.core.Response.Status.NOT_FOUND;
+import static javax.ws.rs.core.Response.ok;
+import static javax.ws.rs.core.Response.status;
 import org.apache.commons.configuration.Configuration;
 import org.joda.time.DateTime;
 import org.restcomm.connect.commons.dao.Sid;
@@ -33,27 +47,11 @@ import org.restcomm.connect.extension.api.ConfigurationException;
 import org.restcomm.connect.extension.api.ExtensionConfiguration;
 import org.restcomm.connect.http.converter.ExtensionConfigurationConverter;
 import org.restcomm.connect.http.converter.RestCommResponseConverter;
-import org.restcomm.connect.http.exceptions.InsufficientPermission;
-
-import javax.annotation.PostConstruct;
-import javax.ws.rs.core.MediaType;
-import javax.ws.rs.core.MultivaluedMap;
-import javax.ws.rs.core.Response;
-
-import static javax.ws.rs.core.MediaType.APPLICATION_JSON;
-import static javax.ws.rs.core.MediaType.APPLICATION_JSON_TYPE;
-import static javax.ws.rs.core.MediaType.APPLICATION_XML;
-import static javax.ws.rs.core.MediaType.APPLICATION_XML_TYPE;
-import static javax.ws.rs.core.Response.Status.BAD_REQUEST;
-import static javax.ws.rs.core.Response.Status.NOT_ACCEPTABLE;
-import static javax.ws.rs.core.Response.Status.NOT_FOUND;
-import static javax.ws.rs.core.Response.ok;
-import static javax.ws.rs.core.Response.status;
 
 /**
  * Created by gvagenas on 12/10/2016.
  */
-public class ExtensionsConfigurationEndpoint extends SecuredEndpoint {
+public class  ExtensionsConfigurationEndpoint extends SecuredEndpoint {
     protected Configuration allConfiguration;
     protected Configuration configuration;
     protected Gson gson;
@@ -78,8 +76,6 @@ public class ExtensionsConfigurationEndpoint extends SecuredEndpoint {
         xstream.registerConverter(converter);
         xstream.registerConverter(new ExtensionConfigurationConverter(configuration));
         xstream.registerConverter(new RestCommResponseConverter(configuration));
-        // Make sure there is an authenticated account present when this endpoint is used
-        checkAuthenticatedAccount();
     }
 
     /**
@@ -90,9 +86,6 @@ public class ExtensionsConfigurationEndpoint extends SecuredEndpoint {
      */
     protected Response getConfiguration(final String extensionId, final Sid accountSid, final MediaType responseType) {
         //Parameter "extensionId" could be the extension Sid or extension name.
-        if (!isSuperAdmin()) {
-            throw new InsufficientPermission();
-        }
 
         ExtensionConfiguration extensionConfiguration = null;
         ExtensionConfiguration extensionAccountConfiguration = null;
@@ -134,10 +127,10 @@ public class ExtensionsConfigurationEndpoint extends SecuredEndpoint {
         if (extensionConfiguration == null) {
             return status(NOT_FOUND).build();
         } else {
-            if (APPLICATION_XML_TYPE == responseType) {
+            if (APPLICATION_XML_TYPE.equals(responseType)) {
                 final RestCommResponse response = new RestCommResponse(extensionConfiguration);
                 return ok(xstream.toXML(response), APPLICATION_XML).build();
-            } else if (APPLICATION_JSON_TYPE == responseType) {
+            } else if (APPLICATION_JSON_TYPE.equals(responseType)) {
                 return ok(gson.toJson(extensionConfiguration), APPLICATION_JSON).build();
             } else {
                 return null;
@@ -173,9 +166,6 @@ public class ExtensionsConfigurationEndpoint extends SecuredEndpoint {
     }
 
     protected Response postConfiguration(final MultivaluedMap<String, String> data, final MediaType responseType) {
-        if (!isSuperAdmin()) {
-            throw new InsufficientPermission();
-        }
 
         Sid accountSid = null;
 
@@ -210,9 +200,9 @@ public class ExtensionsConfigurationEndpoint extends SecuredEndpoint {
             }
         }
 
-        if (APPLICATION_JSON_TYPE == responseType) {
+        if (APPLICATION_JSON_TYPE.equals(responseType)) {
             return ok(gson.toJson(extensionConfiguration), APPLICATION_JSON).build();
-        } else if (APPLICATION_XML_TYPE == responseType) {
+        } else if (APPLICATION_XML_TYPE.equals(responseType)) {
             final RestCommResponse response = new RestCommResponse(extensionConfiguration);
             return ok(xstream.toXML(response), APPLICATION_XML).build();
         } else {
@@ -221,9 +211,6 @@ public class ExtensionsConfigurationEndpoint extends SecuredEndpoint {
     }
 
     protected Response updateConfiguration(String extensionSid, MultivaluedMap<String, String> data, MediaType responseType) {
-        if (!isSuperAdmin()) {
-            throw new InsufficientPermission();
-        }
 
         if (!Sid.pattern.matcher(extensionSid).matches()) {
             return status(BAD_REQUEST).build();
@@ -257,9 +244,9 @@ public class ExtensionsConfigurationEndpoint extends SecuredEndpoint {
             return status(NOT_ACCEPTABLE).entity(exception.getMessage()).build();
         }
 
-        if (APPLICATION_JSON_TYPE == responseType) {
+        if (APPLICATION_JSON_TYPE.equals(responseType)) {
             return ok(gson.toJson(updatedExtensionConfiguration), APPLICATION_JSON).build();
-        } else if (APPLICATION_XML_TYPE == responseType) {
+        } else if (APPLICATION_XML_TYPE.equals(responseType)) {
             final RestCommResponse response = new RestCommResponse(updatedExtensionConfiguration);
             return ok(xstream.toXML(response), APPLICATION_XML).build();
         } else {

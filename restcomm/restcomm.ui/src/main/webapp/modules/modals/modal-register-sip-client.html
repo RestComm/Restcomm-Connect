@@ -21,7 +21,7 @@
             </dd>
             <dt>Password</dt>
             <dd id="client-password-wrap">
-                <div class="password-strength" ng-password-strength="clientDetails.password" strength="pwdStrength" css-mode="bootstrap" inner-class="progress-bar" inner-class-prefix="progress-bar-" style="padding: inherit;">
+                <div class="password-strength" ng-password-strength="clientDetails.password" strength="pwdStrength" css-mode="bootstrap" inner-class="progress-bar" inner-class-prefix="progress-bar-">
                     <uib-progressbar value="pwdStrength"></uib-progressbar>
                 </div>
 
@@ -79,6 +79,6 @@
     </form>
 </div>
 <div class="modal-footer">
-    <button class="btn btn-default cancel" ng-click="closeRegisterSIPClient()">Cancel</button>
-    <button class="btn btn-primary" ng-click="registerSIPClient(clientDetails)" ng-disabled="!clientDetails.password || pwdStrength < 50">Register</button>
+    <button id="btn-cancel-register-sip-client" class="btn btn-default cancel" ng-click="closeRegisterSIPClient()">Cancel</button>
+    <button id="btn-register-sip-client" class="btn btn-primary" ng-click="registerSIPClient(clientDetails)" ng-disabled="!clientDetails.password || pwdStrength < 50">Register</button>
 </div>

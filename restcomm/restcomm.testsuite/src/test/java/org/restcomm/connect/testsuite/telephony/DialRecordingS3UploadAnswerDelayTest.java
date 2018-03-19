@@ -14,15 +14,21 @@ import org.jboss.arquillian.junit.Arquillian;
 import org.jboss.arquillian.test.api.ArquillianResource;
 import org.jboss.shrinkwrap.api.ShrinkWrap;
 import org.jboss.shrinkwrap.api.spec.WebArchive;
-import org.jboss.shrinkwrap.resolver.api.maven.archive.ShrinkWrapMaven;
+import org.jboss.shrinkwrap.resolver.api.maven.Maven;
 import org.joda.time.DateTime;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.BeforeClass;
 import org.junit.Rule;
 import org.junit.Test;
+import org.junit.FixMethodOrder;
+import org.junit.runners.MethodSorters;
+import org.junit.experimental.categories.Category;
 import org.junit.runner.RunWith;
 import org.restcomm.connect.commons.Version;
+import org.restcomm.connect.commons.annotations.FeatureAltTests;
+import org.restcomm.connect.commons.annotations.ParallelClassTests;
+import org.restcomm.connect.commons.annotations.SequentialClassTests;
 import org.restcomm.connect.testsuite.http.RestcommCallsTool;
 
 import javax.sip.address.SipURI;
@@ -49,6 +55,8 @@ import static org.junit.Assert.assertTrue;
  * Created by gvagenas on 08/01/2017.
  */
 @RunWith(Arquillian.class)
+@FixMethodOrder(MethodSorters.NAME_ASCENDING)
+@Category(value={FeatureAltTests.class, SequentialClassTests.class})
 public class DialRecordingS3UploadAnswerDelayTest {
 
 	private final static Logger logger = Logger.getLogger(DialRecordingS3UploadAnswerDelayTest.class.getName());
@@ -228,10 +236,10 @@ public class DialRecordingS3UploadAnswerDelayTest {
 		assertNotNull(recording);
 		assertEquals(1, recording.size());
 		double duration = recording.get(0).getAsJsonObject().get("duration").getAsDouble();
-		assertTrue(duration==3.0);
-		assertTrue(recording.get(0).getAsJsonObject().get("file_uri").getAsString().startsWith("http://localhost:8080/restcomm/2012-04-24/Accounts/ACae6e420f425248d6a26948c17a9e2acf/Recordings/"));
+		assertEquals(3.0,duration,0.5);
+		assertTrue(recording.get(0).getAsJsonObject().get("file_uri").getAsString().contains("/restcomm/2012-04-24/Accounts/ACae6e420f425248d6a26948c17a9e2acf/Recordings/"));
 
-		Thread.sleep(7000);
+		Thread.sleep(5000);
 
 		//Verify S3 Upload
 		List<LoggedRequest> requests = findAll(putRequestedFor(urlMatching("/s3/.*")));
@@ -308,10 +316,10 @@ public class DialRecordingS3UploadAnswerDelayTest {
 		assertNotNull(recording);
 		assertEquals(1, recording.size());
 		double duration = recording.get(0).getAsJsonObject().get("duration").getAsDouble();
-		assertTrue(duration==3.0);
-		assertTrue(recording.get(0).getAsJsonObject().get("file_uri").getAsString().startsWith("http://localhost:8080/restcomm/2012-04-24/Accounts/ACae6e420f425248d6a26948c17a9e2acf/Recordings/"));
+		assertEquals(3.0,duration, 0.5);
+		assertTrue(recording.get(0).getAsJsonObject().get("file_uri").getAsString().contains("/restcomm/2012-04-24/Accounts/ACae6e420f425248d6a26948c17a9e2acf/Recordings/"));
 
-		Thread.sleep(7000);
+		Thread.sleep(5000);
 
 		//Verify S3 Upload
 		List<LoggedRequest> requests = findAll(putRequestedFor(urlMatching("/s3/.*")));
@@ -320,19 +328,21 @@ public class DialRecordingS3UploadAnswerDelayTest {
 	}
 
 
-	@Deployment(name = "DialRecordingS3UploadTest_Secure", managed = true, testable = false)
+	@Deployment(name = "DialRecordingS3UploadSecureTest", managed = true, testable = false)
 	public static WebArchive createWebArchiveNoGw() {
 		logger.info("Packaging Test App");
 		WebArchive archive = ShrinkWrap.create(WebArchive.class, "restcomm.war");
-		final WebArchive restcommArchive = ShrinkWrapMaven.resolver()
+		final WebArchive restcommArchive = Maven.resolver()
 				.resolve("org.restcomm:restcomm-connect.application:war:" + version).withoutTransitivity()
 				.asSingle(WebArchive.class);
 		archive = archive.merge(restcommArchive);
 		archive.delete("/WEB-INF/sip.xml");
+archive.delete("/WEB-INF/web.xml");
 		archive.delete("/WEB-INF/conf/restcomm.xml");
 		archive.delete("/WEB-INF/data/hsql/restcomm.script");
 		archive.delete("/WEB-INF/classes/application.conf");
 		archive.addAsWebInfResource("sip.xml");
+        archive.addAsWebInfResource("web.xml");
 		archive.addAsWebInfResource("restcomm_recording_s3_upload-delay.xml", "conf/restcomm.xml");
 		archive.addAsWebInfResource("restcomm.script_dialTest_new", "data/hsql/restcomm.script");
 		archive.addAsWebInfResource("akka_application.conf", "classes/application.conf");

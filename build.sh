@@ -48,7 +48,6 @@ cd $RESTCOMM_HOME/restcomm
 #echo "Will not run test suite because variable is $RUN_TESTSUITE"
 #fi
 
-#git push --repo https://telscalejenkins:m0b1c3nts@bitbucket.org/telestax/telscale-restcomm.git origin restcomm-release-$MAJOR_VERSION_NUMBER.$BUILD_NUMBER
 echo "$MAJOR_VERSION_NUMBER.$BUILD_NUMBER" > $WORKSPACE/restcomm-version.txt
 ls -la $WORKSPACE/*.zip
 md5sum $WORKSPACE/*.zip

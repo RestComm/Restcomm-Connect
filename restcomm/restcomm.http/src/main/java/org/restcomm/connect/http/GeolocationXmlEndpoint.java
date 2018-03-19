@@ -21,18 +21,16 @@
 
 package org.restcomm.connect.http;
 
-import static javax.ws.rs.core.MediaType.APPLICATION_JSON_TYPE;
-import static javax.ws.rs.core.MediaType.APPLICATION_XML_TYPE;
-
 import javax.ws.rs.DELETE;
 import javax.ws.rs.GET;
 import javax.ws.rs.POST;
 import javax.ws.rs.PUT;
 import javax.ws.rs.Path;
 import javax.ws.rs.PathParam;
+import javax.ws.rs.Produces;
+import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.MultivaluedMap;
 import javax.ws.rs.core.Response;
-
 import org.restcomm.connect.commons.annotations.concurrency.ThreadSafe;
 import org.restcomm.connect.dao.entities.Geolocation;
 
@@ -52,12 +50,6 @@ public final class GeolocationXmlEndpoint extends GeolocationEndpoint {
     // *** Immediate type of Geolocation ***//
     /*******************************************/
 
-    @Path("/Immediate/{sid}.json")
-    @DELETE
-    public Response deleteImmediateGeolocationAsJson(@PathParam("accountSid") final String accountSid,
-                                                     @PathParam("sid") final String sid) {
-        return deleteGeolocation(accountSid, sid);
-    }
 
     @Path("/Immediate/{sid}")
     @DELETE
@@ -66,72 +58,41 @@ public final class GeolocationXmlEndpoint extends GeolocationEndpoint {
         return deleteGeolocation(accountSid, sid);
     }
 
-    @Path("/Immediate/{sid}.json")
-    @GET
-    public Response getImmediateGeolocationAsJson(@PathParam("accountSid") final String accountSid,
-                                                  @PathParam("sid") final String sid) {
-        return getGeolocation(accountSid, sid, APPLICATION_JSON_TYPE);
-    }
-
     @Path("/Immediate/{sid}")
     @GET
+    @Produces({MediaType.APPLICATION_XML, MediaType.APPLICATION_JSON})
     public Response getImmediateGeolocationAsXml(@PathParam("accountSid") final String accountSid,
                                                  @PathParam("sid") final String sid) {
-        return getGeolocation(accountSid, sid, APPLICATION_XML_TYPE);
-    }
-
-    @Path("/Immediate.json")
-    @POST
-    public Response putImmediateGeolocationJsonPost(@PathParam("accountSid") final String accountSid,
-                                                    @PathParam("sid") final String sid, final MultivaluedMap<String, String> data) {
-        return putGeolocation(accountSid, data, Geolocation.GeolocationType.Immediate, APPLICATION_JSON_TYPE);
-    }
-
-    @Path("/Immediate/{sid}.json")
-    @POST
-    public Response updateImmediateGeolocationAsJsonPost(@PathParam("accountSid") final String accountSid,
-                                                         @PathParam("sid") final String sid, final MultivaluedMap<String, String> data) {
-        return updateGeolocation(accountSid, sid, data, APPLICATION_JSON_TYPE);
-    }
-
-    @Path("/Immediate/{sid}.json")
-    @PUT
-    public Response updateImmediateGeolocationAsJsonPut(@PathParam("accountSid") final String accountSid,
-                                                        @PathParam("sid") final String sid, final MultivaluedMap<String, String> data) {
-        return updateGeolocation(accountSid, sid, data, APPLICATION_JSON_TYPE);
+        return getGeolocation(accountSid, sid, retrieveMediaType());
     }
 
     @Path("/Immediate")
     @POST
+    @Produces({MediaType.APPLICATION_XML, MediaType.APPLICATION_JSON})
     public Response putImmediateGeolocationXmlPost(@PathParam("accountSid") final String accountSid,
                                                    final MultivaluedMap<String, String> data) {
-        return putGeolocation(accountSid, data, Geolocation.GeolocationType.Immediate, APPLICATION_XML_TYPE);
+        return putGeolocation(accountSid, data, Geolocation.GeolocationType.Immediate, retrieveMediaType());
     }
 
     @Path("/Immediate/{sid}")
     @POST
+    @Produces({MediaType.APPLICATION_XML, MediaType.APPLICATION_JSON})
     public Response putImmediateGeolocationAsXmlPost(@PathParam("accountSid") final String accountSid,
                                                      @PathParam("sid") final String sid, final MultivaluedMap<String, String> data) {
-        return updateGeolocation(accountSid, sid, data, APPLICATION_XML_TYPE);
+        return updateGeolocation(accountSid, sid, data, retrieveMediaType());
     }
 
     @Path("/Immediate/{sid}")
     @PUT
+    @Produces({MediaType.APPLICATION_XML, MediaType.APPLICATION_JSON})
     public Response updateImmediateGeolocationAsXmlPut(@PathParam("accountSid") final String accountSid,
                                                        @PathParam("sid") final String sid, final MultivaluedMap<String, String> data) {
-        return updateGeolocation(accountSid, sid, data, APPLICATION_XML_TYPE);
+        return updateGeolocation(accountSid, sid, data, retrieveMediaType());
     }
 
     /*******************************************/
     // *** Notification type of Geolocation ***//
     /*******************************************/
-
-    @Path("/Notification/{sid}.json")
-    @DELETE
-    public Response deleteNotificationGeolocationAsJson(@PathParam("accountSid") final String accountSid,
-                                                        @PathParam("sid") final String sid) {
-        return deleteGeolocation(accountSid, sid);
-    }
 
     @Path("/Notification/{sid}")
     @DELETE
@@ -140,65 +101,42 @@ public final class GeolocationXmlEndpoint extends GeolocationEndpoint {
         return deleteGeolocation(accountSid, sid);
     }
 
-    @Path("/Notification/{sid}.json")
-    @GET
-    public Response getNotificationGeolocationAsJson(@PathParam("accountSid") final String accountSid,
-                                                     @PathParam("sid") final String sid) {
-        return getGeolocation(accountSid, sid, APPLICATION_JSON_TYPE);
-    }
-
     @Path("/Notification/{sid}")
     @GET
+    @Produces({MediaType.APPLICATION_XML, MediaType.APPLICATION_JSON})
     public Response getNotificationGeolocationAsXml(@PathParam("accountSid") final String accountSid,
                                                     @PathParam("sid") final String sid) {
-        return getGeolocation(accountSid, sid, APPLICATION_XML_TYPE);
-    }
-
-    @Path("/Notification.json")
-    @POST
-    public Response putNotificationGeolocationJsonPost(@PathParam("accountSid") final String accountSid,
-                                                       @PathParam("sid") final String sid, final MultivaluedMap<String, String> data) {
-        return putGeolocation(accountSid, data, Geolocation.GeolocationType.Notification, APPLICATION_JSON_TYPE);
-    }
-
-    @Path("/Notification/{sid}.json")
-    @POST
-    public Response updateNotificationGeolocationAsJsonPost(@PathParam("accountSid") final String accountSid,
-                                                            @PathParam("sid") final String sid, final MultivaluedMap<String, String> data) {
-        return updateGeolocation(accountSid, sid, data, APPLICATION_JSON_TYPE);
-    }
-
-    @Path("/Notification/{sid}.json")
-    @PUT
-    public Response updateNotificationGeolocationAsJsonPut(@PathParam("accountSid") final String accountSid,
-                                                           @PathParam("sid") final String sid, final MultivaluedMap<String, String> data) {
-        return updateGeolocation(accountSid, sid, data, APPLICATION_JSON_TYPE);
+        return getGeolocation(accountSid, sid, retrieveMediaType());
     }
 
     @Path("/Notification")
     @POST
+    @Produces({MediaType.APPLICATION_XML, MediaType.APPLICATION_JSON})
     public Response putNotificationGeolocationXmlPost(@PathParam("accountSid") final String accountSid,
                                                       final MultivaluedMap<String, String> data) {
-        return putGeolocation(accountSid, data, Geolocation.GeolocationType.Notification, APPLICATION_XML_TYPE);
+        return putGeolocation(accountSid, data, Geolocation.GeolocationType.Notification, retrieveMediaType());
     }
 
     @Path("/Notification/{sid}")
     @POST
+    @Produces({MediaType.APPLICATION_XML, MediaType.APPLICATION_JSON})
     public Response putNotificationGeolocationAsXmlPost(@PathParam("accountSid") final String accountSid,
                                                         @PathParam("sid") final String sid, final MultivaluedMap<String, String> data) {
-        return updateGeolocation(accountSid, sid, data, APPLICATION_XML_TYPE);
+        return updateGeolocation(accountSid, sid, data, retrieveMediaType());
     }
 
     @Path("/Notification/{sid}")
     @PUT
+    @Produces({MediaType.APPLICATION_XML, MediaType.APPLICATION_JSON})
     public Response updateNotificationGeolocationAsXmlPut(@PathParam("accountSid") final String accountSid,
                                                           @PathParam("sid") final String sid, final MultivaluedMap<String, String> data) {
-        return updateGeolocation(accountSid, sid, data, APPLICATION_XML_TYPE);
+        return updateGeolocation(accountSid, sid, data, retrieveMediaType());
     }
 
     @GET
+    @Produces({MediaType.APPLICATION_XML, MediaType.APPLICATION_JSON})
     public Response getGeolocationsAsXml(@PathParam("accountSid") final String accountSid) {
-        return getGeolocations(accountSid, APPLICATION_XML_TYPE);
+        return getGeolocations(accountSid, retrieveMediaType());
     }
 
 

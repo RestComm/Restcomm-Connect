@@ -21,7 +21,6 @@
 package org.restcomm.connect.extension.api;
 
 import javax.servlet.ServletContext;
-import javax.servlet.sip.SipServletRequest;
 
 /**
  * @author <a href="mailto:gvagenas@gmail.com">gvagenas</a>
@@ -43,14 +42,14 @@ public interface RestcommExtensionGeneric {
      * and either block/allow or modify the session before Restcomm process it
      * @return ExtensionResponse see ExtensionResponse
      */
-    ExtensionResponse preInboundAction(SipServletRequest request);
+    ExtensionResponse preInboundAction(IExtensionRequest extensionRequest);
     /**
      * Method that will be executed AFTER the process of an Incoming session
      * Implement this method so you will be able to check the Incoming session
      * and either block or allow or modify the session after Restcomm process it
      * @return ExtensionResponse see ExtensionResponse
      */
-    ExtensionResponse postInboundAction(SipServletRequest request);
+    ExtensionResponse postInboundAction(IExtensionRequest extensionRequest);
     /**
      * Method that will be executed before the process of an Outbound session
      * Implement this method so you will be able to check the Outbound session

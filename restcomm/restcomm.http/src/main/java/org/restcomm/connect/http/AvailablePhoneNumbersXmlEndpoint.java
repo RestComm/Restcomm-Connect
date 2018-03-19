@@ -19,18 +19,18 @@
  */
 package org.restcomm.connect.http;
 
+import com.sun.jersey.spi.container.ResourceFilters;
 import javax.ws.rs.GET;
 import javax.ws.rs.Path;
 import javax.ws.rs.PathParam;
+import javax.ws.rs.Produces;
 import javax.ws.rs.QueryParam;
-
-import static javax.ws.rs.core.MediaType.*;
+import javax.ws.rs.core.MediaType;
+import javax.ws.rs.core.Response;
 import static javax.ws.rs.core.Response.*;
 import static javax.ws.rs.core.Response.Status.*;
-
-import javax.ws.rs.core.Response;
-
 import org.restcomm.connect.commons.annotations.concurrency.ThreadSafe;
+import org.restcomm.connect.http.filters.ExtensionFilter;
 import org.restcomm.connect.provisioning.number.api.PhoneNumberSearchFilters;
 import org.restcomm.connect.provisioning.number.api.PhoneNumberType;
 
@@ -46,6 +46,8 @@ public final class AvailablePhoneNumbersXmlEndpoint extends AvailablePhoneNumber
     }
 
     @GET
+    @ResourceFilters({ ExtensionFilter.class })
+    @Produces({MediaType.APPLICATION_XML, MediaType.APPLICATION_JSON})
     public Response getAvailablePhoneNumber(@PathParam("accountSid") final String accountSid,
             @PathParam("IsoCountryCode") final String isoCountryCode, @QueryParam("AreaCode") String areaCode,
             @QueryParam("Contains") String filterPattern, @QueryParam("SmsEnabled") String smsEnabled,
@@ -92,7 +94,7 @@ public final class AvailablePhoneNumbersXmlEndpoint extends AvailablePhoneNumber
             PhoneNumberSearchFilters listFilters = new PhoneNumberSearchFilters(areaCode, null, smsEnabledBool,
                     mmsEnabledBool, voiceEnabledBool, faxEnabledBool, ussdEnabledBool, nearNumber, nearLatLong, distance, inPostalCode, inRegion,
                     inRateCenter, inLata, rangeSizeInt, rangeIndexInt, phoneNumberType);
-            return getAvailablePhoneNumbers(accountSid, isoCountryCode, listFilters, filterPattern, APPLICATION_XML_TYPE);
+            return getAvailablePhoneNumbers(accountSid, isoCountryCode, listFilters, filterPattern, retrieveMediaType());
         } else {
             return status(BAD_REQUEST).build();
         }

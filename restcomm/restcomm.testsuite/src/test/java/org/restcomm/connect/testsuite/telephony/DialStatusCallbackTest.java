@@ -20,42 +20,6 @@
 
 package org.restcomm.connect.testsuite.telephony;
 
-import com.github.tomakehurst.wiremock.junit.WireMockRule;
-import com.github.tomakehurst.wiremock.verification.LoggedRequest;
-import com.google.gson.JsonObject;
-import org.apache.log4j.Logger;
-import org.cafesip.sipunit.SipCall;
-import org.cafesip.sipunit.SipPhone;
-import org.cafesip.sipunit.SipStack;
-import org.cafesip.sipunit.SipTransaction;
-import org.jboss.arquillian.container.mss.extension.SipStackTool;
-import org.jboss.arquillian.container.test.api.Deployer;
-import org.jboss.arquillian.container.test.api.Deployment;
-import org.jboss.arquillian.junit.Arquillian;
-import org.jboss.arquillian.test.api.ArquillianResource;
-import org.jboss.shrinkwrap.api.ShrinkWrap;
-import org.jboss.shrinkwrap.api.spec.WebArchive;
-import org.jboss.shrinkwrap.resolver.api.maven.archive.ShrinkWrapMaven;
-import org.junit.After;
-import org.junit.Before;
-import org.junit.BeforeClass;
-import org.junit.Rule;
-import org.junit.Test;
-import org.junit.runner.RunWith;
-import org.restcomm.connect.commons.Version;
-import org.restcomm.connect.testsuite.http.RestcommCallsTool;
-import org.restcomm.connect.testsuite.tools.MonitoringServiceTool;
-
-import javax.sip.address.SipURI;
-import javax.sip.message.Response;
-import java.net.MalformedURLException;
-import java.net.URL;
-import java.text.ParseException;
-import java.util.Arrays;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
-
 import static com.github.tomakehurst.wiremock.client.WireMock.aResponse;
 import static com.github.tomakehurst.wiremock.client.WireMock.findAll;
 import static com.github.tomakehurst.wiremock.client.WireMock.get;
@@ -71,6 +35,51 @@ import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertTrue;
 
+import java.net.MalformedURLException;
+import java.net.URL;
+import java.text.ParseException;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+
+import javax.sip.address.SipURI;
+import javax.sip.message.Response;
+
+import org.apache.log4j.Logger;
+import org.cafesip.sipunit.SipCall;
+import org.cafesip.sipunit.SipPhone;
+import org.cafesip.sipunit.SipStack;
+import org.cafesip.sipunit.SipTransaction;
+import org.jboss.arquillian.container.mss.extension.SipStackTool;
+import org.jboss.arquillian.container.test.api.Deployer;
+import org.jboss.arquillian.container.test.api.Deployment;
+import org.jboss.arquillian.junit.Arquillian;
+import org.jboss.arquillian.test.api.ArquillianResource;
+import org.jboss.shrinkwrap.api.spec.WebArchive;
+import org.junit.After;
+import org.junit.Before;
+import org.junit.BeforeClass;
+import org.junit.Rule;
+import org.junit.Test;
+import org.junit.FixMethodOrder;
+import org.junit.runners.MethodSorters;
+import org.junit.experimental.categories.Category;
+import org.junit.runner.RunWith;
+import org.restcomm.connect.commons.Version;
+import org.restcomm.connect.commons.annotations.FeatureAltTests;
+import org.restcomm.connect.commons.annotations.ParallelClassTests;
+import org.restcomm.connect.commons.annotations.UnstableTests;
+import org.restcomm.connect.testsuite.NetworkPortAssigner;
+import org.restcomm.connect.testsuite.WebArchiveUtil;
+import org.restcomm.connect.testsuite.http.RestcommCallsTool;
+import org.restcomm.connect.testsuite.tools.MonitoringServiceTool;
+
+import com.github.tomakehurst.wiremock.junit.WireMockRule;
+import com.github.tomakehurst.wiremock.verification.LoggedRequest;
+import com.google.gson.JsonObject;
+
 /**
  * Test for Dial status callback attribute. Reference: The 'statuscallback'
  * attribute takes a URL as an argument. As the call moves states, Restcomm will make a GET or POST request to this URL
@@ -79,6 +88,8 @@ import static org.junit.Assert.assertTrue;
  *
  */
 @RunWith(Arquillian.class)
+@FixMethodOrder(MethodSorters.NAME_ASCENDING)
+@Category(value={ParallelClassTests.class})
 public class DialStatusCallbackTest {
 
     private final static Logger logger = Logger.getLogger(DialStatusCallbackTest.class.getName());
@@ -96,9 +107,11 @@ public class DialStatusCallbackTest {
     @ArquillianResource
     URL deploymentUrl;
 
-    @Rule
-    public WireMockRule wireMockRule = new WireMockRule(8090); // No-args constructor defaults to port 8080
+    private static int mediaPort = NetworkPortAssigner.retrieveNextPortByFile();
 
+    private static int mockPort = NetworkPortAssigner.retrieveNextPortByFile();
+    @Rule
+    public WireMockRule wireMockRule = new WireMockRule(mockPort);
     private static SipStackTool tool1;
     private static SipStackTool tool2;
     private static SipStackTool tool3;
@@ -107,28 +120,36 @@ public class DialStatusCallbackTest {
     // Bob is a simple SIP Client. Will not register with Restcomm
     private SipStack bobSipStack;
     private SipPhone bobPhone;
-    private String bobContact = "sip:bob@127.0.0.1:5090";
+    private static String bobPort = String.valueOf(NetworkPortAssigner.retrieveNextPortByFile());
+    private String bobContact = "sip:bob@127.0.0.1:" + bobPort;
 
     // Alice is a Restcomm Client with VoiceURL. This Restcomm Client can register with Restcomm and whatever will dial the RCML
     // of the VoiceURL will be executed.
     private SipStack aliceSipStack;
     private SipPhone alicePhone;
-    private String aliceContact = "sip:alice@127.0.0.1:5091";
+    private static String alicePort = String.valueOf(NetworkPortAssigner.retrieveNextPortByFile());
+    private String aliceContact = "sip:alice@127.0.0.1:" + alicePort;
 
     // Henrique is a simple SIP Client. Will not register with Restcomm
     private SipStack henriqueSipStack;
     private SipPhone henriquePhone;
-    private String henriqueContact = "sip:henrique@127.0.0.1:5092";
+    private static String henriquePort = String.valueOf(NetworkPortAssigner.retrieveNextPortByFile());
+    private String henriqueContact = "sip:henrique@127.0.0.1:" + henriquePort;
 
     // George is a simple SIP Client. Will not register with Restcomm
     private SipStack georgeSipStack;
     private SipPhone georgePhone;
-    private String georgeContact = "sip:+131313@127.0.0.1:5070";
+    private static String georgePort = String.valueOf(NetworkPortAssigner.retrieveNextPortByFile());
+    private String georgeContact = "sip:+131313@127.0.0.1:" + georgePort;
 
-    private String dialRestcomm = "sip:1111@127.0.0.1:5080"; // Application: dial-client-entry_wActionUrl.xml
+    private String dialRestcomm = "sip:1111@" + restcommContact; // Application: dial-client-entry_wActionUrl.xml
 
     private String adminAccountSid = "ACae6e420f425248d6a26948c17a9e2acf";
     private String adminAuthToken = "77f8c12cc7b8f8423e5c38b035249166";
+
+    private static int restcommPort = 5080;
+    private static int restcommHTTPPort = 8080;
+    private static String restcommContact = "127.0.0.1:" + restcommPort;
 
     @BeforeClass
     public static void beforeClass() throws Exception {
@@ -138,19 +159,29 @@ public class DialStatusCallbackTest {
         tool4 = new SipStackTool("DialActionTest4");
     }
 
+    public static void reconfigurePorts() {
+        if (System.getProperty("arquillian_sip_port") != null) {
+            restcommPort = Integer.valueOf(System.getProperty("arquillian_sip_port"));
+            restcommContact = "127.0.0.1:" + restcommPort;
+        }
+        if (System.getProperty("arquillian_http_port") != null) {
+            restcommHTTPPort = Integer.valueOf(System.getProperty("arquillian_http_port"));
+        }
+    }
+
     @Before
     public void before() throws Exception {
-        bobSipStack = tool1.initializeSipStack(SipStack.PROTOCOL_UDP, "127.0.0.1", "5090", "127.0.0.1:5080");
-        bobPhone = bobSipStack.createSipPhone("127.0.0.1", SipStack.PROTOCOL_UDP, 5080, bobContact);
+        bobSipStack = tool1.initializeSipStack(SipStack.PROTOCOL_UDP, "127.0.0.1", bobPort, restcommContact);
+        bobPhone = bobSipStack.createSipPhone("127.0.0.1", SipStack.PROTOCOL_UDP, restcommPort, bobContact);
 
-        aliceSipStack = tool2.initializeSipStack(SipStack.PROTOCOL_UDP, "127.0.0.1", "5091", "127.0.0.1:5080");
-        alicePhone = aliceSipStack.createSipPhone("127.0.0.1", SipStack.PROTOCOL_UDP, 5080, aliceContact);
+        aliceSipStack = tool2.initializeSipStack(SipStack.PROTOCOL_UDP, "127.0.0.1", alicePort, restcommContact);
+        alicePhone = aliceSipStack.createSipPhone("127.0.0.1", SipStack.PROTOCOL_UDP, restcommPort, aliceContact);
 
-        henriqueSipStack = tool3.initializeSipStack(SipStack.PROTOCOL_UDP, "127.0.0.1", "5092", "127.0.0.1:5080");
-        henriquePhone = henriqueSipStack.createSipPhone("127.0.0.1", SipStack.PROTOCOL_UDP, 5080, henriqueContact);
+        henriqueSipStack = tool3.initializeSipStack(SipStack.PROTOCOL_UDP, "127.0.0.1", henriquePort, restcommContact);
+        henriquePhone = henriqueSipStack.createSipPhone("127.0.0.1", SipStack.PROTOCOL_UDP, restcommPort, henriqueContact);
 
-        georgeSipStack = tool4.initializeSipStack(SipStack.PROTOCOL_UDP, "127.0.0.1", "5070", "127.0.0.1:5080");
-        georgePhone = georgeSipStack.createSipPhone("127.0.0.1", SipStack.PROTOCOL_UDP, 5080, georgeContact);
+        georgeSipStack = tool4.initializeSipStack(SipStack.PROTOCOL_UDP, "127.0.0.1", georgePort, restcommContact);
+        georgePhone = georgeSipStack.createSipPhone("127.0.0.1", SipStack.PROTOCOL_UDP, restcommPort, georgeContact);
     }
 
     @After
@@ -187,7 +218,7 @@ public class DialStatusCallbackTest {
         Thread.sleep(4000);
     }
 
-    private String dialStatusCallback = "<Response><Dial><Client statusCallback=\"http://127.0.0.1:8090/status\">alice</Client></Dial></Response>";
+    private String dialStatusCallback = "<Response><Dial><Client statusCallback=\"http://127.0.0.1:" + mockPort + "/status\">alice</Client></Dial></Response>";
     @Test
     public void testDialStatusCallbackAliceDisconnects() throws ParseException, InterruptedException {
 
@@ -202,7 +233,7 @@ public class DialStatusCallbackTest {
                     .withStatus(200)));
 
         // Register Alice
-        SipURI uri = aliceSipStack.getAddressFactory().createSipURI(null, "127.0.0.1:5080");
+        SipURI uri = aliceSipStack.getAddressFactory().createSipURI(null, restcommContact);
         assertTrue(alicePhone.register(uri, "alice", "1234", aliceContact, 3600, 3600));
 
         // Prepare Alice to receive call
@@ -284,9 +315,10 @@ public class DialStatusCallbackTest {
         assertTrue(liveCallsArraySize==0);
     }
 
-    private String dialStatusCallbackGetMethod = "<Response><Dial><Client statusCallback=\"http://127.0.0.1:8090/status\" " +
+    private String dialStatusCallbackGetMethod = "<Response><Dial><Client statusCallback=\"http://127.0.0.1:" + mockPort + "/status\" " +
             "statusCallbackMethod=\"get\">alice</Client></Dial></Response>";
     @Test
+    @Category(FeatureAltTests.class)
     public void testDialStatusCallbackMethodGET() throws ParseException, InterruptedException {
 
         stubFor(get(urlPathEqualTo("/1111"))
@@ -300,7 +332,7 @@ public class DialStatusCallbackTest {
                         .withStatus(200)));
 
         // Register Alice
-        SipURI uri = aliceSipStack.getAddressFactory().createSipURI(null, "127.0.0.1:5080");
+        SipURI uri = aliceSipStack.getAddressFactory().createSipURI(null, restcommContact);
         assertTrue(alicePhone.register(uri, "alice", "1234", aliceContact, 3600, 3600));
 
         // Prepare Alice to receive call
@@ -383,8 +415,9 @@ public class DialStatusCallbackTest {
         assertTrue(liveCallsArraySize==0);
     }
 
-    private String dialStatusCallbackGet = "<Response><Dial><Client statusCallback=\"http://127.0.0.1:8090/status\" statusCallbackMethod=\"GET\">alice</Client></Dial></Response>";
+    private String dialStatusCallbackGet = "<Response><Dial><Client statusCallback=\"http://127.0.0.1:" + mockPort +"/status\" statusCallbackMethod=\"GET\">alice</Client></Dial></Response>";
     @Test
+    @Category({UnstableTests.class, FeatureAltTests.class})
     public void testDialStatusCallbackBobDisconnects() throws ParseException, InterruptedException {
 
         stubFor(get(urlPathEqualTo("/1111"))
@@ -402,7 +435,7 @@ public class DialStatusCallbackTest {
                         .withStatus(200)));
 
         // Register Alice
-        SipURI uri = aliceSipStack.getAddressFactory().createSipURI(null, "127.0.0.1:5080");
+        SipURI uri = aliceSipStack.getAddressFactory().createSipURI(null, restcommContact);
         assertTrue(alicePhone.register(uri, "alice", "1234", aliceContact, 3600, 3600));
 
         // Prepare Alice to receive call
@@ -485,9 +518,10 @@ public class DialStatusCallbackTest {
         assertTrue(liveCallsArraySize==0);
     }
 
-    private String dialStatusCallbackOnlyInitiatedAndAnswer = "<Response><Dial><Client statusCallback=\"http://127.0.0.1:8090/status\" " +
+    private String dialStatusCallbackOnlyInitiatedAndAnswer = "<Response><Dial><Client statusCallback=\"http://127.0.0.1:"+ mockPort + "/status\" " +
             "statusCallbackEvent=\"initiated,  answered\">alice</Client></Dial></Response>";
     @Test
+    @Category(FeatureAltTests.class)
     public void testDialStatusCallbackOnlyInitiatedAnswerEvent() throws ParseException, InterruptedException {
 
         stubFor(get(urlPathEqualTo("/1111"))
@@ -501,7 +535,7 @@ public class DialStatusCallbackTest {
                         .withStatus(200)));
 
         // Register Alice
-        SipURI uri = aliceSipStack.getAddressFactory().createSipURI(null, "127.0.0.1:5080");
+        SipURI uri = aliceSipStack.getAddressFactory().createSipURI(null, restcommContact);
         assertTrue(alicePhone.register(uri, "alice", "1234", aliceContact, 3600, 3600));
 
         // Prepare Alice to receive call
@@ -575,9 +609,10 @@ public class DialStatusCallbackTest {
         assertTrue(liveCallsArraySize==0);
     }
 
-    private String dialStatusCallbackOnlyRingingCompleted = "<Response><Dial><Client statusCallback=\"http://127.0.0.1:8090/status\" " +
+    private String dialStatusCallbackOnlyRingingCompleted = "<Response><Dial><Client statusCallback=\"http://127.0.0.1:" + mockPort + "/status\" " +
             "statusCallbackEvent=\"ringing,completed\">alice</Client></Dial></Response>";
     @Test
+    @Category({UnstableTests.class, FeatureAltTests.class})
     public void testDialStatusCallbackOnlyRingingCompleted() throws ParseException, InterruptedException {
 
         stubFor(get(urlPathEqualTo("/1111"))
@@ -591,7 +626,7 @@ public class DialStatusCallbackTest {
                         .withStatus(200)));
 
         // Register Alice
-        SipURI uri = aliceSipStack.getAddressFactory().createSipURI(null, "127.0.0.1:5080");
+        SipURI uri = aliceSipStack.getAddressFactory().createSipURI(null, restcommContact);
         assertTrue(alicePhone.register(uri, "alice", "1234", aliceContact, 3600, 3600));
 
         // Prepare Alice to receive call
@@ -665,7 +700,7 @@ public class DialStatusCallbackTest {
         assertTrue(liveCallsArraySize==0);
     }
 
-    private String dialStatusCallbackForSip = "<Response><Dial><Sip statusCallback=\"http://127.0.0.1:8090/status\">sip:henrique@127.0.0.1:5092</Sip></Dial></Response>";
+    private String dialStatusCallbackForSip = "<Response><Dial><Sip statusCallback=\"http://127.0.0.1:" + mockPort +"/status\">sip:henrique@127.0.0.1:" + henriquePort + "</Sip></Dial></Response>";
     @Test
     public void testDialStatusCallbackDialSip() throws ParseException, InterruptedException {
 
@@ -757,7 +792,7 @@ public class DialStatusCallbackTest {
         assertTrue(liveCallsArraySize==0);
     }
 
-    private String dialStatusCallbackForNumber = "<Response><Dial><Number statusCallback=\"http://127.0.0.1:8090/status\">+131313</Number></Dial></Response>";
+    private String dialStatusCallbackForNumber = "<Response><Dial><Number statusCallback=\"http://127.0.0.1:" + mockPort + "/status\">+131313</Number></Dial></Response>";
     @Test
     public void testDialStatusCallbackDialNumber() throws ParseException, InterruptedException {
 
@@ -849,8 +884,9 @@ public class DialStatusCallbackTest {
         assertTrue(liveCallsArraySize==0);
     }
 
-    private String dialFork = "<Response><Dial><Client statusCallback=\"http://127.0.0.1:8090/status\" statusCallbackMethod=\"get\">alice</Client><Sip statusCallback=\"http://127.0.0.1:8090/status\" statusCallbackMethod=\"get\">sip:henrique@127.0.0.1:5092</Sip><Number statusCallback=\"http://127.0.0.1:8090/status\" statusCallbackMethod=\"get\">+131313</Number></Dial></Response>";
+    private String dialFork = "<Response><Dial><Client statusCallback=\"http://127.0.0.1:" + mockPort + "/status\" statusCallbackMethod=\"get\">alice</Client><Sip statusCallback=\"http://127.0.0.1:" + mockPort + "/status\" statusCallbackMethod=\"get\">sip:henrique@127.0.0.1:" + henriquePort + "</Sip><Number statusCallback=\"http://127.0.0.1:" + mockPort + "/status\" statusCallbackMethod=\"get\">+131313</Number></Dial></Response>";
     @Test
+    @Category({UnstableTests.class, FeatureAltTests.class})
     public synchronized void testDialForkNoAnswerButHenriqueStatusCallbackOnAll() throws InterruptedException, ParseException, MalformedURLException {
         stubFor(get(urlPathEqualTo("/1111"))
                 .willReturn(aResponse()
@@ -863,7 +899,7 @@ public class DialStatusCallbackTest {
                         .withStatus(200)));
 
         // Register Alice
-        SipURI uri = aliceSipStack.getAddressFactory().createSipURI(null, "127.0.0.1:5080");
+        SipURI uri = aliceSipStack.getAddressFactory().createSipURI(null, restcommContact);
         assertTrue(alicePhone.register(uri, "alice", "1234", aliceContact, 3600, 3600));
 
         // Prepare Alice to receive call
@@ -882,7 +918,7 @@ public class DialStatusCallbackTest {
         // Initiate a call using Bob
         final SipCall bobCall = bobPhone.createSipCall();
 
-        bobCall.initiateOutgoingCall(bobContact, "sip:1111@127.0.0.1:5080", null, body, "application", "sdp", null, null);
+        bobCall.initiateOutgoingCall(bobContact, "sip:1111@" + restcommContact, null, body, "application", "sdp", null, null);
         assertLastOperationSuccess(bobCall);
 
         assertTrue(bobCall.waitOutgoingCallResponse(5 * 1000));
@@ -997,8 +1033,9 @@ public class DialStatusCallbackTest {
         assertTrue(MonitoringServiceTool.getInstance().getLiveCallsArraySize(deploymentUrl.toString(), adminAccountSid, adminAuthToken) == 0);
     }
 
-    private String dialForkStatusCallbackWithPost = "<Response><Dial><Client statusCallback=\"http://127.0.0.1:8090/status\">alice</Client><Sip statusCallback=\"http://127.0.0.1:8090/status\">sip:henrique@127.0.0.1:5092</Sip><Number statusCallback=\"http://127.0.0.1:8090/status\">+131313</Number></Dial></Response>";
+    private String dialForkStatusCallbackWithPost = "<Response><Dial><Client statusCallback=\"http://127.0.0.1:" + mockPort + "/status\">alice</Client><Sip statusCallback=\"http://127.0.0.1:" + mockPort + "/status\">sip:henrique@127.0.0.1:" + henriquePort + "</Sip><Number statusCallback=\"http://127.0.0.1:" + mockPort + "/status\">+131313</Number></Dial></Response>";
     @Test
+    @Category({FeatureAltTests.class,UnstableTests.class})
     public synchronized void testDialForkNoAnswerButHenriqueStatusCallbackOnAllPost() throws InterruptedException, ParseException, MalformedURLException {
         stubFor(get(urlPathEqualTo("/1111"))
                 .willReturn(aResponse()
@@ -1011,7 +1048,7 @@ public class DialStatusCallbackTest {
                         .withStatus(200)));
 
         // Register Alice
-        SipURI uri = aliceSipStack.getAddressFactory().createSipURI(null, "127.0.0.1:5080");
+        SipURI uri = aliceSipStack.getAddressFactory().createSipURI(null, restcommContact);
         assertTrue(alicePhone.register(uri, "alice", "1234", aliceContact, 3600, 3600));
 
         // Prepare Alice to receive call
@@ -1030,7 +1067,7 @@ public class DialStatusCallbackTest {
         // Initiate a call using Bob
         final SipCall bobCall = bobPhone.createSipCall();
 
-        bobCall.initiateOutgoingCall(bobContact, "sip:1111@127.0.0.1:5080", null, body, "application", "sdp", null, null);
+        bobCall.initiateOutgoingCall(bobContact, "sip:1111@" + restcommContact, null, body, "application", "sdp", null, null);
         assertLastOperationSuccess(bobCall);
 
         assertTrue(bobCall.waitOutgoingCallResponse(5 * 1000));
@@ -1145,8 +1182,9 @@ public class DialStatusCallbackTest {
         assertTrue(MonitoringServiceTool.getInstance().getLiveCallsArraySize(deploymentUrl.toString(), adminAccountSid, adminAuthToken) == 0);
     }
 
-    private String dialForkWithTimeoutStatusCallbackWithPost = "<Response><Dial timeout=\"60\"><Client statusCallback=\"http://127.0.0.1:8090/status\">alice</Client><Sip statusCallback=\"http://127.0.0.1:8090/status\">sip:henrique@127.0.0.1:5092</Sip><Number statusCallback=\"http://127.0.0.1:8090/status\">+131313</Number></Dial></Response>";
+    private String dialForkWithTimeoutStatusCallbackWithPost = "<Response><Dial timeout=\"60\"><Client statusCallback=\"http://127.0.0.1:" + mockPort + "/status\">alice</Client><Sip statusCallback=\"http://127.0.0.1:" + mockPort + "/status\">sip:henrique@127.0.0.1:" + henriquePort + "</Sip><Number statusCallback=\"http://127.0.0.1:" + mockPort + "/status\">+131313</Number></Dial></Response>";
     @Test
+    @Category({UnstableTests.class, FeatureAltTests.class})
     public synchronized void testDialForkNoAnswerButHenriqueStatusCallbackOnAllPostWithTimeout() throws InterruptedException, ParseException, MalformedURLException {
         stubFor(get(urlPathEqualTo("/1111"))
                 .willReturn(aResponse()
@@ -1159,7 +1197,7 @@ public class DialStatusCallbackTest {
                         .withStatus(200)));
 
         // Register Alice
-        SipURI uri = aliceSipStack.getAddressFactory().createSipURI(null, "127.0.0.1:5080");
+        SipURI uri = aliceSipStack.getAddressFactory().createSipURI(null, restcommContact);
         assertTrue(alicePhone.register(uri, "alice", "1234", aliceContact, 3600, 3600));
 
         // Prepare Alice to receive call
@@ -1178,7 +1216,7 @@ public class DialStatusCallbackTest {
         // Initiate a call using Bob
         final SipCall bobCall = bobPhone.createSipCall();
 
-        bobCall.initiateOutgoingCall(bobContact, "sip:1111@127.0.0.1:5080", null, body, "application", "sdp", null, null);
+        bobCall.initiateOutgoingCall(bobContact, "sip:1111@" + restcommContact, null, body, "application", "sdp", null, null);
         assertLastOperationSuccess(bobCall);
 
         assertTrue(bobCall.waitOutgoingCallResponse(5 * 1000));
@@ -1293,13 +1331,14 @@ public class DialStatusCallbackTest {
         assertTrue(MonitoringServiceTool.getInstance().getLiveCallsArraySize(deploymentUrl.toString(), adminAccountSid, adminAuthToken) == 0);
     }
 
-    private String dialForkWithActionUrl = "<Response><Dial timeLimit=\"1000\" timeout=\"2\" action=\"http://127.0.0.1:8090/action\">" +
-            "<Number statusCallback=\"http://127.0.0.1:8090/status\" statusCallbackMethod=\"get\">+131313</Number>" +
-            "<Sip statusCallback=\"http://127.0.0.1:8090/status\" statusCallbackMethod=\"get\">sip:henrique@127.0.0.1:5092</Sip>" +
-            "<Client statusCallback=\"http://127.0.0.1:8090/status\" statusCallbackMethod=\"get\">alice</Client></Dial></Response>";
-    private String rcmlToReturn = "<Response><Dial timeout=\"50\"><Client statusCallback=\"http://127.0.0.1:8090/status\" statusCallbackMethod=\"get\">alice</Client>   </Dial></Response>";
+    private String dialForkWithActionUrl = "<Response><Dial timeLimit=\"1000\" timeout=\"2\" action=\"http://127.0.0.1:" + mockPort + "/action\">" +
+            "<Number statusCallback=\"http://127.0.0.1:" + mockPort + "/status\" statusCallbackMethod=\"get\">+131313</Number>" +
+            "<Sip statusCallback=\"http://127.0.0.1:" + mockPort + "/status\" statusCallbackMethod=\"get\">sip:henrique@127.0.0.1:" + henriquePort + "</Sip>" +
+            "<Client statusCallback=\"http://127.0.0.1:" + mockPort + "/status\" statusCallbackMethod=\"get\">alice</Client></Dial></Response>";
+    private String rcmlToReturn = "<Response><Dial timeout=\"50\"><Client statusCallback=\"http://127.0.0.1:" + mockPort + "/status\" statusCallbackMethod=\"get\">alice</Client>   </Dial></Response>";
     //Non regression test for https://telestax.atlassian.net/browse/RESTCOMM-585
     @Test //TODO Fails when the whole test class runs but Passes when run individually
+    @Category({UnstableTests.class, FeatureAltTests.class})
     public synchronized void testDialForkNoAnswerExecuteRCML_ReturnedFromActionURLWithStatusCallbacks_BobDisconnects() throws InterruptedException, ParseException, MalformedURLException {
 
         stubFor(get(urlPathEqualTo("/1111"))
@@ -1319,7 +1358,7 @@ public class DialStatusCallbackTest {
                         .withStatus(200)));
 
         // Register Alice
-        SipURI uri = aliceSipStack.getAddressFactory().createSipURI(null, "127.0.0.1:5080");
+        SipURI uri = aliceSipStack.getAddressFactory().createSipURI(null, restcommContact);
         assertTrue(alicePhone.register(uri, "alice", "1234", aliceContact, 3600, 3600));
 
         // Prepare Alice to receive call
@@ -1339,7 +1378,7 @@ public class DialStatusCallbackTest {
         // Initiate a call using Bob
         final SipCall bobCall = bobPhone.createSipCall();
 
-        bobCall.initiateOutgoingCall(bobContact, "sip:1111@127.0.0.1:5080", null, body, "application", "sdp", null, null);
+        bobCall.initiateOutgoingCall(bobContact, "sip:1111@" + restcommContact, null, body, "application", "sdp", null, null);
         assertLastOperationSuccess(bobCall);
 
         assertTrue(bobCall.waitOutgoingCallResponse(5 * 1000));
@@ -1443,6 +1482,7 @@ public class DialStatusCallbackTest {
 
     //Non regression test for https://telestax.atlassian.net/browse/RESTCOMM-585
     @Test //TODO Fails when the whole test class runs but Passes when run individually
+    @Category({UnstableTests.class, FeatureAltTests.class})
     public synchronized void testDialForkNoAnswerExecuteRCML_ReturnedFromActionURLWithStatusCallbacks_AliceDisconnects() throws InterruptedException, ParseException, MalformedURLException {
 
         stubFor(get(urlPathEqualTo("/1111"))
@@ -1462,7 +1502,7 @@ public class DialStatusCallbackTest {
                         .withStatus(200)));
 
         // Register Alice
-        SipURI uri = aliceSipStack.getAddressFactory().createSipURI(null, "127.0.0.1:5080");
+        SipURI uri = aliceSipStack.getAddressFactory().createSipURI(null, restcommContact);
         assertTrue(alicePhone.register(uri, "alice", "1234", aliceContact, 3600, 3600));
 
         // Prepare Alice to receive call
@@ -1482,7 +1522,7 @@ public class DialStatusCallbackTest {
         // Initiate a call using Bob
         final SipCall bobCall = bobPhone.createSipCall();
 
-        bobCall.initiateOutgoingCall(bobContact, "sip:1111@127.0.0.1:5080", null, body, "application", "sdp", null, null);
+        bobCall.initiateOutgoingCall(bobContact, "sip:1111@" + restcommContact, null, body, "application", "sdp", null, null);
         assertLastOperationSuccess(bobCall);
 
         assertTrue(bobCall.waitOutgoingCallResponse(5 * 1000));
@@ -1609,21 +1649,22 @@ public class DialStatusCallbackTest {
     @Deployment(name = "DialAction", managed = true, testable = false)
     public static WebArchive createWebArchiveNoGw() {
         logger.info("Packaging Test App");
-        WebArchive archive = ShrinkWrap.create(WebArchive.class, "restcomm.war");
-        final WebArchive restcommArchive = ShrinkWrapMaven.resolver()
-                .resolve("org.restcomm:restcomm-connect.application:war:" + version).withoutTransitivity()
-                .asSingle(WebArchive.class);
-        archive = archive.merge(restcommArchive);
-        archive.delete("/WEB-INF/sip.xml");
-        archive.delete("/WEB-INF/conf/restcomm.xml");
-        archive.delete("/WEB-INF/data/hsql/restcomm.script");
-        archive.delete("/WEB-INF/classes/application.conf");
-        archive.addAsWebInfResource("sip.xml");
-        archive.addAsWebInfResource("restcomm.xml", "conf/restcomm.xml");
-        archive.addAsWebInfResource("restcomm.script_dialStatusCallbackTest", "data/hsql/restcomm.script");
-        archive.addAsWebInfResource("akka_application.conf", "classes/application.conf");
-        logger.info("Packaged Test App");
-        return archive;
+        reconfigurePorts();
+
+        Map<String,String> replacements = new HashMap();
+        //replace mediaport 2727
+        replacements.put("2727", String.valueOf(mediaPort));
+        replacements.put("8080", String.valueOf(restcommHTTPPort));
+        replacements.put("8090", String.valueOf(mockPort));
+        replacements.put("5080", String.valueOf(restcommPort));
+        replacements.put("5070", String.valueOf(georgePort));
+        replacements.put("5090", String.valueOf(bobPort));
+        replacements.put("5091", String.valueOf(alicePort));
+        replacements.put("5092", String.valueOf(henriquePort));
+
+        List<String> resources = new ArrayList();
+        return WebArchiveUtil.createWebArchiveNoGw("restcomm.xml",
+                "restcomm.script_dialStatusCallbackTest",resources, replacements);
     }
 
 }
