@@ -113,7 +113,7 @@ public abstract class ClientsEndpoint extends SecuredEndpoint {
         PasswordValidator validator = PasswordValidatorFactory.createDefault();
         if (!validator.isStrongEnough(password))
             throw new PasswordTooWeak();
-        String realm = configuration.getString("realm");
+        String realm = organizationsDao.getOrganization(accountsDao.getAccount(accountSid).getOrganizationSid()).getDomainName();
         String algorithm = configuration.getString("client-algorithm");
 
         builder.setPassword(DigestAuthentication.HA1(username, realm, password, algorithm));
