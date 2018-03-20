@@ -27,8 +27,23 @@
         <fileSet>
             <!-- here we override some jboss/sipservlets files -->
             <directory>${project.build.directory}/classes/assembly-resources</directory>
+            <includes>
+                <include>**/*.sh</include>
+            </includes>
             <outputDirectory>/</outputDirectory>
-        </fileSet>                
+            <filtered>true</filtered>
+            <!-- after filtering scripts miss their execution mode -->
+            <fileMode>0777</fileMode>
+        </fileSet>   
+        <fileSet>
+            <!-- here we override some jboss/sipservlets files -->
+            <directory>${project.build.directory}/classes/assembly-resources</directory>
+            <excludes>
+                <exclude>**/*.sh</exclude>
+            </excludes>
+            <outputDirectory>/</outputDirectory>
+            <filtered>true</filtered>
+        </fileSet>                      
     </fileSets>
     <dependencySets>       
         <dependencySet>
