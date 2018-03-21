@@ -21,7 +21,7 @@ import org.jboss.arquillian.junit.Arquillian;
 import org.jboss.arquillian.test.api.ArquillianResource;
 import org.jboss.shrinkwrap.api.ShrinkWrap;
 import org.jboss.shrinkwrap.api.spec.WebArchive;
-import org.jboss.shrinkwrap.resolver.api.maven.archive.ShrinkWrapMaven;
+import org.jboss.shrinkwrap.resolver.api.maven.Maven;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.BeforeClass;
@@ -197,13 +197,27 @@ public class ClientsEndpointTest {
         ClientResponse response = resource.accept(MediaType.APPLICATION_JSON).post(ClientResponse.class, params);
         Assert.assertEquals(400, response.getStatus());
         Assert.assertTrue("Response should contain 'invalid' term", response.getEntity(String.class).toLowerCase().contains("invalid"));
+
+        params = new MultivaluedMapImpl();
+        params.add("Login","maria.test?"); // login contains @ sign
+        params.add("Password","RestComm1234!");
+        response = resource.accept(MediaType.APPLICATION_JSON).post(ClientResponse.class, params);
+        Assert.assertEquals(400, response.getStatus());
+        Assert.assertTrue("Response should contain 'invalid' term", response.getEntity(String.class).toLowerCase().contains("invalid"));
+
+        params = new MultivaluedMapImpl();
+        params.add("Login","maria.test="); // login contains @ sign
+        params.add("Password","RestComm1234!");
+        response = resource.accept(MediaType.APPLICATION_JSON).post(ClientResponse.class, params);
+        Assert.assertEquals(400, response.getStatus());
+        Assert.assertTrue("Response should contain 'invalid' term", response.getEntity(String.class).toLowerCase().contains("invalid"));
     }
 
     /**
      * addSameClientNameInDifferentOrganizations
      * https://github.com/RestComm/Restcomm-Connect/issues/2106
      * We should be able to add same client in different organizations
-     * 
+     *
      */
     @Test
     public void addSameClientNameInDifferentOrganizations() {
@@ -217,7 +231,7 @@ public class ClientsEndpointTest {
         params.add("Password","RestComm1234!");
         ClientResponse response = resource.accept(MediaType.APPLICATION_JSON).post(ClientResponse.class, params);
         Assert.assertEquals(200, response.getStatus());
-        
+
         //try to add same client again in same organization - should not be allowed
         /*jersey = getClient(developerUsername, developeerAuthToken);
         resource = jersey.resource( getResourceUrl("/2012-04-24/Accounts/" + developerAccountSid + "/Clients.json" ) );
@@ -237,7 +251,7 @@ public class ClientsEndpointTest {
         params.add("Password","RestComm1234!");
         response = resource.accept(MediaType.APPLICATION_JSON).post(ClientResponse.class, params);
         Assert.assertEquals(200, response.getStatus());
-    	
+
     }
 
     @Test@Category({FeatureAltTests.class, UnstableTests.class})
@@ -295,14 +309,16 @@ public class ClientsEndpointTest {
     @Deployment(name = "ClientsEndpointTest", managed = true, testable = false)
     public static WebArchive createWebArchiveNoGw() {
         WebArchive archive = ShrinkWrap.create(WebArchive.class, "restcomm.war");
-        final WebArchive restcommArchive = ShrinkWrapMaven.resolver()
+        final WebArchive restcommArchive = Maven.resolver()
                 .resolve("org.restcomm:restcomm-connect.application:war:" + version).withoutTransitivity()
                 .asSingle(WebArchive.class);
         archive = archive.merge(restcommArchive);
         archive.delete("/WEB-INF/sip.xml");
+archive.delete("/WEB-INF/web.xml");
         archive.delete("/WEB-INF/conf/restcomm.xml");
         archive.delete("/WEB-INF/data/hsql/restcomm.script");
         archive.addAsWebInfResource("sip.xml");
+        archive.addAsWebInfResource("web.xml");
         archive.addAsWebInfResource("restcomm.xml", "conf/restcomm.xml");
         archive.addAsWebInfResource("restcomm.script_clients_test", "data/hsql/restcomm.script");
         return archive;
