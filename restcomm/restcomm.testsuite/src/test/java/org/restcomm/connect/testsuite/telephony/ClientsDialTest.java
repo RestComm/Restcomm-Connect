@@ -1231,7 +1231,7 @@ public class ClientsDialTest {
     }
 
     @Test
-    @Category(FeatureExpTests.class)
+    @Category({FeatureExpTests.class, UnstableTests.class})
     public void testClientDialOutPstnCancelBefore200() throws ParseException, InterruptedException {
 
         assertNotNull(mariaRestcommClientSid);
