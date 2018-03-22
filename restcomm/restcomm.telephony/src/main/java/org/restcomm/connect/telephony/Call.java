@@ -2196,6 +2196,8 @@ public final class Call extends RestcommUntypedActor implements TransitionEndLis
                         uri.setLrParam(true);
                         challengeRequest.pushRoute(uri);
                     }
+                    //FIXME:should check for the Ims pushed Route?
+                    B2BUAHelper.addHeadersToMessage(challengeRequest, extensionHeaders, factory);
                     challengeRequest.send();
                 }
                 break;
