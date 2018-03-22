@@ -689,7 +689,7 @@ otherRestCommConf(){
 
     #Configure USESBC
     echo "USESBC: $RCUSESBC"
-    sed -i "s|<use-sbc>.*</use-sbc>|<use-sbc>${RCUSESBC}</use-sbc>" $FILE
+    sed -i "s|<use-sbc>.*</use-sbc>|<use-sbc>${RCUSESBC}</use-sbc>|" $FILE
 
     echo "End Rest RestComm configuration"
 }
