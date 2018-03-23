@@ -106,8 +106,8 @@ public final class UserAgentManager extends RestcommUntypedActor {
         monitoringService = (ActorRef) servletContext.getAttribute(MonitoringService.class.getName());
         final Configuration runtime = configuration.subset("runtime-settings");
         this.authenticateUsers = runtime.getBoolean("authenticate");
-        clientAlgorithm = runtime.getString("client-algorithm");
-        clientQop = runtime.getString("client-qop");
+        clientAlgorithm = RestcommConfiguration.getInstance().getMain().getClientAlgorithm();
+        clientQop = RestcommConfiguration.getInstance().getMain().getClientQOP();
         this.factory = factory;
         this.storage = storage;
         pingInterval = runtime.getInt("ping-interval", 60);
@@ -233,7 +233,7 @@ public final class UserAgentManager extends RestcommUntypedActor {
     private String header(final String nonce, final String realm, final String scheme) {
         final StringBuilder buffer = new StringBuilder();
         buffer.append(scheme).append(" ");
-        if(!clientAlgorithm.isEmpty()){
+        if(clientAlgorithm != null && !clientAlgorithm.isEmpty()){
             buffer.append("algorithm=\"").append(clientAlgorithm).append("\", ");
             buffer.append("qop=\"").append(clientQop).append("\", ");
         }
