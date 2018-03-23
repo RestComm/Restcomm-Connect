@@ -6,7 +6,7 @@
 	<parent>
 		<groupId>org.restcomm</groupId>
 		<artifactId>restcomm-connect</artifactId>
-		<version>8.3.2-SNAPSHOT</version>
+		<version>8.3.2-202</version>
 	</parent>
 
 	<artifactId>restcomm-connect.ussd</artifactId>
