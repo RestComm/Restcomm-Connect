@@ -4,6 +4,7 @@ import static com.github.tomakehurst.wiremock.client.WireMock.aResponse;
 import static com.github.tomakehurst.wiremock.client.WireMock.get;
 import static com.github.tomakehurst.wiremock.client.WireMock.stubFor;
 import static com.github.tomakehurst.wiremock.client.WireMock.urlPathEqualTo;
+import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertTrue;
 
@@ -355,7 +356,7 @@ public class SmppTest {
 
 		int responseMariaCall = mariaCall.getLastReceivedResponse().getStatusCode();
         logger.info("responseMariaCall: "+responseMariaCall);
-        assertTrue(responseMariaCall == Response.NOT_FOUND);
+        assertEquals(Response.NOT_FOUND, responseMariaCall);
 
 	}
 
