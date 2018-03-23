@@ -2477,8 +2477,6 @@ public class DialForkTest {
         assertTrue(henriqueCall.sendInviteOkAck());
 
         assertTrue(aliceCall.waitForIncomingCall(5000));
-//        assertTrue(aliceCall.sendIncomingCallResponse(Response.TRYING, "Alice-Trying", 3600));
-//        assertTrue(aliceCall.sendIncomingCallResponse(Response.RINGING, "Alice-Ringing", 3600));
         String receivedBody = new String(aliceCall.getLastReceivedRequest().getRawContent());
         assertTrue(aliceCall.sendIncomingCallResponse(Response.TEMPORARILY_UNAVAILABLE, "Alice-TemporaryUnavailable", 3600, receivedBody, "application", "sdp",
                 null, null));
