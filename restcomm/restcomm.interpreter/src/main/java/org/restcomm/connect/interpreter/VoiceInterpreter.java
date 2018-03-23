@@ -1331,6 +1331,8 @@ public class VoiceInterpreter extends BaseVoiceInterpreter {
                     if (dialBranches != null && dialBranches.contains(sender)) {
                         dialBranches.remove(sender);
                     }
+                    //https://telestax.atlassian.net/browse/RESTCOMM-1738
+                    context().setReceiveTimeout(Duration.Undefined());
                     checkDialBranch(message,sender,action);
                 } else if (sender.equals(call)) {
                     fsm.transition(message, finished);

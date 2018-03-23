@@ -660,6 +660,13 @@ public class MockMediaGateway extends RestcommUntypedActor {
             event = AUMgcpEvent.auoc.withParm("AU/pr ri=file://" + recordingFile.toPath() + " rc=100 dc=1");
         } else {
             event = AUMgcpEvent.auoc.withParm("rc=100 dc=1");
+            if(!request.getSignalRequests()[0].getEventIdentifier().getParms().contains("ringing.wav")) {
+                try {
+                    Thread.sleep(2000);
+                } catch (Exception e){
+                    System.out.println(e.toString());
+                }
+            }
         }
 
         final EventName[] events = {new EventName(AUPackage.AU, event)};

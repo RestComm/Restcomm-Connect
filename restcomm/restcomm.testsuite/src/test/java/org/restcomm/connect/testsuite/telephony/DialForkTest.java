@@ -145,6 +145,8 @@ public class DialForkTest {
     private static String restcommContact = "127.0.0.1:" + restcommPort;
     private static String dialAliceRcmlWithPlay;
     private static String dialAliceRcmlWithInvalidPlay;
+    private String dialTimeoutRcmlWithPlay;
+    private String rcmlPlayAndDialReturn;
     private int timeout = 10;
     private String dialForkWithTimeout = "<Response><Dial timeout=\""+timeout+"\"><Client>alice</Client><Sip>sip:henrique@127.0.0.1:" + henriquePort + "</Sip><Number>+131313</Number></Dial></Response>";
     private int initialTotalCallSinceUptime;
@@ -175,7 +177,8 @@ public class DialForkTest {
 
         dialAliceRcmlWithPlay = "<Response><Play>" + deploymentUrl.toString() + "/audio/demo-prompt.wav</Play><Dial><Client>alice</Client></Dial></Response>";
         dialAliceRcmlWithInvalidPlay = "<Response><Play>" + deploymentUrl.toString() + "/audio/demo-prompt13.wav</Play><Dial><Client>alice</Client></Dial></Response>";
-
+        dialTimeoutRcmlWithPlay = "<Response><Dial timeout=\"1\" action=\"http://127.0.0.1:" + mockPort+ "/test\"><Client>alice</Client></Dial></Response>";
+        rcmlPlayAndDialReturn = "<Response><Play>" + deploymentUrl.toString() + "/audio/demo-prompt.wav</Play><Dial><Client>bob</Client></Dial></Response>";
         bobSipStack = tool1.initializeSipStack(SipStack.PROTOCOL_UDP, "127.0.0.1", bobPort, restcommContact);
         bobPhone = bobSipStack.createSipPhone("127.0.0.1", SipStack.PROTOCOL_UDP, restcommPort, bobContact);
 
@@ -2431,6 +2434,109 @@ public class DialForkTest {
         assertEquals(0, mgcpConnections);
     }
 
+    @Test
+    @Category(FeatureAltTests.class)
+    public void testDialTimeoutWithPlay() throws ParseException, InterruptedException, MalformedURLException {
+        stubFor(get(urlPathEqualTo("/1111"))
+                .willReturn(aResponse()
+                        .withStatus(200)
+                        .withHeader("Content-Type", "text/xml")
+                        .withBody(dialTimeoutRcmlWithPlay)));
+
+        stubFor(post(urlEqualTo("/test"))
+                .willReturn(aResponse()
+                        .withStatus(200)
+                        .withHeader("Content-Type", "text/xml")
+                        .withBody(rcmlPlayAndDialReturn)));
+
+        SipURI Alice_uri = aliceSipStack.getAddressFactory().createSipURI(null, restcommContact);
+        assertTrue(alicePhone.register(Alice_uri, "alice", "1234", aliceContact, 3600, 3600));
+
+        SipURI Bob_uri = bobSipStack.getAddressFactory().createSipURI(null, restcommContact);
+        assertTrue(bobPhone.register(Bob_uri, "bob", "1234", bobContact, 3600, 3600));
+
+        // Prepare Alice's phone to receive call
+        SipCall aliceCall = alicePhone.createSipCall();
+        aliceCall.listenForIncomingCall();
+
+        // Create outgoing call with first phone
+        final SipCall henriqueCall = henriquePhone.createSipCall();
+        henriqueCall.initiateOutgoingCall(henriqueContact, "sip:1111@" + restcommContact, null, body, "application", "sdp", null, null);
+        assertLastOperationSuccess(henriqueCall);
+        assertTrue(henriqueCall.waitOutgoingCallResponse(5 * 1000));
+        final int response = henriqueCall.getLastReceivedResponse().getStatusCode();
+        assertTrue(response == Response.TRYING || response == Response.RINGING);
+
+        if (response == Response.TRYING) {
+            assertTrue(henriqueCall.waitOutgoingCallResponse(5 * 1000));
+            assertEquals(Response.RINGING, henriqueCall.getLastReceivedResponse().getStatusCode());
+        }
+
+        assertTrue(henriqueCall.waitOutgoingCallResponse(5 * 1000));
+        assertEquals(Response.OK, henriqueCall.getLastReceivedResponse().getStatusCode());
+        assertTrue(henriqueCall.sendInviteOkAck());
+
+        assertTrue(aliceCall.waitForIncomingCall(5000));
+//        assertTrue(aliceCall.sendIncomingCallResponse(Response.TRYING, "Alice-Trying", 3600));
+//        assertTrue(aliceCall.sendIncomingCallResponse(Response.RINGING, "Alice-Ringing", 3600));
+        String receivedBody = new String(aliceCall.getLastReceivedRequest().getRawContent());
+        assertTrue(aliceCall.sendIncomingCallResponse(Response.TEMPORARILY_UNAVAILABLE, "Alice-TemporaryUnavailable", 3600, receivedBody, "application", "sdp",
+                null, null));
+        assertTrue(aliceCall.waitForAck(5000));
+
+        assertEquals(2, MonitoringServiceTool.getInstance().getStatistics(deploymentUrl.toString(), adminAccountSid, adminAuthToken) );
+        assertEquals(2, MonitoringServiceTool.getInstance().getLiveCallsArraySize(deploymentUrl.toString(), adminAccountSid, adminAuthToken) );
+
+        // Prepare Bob's phone to receive call
+        SipCall bobCall = bobPhone.createSipCall();
+        bobCall.listenForIncomingCall();
+
+        assertTrue(bobCall.waitForIncomingCall(5000));
+        assertTrue(bobCall.sendIncomingCallResponse(Response.TRYING, "Henrique-Trying", 3600));
+        assertTrue(bobCall.sendIncomingCallResponse(Response.RINGING, "Henrique-Ringing", 3600));
+        assertTrue(bobCall.sendIncomingCallResponse(Response.OK, "Henrique-OK", 3600, receivedBody, "application", "sdp",
+                null, null));
+        assertTrue(bobCall.waitForAck(5000));
+
+        Thread.sleep(2000);
+        henriqueCall.listenForDisconnect();
+
+        assertTrue(bobCall.disconnect());
+        Thread.sleep(500);
+        assertTrue(henriqueCall.waitForDisconnect(5000));
+        assertTrue(henriqueCall.respondToDisconnect());
+
+        assertTrue(alicePhone.unregister(aliceContact, 3600));
+        assertTrue(bobPhone.unregister(aliceContact, 3600));
+
+        Thread.sleep(10000);
+
+        logger.info("About to check the Requests");
+        List<LoggedRequest> requests = findAll(getRequestedFor(urlPathMatching("/1111")));
+        assertTrue(requests.size() == 1);
+        //        requests.get(0).g;
+        String requestBody = new URL(requests.get(0).getAbsoluteUrl()).getQuery();// .getQuery();// .getBodyAsString();
+        List<String> params = Arrays.asList(requestBody.split("&"));
+        String callSid = "";
+        for (String param : params) {
+            if (param.contains("CallSid")) {
+                callSid = param.split("=")[1];
+            }
+        }
+        JsonObject cdr = RestcommCallsTool.getInstance().getCall(deploymentUrl.toString(), adminAccountSid, adminAuthToken, callSid);
+        JsonObject jsonObj = cdr.getAsJsonObject();
+        assertTrue(jsonObj.get("status").getAsString().equalsIgnoreCase("completed"));
+        assertTrue(MonitoringServiceTool.getInstance().getStatistics(deploymentUrl.toString(), adminAccountSid, adminAuthToken) == 0);
+        assertTrue(MonitoringServiceTool.getInstance().getLiveCallsArraySize(deploymentUrl.toString(), adminAccountSid, adminAuthToken) == 0);
+
+        JsonObject metrics = MonitoringServiceTool.getInstance().getMetrics(deploymentUrl.toString(),adminAccountSid, adminAuthToken);
+        Map<String, Integer> mgcpResources = MonitoringServiceTool.getInstance().getMgcpResources(metrics);
+        int mgcpEndpoints = mgcpResources.get("MgcpEndpoints");
+        int mgcpConnections = mgcpResources.get("MgcpConnections");
+
+        assertEquals(0, mgcpEndpoints);
+        assertEquals(0, mgcpConnections);
+    }
 
     @Test //Test that Restcomm cleans up calls when an error from MMS happens
     @Category(FeatureExpTests.class)
