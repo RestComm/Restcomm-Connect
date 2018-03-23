@@ -143,8 +143,8 @@ public final class SmsService extends RestcommUntypedActor {
         this.configuration = configuration;
         final Configuration runtime = configuration.subset("runtime-settings");
         this.authenticateUsers = runtime.getBoolean("authenticate");
-        clientAlgorithm = runtime.getString("client-algorithm");
-        clientQop = runtime.getString("client-qop");
+        clientAlgorithm = RestcommConfiguration.getInstance().getMain().getClientAlgorithm();
+        clientQop = RestcommConfiguration.getInstance().getMain().getClientQOP();
         this.servletConfig = (ServletConfig) configuration.getProperty(ServletConfig.class.getName());
         this.sipFactory = factory;
         this.storage = storage;

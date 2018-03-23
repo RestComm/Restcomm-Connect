@@ -13,7 +13,6 @@
 	<runtime-settings>
         <client-algorithm>MD5</client-algorithm>
         <client-qop>auth</client-qop>
-        <client-algorithm-sess>false</client-algorithm-sess>
         <!-- The API version that will be used. -->
 		<api-version>2012-04-24</api-version>
 

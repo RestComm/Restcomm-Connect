@@ -273,8 +273,8 @@ public final class CallManager extends RestcommUntypedActor {
         numberSelector = (NumberSelectorService)context.getAttribute(NumberSelectorService.class.getName());
         final Configuration runtime = configuration.subset("runtime-settings");
         final Configuration outboundProxyConfig = runtime.subset("outbound-proxy");
-        clientAlgorithm = runtime.getString("client-algorithm");
-        clientQop = runtime.getString("client-qop");
+        clientAlgorithm = RestcommConfiguration.getInstance().getMain().getClientAlgorithm();
+        clientQop = RestcommConfiguration.getInstance().getMain().getClientQOP();
         SipURI outboundIntf = outboundInterface("udp");
         if (outboundIntf != null) {
             myHostIp = ((SipURI) outboundIntf).getHost().toString();
