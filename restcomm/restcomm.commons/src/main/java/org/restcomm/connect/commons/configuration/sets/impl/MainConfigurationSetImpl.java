@@ -75,8 +75,8 @@ public class MainConfigurationSetImpl extends ConfigurationSet implements MainCo
 
     public static final String BYPASS_LB_FOR_CLIENTS = "bypass-lb-for-clients";
     private boolean bypassLbForClients = false;
-	private String clientAlgorithm = DEFAULT_CLIENT_PASSWORD;
-	private String clientQOP = DEFAULT_CLIENT_QOP;
+    private String clientAlgorithm = DEFAULT_CLIENT_PASSWORD;
+    private String clientQOP = DEFAULT_CLIENT_QOP;
 
     public MainConfigurationSetImpl(ConfigurationSource source) {
         super(source);
@@ -279,14 +279,13 @@ public class MainConfigurationSetImpl extends ConfigurationSet implements MainCo
         this.conferenceTimeout = conferenceTimeout;
     }
 
-	@Override
-	public String getClientAlgorithm() {
-		return clientAlgorithm;
-	}
+    @Override
+    public String getClientAlgorithm() {
+        return clientAlgorithm;
+    }
 
-	@Override
-	public String getClientQOP() {
-		// TODO Auto-generated method stub
-		return clientQOP;
-	}
+    @Override
+    public String getClientQOP() {
+        return clientQOP;
+    }
 }
