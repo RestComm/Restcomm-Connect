@@ -89,10 +89,15 @@ rcMod.config(['$stateProvider','$urlRouterProvider', function($stateProvider, $u
     controller:'ProfileCtrl'
   });
   $stateProvider.state('restcomm.subaccounts',{
-	    url:'/subaccounts',
-	    templateUrl:'modules/subaccounts.html',
-	    controller:'SubAccountsCtrl'
-	  });
+    url:'/subaccounts',
+    templateUrl:'modules/subaccounts.html',
+    controller:'SubAccountsCtrl',
+    resolve: {
+      subAccountsList: function(RCommAccounts) {
+        return RCommAccounts.query().$promise;
+      }
+    }
+  });
   $stateProvider.state('restcomm.register-incoming',{
     url:'/numbers/register-incoming',
     templateUrl:'modules/numbers-incoming-register.html',
@@ -241,6 +246,41 @@ rcMod.directive('equals', function() {
 });
 
 rcMod.run(function($rootScope, $location, $anchorScroll, AuthService) {
+
+  $rootScope.fac = {
+    'SubAccounts': {
+      title: 'Feature not available',
+      message: 'The Sub Accounts feature is not available in your account.',
+      condition: '!!!accountProfile.featureEnablement.subaccountsCreation',
+      wrapper: true,
+      placement: 'right',
+      styles: {'width': 'fit-content'}
+    },
+    'SubAccountsLimit': {
+      title: 'Limit reached',
+      message: 'The maximum number of Sub Accounts for your account has been reached.',
+      condition: '!!!accountProfile.featureEnablement.subaccountsCreation || accountProfile.featureEnablement.subaccountsCreation.limit <= subAccountsList.length',
+      wrapper: true,
+      placement: 'left',
+      styles: {'pointer-events': 'all !important', 'display': 'block', 'float': 'right'}
+    },
+    'DID': {
+      title: 'Feature not available',
+      message: 'The provider number purchasing feature is not available in your account.',
+      condition: '!!!accountProfile.featureEnablement.DIDPurchase',
+      wrapper: true,
+      placement: 'right',
+      styles: {'width': 'fit-content'}
+    },
+    'DIDCountry': {
+      title: 'Country not avaialble',
+      message: 'The selected country is not available for purchasing Numbers in your account.',
+      condition: 'newNumber.countryCode.code && accountProfile.featureEnablement.DIDPurchase.allowedCountries.indexOf(newNumber.countryCode.code) < 0',
+      open: true,
+      placement: 'bottom'
+    }
+  };
+
   $rootScope.$on("$routeChangeStart", function(event, next, current) {
     $anchorScroll(); // scroll to top
     //if(!AuthService.isLoggedIn()) {

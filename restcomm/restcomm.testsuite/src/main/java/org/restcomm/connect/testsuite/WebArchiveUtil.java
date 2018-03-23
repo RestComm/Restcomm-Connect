@@ -20,23 +20,26 @@ public class WebArchiveUtil {
     public static File tweakFilePorts(String filePath, Map<String, String> portReplaments) {
         try {
             InputStream resourceAsStream = WebArchiveUtil.class.getClassLoader().getResourceAsStream(filePath);
-            StringWriter writer = new StringWriter();
-            IOUtils.copy(resourceAsStream, writer, java.nio.charset.Charset.defaultCharset());
-            String confStr = writer.toString();
-            for (String key : portReplaments.keySet()) {
-                confStr = confStr.replace(key, portReplaments.get(key));
+            if (resourceAsStream != null) {
+                StringWriter writer = new StringWriter();
+                IOUtils.copy(resourceAsStream, writer, java.nio.charset.Charset.defaultCharset());
+                String confStr = writer.toString();
+                for (String key : portReplaments.keySet()) {
+                    confStr = confStr.replace(key, portReplaments.get(key));
+                }
+                String targetFilePath = "target" + File.separator;
+                if (System.getProperty("arquillian_sip_port") != null) {
+                    targetFilePath = targetFilePath + System.getProperty("arquillian_sip_port");
+                }
+                targetFilePath = targetFilePath + File.separator + filePath;
+                File f = new File(targetFilePath);
+                FileUtils.writeStringToFile(f, confStr);
+                return f;
             }
-            String targetFilePath = "target" + File.separator;
-            if (System.getProperty("arquillian_sip_port") != null) {
-                targetFilePath = targetFilePath + System.getProperty("arquillian_sip_port");
-            }
-            targetFilePath = targetFilePath + File.separator + filePath;
-            File f = new File(targetFilePath);
-            FileUtils.writeStringToFile(f, confStr);
-            return f;
         } catch (IOException ex) {
             return null;
         }
+        return null;
     }
 
     public static WebArchive createWebArchiveNoGw(String restcommConf, String dbScript, Map<String, String> replacements) {
@@ -67,8 +70,10 @@ public class WebArchiveUtil {
 
         //by default include Allowing extension to check executionPoints
         File extFile = WebArchiveUtil.tweakFilePorts("org/restcomm/connect/testsuite/extensions/extensions_allowing.xml", replacements);
-        archive.delete("/WEB-INF/" + "conf/extensions.xml");
-        archive.addAsWebInfResource(extFile, "conf/extensions.xml");
+        if (extFile != null) {
+            archive.delete("/WEB-INF/" + "conf/extensions.xml");
+            archive.addAsWebInfResource(extFile, "conf/extensions.xml");
+        }
 
         for (String webdInfFile : webInfResources.keySet()) {
             File f = WebArchiveUtil.tweakFilePorts(webdInfFile, replacements);

@@ -523,7 +523,7 @@ public final class CallManager extends RestcommUntypedActor {
 
 
         Sid sourceOrganizationSid = OrganizationUtil.getOrganizationSidBySipURIHost(storage, fromUri);
-        Sid toOrganizationSid = OrganizationUtil.getOrganizationSidBySipURIHost(storage, toUri);
+        Sid toOrganizationSid = SIPOrganizationUtil.searchOrganizationBySIPRequest(storage.getOrganizationsDao(), request);
 
         if(logger.isDebugEnabled()) {
             logger.debug("sourceOrganizationSid: " + sourceOrganizationSid +" fromUri: "+fromUri);

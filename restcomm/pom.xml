@@ -10,7 +10,7 @@
 
     <groupId>org.restcomm</groupId>
     <artifactId>restcomm-connect</artifactId>
-    <version>8.3.1-SNAPSHOT</version>
+    <version>8.3.2-SNAPSHOT</version>
     <packaging>pom</packaging>
     <name>RestComm-Connect</name>
     <description>A unified communications platform for web developers.</description>
@@ -186,6 +186,129 @@
 
     <dependencyManagement>
         <dependencies>
+            <!-- INTERNAL MODULES -->
+            <dependency>
+                <groupId>org.restcomm</groupId>
+                <artifactId>restcomm-connect.sdr.api</artifactId>
+                <version>${project.version}</version>            
+            </dependency>      
+            <dependency>
+                <groupId>org.restcomm</groupId>
+                <artifactId>restcomm-connect.core</artifactId>
+                <version>${project.version}</version>       
+            </dependency>                  
+            <dependency>
+                <groupId>org.restcomm</groupId>
+                <artifactId>restcomm-connect.mrb.api</artifactId>
+                <version>${project.version}</version>                        
+            </dependency>
+
+            <dependency>
+                <groupId>org.restcomm</groupId>
+                <artifactId>restcomm-connect.mrb</artifactId>
+                <version>${project.version}</version>                        
+            </dependency> 
+            <dependency>
+                <groupId>org.restcomm</groupId>
+                <artifactId>restcomm-connect.application</artifactId>
+                <version>${project.version}</version>   
+                <type>war</type>                
+            </dependency>                                     
+            <dependency>
+                <groupId>org.restcomm</groupId>
+                <artifactId>restcomm-connect.extension.api</artifactId>
+                <version>${project.version}</version>                        
+            </dependency>
+            <dependency>
+                <groupId>org.restcomm</groupId>
+                <artifactId>restcomm-connect.extension.controller</artifactId>
+                <version>${project.version}</version>
+            </dependency> 
+            <dependency>
+                <groupId>org.restcomm</groupId>
+                <artifactId>restcomm-connect.monitoring.service</artifactId>
+                <version>${project.version}</version>            
+            </dependency>  
+            <dependency>
+                <groupId>org.restcomm</groupId>
+                <artifactId>restcomm-connect.dao</artifactId>
+                <version>${project.version}</version>                
+            </dependency>
+            <dependency>
+                <groupId>org.restcomm</groupId>
+                <artifactId>restcomm-connect.telephony</artifactId>
+                <version>${project.version}</version>                
+            </dependency>            
+            <dependency>
+                <groupId>org.restcomm</groupId>
+                <artifactId>restcomm-connect.telephony.api</artifactId>
+                <version>${project.version}</version>                
+            </dependency>
+
+            <dependency>
+                <groupId>org.restcomm</groupId>
+                <artifactId>restcomm-connect.http</artifactId>
+                <version>${project.version}</version>                
+            </dependency>  
+            <dependency>
+                <groupId>org.restcomm</groupId>
+                <artifactId>restcomm-connect.extension.api</artifactId>
+                <version>${project.version}</version>                
+            </dependency>
+
+            <dependency>
+                <groupId>org.restcomm</groupId>
+                <artifactId>restcomm-connect.testsuite</artifactId>
+                <version>${project.version}</version>  
+            </dependency>                
+
+            <dependency>
+                <groupId>org.restcomm</groupId>
+                <artifactId>restcomm-connect.commons</artifactId>
+                <version>${project.version}</version>  
+            </dependency> 
+            <dependency>
+                <groupId>org.restcomm</groupId>
+                <artifactId>restcomm-connect.email.api</artifactId>
+                <version>${project.version}</version> 
+            </dependency> 
+            
+            <dependency>
+                <groupId>org.restcomm</groupId>
+                <artifactId>restcomm-connect.sms</artifactId>
+                <version>${project.version}</version> 
+            </dependency>
+            <dependency>
+                <groupId>org.restcomm</groupId>
+                <artifactId>restcomm-connect.mgcp</artifactId>
+                <version>${project.version}</version> 
+            </dependency>   
+            
+            <dependency>
+                <groupId>org.restcomm</groupId>
+                <artifactId>restcomm-connect.mscontrol.api</artifactId>
+                <version>${project.version}</version>                         
+            </dependency>
+
+            <dependency>
+                <groupId>org.restcomm</groupId>
+                <artifactId>restcomm-connect.mscontrol.mms</artifactId>
+                <version>${project.version}</version>                         
+            </dependency>
+            <dependency>
+                <groupId>org.restcomm</groupId>
+                <artifactId>restcomm-connect.dns.api</artifactId>
+                <version>${project.version}</version>                         
+            </dependency>  
+            <dependency>
+                <groupId>org.restcomm</groupId>
+                <artifactId>restcomm-connect-management</artifactId>
+                <version>${project.version}</version>
+                <type>war</type>                
+            </dependency>
+            <!-- END OF INTERNAL MODULES -->                
+            
+            
             <!-- SMPP Testing -->
 
             <dependency>
@@ -459,6 +582,12 @@
                 <version>${sipservletapi.version}</version>
                 <scope>provided</scope>
             </dependency>
+            
+            <dependency>
+                <groupId>org.mobicents.servlet.sip</groupId>
+                <artifactId>sip-servlets-core-api</artifactId>
+                <version>${sipservletapi.version}</version>
+            </dependency>            
 
             <dependency>
                 <groupId>org.mobicents.servlet.sip</groupId>
@@ -489,13 +618,29 @@
                     </exclusion>
                 </exclusions>
             </dependency>
+            
+            <dependency>
+                <groupId>org.apache.tomcat</groupId>
+                <artifactId>tomcat-catalina</artifactId>
+                <version>${tomcat7.version}</version>
+            </dependency>             
 
             <dependency>
                 <groupId>org.jboss.arquillian.junit</groupId>
                 <artifactId>arquillian-junit-container</artifactId>
                 <version>${arquillian.version}</version>
-                <scope>test</scope>
             </dependency>
+            
+            <dependency>
+                <groupId>org.mobicents.arquillian.container</groupId>
+                <artifactId>mss-arquillian-mediaserver-api</artifactId>
+                <version>${mss.arquillian.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>org.mobicents.arquillian.container</groupId>
+                <artifactId>mss-arquillian-mediaserver-extension</artifactId>
+                <version>${mss.arquillian.version}</version>
+            </dependency>                       
 
             <dependency>
                 <groupId>org.jboss.shrinkwrap.resolver</groupId>
@@ -510,6 +655,12 @@
                 <version>${shrinkwrap.resolver.version}</version>
                 <scope>test</scope>
             </dependency>
+            
+            <dependency>
+                <groupId>com.cloudhopper</groupId>
+                <artifactId>ch-commons-util</artifactId>
+                <version>${ch-commons-util.version}</version>
+            </dependency>            
 
             <dependency>
                 <groupId>org.mobicents.sipunit</groupId>
@@ -553,6 +704,40 @@
                 <version>${mockito-core.version}</version>
                 <scope>test</scope>
             </dependency>
+            
+            <dependency>
+                <groupId>org.mobicents.servlet.sip.containers</groupId>
+                <artifactId>sip-servlets-tomcat-7</artifactId>
+                <version>${sipservletapi.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>org.mobicents.servlet.sip</groupId>
+                <artifactId>sip-servlets-impl</artifactId>
+                <version>${sipservletapi.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>org.mobicents.servlet.sip</groupId>
+                <artifactId>sip-servlets-client</artifactId>
+                <version>${sipservletapi.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>org.mobicents.commtesting</groupId>
+                <artifactId>mgcpUnit</artifactId>
+                <version>${mgcpunit.version}</version>
+            </dependency>
+            <dependency>
+                    <groupId>org.mobicents.media</groupId>
+                    <artifactId>concurrent</artifactId>
+                    <version>${mobicents.mgcp.impl.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>com.github.tomakehurst</groupId>
+                <artifactId>wiremock</artifactId>
+                <version>1.57</version>
+                <!-- Include this if you have dependency conflicts for Guava, Jetty, Jackson
+                or Apache HTTP Client -->
+                <classifier>standalone</classifier>
+            </dependency>                                                                       
         </dependencies>
     </dependencyManagement>
 
@@ -676,7 +861,6 @@
             <plugin>
                 <groupId>org.apache.maven.plugins</groupId>
                 <artifactId>maven-checkstyle-plugin</artifactId>
-                <version>${checkstyle.plugin.version}</version>
                 <configuration>
                     <configLocation>/checkstyle/checkstyle.xml</configLocation>
                     <consoleOutput>true</consoleOutput>
@@ -805,6 +989,11 @@
                         <reuseForks>false</reuseForks>
                     </configuration>
                 </plugin>
+                <plugin>
+                    <groupId>org.apache.maven.plugins</groupId>
+                    <artifactId>maven-checkstyle-plugin</artifactId>
+                    <version>${checkstyle.plugin.version}</version>
+                </plugin>                
             </plugins>
         </pluginManagement>
     </build>
