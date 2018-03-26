@@ -84,18 +84,16 @@ public class CallControlHelper {
         final String authorization = request.getHeader("Proxy-Authorization");
         final String method = request.getMethod();
         if (authorization == null || !CallControlHelper.permitted(authorization, method, storage, organizationSid, algo)) {
-            authenticate(request, algo, qop);
+            authenticate(request, algo, qop, storage.getOrganizationsDao().getOrganization(organizationSid).getDomainName());
             return false;
         } else {
             return true;
         }
     }
 
-    static void authenticate(final SipServletRequest request, String algo, String qop) throws IOException {
+    static void authenticate(final SipServletRequest request, String algo, String qop, String realm) throws IOException {
         final SipServletResponse response = request.createResponse(SC_PROXY_AUTHENTICATION_REQUIRED);
         final String nonce = nonce();
-        final SipURI uri = (SipURI) request.getTo().getURI();
-        final String realm = uri.getHost();
         final String header = header(nonce, realm, "Digest", algo, qop);
         response.addHeader("Proxy-Authenticate", header);
         response.send();
