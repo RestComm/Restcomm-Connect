@@ -48,7 +48,7 @@ import org.restcomm.connect.commons.util.DigestAuthentication;
  */
 public class CallControlHelper {
 
-    static boolean permitted(final String authorization, final String method, DaoManager daoManager, final Sid organizationSid, String algo) {
+    static boolean permitted(final String authorization, final String method, DaoManager daoManager, final Sid organizationSid) {
         final Map<String, String> map = authHeaderToMap(authorization);
         final String user = map.get("username");
         final String algorithm = map.get("algorithm");
@@ -62,7 +62,7 @@ public class CallControlHelper {
         final ClientsDao clients = daoManager.getClientsDao();
         final Client client = clients.getClient(user, organizationSid);
         //only allow if client algo is identical to system algo
-        if (client != null && Client.ENABLED == client.getStatus() && algorithm.equals(algo)) {
+        if (client != null && Client.ENABLED == client.getStatus()) {
             final String password2 = client.getPassword();
             final String result = DigestAuthentication.response(algorithm, user, realm, "", password2, nonce, nc, cnonce,
                     method, uri, null, qop);
@@ -84,20 +84,20 @@ public class CallControlHelper {
         // Make sure we force clients to authenticate.
         final String authorization = request.getHeader("Proxy-Authorization");
         final String method = request.getMethod();
-        String algorithm = RestcommConfiguration.getInstance().getMain().getClientAlgorithm();
-        String qop = RestcommConfiguration.getInstance().getMain().getClientQOP();
-        if (authorization == null || !CallControlHelper.permitted(authorization, method, storage, organizationSid, algorithm)) {
-            authenticate(request, algorithm, qop, storage.getOrganizationsDao().getOrganization(organizationSid).getDomainName());
+        if (authorization == null || !CallControlHelper.permitted(authorization, method, storage, organizationSid)) {
+            authenticate(request, storage.getOrganizationsDao().getOrganization(organizationSid).getDomainName());
             return false;
         } else {
             return true;
         }
     }
 
-    static void authenticate(final SipServletRequest request, String algo, String qop, String realm) throws IOException {
+    static void authenticate(final SipServletRequest request, String realm) throws IOException {
         final SipServletResponse response = request.createResponse(SC_PROXY_AUTHENTICATION_REQUIRED);
         final String nonce = nonce();
-        final String header = header(nonce, realm, "Digest", algo, qop);
+        String algorithm = RestcommConfiguration.getInstance().getMain().getClientAlgorithm();
+        String qop = RestcommConfiguration.getInstance().getMain().getClientQOP();
+        final String header = header(nonce, realm, "Digest", algorithm, qop);
         response.addHeader("Proxy-Authenticate", header);
         response.send();
     }
