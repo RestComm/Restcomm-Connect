@@ -339,7 +339,7 @@ public class SmppTest {
 
 		SipURI uri = mariaSipStack.getAddressFactory().createSipURI(null, "127.0.0.1:5080");
 		assertTrue(mariaPhone.register(uri, "maria", "qwerty1234RT", "sip:maria@127.0.0.1:5095", 3600, 3600));
-		Credential mariaCred = new Credential("org3.restcomm.com","maria","qwerty1234RT");
+		Credential mariaCred = new Credential("org2.restcomm.com","maria","qwerty1234RT");
 		mariaPhone.addUpdateCredential(mariaCred);
 
 		assertTrue(mariaOrg3Phone.register(uri,"maria","1234","sip:maria@127.0.0.1:5094", 3600, 3600));
