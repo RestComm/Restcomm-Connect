@@ -34,6 +34,7 @@ import javax.servlet.sip.SipURI;
 import org.restcomm.connect.dao.ClientsDao;
 import org.restcomm.connect.dao.DaoManager;
 import org.restcomm.connect.dao.entities.Client;
+import org.restcomm.connect.commons.configuration.RestcommConfiguration;
 import org.restcomm.connect.commons.dao.Sid;
 import org.restcomm.connect.commons.util.DigestAuthentication;
 
@@ -72,19 +73,21 @@ public class CallControlHelper {
     }
 
     /**
-     *
      * Check if a client is authenticated. If so, return true. Otherwise request authentication and return false;
-     * @param algo TODO
-     * @param qop TODO
+     * @param request
+     * @param storage
+     * @param organizationSid
      * @return
      * @throws IOException
      */
-    public static boolean checkAuthentication(SipServletRequest request, DaoManager storage, Sid organizationSid, String algo, String qop) throws IOException {
+    public static boolean checkAuthentication(SipServletRequest request, DaoManager storage, Sid organizationSid) throws IOException {
         // Make sure we force clients to authenticate.
         final String authorization = request.getHeader("Proxy-Authorization");
         final String method = request.getMethod();
-        if (authorization == null || !CallControlHelper.permitted(authorization, method, storage, organizationSid, algo)) {
-            authenticate(request, algo, qop, storage.getOrganizationsDao().getOrganization(organizationSid).getDomainName());
+        String algorithm = RestcommConfiguration.getInstance().getMain().getClientAlgorithm();
+        String qop = RestcommConfiguration.getInstance().getMain().getClientQOP();
+        if (authorization == null || !CallControlHelper.permitted(authorization, method, storage, organizationSid, algorithm)) {
+            authenticate(request, algorithm, qop, storage.getOrganizationsDao().getOrganization(organizationSid).getDomainName());
             return false;
         } else {
             return true;

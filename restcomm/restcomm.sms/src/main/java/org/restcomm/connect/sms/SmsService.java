@@ -116,8 +116,6 @@ public final class SmsService extends RestcommUntypedActor {
     private final ServletContext servletContext;
     static final int ERROR_NOTIFICATION = 0;
     static final int WARNING_NOTIFICATION = 1;
-    private String clientAlgorithm;
-    private String clientQop;
 
     private final ActorRef monitoringService;
 
@@ -143,8 +141,6 @@ public final class SmsService extends RestcommUntypedActor {
         this.configuration = configuration;
         final Configuration runtime = configuration.subset("runtime-settings");
         this.authenticateUsers = runtime.getBoolean("authenticate");
-        clientAlgorithm = RestcommConfiguration.getInstance().getMain().getClientAlgorithm();
-        clientQop = RestcommConfiguration.getInstance().getMain().getClientQOP();
         this.servletConfig = (ServletConfig) configuration.getProperty(ServletConfig.class.getName());
         this.sipFactory = factory;
         this.storage = storage;
@@ -238,7 +234,7 @@ public final class SmsService extends RestcommUntypedActor {
 
             // Make sure we force clients to authenticate.
             if (authenticateUsers // https://github.com/Mobicents/RestComm/issues/29 Allow disabling of SIP authentication
-                    && !CallControlHelper.checkAuthentication(request, storage, sourceOrganizationSid, clientAlgorithm, clientQop)) {
+                    && !CallControlHelper.checkAuthentication(request, storage, sourceOrganizationSid)) {
                 if(logger.isInfoEnabled()) {
                     logger.info("Client " + client.getLogin() + " failed to authenticate");
                 }

@@ -222,9 +222,6 @@ public final class CallManager extends RestcommUntypedActor {
     // Push notification server
     private final PushNotificationServerHelper pushNotificationServerHelper;
 
-    private String clientAlgorithm;
-    private String clientQop;
-
     // used for sending warning and error logs to notification engine and to the console
     private void sendNotification(Sid accountId, String errMessage, int errCode, String errType, boolean createNotification) {
         NotificationsDao notifications = storage.getNotificationsDao();
@@ -273,8 +270,6 @@ public final class CallManager extends RestcommUntypedActor {
         numberSelector = (NumberSelectorService)context.getAttribute(NumberSelectorService.class.getName());
         final Configuration runtime = configuration.subset("runtime-settings");
         final Configuration outboundProxyConfig = runtime.subset("outbound-proxy");
-        clientAlgorithm = RestcommConfiguration.getInstance().getMain().getClientAlgorithm();
-        clientQop = RestcommConfiguration.getInstance().getMain().getClientQOP();
         SipURI outboundIntf = outboundInterface("udp");
         if (outboundIntf != null) {
             myHostIp = ((SipURI) outboundIntf).getHost().toString();
@@ -552,7 +547,7 @@ public final class CallManager extends RestcommUntypedActor {
 
             // Make sure we force clients to authenticate.
             if (!authenticateUsers // https://github.com/Mobicents/RestComm/issues/29 Allow disabling of SIP authentication
-                    || CallControlHelper.checkAuthentication(request, storage, sourceOrganizationSid, clientAlgorithm, clientQop)) {
+                    || CallControlHelper.checkAuthentication(request, storage, sourceOrganizationSid)) {
                 // if the client has authenticated, try to redirect to the Client VoiceURL app
                 // otherwise continue trying to process the Client invite
                 if (redirectToClientVoiceApp(self, request, accounts, applications, client)) {
