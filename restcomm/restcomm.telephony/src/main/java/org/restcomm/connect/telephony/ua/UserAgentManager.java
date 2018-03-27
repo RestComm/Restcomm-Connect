@@ -433,10 +433,6 @@ public final class UserAgentManager extends RestcommUntypedActor {
             return false;
         }
         if (client != null && Client.ENABLED == client.getStatus()) {
-            //NB: we should have an extra password column to allow both plaintext and digested password
-            //since we arent going to support plaintext, were going to just assume first password will always be empty
-            //and assume that all passwords from dao are digested. However we want to retain the Digest class to allow
-            //for other algorithms including plaintext
             final String password2 = client.getPassword();
             final String result = DigestAuthentication.response(algorithm, user, realm, "", password2, nonce, nc, cnonce,
                     method, uri, null, qop);
