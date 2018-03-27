@@ -42,9 +42,8 @@ DomainConf(){
 #Configure Web Olympus Domain.
 FILE=$BASEDIR/standalone/deployments/olympus.war/resources/xml/olympus.xml
 echo "WebOlympusDomain: $WebOlympusDomain"
-sed -i "s|<domain>.*</domain>|<domain>${WebOlympusDomain}</domain>" $FILE
-
-
+  xmlstarlet ed -L -P -u  "/olympus/server/address" -v ${WebOlympusDomain} $FILE
+}
 
 
 # MAIN
