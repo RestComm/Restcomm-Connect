@@ -150,6 +150,14 @@ rcServices.factory('AuthService',function(RCommAccounts,$http, $location, Sessio
               }
               else if (response.data.status === 'active') {
                 setActiveAccount(response.data);
+                // retrieve the profile link
+                var linkHeader = response.headers('link');
+                if (linkHeader) {
+                  var m = linkHeader.match('.*<(.*)>.*title="Profiles"');
+                  if (m && m[1]) {
+                    getProfile(m[1]);
+                  }
+                }
                 deferred.resolve('OK');
                 return;
               }
@@ -201,6 +209,28 @@ rcServices.factory('AuthService',function(RCommAccounts,$http, $location, Sessio
         return deferred.promise;
     }
 
+    var profile;
+
+    function getProfile(profileURL) {
+      if (!!profile && !profileURL) {
+        return profile;
+      }
+      var deferred = $q.defer();
+      var auth_header = basicAuthHeader(account.sid, account.auth_token, true);
+      $http({
+        method: 'GET',
+        url: profileURL,
+        headers: {
+          Authorization: auth_header
+        }}).then(
+        function(response) { // success
+          profile = response.data;
+        },
+        function(response) { // error
+          console.log('error retrieving profile', response);
+        });
+      return deferred.promise;
+    }
 
     function onAuthError() {
         SessionService.unset('sid');
@@ -224,7 +254,8 @@ rcServices.factory('AuthService',function(RCommAccounts,$http, $location, Sessio
         isUninitialized: isUninitialized,
         onAuthError: onAuthError,
         onError403: onError403,
-        updatePassword: updatePassword
+        updatePassword: updatePassword,
+        getProfile: getProfile
     }
 });
 
