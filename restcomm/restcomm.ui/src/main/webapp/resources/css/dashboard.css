@@ -23,6 +23,8 @@
     --danger-text-color: var(--red-color);
     --hot-text-color: #df3d00;
     --muted-text-color: var(--light-grey-color);
+
+    --contrast-bg-color: #0f1931;
     --contrast-text-color: #ffffff;
 
     --footer-bg-color: transparent;
@@ -351,7 +353,6 @@ a:hover {
 
 @media(max-width:768px) {
     #footer {
-        padding-top: 0;
     }
 }
 
@@ -490,6 +491,58 @@ form[role=login] input:-webkit-autofill:focus{
     margin-top: 10px;
 }
 
+.two-sides-container {
+    position: relative;
+    top: -40px;
+    bottom: 0;
+    left: -80px;
+    width: calc(100% + 160px);
+    margin: 0;
+}
+
+.two-sides-left-side {
+}
+
+.two-sides-right-side {
+    background-color: var(--contrast-bg-color);
+    color: var(--contrast-text-color);
+    height: 100%;
+    padding-top: 8%;
+    padding-bottom: 100%;
+    margin-bottom: -100%;
+    overflow: hidden;
+}
+
+.two-sides-right-side a {
+    background-color: var(--contrast-bg-color);
+    color: var(--contrast-text-color);
+}
+
+@media(max-width:768px) {
+    .two-sides-container {
+        left: 0;
+        width: auto;
+        height: 100%;
+        position: absolute;
+        overflow: auto;
+    }
+
+    .two-sides-right-side {
+        height: 100%;
+        padding-top: 8%;
+        overflow: initial;
+    }
+}
+
+.rc-one-inline {
+    width: 39%;
+    max-width: 260px;
+}
+
+.all-white-svg {
+    filter: brightness(999);
+}
+
 /* -- Main Container -------------------------------------------------------- */
 .main-container {
     // height: calc(100vh - 163px);
@@ -508,8 +561,8 @@ form[role=login] input:-webkit-autofill:focus{
 /* -- Top Bar --------------------------------------------------------------- */
 
 .logo-container {
-    padding-left: 130px;
-    padding-top: 40px;
+    padding-left: calc(50% - 140px);
+    padding-top: 15%;
     margin-right: auto;
     margin-left: auto;
 }
@@ -2100,6 +2153,19 @@ button.btn-selection {
     border-bottom: 1px solid var(--lines-color);
 }
 
+.btn-transparent {
+    border: 2px solid var(--lines-color);
+    background-color: transparent;
+    padding: 10px 40px;
+    color: #ffffff;
+    opacity: 0.7;
+}
+
+.btn-transparent:hover {
+    border: 2px solid var(--contrast-text-color);
+    background-color: transparent;
+    opacity: 1;
+}
 
 
 
