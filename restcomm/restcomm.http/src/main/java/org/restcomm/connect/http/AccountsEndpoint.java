@@ -577,7 +577,7 @@ public class AccountsEndpoint extends SecuredEndpoint {
             }
         }
     }
-    
+
     protected Response updateAccount(final String identifier, final MultivaluedMap<String, String> data,
             final MediaType responseType) {
         // First check if the account has the required permissions in general, this way we can fail fast and avoid expensive DAO
