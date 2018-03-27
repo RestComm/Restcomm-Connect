@@ -45,7 +45,7 @@ rcMod.controller('UserMenuCtrl', function($scope, $http, $resource, $rootScope, 
 
 });
 
-rcMod.controller('SubAccountsCtrl', function($scope, $resource, $stateParams, $uibModal, RCommAccounts,Notifications) {
+rcMod.controller('SubAccountsCtrl', function($scope, $resource, $stateParams, $uibModal, RCommAccounts, subAccountsList, Notifications) {
 
   $scope.predicate = 'friendly_name';
   $scope.reverse = false;
@@ -60,20 +60,18 @@ rcMod.controller('SubAccountsCtrl', function($scope, $resource, $stateParams, $u
   };
   $scope.statusFilter = 'Any';
 
-  var subAccountsList = RCommAccounts.query(function (list) {
-    // remove logged (parent) account from the list
-    var i = 0;
-    while (i < list.length) {
-      if (list[i].sid == $scope.sid) {
-        list.splice(i, 1)
-      }
-      else {
-        i++;
-      }
+  // remove own account
+  var i = 0;
+  while (i < subAccountsList.length) {
+    if (subAccountsList[i].sid === $scope.sid) {
+      subAccountsList.splice(i, 1)
     }
-    $scope.subAccountsList = list;
-    $scope.totalItems = list.length;
-  });
+    else {
+      i++;
+    }
+  }
+  $scope.subAccountsList = subAccountsList;
+  $scope.totalItems = subAccountsList.length;
 
   $scope.setEntryLimit = function(limit) {
     $scope.entryLimit = limit;
