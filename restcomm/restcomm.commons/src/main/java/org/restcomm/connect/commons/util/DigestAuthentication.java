@@ -23,6 +23,7 @@ import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
 
 import org.restcomm.connect.commons.annotations.concurrency.ThreadSafe;
+import org.restcomm.connect.commons.configuration.RestcommConfiguration;
 
 /**
  * @author quintana.thomas@gmail.com (Thomas Quintana)
@@ -61,6 +62,21 @@ public final class DigestAuthentication {
         return response(algorithm, user, realm, password, "", nonce, nc, cnonce, method, uri, body, qop);
     }
 
+    /**
+     * @param algorithm
+     * @param user
+     * @param realm
+     * @param password
+     * @param password2
+     * @param nonce
+     * @param nc
+     * @param cnonce
+     * @param method
+     * @param uri
+     * @param body
+     * @param qop
+     * @return
+     */
     public static String response(final String algorithm, final String user, final String realm, final String password,
             String password2, final String nonce, final String nc, final String cnonce, final String method, final String uri,
             String body, final String qop) {
@@ -116,9 +132,23 @@ public final class DigestAuthentication {
         }
     }
 
-    public static String HA1(String username, String realm, String password, String algorithm){
+    /**
+     * @param username
+     * @param realm
+     * @param password
+     * @return
+     */
+    public static String HA1(String username, String realm, String password){
+        String algorithm = RestcommConfiguration.getInstance().getMain().getClientAlgorithm();
         String ha1 = "";
         ha1 = DigestAuthentication.H(username+":"+realm+":"+password, algorithm);
         return ha1;
+    }
+
+    public static void main(String [] str){
+        String username="alice";
+        String realm="127.0.0.1";
+        String password="1234";
+        System.out.println(DigestAuthentication.HA1(username, realm, password));
     }
 }
