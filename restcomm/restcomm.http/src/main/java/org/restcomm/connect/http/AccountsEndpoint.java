@@ -19,11 +19,34 @@
  */
 package org.restcomm.connect.http;
 
-import com.google.gson.Gson;
-import com.google.gson.GsonBuilder;
-import com.sun.jersey.core.header.LinkHeader;
-import com.sun.jersey.core.util.MultivaluedMapImpl;
-import com.thoughtworks.xstream.XStream;
+import static javax.ws.rs.core.MediaType.APPLICATION_JSON;
+import static javax.ws.rs.core.MediaType.APPLICATION_JSON_TYPE;
+import static javax.ws.rs.core.MediaType.APPLICATION_XML;
+import static javax.ws.rs.core.MediaType.APPLICATION_XML_TYPE;
+import static javax.ws.rs.core.Response.ok;
+import static javax.ws.rs.core.Response.status;
+import static javax.ws.rs.core.Response.Status.BAD_REQUEST;
+import static javax.ws.rs.core.Response.Status.CONFLICT;
+import static javax.ws.rs.core.Response.Status.NOT_FOUND;
+import static javax.ws.rs.core.Response.Status.PRECONDITION_FAILED;
+import static org.restcomm.connect.http.ProfileEndpoint.PROFILE_REL_TYPE;
+import static org.restcomm.connect.http.ProfileEndpoint.TITLE_PARAM;
+
+import java.net.URI;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Map;
+
+import javax.annotation.PostConstruct;
+import javax.mail.internet.AddressException;
+import javax.mail.internet.InternetAddress;
+import javax.servlet.ServletContext;
+import javax.servlet.http.HttpServletRequest;
+import javax.ws.rs.WebApplicationException;
+import javax.ws.rs.core.MediaType;
+import javax.ws.rs.core.MultivaluedMap;
+import javax.ws.rs.core.Response;
+import javax.ws.rs.core.UriInfo;
 
 import org.apache.commons.configuration.Configuration;
 import org.apache.shiro.crypto.hash.Md5Hash;
@@ -32,6 +55,7 @@ import org.restcomm.connect.commons.configuration.RestcommConfiguration;
 import org.restcomm.connect.commons.configuration.sets.RcmlserverConfigurationSet;
 import org.restcomm.connect.commons.dao.Sid;
 import org.restcomm.connect.commons.util.ClientLoginConstrains;
+import org.restcomm.connect.commons.util.DigestAuthentication;
 import org.restcomm.connect.dao.ClientsDao;
 import org.restcomm.connect.dao.DaoManager;
 import org.restcomm.connect.dao.IncomingPhoneNumbersDao;
@@ -42,6 +66,7 @@ import org.restcomm.connect.dao.entities.AccountList;
 import org.restcomm.connect.dao.entities.Client;
 import org.restcomm.connect.dao.entities.IncomingPhoneNumber;
 import org.restcomm.connect.dao.entities.Organization;
+import org.restcomm.connect.dao.entities.Profile;
 import org.restcomm.connect.dao.entities.RestCommResponse;
 import org.restcomm.connect.extension.api.ApiRequest;
 import org.restcomm.connect.extension.controller.ExtensionController;
@@ -58,34 +83,11 @@ import org.restcomm.connect.identity.passwords.PasswordValidatorFactory;
 import org.restcomm.connect.provisioning.number.api.PhoneNumberProvisioningManager;
 import org.restcomm.connect.provisioning.number.api.PhoneNumberProvisioningManagerProvider;
 
-import javax.annotation.PostConstruct;
-import javax.mail.internet.AddressException;
-import javax.mail.internet.InternetAddress;
-import javax.servlet.ServletContext;
-import javax.servlet.http.HttpServletRequest;
-import javax.ws.rs.WebApplicationException;
-import javax.ws.rs.core.MediaType;
-import javax.ws.rs.core.MultivaluedMap;
-import javax.ws.rs.core.Response;
-import javax.ws.rs.core.UriInfo;
-import java.net.URI;
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Map;
-
-import static javax.ws.rs.core.MediaType.APPLICATION_JSON;
-import static javax.ws.rs.core.MediaType.APPLICATION_JSON_TYPE;
-import static javax.ws.rs.core.MediaType.APPLICATION_XML;
-import static javax.ws.rs.core.MediaType.APPLICATION_XML_TYPE;
-import static javax.ws.rs.core.Response.Status.BAD_REQUEST;
-import static javax.ws.rs.core.Response.Status.CONFLICT;
-import static javax.ws.rs.core.Response.Status.NOT_FOUND;
-import static javax.ws.rs.core.Response.Status.PRECONDITION_FAILED;
-import static javax.ws.rs.core.Response.ok;
-import static javax.ws.rs.core.Response.status;
-import org.restcomm.connect.dao.entities.Profile;
-import static org.restcomm.connect.http.ProfileEndpoint.PROFILE_REL_TYPE;
-import static org.restcomm.connect.http.ProfileEndpoint.TITLE_PARAM;
+import com.google.gson.Gson;
+import com.google.gson.GsonBuilder;
+import com.sun.jersey.core.header.LinkHeader;
+import com.sun.jersey.core.util.MultivaluedMapImpl;
+import com.thoughtworks.xstream.XStream;
 
 /**
  * @author quintana.thomas@gmail.com (Thomas Quintana)
@@ -101,7 +103,6 @@ public class AccountsEndpoint extends SecuredEndpoint {
     private ProfileAssociationsDao profileAssociationsDao;
 
     private Map<Status,Runnable> statusActionMap;
-
 
     public AccountsEndpoint() {
         super();
@@ -551,29 +552,32 @@ public class AccountsEndpoint extends SecuredEndpoint {
         if (email != null && !email.equals("")) {
             logger.debug("account email is valid");
             String username = email.split("@")[0];
-            Client client = clientDao.getClient(username, account.getOrganizationSid());
-            if (client != null) {
+            Client clientWithSameFriendlyName = clientDao.getClient(username, account.getOrganizationSid());
+            if (clientWithSameFriendlyName != null) {
                 logger.debug("client found");
-                // TODO: need to encrypt this password because it's
-                // same with Account password.
-                // Don't implement now. Opened another issue for it.
-                if (data.containsKey("Password")) {
-                    // Md5Hash(data.getFirst("Password")).toString();
-                    logger.debug("password changed");
-                    String password = data.getFirst("Password");
-                    client = client.setPassword(password);
-                }
 
                 if (data.containsKey("FriendlyName")) {
                     logger.debug("friendlyname changed");
-                    client = client.setFriendlyName(data.getFirst("FriendlyName"));
+                    clientWithSameFriendlyName = clientWithSameFriendlyName.setFriendlyName(data.getFirst("FriendlyName"));
                 }
-                logger.debug("updating linked client");
-                clientDao.updateClient(client);
+                logger.debug("updating friendlyname of linked client: "+clientWithSameFriendlyName.getLogin());
+                clientDao.updateClient(clientWithSameFriendlyName);
+            }
+            if (data.containsKey("Password")) {
+                logger.debug("password changed");
+                String password = data.getFirst("Password");
+                List<Client> clients = clientDao.getClients(account.getSid());
+                for(int i=0 ; i<clients.size() ; i++ ){
+                    Client client = clients.get(i);
+                    client = client.setPassword(DigestAuthentication.HA1(client.getLogin(), organizationsDao.getOrganization(account.getOrganizationSid()).getDomainName(), password));
+
+                    logger.debug("updating password of linked client: "+client.getLogin());
+                    clientDao.updateClient(client);
+                }
             }
         }
     }
-
+    
     protected Response updateAccount(final String identifier, final MultivaluedMap<String, String> data,
             final MediaType responseType) {
         // First check if the account has the required permissions in general, this way we can fail fast and avoid expensive DAO
