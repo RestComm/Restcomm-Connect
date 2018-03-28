@@ -132,6 +132,8 @@ public final class SmsService extends RestcommUntypedActor {
     //List of extensions for SmsService
     List<RestcommExtensionGeneric> extensions;
 
+    private final String preferredOutboundTransport;
+
     private final NumberSelectorService numberSelector;
 
     public SmsService(final Configuration configuration, final SipFactory factory,
@@ -158,7 +160,7 @@ public final class SmsService extends RestcommUntypedActor {
             }
             patchForNatB2BUASessions = false;
         }
-
+        preferredOutboundTransport = configuration.subset("runtime-settings").getString("preferred-outbound-transport", "udp");
         extensions = ExtensionController.getInstance().getExtensions(ExtensionType.SmsService);
         if (logger.isInfoEnabled()) {
             logger.info("SmsService extensions: "+(extensions != null ? extensions.size() : "0"));
@@ -562,7 +564,7 @@ public final class SmsService extends RestcommUntypedActor {
         final List<SipURI> uris = (List<SipURI>) servletContext.getAttribute(SipServlet.OUTBOUND_INTERFACES);
         for (final SipURI uri : uris) {
             final String transport = uri.getTransportParam();
-            if ("udp".equalsIgnoreCase(transport)) {
+            if (preferredOutboundTransport.equalsIgnoreCase(transport)) {
                 result = uri;
             }
         }

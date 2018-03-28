@@ -94,6 +94,7 @@ public class SmppMessageHandler extends RestcommUntypedActor {
     private final SipFactory sipFactory;
     private final ActorRef monitoringService;
     private final NumberSelectorService numberSelector;
+    private final String preferredOutboundTransport;
     //List of extensions for SmsService
     List<RestcommExtensionGeneric> extensions;
 
@@ -109,6 +110,7 @@ public class SmppMessageHandler extends RestcommUntypedActor {
         if (logger.isInfoEnabled()) {
             logger.info("SmsService extensions: " + (extensions != null ? extensions.size() : "0"));
         }
+        preferredOutboundTransport = configuration.subset("runtime-settings").getString("preferred-outbound-transport", "udp");
     }
 
     @Override
@@ -325,7 +327,7 @@ public class SmppMessageHandler extends RestcommUntypedActor {
         final List<SipURI> uris = (List<SipURI>) servletContext.getAttribute(SipServlet.OUTBOUND_INTERFACES);
         for (final SipURI uri : uris) {
             final String transport = uri.getTransportParam();
-            if ("udp".equalsIgnoreCase(transport)) {
+            if (preferredOutboundTransport.equalsIgnoreCase(transport)) {
                 result = uri;
             }
         }

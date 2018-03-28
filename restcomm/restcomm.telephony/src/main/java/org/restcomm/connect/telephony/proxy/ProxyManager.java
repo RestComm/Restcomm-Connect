@@ -23,6 +23,8 @@ import akka.actor.ActorContext;
 import akka.actor.ReceiveTimeout;
 import akka.event.Logging;
 import akka.event.LoggingAdapter;
+
+import org.apache.commons.configuration.Configuration;
 import org.joda.time.DateTime;
 import org.restcomm.connect.commons.faulttolerance.RestcommUntypedActor;
 import org.restcomm.connect.dao.DaoManager;
@@ -61,6 +63,7 @@ public final class ProxyManager extends RestcommUntypedActor {
     private final SipFactory factory;
     private final DaoManager storage;
     private final String address;
+    private final String preferredOutboundTransport;
 
     public ProxyManager(final ServletContext servletContext, final SipFactory factory, final DaoManager storage,
             final String address) {
@@ -75,6 +78,8 @@ public final class ProxyManager extends RestcommUntypedActor {
         if(logger.isInfoEnabled()) {
             logger.info("Proxy Manager started.");
         }
+        Configuration configuration = (Configuration) servletContext.getAttribute(Configuration.class.getName());
+        preferredOutboundTransport = configuration.subset("runtime-settings").getString("preferred-outbound-transport", "udp");
     }
 
     private void authenticate(final Object message) {
@@ -96,7 +101,7 @@ public final class ProxyManager extends RestcommUntypedActor {
             if(address.contains(":")) {
                 outboundInterface = (SipURI) factory.createSipURI(null, address);
             } else {
-                outboundInterface = outboundInterface(address, "udp");
+                outboundInterface = outboundInterface(address, preferredOutboundTransport);
             }
         } else {
             outboundInterface = outboundInterface();
@@ -150,7 +155,7 @@ public final class ProxyManager extends RestcommUntypedActor {
         final List<SipURI> uris = (List<SipURI>) context.getAttribute(OUTBOUND_INTERFACES);
         for (final SipURI uri : uris) {
             final String transport = uri.getTransportParam();
-            if ("udp".equalsIgnoreCase(transport)) {
+            if (preferredOutboundTransport.equalsIgnoreCase(transport)) {
                 result = uri;
             }
         }

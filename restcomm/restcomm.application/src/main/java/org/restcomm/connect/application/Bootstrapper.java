@@ -472,9 +472,12 @@ public final class Bootstrapper extends SipServlet implements SipServletListener
             Version.printVersion();
             GenerateInstanceId generateInstanceId = null;
             InstanceId instanceId = null;
+
+            String preferredOutboundTransport = xml.subset("runtime-settings").getString("preferred-outbound-transport", "udp");
+
             SipURI sipURI = null;
             try {
-                sipURI = outboundInterface(context, "udp");
+                sipURI = outboundInterface(context, preferredOutboundTransport);
                 if (sipURI != null) {
                     generateInstanceId = new GenerateInstanceId(context, sipURI);
                 } else {

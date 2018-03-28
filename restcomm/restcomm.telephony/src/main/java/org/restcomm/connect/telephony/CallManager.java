@@ -204,6 +204,7 @@ public final class CallManager extends RestcommUntypedActor {
     //Control whether Restcomm will patch Request-URI and SDP for B2BUA calls
     private boolean patchForNatB2BUASessions;
     private boolean useSbc;
+    private final String preferredOutboundTransport;
 
     //List of extensions for CallManager
     List<RestcommExtensionGeneric> extensions;
@@ -270,7 +271,8 @@ public final class CallManager extends RestcommUntypedActor {
         numberSelector = (NumberSelectorService)context.getAttribute(NumberSelectorService.class.getName());
         final Configuration runtime = configuration.subset("runtime-settings");
         final Configuration outboundProxyConfig = runtime.subset("outbound-proxy");
-        SipURI outboundIntf = outboundInterface("udp");
+        preferredOutboundTransport = configuration.subset("runtime-settings").getString("preferred-outbound-transport", "udp");
+        SipURI outboundIntf = outboundInterface(preferredOutboundTransport);
         if (outboundIntf != null) {
             myHostIp = ((SipURI) outboundIntf).getHost().toString();
         } else {
@@ -517,7 +519,7 @@ public final class CallManager extends RestcommUntypedActor {
         final String toHostIpAddress = DNSUtils.getByName(toHost).getHostAddress();
         final String toPort = String.valueOf(((SipURI) request.getTo().getURI()).getPort()).equalsIgnoreCase("-1") ? "5060"
                 : String.valueOf(((SipURI) request.getTo().getURI()).getHost());
-        final String transport = ((SipURI) request.getTo().getURI()).getTransportParam() == null ? "udp" : ((SipURI) request
+        final String transport = ((SipURI) request.getTo().getURI()).getTransportParam() == null ? preferredOutboundTransport : ((SipURI) request
                 .getTo().getURI()).getTransportParam();
         SipURI outboundIntf = outboundInterface(transport);
 
@@ -2073,7 +2075,7 @@ public final class CallManager extends RestcommUntypedActor {
                 if (customHeaders != null) {
                     to = addCustomHeadersForToUri(customHeaders, to);
                 }
-                String transport = (to.getTransportParam() != null) ? to.getTransportParam() : "udp";
+                String transport = (to.getTransportParam() != null) ? to.getTransportParam() : preferredOutboundTransport;
                 outboundIntf = outboundInterface(transport);
                 final boolean outboudproxyUserAtFromHeader = runtime.subset("outbound-proxy").getBoolean(
                         "outboudproxy-user-at-from-header");
@@ -2153,7 +2155,7 @@ public final class CallManager extends RestcommUntypedActor {
             }
         }
 
-        String transport = (to.getTransportParam() != null) ? to.getTransportParam() : "udp";
+        String transport = (to.getTransportParam() != null) ? to.getTransportParam() : preferredOutboundTransport;
         outboundIntf = outboundInterface(transport);
         if (request.from() == null) {
             from = outboundInterface(transport);

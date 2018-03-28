@@ -176,6 +176,11 @@
 		<!-- if this flag is set to true, it will disable all patching done for NAT
 		 even if they are enabled in the configuration file-->
 		<use-sbc>false</use-sbc>
+		
+		<!-- Allows to define with transport interface will be preferred 
+		when dialing out of Restcomm-Connect which allows to bypass issues
+		where MTU is too high with UDP and TCP should be used as default -->
+		<preferred-outbound-transport>udp</preferred-outbound-transport>
 
 		<!-- If set to true Restcomm will use the Local Address (or external address
 			if available) in the host part of the From header for calls to the outbound

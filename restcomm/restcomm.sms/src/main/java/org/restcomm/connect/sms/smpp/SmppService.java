@@ -61,6 +61,7 @@ public final class SmppService extends RestcommUntypedActor {
     private final DaoManager storage;
     private final ServletContext servletContext;
     private static String smppActivated;
+    private final String preferredOutboundTransport;
 
     static final int ERROR_NOTIFICATION = 0;
     static final int WARNING_NOTIFICATION = 1;
@@ -97,6 +98,8 @@ public final class SmppService extends RestcommUntypedActor {
         this.smppSourceAddressMap = config.getString("connections.connection[@sourceAddressMap]");
         this.smppDestinationAddressMap = config.getString("connections.connection[@destinationAddressMap]");
         this.smppTonNpiValue = config.getString("connections.connection[@tonNpiValue]");
+
+        preferredOutboundTransport = configuration.subset("runtime-settings").getString("preferred-outbound-transport", "udp");
 
         this.initializeSmppConnections();
     }
@@ -210,7 +213,7 @@ public final class SmppService extends RestcommUntypedActor {
         // configurable?
         this.clientBootstrap = new DefaultSmppClient(this.executor, 25, monitorExecutor);
 
-        this.smppClientOpsThread = new SmppClientOpsThread(this.clientBootstrap, outboundInterface("udp").getPort(), smppMessageHandler);
+        this.smppClientOpsThread = new SmppClientOpsThread(this.clientBootstrap, outboundInterface(preferredOutboundTransport).getPort(), smppMessageHandler);
 
         (new Thread(this.smppClientOpsThread)).start();
 

@@ -106,6 +106,7 @@ public class UssdCallManager extends RestcommUntypedActor {
     // configurable switch whether to use the To field in a SIP header to determine the callee address
     // alternatively the Request URI can be used
     private boolean useTo;
+    private final String preferredOutboundTransport;
 
     /**
      * @param configuration
@@ -125,6 +126,7 @@ public class UssdCallManager extends RestcommUntypedActor {
         this.ussdGatewayUsername = ussdGatewayConfig.getString("ussd-gateway-user");
         this.ussdGatewayPassword = ussdGatewayConfig.getString("ussd-gateway-password");
         numberSelector = (NumberSelectorService)context.getAttribute(NumberSelectorService.class.getName());
+        preferredOutboundTransport = configuration.subset("runtime-settings").getString("preferred-outbound-transport", "udp");
 
         extensions = ExtensionController.getInstance().getExtensions(ExtensionType.FeatureAccessControl);
     }
@@ -417,7 +419,7 @@ public class UssdCallManager extends RestcommUntypedActor {
         SipURI from = (SipURI) sipFactory.createSipURI(request.from(), uri);
         SipURI to = (SipURI) sipFactory.createSipURI(request.to(), uri);
 
-        String transport = (to.getTransportParam() != null) ? to.getTransportParam() : "udp";
+        String transport = (to.getTransportParam() != null) ? to.getTransportParam() : preferredOutboundTransport;
         //from = outboundInterface(transport);
         SipURI obi = outboundInterface(transport);
         from = (obi == null) ? from : obi;
