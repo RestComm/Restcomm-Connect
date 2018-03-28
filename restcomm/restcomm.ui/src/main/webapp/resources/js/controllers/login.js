@@ -26,14 +26,16 @@ rcMod.controller('LoginCtrl', function ($scope, $rootScope, $location, $timeout,
         }
     }, function (errorStatus) {
         // ERROR
-        if (errorStatus == 'SUSPENDED')
-            showAccountSuspended($dialog);
-        else
-        if (errorStatus == "AUTH_ERROR") {
+        if (errorStatus == 'SUSPENDED') {
+          showAccountSuspended($dialog);
+        }
+        else if (errorStatus == "AUTH_ERROR") {
             Notifications.error('Login failed. Please confirm your username and password.');
             // FIXME: Use ng-animate...
             $scope.loginFailed = true;
             $timeout(function() { $scope.loginFailed = false; }, 1000);
+        }
+        else if (errorStatus == "FORBIDDEN") {
         }
         else
             Notifications.error('Unknown error');

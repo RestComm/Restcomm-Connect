@@ -170,7 +170,12 @@ rcServices.factory('AuthService',function(RCommAccounts,$http, $location, Sessio
         },
         function(response) {
           clearActiveAccount();
-          deferred.reject('AUTH_ERROR');
+          if (response.status === 401)
+            deferred.reject('AUTH_ERROR');
+          else if(response.status === 403)
+            deferred.reject('FORBIDDEN');
+          else
+            deferred.reject(response.statusText.toUpperCase());
           return;
         });
       return deferred.promise;
@@ -240,7 +245,7 @@ rcServices.factory('AuthService',function(RCommAccounts,$http, $location, Sessio
     }
 
     function onError403() {
-        Notifications.error("Unauthorized access.");
+        Notifications.error("Sorry, you can't use this account. It has been closed.");
     }
 
     // public interface
