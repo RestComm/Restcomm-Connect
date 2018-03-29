@@ -1483,6 +1483,9 @@ public class VoiceInterpreter extends BaseVoiceInterpreter {
 
         if (dialBranches == null || dialBranches.size() == 0) {
             dialBranches = null;
+            //https://telestax.atlassian.net/browse/RESTCOMM-1738
+            // If Finish Dial verb. RC need to cancel timeout for this verb before moving to next verb.
+            context().setReceiveTimeout(Duration.Undefined());
 
             if (attribute == null) {
                 if (logger.isInfoEnabled()) {
