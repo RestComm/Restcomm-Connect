@@ -1233,7 +1233,8 @@ public class VoiceInterpreter extends BaseVoiceInterpreter {
                 outboundCallResponse = event.sipResponse();
             }
         if(logger.isInfoEnabled()){
-            logger.info("VoiceInterpreter received CallStateChanged event: "+event+ " from "+(sender == call? "call" : "outboundCall")+ ", sender path: " + sender.path() +", current VI state: "+fsm.state() +" current outboundCall actor is: "+outboundCall);
+            String msg = String.format("VoiceInterpreter received CallStateChanged event: [%s] , from sender path: [%s] , sender is initial call: [%s] , current VI state: [%s] , current call state: [%s] , current outboundCall actor is: [%s]", event, sender.path(),(sender == call), fsm.state(), callState.toString(), outboundCall);
+            logger.info(msg);
         }
 
         switch (event.state()) {
@@ -1241,10 +1242,6 @@ public class VoiceInterpreter extends BaseVoiceInterpreter {
                 //Do nothing
                 break;
             case RINGING:
-                if (logger.isInfoEnabled()) {
-                    String msg = String.format("Got 180 Ringing from outbound call %s",sender);
-                    logger.info(msg);
-                }
                 break;
             case CANCELED:
                 if (is(initializingBridge) || is(acquiringOutboundCallInfo) || is(bridging) || is(bridged)) {
@@ -1338,10 +1335,6 @@ public class VoiceInterpreter extends BaseVoiceInterpreter {
                 break;
             case COMPLETED:
                 //NO_ANSWER, COMPLETED and FAILED events are handled the same
-                if (logger.isInfoEnabled()) {
-                    String msg = String.format("OnCallStateChanged, VI state %s, received %s, is it from inbound call: %s",fsm.state().toString(), callState.toString(), sender.equals(call));
-                    logger.info(msg);
-                }
                 if (is(bridging) || is(bridged)) {
                     if (sender == outboundCall || sender == call) {
                         if(logger.isInfoEnabled()) {
@@ -2822,7 +2815,7 @@ public class VoiceInterpreter extends BaseVoiceInterpreter {
         public void execute(final Object message) throws Exception {
             final State state = fsm.state();
             if(logger.isInfoEnabled()) {
-                logger.info("FinishDialing, current state: " + state);
+                logger.info("At FinishDialing, current VI state: " + state);
             }
 
             if (message instanceof ReceiveTimeout) {
@@ -2862,7 +2855,8 @@ public class VoiceInterpreter extends BaseVoiceInterpreter {
 
             if (message instanceof CallStateChanged) {
                 if(logger.isInfoEnabled()) {
-                    logger.info("CallStateChanged state: "+((CallStateChanged)message).state().toString()+" ,sender: "+sender().path());
+                    String msg = String.format("CallStateChanged state received: [%s] , sender path: [%s] , is initial call: [%s] , call state: [%s], fsm state: [%s]", ((CallStateChanged)message).toString(), sender().path(), (sender == call), callState.toString(), fsm.state());
+                    logger.info(msg);
                 }
                 if (forking.equals(state) || finishDialing.equals(state) || is(bridged) || is(bridging) ) {
                     if (sender.equals(call)) {
@@ -2900,6 +2894,11 @@ public class VoiceInterpreter extends BaseVoiceInterpreter {
                     } else {
                         if (callState == CallStateChanged.State.IN_PROGRESS) {
                             call.tell(new Hangup(), self());
+                        } else {
+                            if (logger.isInfoEnabled()) {
+                                String msg = String.format("Didn't sent Hangup to call because current call state is: [%s]", callState.toString());
+                                logger.info(msg);
+                            }
                         }
                     }
                 }
