@@ -61,8 +61,9 @@ import org.restcomm.connect.testsuite.http.RestcommCallsTool;
 import org.restcomm.connect.testsuite.tools.MonitoringServiceTool;
 
 /**
- * Tests for the Dial forking
- * Created by gvagenas on 12/19/15.
+ * Tests for the Dial Forking timeout, this test class is being tested with 2 seconds audio file, that can make RC in
+ * PLAYING state for 2 seconds.
+ * Created by xhoaluu on 03/29/18.
  */
 @RunWith(Arquillian.class)
 @FixMethodOrder(MethodSorters.NAME_ASCENDING)
