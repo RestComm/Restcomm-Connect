@@ -1233,7 +1233,7 @@ public class VoiceInterpreter extends BaseVoiceInterpreter {
                 outboundCallResponse = event.sipResponse();
             }
         if(logger.isInfoEnabled()){
-            String msg = String.format("VoiceInterpreter received CallStateChanged event: [%s] , from sender path: [%s] , sender is initial call: [%s] , current VI state: [%s] , current call state: [%s] , current outboundCall actor is: [%s]", event, sender.path(),(sender == call), fsm.state(), callState.toString(), outboundCall);
+            String msg = String.format("VoiceInterpreter received CallStateChanged event: [%s] , from sender path: [%s] , sender is initial call: [%s] , current VI state: [%s] , current call state: [%s] , current outboundCall actor is: [%s]", event, sender.path(),(sender == call), fsm.state(), callState != null ? callState.toString() : "null", outboundCall != null ? outboundCall.path(): "null");
             logger.info(msg);
         }
 
