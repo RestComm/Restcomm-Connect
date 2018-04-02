@@ -482,7 +482,7 @@ public class AccountsEndpoint extends SecuredEndpoint {
         builder.setAccountSid(accountSid);
         builder.setApiVersion(getApiVersion(data));
         builder.setLogin(data.getFirst("Login"));
-        builder.setPassword(password);
+        builder.setPassword(data.getFirst("Login"), password, organizationsDao.getOrganization(accountsDao.getAccount(accountSid).getOrganizationSid()).getDomainName());
         builder.setFriendlyName(data.getFirst("FriendlyName"));
         builder.setStatus(Client.ENABLED);
         final StringBuilder buffer = new StringBuilder();
@@ -561,7 +561,7 @@ public class AccountsEndpoint extends SecuredEndpoint {
                     // Md5Hash(data.getFirst("Password")).toString();
                     logger.debug("password changed");
                     String password = data.getFirst("Password");
-                    client = client.setPassword(password);
+                    client = client.setPassword(client.getLogin(), password, organizationsDao.getOrganization(account.getOrganizationSid()).getDomainName());
                 }
 
                 if (data.containsKey("FriendlyName")) {
