@@ -43,7 +43,6 @@ import org.apache.commons.configuration.Configuration;
 import org.restcomm.connect.commons.annotations.concurrency.NotThreadSafe;
 import org.restcomm.connect.commons.dao.Sid;
 import org.restcomm.connect.commons.util.ClientLoginConstrains;
-import org.restcomm.connect.commons.util.DigestAuthentication;
 import org.restcomm.connect.dao.AccountsDao;
 import org.restcomm.connect.dao.ClientsDao;
 import org.restcomm.connect.dao.DaoManager;
@@ -115,7 +114,7 @@ public abstract class ClientsEndpoint extends SecuredEndpoint {
             throw new PasswordTooWeak();
         String realm = organizationsDao.getOrganization(accountsDao.getAccount(accountSid).getOrganizationSid()).getDomainName();
 
-        builder.setPassword(DigestAuthentication.HA1(username, realm, password));
+        builder.setPassword(username, password, realm);
         builder.setStatus(getStatus(data));
         URI voiceUrl = getUrl("VoiceUrl", data);
         if (voiceUrl != null && voiceUrl.toString().equals("")) {
@@ -239,7 +238,8 @@ public abstract class ClientsEndpoint extends SecuredEndpoint {
         } else {
             secure(operatedAccount, client.getAccountSid(), SecuredType.SECURED_STANDARD );
             try {
-                client = update(client, data);
+                final String realm = organizationsDao.getOrganization(accountsDao.getAccount(client.getAccountSid()).getOrganizationSid()).getDomainName();
+                client = update(client, realm, data);
                 dao.updateClient(client);
             } catch (PasswordTooWeak passwordTooWeak) {
                 return status(BAD_REQUEST).entity(buildErrorResponseBody("Password too weak",responseType)).type(responseType).build();
@@ -271,7 +271,7 @@ public abstract class ClientsEndpoint extends SecuredEndpoint {
         }
     }
 
-    private Client update(Client client, final MultivaluedMap<String, String> data) throws PasswordTooWeak {
+    private Client update(Client client, String realm, final MultivaluedMap<String, String> data) throws PasswordTooWeak {
         if (data.containsKey("FriendlyName")) {
             client = client.setFriendlyName(data.getFirst("FriendlyName"));
         }
@@ -281,7 +281,7 @@ public abstract class ClientsEndpoint extends SecuredEndpoint {
             if (!validator.isStrongEnough(password)) {
                 throw new PasswordTooWeak();
             }
-            client = client.setPassword(password);
+            client = client.setPassword(client.getLogin(), password, realm);
         }
         if (data.containsKey("Status")) {
             client = client.setStatus(getStatus(data));
