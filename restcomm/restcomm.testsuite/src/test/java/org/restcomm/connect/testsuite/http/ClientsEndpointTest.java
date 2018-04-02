@@ -121,7 +121,7 @@ public class ClientsEndpointTest {
         assertTrue(bobPhone.register(reqUri, "bob", "RestComm1234", bobContact, 1800, 1800));
         assertTrue(bobPhone.unregister(bobContact, 0));
         
-        //update password
+        //update password and test register again
         Client jersey = getClient(superadminAccountSid, developeerAuthToken);
         WebResource resource = jersey.resource( getResourceUrl("/2012-04-24/Accounts/" + superadminAccountSid + "/Clients/" + clientSID2 ) );
         MultivaluedMap<String, String> params = new MultivaluedMapImpl();
