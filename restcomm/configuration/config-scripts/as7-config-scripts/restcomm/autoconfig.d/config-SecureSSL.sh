@@ -157,10 +157,10 @@ MssStackConf(){
         fi
 
         if [ -n "$SSL_CIPHER_SUITES" ]; then
-            if  grep -q "gov.nist.javax.sip.gov.nist.javax.sip.ENABLED_CIPHER_SUITES" "$FILE"; then
-                sed -i "s|gov.nist.javax.sip.gov.nist.javax.sip.ENABLED_CIPHER_SUITES=.*|gov.nist.javax.sip.gov.nist.javax.sip.ENABLED_CIPHER_SUITES=$SSL_CIPHER_SUITES|" $FILE
+            if  grep -q "gov.nist.javax.sip.ENABLED_CIPHER_SUITES" "$FILE"; then
+                sed -i "s|gov.nist.javax.sip.ENABLED_CIPHER_SUITES=.*|gov.nist.javax.sip.ENABLED_CIPHER_SUITES=$SSL_CIPHER_SUITES|" $FILE
             else
-                echo 'gov.nist.javax.sip.gov.nist.javax.sip.ENABLED_CIPHER_SUITES='"$SSL_CIPHER_SUITES"'' >> $FILE
+                echo 'gov.nist.javax.sip.ENABLED_CIPHER_SUITES='"$SSL_CIPHER_SUITES"'' >> $FILE
             fi
 
         fi
