@@ -46,7 +46,7 @@ import org.restcomm.connect.telephony.api.CallStateChanged;
 import org.restcomm.connect.telephony.api.GetCallInfo;
 import org.restcomm.connect.telephony.api.GetCallObservers;
 import org.restcomm.connect.telephony.api.InitializeOutbound;
-import org.restcomm.connect.telephony.api.UssdCallInfoStreamEvent;
+import org.restcomm.connect.telephony.api.events.UssdStreamEvent;
 import org.restcomm.connect.ussd.commons.UssdRestcommResponse;
 import org.restcomm.connect.ussd.interpreter.UssdInterpreter;
 import scala.concurrent.duration.Duration;
@@ -110,6 +110,7 @@ public class UssdCall extends RestcommUntypedActor implements TransitionEndListe
     private SipURI from;
     private SipURI to;
     private String transport;
+    private String userUssdRequest;
     private String username;
     private String password;
     private CreateCallType type;
@@ -318,12 +319,24 @@ public class UssdCall extends RestcommUntypedActor implements TransitionEndListe
 
     @Override
     public void onTransitionEnd(State was, State is, Object event) {
-        CallResponse callResponse = info();
-        if (callResponse != null && callResponse.get() != null) {
-            getContext().system()
-                    .eventStream()
-                    .publish(new UssdCallInfoStreamEvent((CallInfo) callResponse.get()));
+        UssdStreamEvent.Builder builder = UssdStreamEvent.builder()
+                .setSid(id)
+                .setAccountSid(accountId)
+                .setDirection(UssdStreamEvent.Direction.getDirectionValue(direction))
+                .setFrom(from.getUser())
+                .setTo(to.getUser());
+
+        if (userUssdRequest != null){
+            builder.setStatus(UssdStreamEvent.Status.PROCESSING)
+                    .setRequest(userUssdRequest);
+            userUssdRequest = null;
+        } else {
+            builder.setStatus(UssdStreamEvent.Status.getStatusValue(external.toString()));
         }
+
+        getContext().system()
+                .eventStream()
+                .publish(builder.build());
     }
 
     private abstract class AbstractAction implements Action {
@@ -437,7 +450,9 @@ public class UssdCall extends RestcommUntypedActor implements TransitionEndListe
             } else {
                 request = session.createRequest("INFO");
             }
-            request.setContent(ussdRequest.createUssdPayload().toString().trim(), ussdContentType);
+
+            userUssdRequest = ussdRequest.createUssdPayload().toString().trim();
+            request.setContent(userUssdRequest, ussdContentType);
 
             logger.info("Prepared request: \n"+request);
 

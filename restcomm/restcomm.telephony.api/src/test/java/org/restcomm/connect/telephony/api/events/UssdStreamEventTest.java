@@ -17,22 +17,30 @@
  *  along  this program.  If not, see <http:www.gnu.orglicenses>
  */
 
-package org.restcomm.connect.telephony.api;
+package org.restcomm.connect.telephony.api.events;
 
-import org.restcomm.connect.commons.stream.StreamEvent;
+import org.mobicents.commons.utils.SidUtil;
+import org.restcomm.connect.telephony.api.events.UssdStreamEvent;
+
+import org.junit.Test;
+import static org.junit.Assert.assertEquals;
 
 /**
  * @author laslo.horvat@telestax.com (Laslo Horvat)
  */
-public class UssdCallInfoStreamEvent implements StreamEvent {
+public class UssdStreamEventTest {
 
-    private final CallInfo callInfo;
+    @Test
+    public void buildUssdStreamEventTest() {
+        UssdStreamEvent expected = UssdStreamEvent.builder()
+            .accountSid(SidUtil.randomSid())
+            .sid(SidUtil.randomSid())
+            .to(SidUtil.randomSid())
+            .from(SidUtil.randomSid())
+            .status(UssdStreamEvent.Status.COMPLETED)
+            .direction(UssdStreamEvent.Direction.INBOUND)
+            .build();
 
-    public UssdCallInfoStreamEvent(CallInfo callInfo) {
-        this.callInfo = callInfo;
-    }
-
-    public CallInfo getCallInfo() {
-        return callInfo;
+        assertNotNull(expected);
     }
 }
