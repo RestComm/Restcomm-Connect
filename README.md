@@ -56,7 +56,10 @@ Continuous Integration and Delivery
 
 Acknowledgements
 ========
-Java Profiler sponsored by YourKit 
-[![YourKit The Industry Leader in .NET & Java Profiling](https://www.yourkit.com/images/yk_logo.png)](https://www.yourkit.com/)
 
-[See who has been contributing to RestComm](http://www.telestax.com/opensource/acknowledgments/)
+* [![YourKit The Industry Leader in .NET & Java Profiling](https://www.yourkit.com/images/yk_logo.png)](https://www.yourkit.com/) Java Profiler sponsored by YourKit
+
+* [![JProfiler](https://www.ej-technologies.com/images/product_banners/jprofiler_large.png)](https://www.ej-technologies.com/products/jprofiler/overview.html) JProfiler Open Source License
+
+---
+We also maintain a list of [all Restcomm contributors](http://www.telestax.com/opensource/acknowledgments/) on the Restcomm website, to acknowledge contributions by the broad open source community.
