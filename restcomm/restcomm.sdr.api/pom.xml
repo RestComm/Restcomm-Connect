@@ -5,7 +5,7 @@
     <parent>
         <artifactId>restcomm-connect</artifactId>
         <groupId>org.restcomm</groupId>
-        <version>8.3.2-SNAPSHOT</version>
+        <version>8.3.2-213</version>
     </parent>
 
     <artifactId>restcomm-connect.sdr.api</artifactId>
