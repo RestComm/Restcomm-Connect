@@ -1328,6 +1328,13 @@ public class VoiceInterpreter extends BaseVoiceInterpreter {
                     if (dialBranches != null && dialBranches.contains(sender)) {
                         dialBranches.remove(sender);
                     }
+                    if (dialBranches == null || dialBranches.size() == 0){
+                        // Stop playing the ringing tone from inbound call. There is race condifiton, If after Dial verb
+                        // has Play or Say verb, NTFY for Stop media recouce will also stop Play or Say Verb. Better to
+                        // stop it here.
+                        msResponsePending = true;
+                        call.tell(new StopMediaGroup(), self());
+                    }
                     checkDialBranch(message,sender,action);
                 } else if (sender.equals(call)) {
                     fsm.transition(message, finished);
@@ -1512,7 +1519,11 @@ public class VoiceInterpreter extends BaseVoiceInterpreter {
             }
             if (bridge != null) {
                 // Stop the bridge
-                bridge.tell(new StopBridge(liveCallModification), self());
+                if (logger.isDebugEnabled()) {
+                    logger.debug("LivecallModification: " + liveCallModification + " Sender == call?: " + (sender != null && !sender.equals(call)));
+                }
+                bridge.tell(new StopBridge(liveCallModification ||
+                        (sender != null && !sender.equals(call))), self());
                 recordingCall = false;
                 bridge = null;
             }
@@ -2896,7 +2907,8 @@ public class VoiceInterpreter extends BaseVoiceInterpreter {
                         return;
                     } else {
                         if (callState == CallStateChanged.State.IN_PROGRESS) {
-                            call.tell(new Hangup(), self());
+                            // Finish Dialing, need to check for next verb or execute Dial Action link. Should not stop here.
+                            checkDialBranch(message,sender,action);
                         } else {
                             if (logger.isInfoEnabled()) {
                                 String msg = String.format("Didn't sent Hangup to call because current call state is: [%s]", callState.toString());
