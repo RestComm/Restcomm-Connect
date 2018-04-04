@@ -103,6 +103,8 @@ import com.google.gson.JsonArray;
 import com.google.gson.JsonObject;
 
 import gov.nist.javax.sip.stack.HopImpl;
+import org.restcomm.connect.commons.annotations.FeatureAltTests;
+import org.restcomm.connect.commons.annotations.FeatureExpTests;
 
 /**
  * Test for Dial Action attribute for organization
@@ -760,7 +762,7 @@ public class DialActionOrganizationSBCTest {
         logger.info("&&&&& LiveCallsArraySize: "+liveCallsArraySize);
         assertEquals(0, liveCalls);
         assertEquals(0,liveCallsArraySize);
-        
+
 
     }
 
@@ -779,6 +781,7 @@ public class DialActionOrganizationSBCTest {
      * @throws InterruptedException
      */
     @Test
+    @Category({FeatureExpTests.class})
     public void testClientsCallEachOtherDifferentOrganization() throws ParseException, InterruptedException {
 
         SipURI uri = mariaSipStackOrg2.getAddressFactory().createSipURI(null, "127.0.0.1:5080");
@@ -928,6 +931,7 @@ public class DialActionOrganizationSBCTest {
      * @throws UnknownHostException
      */
     @Test
+    @Category({FeatureAltTests.class})
     public void testDialActionHangupWithLCM() throws Exception {
 
         stubFor(post(urlPathMatching("/DialAction.*"))

@@ -60,6 +60,8 @@ import org.restcomm.connect.testsuite.tools.MonitoringServiceTool;
 
 import gov.nist.javax.sip.address.SipUri;
 import gov.nist.javax.sip.message.SIPResponse;
+import org.restcomm.connect.commons.annotations.FeatureAltTests;
+import org.restcomm.connect.commons.annotations.FeatureExpTests;
 
 /**
  * @author quintana.thomas@gmail.com (Thomas Quintana)
@@ -239,6 +241,7 @@ public final class UserAgentManagerWithSBCTest {
     }
 
     @Test
+    @Category({FeatureAltTests.class})
     public void registerUserAgentWithExtraParamsAndOptionsPing() throws ParseException, InterruptedException {
 //        deployer.deploy("UserAgentTest");
         // Register the phone so we can get OPTIONS pings from RestComm.
@@ -263,8 +266,9 @@ public final class UserAgentManagerWithSBCTest {
         // Clean up (Unregister).
         assertTrue(phone.unregister(aliceContact, 0));
     }
-    
+
     @Test
+    @Category({FeatureExpTests.class})
     public void registerUserAgentWith408ErrorResponse() throws ParseException, InterruptedException, InvalidArgumentException {
 //        deployer.deploy("UserAgentTest");
         // Register the phone so we can get OPTIONS pings from RestComm.
@@ -283,8 +287,9 @@ public final class UserAgentManagerWithSBCTest {
 
         phone2.setAutoResponseOptionsRequests(true);
     }
-    
+
     @Test
+    @Category({FeatureExpTests.class})
     public void registerUserAgentWithExtraParamsAnd408ToOptionsPing() throws ParseException, InterruptedException, InvalidArgumentException {
 //        deployer.deploy("UserAgentTest");
         // Register the phone so we can get OPTIONS pings from RestComm.
