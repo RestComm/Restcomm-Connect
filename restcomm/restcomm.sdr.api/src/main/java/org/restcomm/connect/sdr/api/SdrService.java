@@ -24,7 +24,7 @@ import org.restcomm.connect.commons.faulttolerance.RestcommUntypedActor;
 import org.restcomm.connect.commons.stream.StreamEvent;
 import org.restcomm.connect.dao.entities.SmsMessage;
 import org.restcomm.connect.telephony.api.CallInfoStreamEvent;
-import org.restcomm.connect.telephony.api.UssdCallInfoStreamEvent;
+import org.restcomm.connect.telephony.api.events.UssdStreamEvent;
 
 /**
  * @author oleg.agafonov@telestax.com (Oleg Agafonov)
@@ -40,8 +40,8 @@ public abstract class SdrService extends RestcommUntypedActor {
             onStartSdrService((StartSdrService) message, self, sender);
         } else if (message instanceof CallInfoStreamEvent) {
             onCallInfoStreamEvent((CallInfoStreamEvent) message, self, sender);
-        } else if (message instanceof UssdCallInfoStreamEvent) {
-            onUssdCallInfoStreamEvent((UssdCallInfoStreamEvent) message, self, sender);
+        } else if (message instanceof UssdStreamEvent) {
+            onUssdStreamEvent((UssdStreamEvent) message, self, sender);
         } else if (message instanceof SmsMessage) {
             onSmsMessage((SmsMessage) message, self, sender);
         }
@@ -53,5 +53,5 @@ public abstract class SdrService extends RestcommUntypedActor {
 
     protected abstract void onSmsMessage(SmsMessage message, ActorRef self, ActorRef sender);
 
-    protected abstract void onUssdCallInfoStreamEvent(UssdCallInfoStreamEvent message, ActorRef self, ActorRef sender);
+    protected abstract void onUssdStreamEvent(UssdStreamEvent message, ActorRef self, ActorRef sender);
 }
