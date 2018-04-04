@@ -2896,6 +2896,10 @@ public class VoiceInterpreter extends BaseVoiceInterpreter {
                         return;
                     } else {
                         if (callState == CallStateChanged.State.IN_PROGRESS) {
+                            if (logger.isInfoEnabled()) {
+                                String msg = String.format("At finishDialingState, will ASK call to hangup. Current VI State %s Call State: %s ",state, callState);
+                                logger.info(msg);
+                            }
                             call.tell(new Hangup(), self());
                         } else {
                             if (logger.isInfoEnabled()) {
