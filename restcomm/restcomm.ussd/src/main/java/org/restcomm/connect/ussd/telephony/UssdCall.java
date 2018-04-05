@@ -60,6 +60,7 @@ import javax.servlet.sip.SipServletRequest;
 import javax.servlet.sip.SipServletResponse;
 import javax.servlet.sip.SipSession;
 import javax.servlet.sip.SipURI;
+import javax.xml.stream.XMLStreamException;
 import java.math.BigDecimal;
 import java.net.InetAddress;
 import java.net.URI;
@@ -110,7 +111,7 @@ public class UssdCall extends RestcommUntypedActor implements TransitionEndListe
     private SipURI from;
     private SipURI to;
     private String transport;
-    private String userUssdRequest;
+    private UssdRestcommResponse userUssdRequest;
     private String username;
     private String password;
     private CreateCallType type;
@@ -328,7 +329,7 @@ public class UssdCall extends RestcommUntypedActor implements TransitionEndListe
 
         if (userUssdRequest != null){
             builder.setStatus(UssdStreamEvent.Status.PROCESSING)
-                    .setRequest(userUssdRequest);
+                    .setRequest(getUssdRequestSdrData());
             userUssdRequest = null;
         } else {
             builder.setStatus(UssdStreamEvent.Status.getStatusValue(external.toString()));
@@ -337,6 +338,17 @@ public class UssdCall extends RestcommUntypedActor implements TransitionEndListe
         getContext().system()
                 .eventStream()
                 .publish(builder.build());
+    }
+
+    private String getUssdRequestSdrData(){
+        //TODO parse request payload if just dialed number is needed
+        String requestData = null;
+        try {
+            requestData = userUssdRequest.createUssdPayload().toString().trim();
+        } catch (XMLStreamException e) {
+            logger.warning("Error parsing user ussd request XML payload "+requestData);
+        }
+        return requestData;
     }
 
     private abstract class AbstractAction implements Action {
@@ -451,8 +463,8 @@ public class UssdCall extends RestcommUntypedActor implements TransitionEndListe
                 request = session.createRequest("INFO");
             }
 
-            userUssdRequest = ussdRequest.createUssdPayload().toString().trim();
-            request.setContent(userUssdRequest, ussdContentType);
+            userUssdRequest = ussdRequest;
+            request.setContent(ussdRequest.createUssdPayload().toString().trim(), ussdContentType);
 
             logger.info("Prepared request: \n"+request);
 
