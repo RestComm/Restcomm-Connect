@@ -521,6 +521,7 @@ public class SmppInterpreter extends RestcommUntypedActor {
             final SmsMessage record = builder.build();
             final SmsMessagesDao messages = storage.getSmsMessagesDao();
             messages.addSmsMessage(record);
+            getContext().system().eventStream().publish(record);
             // Destroy the initial session.
             smppMessageHandler.tell(new DestroySmsSession(initialSession), source);
             initialSession = null;
