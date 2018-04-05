@@ -215,6 +215,15 @@ rcServices.factory('AuthService',function(RCommAccounts,$http, $location, Sessio
       if (!!profile && !profileURL) {
         return profile;
       }
+      else if (!profileURL) {
+        return;
+      }
+      else { // make sure we use the same protocol serving this...
+        if (!profileURL.startsWith(window.location.protocol)) {
+          profileURL = profileURL.replace(/^.*:\/\//, '//');
+        }
+      }
+
       var deferred = $q.defer();
       var auth_header = basicAuthHeader(account.sid, account.auth_token, true);
       $http({

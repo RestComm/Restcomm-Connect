@@ -38,9 +38,16 @@ FILE=$BASEDIR/standalone/deployments/olympus.war/resources/xml/olympus.xml
 }
 
 
+DomainConf(){
+#Configure Web Olympus Domain.
+FILE=$BASEDIR/standalone/deployments/olympus.war/resources/xml/olympus.xml
+echo "WebOlympusDomain: $WebOlympusDomain"
+  xmlstarlet ed -L -P -u  "/olympus/server/address" -v ${WebOlympusDomain} $FILE
+}
 
 
 # MAIN
 echo 'Configuring Olympus...'
 #Reload Variables
 olympusPortConf
+DomainConf
