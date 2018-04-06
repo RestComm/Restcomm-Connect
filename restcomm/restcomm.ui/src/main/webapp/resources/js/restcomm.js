@@ -56,9 +56,6 @@ rcMod.config(['$stateProvider','$urlRouterProvider', function($stateProvider, $u
     resolve: {
         authorize: function (AuthService) {
             return AuthService.checkAccess();
-        },
-        dashboardConfig: function (PublicConfig) {
-
         }
     }
   });
@@ -210,9 +207,25 @@ rcMod.config(['$stateProvider','$urlRouterProvider', function($stateProvider, $u
 
 angular.element(document).ready(['$http',function ($http) {
   // manually inject $q since it's not available
-  var initInjector = angular.injector(["ng"]);
-  var $q = initInjector.get("$q");
-  angular.bootstrap(document, ["rcApp"]);
+  var initInjector = angular.injector(['ng']);
+  var $q = initInjector.get('$q');
+  var $window = initInjector.get('$window');
+
+  var configPromise = $q.defer();
+  $http.get($window.location.pathname + 'conf/dashboard.json').success(function (response) {
+    angular.module('rcApp.services').factory('PublicConfig', function () {
+      return JSON.parse(response);
+    });
+    configPromise.resolve(response.data);
+  }).error(function () {
+    configPromise.reject();
+  });
+
+  $q.all([configPromise.promise]).then(function (responses) {
+    angular.bootstrap(document, ['rcApp']);
+  }, function (error) {
+    console.error('Internal server error', error);
+  });
 }]);
 
 
@@ -292,12 +305,12 @@ rcMod.run(function($rootScope, $location, $anchorScroll, AuthService) {
 // There is a circular dependency issue when directly injecting AuthService in the function. A workaround using $injector has
 // been used - http://stackoverflow.com/questions/20647483/angularjs-injecting-service-into-a-http-interceptor-circular-dependency
 rcMod.
-  factory('authHttpResponseInterceptor',['$q','$location','$injector','Notifications',function($q,$location,$injector, Notifications){
+  factory('authHttpResponseInterceptor',['$q','$location','$injector','Notifications', 'PublicConfig',function($q,$location,$injector, Notifications, PublicConfig){
     return {
       request: function(config) {
-          var restcomm_prefix = "/restcomm/"
-    	  var rvd_prefix = "/restcomm-rvd/";
-    	  if ( ! config.headers.Authorization ) { // if no header is already present
+          var restcomm_prefix = "/restcomm/";
+          var rvd_prefix = PublicConfig.rvdUrl + '/';
+          if ( ! config.headers.Authorization ) { // if no header is already present
               if ( config.url.substring(0, rvd_prefix.length) === rvd_prefix || config.url.substring(0, restcomm_prefix.length) === restcomm_prefix  ) {
                   var AuthService = $injector.get('AuthService');
                   var account = AuthService.getAccount();
@@ -308,8 +321,8 @@ rcMod.
                   }
               }
           }
-		  return config;
-	    },
+          return config;
+      },
       response: function(response){
             var AuthService = $injector.get('AuthService');
             if (response.status === 401) {
