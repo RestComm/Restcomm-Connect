@@ -34,6 +34,7 @@ import javax.servlet.sip.SipURI;
 import org.restcomm.connect.dao.ClientsDao;
 import org.restcomm.connect.dao.DaoManager;
 import org.restcomm.connect.dao.entities.Client;
+import org.restcomm.connect.commons.configuration.RestcommConfiguration;
 import org.restcomm.connect.commons.dao.Sid;
 import org.restcomm.connect.commons.util.DigestAuthentication;
 
@@ -60,10 +61,11 @@ public class CallControlHelper {
         final String response = map.get("response");
         final ClientsDao clients = daoManager.getClientsDao();
         final Client client = clients.getClient(user, organizationSid);
+        //only allow if client algo is identical to system algo
         if (client != null && Client.ENABLED == client.getStatus()) {
-            final String password = client.getPassword();
-            final String result = DigestAuthentication.response(algorithm, user, realm, password, nonce, nc, cnonce, method,
-                    uri, null, qop);
+            final String password2 = client.getPassword();
+            final String result = DigestAuthentication.response(algorithm, user, realm, "", password2, nonce, nc, cnonce,
+                    method, uri, null, qop);
             return result.equals(response);
         } else {
             return false;
@@ -71,9 +73,10 @@ public class CallControlHelper {
     }
 
     /**
-     *
      * Check if a client is authenticated. If so, return true. Otherwise request authentication and return false;
-     *
+     * @param request
+     * @param storage
+     * @param organizationSid
      * @return
      * @throws IOException
      */
@@ -82,19 +85,19 @@ public class CallControlHelper {
         final String authorization = request.getHeader("Proxy-Authorization");
         final String method = request.getMethod();
         if (authorization == null || !CallControlHelper.permitted(authorization, method, storage, organizationSid)) {
-            authenticate(request);
+            authenticate(request, storage.getOrganizationsDao().getOrganization(organizationSid).getDomainName());
             return false;
         } else {
             return true;
         }
     }
 
-    static void authenticate(final SipServletRequest request) throws IOException {
+    static void authenticate(final SipServletRequest request, String realm) throws IOException {
         final SipServletResponse response = request.createResponse(SC_PROXY_AUTHENTICATION_REQUIRED);
         final String nonce = nonce();
-        final SipURI uri = (SipURI) request.getTo().getURI();
-        final String realm = uri.getHost();
-        final String header = header(nonce, realm, "Digest");
+        String algorithm = RestcommConfiguration.getInstance().getMain().getClientAlgorithm();
+        String qop = RestcommConfiguration.getInstance().getMain().getClientQOP();
+        final String header = header(nonce, realm, "Digest", algorithm, qop);
         response.addHeader("Proxy-Authenticate", header);
         response.send();
     }
@@ -118,9 +121,14 @@ public class CallControlHelper {
         return new String(hex).substring(0, 31);
     }
 
-    static String header(final String nonce, final String realm, final String scheme) {
+    static String header(final String nonce, final String realm, final String scheme, String algo, String qop) {
         final StringBuilder buffer = new StringBuilder();
         buffer.append(scheme).append(" ");
+        if(!algo.isEmpty()){
+            //NB: we dont support "algorithm-sess" yet
+            buffer.append("algorithm=\"").append(algo).append("\", ");
+            buffer.append("qop=\"").append(qop).append("\", ");
+        }
         buffer.append("realm=\"").append(realm).append("\", ");
         buffer.append("nonce=\"").append(nonce).append("\"");
         return buffer.toString();

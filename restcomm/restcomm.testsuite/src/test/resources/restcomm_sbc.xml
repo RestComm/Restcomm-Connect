@@ -12,7 +12,7 @@
 <restcomm>
 	<runtime-settings>
 		<!-- The API version that will be used. -->
-		<api-version>2012-04-24</api-version><client-algorithm>MD5</client-algorithm><client-qop>auth</client-qop><client-algorithm-sess>false</client-algorithm-sess>
+		<api-version>2012-04-24</api-version>
 
 		<!-- Try to run RVD workspace projects migration to apply new naming
 			convention and synchronization with database entities. This execution
@@ -21,20 +21,18 @@
 		<rvd-workspace-migration-enabled>false</rvd-workspace-migration-enabled>
 
 		<!-- The location where the audio prompts are located. -->
-		<prompts-uri>http://127.0.0.1:8080/restcomm/audio</prompts-uri>
+		<prompts-uri>/restcomm/audio</prompts-uri>
 
 		<!-- Cache settings. -->
 		<cache-path>${restcomm:home}/cache</cache-path>
-		<cache-uri>http://127.0.0.1:8080/restcomm/cache</cache-uri>
+		<cache-uri>/restcomm/cache</cache-uri>
 
 		<!-- The path where recordings made by the <Record> verb are stored. -->
 		<recordings-path>file://${restcomm:home}/recordings</recordings-path>
-		<recordings-uri>http://127.0.0.1:8080/restcomm/recordings
-		</recordings-uri>
+		<recordings-uri>/restcomm/recordings</recordings-uri>
 
 		<!-- The URL to the errors dictionary. -->
-		<error-dictionary-uri>http://127.0.0.1:8080/restcomm/errors
-		</error-dictionary-uri>
+		<error-dictionary-uri>/restcomm/errors</error-dictionary-uri>
 
 		<!-- The IP to use for out-bound SIP REGISTER requests. This is useful
 			when you want to report a different IP than the one RestComm picked by default. -->
@@ -44,30 +42,36 @@
 			If set to false RestComm will use the Request URI to determine the destination. -->
 		<use-to>true</use-to>
 
-		<!-- If set to true Restcomm will use the Local Address (or external address if available)
-		     in the host part of the From header for calls to the outbound proxy.
-		     Default is False, which means that Restcomm will use outbound proxy for the host part of From header -->
+		<!-- if this flag is set to true, it will disable all patching done for NAT
+		 even if they are enabled in the configuration file-->
+		<use-sbc>true</use-sbc>
+
+		<!-- If set to true Restcomm will use the Local Address (or external address
+			if available) in the host part of the From header for calls to the outbound
+			proxy. Default is False, which means that Restcomm will use outbound proxy
+			for the host part of From header -->
 		<use-local-address>false</use-local-address>
-
-		<!-- If set to true Restcomm will authenticate users and incoming messages from those users -->
-		<authenticate>true</authenticate>
-
-		<!-- Interval time in seconds that Restcomm will send keepalive messages (OPTIONS) to registered clients -->
-		<ping-interval>60</ping-interval>
 
 		<!-- If set to true Restcomm will authenticate users and incoming messages
 			from those users -->
 		<authenticate>true</authenticate>
 
+		<!-- Interval time in seconds that Restcomm will send keepalive messages (OPTIONS) to registered clients -->
+		<ping-interval>60</ping-interval>
+
 		<!-- If set to FALSE Restcomm wont normalize phone numbers (prepend +1)
 			when creating an outbound call -->
-		<normalize-numbers-for-outbound-calls>true
-		</normalize-numbers-for-outbound-calls>
+		<normalize-numbers-for-outbound-calls>true</normalize-numbers-for-outbound-calls>
 		<!--If set to TRUE Restcomm will use the From address of initial call to
 			proxied calls Caller A dials DID XYZ that is bind to RCML that Dials Number
 			4321. If from-address-to-proxied-calls is TRUE Restcomm will pass callerId
 			A to the created call -->
 		<from-address-to-proxied-calls>true</from-address-to-proxied-calls>
+
+		<!-- Control whether Restcomm will try to patch the Request-URI and SDP
+			for B2BUA sessions with the discovered external IP Address of the peer -->
+		<!-- Default value: true -->
+		<patch-for-nat-b2bua-sessions>true</patch-for-nat-b2bua-sessions>
 
 		<outbound-proxy>
 			<!-- Parameters for primary outbound proxy. -->
@@ -78,8 +82,17 @@
 			<!-- Parameters for fallback outbound proxy. -->
 			<fallback-outbound-proxy-user></fallback-outbound-proxy-user>
 			<fallback-outbound-proxy-password></fallback-outbound-proxy-password>
-			<fallback-outbound-proxy-uri>127.0.0.1:5090
-			</fallback-outbound-proxy-uri>
+			<fallback-outbound-proxy-uri>127.0.0.1:5090</fallback-outbound-proxy-uri>
+
+			<!-- When set to true, Restcomm will use the username of the outbound
+				proxy when -->
+			<!-- creating the From header, as the userpart of the sip uri. Example:
+				From: "Alice" <sip:PROXY_USERNAME@PROXY> -->
+			<outboudproxy-user-at-from-header>true</outboudproxy-user-at-from-header>
+			<!-- When set to true, Restcomm will use the original user for the display
+				name of the From header -->
+			<!-- Example: From: "Alice" <sip:PROXY_USERNAME@PROXY> -->
+			<user-at-displayed-name>true</user-at-displayed-name>
 
 			<!-- Allow fallback to backup proxy -->
 			<allow-fallback>true</allow-fallback>
@@ -105,6 +118,12 @@
 			<ussd-gateway-password></ussd-gateway-password>
 		</ussd-gateway>
 
+		<gmlc>
+			<gmlc-uri>http://127.0.0.1:8090/restcomm/gmlc/rest?msisdn=</gmlc-uri> <!-- Change GMLC-IP:port to appropriate value-->
+			<gmlc-user></gmlc-user>
+			<gmlc-password></gmlc-password>
+		</gmlc>
+
 		<!-- Each permission is represented as three columns Domain:Action:Target
 			Possible actions are Create, Read, Modify, Delete. -->
 		<security-roles>
@@ -126,24 +145,32 @@
 				<permission>RestComm:Read:SmsMessages</permission>
 				<permission>RestComm:Read:Transcriptions</permission>
 				<permission>RestComm:*:OutboundProxies</permission>
+				<permission>RestComm:*:EmailMessages</permission>
+				<permission>RestComm:*:Usage</permission>
+				<permission>RestComm:*:Geolocation</permission>
 			</role>
+			<role name="Unprivileged">
+				<permission>RestComm:Read:Accounts</permission>
+			</role>
+			<role name="Guest"></role>
 		</security-roles>
 	</runtime-settings>
 
 	<!-- Configuration for the VoIP Innovations provisioning API. -->
 	<phone-number-provisioning
-		class="org.restcomm.connect.provisioning.number.nexmo.NexmoPhoneNumberProvisioningManager">
+		class="org.restcomm.connect.provisioning.number.vi.VoIPInnovationsNumberProvisioningManager">
 		<callback-urls>
 			<voice url="localhost:5080" method="SIP" />
 			<sms url="localhost:5080" method="SIP" />
 			<fax url="localhost:5080" method="SIP" />
 			<ussd url="localhost:5080" method="SIP" />
 		</callback-urls>
-		<nexmo>
-			<api-key>randomkey</api-key>
-			<api-secret>randomsecret</api-secret>
-			<uri>http://127.0.0.1:8090/nexmo</uri>
-		</nexmo>
+		<voip-innovations>
+			<login></login>
+			<password></password>
+			<endpoint></endpoint>
+			<uri>https://backoffice.voipinnovations.com/api2.pl</uri>
+		</voip-innovations>
 	</phone-number-provisioning>
 
 	<smtp-notify>
@@ -157,7 +184,8 @@
 	</smtp-notify>
 
 	<smtp-service>
-		<host> </host>
+		<host>
+		</host>
 		<user></user>
 		<password></password>
 		<port></port>
@@ -173,6 +201,20 @@
 		<minutes-to-retain-public-url>7</minutes-to-retain-public-url>
 		<remove-original-file>true</remove-original-file>
 	</amazon-s3>
+
+	<!-- Defines how RestComm communicates with the Media Server Control layer.
+		Accepted values: XMS (Dialogic XMS using JSR-309 driver) or RMS (RestComm
+		Media Server using MGCP driver) -->
+	<mscontrol>
+		<compatibility>rms</compatibility>
+		<media-server name="Dialogic XMS" class="com.dialogic.dlg309">
+			<address>127.0.0.1</address>
+			<port>5060</port>
+			<transport>udp</transport>
+			<timeout>5</timeout>
+		</media-server>
+	</mscontrol>
+	<dns-util class="org.restcomm.connect.commons.util.mock.InetAddressMock"/>
 
 	<!-- The media server manager is responsible for managing the media servers
 		in use by RestComm. The default way to control media servers is using the
@@ -202,7 +244,7 @@
 		</mrb>
 	</media-server-manager>
 
-	<!-- Adjust http client behaviour for outgoing requests -->
+		<!-- Adjust http client behaviour for outgoing requests -->
 	<http-client>
 		<response-timeout>5000</response-timeout>
 		<!-- Control peer certificate verification for https connections. Two modes are supported:
@@ -349,6 +391,7 @@
 			<swedish>sv-se</swedish>
 		</languages>
 	</voicerss>
+
 
 	<!-- AT&T Speech Synthesizer plugin -->
 	<!-- <speech-synthesizer class="org.restcomm.connect.tts.att.AttSpeechSynthesizer">

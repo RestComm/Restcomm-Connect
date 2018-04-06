@@ -33,6 +33,8 @@ import static org.cafesip.sipunit.SipAssert.assertLastOperationSuccess;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertTrue;
+import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.when;
 
 import java.net.MalformedURLException;
 import java.net.URL;
@@ -72,15 +74,18 @@ import org.jboss.shrinkwrap.resolver.api.maven.Maven;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.BeforeClass;
+import org.junit.FixMethodOrder;
 import org.junit.Ignore;
 import org.junit.Rule;
 import org.junit.Test;
-import org.junit.FixMethodOrder;
-import org.junit.runners.MethodSorters;
+import org.junit.experimental.categories.Category;
 import org.junit.runner.RunWith;
+import org.junit.runners.MethodSorters;
 import org.mobicents.ext.javax.sip.dns.DNSLookupPerformer;
 import org.mobicents.ext.javax.sip.dns.DefaultDNSLookupPerformer;
 import org.restcomm.connect.commons.Version;
+import org.restcomm.connect.commons.annotations.SequentialClassTests;
+import org.restcomm.connect.commons.annotations.WithInMinsTests;
 import org.restcomm.connect.testsuite.http.RestcommCallsTool;
 import org.restcomm.connect.testsuite.http.RestcommConferenceParticipantsTool;
 import org.restcomm.connect.testsuite.http.RestcommConferenceTool;
@@ -98,12 +103,8 @@ import com.google.gson.JsonArray;
 import com.google.gson.JsonObject;
 
 import gov.nist.javax.sip.stack.HopImpl;
-import org.junit.experimental.categories.Category;
-
-import static org.mockito.Mockito.mock;
-import static org.mockito.Mockito.when;
-import org.restcomm.connect.commons.annotations.SequentialClassTests;
-import org.restcomm.connect.commons.annotations.WithInMinsTests;
+import org.restcomm.connect.commons.annotations.FeatureAltTests;
+import org.restcomm.connect.commons.annotations.FeatureExpTests;
 
 /**
  * Test for Dial Action attribute for organization
@@ -114,9 +115,9 @@ import org.restcomm.connect.commons.annotations.WithInMinsTests;
 @RunWith(Arquillian.class)
 @FixMethodOrder(MethodSorters.NAME_ASCENDING)
 @Category(value={WithInMinsTests.class, SequentialClassTests.class})
-public class DialActionOrganizationTest {
+public class DialActionOrganizationSBCTest {
 
-    private final static Logger logger = Logger.getLogger(DialActionOrganizationTest.class.getName());
+    private final static Logger logger = Logger.getLogger(DialActionOrganizationSBCTest.class.getName());
     private static final String TRANSPORT = "udp";
 
     private static final String version = Version.getVersion();
@@ -473,6 +474,12 @@ public class DialActionOrganizationTest {
         Credential c = new Credential("org2.restcomm.com", "bob", clientPassword);
         bobPhoneOrg2.addUpdateCredential(c);
 
+        //register as alice@org2.restcomm.com
+        uri = aliceSipStackOrg2.getAddressFactory().createSipURI(null, "127.0.0.1:5080");
+        assertTrue(alicePhoneOrg2.register(uri, "alice", "1234", "sip:alice@127.0.0.1:5091", 3600, 3600));
+        SipCall aliceCallOrg2 = alicePhoneOrg2.createSipCall();
+        aliceCallOrg2.listenForIncomingCall();
+
         // bob@org2.restcomm.com - dials a pure sip number in org3.
         final SipCall bobCallOrg2 = bobPhoneOrg2.createSipCall();
         bobCallOrg2.initiateOutgoingCall(bobContactOrg2, pureSipNumberOrg3, null, body, "application", "sdp", null, null);
@@ -755,7 +762,7 @@ public class DialActionOrganizationTest {
         logger.info("&&&&& LiveCallsArraySize: "+liveCallsArraySize);
         assertEquals(0, liveCalls);
         assertEquals(0,liveCallsArraySize);
-        
+
 
     }
 
@@ -774,6 +781,7 @@ public class DialActionOrganizationTest {
      * @throws InterruptedException
      */
     @Test
+    @Category({FeatureExpTests.class})
     public void testClientsCallEachOtherDifferentOrganization() throws ParseException, InterruptedException {
 
         SipURI uri = mariaSipStackOrg2.getAddressFactory().createSipURI(null, "127.0.0.1:5080");
@@ -922,6 +930,7 @@ public class DialActionOrganizationTest {
      * @throws UnknownHostException
      */
     @Test
+    @Category({FeatureAltTests.class})
     public void testDialActionHangupWithLCM() throws Exception {
 
         stubFor(post(urlPathMatching("/DialAction.*"))
@@ -1058,12 +1067,12 @@ public class DialActionOrganizationTest {
                 .asSingle(WebArchive.class);
         archive = archive.merge(restcommArchive);
         archive.delete("/WEB-INF/sip.xml");
-archive.delete("/WEB-INF/web.xml");
+        archive.delete("/WEB-INF/web.xml");
         archive.delete("/WEB-INF/conf/restcomm.xml");
         archive.delete("/WEB-INF/data/hsql/restcomm.script");
         archive.addAsWebInfResource("sip.xml");
         archive.addAsWebInfResource("web.xml");
-        archive.addAsWebInfResource("restcomm.xml", "conf/restcomm.xml");
+        archive.addAsWebInfResource("restcomm_sbc.xml", "conf/restcomm.xml");
         archive.addAsWebInfResource("restcomm.script_dialActionTest", "data/hsql/restcomm.script");
         archive.addAsWebResource("dial-client-entry_wActionUrl.xml");
         logger.info("Packaged Test App");

@@ -4,6 +4,7 @@ import static com.github.tomakehurst.wiremock.client.WireMock.aResponse;
 import static com.github.tomakehurst.wiremock.client.WireMock.get;
 import static com.github.tomakehurst.wiremock.client.WireMock.stubFor;
 import static com.github.tomakehurst.wiremock.client.WireMock.urlPathEqualTo;
+import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertTrue;
 
@@ -338,7 +339,7 @@ public class SmppTest {
 
 		SipURI uri = mariaSipStack.getAddressFactory().createSipURI(null, "127.0.0.1:5080");
 		assertTrue(mariaPhone.register(uri, "maria", "qwerty1234RT", "sip:maria@127.0.0.1:5095", 3600, 3600));
-		Credential mariaCred = new Credential("org3.restcomm.com","maria","qwerty1234RT");
+		Credential mariaCred = new Credential("org2.restcomm.com","maria","qwerty1234RT");
 		mariaPhone.addUpdateCredential(mariaCred);
 
 		assertTrue(mariaOrg3Phone.register(uri,"maria","1234","sip:maria@127.0.0.1:5094", 3600, 3600));
@@ -355,7 +356,7 @@ public class SmppTest {
 
 		int responseMariaCall = mariaCall.getLastReceivedResponse().getStatusCode();
         logger.info("responseMariaCall: "+responseMariaCall);
-        assertTrue(responseMariaCall == Response.NOT_FOUND);
+        assertEquals(Response.NOT_FOUND, responseMariaCall);
 
 	}
 
