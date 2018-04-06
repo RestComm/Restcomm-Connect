@@ -144,11 +144,4 @@ public final class DigestAuthentication {
         ha1 = DigestAuthentication.H(username+":"+realm+":"+password, algorithm);
         return ha1;
     }
-
-    public static void main(String [] str){
-        String username="alice";
-        String realm="127.0.0.1";
-        String password="1234";
-        System.out.println(DigestAuthentication.HA1(username, realm, password));
-    }
 }
