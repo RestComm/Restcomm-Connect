@@ -11,7 +11,9 @@
 	MA 02110-1301 USA, or see the FSF site: http://www.fsf.org. -->
 <restcomm>
 	<runtime-settings>
-		<!-- The API version that will be used. -->
+        <client-algorithm>MD5</client-algorithm>
+        <client-qop>auth</client-qop>
+        <!-- The API version that will be used. -->
 		<api-version>2012-04-24</api-version>
 
 		<!-- Try to run RVD workspace projects migration to apply new naming

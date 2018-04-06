@@ -52,6 +52,8 @@ public class MainConfigurationSetImpl extends ConfigurationSet implements MainCo
     private static final String HTTP_ROUTES_PORT = "http-client.routes-port";
     private static final String HTTP_ROUTES_CONN = "http-client.routes-conn";
     private static final String CONFERENCE_TIMEOUT_KEY = "runtime-settings.conference-timeout";
+    private static final String DEFAULT_CLIENT_PASSWORD = "MD5";
+    private static final String DEFAULT_CLIENT_QOP = "auth";
     private static final long CONFERENCE_TIMEOUT_DEFAULT = 14400; //4 hours in seconds
     private static final SslMode SSL_MODE_DEFAULT = SslMode.strict;
     private SslMode sslMode;
@@ -73,6 +75,8 @@ public class MainConfigurationSetImpl extends ConfigurationSet implements MainCo
 
     public static final String BYPASS_LB_FOR_CLIENTS = "bypass-lb-for-clients";
     private boolean bypassLbForClients = false;
+    private String clientAlgorithm = DEFAULT_CLIENT_PASSWORD;
+    private String clientQOP = DEFAULT_CLIENT_QOP;
 
     public MainConfigurationSetImpl(ConfigurationSource source) {
         super(source);
@@ -161,6 +165,9 @@ public class MainConfigurationSetImpl extends ConfigurationSet implements MainCo
         }catch(NumberFormatException nfe){
             this.conferenceTimeout = CONFERENCE_TIMEOUT_DEFAULT;
         }
+
+        clientAlgorithm = source.getProperty("runtime-settings.client-algorithm", DEFAULT_CLIENT_PASSWORD);
+        clientQOP = source.getProperty("runtime-settings.client-qop", DEFAULT_CLIENT_QOP);
     }
 
     public MainConfigurationSetImpl(SslMode sslMode, int responseTimeout, boolean useHostnameToResolveRelativeUrls, String hostname, String instanceId, boolean bypassLbForClients) {
@@ -270,5 +277,15 @@ public class MainConfigurationSetImpl extends ConfigurationSet implements MainCo
     @Override
     public void setConferenceTimeout(long conferenceTimeout) {
         this.conferenceTimeout = conferenceTimeout;
+    }
+
+    @Override
+    public String getClientAlgorithm() {
+        return clientAlgorithm;
+    }
+
+    @Override
+    public String getClientQOP() {
+        return clientQOP;
     }
 }
