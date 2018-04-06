@@ -1,5 +1,7 @@
 package org.restcomm.connect.sms.smpp;
 
+import org.apache.log4j.Logger;
+
 import com.cloudhopper.commons.charset.Charset;
 import com.cloudhopper.commons.charset.CharsetUtil;
 import com.cloudhopper.smpp.SmppBindType;
@@ -13,7 +15,10 @@ import com.cloudhopper.smpp.type.Address;
  */
 public class Smpp {
 
-    private static final String DEFAULT_SMPP_ENCODING = "UTF-8";
+    private static final Logger logger = Logger.getLogger(Smpp.class);
+
+    private static final String DEFAULT_SMPP_INBOUND_ENCODING = "MODIFIED-UTF8";
+    private static final String DEFAULT_SMPP_OUTBOUND_ENCODING = "GSM7";
     private String name;
     private String systemId;
     private String peerIp;
@@ -51,7 +56,7 @@ public class Smpp {
     public Smpp(String name, String systemId, String peerIp, int peerPort, SmppBindType smppBindType, String password,
             String systemType, byte interfaceVersion, Address address, long connectTimeout, int windowSize,
             long windowWaitTimeout, long requestExpiryTimeout, long windowMonitorInterval, boolean countersEnabled,
-            boolean logBytes, long enquireLinkDelay, String incomingCharacterEncoding, String outgoingCharacterEncoding) {
+            boolean logBytes, long enquireLinkDelay, String inboundCharacterEncoding, String outboundCharacterEncoding) {
         super();
         this.name = name;
         this.systemId = systemId;
@@ -71,14 +76,20 @@ public class Smpp {
         this.logBytes = logBytes;
         this.enquireLinkDelay = enquireLinkDelay;
         try {
-            this.inboundCharacterEncoding = CharsetUtil.map(incomingCharacterEncoding);
+            this.inboundCharacterEncoding = CharsetUtil.map(inboundCharacterEncoding);
         } catch (Exception e) {
-            this.inboundCharacterEncoding = CharsetUtil.map(DEFAULT_SMPP_ENCODING);
+            this.inboundCharacterEncoding = CharsetUtil.map(DEFAULT_SMPP_INBOUND_ENCODING);
+            if(logger.isInfoEnabled()) {
+                logger.info("Charset " + inboundCharacterEncoding + " does not exist. Inbound encoding is set to default " + DEFAULT_SMPP_INBOUND_ENCODING + "\n" + e.getMessage());
+            }
         }
         try {
-            this.outboundCharacterEncoding = CharsetUtil.map(outgoingCharacterEncoding);
+            this.outboundCharacterEncoding = CharsetUtil.map(outboundCharacterEncoding);
         } catch (Exception e) {
-            this.outboundCharacterEncoding = CharsetUtil.map(DEFAULT_SMPP_ENCODING);
+            this.outboundCharacterEncoding = CharsetUtil.map(DEFAULT_SMPP_OUTBOUND_ENCODING);
+            if(logger.isInfoEnabled()) {
+                logger.info("Charset " + outboundCharacterEncoding+ " does not exist. Outbound encoding is set to default " + DEFAULT_SMPP_OUTBOUND_ENCODING + "\n" + e.getMessage());
+            }
         }
     }
 
