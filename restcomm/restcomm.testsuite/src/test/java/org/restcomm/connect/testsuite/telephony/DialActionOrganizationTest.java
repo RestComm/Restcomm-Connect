@@ -470,14 +470,8 @@ public class DialActionOrganizationTest {
 
         SipURI uri = bobSipStackOrg2.getAddressFactory().createSipURI(null, "127.0.0.1:5080");
         assertTrue(bobPhoneOrg2.register(uri, "bob", clientPassword, "sip:bob@127.0.0.1:5090", 3600, 3600));
-        Credential c = new Credential("org3.restcomm.com", "bob", clientPassword);
+        Credential c = new Credential("org2.restcomm.com", "bob", clientPassword);
         bobPhoneOrg2.addUpdateCredential(c);
-
-        //register as alice@org2.restcomm.com
-        uri = aliceSipStackOrg2.getAddressFactory().createSipURI(null, "127.0.0.1:5080");
-        assertTrue(alicePhoneOrg2.register(uri, "alice", "1234", "sip:alice@127.0.0.1:5091", 3600, 3600));
-        SipCall aliceCallOrg2 = alicePhoneOrg2.createSipCall();
-        aliceCallOrg2.listenForIncomingCall();
 
         // bob@org2.restcomm.com - dials a pure sip number in org3.
         final SipCall bobCallOrg2 = bobPhoneOrg2.createSipCall();
@@ -523,7 +517,7 @@ public class DialActionOrganizationTest {
 
         SipURI uri = bobSipStackOrg2.getAddressFactory().createSipURI(null, "127.0.0.1:5080");
         assertTrue(bobPhoneOrg2.register(uri, "bob", clientPassword, "sip:bob@127.0.0.1:5090", 3600, 3600));
-        Credential c = new Credential("127.0.0.1", "bob", clientPassword);
+        Credential c = new Credential("org2.restcomm.com", "bob", clientPassword);
         bobPhoneOrg2.addUpdateCredential(c);
 
         //register as alice@org2.restcomm.com
@@ -579,7 +573,7 @@ public class DialActionOrganizationTest {
 
     	SipURI uri = bobSipStackOrg3.getAddressFactory().createSipURI(null, "127.0.0.1:5080");
         assertTrue(bobPhoneOrg3.register(uri, "bob", clientPassword, "sip:bob@127.0.0.1:5092", 3600, 3600));
-        Credential c = new Credential("org2.restcomm.com", "bob", clientPassword);
+        Credential c = new Credential("org3.restcomm.com", "bob", clientPassword);
         bobPhoneOrg3.addUpdateCredential(c);
 
         final SipCall bobCallOrg3 = bobPhoneOrg3.createSipCall();
@@ -785,8 +779,7 @@ public class DialActionOrganizationTest {
         SipURI uri = mariaSipStackOrg2.getAddressFactory().createSipURI(null, "127.0.0.1:5080");
         assertTrue(mariaPhoneOrg2.register(uri, "maria", clientPassword, "sip:maria@127.0.0.1:5093", 3600, 3600));
         assertTrue(alicePhoneOrg3.register(uri, "alice", "1234", "sip:alice@127.0.0.1:5095", 3600, 3600));
-        //following realm is a cheat/hack to get through authorization and test organization related p2p logic.
-        Credential c = new Credential("org3.restcomm.com", "maria", clientPassword);
+        Credential c = new Credential("org2.restcomm.com", "maria", clientPassword);
         mariaPhoneOrg2.addUpdateCredential(c);
 
         final SipCall aliceCallOrg3 = alicePhoneOrg3.createSipCall();
