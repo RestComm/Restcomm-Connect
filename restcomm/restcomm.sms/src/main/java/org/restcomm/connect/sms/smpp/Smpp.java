@@ -1,5 +1,7 @@
 package org.restcomm.connect.sms.smpp;
 
+import com.cloudhopper.commons.charset.Charset;
+import com.cloudhopper.commons.charset.CharsetUtil;
 import com.cloudhopper.smpp.SmppBindType;
 import com.cloudhopper.smpp.impl.DefaultSmppSession;
 import com.cloudhopper.smpp.type.Address;
@@ -11,6 +13,7 @@ import com.cloudhopper.smpp.type.Address;
  */
 public class Smpp {
 
+    private static final String DEFAULT_SMPP_ENCODING = "UTF-8";
     private String name;
     private String systemId;
     private String peerIp;
@@ -37,6 +40,9 @@ public class Smpp {
 
     private long enquireLinkDelay;
 
+    private Charset inboundCharacterEncoding;
+    private Charset outboundCharacterEncoding;
+
     // not used as of today, but later we can allow users to stop each SMPP
     private boolean started = true;
 
@@ -45,7 +51,7 @@ public class Smpp {
     public Smpp(String name, String systemId, String peerIp, int peerPort, SmppBindType smppBindType, String password,
             String systemType, byte interfaceVersion, Address address, long connectTimeout, int windowSize,
             long windowWaitTimeout, long requestExpiryTimeout, long windowMonitorInterval, boolean countersEnabled,
-            boolean logBytes, long enquireLinkDelay) {
+            boolean logBytes, long enquireLinkDelay, String incomingCharacterEncoding, String outgoingCharacterEncoding) {
         super();
         this.name = name;
         this.systemId = systemId;
@@ -64,6 +70,16 @@ public class Smpp {
         this.countersEnabled = countersEnabled;
         this.logBytes = logBytes;
         this.enquireLinkDelay = enquireLinkDelay;
+        try {
+            this.inboundCharacterEncoding = CharsetUtil.map(incomingCharacterEncoding);
+        } catch (Exception e) {
+            this.inboundCharacterEncoding = CharsetUtil.map(DEFAULT_SMPP_ENCODING);
+        }
+        try {
+            this.outboundCharacterEncoding = CharsetUtil.map(outgoingCharacterEncoding);
+        } catch (Exception e) {
+            this.outboundCharacterEncoding = CharsetUtil.map(DEFAULT_SMPP_ENCODING);
+        }
     }
 
     public String getName() {
@@ -202,6 +218,13 @@ public class Smpp {
         this.enquireLinkDelay = enquireLinkDelay;
     }
 
+    public Charset getInboundDefaultEncoding() {
+        return inboundCharacterEncoding;
+    }
+    public Charset getOutboundDefaultEncoding() {
+        return outboundCharacterEncoding;
+    }
+
     public boolean isStarted() {
         return started;
     }
@@ -228,7 +251,10 @@ public class Smpp {
                 + ", interfaceVersion=" + interfaceVersion + ", address=" + address + ", connectTimeout=" + connectTimeout
                 + ", windowSize=" + windowSize + ", windowWaitTimeout=" + windowWaitTimeout + ", requestExpiryTimeout="
                 + requestExpiryTimeout + ", windowMonitorInterval=" + windowMonitorInterval + ", countersEnabled="
-                + countersEnabled + ", logBytes=" + logBytes + ", enquireLinkDelay=" + enquireLinkDelay + "]";
+                + countersEnabled + ", logBytes=" + logBytes + ", enquireLinkDelay=" + enquireLinkDelay
+                + ", inboundCharacterEncoding=" + inboundCharacterEncoding.toString()
+                + ", outboundCharacterEncoding=" + outboundCharacterEncoding.toString()
+                + "]";
     }
 
     @Override
@@ -255,5 +281,4 @@ public class Smpp {
             return false;
         return true;
     }
-
 }

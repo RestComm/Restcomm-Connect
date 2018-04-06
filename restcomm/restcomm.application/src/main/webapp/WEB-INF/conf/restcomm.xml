@@ -670,6 +670,11 @@
 					If no response received for 3 consecutive requests, connection will be killed
 					and attempted to connect again -->
 				<enquirelinkdelay>30000</enquirelinkdelay>
+				<!-- when no values are set, default value from code is UTF-8-->
+				<!-- 
+				<incomingencoding>UTF-8</incomingencoding>
+				<outgoingencoding>GSM7</outgoingencoding>
+				 -->
 			</connection>
 		</connections>
 	</smpp>
