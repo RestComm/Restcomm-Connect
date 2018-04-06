@@ -175,6 +175,10 @@
 			If set to false RestComm will use the Request URI to determine the destination. -->
 		<use-to>true</use-to>
 
+		<!-- if this flag is set to true, it will disable all patching done for NAT
+		 even if they are enabled in the configuration file-->
+		<use-sbc>false</use-sbc>
+
 		<!-- If set to true Restcomm will use the Local Address (or external address
 			if available) in the host part of the From header for calls to the outbound
 			proxy. Default is False, which means that Restcomm will use outbound proxy
