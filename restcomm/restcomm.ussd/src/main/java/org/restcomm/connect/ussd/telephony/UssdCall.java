@@ -341,14 +341,7 @@ public class UssdCall extends RestcommUntypedActor implements TransitionEndListe
     }
 
     private String getUssdRequestSdrData(){
-        //TODO parse request payload if just dialed number is needed
-        String requestData = null;
-        try {
-            requestData = userUssdRequest.createUssdPayload().toString().trim();
-        } catch (XMLStreamException e) {
-            logger.warning("Error parsing user ussd request XML payload "+requestData);
-        }
-        return requestData;
+        return userUssdRequest.getMessage().trim();
     }
 
     private abstract class AbstractAction implements Action {
