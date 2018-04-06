@@ -2,7 +2,9 @@
 
 var rcMod = angular.module('rcApp');
 
-rcMod.controller('UserMenuCtrl', function($scope, $http, $resource, $rootScope, $location, $uibModal, AuthService, Notifications, RCommAccounts, $state) {
+rcMod.controller('UserMenuCtrl', function($scope, $http, $resource, $rootScope, $location, $uibModal, AuthService, Notifications, RCommAccounts, $state, PublicConfig) {
+
+  $scope.PublicConfig = PublicConfig;
 
   /* watch location change and update root scope variable for rc-*-pills */
   $rootScope.$on('$locationChangeStart', function(/*event, next, current*/) {
