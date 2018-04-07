@@ -54,7 +54,6 @@ import static com.github.tomakehurst.wiremock.client.WireMock.postRequestedFor;
 import static com.github.tomakehurst.wiremock.client.WireMock.stubFor;
 import static com.github.tomakehurst.wiremock.client.WireMock.urlMatching;
 import static com.github.tomakehurst.wiremock.client.WireMock.verify;
-import org.junit.Ignore;
 
 /**
  * @author otsakir@gmail.com - Orestis Tsakiridis
@@ -82,7 +81,7 @@ public class AccountsEndpointClosingTest extends EndpointTest {
         stubFor(post(urlMatching("/restcomm-rvd/services/notifications")).willReturn(aResponse().withStatus(200)));
     }
 
-    // verify that acount-removal notifications are sent to the application server (RVD)
+    // verify that account-removal notifications are sent to the application server (RVD)
     @Test
     public void removeAccountAndSendNotifications() throws InterruptedException {
 
@@ -131,16 +130,17 @@ public class AccountsEndpointClosingTest extends EndpointTest {
     }
 
     @Deployment(name = "AccountsEndpointClosingTest", managed = true, testable = false)
-    public static WebArchive createWebArchiveNoGw() {
+    public static WebArchive createWebArchiveNoGw ( ) {
         logger.info("Packaging Test App");
         logger.info("version");
         WebArchive archive = ShrinkWrap.create(WebArchive.class, "restcomm.war");
         final WebArchive restcommArchive = Maven.resolver()
-                .resolve("org.restcomm:restcomm-connect.application:war:" + version).withoutTransitivity()
-                .asSingle(WebArchive.class);
+                                                .resolve("org.restcomm:restcomm-connect.application:war:" + version)
+                                                .withoutTransitivity()
+                                                .asSingle(WebArchive.class);
         archive = archive.merge(restcommArchive);
         archive.delete("/WEB-INF/sip.xml");
-archive.delete("/WEB-INF/web.xml");
+        archive.delete("/WEB-INF/web.xml");
         archive.delete("/WEB-INF/conf/restcomm.xml");
         archive.delete("/WEB-INF/data/hsql/restcomm.script");
         archive.addAsWebInfResource("sip.xml");

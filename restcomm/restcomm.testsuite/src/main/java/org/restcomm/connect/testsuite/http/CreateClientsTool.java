@@ -7,6 +7,10 @@ import java.io.IOException;
 import java.nio.charset.Charset;
 import java.util.ArrayList;
 import java.util.List;
+
+import javax.ws.rs.core.MediaType;
+import javax.ws.rs.core.MultivaluedMap;
+
 import org.apache.commons.codec.binary.Base64;
 import org.apache.http.HttpEntity;
 import org.apache.http.HttpResponse;
@@ -23,6 +27,12 @@ import org.apache.http.impl.client.DefaultHttpClient;
 import org.apache.http.impl.client.HttpClientBuilder;
 import org.apache.http.message.BasicNameValuePair;
 import org.apache.http.util.EntityUtils;
+
+import com.sun.jersey.api.client.Client;
+import com.sun.jersey.api.client.ClientResponse;
+import com.sun.jersey.api.client.WebResource;
+import com.sun.jersey.api.client.filter.HTTPBasicAuthFilter;
+import com.sun.jersey.core.util.MultivaluedMapImpl;
 
 /**
  * @author <a href="mailto:gvagenas@gmail.com">gvagenas</a>
@@ -113,6 +123,22 @@ public class CreateClientsTool {
         return jsonResponse;
     }
 
+    public ClientResponse getClientsResponse ( String deploymentUrl, JsonObject account ) {
+        Client jerseyClient = Client.create();
+        jerseyClient.addFilter(new HTTPBasicAuthFilter(account.get("email_address").getAsString(), account.get("auth_token").getAsString()));
+        WebResource webResource = jerseyClient.resource(getClientUrl(deploymentUrl, account));
+        ClientResponse response = webResource.accept(MediaType.APPLICATION_JSON).get(ClientResponse.class);
+        return response;
+    }
+
+    public ClientResponse getClientsResponse ( String deploymentUrl, JsonObject account ) {
+        Client jerseyClient = Client.create();
+        jerseyClient.addFilter(new HTTPBasicAuthFilter(account.get("email_address").getAsString(), account.get("auth_token").getAsString()));
+        WebResource webResource = jerseyClient.resource(getClientUrl(deploymentUrl, account));
+        ClientResponse response = webResource.accept(MediaType.APPLICATION_JSON).get(ClientResponse.class);
+        return response;
+    }
+
     public void updateClientVoiceUrl(String deploymentUrl, JsonObject account, String clientSid, String voiceUrl,
             String credentialUsername, String credentialPassword) throws IOException {
         String url = getClientUrl(deploymentUrl, account);
@@ -190,4 +216,51 @@ public class CreateClientsTool {
 
         return clientSid;
     }
+
+    public ClientResponse createClientResponse ( String deploymentUrl, String accountUsername, String accountAuthToken,
+                                                 String accountSid, String clientUsername, String clientPassword,
+                                                 String clientVoiceUrl ) {
+        Client jerseyClient = Client.create();
+        jerseyClient.addFilter(new HTTPBasicAuthFilter(accountUsername, accountAuthToken));
+        String url = getEndpoint(deploymentUrl) + "/2012-04-24/Accounts/" + accountSid + "/Clients.json";
+        WebResource webResource = jerseyClient.resource(url);
+        MultivaluedMap<String, String> params = new MultivaluedMapImpl();
+        if (clientUsername != null)
+            params.add("Login", clientUsername);
+        if (clientPassword != null)
+            params.add("Password", clientPassword);
+        if (clientVoiceUrl != null)
+            params.add("VoiceUrl", clientVoiceUrl);
+        System.out.println("[createClientResponse]" + url);
+        System.out.println("[createClientResponse]" + params.toString());
+        ClientResponse response = webResource.accept(MediaType.APPLICATION_JSON).post(ClientResponse.class, params);
+        return response;
+    }
+
+    public ClientResponse updateClientResponse ( String deploymentUrl, String accountUsername, String accountAuthToken,
+                                                 String accountSid, String clientSid, String clientPassword,
+                                                 String clientVoiceUrl ) {
+        Client jerseyClient = Client.create();
+        jerseyClient.addFilter(new HTTPBasicAuthFilter(accountUsername, accountAuthToken));
+        String url = getEndpoint(deploymentUrl) + "/2012-04-24/Accounts/" + accountSid + "/Clients/" + clientSid;
+        WebResource webResource = jerseyClient.resource(url);
+        MultivaluedMap<String, String> params = new MultivaluedMapImpl();
+        if (clientPassword != null)
+            params.add("Password", clientPassword);
+        if (clientVoiceUrl != null)
+            params.add("VoiceUrl", clientVoiceUrl);
+        ClientResponse response = webResource.accept(MediaType.APPLICATION_JSON).post(ClientResponse.class, params);
+        return response;
+    }
+
+    public ClientResponse deleteClientResponse ( String deploymentUrl, String accountUsername, String accountAuthToken,
+                                                 String accountSid, String clientSid ) {
+        Client jerseyClient = Client.create();
+        jerseyClient.addFilter(new HTTPBasicAuthFilter(accountUsername, accountAuthToken));
+        String url = getEndpoint(deploymentUrl) + "/2012-04-24/Accounts/" + accountSid + "/Clients/" + clientSid;
+        WebResource webResource = jerseyClient.resource(url);
+        ClientResponse response = webResource.accept(MediaType.APPLICATION_JSON).delete(ClientResponse.class);
+        return response;
+    }
+
 }
