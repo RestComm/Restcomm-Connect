@@ -131,14 +131,6 @@ public class CreateClientsTool {
         return response;
     }
 
-    public ClientResponse getClientsResponse ( String deploymentUrl, JsonObject account ) {
-        Client jerseyClient = Client.create();
-        jerseyClient.addFilter(new HTTPBasicAuthFilter(account.get("email_address").getAsString(), account.get("auth_token").getAsString()));
-        WebResource webResource = jerseyClient.resource(getClientUrl(deploymentUrl, account));
-        ClientResponse response = webResource.accept(MediaType.APPLICATION_JSON).get(ClientResponse.class);
-        return response;
-    }
-
     public void updateClientVoiceUrl(String deploymentUrl, JsonObject account, String clientSid, String voiceUrl,
             String credentialUsername, String credentialPassword) throws IOException {
         String url = getClientUrl(deploymentUrl, account);
