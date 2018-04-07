@@ -39,8 +39,6 @@ public class RestcommApplicationsTool {
     private static RestcommApplicationsTool instance;
     private static String applicationsUrl;
 
-    private final static Logger logger = Logger.getLogger(RestcommApplicationsTool.class);
-
     public static RestcommApplicationsTool getInstance() {
         if (instance == null) {
             instance = new RestcommApplicationsTool();
@@ -136,15 +134,6 @@ public class RestcommApplicationsTool {
         JsonParser parser = new JsonParser();
         JsonArray jsonResponse = parser.parse(response).getAsJsonArray();
         return jsonResponse;
-    }
-
-    public ClientResponse getApplicationsResponse ( String deploymentUrl, String adminUsername, String adminAuthToken, String adminAccountSid ) {
-        Client jerseyClient = Client.create();
-        jerseyClient.addFilter(new HTTPBasicAuthFilter(adminUsername, adminAuthToken));
-        String url = getApplicationsUrl(deploymentUrl, adminAccountSid, false);
-        WebResource webResource = jerseyClient.resource(url);
-        ClientResponse response = webResource.accept(MediaType.APPLICATION_JSON).get(ClientResponse.class);
-        return response;
     }
 
     public ClientResponse getApplicationsResponse ( String deploymentUrl, String adminUsername, String adminAuthToken, String adminAccountSid ) {
