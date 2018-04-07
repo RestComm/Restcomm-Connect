@@ -51,7 +51,6 @@ import java.util.List;
 import java.util.Set;
 import org.restcomm.connect.core.service.api.ProfileService;
 
-
 /**
  * Security layer endpoint. It will scan the request for security related assets and populate the
  * UserIdentityContext accordingly. Extend the class and use checkAuthenticatedAccount*() methods to apply security rules to

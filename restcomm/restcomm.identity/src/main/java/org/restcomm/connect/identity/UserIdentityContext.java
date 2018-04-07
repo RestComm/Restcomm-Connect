@@ -30,6 +30,7 @@ import javax.servlet.http.HttpServletRequest;
 import org.apache.commons.codec.binary.Base64;
 import org.apache.commons.lang.StringUtils;
 import org.restcomm.connect.dao.exceptions.AccountHierarchyDepthCrossed;
+import org.restcomm.connect.commons.dao.Sid;
 import org.restcomm.connect.dao.AccountsDao;
 import org.restcomm.connect.dao.entities.Account;
 
@@ -132,4 +133,10 @@ public class UserIdentityContext {
         return accountLineage;
     }
 
+    public Account getParrentAccount ( ) {
+        Sid parentSid = this.effectiveAccount.getParentSid();
+        if (parentSid != null)
+            return this.accountsDao.getAccount(parentSid);
+        return null;
+    }
 }
