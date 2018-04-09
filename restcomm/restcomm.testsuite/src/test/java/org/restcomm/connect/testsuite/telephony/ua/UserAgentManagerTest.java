@@ -23,7 +23,7 @@ import org.cafesip.sipunit.Credential;
 import org.cafesip.sipunit.SipPhone;
 import org.cafesip.sipunit.SipRequest;
 import org.cafesip.sipunit.SipStack;
-import org.jboss.arquillian.container.mss.extension.SipStackTool;
+import org.restcomm.connect.testsuite.SipStackTool;
 import org.jboss.arquillian.container.test.api.Deployer;
 import org.jboss.arquillian.container.test.api.Deployment;
 import org.jboss.arquillian.junit.Arquillian;
