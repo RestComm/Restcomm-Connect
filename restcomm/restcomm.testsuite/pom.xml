@@ -149,7 +149,7 @@
                 <artifactId>shrinkwrap-resolver-api-maven</artifactId>
                 <version>${shrinkwrap.resolver.version}</version>
                 <scope>compile</scope>
-        </dependency>        
+        </dependency>
 
         <dependency>
                 <groupId>org.jboss.shrinkwrap.resolver</groupId>
@@ -165,11 +165,10 @@
                 <scope>compile</scope>
         </dependency>        
 
-        <!--Dependencies for Tomcat-7 -->
+        <!--Dependencies for wildfly10 -->
         <dependency>
                 <groupId>org.mobicents.sipunit</groupId>
                 <artifactId>sipunit</artifactId>
-                <version>2.0.3</version>
                 <scope>compile</scope>
         </dependency>       
         <dependency>
@@ -179,7 +178,7 @@
             <scope>test</scope>
         </dependency>           
 
-        <!--Dependencies for Tomcat-7 -->
+        <!--Dependencies for wildfly10 -->
 
 
         <dependency>
@@ -299,23 +298,13 @@
             <version>${mgcpunit.version}</version>
             <scope>test</scope>
         </dependency>
-        <dependency>
-            <groupId>org.mobicents.arquillian.container</groupId>
-            <artifactId>mss-arquillian-mediaserver-api</artifactId>
-            <version>${mss.arquillian.version}</version>
-            <scope>compile</scope>
-        </dependency>
+
         <dependency>
             <groupId>javax.servlet</groupId>
             <artifactId>javax.servlet-api</artifactId>
             <scope>provided</scope>
         </dependency>
-        <dependency>
-            <groupId>org.mobicents.arquillian.container</groupId>
-            <artifactId>mss-arquillian-mediaserver-extension</artifactId>
-            <version>${mss.arquillian.version}</version>
-            <scope>compile</scope>
-        </dependency>
+
         <dependency>
             <groupId>com.icegreen</groupId>
             <artifactId>greenmail</artifactId>
@@ -463,8 +452,10 @@
                       <java.util.logging.manager>org.jboss.logmanager.LogManager</java.util.logging.manager>
                       <jboss.home>${project.basedir}/target/dependency/restcomm-sip-servlets-3.2.0-89-wildfly-10.0.0.Final</jboss.home>
                       <module.path>${project.basedir}/target/dependency/restcomm-sip-servlets-3.2.0-89-wildfly-10.0.0.Final/modules</module.path>
+                      <server-config>standalone-sip.xml</server-config>
                       <arquillian.launch>wildfly10</arquillian.launch>
-                    </systemPropertyVariables>                    
+                    </systemPropertyVariables>     
+                    <redirectTestOutputToFile>false</redirectTestOutputToFile>               
                 </configuration>
             </plugin>
         </plugins>
