@@ -5,6 +5,12 @@
 
     
     <container qualifier="wildfly10" default="true">
+        <configuration>
+            <property name="outputToConsole">true</property>
+            <property name="serverConfig">standalone-sip.xml</property>
+            <property name="javaVmArguments">-Dserver-config=${project.basedir}/target/dependency/restcomm-sip-servlets-3.2.0-89-wildfly-10.0.0.Final/standalone/configuration/standalone-sip.xml
+            </property>            
+        </configuration>
     </container>
         
 </arquillian>
