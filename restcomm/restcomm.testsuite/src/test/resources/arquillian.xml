@@ -1,28 +1,10 @@
 <?xml version="1.0" encoding="UTF-8" standalone="yes"?>
 <arquillian xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
-	xmlns="http://jboss.org/schema/arquillian"
-	xsi:schemaLocation="http://jboss.org/schema/arquillian http://jboss.org/schema/arquillian/arquillian_1_0.xsd">
+            xmlns="http://jboss.org/schema/arquillian"
+            xsi:schemaLocation="http://jboss.org/schema/arquillian http://jboss.org/schema/arquillian/arquillian_1_0.xsd">
 
-	<container qualifier="mss-tomcat-embedded-7" default="true">
-		<configuration>
-			<property name="tomcatHome">target/mss-tomcat-embedded-7</property>
-			<property name="workDir">work</property>
-			<property name="bindHttpPort">8080</property>
-			<property name="unpackArchive">true</property>
-			<property name="sipConnectors">:5080,:5080/TCP</property>
-			<property name="bindAddress">127.0.0.1</property>
-			<property name="sipApplicationRouterProviderClassName">org.mobicents.servlet.sip.router.DefaultApplicationRouterProvider</property>
-		</configuration>
-	</container>
-	<container qualifier="mss-tomcat-embedded-7-forked" default="false">
-		<configuration>
-			<property name="tomcatHome">target/${arquillian_sip_port}-mss-tomcat-embedded-7</property>
-			<property name="workDir">work</property>
-			<property name="bindHttpPort">${arquillian_http_port}</property>
-			<property name="unpackArchive">true</property>
-			<property name="sipConnectors">:${arquillian_sip_port},:${arquillian_sip_port}/TCP</property>
-			<property name="bindAddress">127.0.0.1</property>
-			<property name="sipApplicationRouterProviderClassName">org.mobicents.servlet.sip.router.DefaultApplicationRouterProvider</property>
-		</configuration>
-</container>         
+    
+    <container qualifier="wildfly10" default="true">
+    </container>
+        
 </arquillian>
