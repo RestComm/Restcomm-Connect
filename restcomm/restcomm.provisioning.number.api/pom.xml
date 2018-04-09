@@ -14,13 +14,12 @@
 	  <artifactId>restcomm-connect.commons</artifactId>
 	  <version>${project.version}</version>
 	</dependency>
-        
-		<dependency>
-			<groupId>org.apache.tomcat</groupId>
-			<artifactId>tomcat-coyote</artifactId>
-			<scope>provided</scope>
-		</dependency>     
-	
+          
+    <dependency>
+        <groupId>javax.servlet</groupId>
+        <artifactId>javax.servlet-api</artifactId>
+        <scope>provided</scope>
+    </dependency>	
   </dependencies>
   <build>
 		<plugins>		

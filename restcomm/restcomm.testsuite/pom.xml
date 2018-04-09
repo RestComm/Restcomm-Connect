@@ -167,36 +167,20 @@
 
         <!--Dependencies for Tomcat-7 -->
         <dependency>
-            <groupId>org.mobicents.servlet.sip.containers</groupId>
-            <artifactId>sip-servlets-catalina-7</artifactId>
-            <version>${sipservletapi.version}</version>
-            <scope>compile</scope>
-        </dependency>
+                <groupId>org.mobicents.sipunit</groupId>
+                <artifactId>sipunit</artifactId>
+                <version>2.0.3</version>
+                <scope>compile</scope>
+        </dependency>       
         <dependency>
-            <groupId>org.mobicents.servlet.sip.containers</groupId>
-            <artifactId>sip-servlets-tomcat-7</artifactId>
-            <version>${sipservletapi.version}</version>
-            <scope>compile</scope>            
-        </dependency>
-        <dependency>
-            <groupId>org.mobicents.arquillian.container</groupId>
-            <artifactId>mss-tomcat-embedded-7</artifactId>
-            <version>${mss.arquillian.version}</version>
-            <scope>compile</scope>            
-        </dependency>
+            <groupId>org.wildfly.arquillian</groupId>
+            <artifactId>wildfly-arquillian-container-embedded</artifactId>
+            <version>2.1.0.Final</version>
+            <scope>test</scope>
+        </dependency>           
 
         <!--Dependencies for Tomcat-7 -->
 
-        <!--Dependencies for Tomcat-6 -->
-        <!-- <dependency> <groupId>org.mobicents.servlet.sip.containers</groupId>
-        <artifactId>sip-servlets-catalina-6</artifactId> <version>${sipservletapi.version}</version>
-        <scope>test</scope> </dependency> <dependency> <groupId>org.mobicents.servlet.sip.containers</groupId>
-        <artifactId>sip-servlets-tomcat-jboss4</artifactId> <version>${sipservletapi.version}</version>
-        <scope>test</scope> </dependency> <dependency> <groupId>org.mobicents.arquillian.container</groupId>
-        <artifactId>mss-tomcat-embedded-6</artifactId> <version>${mss.arquillian.version}</version>
-        <scope>test</scope> </dependency> -->
-
-        <!--Dependencies for Tomcat-6 -->
 
         <dependency>
             <groupId>com.cloudhopper</groupId>
@@ -253,7 +237,7 @@
             <groupId>javax.sip</groupId>
             <artifactId>jain-sip-api</artifactId>
             <version>1.2</version>
-            <scope>test</scope>
+            <scope>compile</scope>
         </dependency>
 
         <dependency>
@@ -285,19 +269,7 @@
             <scope>test</scope>
         </dependency>
 
-        <dependency>
-            <groupId>org.apache.tomcat</groupId>
-            <artifactId>tomcat-coyote</artifactId>
-            <version>${tomcat7.version}</version>
-            <scope>test</scope>
-        </dependency>
 
-        <dependency>
-            <groupId>org.apache.tomcat</groupId>
-            <artifactId>tomcat-jasper</artifactId>
-            <version>${tomcat7.version}</version>
-            <scope>test</scope>
-        </dependency>
 
         <dependency>
             <groupId>org.mockito</groupId>
@@ -319,12 +291,6 @@
             <!-- Include this if you have dependency conflicts for Guava, Jetty, Jackson
             or Apache HTTP Client -->
             <classifier>standalone</classifier>
-        </dependency>
-
-        <dependency>
-            <groupId>org.apache.tomcat</groupId>
-            <artifactId>tomcat-catalina</artifactId>
-            <version>${tomcat7.version}</version>
         </dependency>
 
         <dependency>
@@ -404,6 +370,31 @@
     <build>
         <plugins>
             <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-dependency-plugin</artifactId>
+                <executions>
+                    <execution>
+                        <id>unpack</id>
+                        <phase>process-test-classes</phase>
+                        <goals>
+                            <goal>unpack</goal>
+                        </goals>
+                        <configuration>
+                            <artifactItems>
+                                <artifactItem>
+                                    <groupId>org.wildfly</groupId>
+                                    <artifactId>wildfly-dist</artifactId>
+                                    <version>10.0.0.Final</version>
+                                    <type>zip</type>
+                                    <overWrite>false</overWrite>
+                                    <outputDirectory>target</outputDirectory>
+                                </artifactItem>
+                            </artifactItems>
+                        </configuration>
+                    </execution>
+                </executions>
+            </plugin>            
+            <plugin>
                 <artifactId>maven-compiler-plugin</artifactId>
                 <configuration>
                     <compilerArguments>
@@ -469,6 +460,12 @@
                 <configuration>
                     <argLine>-Xms256m -Xmx2048m -XX:MaxPermSize=1024m ${jacocoArgLine}</argLine>
                     <reuseForks>false</reuseForks>
+                    <systemPropertyVariables>
+                      <java.util.logging.manager>org.jboss.logmanager.LogManager</java.util.logging.manager>
+                      <jboss.home>${project.basedir}/target/wildfly-10.0.0.Final</jboss.home>
+                      <module.path>${project.basedir}/target/wildfly-10.0.0.Final/modules</module.path>
+                      <arquillian.launch>wildfly10</arquillian.launch>
+                    </systemPropertyVariables>                    
                 </configuration>
             </plugin>
         </plugins>
