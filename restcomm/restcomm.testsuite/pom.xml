@@ -382,13 +382,12 @@
                         <configuration>
                             <artifactItems>
                                 <artifactItem>
-                                    <groupId>org.wildfly</groupId>
-                                    <artifactId>wildfly-dist</artifactId>
-                                    <version>10.0.0.Final</version>
+                                    <groupId>org.mobicents.servlet.sip</groupId>
+                                    <artifactId>sip-servlets-wildfly-10</artifactId>
+                                    <version>3.2.0-89</version>
                                     <type>zip</type>
-                                    <overWrite>false</overWrite>
-                                    <outputDirectory>target</outputDirectory>
-                                </artifactItem>
+                                    <classifier>assembly</classifier>
+                                </artifactItem>                                
                             </artifactItems>
                         </configuration>
                     </execution>
@@ -462,8 +461,8 @@
                     <reuseForks>false</reuseForks>
                     <systemPropertyVariables>
                       <java.util.logging.manager>org.jboss.logmanager.LogManager</java.util.logging.manager>
-                      <jboss.home>${project.basedir}/target/wildfly-10.0.0.Final</jboss.home>
-                      <module.path>${project.basedir}/target/wildfly-10.0.0.Final/modules</module.path>
+                      <jboss.home>${project.basedir}/target/dependency/restcomm-sip-servlets-3.2.0-89-wildfly-10.0.0.Final</jboss.home>
+                      <module.path>${project.basedir}/target/dependency/restcomm-sip-servlets-3.2.0-89-wildfly-10.0.0.Final/modules</module.path>
                       <arquillian.launch>wildfly10</arquillian.launch>
                     </systemPropertyVariables>                    
                 </configuration>
