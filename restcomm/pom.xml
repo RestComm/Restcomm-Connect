@@ -115,7 +115,7 @@
         <arquillian.version>1.0.3.Final</arquillian.version>
         <mss.arquillian.version>1.0.3</mss.arquillian.version>
         <mss.shrinkwrap.version>1.0.2</mss.shrinkwrap.version>
-        <shrinkwrap.resolver.version>2.0.0-alpha-4</shrinkwrap.resolver.version>
+        <shrinkwrap.resolver.version>2.2.6</shrinkwrap.resolver.version>
         <sipunit.version>2.0.4</sipunit.version>
         <!--tomcat.version>6.0.35</tomcat.version -->
         <tomcat7.version>7.0.64</tomcat7.version>
@@ -187,11 +187,6 @@
                 <groupId>org.restcomm</groupId>
                 <artifactId>restcomm-connect.sms.api</artifactId>
                 <version>${project.version}</version>
-            </dependency>
-            <dependency>
-                <groupId>junit</groupId>
-                <artifactId>junit</artifactId>
-                <version>${junit.version}</version>
             </dependency>
 
             <dependency>
@@ -314,6 +309,12 @@
                 <version>${sipservletapi.version}</version>
                 <scope>provided</scope>
             </dependency>
+            <dependency>
+                    <groupId>org.mobicents.servlet.sip</groupId>
+                    <artifactId>sip-servlets-client</artifactId>
+                    <version>${sipservletapi.version}</version>                    
+                    <scope>provided</scope>
+            </dependency>            
 
             <!--dependency> <groupId>org.apache.tomcat</groupId> <artifactId>servlet-api</artifactId>
             <version>${servlet-api.version}</version> </dependency -->
@@ -432,32 +433,12 @@
                 <scope>test</scope>
             </dependency>
 
-            <dependency>
-                <groupId>org.apache.tomcat</groupId>
-                <artifactId>tomcat-coyote</artifactId>
-                <version>${tomcat7.version}</version>
-                <scope>provided</scope>
-            </dependency>
-
-            <dependency>
-                <groupId>org.apache.tomcat</groupId>
-                <artifactId>tomcat-jasper</artifactId>
-                <version>${tomcat7.version}</version>
-                <scope>provided</scope>
-            </dependency>
 
             <dependency>
                 <groupId>javax.sip</groupId>
                 <artifactId>jain-sip-ri</artifactId>
                 <version>${sip-ri.version}</version>
                 <scope>test</scope>
-            </dependency>
-
-            <dependency>
-                <groupId>org.mobicents.servlet.sip.containers</groupId>
-                <artifactId>sip-servlets-catalina-7</artifactId>
-                <version>${sipservletapi.version}</version>
-                <scope>provided</scope>
             </dependency>
 
             <dependency>
@@ -580,32 +561,12 @@
         </dependency>
 
         <dependency>
-            <groupId>org.apache.tomcat</groupId>
-            <artifactId>tomcat-coyote</artifactId>
-            <version>${tomcat7.version}</version>
-            <scope>test</scope>
-        </dependency>
-
-        <dependency>
-            <groupId>org.apache.tomcat</groupId>
-            <artifactId>tomcat-jasper</artifactId>
-            <version>${tomcat7.version}</version>
-            <scope>test</scope>
-        </dependency>
-
-        <dependency>
             <groupId>javax.sip</groupId>
             <artifactId>jain-sip-ri</artifactId>
             <version>${sip-ri.version}</version>
             <scope>test</scope>
         </dependency>
 
-        <dependency>
-            <groupId>org.mobicents.servlet.sip.containers</groupId>
-            <artifactId>sip-servlets-catalina-7</artifactId>
-            <version>${sipservletapi.version}</version>
-            <scope>test</scope>
-        </dependency>
 
         <dependency>
             <groupId>org.mobicents.servlet.sip</groupId>
@@ -613,6 +574,14 @@
             <version>${sipservletapi.version}</version>
             <scope>test</scope>
         </dependency>
+        
+        <dependency>
+            <groupId>javax.servlet</groupId>
+            <artifactId>javax.servlet-api</artifactId>
+            <version>3.1.0</version>
+            <scope>provided</scope>
+        </dependency>
+      
 
         <dependency>
             <groupId>org.hsqldb</groupId>
