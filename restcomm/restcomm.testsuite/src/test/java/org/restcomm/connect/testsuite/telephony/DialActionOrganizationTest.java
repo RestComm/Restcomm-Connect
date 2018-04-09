@@ -39,17 +39,10 @@ import java.net.URL;
 import java.net.UnknownHostException;
 import java.text.ParseException;
 import java.util.Arrays;
-import java.util.HashSet;
 import java.util.Iterator;
-import java.util.LinkedList;
 import java.util.List;
-import java.util.Queue;
-import java.util.Set;
-import java.util.concurrent.ConcurrentLinkedQueue;
 
 import javax.sip.Dialog;
-import javax.sip.ListeningPoint;
-import javax.sip.address.Hop;
 import javax.sip.address.SipURI;
 import javax.sip.message.Response;
 
@@ -58,9 +51,6 @@ import org.cafesip.sipunit.Credential;
 import org.cafesip.sipunit.SipCall;
 import org.cafesip.sipunit.SipPhone;
 import org.cafesip.sipunit.SipStack;
-import org.jboss.arquillian.container.mobicents.api.annotations.GetDeployableContainer;
-import org.jboss.arquillian.container.mss.extension.ContainerManagerTool;
-import org.jboss.arquillian.container.mss.extension.SipStackTool;
 import org.jboss.arquillian.container.spi.client.container.DeploymentException;
 import org.jboss.arquillian.container.test.api.Deployer;
 import org.jboss.arquillian.container.test.api.Deployment;
@@ -72,38 +62,26 @@ import org.jboss.shrinkwrap.resolver.api.maven.Maven;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.BeforeClass;
+import org.junit.FixMethodOrder;
 import org.junit.Ignore;
 import org.junit.Rule;
 import org.junit.Test;
-import org.junit.FixMethodOrder;
-import org.junit.runners.MethodSorters;
+import org.junit.experimental.categories.Category;
 import org.junit.runner.RunWith;
-import org.mobicents.ext.javax.sip.dns.DNSLookupPerformer;
-import org.mobicents.ext.javax.sip.dns.DefaultDNSLookupPerformer;
+import org.junit.runners.MethodSorters;
 import org.restcomm.connect.commons.Version;
+import org.restcomm.connect.commons.annotations.SequentialClassTests;
+import org.restcomm.connect.commons.annotations.WithInMinsTests;
+import org.restcomm.connect.testsuite.SipStackTool;
 import org.restcomm.connect.testsuite.http.RestcommCallsTool;
 import org.restcomm.connect.testsuite.http.RestcommConferenceParticipantsTool;
 import org.restcomm.connect.testsuite.http.RestcommConferenceTool;
 import org.restcomm.connect.testsuite.tools.MonitoringServiceTool;
-import org.xbill.DNS.DClass;
-import org.xbill.DNS.NAPTRRecord;
-import org.xbill.DNS.Name;
-import org.xbill.DNS.Record;
-import org.xbill.DNS.SRVRecord;
-import org.xbill.DNS.TextParseException;
 
 import com.github.tomakehurst.wiremock.junit.WireMockRule;
 import com.github.tomakehurst.wiremock.verification.LoggedRequest;
 import com.google.gson.JsonArray;
 import com.google.gson.JsonObject;
-
-import gov.nist.javax.sip.stack.HopImpl;
-import org.junit.experimental.categories.Category;
-
-import static org.mockito.Mockito.mock;
-import static org.mockito.Mockito.when;
-import org.restcomm.connect.commons.annotations.SequentialClassTests;
-import org.restcomm.connect.commons.annotations.WithInMinsTests;
 
 /**
  * Test for Dial Action attribute for organization
@@ -131,9 +109,6 @@ public class DialActionOrganizationTest {
     private Deployer deployer;
     @ArquillianResource
     URL deploymentUrl;
-
-	@GetDeployableContainer
-	private ContainerManagerTool containerManager;
 
     @Rule
     public WireMockRule wireMockRule = new WireMockRule(8090); // No-args constructor defaults to port 8080
@@ -250,7 +225,7 @@ public class DialActionOrganizationTest {
 
     }
 
-    private void mockDNSLookup(String host, String transport) throws TextParseException {
+    /*private void mockDNSLookup(String host, String transport) throws TextParseException {
         DNSLookupPerformer dnsLookupPerformer = mock(DefaultDNSLookupPerformer.class);
         //mocking the DNS Lookups to match our test cases
         containerManager.getSipStandardService().getSipApplicationDispatcher().getDNSServerLocator().setDnsLookupPerformer(dnsLookupPerformer);
@@ -290,11 +265,11 @@ public class DialActionOrganizationTest {
         mockedSRVTLSRecords.add(new SRVRecord(new Name("_sips._" + ListeningPoint.TCP.toLowerCase() + "." + host + "."), DClass.IN, 1000L, 0, 0, 5081, name));
 //		mockedSRVTLSRecords.add(new SRVRecord(new Name("_sips._" + ListeningPoint.TLS.toLowerCase() + "." + host + "."), DClass.IN, 1000L, 1, 0, 5081, name));
         when(dnsLookupPerformer.performSRVLookup("_sips._" + ListeningPoint.TLS.toLowerCase() + "." + host)).thenReturn(mockedSRVTLSRecords);
-    }
+    }*/
 
     @Ignore
     @Test
-    public void testDialSipNumberSameAndDifferentOrganization() throws ParseException, InterruptedException, DeploymentException, TextParseException{
+    public void testDialSipNumberSameAndDifferentOrganization() throws ParseException, InterruptedException, DeploymentException {
     	stubFor(get(urlPathEqualTo("/1111"))
                 .willReturn(aResponse()
                         .withStatus(200)
@@ -310,7 +285,7 @@ public class DialActionOrganizationTest {
     	//Reload Context
     	//containerManagercontainerManager.reloadContext();
 
-    	mockDNSLookup(HOST_ORG2, TRANSPORT);
+    	//mockDNSLookup(HOST_ORG2, TRANSPORT);
 
         //bob@org3 will dial a sip number X@org3
     	SipURI uri = bobSipStackOrg3.getAddressFactory().createSipURI(null, "127.0.0.1:5080");
