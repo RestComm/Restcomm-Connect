@@ -60,7 +60,6 @@ import org.cafesip.sipunit.SipPhone;
 import org.cafesip.sipunit.SipStack;
 import org.jboss.arquillian.container.mobicents.api.annotations.GetDeployableContainer;
 import org.jboss.arquillian.container.mss.extension.ContainerManagerTool;
-import org.jboss.arquillian.container.mss.extension.SipStackTool;
 import org.jboss.arquillian.container.spi.client.container.DeploymentException;
 import org.jboss.arquillian.container.test.api.Deployer;
 import org.jboss.arquillian.container.test.api.Deployment;
@@ -104,6 +103,7 @@ import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 import org.restcomm.connect.commons.annotations.SequentialClassTests;
 import org.restcomm.connect.commons.annotations.WithInMinsTests;
+import org.restcomm.connect.testsuite.SipStackTool;
 
 /**
  * Test for Dial Action attribute for organization
@@ -761,7 +761,7 @@ public class DialActionOrganizationTest {
         logger.info("&&&&& LiveCallsArraySize: "+liveCallsArraySize);
         assertEquals(0, liveCalls);
         assertEquals(0,liveCallsArraySize);
-        
+
 
     }
 
