@@ -18,7 +18,7 @@ public class Smpp {
     private static final Logger logger = Logger.getLogger(Smpp.class);
 
     private static final String DEFAULT_SMPP_INBOUND_ENCODING = "MODIFIED-UTF8";
-    private static final String DEFAULT_SMPP_OUTBOUND_ENCODING = "GSM7";
+    private static final String DEFAULT_SMPP_OUTBOUND_ENCODING = "GSM";
     private String name;
     private String systemId;
     private String peerIp;
