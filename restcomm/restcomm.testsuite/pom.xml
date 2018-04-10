@@ -127,49 +127,49 @@
         </dependency>
         
         <dependency>
-                <groupId>org.jboss.arquillian.junit</groupId>
-                <artifactId>arquillian-junit-container</artifactId>
-                <version>${arquillian.version}</version>
-                <scope>compile</scope>
+            <groupId>org.jboss.arquillian.junit</groupId>
+            <artifactId>arquillian-junit-container</artifactId>
+            <version>${arquillian.version}</version>
+            <scope>compile</scope>
         </dependency>
 
         <dependency>
-                <groupId>org.jboss.shrinkwrap.resolver</groupId>
-                <artifactId>shrinkwrap-resolver-impl-maven</artifactId>
-                <version>${shrinkwrap.resolver.version}</version>
-                <scope>compile</scope>
+            <groupId>org.jboss.shrinkwrap.resolver</groupId>
+            <artifactId>shrinkwrap-resolver-impl-maven</artifactId>
+            <version>${shrinkwrap.resolver.version}</version>
+            <scope>compile</scope>
         </dependency>
         
-   <dependency>
-                <groupId>org.jboss.shrinkwrap.resolver</groupId>
-                <artifactId>shrinkwrap-resolver-api-maven</artifactId>
-                <version>${shrinkwrap.resolver.version}</version>
-                <scope>compile</scope>
+        <dependency>
+            <groupId>org.jboss.shrinkwrap.resolver</groupId>
+            <artifactId>shrinkwrap-resolver-api-maven</artifactId>
+            <version>${shrinkwrap.resolver.version}</version>
+            <scope>compile</scope>
         </dependency>
 
         <dependency>
-                <groupId>org.jboss.shrinkwrap.resolver</groupId>
-                <artifactId>shrinkwrap-resolver-api-maven-archive</artifactId>
-                <version>${shrinkwrap.resolver.version}</version>
-                <scope>compile</scope>
+            <groupId>org.jboss.shrinkwrap.resolver</groupId>
+            <artifactId>shrinkwrap-resolver-api-maven-archive</artifactId>
+            <version>${shrinkwrap.resolver.version}</version>
+            <scope>compile</scope>
         </dependency>   
 
         <dependency>
-                <groupId>org.jboss.shrinkwrap.resolver</groupId>
-                <artifactId>shrinkwrap-resolver-impl-maven-archive</artifactId>
-                <version>${shrinkwrap.resolver.version}</version>
-                <scope>compile</scope>
+            <groupId>org.jboss.shrinkwrap.resolver</groupId>
+            <artifactId>shrinkwrap-resolver-impl-maven-archive</artifactId>
+            <version>${shrinkwrap.resolver.version}</version>
+            <scope>compile</scope>
         </dependency>        
 
         <!--Dependencies for wildfly10 -->
         <dependency>
-                <groupId>org.mobicents.sipunit</groupId>
-                <artifactId>sipunit</artifactId>
-                <scope>compile</scope>
+            <groupId>org.mobicents.sipunit</groupId>
+            <artifactId>sipunit</artifactId>
+            <scope>compile</scope>
         </dependency>       
         <dependency>
             <groupId>org.wildfly.arquillian</groupId>
-            <artifactId>wildfly-arquillian-container-embedded</artifactId>
+            <artifactId>wildfly-arquillian-container-managed</artifactId>
             <version>2.1.0.Final</version>
             <scope>test</scope>
         </dependency>           
@@ -338,17 +338,17 @@
             <scope>test</scope>
         </dependency>
 
-		<dependency>
-			<groupId>org.restcomm</groupId>
-			<artifactId>restcomm-connect.monitoring.service</artifactId>
-			<version>${project.version}</version>
-			<scope>test</scope>
-		</dependency>
+        <dependency>
+            <groupId>org.restcomm</groupId>
+            <artifactId>restcomm-connect.monitoring.service</artifactId>
+            <version>${project.version}</version>
+            <scope>test</scope>
+        </dependency>
 	
-		<dependency>
-			<groupId>org.restcomm.smpp</groupId>
-			<artifactId>smpp-extensions</artifactId>
-		</dependency>
+        <dependency>
+            <groupId>org.restcomm.smpp</groupId>
+            <artifactId>smpp-extensions</artifactId>
+        </dependency>
 
     </dependencies>
 
@@ -377,7 +377,7 @@
                         </configuration>
                     </execution>
                 </executions>
-            </plugin>            
+            </plugin> 
             <plugin>
                 <artifactId>maven-compiler-plugin</artifactId>
                 <configuration>
@@ -442,12 +442,12 @@
                 <artifactId>maven-surefire-plugin</artifactId>
                 <version>2.19.1</version>
                 <configuration>
-                    <argLine>-Xms256m -Xmx2048m -XX:MaxPermSize=1024m ${jacocoArgLine}</argLine>
+                    <argLine>-Xms256m -Xmx2048m ${jacocoArgLine}</argLine>
                     <reuseForks>false</reuseForks>
                     <systemPropertyVariables>
-                      <java.util.logging.manager>org.jboss.logmanager.LogManager</java.util.logging.manager>
-                      <jboss.home>${project.basedir}/target/dependency/restcomm-sip-servlets-3.2.0-89-wildfly-10.0.0.Final</jboss.home>
-                      <arquillian.launch>wildfly10</arquillian.launch>
+                        <java.util.logging.manager>org.jboss.logmanager.LogManager</java.util.logging.manager>
+                        <jboss.home>${project.basedir}/target/dependency/restcomm-sip-servlets-3.2.0-89-wildfly-10.0.0.Final</jboss.home>
+                        <arquillian.launch>wildfly10-managed</arquillian.launch>
                     </systemPropertyVariables>     
                     <redirectTestOutputToFile>false</redirectTestOutputToFile>               
                 </configuration>
