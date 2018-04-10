@@ -3,17 +3,26 @@
             xmlns="http://jboss.org/schema/arquillian"
             xsi:schemaLocation="http://jboss.org/schema/arquillian http://jboss.org/schema/arquillian/arquillian_1_0.xsd">
 
-<engine>
-    <property name="deploymentExportPath">target/deployments</property>
-</engine>
-    <container qualifier="wildfly10" default="true">
+    <engine>
+        <property name="deploymentExportPath">target/deployments</property>
+    </engine>
+    <container qualifier="wildfly10-managed" default="true">
         <configuration>
+            <property name="enableAssertions">false</property>
+            <property name="outputToConsole">true</property>
+            <property name="serverConfig">standalone-sip.xml</property>           
+        </configuration>
+    </container>
+    
+    <container qualifier="wildfly10-remote" default="false">
+        <configuration>
+            <property name="managementAddress">localhost</property>             
             <property name="managementPort">9990</property>
             <property name="outputToConsole">true</property>
             <property name="serverConfig">standalone-sip.xml</property>
-            <property name="javaVmArguments">-Dorg.jboss.server.bootstrap.maxThreads=1 -Dserver-config=${project.basedir}/target/dependency/restcomm-sip-servlets-3.2.0-89-wildfly-10.0.0.Final/standalone/configuration/standalone-sip.xml
+            <property name="javaVmArguments">-agentlib:jdwp=transport=dt_socket,address=8787,server=y,suspend=y -Dorg.jboss.server.bootstrap.maxThreads=1
             </property>            
         </configuration>
-    </container>
+    </container>    
         
 </arquillian>
