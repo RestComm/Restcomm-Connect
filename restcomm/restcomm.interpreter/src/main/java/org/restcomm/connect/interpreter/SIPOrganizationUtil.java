@@ -42,33 +42,13 @@ public class SIPOrganizationUtil {
         return organization == null ? null : organization.getSid();
     }
 
-    public static Sid searchOrganizationBySIPRequest(OrganizationsDao orgDao, SipServletRequest request)
-    {
-        Sid destinationOrganizationSid = null;
-        SipURI sipURI = null;
-        if (!request.getMethod().equals("REFER")) {
-            //first try with requetURI
-            destinationOrganizationSid = getOrganizationSidBySipURIHost(orgDao, (SipURI)request.getRequestURI());
+    public static Sid searchOrganizationBySIPRequest(OrganizationsDao orgDao, SipServletRequest request) {
+        //first try with requetURI
+        Sid destinationOrganizationSid = getOrganizationSidBySipURIHost(orgDao,
+                (SipURI) request.getRequestURI());
+        if (destinationOrganizationSid == null) {
             // try to get destinationOrganizationSid from toUri
-            if (destinationOrganizationSid == null) {
-                destinationOrganizationSid = getOrganizationSidBySipURIHost(orgDao, (SipURI)request.getTo().getURI());
-            }
-        }else{
-            // The Request URI from SIP REFER method is going with the IP Address instead of the domain name
-            // try to get destinationOrganizationSid from Refer-To
-            try{
-                sipURI = (SipURI)request.getAddressHeader("Refer-To").getURI();
-            } catch (ServletParseException e){
-                logger.error("sipURI is NULL");
-            }
-            if (sipURI != null){
-                destinationOrganizationSid = getOrganizationSidBySipURIHost(orgDao, sipURI);
-                if(destinationOrganizationSid == null){
-                    logger.error("destinationOrganizationSid is NULL: Refer-To Uri is: "+ sipURI);
-                }else{
-                    logger.debug("searchOrganizationBySIPRequest: destinationOrganizationSid: "+destinationOrganizationSid +" Refer-To Uri is: "+sipURI);
-                }
-            }
+            destinationOrganizationSid = getOrganizationSidBySipURIHost(orgDao, (SipURI) request.getTo().getURI());
         }
         return destinationOrganizationSid;
     }
