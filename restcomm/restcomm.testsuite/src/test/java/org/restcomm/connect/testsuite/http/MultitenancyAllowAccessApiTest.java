@@ -36,7 +36,7 @@ import org.jboss.arquillian.junit.Arquillian;
 import org.jboss.arquillian.test.api.ArquillianResource;
 import org.jboss.shrinkwrap.api.ShrinkWrap;
 import org.jboss.shrinkwrap.api.spec.WebArchive;
-import org.jboss.shrinkwrap.resolver.api.maven.archive.ShrinkWrapMaven;
+import org.jboss.shrinkwrap.resolver.api.maven.Maven;
 import org.junit.Test;
 import org.junit.FixMethodOrder;
 import org.junit.runners.MethodSorters;
@@ -173,7 +173,10 @@ public class MultitenancyAllowAccessApiTest {
 
     @Test
     @Category(UnstableTests.class)
-    public void getElementSameAccount() throws ClientProtocolException, IOException {
+    /**
+     * using aaa prefix to ensure order and prevent sideeffects
+     */
+    public void aaagetElementSameAccount() throws ClientProtocolException, IOException {
         String baseUrl = deploymentUrl.toString() + apiPath + primaryAccountSid + "/";
         for (Endpoint endpoint : Endpoint.values()) {
             if (endpoint.get) {
@@ -187,7 +190,7 @@ public class MultitenancyAllowAccessApiTest {
 
     @Test
     @Category({UnstableTests.class, FeatureAltTests.class})
-    public void getElementSubaccount() throws ClientProtocolException, IOException {
+    public void aaagetElementSubaccount() throws ClientProtocolException, IOException {
         String baseUrl = deploymentUrl.toString() + apiPath + subaccountaAccountSid + "/";
         for (Endpoint endpoint : Endpoint.values()) {
             if (endpoint.get) {
@@ -201,7 +204,10 @@ public class MultitenancyAllowAccessApiTest {
 
     @Test
     @Category(UnstableTests.class)
-    public void postElementSameAccount() throws ClientProtocolException, IOException {
+    /**
+     * using aaa prefix to ensure order and prevent sideeffects
+     */
+    public void aaapostElementSameAccount() throws ClientProtocolException, IOException {
         Endpoint endpoints[] = modifyPostParameters("3");
         String baseUrl = deploymentUrl.toString() + apiPath + primaryAccountSid + "/";
         for (Endpoint endpoint : endpoints) {
@@ -217,7 +223,10 @@ public class MultitenancyAllowAccessApiTest {
 
     @Test
     @Category(FeatureAltTests.class)
-    public void postElementSubaccount() throws ClientProtocolException, IOException {
+    /**
+     * using aaa prefix to ensure order and prevent sideeffects
+     */
+    public void aaapostElementSubaccount() throws ClientProtocolException, IOException {
         Endpoint endpoints[] = modifyPostParameters("4");
         String baseUrl = deploymentUrl.toString() + apiPath + subaccountaAccountSid + "/";
         for (Endpoint endpoint : endpoints) {
@@ -259,20 +268,23 @@ public class MultitenancyAllowAccessApiTest {
     }
 
     @Test
-    public void accountsApi() throws ClientProtocolException, IOException {
+    /**
+     * using aaa prefix to ensure order and prevent sideeffects
+     */
+    public void aaaaccountsApi() throws ClientProtocolException, IOException {
         // Same account
         String baseUrl = deploymentUrl.toString() + apiPath.substring(0, apiPath.length()-1);
         int statusCode = RestcommMultitenancyTool.getInstance().get(baseUrl + jsonExtension, primaryUsername, accountsPassword);
-        assertTrue(statusCode == httpOk);
+        Assert.assertEquals(httpOk, statusCode);
         statusCode = RestcommMultitenancyTool.getInstance().post(baseUrl + jsonExtension, primaryUsername, accountsPassword, new HashMap<String,String>(){{ put("EmailAddress","test@test.com"); put("Password","RestComm12");}});
         Assert.assertEquals(httpOk, statusCode);
 
         // Sub account
         baseUrl = deploymentUrl.toString() + apiPath.substring(0, apiPath.length()-1);
         statusCode = RestcommMultitenancyTool.getInstance().get(baseUrl + jsonExtension + "/" + subaccountbAccountSid, primaryUsername, accountsPassword);
-        assertTrue(statusCode == httpOk);
+        Assert.assertEquals(httpOk, statusCode);
         statusCode = RestcommMultitenancyTool.getInstance().post(baseUrl + "/" + subaccountbAccountSid, primaryUsername, accountsPassword, new HashMap<String,String>(){{ put("EmailAddress","test2@test.com"); put("Password","RestComm12");}});
-        assertTrue(statusCode == httpOk);
+        Assert.assertEquals(httpOk, statusCode);
         Map<String,String> updateParams = new HashMap<String,String>();
         updateParams.put("Status", "closed");
         statusCode = RestcommMultitenancyTool.getInstance().update(baseUrl + jsonExtension + "/" + subaccountbAccountSid, primaryUsername, accountsPassword,updateParams);
@@ -322,14 +334,16 @@ public class MultitenancyAllowAccessApiTest {
     @Deployment(name = "MultitenancyAllowAccessApiTest", managed = true, testable = false)
     public static WebArchive createWebArchiveNoGw() {
         WebArchive archive = ShrinkWrap.create(WebArchive.class, "restcomm.war");
-        final WebArchive restcommArchive = ShrinkWrapMaven.resolver()
+        final WebArchive restcommArchive = Maven.resolver()
                 .resolve("org.restcomm:restcomm-connect.application:war:" + version).withoutTransitivity()
                 .asSingle(WebArchive.class);
         archive = archive.merge(restcommArchive);
         archive.delete("/WEB-INF/sip.xml");
+archive.delete("/WEB-INF/web.xml");
         archive.delete("/WEB-INF/conf/restcomm.xml");
         archive.delete("/WEB-INF/data/hsql/restcomm.script");
         archive.addAsWebInfResource("sip.xml");
+        archive.addAsWebInfResource("web.xml");
         archive.addAsWebInfResource("restcomm.xml", "conf/restcomm.xml");
         archive.addAsWebInfResource("restcomm.script_multitenancyTest", "data/hsql/restcomm.script");
         return archive;

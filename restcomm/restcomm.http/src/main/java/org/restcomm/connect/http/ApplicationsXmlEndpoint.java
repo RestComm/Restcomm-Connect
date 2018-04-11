@@ -81,6 +81,7 @@ public class ApplicationsXmlEndpoint extends ApplicationsEndpoint {
 
     @Path("/{sid}")
     @POST
+    @Produces({MediaType.APPLICATION_XML, MediaType.APPLICATION_JSON})
     public Response updateApplicationAsXmlPost(@PathParam("accountSid") final String accountSid,
             @PathParam("sid") final String sid, final MultivaluedMap<String, String> data) {
         return updateApplication(accountSid, sid, data, retrieveMediaType());

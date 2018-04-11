@@ -599,7 +599,7 @@ public class UssdInterpreter extends RestcommUntypedActor {
 
             ExtensionController ec = ExtensionController.getInstance();
             IExtensionFeatureAccessRequest far = new FeatureAccessRequest(FeatureAccessRequest.Feature.OUTBOUND_USSD, accountId);
-            ExtensionResponse er = ec.executePreInboundAction(far, extensions);
+            ExtensionResponse er = ec.executePreOutboundAction(far, extensions);
 
             if (!er.isAllowed()) {
                 if (logger.isDebugEnabled()) {

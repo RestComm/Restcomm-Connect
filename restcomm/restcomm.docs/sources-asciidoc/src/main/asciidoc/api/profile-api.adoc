@@ -22,6 +22,10 @@ Since the Profile configuration is expected to grow as required, the Profile ent
 is defined by a JSON schema, rather than regular properties, representing a 
 document used as generic container.
 
+All Profiles REST API is only accesible by SuperAdmin credentials. With the exception
+of reading the associated Profile, where all Roles are allowed if the queried profile
+is associated with the requesting Account credentials.
+
 === Profile Resource URI
 
 */2012-04-24/Profiles/\{ProfileSid}*
@@ -43,7 +47,7 @@ document used as generic container.
 
 === Supported Operations
 
-*HTTP GET.* Returns the representation of a Profile resource.
+*HTTP GET.* Returns the representation of a Profile resource. All roles are allowed.
 
 ==== Response Status
 [cols=",",options="header",]
@@ -123,15 +127,19 @@ To associate a single Profile with multiple Accounts/Organizations, multiple req
 ....
 curl -X GET  https://ACae6e420f425248d6a26948c17a9e2acf:77f8c12cc7b8f8423e5c38b035249166@127.0.0.1:8080/restcomm/2012-04-24/Profiles/PRae6e420f425248d6a26948c17a9e2acf
 ....
+**Add a new Profile.**
 
+....
+curl -X POST -H 'Content-Type: application/instance+json' --data "@/path/to/filename" https://ACae6e420f425248d6a26948c17a9e2acf:77f8c12cc7b8f8423e5c38b035249166@127.0.0.1:8080/restcomm/2012-04-24/Profiles
+....
 
 **Modify a Profile.**
 
-To update a Profile you need to provide the SID
+To update a Profile you need to provide the Profile SID
 
 For example, update Proile using sid:
 ....
-curl -H 'Content-Type: application/instance+json' --data "@/path/to/filename" -X PUT https://ACae6e420f425248d6a26948c17a9e2acf:77f8c12cc7b8f8423e5c38b035249166@127.0.0.1:8080/restcomm/2012-04-24/Profiles/PRae6e420f425248d6a26948c17a9e2123
+curl -X PUT -H 'Content-Type: application/instance+json' --data "@/path/to/filename" https://ACae6e420f425248d6a26948c17a9e2acf:77f8c12cc7b8f8423e5c38b035249166@127.0.0.1:8080/restcomm/2012-04-24/Profiles/PRae6e420f425248d6a26948c17a9e2123
 ....
 
 ....
@@ -162,6 +170,32 @@ The above command will print an output similar to the one below:
     }   
 }
 ----
+
+**Link/Unlink a Profile to an Entity**
+
+To link a Profile to an Account
+
+....
+curl -X PUT -H "X-HTTP-Method-Override:LINK" -H "Link:<https://127.0.0.1:8080/restcomm/2012-04-24/Accounts/ACae6e420f425248d6a26948c17a9e2acf>;rel=related" https://ACae6e420f425248d6a26948c17a9e2acf:77f8c12cc7b8f8423e5c38b035249166@127.0.0.1:8080/restcomm/2012-04-24/Profiles/PRae6e420f425248d6a26948c17a9e2123
+....
+
+To unlink a Profile from an Account
+
+....
+curl -X PUT -H "X-HTTP-Method-Override:UNLINK" -H "Link:<https://127.0.0.1:8080/restcomm/2012-04-24/Accounts/ACae6e420f425248d6a26948c17a9e2acf>;rel=related" https://ACae6e420f425248d6a26948c17a9e2acf:77f8c12cc7b8f8423e5c38b035249166@127.0.0.1:8080/restcomm/2012-04-24/Profiles/PRae6e420f425248d6a26948c17a9e2123
+....
+
+To link a Profile to an Organization
+
+....
+curl -X PUT -H "X-HTTP-Method-Override:LINK" -H "Link:<https://127.0.0.1:8080/restcomm/2012-04-24/Organizations/ORafbe225ad37541eba518a74248f0ac4c>;rel=related" https://ACae6e420f425248d6a26948c17a9e2acf:77f8c12cc7b8f8423e5c38b035249166@127.0.0.1:8080/restcomm/2012-04-24/Profiles/PRae6e420f425248d6a26948c17a9e2123
+....
+
+To unlink a Profile from an Organization
+
+....
+curl -X PUT -H "X-HTTP-Method-Override:UNLINK" -H  "Link:<https://127.0.0.1:8080/restcomm/2012-04-24/Organizations/ORafbe225ad37541eba518a74248f0ac4c>;rel=related" https://ACae6e420f425248d6a26948c17a9e2acf:77f8c12cc7b8f8423e5c38b035249166@127.0.0.1:8080/restcomm/2012-04-24/Profiles/PRae6e420f425248d6a26948c17a9e2123
+....
 
 [[Profiles_List]]
 == Profile List Resource

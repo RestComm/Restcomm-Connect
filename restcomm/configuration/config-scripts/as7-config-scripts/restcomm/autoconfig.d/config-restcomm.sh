@@ -492,6 +492,8 @@ configSMPPAccount() {
 	peerPort="$6"
 	sourceMap="$7"
 	destinationMap="$8"
+	inboundEncoding="$9"
+	outboundEncoding="${10}"
 
 
 	sed -i "s|<smpp class=\"org.restcomm.connect.sms.smpp.SmppService\" activateSmppConnection =\".*\">|<smpp class=\"org.restcomm.connect.sms.smpp.SmppService\" activateSmppConnection =\"$activate\">|g" $FILE
@@ -528,6 +530,13 @@ configSMPPAccount() {
 		}" $FILE
 
         sed -i "s|<connection activateAddressMapping=\"false\" sourceAddressMap=\"\" destinationAddressMap=\"\" tonNpiValue=\"1\">|<connection activateAddressMapping=\"false\" sourceAddressMap=\"${sourceMap}\" destinationAddressMap=\"${destinationMap}\" tonNpiValue=\"1\">|" $FILE
+
+        if [ ! -z "${inboundEncoding}" ]; then
+            xmlstarlet ed -L -P -u  "/restcomm/smpp/connections/connection/inboundencoding" -v $inboundEncoding $FILE
+        fi
+        if [ ! -z "${outboundEncoding}" ]; then
+            xmlstarlet ed -L -P -u  "/restcomm/smpp/connections/connection/outboundencoding" -v $outboundEncoding $FILE
+        fi
 		echo 'Configured SMPP Account Details'
 
 	else
@@ -560,6 +569,10 @@ configSMPPAccount() {
 		}" $FILE
 
         sed -i "s|<connection activateAddressMapping=\"false\" sourceAddressMap=\"\" destinationAddressMap=\"\" tonNpiValue=\"1\">|<connection activateAddressMapping=\"false\" sourceAddressMap=\"\" destinationAddressMap=\"\" tonNpiValue=\"1\">|" $FILE
+
+        xmlstarlet ed -L -P -u  "/restcomm/smpp/connections/connection/inboundencoding" -v "" $FILE
+        xmlstarlet ed -L -P -u  "/restcomm/smpp/connections/connection/outboundencoding" -v "" $FILE
+
 		echo 'Configured SMPP Account Details'
 	fi
 }
@@ -686,6 +699,10 @@ otherRestCommConf(){
 
     echo "CACHE_NO_WAV $CACHE_NO_WAV"
     sed -i "s|<cache-no-wav>.*</cache-no-wav>|<cache-no-wav>${CACHE_NO_WAV}</cache-no-wav>|" $FILE
+
+    #Configure USESBC
+    echo "USESBC: $RCUSESBC"
+    sed -i "s|<use-sbc>.*</use-sbc>|<use-sbc>${RCUSESBC}</use-sbc>|" $FILE
 
     echo "End Rest RestComm configuration"
 }
@@ -876,7 +893,7 @@ configSpeechRecognizer "$ISPEECH_KEY"
 configSpeechSynthesizers
 configTelestaxProxy "$ACTIVE_PROXY" "$TP_LOGIN" "$TP_PASSWORD" "$INSTANCE_ID" "$PROXY_IP" "$SITE_ID"
 configMediaServerManager "$BIND_ADDRESS" "$MS_ADDRESS" "$MEDIASERVER_EXTERNAL_ADDRESS"
-configSMPPAccount "$SMPP_ACTIVATE" "$SMPP_SYSTEM_ID" "$SMPP_PASSWORD" "$SMPP_SYSTEM_TYPE" "$SMPP_PEER_IP" "$SMPP_PEER_PORT" "$SMPP_SOURCE_MAP" "$SMPP_DEST_MAP"
+configSMPPAccount "$SMPP_ACTIVATE" "$SMPP_SYSTEM_ID" "$SMPP_PASSWORD" "$SMPP_SYSTEM_TYPE" "$SMPP_PEER_IP" "$SMPP_PEER_PORT" "$SMPP_SOURCE_MAP" "$SMPP_DEST_MAP" "$SMPP_INBOUND_ENCODING" "$SMPP_OUTBOUND_ENCODING"
 configRestCommURIs
 updateRecordingsPath
 configHypertextPort

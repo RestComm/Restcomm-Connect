@@ -19,14 +19,26 @@
  */
 package org.restcomm.connect.sms;
 
-import akka.actor.ActorRef;
-import akka.actor.ActorSystem;
-import akka.actor.Props;
-import akka.actor.UntypedActor;
-import akka.actor.UntypedActorContext;
-import akka.actor.UntypedActorFactory;
-import akka.event.Logging;
-import akka.event.LoggingAdapter;
+import static javax.servlet.sip.SipServletResponse.SC_FORBIDDEN;
+import static javax.servlet.sip.SipServletResponse.SC_NOT_FOUND;
+
+import java.io.IOException;
+import java.math.BigDecimal;
+import java.net.URI;
+import java.net.URISyntaxException;
+import java.util.Currency;
+import java.util.List;
+import java.util.concurrent.TimeUnit;
+
+import javax.servlet.ServletConfig;
+import javax.servlet.ServletContext;
+import javax.servlet.sip.SipApplicationSession;
+import javax.servlet.sip.SipFactory;
+import javax.servlet.sip.SipServlet;
+import javax.servlet.sip.SipServletRequest;
+import javax.servlet.sip.SipServletResponse;
+import javax.servlet.sip.SipURI;
+
 import org.apache.commons.configuration.Configuration;
 import org.joda.time.DateTime;
 import org.restcomm.connect.commons.configuration.RestcommConfiguration;
@@ -35,6 +47,7 @@ import org.restcomm.connect.commons.dao.Sid;
 import org.restcomm.connect.commons.faulttolerance.RestcommUntypedActor;
 import org.restcomm.connect.commons.push.PushNotificationServerHelper;
 import org.restcomm.connect.commons.util.UriUtils;
+import org.restcomm.connect.core.service.api.NumberSelectorService;
 import org.restcomm.connect.dao.AccountsDao;
 import org.restcomm.connect.dao.ApplicationsDao;
 import org.restcomm.connect.dao.ClientsDao;
@@ -58,7 +71,6 @@ import org.restcomm.connect.extension.api.RestcommExtensionException;
 import org.restcomm.connect.extension.api.RestcommExtensionGeneric;
 import org.restcomm.connect.extension.controller.ExtensionController;
 import org.restcomm.connect.http.client.rcmlserver.resolver.RcmlserverResolver;
-import org.restcomm.connect.interpreter.NumberSelectorService;
 import org.restcomm.connect.interpreter.SIPOrganizationUtil;
 import org.restcomm.connect.interpreter.SmsInterpreter;
 import org.restcomm.connect.interpreter.SmsInterpreterParams;
@@ -74,26 +86,16 @@ import org.restcomm.connect.telephony.api.TextMessage;
 import org.restcomm.connect.telephony.api.util.B2BUAHelper;
 import org.restcomm.connect.telephony.api.util.CallControlHelper;
 import org.restcomm.smpp.parameter.TlvSet;
+
+import akka.actor.ActorRef;
+import akka.actor.ActorSystem;
+import akka.actor.Props;
+import akka.actor.UntypedActor;
+import akka.actor.UntypedActorContext;
+import akka.actor.UntypedActorFactory;
+import akka.event.Logging;
+import akka.event.LoggingAdapter;
 import scala.concurrent.duration.Duration;
-
-import javax.servlet.ServletConfig;
-import javax.servlet.ServletContext;
-import javax.servlet.sip.SipApplicationSession;
-import javax.servlet.sip.SipFactory;
-import javax.servlet.sip.SipServlet;
-import javax.servlet.sip.SipServletRequest;
-import javax.servlet.sip.SipServletResponse;
-import javax.servlet.sip.SipURI;
-import java.io.IOException;
-import java.math.BigDecimal;
-import java.net.URI;
-import java.net.URISyntaxException;
-import java.util.Currency;
-import java.util.List;
-import java.util.concurrent.TimeUnit;
-
-import static javax.servlet.sip.SipServletResponse.SC_FORBIDDEN;
-import static javax.servlet.sip.SipServletResponse.SC_NOT_FOUND;
 
 /**
  * @author quintana.thomas@gmail.com (Thomas Quintana)
@@ -144,11 +146,18 @@ public final class SmsService extends RestcommUntypedActor {
         this.storage = storage;
         this.servletContext = servletContext;
         monitoringService = (ActorRef) servletContext.getAttribute(MonitoringService.class.getName());
-        numberSelector = (NumberSelectorService) servletContext.getAttribute(NumberSelectorService.class.getName());
+        numberSelector = (NumberSelectorService)servletContext.getAttribute(NumberSelectorService.class.getName());
         this.pushNotificationServerHelper = new PushNotificationServerHelper(system, configuration);
         // final Configuration runtime = configuration.subset("runtime-settings");
         // TODO this.useTo = runtime.getBoolean("use-to");
         patchForNatB2BUASessions = runtime.getBoolean("patch-for-nat-b2bua-sessions", true);
+        boolean useSbc = runtime.getBoolean("use-sbc", false);
+        if(useSbc) {
+            if (logger.isDebugEnabled()) {
+                logger.debug("SmsService: use-sbc is true, overriding patch-for-nat-b2bua-sessions to false");
+            }
+            patchForNatB2BUASessions = false;
+        }
 
         extensions = ExtensionController.getInstance().getExtensions(ExtensionType.SmsService);
         if (logger.isInfoEnabled()) {
@@ -290,7 +299,7 @@ public final class SmsService extends RestcommUntypedActor {
                     public void run() {
                         try {
                             // to the b2bua
-                            if (B2BUAHelper.redirectToB2BUA(request, client, toClient, storage, sipFactory, patchForNatB2BUASessions)) {
+                            if (B2BUAHelper.redirectToB2BUA(system, request, client, toClient, storage, sipFactory, patchForNatB2BUASessions)) {
                                 // if all goes well with proxying the SIP MESSAGE on to the target client
                                 // then we can end further processing of this request and send response to sender
                                 if(logger.isInfoEnabled()) {
@@ -319,7 +328,7 @@ public final class SmsService extends RestcommUntypedActor {
 
                 ExtensionController ec = ExtensionController.getInstance();
                 final IExtensionFeatureAccessRequest far = new FeatureAccessRequest(FeatureAccessRequest.Feature.OUTBOUND_SMS, client.getAccountSid());
-                ExtensionResponse er = ec.executePreInboundAction(far, this.extensions);
+                ExtensionResponse er = ec.executePreOutboundAction(far, this.extensions);
 
                 if (er.isAllowed()) {
                     final SipServletResponse trying = request.createResponse(SipServletResponse.SC_TRYING);
@@ -454,7 +463,7 @@ public final class SmsService extends RestcommUntypedActor {
                     final StartInterpreter start = new StartInterpreter(session);
                     interpreter.tell(start, self());
                     isFoundHostedApp = true;
-                    ec.executePostOutboundAction(far, extensions);
+                    ec.executePostInboundAction(far, extensions);
                 } else {
                     if (logger.isDebugEnabled()) {
                         final String errMsg = "Inbound SMS is not Allowed";
@@ -465,7 +474,7 @@ public final class SmsService extends RestcommUntypedActor {
                     sendNotification(errMsg, 11001, "warning", true);
                     final SipServletResponse resp = request.createResponse(SC_FORBIDDEN, "SMS not allowed");
                     resp.send();
-                    ec.executePostOutboundAction(far, extensions);
+                    ec.executePostInboundAction(far, extensions);
                     return false;
                 }
             }
@@ -486,8 +495,8 @@ public final class SmsService extends RestcommUntypedActor {
         if (CreateSmsSession.class.equals(klass)) {
             IExtensionCreateSmsSessionRequest ier = (CreateSmsSession)message;
             ier.setConfiguration(this.configuration);
-            ec.executePreOutboundAction(ier, this.extensions);
-            if (ier.isAllowed()) {
+            ExtensionResponse executePreOutboundAction = ec.executePreOutboundAction(ier, this.extensions);
+            if (executePreOutboundAction.isAllowed()) {
                 CreateSmsSession createSmsSession = (CreateSmsSession) message;
                 final ActorRef session = session(ier.getConfiguration(), OrganizationUtil.getOrganizationSidByAccountSid(storage, new Sid(createSmsSession.getAccountSid())));
                 final SmsServiceResponse<ActorRef> response = new SmsServiceResponse<ActorRef>(session);
@@ -523,7 +532,7 @@ public final class SmsService extends RestcommUntypedActor {
         final SipServletResponse response = (SipServletResponse) message;
         // https://bitbucket.org/telestax/telscale-restcomm/issue/144/send-p2p-chat-works-but-gives-npe
         if (B2BUAHelper.isB2BUASession(response)) {
-            B2BUAHelper.forwardResponse(response, patchForNatB2BUASessions);
+            B2BUAHelper.forwardResponse(system, response, patchForNatB2BUASessions);
             return;
         }
         final SipApplicationSession application = response.getApplicationSession();

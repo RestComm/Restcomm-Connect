@@ -18,13 +18,23 @@
  *
  */package org.restcomm.connect.telephony.api.util;
 
- import java.io.IOException;
-import java.math.BigDecimal;
-import java.net.InetAddress;
-import java.net.URI;
-import java.net.UnknownHostException;
-import java.util.Currency;
-import java.util.Vector;
+import akka.actor.ActorSystem;
+import org.apache.log4j.Logger;
+import org.joda.time.DateTime;
+import org.mobicents.javax.servlet.sip.SipSessionExt;
+import org.restcomm.connect.commons.configuration.RestcommConfiguration;
+import org.restcomm.connect.commons.dao.Sid;
+import org.restcomm.connect.commons.util.DNSUtils;
+import org.restcomm.connect.dao.CallDetailRecordsDao;
+import org.restcomm.connect.dao.DaoManager;
+import org.restcomm.connect.dao.RegistrationsDao;
+import org.restcomm.connect.dao.common.OrganizationUtil;
+import org.restcomm.connect.dao.entities.CallDetailRecord;
+import org.restcomm.connect.dao.entities.Client;
+import org.restcomm.connect.dao.entities.Registration;
+import org.restcomm.connect.telephony.api.CallInfo;
+import org.restcomm.connect.telephony.api.CallInfoStreamEvent;
+import org.restcomm.connect.telephony.api.CallStateChanged;
 
 import javax.sdp.Connection;
 import javax.sdp.MediaDescription;
@@ -40,21 +50,17 @@ import javax.servlet.sip.SipServletRequest;
 import javax.servlet.sip.SipServletResponse;
 import javax.servlet.sip.SipSession;
 import javax.servlet.sip.SipURI;
-
-import org.apache.log4j.Logger;
-import org.joda.time.DateTime;
-import org.mobicents.javax.servlet.sip.SipSessionExt;
-import org.restcomm.connect.commons.configuration.RestcommConfiguration;
-import org.restcomm.connect.commons.dao.Sid;
-import org.restcomm.connect.commons.util.DNSUtils;
-import org.restcomm.connect.dao.CallDetailRecordsDao;
-import org.restcomm.connect.dao.DaoManager;
-import org.restcomm.connect.dao.RegistrationsDao;
-import org.restcomm.connect.dao.common.OrganizationUtil;
-import org.restcomm.connect.dao.entities.CallDetailRecord;
-import org.restcomm.connect.dao.entities.Client;
-import org.restcomm.connect.dao.entities.Registration;
-import org.restcomm.connect.telephony.api.CallStateChanged;
+import java.io.IOException;
+import java.math.BigDecimal;
+import java.net.InetAddress;
+import java.net.URI;
+import java.net.UnknownHostException;
+import java.util.ArrayList;
+import java.util.Currency;
+import java.util.HashMap;
+import java.util.Iterator;
+import java.util.Map;
+import java.util.Vector;
 
 /**
   * Helper methods for proxying SIP messages between Restcomm clients that are connecting in peer to peer mode
@@ -70,8 +76,13 @@ import org.restcomm.connect.telephony.api.CallStateChanged;
      public static final String B2BUA_LAST_REQUEST = "lastRequest";
      public static final String B2BUA_LAST_RESPONSE = "lastResponse";
      public static final String B2BUA_LAST_FINAL_RESPONSE = "lastFinalResponse";
+     public static final String EXTENSION_HEADERS = "extensionHeaders";
      private static final String B2BUA_LINKED_SESSION = "linkedSession";
      private static final String CDR_SID = "callDetailRecord_sid";
+     private static final String CDR_ACCOUNT_SID = "callDetailRecord_accountSid";
+     private static final String CDR_DIRECTION = "callDetailRecord_direction";
+     private static final String CDR_FROM = "callDetailRecord_from";
+     private static final String CDR_TO = "callDetailRecord_to";
 
      private static final Logger logger = Logger.getLogger(B2BUAHelper.class);
 
@@ -85,7 +96,7 @@ import org.restcomm.connect.telephony.api.CallStateChanged;
       * @throws IOException
       */
      // This is used for redirect calls to Restcomm clients from Restcomm Clients
-     public static boolean redirectToB2BUA(final SipServletRequest request, final Client client, Client toClient,
+     public static boolean redirectToB2BUA(final ActorSystem system, final SipServletRequest request, final Client client, Client toClient,
                                            DaoManager storage, SipFactory sipFactory, final boolean patchForNat) throws IOException {
          request.getSession().setAttribute("lastRequest", request);
 
@@ -109,20 +120,37 @@ import org.restcomm.connect.telephony.api.CallStateChanged;
                  final String aor = registration.getAddressOfRecord();
                  SipURI to;
                  SipURI from;
-                 to = (SipURI) sipFactory.createURI(location);
+                 SipURI locationURI = null;
+
                  Sid fromOrganizationSid = OrganizationUtil.getOrganizationSidBySipURIHost(storage, (SipURI) request.getFrom().getURI());
                  // if both clients don't belong to same organization, call should not be allowed.
                  if(!toOrganizationSid.equals(fromOrganizationSid)){
                      logger.warn(String.format("B2B clients do not belong to same organization. from-client: %s belong to %s . where as to-client %s belong to %s", client.getLogin(), fromOrganizationSid, user, toOrganizationSid));
                      return false;
                  }
-                 from = (SipURI) sipFactory.createURI((registrations.getRegistration(client.getLogin(), fromOrganizationSid)).getLocation());
+                 if(patchForNat) {
+                     to = (SipURI) sipFactory.createURI(location);
+                     from = (SipURI) sipFactory.createURI((registrations.getRegistration(client.getLogin(), fromOrganizationSid)).getLocation());
+                 } else {
+                     // https://github.com/RestComm/Restcomm-Connect/issues/2741 support for SBC
+                     if (logger.isDebugEnabled()) {
+                         logger.debug("B2BUA not patched for NAT, using address of record for to and from");
+                     }
+                     to = (SipURI) sipFactory.createURI(aor);
+                     locationURI = (SipURI) sipFactory.createURI(location);
+                     from = (SipURI) sipFactory.createURI((registrations.getRegistration(client.getLogin(), fromOrganizationSid)).getAddressOfRecord());
+                 }
+
                  final SipSession incomingSession = request.getSession();
                  // create and send the outgoing invite and do the session linking
                  incomingSession.setAttribute(B2BUA_LAST_REQUEST, request);
                  SipServletRequest outRequest = sipFactory.createRequest(request.getApplicationSession(), request.getMethod(),
                          from, to);
-                 outRequest.setRequestURI(to);
+                 if(patchForNat) {
+                     outRequest.setRequestURI(to);
+                 } else {
+                     outRequest.setRequestURI(locationURI);
+                 }
 
                  if (request.getContent() != null) {
                      final byte[] sdp = request.getRawContent();
@@ -148,6 +176,8 @@ import org.restcomm.connect.telephony.api.CallStateChanged;
                          outRequest.setContent(sdp, request.getContentType());
                      }
                  }
+
+                 addHeadersToMessage(outRequest, getCustomHeaders(request, "X-"));
 
                  final SipSession outgoingSession = outRequest.getSession();
                  if (request.isInitial()) {
@@ -196,6 +226,16 @@ import org.restcomm.connect.telephony.api.CallStateChanged;
 
                  incomingSession.setAttribute(CDR_SID, callRecord.getSid());
                  outgoingSession.setAttribute(CDR_SID, callRecord.getSid());
+                 incomingSession.setAttribute(CDR_ACCOUNT_SID, client.getSid());
+                 outgoingSession.setAttribute(CDR_ACCOUNT_SID, client.getSid());
+                 incomingSession.setAttribute(CDR_DIRECTION, "Client-To-Client");
+                 outgoingSession.setAttribute(CDR_DIRECTION, "Client-To-Client");
+                 incomingSession.setAttribute(CDR_FROM, client.getLogin());
+                 outgoingSession.setAttribute(CDR_FROM, client.getLogin());
+                 incomingSession.setAttribute(CDR_TO, toClient.getLogin());
+                 outgoingSession.setAttribute(CDR_TO, toClient.getLogin());
+
+                 sendCallInfoStreamEvent(system, request, CallStateChanged.State.QUEUED);
 
                  return true; // successfully proxied the SIP request between two registered clients
              }
@@ -209,14 +249,22 @@ import org.restcomm.connect.telephony.api.CallStateChanged;
      }
 
      /**
+      * @param system
       * @param request
-      * @param client
-      * @param toClient
+      * @param fromClient
+      * @param from
+      * @param to
+      * @param proxyUsername
+      * @param proxyPassword
+      * @param storage
+      * @param sipFactory
+      * @param callToSipUri
+      * @param patchForNat
       * @throws IOException
       */
      // https://telestax.atlassian.net/browse/RESTCOMM-335
      // This is used for redirect calls to PSTN Numbers and SIP URIs from Restcomm Clients
-     public static boolean redirectToB2BUA(final SipServletRequest request, final Client fromClient, final SipURI from,
+     public static boolean redirectToB2BUA(final ActorSystem system, final SipServletRequest request, final Client fromClient, final SipURI from,
              SipURI to, String proxyUsername, String proxyPassword, DaoManager storage, SipFactory sipFactory,
              boolean callToSipUri, final boolean patchForNat) {
          request.getSession().setAttribute("lastRequest", request);
@@ -284,6 +332,8 @@ import org.restcomm.connect.telephony.api.CallStateChanged;
                  }
              }
 
+             addHeadersToMessage(outRequest, getCustomHeaders(request, "X-"));
+
              final SipSession outgoingSession = outRequest.getSession();
              if (request.isInitial()) {
                  incomingSession.setAttribute(B2BUA_LINKED_SESSION, outgoingSession);
@@ -302,6 +352,9 @@ import org.restcomm.connect.telephony.api.CallStateChanged;
                      ((SipSessionExt) outRequest.getSession()).setBypassProxy(true);
                  }
              }
+
+             Map<String,ArrayList<String>> extensionHeaders = (Map<String,ArrayList<String>>)incomingSession.getAttribute(EXTENSION_HEADERS);
+             addHeadersToMessage(outRequest, extensionHeaders, sipFactory);
              outRequest.send();
              Address originalFromAddress = request.getFrom();
              SipURI originalFromUri = (SipURI) originalFromAddress.getURI();
@@ -355,6 +408,16 @@ import org.restcomm.connect.telephony.api.CallStateChanged;
 
              incomingSession.setAttribute(CDR_SID, callRecord.getSid());
              outgoingSession.setAttribute(CDR_SID, callRecord.getSid());
+             incomingSession.setAttribute(CDR_ACCOUNT_SID, fromClient.getSid());
+             outgoingSession.setAttribute(CDR_ACCOUNT_SID, fromClient.getSid());
+             incomingSession.setAttribute(CDR_DIRECTION, "Client-To-Client");
+             outgoingSession.setAttribute(CDR_DIRECTION, "Client-To-Client");
+             incomingSession.setAttribute(CDR_FROM, fromClient.getLogin());
+             outgoingSession.setAttribute(CDR_FROM, fromClient.getLogin());
+             incomingSession.setAttribute(CDR_TO, to.toString());
+             outgoingSession.setAttribute(CDR_TO, to.toString());
+
+             sendCallInfoStreamEvent(system, request, CallStateChanged.State.QUEUED);
 
              return true; // successfully proxied the SIP request
          } catch (IOException exception) {
@@ -442,7 +505,7 @@ import org.restcomm.connect.telephony.api.CallStateChanged;
       * @param response
       * @throws IOException
       */
-     public static void forwardResponse(final SipServletResponse response, final boolean patchForNat) throws IOException {
+     public static void forwardResponse(final ActorSystem system, final SipServletResponse response, final boolean patchForNat) throws IOException {
          if (logger.isInfoEnabled()) {
              logger.info(String.format("B2BUA: Got response: \n %s", response));
          }
@@ -487,7 +550,10 @@ import org.restcomm.connect.telephony.api.CallStateChanged;
                  }
                  callRecord = callRecord.setDuration(seconds);
                  records.updateCallDetailRecord(callRecord);
+
+                 sendCallInfoStreamEvent(system, request, CallStateChanged.State.CANCELED);
              }
+
              return;
          }
 
@@ -551,6 +617,9 @@ import org.restcomm.connect.telephony.api.CallStateChanged;
                  clonedResponse.setContent(sdp, response.getContentType());
              }
          }
+
+         addHeadersToMessage(clonedResponse, getCustomHeaders(response, "X-"));
+
          clonedResponse.send();
 
          // CallDetailRecord callRecord = records.getCallDetailRecord((Sid) request.getSession().getAttribute(CDR_SID));
@@ -581,11 +650,13 @@ import org.restcomm.connect.telephony.api.CallStateChanged;
              }
 
              records.updateCallDetailRecord(callRecord);
+
+             sendCallInfoStreamEvent(system, linkedRequest, CallStateChanged.State.valueOf(callRecord.getStatus()));
          }
 
      }
 
-     public static void updateCDR(SipServletMessage message, CallStateChanged.State state) {
+     public static void updateCDR(ActorSystem system, SipServletMessage message, CallStateChanged.State state) {
          CallDetailRecordsDao records = daoManager.getCallDetailRecordsDao();
          SipServletRequest request = null;
 
@@ -612,6 +683,8 @@ import org.restcomm.connect.telephony.api.CallStateChanged;
              }
              callRecord = callRecord.setDuration(seconds);
              records.updateCallDetailRecord(callRecord);
+
+             sendCallInfoStreamEvent(system, message, state);
          }
      }
 
@@ -626,4 +699,170 @@ import org.restcomm.connect.telephony.api.CallStateChanged;
          return (linkedB2BUASession != null);
      }
 
+     private static Map<String, String> getCustomHeaders (SipServletMessage message, String prefix) {
+         Map<String, String> customHeaders = new HashMap<>();
+
+         Iterator<String> headersIter = message.getHeaderNames();
+         while (headersIter.hasNext()) {
+             String header = headersIter.next();
+             if (header.toUpperCase().startsWith(prefix)) {
+                 customHeaders.put(header, message.getHeader(header).toString());
+             }
+         }
+
+         return customHeaders;
+     }
+
+    /**
+     * Method adds custom headers to a SipServlet message
+     * @param message
+     * @param customHeaders
+     */
+     private static void addHeadersToMessage(SipServletMessage message, Map<String, String> customHeaders) {
+         for (Map.Entry<String, String> entry: customHeaders.entrySet()) {
+             String headerName = entry.getKey();
+             String headerVal = entry.getValue();
+             message.addHeader(headerName, headerVal);
+         }
+     }
+
+     /**
+      * Modify Messages with new headers and header attributes
+      * Moved from CallManager and Call
+      *
+      * The method deals with custom and standard headers, such as R-URI, Route etc
+      *
+      * TODO: refactor/rename/handle more specific headers
+      * @param sipFactory SipFactory
+      * @param message
+      * @param headers
+      */
+     public static void addHeadersToMessage(SipServletRequest message, Map<String, ArrayList<String>> headers, SipFactory sipFactory) {
+         if (headers != null && sipFactory != null) {
+             for (Map.Entry<String, ArrayList<String>> entry : headers.entrySet()) {
+                 //check if header exists
+                 String headerName = entry.getKey();
+
+                 if (logger.isDebugEnabled()) {
+                     logger.debug("headerName=" + headerName + " headerVal=" + message.getHeader(headerName));
+                 }
+
+                 if(headerName.equalsIgnoreCase("Request-URI")) {
+                     //handle Request-URI
+                     javax.servlet.sip.URI reqURI = message.getRequestURI();
+                     if(logger.isDebugEnabled()) {
+                         logger.debug("ReqURI="+reqURI.toString()+" msgReqURI="+message.getRequestURI());
+                     }
+                     for(String keyValPair :entry.getValue()){
+                         String parName = "";
+                         String parVal = "";
+                         int equalsPos = keyValPair.indexOf("=");
+                         parName = keyValPair.substring(0, equalsPos);
+                         parVal = keyValPair.substring(equalsPos+1);
+                         reqURI.setParameter(parName, parVal);
+                         if(logger.isDebugEnabled()) {
+                             logger.debug("ReqURI pars ="+parName+"="+parVal+" equalsPos="+equalsPos+" keyValPair="+keyValPair);
+                         }
+                     }
+
+                     message.setRequestURI(reqURI);
+                     if(logger.isDebugEnabled()) {
+                         logger.debug("ReqURI="+reqURI.toString()+" msgReqURI="+message.getRequestURI());
+                     }
+                 } else if( headerName.equalsIgnoreCase("Route") ){
+                     //handle Route
+                     String headerVal = message.getHeader(headerName);
+                     //TODO: do we want to add arbitrary parameters?
+
+                     if(logger.isDebugEnabled()) {
+                         logger.debug("ROUTE: "+headerName + "=" + headerVal);
+                     }
+                     //check how many pairs of host +port
+                     for(String keyValPair :entry.getValue()){
+                         String parName = "";
+                         String parVal = "";
+                         int equalsPos = keyValPair.indexOf("=");
+                         if(equalsPos>0){
+                             parName = keyValPair.substring(0, equalsPos);
+                         }
+                         parVal = keyValPair.substring(equalsPos+1);
+
+                         if (parName.isEmpty() || parName.equalsIgnoreCase("host_name")) {
+                             try {
+                                 if(logger.isDebugEnabled()) {
+                                     logger.debug("adding ROUTE parVal =" + parVal);
+                                 }
+                                 final SipURI uri = sipFactory.createSipURI(null, parVal);
+                                 message.pushRoute((SipURI)uri);
+                                 if(logger.isDebugEnabled()) {
+                                     logger.debug("added ROUTE parVal =" + uri.toString());
+                                 }
+                             } catch (Exception e) {
+                                 if(logger.isDebugEnabled()) {
+                                     logger.debug("error adding ROUTE uri ="
+                                             + parVal);
+                                 }
+                             }
+
+                         }
+
+                         if(logger.isDebugEnabled()) {
+                             logger.debug("ROUTE pars ="+parName+"="+parVal+" equalsPos="+equalsPos+" keyValPair="+keyValPair);
+                         }
+                     }
+                 } else {
+                     StringBuilder sb = new StringBuilder();
+                     try {
+                         String headerVal = message.getHeader(headerName);
+                         if (headerVal != null && !headerVal.isEmpty()) {
+                             if (entry.getValue() instanceof ArrayList) {
+                                 for (String pair : entry.getValue()) {
+                                     sb.append(";").append(pair);
+                                 }
+                             }
+                             message.setHeader(headerName,
+                                     headerVal + sb.toString());
+                         } else {
+                             if (entry.getValue() instanceof ArrayList) {
+                                 for (String pair : entry.getValue()) {
+                                     sb.append(pair).append(";");
+                                 }
+                             }
+                             message.addHeader(headerName, sb.toString());
+                         }
+                     } catch (IllegalArgumentException iae) {
+                             logger.error("Exception while setting message header: "
+                                     + iae.getMessage());
+                     }
+                 }
+
+                 if (logger.isDebugEnabled()) {
+                     logger.debug("headerName=" + headerName + " headerVal=" + message.getHeader(headerName));
+                 }
+             }
+         } else {
+             logger.error("headers are null");
+         }
+     }
+
+     private static void sendCallInfoStreamEvent(ActorSystem system, SipServletMessage message, CallStateChanged.State state) {
+         SipSession session = message.getSession();
+         Object sid = session.getAttribute(CDR_SID);
+         if (sid != null) {
+             CallInfo callInfo = new CallInfo(
+                     (Sid) sid,
+                     (Sid) session.getAttribute(CDR_ACCOUNT_SID),
+                     state,
+                     null,
+                     (String) session.getAttribute(CDR_DIRECTION),
+                     null,
+                     null,
+                     null,
+                     (String) session.getAttribute(CDR_FROM),
+                     (String) session.getAttribute(CDR_TO),
+                     null, null, false, false, false, null, null
+             );
+             system.eventStream().publish(new CallInfoStreamEvent(callInfo));
+         }
+     }
  }

@@ -6,7 +6,9 @@ import static com.github.tomakehurst.wiremock.client.WireMock.get;
 import static com.github.tomakehurst.wiremock.client.WireMock.stubFor;
 import static com.github.tomakehurst.wiremock.client.WireMock.urlPathEqualTo;
 import static org.cafesip.sipunit.SipAssert.assertLastOperationSuccess;
+import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
+import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertTrue;
 
 import java.net.URL;
@@ -135,6 +137,7 @@ public final class SmsSessionTest {
         if (alice != null) {
             alice.dispose();
         }
+        Thread.sleep(1000);
     }
 
     @Test
@@ -287,7 +290,7 @@ public final class SmsSessionTest {
 
     @Test
     @Category(value={FeatureExpTests.class})
-    public void sendMessageUsingValidContentType() throws ParseException {
+    public void sendMessageUsingValidContentType() throws ParseException, InterruptedException {
         final String proxy = phone.getStackAddress() + ":" + restcommPort + ";lr/udp";
         final String to = "sip:+12223334450@" + restcommContact;
         final String body = "VALID-CONTENT-TYPE";
@@ -299,8 +302,10 @@ public final class SmsSessionTest {
         replaceHeaders.add(header);
         call.initiateOutgoingMessage(null, to, proxy, new ArrayList<Header>(), replaceHeaders, body);
         assertLastOperationSuccess(call);
+        Thread.sleep(1000);
         // Verify if message was properly registered
         JsonArray array = SmsEndpointTool.getInstance().getSmsList(deploymentUrl.toString(), adminAccountSid, adminAuthToken);
+        assertNotNull(array);
         boolean found = false;
         for (int i = 0; i < array.size(); i++) {
             if (((JsonObject) array.get(i)).get("body").getAsString().equals(body)) {
@@ -375,6 +380,7 @@ public final class SmsSessionTest {
         webInfResources.put("restcomm_SmsTest.xml", "conf/restcomm.xml");
         webInfResources.put("restcomm.script_SmsTest", "data/hsql/restcomm.script");
         webInfResources.put("sip.xml", "sip.xml");
+        webInfResources.put("web.xml", "web.xml");
         webInfResources.put("akka_application.conf", "classes/application.conf");
 
         Map<String, String> replacements = new HashMap();

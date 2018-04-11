@@ -311,7 +311,10 @@ public abstract class CallsEndpoint extends SecuredEndpoint {
                 throw new IllegalArgumentException(exception);
             }
         }
-        final String to = data.getFirst("To");
+        String to = data.getFirst("To");
+        if (to.contains("?")) {
+            to = to.substring(0, to.indexOf("?"));
+        }
         // Only try to normalize phone numbers.
         if (to.startsWith("client")) {
             if (to.split(":").length != 2) {
@@ -336,11 +339,11 @@ public abstract class CallsEndpoint extends SecuredEndpoint {
         } catch (final IllegalArgumentException exception){
             return status(INTERNAL_SERVER_ERROR).entity(buildErrorResponseBody(exception.getMessage(),responseType)).build();
         }
+
         secure(daos.getAccountsDao().getAccount(accountSid), "RestComm:Create:Calls");
+
         try {
             validate(data);
-            if (normalizePhoneNumbers)
-                normalize(data);
         } catch (final RuntimeException exception) {
             return status(BAD_REQUEST).entity(exception.getMessage()).build();
         }
@@ -354,13 +357,29 @@ public abstract class CallsEndpoint extends SecuredEndpoint {
         statusCallbackEvent.add("completed");
 
         final String from = data.getFirst("From").trim();
-        final String to = data.getFirst("To").trim();
+        String to = data.getFirst("To").trim();
         final String username = data.getFirst("Username");
         final String password = data.getFirst("Password");
         Integer timeout = getTimeout(data);
         timeout = timeout != null ? timeout : 30;
         final Timeout expires = new Timeout(Duration.create(60, TimeUnit.SECONDS));
         final URI rcmlUrl = getUrl("Url", data);
+
+        String customHeaders = getCustomHeaders(to);
+
+        if (customHeaders != null) {
+            to = (customHeaders != null) ? to.substring(0, to.indexOf("?")) : to;
+            data.remove(to);
+            data.putSingle("To", to);
+        }
+
+        try {
+            if (normalizePhoneNumbers)
+                normalize(data);
+        } catch (RuntimeException exception) {
+            return status(BAD_REQUEST).entity(exception.getMessage()).build();
+        }
+
 
         try {
             if (data.containsKey("StatusCallback")) {
@@ -380,16 +399,17 @@ public abstract class CallsEndpoint extends SecuredEndpoint {
         }
 
         CreateCall create = null;
+
         try {
             if (to.contains("@")) {
                 create = new CreateCall(from, to, username, password, true, timeout, CreateCallType.SIP,
-                        accountId, null, statusCallback, statusCallbackMethod, statusCallbackEvent);
+                        accountId, null, statusCallback, statusCallbackMethod, statusCallbackEvent, customHeaders);
             } else if (to.startsWith("client")) {
                 create = new CreateCall(from, to, username, password, true, timeout, CreateCallType.CLIENT,
-                        accountId, null, statusCallback, statusCallbackMethod, statusCallbackEvent);
+                        accountId, null, statusCallback, statusCallbackMethod, statusCallbackEvent, customHeaders);
             } else {
                 create = new CreateCall(from, to, username, password, true, timeout, CreateCallType.PSTN,
-                        accountId, null, statusCallback, statusCallbackMethod, statusCallbackEvent);
+                        accountId, null, statusCallback, statusCallbackMethod, statusCallbackEvent, customHeaders);
             }
             create.setCreateCDR(false);
             if (callManager == null)
@@ -460,6 +480,16 @@ public abstract class CallsEndpoint extends SecuredEndpoint {
         } catch (final Exception exception) {
             return status(INTERNAL_SERVER_ERROR).entity(exception.getMessage()).build();
         }
+    }
+
+    private String getCustomHeaders(final String to) {
+        String customHeaders = null;
+
+        if (to.contains("?")) {
+            customHeaders = to.substring(to.indexOf("?")+1, to.length());
+        }
+
+        return customHeaders;
     }
 
     // Issue 139: https://bitbucket.org/telestax/telscale-restcomm/issue/139

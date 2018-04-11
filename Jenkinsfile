@@ -1,6 +1,6 @@
 
-def runTestsuite(exludedGroups = "org.restcomm.connect.commons.annotations.BrokenTests",groups = "", forkCount=1, profile="") {
-        sh "mvn -f restcomm/restcomm.testsuite/pom.xml  install -DskipUTs=false  -Dmaven.test.failure.ignore=true -Dmaven.test.redirectTestOutputToFile=true -Dfailsafe.rerunFailingTestsCount=1 -Dgroups=\"$groups\" -DexcludedGroups=\"$exludedGroups\""
+def runTestsuite(exludedGroups = "org.restcomm.connect.commons.annotations.BrokenTests",groups = "", forkCount=1, profile="defaultProfile") {
+        sh "mvn -f restcomm/restcomm.testsuite/pom.xml  install -DskipUTs=false  -Dmaven.test.failure.ignore=true -Dmaven.test.redirectTestOutputToFile=true -Dfailsafe.rerunFailingTestsCount=1 -P $profile -DforkCount=\"$forkCount\" -Dgroups=\"$groups\" -DexcludedGroups=\"$exludedGroups\""
 }
 
 
@@ -46,22 +46,12 @@ node("cxs-ups-testsuites_large") {
     }
 
     stage("CITestsuiteSeq") {
-        if (env.BRANCH_NAME == 'master') {
             runTestsuite("org.restcomm.connect.commons.annotations.ParallelClassTests or org.restcomm.connect.commons.annotations.UnstableTests or org.restcomm.connect.commons.annotations.BrokenTests")
-        } else {
-            //exclude alt and exp to make it lighter
-            runTestsuite("org.restcomm.connect.commons.annotations.ParallelClassTests or org.restcomm.connect.commons.annotations.UnstableTests or org.restcomm.connect.commons.annotations.BrokenTests or org.restcomm.connect.commons.annotations.FeatureAltTests or org.restcomm.connect.commons.annotations.FeatureExpTests")
-        }
     }
 
 
     stage("CITestsuiteParallel") {
-        if (env.BRANCH_NAME == 'master') {
-            runTestsuite("org.restcomm.connect.commons.annotations.UnstableTests or org.restcomm.connect.commons.annotations.BrokenTests", "org.restcomm.connect.commons.annotations.ParallelClassTests", "16" , "parallel-testing")
-        } else {
-            //exclude alt and exp to make it lighter
-            runTestsuite("org.restcomm.connect.commons.annotations.UnstableTests or org.restcomm.connect.commons.annotations.BrokenTests or org.restcomm.connect.commons.annotations.FeatureAltTests or org.restcomm.connect.commons.annotations.FeatureExpTests", "org.restcomm.connect.commons.annotations.ParallelClassTests", "16" , "parallel-testing")
-        }
+            runTestsuite("org.restcomm.connect.commons.annotations.UnstableTests or org.restcomm.connect.commons.annotations.BrokenTests", "org.restcomm.connect.commons.annotations.ParallelClassTests", "20" , "parallel-testing")
     }
 
 

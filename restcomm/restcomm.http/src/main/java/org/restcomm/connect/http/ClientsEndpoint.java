@@ -19,29 +19,30 @@
  */
 package org.restcomm.connect.http;
 
-import com.google.gson.Gson;
-import com.google.gson.GsonBuilder;
-import com.thoughtworks.xstream.XStream;
-import java.net.URI;
-import java.util.List;
-import javax.annotation.PostConstruct;
-import javax.servlet.ServletContext;
-import javax.ws.rs.core.Context;
-import javax.ws.rs.core.MediaType;
 import static javax.ws.rs.core.MediaType.APPLICATION_JSON;
 import static javax.ws.rs.core.MediaType.APPLICATION_JSON_TYPE;
 import static javax.ws.rs.core.MediaType.APPLICATION_XML;
 import static javax.ws.rs.core.MediaType.APPLICATION_XML_TYPE;
-import javax.ws.rs.core.MultivaluedMap;
-import javax.ws.rs.core.Response;
+import static javax.ws.rs.core.Response.ok;
+import static javax.ws.rs.core.Response.status;
 import static javax.ws.rs.core.Response.Status.BAD_REQUEST;
 import static javax.ws.rs.core.Response.Status.CONFLICT;
 import static javax.ws.rs.core.Response.Status.NOT_FOUND;
-import static javax.ws.rs.core.Response.ok;
-import static javax.ws.rs.core.Response.status;
+
+import java.net.URI;
+import java.util.List;
+
+import javax.annotation.PostConstruct;
+import javax.servlet.ServletContext;
+import javax.ws.rs.core.Context;
+import javax.ws.rs.core.MediaType;
+import javax.ws.rs.core.MultivaluedMap;
+import javax.ws.rs.core.Response;
+
 import org.apache.commons.configuration.Configuration;
 import org.restcomm.connect.commons.annotations.concurrency.NotThreadSafe;
 import org.restcomm.connect.commons.dao.Sid;
+import org.restcomm.connect.commons.util.ClientLoginConstrains;
 import org.restcomm.connect.dao.AccountsDao;
 import org.restcomm.connect.dao.ClientsDao;
 import org.restcomm.connect.dao.DaoManager;
@@ -55,6 +56,10 @@ import org.restcomm.connect.http.converter.RestCommResponseConverter;
 import org.restcomm.connect.http.exceptions.PasswordTooWeak;
 import org.restcomm.connect.identity.passwords.PasswordValidator;
 import org.restcomm.connect.identity.passwords.PasswordValidatorFactory;
+
+import com.google.gson.Gson;
+import com.google.gson.GsonBuilder;
+import com.thoughtworks.xstream.XStream;
 
 /**
  * @author quintana.thomas@gmail.com (Thomas Quintana)
@@ -100,13 +105,16 @@ public abstract class ClientsEndpoint extends SecuredEndpoint {
         builder.setApiVersion(getApiVersion(data));
         builder.setFriendlyName(getFriendlyName(data.getFirst("Login"), data));
         builder.setAccountSid(accountSid);
-        builder.setLogin(data.getFirst("Login"));
+        String username = data.getFirst("Login");
+        builder.setLogin(username);
         // Validate the password. Should be strong enough
         String password = data.getFirst("Password");
         PasswordValidator validator = PasswordValidatorFactory.createDefault();
         if (!validator.isStrongEnough(password))
             throw new PasswordTooWeak();
-        builder.setPassword(password);
+        String realm = organizationsDao.getOrganization(accountsDao.getAccount(accountSid).getOrganizationSid()).getDomainName();
+
+        builder.setPassword(username, password, realm);
         builder.setStatus(getStatus(data));
         URI voiceUrl = getUrl("VoiceUrl", data);
         if (voiceUrl != null && voiceUrl.toString().equals("")) {
@@ -230,7 +238,8 @@ public abstract class ClientsEndpoint extends SecuredEndpoint {
         } else {
             secure(operatedAccount, client.getAccountSid(), SecuredType.SECURED_STANDARD );
             try {
-                client = update(client, data);
+                final String realm = organizationsDao.getOrganization(accountsDao.getAccount(client.getAccountSid()).getOrganizationSid()).getDomainName();
+                client = update(client, realm, data);
                 dao.updateClient(client);
             } catch (PasswordTooWeak passwordTooWeak) {
                 return status(BAD_REQUEST).entity(buildErrorResponseBody("Password too weak",responseType)).type(responseType).build();
@@ -252,13 +261,17 @@ public abstract class ClientsEndpoint extends SecuredEndpoint {
         } else if (!data.containsKey("Password")) {
             throw new NullPointerException("Password can not be null.");
         }
-        // https://github.com/RestComm/Restcomm-Connect/issues/1979
-        if (data.getFirst("Login").contains("@")) {
-            throw new IllegalArgumentException("Login contains invalid character: @ "+data.getFirst("Login"));
+        // https://github.com/RestComm/Restcomm-Connect/issues/1979 && https://telestax.atlassian.net/browse/RESTCOMM-1797
+        if (!ClientLoginConstrains.isValidClientLogin(data.getFirst("Login"))) {
+            String msg = String.format("Login %s contains invalid character(s)",data.getFirst("Login"));
+            if (logger.isDebugEnabled()) {
+                logger.debug(msg);
+            }
+            throw new IllegalArgumentException(msg);
         }
     }
 
-    private Client update(Client client, final MultivaluedMap<String, String> data) throws PasswordTooWeak {
+    private Client update(Client client, String realm, final MultivaluedMap<String, String> data) throws PasswordTooWeak {
         if (data.containsKey("FriendlyName")) {
             client = client.setFriendlyName(data.getFirst("FriendlyName"));
         }
@@ -268,7 +281,7 @@ public abstract class ClientsEndpoint extends SecuredEndpoint {
             if (!validator.isStrongEnough(password)) {
                 throw new PasswordTooWeak();
             }
-            client = client.setPassword(password);
+            client = client.setPassword(client.getLogin(), password, realm);
         }
         if (data.containsKey("Status")) {
             client = client.setStatus(getStatus(data));

@@ -16,7 +16,7 @@
     </init-param>
     <init-param>
       <param-name>com.sun.jersey.spi.container.ContainerRequestFilters</param-name>
-      <param-value>org.restcomm.connect.http.security.SecurityFilter;org.restcomm.connect.http.filters.AcceptFilter;org.restcomm.connect.http.filters.BodyLengthFilter</param-value>
+      <param-value>org.restcomm.connect.http.security.SecurityFilter;org.restcomm.connect.http.filters.BodyLengthFilter;org.restcomm.connect.http.filters.AcceptFilter;org.restcomm.connect.http.filters.SchemeRewriteFilter</param-value>
     </init-param>    
     <init-param>
         <param-name>com.sun.jersey.spi.container.ResourceFilters</param-name>

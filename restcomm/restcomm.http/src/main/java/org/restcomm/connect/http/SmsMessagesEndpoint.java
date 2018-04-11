@@ -54,7 +54,6 @@ import static javax.ws.rs.core.Response.ok;
 import static javax.ws.rs.core.Response.status;
 import javax.ws.rs.core.UriInfo;
 import org.apache.commons.configuration.Configuration;
-import org.joda.time.DateTime;
 import org.restcomm.connect.commons.annotations.concurrency.NotThreadSafe;
 import org.restcomm.connect.commons.configuration.RestcommConfiguration;
 import org.restcomm.connect.commons.dao.Sid;
@@ -65,7 +64,6 @@ import org.restcomm.connect.dao.SmsMessagesDao;
 import org.restcomm.connect.dao.entities.Account;
 import org.restcomm.connect.dao.entities.RestCommResponse;
 import org.restcomm.connect.dao.entities.SmsMessage;
-import org.restcomm.connect.dao.entities.SmsMessage.Status;
 import org.restcomm.connect.dao.entities.SmsMessageFilter;
 import org.restcomm.connect.dao.entities.SmsMessageList;
 import org.restcomm.connect.http.converter.RestCommResponseConverter;
@@ -397,13 +395,6 @@ public abstract class SmsMessagesEndpoint extends SecuredEndpoint {
                 final SmsSessionResponse response = (SmsSessionResponse) message;
                 final SmsSessionInfo info = response.info();
                 SmsMessage record = (SmsMessage) info.attributes().get("record");
-                if (response.succeeded()) {
-                    final DateTime now = DateTime.now();
-                    record = record.setDateSent(now);
-                    record = record.setStatus(Status.SENT);
-                } else {
-                    record = record.setStatus(Status.FAILED);
-                }
                 dao.updateSmsMessage(record);
                 final UntypedActorContext context = getContext();
                 final ActorRef self = self();

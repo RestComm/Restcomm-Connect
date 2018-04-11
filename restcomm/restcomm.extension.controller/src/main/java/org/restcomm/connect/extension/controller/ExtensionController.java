@@ -125,8 +125,8 @@ public class ExtensionController {
                         }
                     } catch (Throwable t) {
                         if (logger.isDebugEnabled()) {
-                            String msg = String.format("There was an exception while executing preInboundAction from extension %s, exception %s", extension.getName(), t);
-                            logger.debug(msg);
+                            String msg = String.format("There was an exception while executing preInboundAction from extension %s", extension.getName());
+                            logger.debug(msg, t);
                         }
                     }
                 }
@@ -155,8 +155,8 @@ public class ExtensionController {
                         }
                     } catch (Throwable t) {
                         if (logger.isDebugEnabled()) {
-                            String msg = String.format("There was an exception while executing preInboundAction from extension %s, exception %s", extension.getName(), t);
-                            logger.debug(msg);
+                            String msg = String.format("There was an exception while executing preInboundAction from extension %s", extension.getName());
+                            logger.debug(msg, t);
                         }
                     }
                 }
@@ -184,8 +184,8 @@ public class ExtensionController {
                         }
                     } catch (Throwable t) {
                         if (logger.isDebugEnabled()) {
-                            String msg = String.format("There was an exception while executing preInboundAction from extension %s, exception %s", extension.getName(), t);
-                            logger.debug(msg);
+                            String msg = String.format("There was an exception while executing preInboundAction from extension %s", extension.getName());
+                            logger.debug(msg, t);
                         }
                     }
                 }
@@ -213,8 +213,8 @@ public class ExtensionController {
                         }
                     } catch (Throwable t) {
                         if (logger.isDebugEnabled()) {
-                            String msg = String.format("There was an exception while executing preInboundAction from extension %s, exception %s", extension.getName(), t);
-                            logger.debug(msg);
+                            String msg = String.format("There was an exception while executing preInboundAction from extension %s", extension.getName());
+                            logger.debug(msg, t);
                         }
                     }
                 }
@@ -243,8 +243,8 @@ public class ExtensionController {
                         }
                     } catch (Throwable t) {
                         if (logger.isDebugEnabled()) {
-                            String msg = String.format("There was an exception while executing preInboundAction from extension %s, exception %s", extension.getName(), t);
-                            logger.debug(msg);
+                            String msg = String.format("There was an exception while executing preInboundAction from extension %s", extension.getName());
+                            logger.debug(msg, t);
                         }
                     }
                 }
@@ -273,8 +273,8 @@ public class ExtensionController {
                         }
                     } catch (Throwable t) {
                         if (logger.isDebugEnabled()) {
-                            String msg = String.format("There was an exception while executing preInboundAction from extension %s, exception %s", extension.getName(), t);
-                            logger.debug(msg);
+                            String msg = String.format("There was an exception while executing preInboundAction from extension %s", extension.getName());
+                            logger.debug(msg, t);
                         }
                     }
                 }

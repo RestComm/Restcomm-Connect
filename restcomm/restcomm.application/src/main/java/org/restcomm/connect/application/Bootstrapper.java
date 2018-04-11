@@ -1,5 +1,7 @@
 package org.restcomm.connect.application;
 
+import static org.restcomm.connect.dao.entities.Profile.DEFAULT_PROFILE_SID;
+
 import java.io.IOException;
 import java.net.UnknownHostException;
 import java.sql.SQLException;
@@ -41,14 +43,12 @@ import org.restcomm.connect.dao.entities.Profile;
 import org.restcomm.connect.dao.entities.shiro.ShiroResources;
 import org.restcomm.connect.extension.controller.ExtensionBootstrapper;
 import org.restcomm.connect.identity.IdentityContext;
-import org.restcomm.connect.interpreter.NumberSelectorService;
 import org.restcomm.connect.monitoringservice.MonitoringService;
 import org.restcomm.connect.mrb.api.StartMediaResourceBroker;
 import org.restcomm.connect.mscontrol.api.MediaServerControllerFactory;
 import org.restcomm.connect.mscontrol.api.MediaServerInfo;
 import org.restcomm.connect.mscontrol.jsr309.Jsr309ControllerFactory;
 import org.restcomm.connect.mscontrol.mms.MmsControllerFactory;
-import org.restcomm.connect.sdr.api.SdrService;
 import org.restcomm.connect.sdr.api.StartSdrService;
 
 import com.fasterxml.jackson.databind.JsonNode;
@@ -62,7 +62,6 @@ import akka.actor.ActorSystem;
 import akka.actor.Props;
 import akka.actor.UntypedActor;
 import akka.actor.UntypedActorFactory;
-import static org.restcomm.connect.dao.entities.Profile.DEFAULT_PROFILE_SID;
 import scala.concurrent.ExecutionContext;
 
 /**
@@ -402,8 +401,8 @@ public final class Bootstrapper extends SipServlet implements SipServletListener
             IdentityContext identityContext = new IdentityContext(xml);
             context.setAttribute(IdentityContext.class.getName(), identityContext);
 
-            //init NumberSelectorService
-            context.setAttribute(NumberSelectorService.class.getName(), new NumberSelectorService(storage.getIncomingPhoneNumbersDao()));
+            // Initialize CoreServices
+            RestcommConnectServiceProvider.getInstance().startServices(context);
 
             // Create the media gateway.
 
@@ -420,13 +419,7 @@ public final class Bootstrapper extends SipServlet implements SipServletListener
 
             //Initialize Sdr Service
             try {
-                ActorRef sdrService = sdrService(xml, loader);
-                if (sdrService != null) {
-                    context.setAttribute(SdrService.class.getName(), sdrService);
-                    if (logger.isInfoEnabled()) {
-                        logger.info("Sdr Service created and stored in the context");
-                    }
-                }
+                sdrService(xml, loader);
             } catch (Exception e) {
                 logger.error("Exception during Sdr Service initialization: " + e.getStackTrace());
             }

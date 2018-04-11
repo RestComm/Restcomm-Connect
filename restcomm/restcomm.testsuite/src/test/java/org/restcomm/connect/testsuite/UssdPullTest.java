@@ -60,10 +60,12 @@ import org.junit.experimental.categories.Category;
 import org.junit.runner.RunWith;
 import org.restcomm.connect.commons.Version;
 import org.restcomm.connect.commons.annotations.ParallelClassTests;
+import org.restcomm.connect.commons.annotations.UnstableTests;
 import org.restcomm.connect.commons.annotations.WithInMinsTests;
 
 /**
  * @author <a href="mailto:gvagenas@gmail.com">gvagenas</a>
+ * @modified <a href="mailto:fernando.mendioroz@telestax.com"> Fernando Mendioroz </a>
  *
  */
 @RunWith(Arquillian.class)
@@ -87,7 +89,8 @@ public class UssdPullTest {
     private static int restcommHTTPPort = 8080;
     private static String restcommContact = "127.0.0.1:" + restcommPort;
     private static String ussdPullDid = "sip:5544@" + restcommContact;
-    private static String ussdPullDid2 = "sip:*777#@" + restcommContact;
+    private static String ussdPullShortCodeDialDid = "sip:*777#@" + restcommContact;
+    private static String ussdPullFastDialDid = "sip:*777*3#@" + restcommContact;
     private static String ussdPullWithCollectDID = "sip:5555@" + restcommContact;
     private static String ussdPullMessageLengthExceeds = "sip:5566@" + restcommContact;
     private static String ussdPullDidNoHttpMethod = "sip:5577@" + restcommContact;
@@ -104,7 +107,8 @@ public class UssdPullTest {
             restcommPort = Integer.valueOf(System.getProperty("arquillian_sip_port"));
             restcommContact = "127.0.0.1:" + restcommPort;
             ussdPullDid = "sip:5544@" + restcommContact;
-            ussdPullDid2 = "sip:*777#@" + restcommContact;
+            ussdPullShortCodeDialDid = "sip:*777#@" + restcommContact;
+            ussdPullFastDialDid = "sip:*777*3#@" + restcommContact;
             ussdPullWithCollectDID = "sip:5555@" + restcommContact;
             ussdPullMessageLengthExceeds = "sip:5566@" + restcommContact;
             ussdPullDidNoHttpMethod = "sip:5577@" + restcommContact;
@@ -195,9 +199,9 @@ public class UssdPullTest {
     }
 
     @Test //USSD Pull to *777#
-    public void testUssdPull2() {
+    public void testUssdPullShortCodeDial() {
         final SipCall bobCall = bobPhone.createSipCall();
-        bobCall.initiateOutgoingCall(bobContact, ussdPullDid2, null, UssdPullTestMessages.ussdClientRequestBody, "application", "vnd.3gpp.ussd+xml", null, null);
+        bobCall.initiateOutgoingCall(bobContact, ussdPullShortCodeDialDid, null, UssdPullTestMessages.ussdClientRequestBody, "application", "vnd.3gpp.ussd+xml", null, null);
         assertLastOperationSuccess(bobCall);
 
         assertTrue(bobCall.waitOutgoingCallResponse(5 * 1000));
@@ -222,6 +226,38 @@ public class UssdPullTest {
         SipRequest bye = bobCall.getLastReceivedRequest();
         String receivedUssdPayload = new String(bye.getRawContent());
         assertTrue(receivedUssdPayload.equalsIgnoreCase(UssdPullTestMessages.ussdRestcommResponse.trim()));
+        bobCall.dispose();
+    }
+
+    @Test //USSD Pull to *777*...#
+    @Category(UnstableTests.class)
+    public void testUssdPullFastDial() {
+        final SipCall bobCall = bobPhone.createSipCall();
+        bobCall.initiateOutgoingCall(bobContact, ussdPullFastDialDid, null, UssdPullTestMessages.ussdClientFastDialRequestBody, "application", "vnd.3gpp.ussd+xml", null, null);
+        assertLastOperationSuccess(bobCall);
+
+        assertTrue(bobCall.waitOutgoingCallResponse(5 * 1000));
+        int responseBob = bobCall.getLastReceivedResponse().getStatusCode();
+        if (responseBob == Response.TRYING) {
+            assertTrue(bobCall.waitOutgoingCallResponse(5 * 1000));
+            assertTrue(bobCall.getLastReceivedResponse().getStatusCode() == Response.RINGING);
+        } else {
+            assertTrue(bobCall.getLastReceivedResponse().getStatusCode() == Response.RINGING);
+        }
+
+        assertTrue(bobCall.waitOutgoingCallResponse(5 * 1000));
+        assertEquals(Response.OK, bobCall.getLastReceivedResponse().getStatusCode());
+        assertTrue(bobCall.sendInviteOkAck());
+
+        assertTrue(bobCall.getDialog().getState().getValue() == DialogState._CONFIRMED);
+
+        assertTrue(bobCall.listenForDisconnect());
+
+        assertTrue(bobCall.waitForDisconnect(30 * 1000));
+        bobCall.respondToDisconnect();
+        SipRequest bye = bobCall.getLastReceivedRequest();
+        String receivedUssdPayload = new String(bye.getRawContent());
+        assertTrue(receivedUssdPayload.equalsIgnoreCase(UssdPullTestMessages.ussdRestcommShortDialResponse.trim()));
         bobCall.dispose();
     }
 
@@ -413,9 +449,10 @@ public class UssdPullTest {
     }
 
     @Test
+    @Category(UnstableTests.class)
     public void testUssdMessageLengthExceeds() {
         final SipCall bobCall = bobPhone.createSipCall();
-        bobCall.initiateOutgoingCall(bobContact, ussdPullMessageLengthExceeds, null, UssdPullTestMessages.ussdClientRequestBodyForMessageLenghtExceeds, "application", "vnd.3gpp.ussd+xml", null, null);
+        bobCall.initiateOutgoingCall(bobContact, ussdPullMessageLengthExceeds, null, UssdPullTestMessages.ussdClientRequestBodyForMessageLengthExceeds, "application", "vnd.3gpp.ussd+xml", null, null);
         assertLastOperationSuccess(bobCall);
 
         assertTrue(bobCall.waitOutgoingCallResponse(5 * 1000));
@@ -487,6 +524,7 @@ public class UssdPullTest {
         webInfResources.put("org/restcomm/connect/ussd/restcomm.script_ussdPullTest", "data/hsql/restcomm.script");
         webInfResources.put("akka_application.conf", "classes/application.conf");
         webInfResources.put("sip.xml", "/sip.xml");
+        webInfResources.put("web.xml", "web.xml");
 
         Map<String, String> replacements = new HashMap();
         //replace mediaport 2727
@@ -498,7 +536,8 @@ public class UssdPullTest {
         List<String> resources = new ArrayList(Arrays.asList(
                 "org/restcomm/connect/ussd/ussd-rcml.xml",
                 "org/restcomm/connect/ussd/ussd-rcml-collect.xml",
-                "org/restcomm/connect/ussd/ussd-rcml-character-limit-exceed.xml"
+                "org/restcomm/connect/ussd/ussd-rcml-character-limit-exceed.xml",
+                "org/restcomm/connect/ussd/ussd-rcml-shortdial.xml"
         ));
 
         return WebArchiveUtil.createWebArchiveNoGw(webInfResources,

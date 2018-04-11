@@ -122,7 +122,7 @@ public class UssdPushEndpoint extends SecuredEndpoint {
         //Currently we don't support StatusCallback for USSD Push requests
         try {
             create = new CreateCall(from, to, username, password, true, timeout, CreateCallType.USSD,
-                    accountId, null, null, null, null);
+                    accountId, null, null, null, null, null);
             create.setCreateCDR(false);
             Future<Object> future = (Future<Object>) ask(ussdCallManager, create, expires);
             Object object = Await.result(future, Duration.create(10, TimeUnit.SECONDS));

@@ -15,9 +15,12 @@ import javax.sip.address.SipURI;
 import javax.sip.header.FromHeader;
 import javax.sip.message.Response;
 
+import gov.nist.javax.sip.header.HeaderExt;
 import org.apache.log4j.Logger;
+import org.cafesip.sipunit.Credential;
 import org.cafesip.sipunit.SipCall;
 import org.cafesip.sipunit.SipPhone;
+import org.cafesip.sipunit.SipRequest;
 import org.cafesip.sipunit.SipStack;
 import org.cafesip.sipunit.SipTransaction;
 import org.jboss.arquillian.container.mss.extension.SipStackTool;
@@ -27,7 +30,7 @@ import org.jboss.arquillian.junit.Arquillian;
 import org.jboss.arquillian.test.api.ArquillianResource;
 import org.jboss.shrinkwrap.api.ShrinkWrap;
 import org.jboss.shrinkwrap.api.spec.WebArchive;
-import org.jboss.shrinkwrap.resolver.api.maven.archive.ShrinkWrapMaven;
+import org.jboss.shrinkwrap.resolver.api.maven.Maven;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.BeforeClass;
@@ -132,23 +135,25 @@ public class CreateCallsTest {
             georgeSipStack.dispose();
         }
 
-        if (aliceSipStack != null) {
-            aliceSipStack.dispose();
-        }
         if (alicePhone != null) {
             alicePhone.dispose();
         }
-
-        if (alice2SipStack != null) {
-            alice2SipStack.dispose();
+        if (aliceSipStack != null) {
+            aliceSipStack.dispose();
         }
+
         if (alice2Phone != null) {
             alice2Phone.dispose();
         }
+        if (alice2SipStack != null) {
+            alice2SipStack.dispose();
+        }
+
+        Thread.sleep(1000);
     }
 
     @Test
-    @Category(UnstableTests.class)
+//    @Category(UnstableTests.class)
     // Create a call to a SIP URI. Non-regression test for issue https://bitbucket.org/telestax/telscale-restcomm/issue/175
     // Use Calls Rest API to dial Bob (SIP URI sip:bob@127.0.0.1:5090) and connect him to the RCML app dial-number-entry.xml.
     // This RCML will dial +131313 which George's phone is listening (use the dial-number-entry.xml as a side effect to verify
@@ -211,8 +216,78 @@ public class CreateCallsTest {
         assertEquals(2,maxConcurrentOutgoingCalls);
     }
 
+    @Test @Category(FeatureAltTests.class)
+    public void createCallSipUriWithCustomHeadersTest() throws InterruptedException {
+
+        SipCall bobCall = bobPhone.createSipCall();
+        bobCall.listenForIncomingCall();
+
+        SipCall georgeCall = georgePhone.createSipCall();
+        georgeCall.listenForIncomingCall();
+
+        String from = "+15126002188";
+        String to = bobContact+"?X-Custom-Header1=1234&X-Custom-Header2=4321";
+        String rcmlUrl = deploymentUrl.toString() + "/dial-number-entry.xml";
+
+        JsonElement callResult = RestcommCallsTool.getInstance().createCall(deploymentUrl.toString(), adminAccountSid,
+                adminAuthToken, from, to, rcmlUrl);
+        assertNotNull(callResult);
+
+        assertTrue(bobCall.waitForIncomingCall(5000));
+
+        //Check custom headers
+        SipRequest invite = bobCall.getLastReceivedRequest();
+        assertEquals(SipRequest.INVITE, invite.getRequestEvent().getRequest().getMethod());
+
+        String customHeader1 = ((HeaderExt) invite.getRequestEvent().getRequest().getHeader("X-Custom-Header1")).getValue();
+        String customHeader2 = ((HeaderExt) invite.getRequestEvent().getRequest().getHeader("X-Custom-Header2")).getValue();
+        assertEquals("1234", customHeader1);
+        assertEquals("4321", customHeader2);
+
+        String receivedBody = new String(bobCall.getLastReceivedRequest().getRawContent());
+        assertTrue(bobCall.sendIncomingCallResponse(Response.RINGING, "Ringing-Bob", 3600));
+        assertTrue(bobCall
+                .sendIncomingCallResponse(Response.OK, "OK-Bob", 3600, receivedBody, "application", "sdp", null, null));
+
+        // Restcomm now should execute RCML that will create a call to +131313 (george's phone)
+
+        assertTrue(georgeCall.waitForIncomingCall(5000));
+        receivedBody = new String(georgeCall.getLastReceivedRequest().getRawContent());
+        assertTrue(georgeCall.sendIncomingCallResponse(Response.RINGING, "Ringing-George", 3600));
+        assertTrue(georgeCall.sendIncomingCallResponse(Response.OK, "OK-George", 3600, receivedBody, "application", "sdp",
+                null, null));
+
+        Thread.sleep(3000);
+
+        bobCall.listenForDisconnect();
+
+        assertTrue(georgeCall.disconnect());
+        assertTrue(georgeCall.waitForAck(5000));
+
+        assertTrue(bobCall.waitForDisconnect(5000));
+        assertTrue(bobCall.respondToDisconnect());
+
+        Thread.sleep(3000);
+
+        JsonObject metrics = MonitoringServiceTool.getInstance().getMetrics(deploymentUrl.toString(),adminAccountSid, adminAuthToken);
+        assertNotNull(metrics);
+        int liveCalls = metrics.getAsJsonObject("Metrics").get("LiveCalls").getAsInt();
+        logger.info("LiveCalls: "+liveCalls);
+        int liveCallsArraySize = metrics.getAsJsonArray("LiveCallDetails").size();
+        logger.info("LiveCallsArraySize: "+liveCallsArraySize);
+        assertEquals(0, liveCalls);
+        assertEquals(0, liveCallsArraySize);
+        int maxConcurrentCalls = metrics.getAsJsonObject("Metrics").get("MaximumConcurrentCalls").getAsInt();
+        int maxConcurrentIncomingCalls = metrics.getAsJsonObject("Metrics").get("MaximumConcurrentIncomingCalls").getAsInt();
+        int maxConcurrentOutgoingCalls = metrics.getAsJsonObject("Metrics").get("MaximumConcurrentOutgoingCalls").getAsInt();
+        assertEquals(2, maxConcurrentCalls);
+        assertEquals(0,maxConcurrentIncomingCalls);
+        assertEquals(2,maxConcurrentOutgoingCalls);
+    }
+
     @Test
-    @Category({FeatureAltTests.class, UnstableTests.class})
+//    @Category({FeatureAltTests.class, UnstableTests.class})
+    @Category(FeatureAltTests.class)
     // Create a call to a SIP URI. Non-regression test for issue https://github.com/Mobicents/RestComm/issues/150
     // Use Calls Rest API to dial Bob (SIP URI sip:bob@127.0.0.1:5090) and connect him to the RCML app dial-number-entry.xml.
     // This RCML will dial +131313 which George's phone is listening (use the dial-number-entry.xml as a side effect to verify
@@ -280,7 +355,7 @@ public class CreateCallsTest {
     }
 
     @Test
-    @Category(UnstableTests.class)
+//    @Category(UnstableTests.class)
     // Create a call to a Restcomm Client. Non-regression test for issue
     // https://bitbucket.org/telestax/telscale-restcomm/issue/175
     // Use Calls Rest API to dial Alice Restcomm client and connect him to the RCML app dial-number-entry.xml.
@@ -307,6 +382,80 @@ public class CreateCallsTest {
         assertNotNull(callResult);
 
         assertTrue(aliceCall.waitForIncomingCall(5000));
+        String receivedBody = new String(aliceCall.getLastReceivedRequest().getRawContent());
+        assertTrue(aliceCall.sendIncomingCallResponse(Response.RINGING, "Ringing-Alice", 3600));
+        assertTrue(aliceCall.sendIncomingCallResponse(Response.OK, "OK-Alice", 3600, receivedBody, "application", "sdp", null,
+                null));
+
+        // Restcomm now should execute RCML that will create a call to +131313 (george's phone)
+
+        assertTrue(georgeCall.waitForIncomingCall(5000));
+        receivedBody = new String(georgeCall.getLastReceivedRequest().getRawContent());
+        assertTrue(georgeCall.sendIncomingCallResponse(Response.RINGING, "Ringing-George", 3600));
+        assertTrue(georgeCall.sendIncomingCallResponse(Response.OK, "OK-George", 3600, receivedBody, "application", "sdp",
+                null, null));
+
+        Thread.sleep(3000);
+
+        aliceCall.listenForDisconnect();
+
+        assertTrue(georgeCall.disconnect());
+        assertTrue(georgeCall.waitForAck(5000));
+
+        assertTrue(aliceCall.waitForDisconnect(5000));
+        assertTrue(aliceCall.respondToDisconnect());
+
+        Thread.sleep(2000);
+
+        JsonObject metrics = MonitoringServiceTool.getInstance().getMetrics(deploymentUrl.toString(),adminAccountSid, adminAuthToken);
+        assertNotNull(metrics);
+        int liveCalls = metrics.getAsJsonObject("Metrics").get("LiveCalls").getAsInt();
+        logger.info("LiveCalls: "+liveCalls);
+        int liveCallsArraySize = metrics.getAsJsonArray("LiveCallDetails").size();
+        logger.info("LiveCallsArraySize: "+liveCallsArraySize);
+        assertEquals(0, liveCalls);
+        assertEquals(0, liveCallsArraySize);
+        int maxConcurrentCalls = metrics.getAsJsonObject("Metrics").get("MaximumConcurrentCalls").getAsInt();
+        int maxConcurrentIncomingCalls = metrics.getAsJsonObject("Metrics").get("MaximumConcurrentIncomingCalls").getAsInt();
+        int maxConcurrentOutgoingCalls = metrics.getAsJsonObject("Metrics").get("MaximumConcurrentOutgoingCalls").getAsInt();
+        assertEquals(2, maxConcurrentCalls);
+        assertEquals(0,maxConcurrentIncomingCalls);
+        assertEquals(2,maxConcurrentOutgoingCalls);
+    }
+
+    @Test @Category(FeatureAltTests.class)
+    public void createCallClientWithCustomHeadersTest() throws InterruptedException, ParseException {
+
+        SipCall georgeCall = georgePhone.createSipCall();
+        georgeCall.listenForIncomingCall();
+
+        // Register Alice Restcomm client
+        SipURI uri = aliceSipStack.getAddressFactory().createSipURI(null, "127.0.0.1:5080");
+        assertTrue(alicePhone.register(uri, "alice", "1234", aliceContact, 3600, 3600));
+        Credential c = new Credential("127.0.0.1", "alice", "1234");
+        alicePhone.addUpdateCredential(c);
+
+        SipCall aliceCall = alicePhone.createSipCall();
+        aliceCall.listenForIncomingCall();
+
+        String from = "+15126002188";
+        String to = "client:alice?X-Custom-Header1=1234&X-Custom-Header2=4321";
+        String rcmlUrl = deploymentUrl.toString() + "dial-number-entry.xml";
+
+        JsonElement callResult = RestcommCallsTool.getInstance().createCall(deploymentUrl.toString(), adminAccountSid,
+                adminAuthToken, from, to, rcmlUrl);
+        assertNotNull(callResult);
+
+        assertTrue(aliceCall.waitForIncomingCall(5000));
+
+        SipRequest invite = aliceCall.getLastReceivedRequest();
+        assertEquals(SipRequest.INVITE, invite.getRequestEvent().getRequest().getMethod());
+
+        String customHeader1 = ((HeaderExt) invite.getRequestEvent().getRequest().getHeader("X-Custom-Header1")).getValue();
+        String customHeader2 = ((HeaderExt) invite.getRequestEvent().getRequest().getHeader("X-Custom-Header2")).getValue();
+        assertEquals("1234", customHeader1);
+        assertEquals("4321", customHeader2);
+
         String receivedBody = new String(aliceCall.getLastReceivedRequest().getRawContent());
         assertTrue(aliceCall.sendIncomingCallResponse(Response.RINGING, "Ringing-Alice", 3600));
         assertTrue(aliceCall.sendIncomingCallResponse(Response.OK, "OK-Alice", 3600, receivedBody, "application", "sdp", null,
@@ -491,7 +640,64 @@ public class CreateCallsTest {
         aliceCall.listenForIncomingCall();
 
         String from = "+15126002188";
-        String to = "131313";
+        String to = "+131313";
+        String rcmlUrl = deploymentUrl.toString() + "/dial-client-entry.xml";
+
+        JsonElement callResult = RestcommCallsTool.getInstance().createCall(deploymentUrl.toString(), adminAccountSid,
+                adminAuthToken, from, to, rcmlUrl);
+        assertNotNull(callResult);
+        logger.info("CallResult: "+callResult);
+
+        assertTrue(georgeCall.waitForIncomingCall(5000));
+        String receivedBody = new String(georgeCall.getLastReceivedRequest().getRawContent());
+        assertTrue(georgeCall.sendIncomingCallResponse(Response.RINGING, "Ringing-George", 3600));
+        assertTrue(georgeCall.sendIncomingCallResponse(Response.OK, "OK-George", 3600, receivedBody, "application", "sdp",
+                null, null));
+
+        // Restcomm now should execute RCML that will create a call to Alice Restcomm client
+        assertTrue(aliceCall.waitForIncomingCall(5000));
+        receivedBody = new String(aliceCall.getLastReceivedRequest().getRawContent());
+        assertTrue(aliceCall.sendIncomingCallResponse(Response.RINGING, "Ringing-Alice", 3600));
+        assertTrue(aliceCall.sendIncomingCallResponse(Response.OK, "OK-Alice", 3600, receivedBody, "application", "sdp", null,
+                null));
+
+        Thread.sleep(3000);
+
+        aliceCall.listenForDisconnect();
+
+        assertTrue(georgeCall.disconnect());
+        assertTrue(georgeCall.waitForAck(5000));
+
+        assertTrue(aliceCall.waitForDisconnect(5000));
+        assertTrue(aliceCall.respondToDisconnect());
+
+        Thread.sleep(2000);
+
+        JsonObject metrics = MonitoringServiceTool.getInstance().getMetrics(deploymentUrl.toString(),adminAccountSid, adminAuthToken);
+        assertNotNull(metrics);
+        int liveCalls = metrics.getAsJsonObject("Metrics").get("LiveCalls").getAsInt();
+        logger.info("LiveCalls: "+liveCalls);
+        int liveCallsArraySize = metrics.getAsJsonArray("LiveCallDetails").size();
+        logger.info("LiveCallsArraySize: "+liveCallsArraySize);
+        assertEquals(0, liveCalls);
+        assertEquals(0, liveCallsArraySize);
+    }
+
+    @Test @Category(FeatureAltTests.class)
+    public void createCallNumberWithCustomHeadersTest() throws InterruptedException, ParseException {
+
+        SipCall georgeCall = georgePhone.createSipCall();
+        georgeCall.listenForIncomingCall();
+
+        // Register Alice Restcomm client
+        SipURI uri = aliceSipStack.getAddressFactory().createSipURI(null, "127.0.0.1:5080");
+        assertTrue(alicePhone.register(uri, "alice", "1234", aliceContact, 3600, 3600));
+
+        SipCall aliceCall = alicePhone.createSipCall();
+        aliceCall.listenForIncomingCall();
+
+        String from = "+15126002188";
+        String to = "+131313?X-Custom-Header1=1234&X-Custom-Header2=4321";
         String rcmlUrl = deploymentUrl.toString() + "/dial-client-entry.xml";
 
         JsonElement callResult = RestcommCallsTool.getInstance().createCall(deploymentUrl.toString(), adminAccountSid,
@@ -499,6 +705,16 @@ public class CreateCallsTest {
         assertNotNull(callResult);
 
         assertTrue(georgeCall.waitForIncomingCall(5000));
+
+        //Check custom headers
+        SipRequest invite = georgeCall.getLastReceivedRequest();
+        assertEquals(SipRequest.INVITE, invite.getRequestEvent().getRequest().getMethod());
+
+        String customHeader1 = ((HeaderExt) invite.getRequestEvent().getRequest().getHeader("X-Custom-Header1")).getValue();
+        String customHeader2 = ((HeaderExt) invite.getRequestEvent().getRequest().getHeader("X-Custom-Header2")).getValue();
+        assertEquals("1234", customHeader1);
+        assertEquals("4321", customHeader2);
+
         String receivedBody = new String(georgeCall.getLastReceivedRequest().getRawContent());
         assertTrue(georgeCall.sendIncomingCallResponse(Response.RINGING, "Ringing-George", 3600));
         assertTrue(georgeCall.sendIncomingCallResponse(Response.OK, "OK-George", 3600, receivedBody, "application", "sdp",
@@ -560,7 +776,7 @@ public class CreateCallsTest {
         aliceCall.listenForIncomingCall();
 
         String from = "+15126002188";
-        String to = "131313";
+        String to = "+131313";
         String rcmlUrl = "http://127.0.0.1:8090/1111";
         String timeout = "10";
 
@@ -599,7 +815,8 @@ public class CreateCallsTest {
         but there will be no answer within the timeout interval (10sec) and Restcomm should cancel the call to alice and disconnect 'george' call
     */
     @Test
-    @Category({FeatureExpTests.class, UnstableTests.class})
+//    @Category({FeatureExpTests.class, UnstableTests.class})
+    @Category(FeatureExpTests.class)
     public void createCallNumberTestNoAnswerOnRcml() throws InterruptedException, ParseException {
 
         stubFor(post(urlPathEqualTo("/1111"))
@@ -619,7 +836,7 @@ public class CreateCallsTest {
         aliceCall.listenForIncomingCall();
 
         String from = "+15126002188";
-        String to = "131313";
+        String to = "+131313";
         String rcmlUrl = "http://127.0.0.1:8090/1111";
         String timeout = "10";
 
@@ -664,7 +881,8 @@ public class CreateCallsTest {
 	but the response will be 486 Busy here and Restcomm should disconnect 'george' call
 */
     @Test
-    @Category({FeatureExpTests.class, UnstableTests.class})
+//    @Category({FeatureExpTests.class, UnstableTests.class})
+    @Category(FeatureExpTests.class)
     public void createCallNumberTestBusyOnRcml () throws InterruptedException, ParseException {
 
         stubFor(post(urlPathEqualTo("/1111"))
@@ -684,7 +902,7 @@ public class CreateCallsTest {
         aliceCall.listenForIncomingCall();
 
         String from = "+15126002188";
-        String to = "131313";
+        String to = "+131313";
         String rcmlUrl = "http://127.0.0.1:8090/1111";
         String timeout = "10";
 
@@ -738,7 +956,7 @@ public class CreateCallsTest {
         aliceCall.listenForIncomingCall();
 
         String from = "+15126002188";
-        String to = "131313";
+        String to = "+131313";
         String rcmlUrl = deploymentUrl.toString() + "/dial-client-entry.xml";
 
         JsonElement callResult = RestcommCallsTool.getInstance().createCall(deploymentUrl.toString(), adminAccountSid,
@@ -790,7 +1008,7 @@ public class CreateCallsTest {
         aliceCall.listenForIncomingCall();
 
         String from = "+15126002188";
-        String to = "131313";
+        String to = "+131313";
         String rcmlUrl = "http://127.0.0.1:8090/1111";
 
         JsonElement callResult = RestcommCallsTool.getInstance().createCall(deploymentUrl.toString(), adminAccountSid,
@@ -845,14 +1063,16 @@ public class CreateCallsTest {
     public static WebArchive createWebArchiveNoGw() {
         logger.info("Packaging Test App");
         WebArchive archive = ShrinkWrap.create(WebArchive.class, "restcomm.war");
-        final WebArchive restcommArchive = ShrinkWrapMaven.resolver()
+        final WebArchive restcommArchive = Maven.resolver()
                 .resolve("org.restcomm:restcomm-connect.application:war:" + version).withoutTransitivity()
                 .asSingle(WebArchive.class);
         archive = archive.merge(restcommArchive);
         archive.delete("/WEB-INF/sip.xml");
+archive.delete("/WEB-INF/web.xml");
         archive.delete("/WEB-INF/conf/restcomm.xml");
         archive.delete("/WEB-INF/data/hsql/restcomm.script");
         archive.addAsWebInfResource("sip.xml");
+        archive.addAsWebInfResource("web.xml");
         archive.addAsWebInfResource("restcomm.xml", "conf/restcomm.xml");
         archive.addAsWebInfResource("restcomm.script_dialTest", "data/hsql/restcomm.script");
         archive.addAsWebResource("dial-number-entry.xml");
