@@ -19,10 +19,6 @@
  */
 package org.restcomm.connect.http;
 
-import static javax.ws.rs.core.MediaType.APPLICATION_JSON;
-import static javax.ws.rs.core.MediaType.APPLICATION_JSON_TYPE;
-import static javax.ws.rs.core.MediaType.APPLICATION_XML;
-import static javax.ws.rs.core.MediaType.APPLICATION_XML_TYPE;
 import static javax.ws.rs.core.Response.ok;
 import static javax.ws.rs.core.Response.status;
 import static javax.ws.rs.core.Response.Status.BAD_REQUEST;
@@ -66,14 +62,10 @@ import org.restcomm.connect.dao.entities.Client;
 import org.restcomm.connect.dao.entities.IncomingPhoneNumber;
 import org.restcomm.connect.dao.entities.Organization;
 import org.restcomm.connect.dao.entities.Profile;
-import org.restcomm.connect.dao.entities.RestCommResponse;
 import org.restcomm.connect.extension.api.ApiRequest;
 import org.restcomm.connect.extension.controller.ExtensionController;
 import org.restcomm.connect.http.client.rcmlserver.RcmlserverApi;
 import org.restcomm.connect.http.client.rcmlserver.RcmlserverNotifications;
-import org.restcomm.connect.http.converter.AccountConverter;
-import org.restcomm.connect.http.converter.AccountListConverter;
-import org.restcomm.connect.http.converter.RestCommResponseConverter;
 import org.restcomm.connect.http.exceptionmappers.CustomReasonPhraseType;
 import org.restcomm.connect.http.exceptions.InsufficientPermission;
 import org.restcomm.connect.http.exceptions.PasswordTooWeak;
@@ -82,11 +74,8 @@ import org.restcomm.connect.identity.passwords.PasswordValidatorFactory;
 import org.restcomm.connect.provisioning.number.api.PhoneNumberProvisioningManager;
 import org.restcomm.connect.provisioning.number.api.PhoneNumberProvisioningManagerProvider;
 
-import com.google.gson.Gson;
-import com.google.gson.GsonBuilder;
 import com.sun.jersey.core.header.LinkHeader;
 import com.sun.jersey.core.util.MultivaluedMapImpl;
-import com.thoughtworks.xstream.XStream;
 
 /**
  * @author quintana.thomas@gmail.com (Thomas Quintana)

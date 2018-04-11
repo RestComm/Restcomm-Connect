@@ -51,7 +51,7 @@ public class ApplicationConverterTest {
         builder.setFieldNamingPolicy(FieldNamingPolicy.LOWER_CASE_WITH_UNDERSCORES);
         builder.setPrettyPrinting();
         Gson gson = builder.create();
-        ApplicationNumberSummaryConverter numberConverter = new ApplicationNumberSummaryConverter();
+        ApplicationNumberSummaryConverter numberConverter = new ApplicationNumberSummaryConverter(null);
         XStream xstream = new XStream();
         //xstream.alias("RestcommResponse", RestCommResponse.class);
         xstream.registerConverter(applicationConverter);

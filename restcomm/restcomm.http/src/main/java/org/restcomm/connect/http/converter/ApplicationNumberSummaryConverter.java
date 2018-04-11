@@ -22,7 +22,6 @@ package org.restcomm.connect.http.converter;
 
 import com.google.gson.JsonElement;
 import com.google.gson.JsonSerializationContext;
-import com.thoughtworks.xstream.converters.Converter;
 import com.thoughtworks.xstream.converters.MarshallingContext;
 import com.thoughtworks.xstream.converters.UnmarshallingContext;
 import com.thoughtworks.xstream.io.HierarchicalStreamReader;
