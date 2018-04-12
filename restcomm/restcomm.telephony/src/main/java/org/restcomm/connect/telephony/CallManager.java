@@ -203,6 +203,7 @@ public final class CallManager extends RestcommUntypedActor {
 
     //Control whether Restcomm will patch Request-URI and SDP for B2BUA calls
     private boolean patchForNatB2BUASessions;
+    private boolean useSbc;
 
     //List of extensions for CallManager
     List<RestcommExtensionGeneric> extensions;
@@ -216,6 +217,7 @@ public final class CallManager extends RestcommUntypedActor {
 
     private boolean actAsProxyOut;
     private List<ProxyRule> proxyOutRules;
+
     private boolean isActAsProxyOutUseFromHeader;
 
     // Push notification server
@@ -317,6 +319,13 @@ public final class CallManager extends RestcommUntypedActor {
         allowFallbackToPrimary = outboundProxyConfig.getBoolean("allow-fallback-to-primary", false);
 
         patchForNatB2BUASessions = runtime.getBoolean("patch-for-nat-b2bua-sessions", true);
+        useSbc = runtime.getBoolean("use-sbc", false);
+        if(useSbc) {
+            if (logger.isDebugEnabled()) {
+                logger.debug("CallManager: use-sbc is true, overriding patch-for-nat-b2bua-sessions to false");
+            }
+            patchForNatB2BUASessions = false;
+        }
 
         //Monitoring Service
         this.monitoring = (ActorRef) context.getAttribute(MonitoringService.class.getName());
@@ -503,7 +512,7 @@ public final class CallManager extends RestcommUntypedActor {
         final SipURI fromUri = (SipURI) request.getFrom().getURI();
         final String fromUser = fromUri.getUser();
         final SipURI toUri = (SipURI) request.getTo().getURI();
-        final String toUser = CallControlHelper.getUserSipId(request, useTo);
+        String toUser = CallControlHelper.getUserSipId(request, useTo);
         final String ruri = ((SipURI) request.getRequestURI()).getHost();
         final String toHost = toUri.getHost();
         final String toHostIpAddress = DNSUtils.getByName(toHost).getHostAddress();
@@ -515,7 +524,7 @@ public final class CallManager extends RestcommUntypedActor {
 
 
         Sid sourceOrganizationSid = OrganizationUtil.getOrganizationSidBySipURIHost(storage, fromUri);
-        Sid toOrganizationSid = OrganizationUtil.getOrganizationSidBySipURIHost(storage, toUri);
+        Sid toOrganizationSid = SIPOrganizationUtil.searchOrganizationBySIPRequest(storage.getOrganizationsDao(), request);
 
         if(logger.isDebugEnabled()) {
             logger.debug("sourceOrganizationSid: " + sourceOrganizationSid +" fromUri: "+fromUri);
@@ -547,7 +556,6 @@ public final class CallManager extends RestcommUntypedActor {
             // Make sure we force clients to authenticate.
             if (!authenticateUsers // https://github.com/Mobicents/RestComm/issues/29 Allow disabling of SIP authentication
                     || CallControlHelper.checkAuthentication(request, storage, sourceOrganizationSid)) {
-
                 // if the client has authenticated, try to redirect to the Client VoiceURL app
                 // otherwise continue trying to process the Client invite
                 if (redirectToClientVoiceApp(self, request, accounts, applications, client)) {
@@ -686,6 +694,13 @@ public final class CallManager extends RestcommUntypedActor {
                 // log to console and to notification engine
                 String errMsg = "A Restcomm Client is trying to call a Number/DID that is not registered with Restcomm";
                 sendNotification(client.getAccountSid(), errMsg, 11002, "info", true);
+
+                if(useSbc) {
+                    toUser = toUser+"@"+ruri;
+                    if (logger.isDebugEnabled()) {
+                        logger.debug("CallManager: use-sbc is true, overriding webrtc toUser to " + toUser);
+                    }
+                }
 
                 ExtensionController ec = ExtensionController.getInstance();
                 IExtensionCreateCallRequest er = new CreateCall(fromUser, toUser, "", "", false, 0, CreateCallType.PSTN, client.getAccountSid(), null, null, null, null);
@@ -2006,6 +2021,12 @@ public final class CallManager extends RestcommUntypedActor {
                     logger.warning(errMsg);
                     sender.tell(new CallManagerResponse<ActorRef>(new NullPointerException(errMsg), request), self());
                 } else {
+                    if(useSbc) {
+                        // To avoid using SDP with encryption enabled between RC and the SBC
+                        // we need to disable webRTC as it will be handled on the last mile
+                        // ie between SBC and Client and SBC will be responsible for that not RC
+                        webRTC = false;
+                    }
                     calls.add(createOutbound(request, from, to, webRTC));
                 }
             }
