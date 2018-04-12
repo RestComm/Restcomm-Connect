@@ -46,8 +46,8 @@
             <version>${sipservletapi.version}</version>
             <scope>provided</scope>
         </dependency>
-        
-   
+
+
         <dependency>
             <groupId>org.restcomm</groupId>
             <artifactId>restcomm-connect.dao</artifactId>
@@ -66,13 +66,13 @@
             <groupId>javax.servlet</groupId>
             <artifactId>javax.servlet-api</artifactId>
             <scope>provided</scope>
-        </dependency>  
-        
+        </dependency>
+
         <dependency>
             <groupId>javax.ws.rs</groupId>
-            <artifactId>javax.ws.rs</artifactId>
+            <artifactId>jsr311-api</artifactId>
             <scope>test</scope>
-        </dependency>         
+        </dependency>
     </dependencies>
 
 </project>
