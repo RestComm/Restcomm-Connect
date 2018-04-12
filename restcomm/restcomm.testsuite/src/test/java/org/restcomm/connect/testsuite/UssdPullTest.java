@@ -137,6 +137,7 @@ public class UssdPullTest {
     }
 
     @Test
+    @Category(UnstableTests.class)
     public void testUssdPull() {
         final SipCall bobCall = bobPhone.createSipCall();
         bobCall.initiateOutgoingCall(bobContact, ussdPullDid, null, UssdPullTestMessages.ussdClientRequestBody, "application", "vnd.3gpp.ussd+xml", null, null);
