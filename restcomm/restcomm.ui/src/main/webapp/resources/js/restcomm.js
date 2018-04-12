@@ -214,7 +214,7 @@ angular.element(document).ready(['$http',function ($http) {
   var configPromise = $q.defer();
   $http.get($window.location.pathname + 'conf/dashboard.json').success(function (response) {
     angular.module('rcApp.services').factory('PublicConfig', function () {
-      return JSON.parse(response);
+      return typeof response === 'string' ? JSON.parse(response) : response;
     });
     configPromise.resolve(response.data);
   }).error(function () {
