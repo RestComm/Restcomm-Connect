@@ -59,4 +59,8 @@ public interface MainConfigurationSet {
     long getConferenceTimeout();
 
     void setConferenceTimeout(long conferenceTimeout);
+
+    String getClientAlgorithm();
+
+    String getClientQOP();
 }
