@@ -135,7 +135,7 @@
         Therefore we set this empty property here-->
         <jacocoArgLine />
     </properties>
-    <modules>           
+    <modules>
         <module>restcomm.application</module>
         <module>restcomm.commons</module>
         <module>restcomm.dao</module>
@@ -174,7 +174,7 @@
         <module>restcomm.monitoring.service</module>
         <module>restcomm.tts.awspolly</module>
         <module>restcomm.sdr.api</module>
-        <module>restcomm.core</module>
+        <module>restcomm-connect.core</module>
     </modules>
 
     <dependencyManagement>
@@ -304,9 +304,9 @@
             <dependency>
                     <groupId>org.mobicents.servlet.sip</groupId>
                     <artifactId>sip-servlets-client</artifactId>
-                    <version>${sipservletapi.version}</version>                    
+                    <version>${sipservletapi.version}</version>
                     <scope>provided</scope>
-            </dependency>            
+            </dependency>
 
             <!--dependency> <groupId>org.apache.tomcat</groupId> <artifactId>servlet-api</artifactId>
             <version>${servlet-api.version}</version> </dependency -->
@@ -322,12 +322,12 @@
                 <artifactId>shiro-web</artifactId>
                 <version>${shiroweb.version}</version>
             </dependency>
-            
+
             <dependency>
                 <groupId>javax.ws.rs</groupId>
-                <artifactId>javax.ws.rs</artifactId>
+                <artifactId>jsr311-api</artifactId>
                 <version>1.0</version>
-            </dependency>            
+            </dependency>
 
             <dependency>
                 <groupId>com.sun.jersey</groupId>
@@ -562,7 +562,7 @@
             <version>${sipservletapi.version}</version>
             <scope>test</scope>
         </dependency>
-        
+
         <dependency>
             <groupId>org.hsqldb</groupId>
             <artifactId>hsqldb</artifactId>
@@ -772,7 +772,7 @@
                     <groupId>org.apache.maven.plugins</groupId>
                     <artifactId>maven-checkstyle-plugin</artifactId>
                     <version>${checkstyle.plugin.version}</version>
-                </plugin>                
+                </plugin>
             </plugins>
         </pluginManagement>
     </build>
@@ -789,7 +789,7 @@
             <modules>
                 <module>restcomm.testsuite</module>
             </modules>
-        </profile>               
+        </profile>
         <profile>
             <id>set-git-hash</id>
             <build>
