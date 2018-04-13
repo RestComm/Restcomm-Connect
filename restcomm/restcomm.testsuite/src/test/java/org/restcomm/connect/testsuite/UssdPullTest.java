@@ -60,6 +60,7 @@ import org.junit.experimental.categories.Category;
 import org.junit.runner.RunWith;
 import org.restcomm.connect.commons.Version;
 import org.restcomm.connect.commons.annotations.ParallelClassTests;
+import org.restcomm.connect.commons.annotations.UnstableTests;
 import org.restcomm.connect.commons.annotations.WithInMinsTests;
 
 /**
@@ -229,6 +230,7 @@ public class UssdPullTest {
     }
 
     @Test //USSD Pull to *777*...#
+    @Category(UnstableTests.class)
     public void testUssdPullFastDial() {
         final SipCall bobCall = bobPhone.createSipCall();
         bobCall.initiateOutgoingCall(bobContact, ussdPullFastDialDid, null, UssdPullTestMessages.ussdClientFastDialRequestBody, "application", "vnd.3gpp.ussd+xml", null, null);
@@ -447,6 +449,7 @@ public class UssdPullTest {
     }
 
     @Test
+    @Category(UnstableTests.class)
     public void testUssdMessageLengthExceeds() {
         final SipCall bobCall = bobPhone.createSipCall();
         bobCall.initiateOutgoingCall(bobContact, ussdPullMessageLengthExceeds, null, UssdPullTestMessages.ussdClientRequestBodyForMessageLengthExceeds, "application", "vnd.3gpp.ussd+xml", null, null);
