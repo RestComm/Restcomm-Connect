@@ -36,8 +36,11 @@ import javax.ws.rs.core.HttpHeaders;
 import javax.ws.rs.core.MediaType;
 import static javax.ws.rs.core.MediaType.APPLICATION_JSON;
 import javax.ws.rs.core.Response;
+import javax.ws.rs.core.SecurityContext;
 import javax.ws.rs.core.UriInfo;
 import org.restcomm.connect.commons.annotations.concurrency.ThreadSafe;
+import static org.restcomm.connect.http.ProfileEndpoint.PROFILE_CONTENT_TYPE;
+import static org.restcomm.connect.http.ProfileEndpoint.PROFILE_SCHEMA_CONTENT_TYPE;
 import static org.restcomm.connect.http.security.AccountPrincipal.SUPER_ADMIN_ROLE;
 
 @Path("/Profiles")
@@ -55,23 +58,25 @@ public class ProfileJsonEndpoint extends ProfileEndpoint {
     }
 
     @POST
-    @Consumes(PROFILE_CONTENT_TYPE)
-    @Produces(PROFILE_CONTENT_TYPE)
+    @Consumes({PROFILE_CONTENT_TYPE, APPLICATION_JSON})
+    @Produces({PROFILE_CONTENT_TYPE, APPLICATION_JSON})
     public Response createProfileAsJson(InputStream body, @Context UriInfo info) {
         return createProfile(body, info);
     }
 
     @Path("/{profileSid}")
     @GET
-    @Produces(PROFILE_CONTENT_TYPE)
+    @Produces({PROFILE_CONTENT_TYPE, MediaType.APPLICATION_JSON})
+    @PermitAll
     public Response getProfileAsJson(@PathParam("profileSid") final String profileSid,
-            @Context UriInfo info) {
-        return getProfile(profileSid, info);
+            @Context UriInfo info, @Context SecurityContext secCtx) {
+        return getProfile(profileSid, info, secCtx);
     }
 
     @Path("/{profileSid}")
     @PUT
     @Consumes({PROFILE_CONTENT_TYPE, MediaType.APPLICATION_JSON})
+    @Produces({PROFILE_CONTENT_TYPE, MediaType.APPLICATION_JSON})
     public Response updateProfileAsJson(@PathParam("profileSid") final String profileSid,
             InputStream body, @Context UriInfo info,
             @Context HttpHeaders headers) {
@@ -114,7 +119,7 @@ public class ProfileJsonEndpoint extends ProfileEndpoint {
 
     @Path("/schemas/{schemaId}")
     @GET
-    @Produces(PROFILE_SCHEMA_CONTENT_TYPE)
+    @Produces({PROFILE_SCHEMA_CONTENT_TYPE, MediaType.APPLICATION_JSON})
     @PermitAll
     public Response getProfileSchemaAsJson(@PathParam("schemaId") final String schemaId) {
         return getSchema(schemaId);

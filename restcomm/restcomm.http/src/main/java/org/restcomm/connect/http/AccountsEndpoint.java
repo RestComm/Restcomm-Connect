@@ -19,26 +19,53 @@
  */
 package org.restcomm.connect.http;
 
-import com.google.gson.Gson;
-import com.google.gson.GsonBuilder;
-import com.sun.jersey.core.header.LinkHeader;
-import com.sun.jersey.core.header.LinkHeader.LinkHeaderBuilder;
-import com.sun.jersey.core.util.MultivaluedMapImpl;
-import com.thoughtworks.xstream.XStream;
+import static javax.ws.rs.core.MediaType.APPLICATION_JSON;
+import static javax.ws.rs.core.MediaType.APPLICATION_JSON_TYPE;
+import static javax.ws.rs.core.MediaType.APPLICATION_XML;
+import static javax.ws.rs.core.MediaType.APPLICATION_XML_TYPE;
+import static javax.ws.rs.core.Response.ok;
+import static javax.ws.rs.core.Response.status;
+import static javax.ws.rs.core.Response.Status.BAD_REQUEST;
+import static javax.ws.rs.core.Response.Status.CONFLICT;
+import static javax.ws.rs.core.Response.Status.NOT_FOUND;
+import static javax.ws.rs.core.Response.Status.PRECONDITION_FAILED;
+import static org.restcomm.connect.http.ProfileEndpoint.PROFILE_REL_TYPE;
+import static org.restcomm.connect.http.ProfileEndpoint.TITLE_PARAM;
+
+import java.net.URI;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Map;
+
+import javax.annotation.PostConstruct;
+import javax.mail.internet.AddressException;
+import javax.mail.internet.InternetAddress;
+import javax.servlet.ServletContext;
+import javax.servlet.http.HttpServletRequest;
+import javax.ws.rs.WebApplicationException;
+import javax.ws.rs.core.MediaType;
+import javax.ws.rs.core.MultivaluedMap;
+import javax.ws.rs.core.Response;
+import javax.ws.rs.core.UriInfo;
+
 import org.apache.commons.configuration.Configuration;
 import org.apache.shiro.crypto.hash.Md5Hash;
 import org.joda.time.DateTime;
 import org.restcomm.connect.commons.configuration.RestcommConfiguration;
 import org.restcomm.connect.commons.configuration.sets.RcmlserverConfigurationSet;
 import org.restcomm.connect.commons.dao.Sid;
+import org.restcomm.connect.commons.util.ClientLoginConstrains;
 import org.restcomm.connect.dao.ClientsDao;
 import org.restcomm.connect.dao.DaoManager;
 import org.restcomm.connect.dao.IncomingPhoneNumbersDao;
+import org.restcomm.connect.dao.ProfileAssociationsDao;
 import org.restcomm.connect.dao.entities.Account;
+import org.restcomm.connect.dao.entities.Account.Status;
 import org.restcomm.connect.dao.entities.AccountList;
 import org.restcomm.connect.dao.entities.Client;
 import org.restcomm.connect.dao.entities.IncomingPhoneNumber;
 import org.restcomm.connect.dao.entities.Organization;
+import org.restcomm.connect.dao.entities.Profile;
 import org.restcomm.connect.dao.entities.RestCommResponse;
 import org.restcomm.connect.extension.api.ApiRequest;
 import org.restcomm.connect.extension.controller.ExtensionController;
@@ -47,6 +74,7 @@ import org.restcomm.connect.http.client.rcmlserver.RcmlserverNotifications;
 import org.restcomm.connect.http.converter.AccountConverter;
 import org.restcomm.connect.http.converter.AccountListConverter;
 import org.restcomm.connect.http.converter.RestCommResponseConverter;
+import org.restcomm.connect.http.exceptionmappers.CustomReasonPhraseType;
 import org.restcomm.connect.http.exceptions.InsufficientPermission;
 import org.restcomm.connect.http.exceptions.PasswordTooWeak;
 import org.restcomm.connect.identity.passwords.PasswordValidator;
@@ -54,35 +82,11 @@ import org.restcomm.connect.identity.passwords.PasswordValidatorFactory;
 import org.restcomm.connect.provisioning.number.api.PhoneNumberProvisioningManager;
 import org.restcomm.connect.provisioning.number.api.PhoneNumberProvisioningManagerProvider;
 
-import javax.annotation.PostConstruct;
-import javax.servlet.ServletContext;
-import javax.servlet.http.HttpServletRequest;
-import javax.ws.rs.core.MediaType;
-import javax.ws.rs.core.MultivaluedMap;
-import javax.ws.rs.core.Response;
-import javax.ws.rs.core.UriInfo;
-import java.net.URI;
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Map;
-import javax.ws.rs.WebApplicationException;
-
-import static javax.ws.rs.core.MediaType.APPLICATION_JSON;
-import static javax.ws.rs.core.MediaType.APPLICATION_JSON_TYPE;
-import static javax.ws.rs.core.MediaType.APPLICATION_XML;
-import static javax.ws.rs.core.MediaType.APPLICATION_XML_TYPE;
-import static javax.ws.rs.core.Response.Status.BAD_REQUEST;
-import static javax.ws.rs.core.Response.Status.CONFLICT;
-import static javax.ws.rs.core.Response.Status.NOT_FOUND;
-import static javax.ws.rs.core.Response.Status.PRECONDITION_FAILED;
-import static javax.ws.rs.core.Response.ok;
-import static javax.ws.rs.core.Response.status;
-import org.restcomm.connect.dao.ProfileAssociationsDao;
-import org.restcomm.connect.dao.entities.Account.Status;
-import org.restcomm.connect.dao.entities.ProfileAssociation;
-import static org.restcomm.connect.http.ProfileEndpoint.PROFILE_REL_TYPE;
-import static org.restcomm.connect.http.ProfileEndpoint.TITLE_PARAM;
-import org.restcomm.connect.http.exceptionmappers.CustomReasonPhraseType;
+import com.google.gson.Gson;
+import com.google.gson.GsonBuilder;
+import com.sun.jersey.core.header.LinkHeader;
+import com.sun.jersey.core.util.MultivaluedMapImpl;
+import com.thoughtworks.xstream.XStream;
 
 /**
  * @author quintana.thomas@gmail.com (Thomas Quintana)
@@ -98,7 +102,6 @@ public class AccountsEndpoint extends SecuredEndpoint {
     private ProfileAssociationsDao profileAssociationsDao;
 
     private Map<Status,Runnable> statusActionMap;
-
 
     public AccountsEndpoint() {
         super();
@@ -174,13 +177,6 @@ public class AccountsEndpoint extends SecuredEndpoint {
         return new Account(sid, now, now, emailAddress, friendlyName, accountSid, type, status, authToken, role, uri, organizationSid);
     }
 
-    public LinkHeader composeLink(Sid targetSid, UriInfo info) {
-        String sid = targetSid.toString();
-        URI uri = info.getBaseUriBuilder().path(ProfileJsonEndpoint.class).path(sid).build();
-        LinkHeaderBuilder link = LinkHeader.uri(uri).parameter(TITLE_PARAM, "Profiles");
-        return link.rel(PROFILE_REL_TYPE).build();
-    }
-
     protected Response getAccount(final String accountSid, final MediaType responseType, UriInfo info) {
         //First check if the account has the required permissions in general, this way we can fail fast and avoid expensive DAO operations
         Account account = null;
@@ -205,15 +201,15 @@ public class AccountsEndpoint extends SecuredEndpoint {
             return status(NOT_FOUND).build();
         } else {
             Response.ResponseBuilder ok = Response.ok();
-            ProfileAssociation profileAssociationByTargetSid = profileAssociationsDao.getProfileAssociationByTargetSid(accountSid);
-            if (profileAssociationByTargetSid != null) {
-                LinkHeader profileLink = composeLink(profileAssociationByTargetSid.getProfileSid(), info);
+            Profile associatedProfile = profileService.retrieveEffectiveProfileByAccountSid(account.getSid());
+            if (associatedProfile != null) {
+                LinkHeader profileLink = composeLink(new Sid(associatedProfile.getSid()), info);
                 ok.header(ProfileEndpoint.LINK_HEADER, profileLink.toString());
             }
-            if (APPLICATION_XML_TYPE == responseType) {
+            if (APPLICATION_XML_TYPE.equals(responseType)) {
                 final RestCommResponse response = new RestCommResponse(account);
                 return ok.type(APPLICATION_XML).entity(xstream.toXML(response)).build();
-            } else if (APPLICATION_JSON_TYPE == responseType) {
+            } else if (APPLICATION_JSON_TYPE.equals(responseType)) {
                 return ok.type(APPLICATION_JSON).entity(gson.toJson(account)).build();
             } else {
                 return null;
@@ -292,6 +288,7 @@ public class AccountsEndpoint extends SecuredEndpoint {
      * @param sid
      */
     private void removeAccoundDependencies(Sid sid) {
+        logger.debug("removing accoutn dependencies");
         DaoManager daoManager = (DaoManager) context.getAttribute(DaoManager.class.getName());
         // remove dependency entities first and dependent entities last. Also, do safer operation first (as a secondary rule)
         daoManager.getAnnouncementsDao().removeAnnouncements(sid);
@@ -378,10 +375,10 @@ public class AccountsEndpoint extends SecuredEndpoint {
                 }
             }
 
-            if (APPLICATION_XML_TYPE == responseType) {
+            if (APPLICATION_XML_TYPE.equals(responseType)) {
                 final RestCommResponse response = new RestCommResponse(new AccountList(accounts));
                 return ok(xstream.toXML(response), APPLICATION_XML).build();
-            } else if (APPLICATION_JSON_TYPE == responseType) {
+            } else if (APPLICATION_JSON_TYPE.equals(responseType)) {
                 return ok(gson.toJson(accounts), APPLICATION_JSON).build();
             } else {
                 return null;
@@ -452,9 +449,9 @@ public class AccountsEndpoint extends SecuredEndpoint {
 
             executePostApiAction(apiRequest);
 
-            if (APPLICATION_JSON_TYPE == responseType) {
+            if (APPLICATION_JSON_TYPE.equals(responseType)) {
                 return ok(gson.toJson(account), APPLICATION_JSON).build();
-            } else if (APPLICATION_XML_TYPE == responseType) {
+            } else if (APPLICATION_XML_TYPE.equals(responseType)) {
                 final RestCommResponse response = new RestCommResponse(account);
                 return ok(xstream.toXML(response), APPLICATION_XML).build();
             } else {
@@ -485,7 +482,7 @@ public class AccountsEndpoint extends SecuredEndpoint {
         builder.setAccountSid(accountSid);
         builder.setApiVersion(getApiVersion(data));
         builder.setLogin(data.getFirst("Login"));
-        builder.setPassword(password);
+        builder.setPassword(data.getFirst("Login"), password, organizationsDao.getOrganization(accountsDao.getAccount(accountSid).getOrganizationSid()).getDomainName());
         builder.setFriendlyName(data.getFirst("FriendlyName"));
         builder.setStatus(Client.ENABLED);
         final StringBuilder buffer = new StringBuilder();
@@ -500,26 +497,27 @@ public class AccountsEndpoint extends SecuredEndpoint {
      *
      * @param account
      * @param data
-     * @return
+     * @return a new instance with given account,and overriden fields from data
      */
     private Account prepareAccountForUpdate(final Account account, final MultivaluedMap<String, String> data) {
-        Account result = account;
-        boolean isPasswordReset = false;
-        Account.Status newStatus = null;
+        Account.Builder accBuilder = Account.builder();
+        //copy full incoming account, and let override happen
+        //in a separate instance later
+        accBuilder.copy(account);
 
 
         if (data.containsKey("Status")) {
-            // if the status is switched , the rest of the updates are ignored.
-            newStatus = Account.Status.getValueOf(data.getFirst("Status").toLowerCase());
-            return account.setStatus(newStatus);
+            Account.Status newStatus = Account.Status.getValueOf(data.getFirst("Status").toLowerCase());
+            accBuilder.setStatus(newStatus);
         }
         if (data.containsKey("FriendlyName")) {
-            result = result.setFriendlyName(data.getFirst("FriendlyName"));
+            accBuilder.setFriendlyName(data.getFirst("FriendlyName"));
         }
         if (data.containsKey("Password")) {
             // if this is a reset-password operation, we also need to set the account status to active
-            if (account.getStatus() == Account.Status.UNINITIALIZED)
-                isPasswordReset = true;
+            if (account.getStatus() == Account.Status.UNINITIALIZED) {
+                accBuilder.setStatus(Account.Status.ACTIVE);
+            }
 
             String password = data.getFirst("Password");
             PasswordValidator validator = PasswordValidatorFactory.createDefault();
@@ -528,27 +526,52 @@ public class AccountsEndpoint extends SecuredEndpoint {
                 throw new WebApplicationException(status(stat).build());
             }
             final String hash = new Md5Hash(data.getFirst("Password")).toString();
-            result = result.setAuthToken(hash);
+            accBuilder.setAuthToken(hash);
         }
-        if (newStatus != null) {
-            result = result.setStatus(newStatus);
-        } else {
-            // if this is a password reset operation we need to activate the account (in case there is no explicity Status passed of course)
-            if (isPasswordReset) {
-                result = result.setStatus(Account.Status.ACTIVE);
-            }
-        }
+
         if (data.containsKey("Role")) {
             // Only allow role change for administrators. Multitenancy checks will take care of restricting the modification scope to sub-accounts.
             if (userIdentityContext.getEffectiveAccountRoles().contains(getAdministratorRole())) {
-                result = result.setRole(data.getFirst("Role"));
+                accBuilder.setRole(data.getFirst("Role"));
             } else {
                 CustomReasonPhraseType stat = new CustomReasonPhraseType(Response.Status.FORBIDDEN, "Only Administrator allowed");
                 throw new WebApplicationException(status(stat).build());
             }
         }
 
-        return result;
+        return accBuilder.build();
+    }
+
+    /**
+     * update SIP client of the corresponding Account.Password and FriendlyName fields are synched.
+     */
+    private void updateLinkedClient(Account account, MultivaluedMap<String, String> data) {
+        logger.debug("checking linked client");
+        String email = account.getEmailAddress();
+        if (email != null && !email.equals("")) {
+            logger.debug("account email is valid");
+            String username = email.split("@")[0];
+            Client client = clientDao.getClient(username, account.getOrganizationSid());
+            if (client != null) {
+                logger.debug("client found");
+                // TODO: need to encrypt this password because it's
+                // same with Account password.
+                // Don't implement now. Opened another issue for it.
+                if (data.containsKey("Password")) {
+                    // Md5Hash(data.getFirst("Password")).toString();
+                    logger.debug("password changed");
+                    String password = data.getFirst("Password");
+                    client = client.setPassword(client.getLogin(), password, organizationsDao.getOrganization(account.getOrganizationSid()).getDomainName());
+                }
+
+                if (data.containsKey("FriendlyName")) {
+                    logger.debug("friendlyname changed");
+                    client = client.setFriendlyName(data.getFirst("FriendlyName"));
+                }
+                logger.debug("updating linked client");
+                clientDao.updateClient(client);
+            }
+        }
     }
 
     protected Response updateAccount(final String identifier, final MultivaluedMap<String, String> data,
@@ -575,38 +598,22 @@ public class AccountsEndpoint extends SecuredEndpoint {
             modifiedAccount = prepareAccountForUpdate(account, data);
 
             // we are modifying status
-            if (account.getStatus() != modifiedAccount.getStatus()) {
+            if (modifiedAccount.getStatus() != null &&
+                    account.getStatus() != modifiedAccount.getStatus()) {
                 switchAccountStatusTree(modifiedAccount);
-            } else {
-                // if we're not closing the account, update SIP client of the corresponding Account.
-                // Password and FriendlyName fields are synched.
-                String email = modifiedAccount.getEmailAddress();
-                if (email != null && !email.equals("")) {
-                    String username = email.split("@")[0];
-                    Client client = clientDao.getClient(username, account.getOrganizationSid());
-                    if (client != null) {
-                        // TODO: need to encrypt this password because it's
-                        // same with Account password.
-                        // Don't implement now. Opened another issue for it.
-                        if (data.containsKey("Password")) {
-                            // Md5Hash(data.getFirst("Password")).toString();
-                            String password = data.getFirst("Password");
-                            client = client.setPassword(password);
-                        }
-
-                        if (data.containsKey("FriendlyName")) {
-                            client = client.setFriendlyName(data.getFirst("FriendlyName"));
-                        }
-
-                        clientDao.updateClient(client);
-                    }
-                }
-                accountsDao.updateAccount(modifiedAccount);
             }
 
-            if (APPLICATION_JSON_TYPE == responseType) {
+            //update client only if friendlyname or password was changed
+            if (data.containsKey("Password") ||
+                data.containsKey("FriendlyName") )  {
+                updateLinkedClient(account, data);
+            }
+            accountsDao.updateAccount(modifiedAccount);
+
+
+            if (APPLICATION_JSON_TYPE.equals(responseType)) {
                 return ok(gson.toJson(modifiedAccount), APPLICATION_JSON).build();
-            } else if (APPLICATION_XML_TYPE == responseType) {
+            } else if (APPLICATION_XML_TYPE.equals(responseType)) {
                 final RestCommResponse response = new RestCommResponse(modifiedAccount);
                 return ok(xstream.toXML(response), APPLICATION_XML).build();
             } else {
@@ -701,9 +708,9 @@ public class AccountsEndpoint extends SecuredEndpoint {
             }
         }
 
-        if (APPLICATION_JSON_TYPE == responseType) {
+        if (APPLICATION_JSON_TYPE.equals(responseType)) {
             return ok(gson.toJson(modifiedAccount), APPLICATION_JSON).build();
-        } else if (APPLICATION_XML_TYPE == responseType) {
+        } else if (APPLICATION_XML_TYPE.equals(responseType)) {
             final RestCommResponse response = new RestCommResponse(modifiedAccount);
             return ok(xstream.toXML(response), APPLICATION_XML).build();
         } else {
@@ -712,10 +719,12 @@ public class AccountsEndpoint extends SecuredEndpoint {
     }
 
     private void sendRVDStatusNotification(Account updatedAccount) {
+        logger.debug("sendRVDStatusNotification");
         // set rcmlserverApi in case we need to also notify the application sever (RVD)
         RestcommConfiguration rcommConfiguration = RestcommConfiguration.getInstance();
         RcmlserverConfigurationSet config = rcommConfiguration.getRcmlserver();
         if (config != null && config.getNotify()) {
+            logger.debug("notification enabled");
             // first send account removal notification to RVD now that the applications of the account still exist
             RcmlserverApi rcmlServerApi = new RcmlserverApi(rcommConfiguration.getMain(), rcommConfiguration.getRcmlserver());
             RcmlserverNotifications notifications = new RcmlserverNotifications();
@@ -737,6 +746,9 @@ public class AccountsEndpoint extends SecuredEndpoint {
      * @param account
      */
     private void switchAccountStatus(Account account, Account.Status status) {
+        if (logger.isDebugEnabled()) {
+            logger.debug("Switching status for account:" + account.getSid() + ",status:" + status);
+        }
         switch (status) {
             case CLOSED:
                 sendRVDStatusNotification(account);
@@ -758,6 +770,7 @@ public class AccountsEndpoint extends SecuredEndpoint {
      * @param parentAccount
      */
     private void switchAccountStatusTree(Account parentAccount) {
+        logger.debug("Status transition requested");
         // transition child accounts
         List<String> subAccountsToSwitch = accountsDao.getSubAccountSidsRecursive(parentAccount.getSid());
         if (subAccountsToSwitch != null && !subAccountsToSwitch.isEmpty()) {
@@ -785,6 +798,34 @@ public class AccountsEndpoint extends SecuredEndpoint {
         } else if (!data.containsKey("Password")) {
             throw new NullPointerException("Password can not be null.");
         }
+
+        String emailAddress = data.getFirst("EmailAddress");
+        try {
+            InternetAddress emailAddr = new InternetAddress(emailAddress);
+            emailAddr.validate();
+        } catch (AddressException ex) {
+            String msg = String.format("Provided email address %s is not valid",emailAddress);
+            if (logger.isDebugEnabled()) {
+                logger.debug(msg);
+            }
+            throw new IllegalArgumentException(msg);
+        }
+
+        String clientLogin = data.getFirst("EmailAddress").split("@")[0];
+        if (!ClientLoginConstrains.isValidClientLogin(clientLogin)) {
+            String msg = String.format("Login %s contains invalid character(s) ",clientLogin);
+            if (logger.isDebugEnabled()) {
+                logger.debug(msg);
+            }
+            throw new IllegalArgumentException(msg);
+        }
+    }
+
+    public LinkHeader composeLink(Sid targetSid, UriInfo info) {
+        String sid = targetSid.toString();
+        URI uri = info.getBaseUriBuilder().path(ProfileJsonEndpoint.class).path(sid).build();
+        LinkHeader.LinkHeaderBuilder link = LinkHeader.uri(uri).parameter(TITLE_PARAM, "Profiles");
+        return link.rel(PROFILE_REL_TYPE).build();
     }
 
 }

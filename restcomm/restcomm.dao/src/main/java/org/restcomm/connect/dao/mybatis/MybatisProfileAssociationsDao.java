@@ -132,14 +132,19 @@ public final class MybatisProfileAssociationsDao implements ProfileAssociationsD
     }
 
     @Override
-    public void deleteProfileAssociationByTargetSid(String targetSid) {
+    public int deleteProfileAssociationByTargetSid(String targetSid, String profileSid) {
+        int removed = 0;
         final SqlSession session = sessions.openSession();
+        final Map<String, Object> map = new HashMap<String, Object>();
+        map.put("profile_sid", profileSid);
+        map.put("target_sid", targetSid);
         try {
-            session.delete(namespace + "deleteProfileAssociationByTargetSid", targetSid);
+            removed = session.delete(namespace + "deleteProfileAssociationByTargetSid", map);
             session.commit();
         } finally {
             session.close();
         }
+        return removed;
     }
 
     private ProfileAssociation toProfileAssociation(final Map<String, Object> map) {
@@ -157,5 +162,10 @@ public final class MybatisProfileAssociationsDao implements ProfileAssociationsD
         map.put("date_created", profileAssociation.getDateCreated());
         map.put("date_updated", profileAssociation.getDateCreated());
         return map;
+    }
+
+    @Override
+    public int deleteProfileAssociationByTargetSid(String targetSid) {
+        return deleteProfileAssociationByTargetSid(targetSid, null);
     }
 }

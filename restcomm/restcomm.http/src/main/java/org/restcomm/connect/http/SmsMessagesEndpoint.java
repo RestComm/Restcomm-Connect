@@ -25,6 +25,7 @@ import akka.actor.Props;
 import akka.actor.UntypedActor;
 import akka.actor.UntypedActorContext;
 import akka.actor.UntypedActorFactory;
+import static akka.pattern.Patterns.ask;
 import akka.util.Timeout;
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
@@ -32,8 +33,27 @@ import com.google.i18n.phonenumbers.NumberParseException;
 import com.google.i18n.phonenumbers.PhoneNumberUtil;
 import com.google.i18n.phonenumbers.PhoneNumberUtil.PhoneNumberFormat;
 import com.thoughtworks.xstream.XStream;
+import java.math.BigDecimal;
+import java.net.URI;
+import java.text.ParseException;
+import java.util.ArrayList;
+import java.util.Currency;
+import java.util.Iterator;
+import java.util.List;
+import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.TimeUnit;
+import javax.annotation.PostConstruct;
+import javax.servlet.ServletContext;
+import javax.ws.rs.core.Context;
+import javax.ws.rs.core.MediaType;
+import static javax.ws.rs.core.MediaType.*;
+import javax.ws.rs.core.MultivaluedMap;
+import javax.ws.rs.core.Response;
+import static javax.ws.rs.core.Response.Status.*;
+import static javax.ws.rs.core.Response.ok;
+import static javax.ws.rs.core.Response.status;
+import javax.ws.rs.core.UriInfo;
 import org.apache.commons.configuration.Configuration;
-import org.joda.time.DateTime;
 import org.restcomm.connect.commons.annotations.concurrency.NotThreadSafe;
 import org.restcomm.connect.commons.configuration.RestcommConfiguration;
 import org.restcomm.connect.commons.dao.Sid;
@@ -44,7 +64,6 @@ import org.restcomm.connect.dao.SmsMessagesDao;
 import org.restcomm.connect.dao.entities.Account;
 import org.restcomm.connect.dao.entities.RestCommResponse;
 import org.restcomm.connect.dao.entities.SmsMessage;
-import org.restcomm.connect.dao.entities.SmsMessage.Status;
 import org.restcomm.connect.dao.entities.SmsMessageFilter;
 import org.restcomm.connect.dao.entities.SmsMessageList;
 import org.restcomm.connect.http.converter.RestCommResponseConverter;
@@ -59,29 +78,6 @@ import org.restcomm.connect.sms.api.SmsSessionResponse;
 import scala.concurrent.Await;
 import scala.concurrent.Future;
 import scala.concurrent.duration.Duration;
-
-import javax.annotation.PostConstruct;
-import javax.servlet.ServletContext;
-import javax.ws.rs.core.Context;
-import javax.ws.rs.core.MediaType;
-import javax.ws.rs.core.MultivaluedMap;
-import javax.ws.rs.core.Response;
-import javax.ws.rs.core.UriInfo;
-import java.math.BigDecimal;
-import java.net.URI;
-import java.text.ParseException;
-import java.util.ArrayList;
-import java.util.Currency;
-import java.util.Iterator;
-import java.util.List;
-import java.util.concurrent.ConcurrentHashMap;
-import java.util.concurrent.TimeUnit;
-
-import static akka.pattern.Patterns.ask;
-import static javax.ws.rs.core.MediaType.*;
-import static javax.ws.rs.core.Response.Status.*;
-import static javax.ws.rs.core.Response.ok;
-import static javax.ws.rs.core.Response.status;
 
 /**
  * @author quintana.thomas@gmail.com (Thomas Quintana)
@@ -141,9 +137,9 @@ public abstract class SmsMessagesEndpoint extends SecuredEndpoint {
             return status(NOT_FOUND).build();
         } else {
             secure(operatedAccount, smsMessage.getAccountSid(), SecuredType.SECURED_STANDARD);
-            if (APPLICATION_JSON_TYPE == responseType) {
+            if (APPLICATION_JSON_TYPE.equals(responseType)) {
                 return ok(gson.toJson(smsMessage), APPLICATION_JSON).build();
-            } else if (APPLICATION_XML_TYPE == responseType) {
+            } else if (APPLICATION_XML_TYPE.equals(responseType)) {
                 final RestCommResponse response = new RestCommResponse(smsMessage);
                 return ok(xstream.toXML(response), APPLICATION_XML).build();
             } else {
@@ -241,10 +237,10 @@ public abstract class SmsMessagesEndpoint extends SecuredEndpoint {
         listConverter.setPageSize(Integer.parseInt(pageSize));
         listConverter.setPathUri(info.getRequestUri().getPath());
 
-        if (APPLICATION_XML_TYPE == responseType) {
+        if (APPLICATION_XML_TYPE.equals(responseType)) {
             final RestCommResponse response = new RestCommResponse(new SmsMessageList(cdrs));
             return ok(xstream.toXML(response), APPLICATION_XML).build();
-        } else if (APPLICATION_JSON_TYPE == responseType) {
+        } else if (APPLICATION_JSON_TYPE.equals(responseType)) {
             return ok(gson.toJson(new SmsMessageList(cdrs)), APPLICATION_JSON).build();
         } else {
             return null;
@@ -321,9 +317,9 @@ public abstract class SmsMessagesEndpoint extends SecuredEndpoint {
                     session.tell(new SmsSessionAttribute("record", record), null);
                     final SmsSessionRequest request = new SmsSessionRequest(sender, recipient, body, encoding, customRestOutgoingHeaderMap);
                     session.tell(request, null);
-                    if (APPLICATION_JSON_TYPE == responseType) {
+                    if (APPLICATION_JSON_TYPE.equals(responseType)) {
                         return ok(gson.toJson(record), APPLICATION_JSON).build();
-                    } else if (APPLICATION_XML_TYPE == responseType) {
+                    } else if (APPLICATION_XML_TYPE.equals(responseType)) {
                         final RestCommResponse response = new RestCommResponse(record);
                         return ok(xstream.toXML(response), APPLICATION_XML).build();
                     } else {
@@ -399,13 +395,6 @@ public abstract class SmsMessagesEndpoint extends SecuredEndpoint {
                 final SmsSessionResponse response = (SmsSessionResponse) message;
                 final SmsSessionInfo info = response.info();
                 SmsMessage record = (SmsMessage) info.attributes().get("record");
-                if (response.succeeded()) {
-                    final DateTime now = DateTime.now();
-                    record = record.setDateSent(now);
-                    record = record.setStatus(Status.SENT);
-                } else {
-                    record = record.setStatus(Status.FAILED);
-                }
                 dao.updateSmsMessage(record);
                 final UntypedActorContext context = getContext();
                 final ActorRef self = self();

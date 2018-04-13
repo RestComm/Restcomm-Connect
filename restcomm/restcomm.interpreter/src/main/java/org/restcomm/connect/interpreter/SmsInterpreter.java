@@ -391,11 +391,11 @@ public final class SmsInterpreter extends RestcommUntypedActor {
                 //Check if Outbound SMS is allowed
                 ExtensionController ec = ExtensionController.getInstance();
                 final IExtensionFeatureAccessRequest far = new FeatureAccessRequest(FeatureAccessRequest.Feature.OUTBOUND_SMS, accountId);
-                ExtensionResponse er = ec.executePreInboundAction(far, this.extensions);
+                ExtensionResponse er = ec.executePreOutboundAction(far, this.extensions);
 
                 if (er.isAllowed()) {
                     fsm.transition(message, creatingSmsSession);
-                    ec.executePostInboundAction(far, extensions);
+                    ec.executePostOutboundAction(far, extensions);
                 } else {
                     if (logger.isDebugEnabled()) {
                         final String errMsg = "Outbound SMS is not Allowed";
@@ -405,7 +405,7 @@ public final class SmsInterpreter extends RestcommUntypedActor {
                     final Notification notification = notification(WARNING_NOTIFICATION, 11001, "Outbound SMS is now allowed");
                     notifications.addNotification(notification);
                     fsm.transition(message, finished);
-                    ec.executePostInboundAction(far, extensions);
+                    ec.executePostOutboundAction(far, extensions);
                     return;
                 }
             } else if (Verbs.email.equals(verb.name())) {
@@ -488,13 +488,6 @@ public final class SmsInterpreter extends RestcommUntypedActor {
             final SmsSessionResponse response = (SmsSessionResponse) message;
             final SmsSessionInfo info = response.info();
             SmsMessage record = (SmsMessage) info.attributes().get("record");
-            if (response.succeeded()) {
-                final DateTime now = DateTime.now();
-                record = record.setDateSent(now);
-                record = record.setStatus(Status.SENT);
-            } else {
-                record = record.setStatus(Status.FAILED);
-            }
             final SmsMessagesDao messages = storage.getSmsMessagesDao();
             messages.updateSmsMessage(record);
             // Notify the callback listener.
@@ -583,6 +576,7 @@ public final class SmsInterpreter extends RestcommUntypedActor {
             final SmsMessage record = builder.build();
             final SmsMessagesDao messages = storage.getSmsMessagesDao();
             messages.addSmsMessage(record);
+            getContext().system().eventStream().publish(record);
             // Destroy the initial session.
             service.tell(new DestroySmsSession(initialSession), source);
             initialSession = null;
