@@ -26,6 +26,7 @@ import org.joda.time.DateTime;
 import org.restcomm.connect.commons.annotations.concurrency.Immutable;
 import org.restcomm.connect.commons.annotations.concurrency.NotThreadSafe;
 import org.restcomm.connect.commons.dao.Sid;
+import org.restcomm.connect.commons.util.DigestAuthentication;
 
 /**
  * @author quintana.thomas@gmail.com (Thomas Quintana)
@@ -148,8 +149,14 @@ public final class Client {
                 voiceUrl, voiceMethod, voiceFallbackUrl, voiceFallbackMethod, voiceApplicationSid, uri, pushClientIdentity);
     }
 
-    public Client setPassword(final String password) {
-        return new Client(sid, dateCreated, DateTime.now(), accountSid, apiVersion, friendlyName, login, password, status,
+    /**
+     * @param login
+     * @param password
+     * @param realm
+     * @return
+     */
+    public Client setPassword(final String login, final String password, final String realm) {
+        return new Client(sid, dateCreated, DateTime.now(), accountSid, apiVersion, friendlyName, login, DigestAuthentication.HA1(login, realm, password), status,
                 voiceUrl, voiceMethod, voiceFallbackUrl, voiceFallbackMethod, voiceApplicationSid, uri, pushClientIdentity);
     }
 
@@ -235,8 +242,13 @@ public final class Client {
             this.login = login;
         }
 
-        public void setPassword(final String password) {
-            this.password = password;
+        /**
+         * @param login
+         * @param password
+         * @param realm
+         */
+        public void setPassword(final String login, final String password, final String realm) {
+            this.password = DigestAuthentication.HA1(login, realm, password);
         }
 
         public void setStatus(final int status) {

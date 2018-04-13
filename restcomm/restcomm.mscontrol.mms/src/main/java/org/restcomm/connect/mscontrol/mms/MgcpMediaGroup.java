@@ -404,7 +404,7 @@ public class MgcpMediaGroup extends MediaGroup {
         builder.setPreSpeechTimer(request.timeout());
         builder.setPostSpeechTimer(request.timeout());
         builder.setRecordingLength(request.length());
-        if (!request.endInputKey().equals("-1")) {
+        if (request.endInputKey() != null && !request.endInputKey().equals("-1")) {
             builder.setEndInputKey(request.endInputKey());
         } else {
             builder.setEndInputKey("null");
