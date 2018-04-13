@@ -886,7 +886,7 @@ if [ -z "$MS_ADDRESS" ]; then
     MS_ADDRESS=$BIND_ADDRESS
 fi
 
-if [ "a" -ne "a$MGCP_LOCAL_ADDRESS"]; then
+if [ "a" -ne "a$MGCP_LOCAL_ADDRESS" ]; then
     MGCP_ADDRESS=$MGCP_LOCAL_ADDRESS
 else
     MGCP_ADDRESS=$BIND_ADDRESS
