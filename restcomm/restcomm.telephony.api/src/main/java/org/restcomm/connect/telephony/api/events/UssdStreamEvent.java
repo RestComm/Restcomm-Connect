@@ -40,6 +40,15 @@ public final class UssdStreamEvent implements StreamEvent {
     private final String request;
     private final DateTime dateCreated;
 
+
+    public enum Direction {
+        inbound, outbound
+    }
+
+    public enum Status {
+        started, queued, ringing, in_progress, canceled, failed, not_found, processing, completed;
+    }
+
     public UssdStreamEvent(final Sid sid, final Sid accountSid, final String from, final String to, final Status status,
                            final Direction direction, final String request, final DateTime dateCreated) {
         super();
@@ -152,64 +161,6 @@ public final class UssdStreamEvent implements StreamEvent {
         public Builder setDateCreated(DateTime dateCreated) {
             this.dateCreated = dateCreated;
             return this;
-        }
-    }
-
-    public enum Direction {
-        INBOUND("inbound"), OUTBOUND("outbound");
-
-        private final String text;
-
-        private Direction(final String text) {
-            this.text = text;
-        }
-
-        public static UssdStreamEvent.Direction getDirectionValue(final String text) {
-            final UssdStreamEvent.Direction[] values = values();
-            for (final UssdStreamEvent.Direction value : values) {
-                if (value.toString().equals(text)) {
-                    return value;
-                }
-            }
-            throw new IllegalArgumentException(text + " is not a valid direction.");
-        }
-
-        @Override
-        public String toString() {
-            return text;
-        }
-    }
-
-    public enum Status {
-        STARTED("started"),
-        QUEUED("queued"),
-        RINGING("ringing"),
-        IN_PROGRESS("in-progress"),
-        CANCELED("canceled"),
-        FAILED("failed"),
-        NOT_FOUND("not_found"),
-        PROCESSING("processing"),
-        COMPLETED("completed");
-
-        private final String text;
-
-        private Status(final String text) {
-            this.text = text;
-        }
-
-        public static UssdStreamEvent.Status getStatusValue(final String text) {
-            final UssdStreamEvent.Status[] values = values();
-            for (final UssdStreamEvent.Status value : values) {
-                if (value.toString().equals(text)) {
-                    return value;
-                }
-            }
-            throw new IllegalArgumentException(text + " is not a valid status.");
-        }
-
-        @Override
-        public String toString() {
-            return text;
         }
     }
 }
