@@ -25,16 +25,8 @@ services:
 
     environment:
       ## =============================== IMPORTANT!!    While most of the below defaults should be fine, YOU PROBABLY NEED TO CHANGE THIS!!
-      
-      ### Defaults for Docker @ macOS, go with the below, instead. Please note you'll need Docker version > 17.12 for `docker.for.mac.localhost` to work.
-      RCBCONF_STATIC_ADDRESS: docker.for.mac.localhost
+      RCBCONF_STATIC_ADDRESS: 127.0.0.1   # YOUR LOCAL IP ADDRESS GOES HERE.
       RMSCONF_EXTERNAL_ADDRESS: 127.0.0.1  # YOUR LOCAL IP ADDRESS GOES HERE.
-      RCBCONF_HOSTNAME: docker.for.mac.localhost
-
-      ### Defaults for Docker @ Linux. Please also ensure to enable `network_mode: "host"` below.
-      #RCBCONF_STATIC_ADDRESS: 127.0.0.1 
-      #RMSCONF_EXTERNAL_ADDRESS: 127.0.0.1
-
       ## =============================== IMPORTANT ========================================================================================
 
       # ENVCONFURL: https://raw.githubusercontent.com/RestComm/Restcomm-Docker/master/env_files/restcomm_env_locally.sh
