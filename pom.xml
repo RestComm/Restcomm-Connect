@@ -4,7 +4,7 @@
         <groupId>org.restcomm</groupId>
         <artifactId>restcomm-parent</artifactId>
         <version>4.0.1</version>
-    </parent>    
+    </parent>
     <modelVersion>4.0.0</modelVersion>
     <groupId>org.restcomm</groupId>
     <artifactId>restcomm-connect-root</artifactId>
@@ -38,8 +38,8 @@
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
         <mobicents.mgcp.impl.version>6.0.23</mobicents.mgcp.impl.version>
         <servletapi.version>2.5</servletapi.version>
-    </properties> 
-    
+    </properties>
+
     <repositories>
         <repository>
             <id>mobicents-public-repository-group</id>
@@ -68,6 +68,11 @@
                 <enabled>true</enabled>
                 <updatePolicy>never</updatePolicy>
             </snapshots>
+        </repository>
+        <repository>
+            <id>cxsnexus-releases</id>
+            <url>http://cxsnexus.restcomm.com/nexus/content/repositories/releases/</url>
+            <layout>default</layout>
         </repository>
 
         <!-- Local repository for the ATT TTS Java wrapper library -->
@@ -104,5 +109,5 @@
                 <updatePolicy>never</updatePolicy>
             </snapshots>
         </pluginRepository>
-    </pluginRepositories>          
+    </pluginRepositories>
 </project>
