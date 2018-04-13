@@ -5,13 +5,13 @@
         <groupId>org.restcomm</groupId>
         <artifactId>assembly-parent</artifactId>
         <version>9.0.0-SNAPSHOT</version>
-    </parent>     
+    </parent>
     <artifactId>assembly-wildfly10</artifactId>
-    <packaging>jar</packaging>
+    <packaging>pom</packaging>
     <properties>
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
         <sipservletapi.version>3.2.0-89</sipservletapi.version>
-    </properties>    
+    </properties>
     <dependencies>
         <dependency>
             <groupId>org.restcomm</groupId>
@@ -22,22 +22,22 @@
             <groupId>org.restcomm</groupId>
             <artifactId>restcomm-connect.application</artifactId>
             <type>war</type>
-        </dependency>   
-        
+        </dependency>
+
         <dependency>
             <groupId>org.restcomm</groupId>
             <artifactId>restcomm-connect-management</artifactId>
             <type>war</type>
-        </dependency>         
-        
-                                
+        </dependency>
+
+
         <dependency>
             <groupId>org.mobicents.webrtc</groupId>
             <artifactId>webrtc-ui</artifactId>
             <type>war</type>
-        </dependency>              
+        </dependency>
     </dependencies>
-    <build>    
+    <build>
         <plugins>
             <plugin>
                 <groupId>org.apache.maven.plugins</groupId>
@@ -78,11 +78,11 @@
                                 </artifactItem>
                             </artifactItems>
                         </configuration>
-                    </execution>                    
+                    </execution>
                 </executions>
-            </plugin>            
+            </plugin>
             <plugin>
-                <groupId>org.apache.maven.plugins</groupId>                
+                <groupId>org.apache.maven.plugins</groupId>
                 <artifactId>maven-assembly-plugin</artifactId>
                 <version>3.1.0</version>
                 <configuration>
@@ -102,5 +102,5 @@
                 </executions>
             </plugin>
         </plugins>
-    </build>  
+    </build>
 </project>
