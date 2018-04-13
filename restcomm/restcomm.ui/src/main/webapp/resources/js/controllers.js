@@ -10,5 +10,6 @@ angular.module('rcApp.controllers', ['ui.bootstrap']);
 // Parent 'restcomm' state controller. This state assumes the availability of an authenticated user
 angular.module('rcApp.controllers').controller('RestcommCtrl', function ($scope,AuthService) {
     $scope.loggedAccount = AuthService.getAccount();
+    $scope.accountProfile = AuthService.getProfile();
     $scope.sid = AuthService.getAccountSid();
 });

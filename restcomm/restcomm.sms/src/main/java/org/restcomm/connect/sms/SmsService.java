@@ -151,6 +151,13 @@ public final class SmsService extends RestcommUntypedActor {
         // final Configuration runtime = configuration.subset("runtime-settings");
         // TODO this.useTo = runtime.getBoolean("use-to");
         patchForNatB2BUASessions = runtime.getBoolean("patch-for-nat-b2bua-sessions", true);
+        boolean useSbc = runtime.getBoolean("use-sbc", false);
+        if(useSbc) {
+            if (logger.isDebugEnabled()) {
+                logger.debug("SmsService: use-sbc is true, overriding patch-for-nat-b2bua-sessions to false");
+            }
+            patchForNatB2BUASessions = false;
+        }
 
         extensions = ExtensionController.getInstance().getExtensions(ExtensionType.SmsService);
         if (logger.isInfoEnabled()) {

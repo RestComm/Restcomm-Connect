@@ -11,8 +11,12 @@
 	MA 02110-1301 USA, or see the FSF site: http://www.fsf.org. -->
 <restcomm>
 	<runtime-settings>
+          <client-algorithm>MD5</client-algorithm>
+        <client-qop>auth</client-qop>
+        <client-algorithm-sess>false</client-algorithm-sess>
+        <realm>127.0.0.1</realm>
 		<!-- The API version that will be used. -->
-		<api-version>2012-04-24</api-version>
+		<api-version>2012-04-24</api-version><client-algorithm>MD5</client-algorithm><client-qop>auth</client-qop><client-algorithm-sess>false</client-algorithm-sess>
 
 		<!-- Try to run RVD workspace projects migration to apply new naming
 			convention and synchronization with database entities. This execution

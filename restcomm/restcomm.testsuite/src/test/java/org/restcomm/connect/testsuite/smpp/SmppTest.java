@@ -4,6 +4,7 @@ import static com.github.tomakehurst.wiremock.client.WireMock.aResponse;
 import static com.github.tomakehurst.wiremock.client.WireMock.get;
 import static com.github.tomakehurst.wiremock.client.WireMock.stubFor;
 import static com.github.tomakehurst.wiremock.client.WireMock.urlPathEqualTo;
+import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertTrue;
 
@@ -46,6 +47,7 @@ import org.restcomm.connect.commons.annotations.SequentialClassTests;
 import org.restcomm.connect.commons.annotations.WithInSecsTests;
 import org.restcomm.connect.sms.smpp.SmppInboundMessageEntity;
 
+import com.cloudhopper.commons.charset.Charset;
 import com.cloudhopper.commons.charset.CharsetUtil;
 import com.cloudhopper.smpp.type.SmppChannelException;
 import com.cloudhopper.smpp.type.SmppInvalidArgumentException;
@@ -66,9 +68,9 @@ public class SmppTest {
     private static String to = "7777";
     private static String toPureSipProviderNumber = "7007";
     private static String from = "9999";
-    private static String msgBody = "Message from SMPP Server to Restcomm";
-    private static String msgBodyResp = "Response from Restcomm to SMPP server";
-    private static String msgBodyRespUCS2 = "Response from Restcomm to SMPP serverПППРРр";
+    private static String msgBody = "か~!@#$%^&*()-=\u263a\u00a1\u00a2\u00a3\u00a4\u00a5Message from SMPP Server to Restcomm";
+    private static String msgBodyResp = "か~!@#$%^&*()-=\u263a\u00a1\u00a2\u00a3\u00a4\u00a5Response from Restcomm to SMPP server";
+    private static String msgBodyRespUCS2 = "か~!@#$%^&*()-=\u263a\u00a1\u00a2\u00a3\u00a4\u00a5Response from Restcomm to SMPP server";
 
     @Rule
     public WireMockRule wireMockRule = new WireMockRule(8090); // No-args constructor defaults to port 8080
@@ -190,27 +192,39 @@ public class SmppTest {
         Thread.sleep(2000);
 	}
 
-    private String smsEchoRcml = "<Response><Sms to=\""+from+"\" from=\""+to+"\">"+msgBodyResp+"</Sms></Response>";
-	@Test
-	public void testSendMessageToRestcomm () throws SmppInvalidArgumentException, IOException, InterruptedException {
+    @Test
+    public void testSendMessageToRestcommUTF8() throws SmppInvalidArgumentException, IOException, InterruptedException {
+        testSendMessageToRestcomm(msgBody, msgBodyResp, CharsetUtil.CHARSET_UTF_8);
+    }
 
-        stubFor(get(urlPathEqualTo("/smsApp"))
-                .willReturn(aResponse()
-                        .withStatus(200)
-                        .withHeader("Content-Type", "text/xml")
-                        .withBody(smsEchoRcml)));
+    @Test
+    public void testSendMessageToRestcommUCS2() throws SmppInvalidArgumentException, IOException, InterruptedException {
+        testSendMessageToRestcomm(msgBody, msgBodyRespUCS2, CharsetUtil.CHARSET_UCS_2);
+    }
 
-		mockSmppServer.sendSmppMessageToRestcomm(msgBody,to,from,CharsetUtil.CHARSET_GSM);
+    public void testSendMessageToRestcomm(String msgBodySend, String msgBodyResp, Charset charset) throws SmppInvalidArgumentException, IOException, InterruptedException {
+
+        String smsEchoRcml = "<Response><Sms to=\"" + from + "\" from=\"" + to + "\">" + msgBodyResp + "</Sms></Response>";
+        stubFor(get(urlPathEqualTo("/smsApp")).willReturn(aResponse()
+                .withStatus(200).withHeader("Content-Type", "text/xml")
+                .withBody(smsEchoRcml)));
+
+        mockSmppServer.sendSmppMessageToRestcomm(msgBodySend, to, from,
+                charset);
         Thread.sleep(2000);
         assertTrue(mockSmppServer.isMessageSent());
-		Thread.sleep(2000);
-		assertTrue(mockSmppServer.isMessageReceived());
-		SmppInboundMessageEntity inboundMessageEntity = mockSmppServer.getSmppInboundMessageEntity();
-		assertNotNull(inboundMessageEntity);
-		assertTrue(inboundMessageEntity.getSmppTo().equals(from));
-		assertTrue(inboundMessageEntity.getSmppFrom().equals(to));
-		assertTrue(inboundMessageEntity.getSmppContent().equals(msgBodyResp));
-	}
+        Thread.sleep(2000);
+        assertTrue(mockSmppServer.isMessageReceived());
+        SmppInboundMessageEntity inboundMessageEntity = mockSmppServer.getSmppInboundMessageEntity();
+        assertNotNull(inboundMessageEntity);
+
+        logger.info("msgBodyResp: " + msgBodyResp);
+        logger.info("getSmppContent: " + inboundMessageEntity.getSmppContent());
+
+        assertTrue(inboundMessageEntity.getSmppTo().equals(from));
+        assertTrue(inboundMessageEntity.getSmppFrom().equals(to));
+        assertTrue(inboundMessageEntity.getSmppContent().equals(msgBodyResp));
+    }
 
     private String smsEchoRcmlPureSipProviderNumber = "<Response><Sms to=\""+from+"\" from=\""+toPureSipProviderNumber+"\">"+msgBodyResp+"</Sms></Response>";
 	@Test //https://telestax.atlassian.net/browse/RESTCOMM-1428, https://telestax.atlassian.net/browse/POSTMORTEM-13
@@ -237,7 +251,7 @@ public class SmppTest {
     private String smsEchoRcmlUCS2 = "<Response><Sms to=\""+from+"\" from=\""+to+"\">"+msgBodyRespUCS2+"</Sms></Response>";
 	@Test
     @Category(value={FeatureAltTests.class, BrokenTests.class})
-	public void testSendMessageToRestcommUCS2 () throws SmppInvalidArgumentException, IOException, InterruptedException {
+	public void testSendMessageToRestcommUCS2_2 () throws SmppInvalidArgumentException, IOException, InterruptedException {
 
         stubFor(get(urlPathEqualTo("/smsApp"))
                 .willReturn(aResponse()
@@ -338,7 +352,7 @@ public class SmppTest {
 
 		SipURI uri = mariaSipStack.getAddressFactory().createSipURI(null, "127.0.0.1:5080");
 		assertTrue(mariaPhone.register(uri, "maria", "qwerty1234RT", "sip:maria@127.0.0.1:5095", 3600, 3600));
-		Credential mariaCred = new Credential("org3.restcomm.com","maria","qwerty1234RT");
+		Credential mariaCred = new Credential("org2.restcomm.com","maria","qwerty1234RT");
 		mariaPhone.addUpdateCredential(mariaCred);
 
 		assertTrue(mariaOrg3Phone.register(uri,"maria","1234","sip:maria@127.0.0.1:5094", 3600, 3600));
@@ -355,7 +369,7 @@ public class SmppTest {
 
 		int responseMariaCall = mariaCall.getLastReceivedResponse().getStatusCode();
         logger.info("responseMariaCall: "+responseMariaCall);
-        assertTrue(responseMariaCall == Response.NOT_FOUND);
+        assertEquals(Response.NOT_FOUND, responseMariaCall);
 
 	}
 
