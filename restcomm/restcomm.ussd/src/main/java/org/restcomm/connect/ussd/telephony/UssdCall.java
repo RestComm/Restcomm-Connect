@@ -323,16 +323,16 @@ public class UssdCall extends RestcommUntypedActor implements TransitionEndListe
         UssdStreamEvent.Builder builder = UssdStreamEvent.builder()
                 .setSid(id)
                 .setAccountSid(accountId)
-                .setDirection(UssdStreamEvent.Direction.getDirectionValue(direction))
+                .setDirection(UssdStreamEvent.Direction.valueOf(direction))
                 .setFrom(from.getUser())
                 .setTo(to.getUser());
 
         if (userUssdRequest != null){
-            builder.setStatus(UssdStreamEvent.Status.PROCESSING)
+            builder.setStatus(UssdStreamEvent.Status.processing)
                     .setRequest(getUssdRequestSdrData());
             userUssdRequest = null;
         } else {
-            builder.setStatus(UssdStreamEvent.Status.getStatusValue(external.toString()));
+            UssdStreamEvent.Status.valueOf(external.toString().toUpperCase().replaceAll("-", "_"));
         }
 
         getContext().system()
