@@ -886,10 +886,11 @@ if [ -z "$MS_ADDRESS" ]; then
     MS_ADDRESS=$BIND_ADDRESS
 fi
 
-if [ "a" -ne "a$MGCP_LOCAL_ADDRESS" ]; then
-    MGCP_ADDRESS=$MGCP_LOCAL_ADDRESS
-else
+if [ "a" == "a$MGCP_LOCAL_ADDRESS" ]; then
+    # $MGCP_LOCAL_ADDRESS is empty, so just use bind address
     MGCP_ADDRESS=$BIND_ADDRESS
+else
+    MGCP_ADDRESS=$MGCP_LOCAL_ADDRESS
 fi
 
 configDidProvisionManager "$DID_LOGIN" "$DID_PASSWORD" "$DID_ENDPOINT" "$DID_SITEID" "$HOSTFORDID" "$DID_ACCOUNTID" "$SMPP_SYSTEM_TYPE" "$DID_URIPORT"
