@@ -10,19 +10,19 @@
         <configuration>
             <property name="enableAssertions">false</property>
             <property name="outputToConsole">true</property>
-            <property name="serverConfig">standalone-sip.xml</property>           
+            <property name="serverConfig">standalone-sip.xml</property>
         </configuration>
     </container>
-    
+
     <container qualifier="wildfly10-remote" default="false">
         <configuration>
-            <property name="managementAddress">localhost</property>             
+            <property name="managementAddress">localhost</property>
             <property name="managementPort">9990</property>
             <property name="outputToConsole">true</property>
             <property name="serverConfig">standalone-sip.xml</property>
             <property name="javaVmArguments">-agentlib:jdwp=transport=dt_socket,address=8787,server=y,suspend=y -Dorg.jboss.server.bootstrap.maxThreads=1
-            </property>            
+            </property>
         </configuration>
-    </container>    
-        
+    </container>
+
 </arquillian>
