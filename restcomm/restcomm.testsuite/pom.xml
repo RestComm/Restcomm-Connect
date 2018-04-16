@@ -374,6 +374,8 @@
                                     <classifier>assembly</classifier>
                                 </artifactItem>
                             </artifactItems>
+                            <includes>**/**</includes>
+                            <excludes>**/mobicents-dar.properties, **/click2call.**, **/media-jsr309-servlet.**, **/websockets-sip-servlet.**</excludes>
                         </configuration>
                     </execution>
                 </executions>
@@ -451,6 +453,32 @@
                     </systemPropertyVariables>
                     <redirectTestOutputToFile>false</redirectTestOutputToFile>
                 </configuration>
+            </plugin>
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-resources-plugin</artifactId>
+                <executions>
+                    <execution>
+                        <id>copy-dar-file</id>
+                        <phase>process-test-classes</phase>
+                        <goals>
+                            <goal>copy-resources</goal>
+                        </goals>
+                        <configuration>
+                            <outputDirectory>${project.basedir}/target/dependency/restcomm-sip-servlets-3.2.0-89-wildfly-10.0.0.Final/standalone/configuration/dars/</outputDirectory>
+                            <overwrite>true</overwrite>
+                            <resources>
+                                <resource>
+                                    <directory>${project.basedir}/src/test/resources</directory>
+                                    <includes>
+                                        <include>mobicents-dar.properties</include>
+                                    </includes>
+                                    <filtering>false</filtering>
+                                </resource>
+                            </resources>
+                        </configuration>
+                    </execution>
+                </executions>
             </plugin>
         </plugins>
     </build>
