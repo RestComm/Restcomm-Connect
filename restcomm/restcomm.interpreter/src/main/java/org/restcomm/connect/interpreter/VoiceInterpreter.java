@@ -1328,6 +1328,12 @@ public class VoiceInterpreter extends BaseVoiceInterpreter {
                     if (dialBranches != null && dialBranches.contains(sender)) {
                         dialBranches.remove(sender);
                     }
+                    if (dialBranches == null || dialBranches.size() == 0){
+                        // https://github.com/RestComm/Restcomm-Connect/issues/2895
+                        // Race condition If there is Play/Say Verb after dial verb, if the Dia verb is failing to call to the other,
+                        // NTFY to stop ringing tone also stop RQNT for playing/say verb. Better to stop it here.
+                        call.tell(new StopMediaGroup(), self());
+                    }
                     checkDialBranch(message,sender,action);
                 } else if (sender.equals(call)) {
                     fsm.transition(message, finished);
