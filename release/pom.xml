@@ -21,34 +21,34 @@
                 <artifactId>webrtc-ui</artifactId>
                 <version>[1.1,1.1.999)</version>
                 <type>war</type>
-            </dependency> 
+            </dependency>
             <dependency>
                 <groupId>org.mobicents.media</groupId>
                 <artifactId>media-server-standalone</artifactId>
                 <version>${mobicents.mgcp.impl.version}</version>
                 <type>zip</type>
-                <classifier>assembly</classifier>                
+                <classifier>assembly</classifier>
             </dependency>
             <dependency>
                 <groupId>org.restcomm</groupId>
                 <artifactId>restcomm-connect.application</artifactId>
                 <version>${project.version}</version>
                 <type>war</type>
-            </dependency>       
+            </dependency>
             <dependency>
                 <groupId>org.restcomm</groupId>
                 <artifactId>restcomm-connect-management</artifactId>
-                <version>${project.version}</version>            
+                <version>${project.version}</version>
                 <type>war</type>
-            </dependency>                
-        </dependencies>             
+            </dependency>
+        </dependencies>
     </dependencyManagement>
     <modules>
         <!--
 
         <module>restcomm-assembly-docker</module>
         -->
-        <module>restcomm-assembly-as7</module>        
+        <module>restcomm-assembly-as7</module>
         <module>restcomm-assembly-wildfly10</module>
     </modules>
 </project>
