@@ -10,6 +10,10 @@
 
     <artifactId>restcomm-connect.testsuite</artifactId>
 
+    <properties>
+        <sip.servlets.wildfly.version>3.2.0-103</sip.servlets.wildfly.version>
+    </properties>
+
     <dependencies>
         <!-- Testing -->
         <dependency>
@@ -369,7 +373,7 @@
                                 <artifactItem>
                                     <groupId>org.mobicents.servlet.sip</groupId>
                                     <artifactId>sip-servlets-wildfly-10</artifactId>
-                                    <version>3.2.0-89</version>
+                                    <version>${sip.servlets.wildfly.version}</version>
                                     <type>zip</type>
                                     <classifier>assembly</classifier>
                                 </artifactItem>
@@ -448,7 +452,7 @@
                     <reuseForks>false</reuseForks>
                     <systemPropertyVariables>
                         <java.util.logging.manager>org.jboss.logmanager.LogManager</java.util.logging.manager>
-                        <jboss.home>${project.basedir}/target/dependency/restcomm-sip-servlets-3.2.0-89-wildfly-10.0.0.Final</jboss.home>
+                        <jboss.home>${project.basedir}/target/dependency/restcomm-sip-servlets-${sip.servlets.wildfly.version}-wildfly-10.0.0.Final</jboss.home>
                         <arquillian.launch>wildfly10-managed</arquillian.launch>
                     </systemPropertyVariables>
                     <redirectTestOutputToFile>false</redirectTestOutputToFile>
@@ -465,7 +469,7 @@
                             <goal>copy-resources</goal>
                         </goals>
                         <configuration>
-                            <outputDirectory>${project.basedir}/target/dependency/restcomm-sip-servlets-3.2.0-89-wildfly-10.0.0.Final/standalone/configuration/dars/</outputDirectory>
+                            <outputDirectory>${project.basedir}/target/dependency/restcomm-sip-servlets-${sip.servlets.wildfly.version}-wildfly-10.0.0.Final/standalone/configuration/dars/</outputDirectory>
                             <overwrite>true</overwrite>
                             <resources>
                                 <resource>
