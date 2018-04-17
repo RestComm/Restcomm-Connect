@@ -1,0 +1,47 @@
+= Restcomm Release Notes
+
+These notes group both Community and Telscale changes in a single document.
+Changes marked with (R) sign, means those changes are introduced for the respective
+Telscale commercial product.
+
+//add release-notes with newer on top
+== 8.4.0 version
+=== Additions 
+// New features (whether major or minor) go here
+* Clients passwords are now hashed in DB.
+* Profiles allow arbitrary properties to be saved/retrieved.
+* Added configurable SBC mode.
+
+=== Removals
+// draws attention to functionality that is getting removed
+* RVD auto-login from Console no longer works after hashed passwords
+
+=== Changes
+// any difference in functionality
+* Dial Timeout does not cancel task when Callee is busy
+* Configurable inbound/outbound SMPP encoding
+* Race condition on sending BYE to incoming call for a dial fork scenario
+* (R) Fixed SDR event for SMS
+
+
+=== Migration Notes
+// Things to consider during migration from previous release
+* Clients password are considered to be MD5 hashed in DB. Use proper migration 
+scripts as usual (R), to ensure existing clients passwords are properly migrated.
+
+=== External Dependencies Updates
+// any dependencies
+* Console updated to version:
+** Integrated Feature Access Control (FAC) limitations
+** Updated Console Look & Feel to match new Restcomm branding
+** Implemented new Sign In page in Console
+** Use Designer location in Console from configuration file
+* RVD updated to version.
+** Integrated Feature Access Control (FAC) limitations
+** Improved Designer performance with better xstream usage
+** Designer Look & Feel to match new Restcomm branding
+* WebRTC Demo updated to version.
+** Fixed an issue in WebRTC Demo jain-sip library, parsing some headers
+** Improve WebRTC Demo UX by showing incoming call screen on top even if caller is not the selected contact
+** Add additional configuration to WebRTC Demo for specifying client-specific parameters
+** Improve WebRTC Xirsys integration by checking for actual success response and using domain property as namespace (now required)
