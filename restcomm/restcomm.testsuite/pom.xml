@@ -11,7 +11,7 @@
     <artifactId>restcomm-connect.testsuite</artifactId>
 
     <properties>
-        <sip.servlets.wildfly.version>3.2.0-103</sip.servlets.wildfly.version>
+        <sip.servlets.wildfly.version>3.2.0-105</sip.servlets.wildfly.version>
     </properties>
 
     <dependencies>
