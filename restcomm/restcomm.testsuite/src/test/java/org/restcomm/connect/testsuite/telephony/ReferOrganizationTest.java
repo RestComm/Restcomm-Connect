@@ -605,7 +605,7 @@ public class ReferOrganizationTest {
 
         final SipCall bobCall = bobPhone.createSipCall();
 
-        bobCall.initiateOutgoingCall(bobContact, "sip:1111@127.0.0.1:5080", null, body, "application", "sdp", null, null);
+        bobCall.initiateOutgoingCall(bobContact, dialRestcommOrg3, null, body, "application", "sdp", null, null);
 
         assertLastOperationSuccess(bobCall);
         assertTrue(bobCall.waitOutgoingCallResponse(5 * 1000));
@@ -733,7 +733,7 @@ public class ReferOrganizationTest {
 
         final SipCall bobCall = bobPhone.createSipCall();
 
-        bobCall.initiateOutgoingCall(bobContact, "sip:1111@127.0.0.1:5080", null, body, "application", "sdp", null, null);
+        bobCall.initiateOutgoingCall(bobContact, dialRestcommOrg3, null, body, "application", "sdp", null, null);
 
         assertLastOperationSuccess(bobCall);
         assertTrue(bobCall.waitOutgoingCallResponse(5 * 1000));
@@ -927,7 +927,7 @@ public class ReferOrganizationTest {
 
         final SipCall bobCall = bobPhone.createSipCall();
 
-        bobCall.initiateOutgoingCall(bobContact, "sip:1111@127.0.0.1:5080", null, body, "application", "sdp", null, null);
+        bobCall.initiateOutgoingCall(bobContact, dialRestcommOrg3, null, body, "application", "sdp", null, null);
 
         assertLastOperationSuccess(bobCall);
         assertTrue(bobCall.waitOutgoingCallResponse(5 * 1000));
@@ -994,7 +994,7 @@ public class ReferOrganizationTest {
 
         final SipCall bobCall = bobPhone.createSipCall();
 
-        bobCall.initiateOutgoingCall(bobContact, "sip:1111@127.0.0.1:5080", null, body, "application", "sdp", null, null);
+        bobCall.initiateOutgoingCall(bobContact, dialRestcommOrg3, null, body, "application", "sdp", null, null);
 
         assertLastOperationSuccess(bobCall);
         assertTrue(bobCall.waitOutgoingCallResponse(5 * 1000));
