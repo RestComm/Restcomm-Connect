@@ -199,7 +199,7 @@ public class ReferOrganizationTest {
                         .withBody(dialAliceRcml)));
 
         SipURI uri = aliceSipStack.getAddressFactory().createSipURI(null, "127.0.0.1:5080");
-        assertTrue(alicePhone.register(uri, "alice", "1234", aliceContact, 3600, 3600));
+        assertTrue(alicePhone.register(uri, "alice", "1234", "sip:alice@127.0.0.1:5091", 3600, 3600));
         Credential c = new Credential("refertest.restcomm.com", "alice", clientPassword );
         alicePhone.addUpdateCredential(c);
 
@@ -239,7 +239,7 @@ public class ReferOrganizationTest {
                 null, null));
         assertTrue(georgeCall.waitForAck(5000));
 
-        SipURI referTo = georgeSipStack.getAddressFactory().createSipURI("alice", "127.0.0.1:5080");
+        SipURI referTo = georgeSipStack.getAddressFactory().createSipURI("alice", "refertest.restcomm.com");
 
         ReferSubscriber subscription = georgePhone.refer(georgeCall.getDialog(), referTo, null, 5000);
         assertNotNull(subscription);
@@ -336,7 +336,7 @@ public class ReferOrganizationTest {
                         .withBody(dialAliceRcml)));
 
         SipURI uri = aliceSipStack.getAddressFactory().createSipURI(null, "127.0.0.1:5080");
-        assertTrue(alicePhone.register(uri, "alice", "1234", aliceContact, 3600, 3600));
+        assertTrue(alicePhone.register(uri, "alice", "1234", "sip:alice@127.0.0.1:5091", 3600, 3600));
         Credential c = new Credential("refertest.restcomm.com", "alice", clientPassword );
         alicePhone.addUpdateCredential(c);
 
@@ -348,7 +348,7 @@ public class ReferOrganizationTest {
 
         final SipCall bobCall = bobPhone.createSipCall();
 
-        bobCall.initiateOutgoingCall(bobContact, "sip:0545@127.0.0.1:5080", null, body, "application", "sdp", null, null);
+        bobCall.initiateOutgoingCall(bobContact, "sip:0545@refertest.restcomm.com", null, body, "application", "sdp", null, null);
 
         assertLastOperationSuccess(bobCall);
         assertTrue(bobCall.waitOutgoingCallResponse(5 * 1000));
@@ -376,7 +376,7 @@ public class ReferOrganizationTest {
                 null, null));
         assertTrue(georgeCall.waitForAck(5000));
 
-        SipURI referTo = georgeSipStack.getAddressFactory().createSipURI("alice", "127.0.0.1:5080");
+        SipURI referTo = georgeSipStack.getAddressFactory().createSipURI("alice", "refertest.restcomm.com");
 
         ReferSubscriber subscription = georgePhone.refer(georgeCall.getDialog(), referTo, null, 5000);
         assertNotNull(subscription);
@@ -464,7 +464,7 @@ public class ReferOrganizationTest {
                         .withBody(dialAliceRcml)));
 
         SipURI uri = aliceSipStack.getAddressFactory().createSipURI(null, "127.0.0.1:5080");
-        assertTrue(alicePhone.register(uri, "alice", "1234", aliceContact, 3600, 3600));
+        assertTrue(alicePhone.register(uri, "alice", "1234", "sip:alice@127.0.0.1:5091", 3600, 3600));
         Credential c = new Credential("refertest.restcomm.com", "alice", clientPassword );
         alicePhone.addUpdateCredential(c);
 
@@ -476,7 +476,7 @@ public class ReferOrganizationTest {
 
         final SipCall bobCall = bobPhone.createSipCall();
 
-        bobCall.initiateOutgoingCall(bobContact, "sip:1112@127.0.0.1:5080", null, body, "application", "sdp", null, null);
+        bobCall.initiateOutgoingCall(bobContact, "sip:1112@refertest.restcomm.com", null, body, "application", "sdp", null, null);
 
         assertLastOperationSuccess(bobCall);
         assertTrue(bobCall.waitOutgoingCallResponse(5 * 1000));
@@ -504,7 +504,7 @@ public class ReferOrganizationTest {
                 null, null));
         assertTrue(georgeCall.waitForAck(5000));
 
-        SipURI referTo = georgeSipStack.getAddressFactory().createSipURI("alice", "127.0.0.1:5080");
+        SipURI referTo = georgeSipStack.getAddressFactory().createSipURI("alice", "refertest.restcomm.com");
 
         ReferSubscriber subscription = georgePhone.refer(georgeCall.getDialog(), referTo, null, 5000);
         assertNotNull(subscription);
@@ -593,7 +593,7 @@ public class ReferOrganizationTest {
                         .withBody(dialAliceRcml)));
 
         SipURI uri = aliceSipStack.getAddressFactory().createSipURI(null, "127.0.0.1:5080");
-        assertTrue(alicePhone.register(uri, "alice", "1234", aliceContact, 3600, 3600));
+        assertTrue(alicePhone.register(uri, "alice", "1234", "sip:alice@127.0.0.1:5091", 3600, 3600));
         Credential c = new Credential("refertest.restcomm.com", "alice", clientPassword );
         alicePhone.addUpdateCredential(c);
 
@@ -633,7 +633,7 @@ public class ReferOrganizationTest {
                 null, null));
         assertTrue(georgeCall.waitForAck(5000));
 
-        SipURI referTo = georgeSipStack.getAddressFactory().createSipURI("alice", "127.0.0.1:5080");
+        SipURI referTo = georgeSipStack.getAddressFactory().createSipURI("alice", "refertest.restcomm.com");
 
         ReferSubscriber subscription = georgePhone.refer(georgeCall.getDialog(), referTo, null, 5000);
         assertNotNull(subscription);
@@ -721,7 +721,7 @@ public class ReferOrganizationTest {
                         .withBody(dialAliceRcml)));
 
         SipURI uri = aliceSipStack.getAddressFactory().createSipURI(null, "127.0.0.1:5080");
-        assertTrue(alicePhone.register(uri, "alice", "1234", aliceContact, 3600, 3600));
+        assertTrue(alicePhone.register(uri, "alice", "1234", "sip:alice@127.0.0.1:5091", 3600, 3600));
         Credential c = new Credential("refertest.restcomm.com", "alice", clientPassword );
         alicePhone.addUpdateCredential(c);
 
@@ -850,7 +850,7 @@ public class ReferOrganizationTest {
                         .withBody(dialAliceRcml)));
 
         SipURI uri = aliceSipStack.getAddressFactory().createSipURI(null, "127.0.0.1:5080");
-        assertTrue(alicePhone.register(uri, "alice", "1234", aliceContact, 3600, 3600));
+        assertTrue(alicePhone.register(uri, "alice", "1234", "sip:alice@127.0.0.1:5091", 3600, 3600));
         Credential c = new Credential("refertest.restcomm.com", "alice", clientPassword );
         alicePhone.addUpdateCredential(c);
 
@@ -862,7 +862,7 @@ public class ReferOrganizationTest {
 
         final SipCall bobCall = bobPhone.createSipCall();
 
-        bobCall.initiateOutgoingCall(bobContact, "sip:1212@127.0.0.1:5080", null, body, "application", "sdp", null, null);
+        bobCall.initiateOutgoingCall(bobContact, "sip:1212@refertest.restcomm.com", null, body, "application", "sdp", null, null);
 
         assertLastOperationSuccess(bobCall);
         assertTrue(bobCall.waitOutgoingCallResponse(5 * 1000));
@@ -915,7 +915,7 @@ public class ReferOrganizationTest {
                         .withBody(dialAliceRcml)));
 
         SipURI uri = aliceSipStack.getAddressFactory().createSipURI(null, "127.0.0.1:5080");
-        assertTrue(alicePhone.register(uri, "alice", "1234", aliceContact, 3600, 3600));
+        assertTrue(alicePhone.register(uri, "alice", "1234", "sip:alice@127.0.0.1:5091", 3600, 3600));
         Credential c = new Credential("refertest.restcomm.com", "alice", clientPassword );
         alicePhone.addUpdateCredential(c);
 
@@ -982,7 +982,7 @@ public class ReferOrganizationTest {
                         .withBody(dialJoeRcml)));
 
         SipURI uri = aliceSipStack.getAddressFactory().createSipURI(null, "127.0.0.1:5080");
-        assertTrue(alicePhone.register(uri, "alice", "1234", aliceContact, 3600, 3600));
+        assertTrue(alicePhone.register(uri, "alice", "1234", "sip:alice@127.0.0.1:5091", 3600, 3600));
         Credential c = new Credential("refertest.restcomm.com", "alice", clientPassword );
         alicePhone.addUpdateCredential(c);
 
@@ -1025,7 +1025,7 @@ public class ReferOrganizationTest {
         georgeCall.listenForDisconnect();
         bobCall.listenForDisconnect();
 
-        SipURI referTo = georgeSipStack.getAddressFactory().createSipURI("joe", "127.0.0.1:5080");
+        SipURI referTo = georgeSipStack.getAddressFactory().createSipURI("joe", "refertest.restcomm.com");
         georgePhone.refer(georgeCall.getDialog(), referTo, null, 5000);
 
         assertTrue(georgeCall.waitForDisconnect(5000));
@@ -1051,7 +1051,7 @@ archive.delete("/WEB-INF/web.xml");
         archive.delete("/WEB-INF/classes/application.conf");
         archive.addAsWebInfResource("sip.xml");
         archive.addAsWebInfResource("web.xml");
-        archive.addAsWebInfResource("restcomm_calllifecycle.xml", "conf/restcomm.xml");
+        archive.addAsWebInfResource("restcomm_referorg.xml", "conf/restcomm.xml");
         archive.addAsWebInfResource("restcomm.script_ReferMessageOrgTest", "data/hsql/restcomm.script");
         archive.addAsWebInfResource("akka_application.conf", "classes/application.conf");
         logger.info("Packaged Test App");
