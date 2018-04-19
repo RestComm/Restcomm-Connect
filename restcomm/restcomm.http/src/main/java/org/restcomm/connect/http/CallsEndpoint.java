@@ -623,7 +623,7 @@ public class CallsEndpoint extends AbstractEndpoint {
 
         if(mute != null && call != null){
             try{
-                muteUnmuteCall(mute, callInfo, call, cdr, dao);
+                CallsUtil.muteUnmuteCall(mute, callInfo, call, cdr, dao);
             } catch (Exception exception) {
                 return status(INTERNAL_SERVER_ERROR).entity(exception.getMessage()).build();
             }
@@ -700,37 +700,6 @@ public class CallsEndpoint extends AbstractEndpoint {
             return null;
         }
 
-    }
-
-    /**
-     * @param mute - true if we want to mute the call, false otherwise.
-     * @param callInfo - CallInfo
-     * @param call - ActorRef for the call
-     * @param cdr - CallDetailRecord of given call to update mute status in db
-     * @param dao - CallDetailRecordsDao for calls to update mute status in db
-     */
-    protected void muteUnmuteCall(Boolean mute, CallInfo callInfo, ActorRef call, CallDetailRecord cdr, CallDetailRecordsDao dao){
-        if(callInfo.state().name().equalsIgnoreCase("IN_PROGRESS") || callInfo.state().name().equalsIgnoreCase("in-progress")){
-            if(mute){
-                if(!callInfo.isMuted()){
-                    call.tell(new Mute(), null);
-                }else{
-                    if(logger.isInfoEnabled())
-                        logger.info("Call is already muted.");
-                }
-            }else{
-                if(callInfo.isMuted()){
-                    call.tell(new Unmute(), null);
-                }else{
-                    if(logger.isInfoEnabled())
-                        logger.info("Call is not muted.");
-                }
-            }
-            cdr = cdr.setMuted(mute);
-            dao.updateCallDetailRecord(cdr);
-        }else{
-            // Do Nothing. We can only mute/unMute in progress calls
-        }
     }
 
     @Path("/{sid}")

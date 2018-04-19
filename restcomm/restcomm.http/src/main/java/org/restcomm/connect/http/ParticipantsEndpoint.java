@@ -91,7 +91,7 @@ import scala.concurrent.duration.Duration;
 @Path("/Accounts/{accountSid}/Conferences/{conferenceSid}/Participants")
 @ThreadSafe
 @Singleton
-public class ParticipantsEndpoint extends CallsEndpoint {
+public class ParticipantsEndpoint extends AbstractEndpoint {
     @Context
     private ServletContext context;
     private Configuration configuration;
@@ -299,7 +299,7 @@ public class ParticipantsEndpoint extends CallsEndpoint {
 
             if(call != null){
                 try{
-                    muteUnmuteCall(mute, callInfo, call, cdr, dao);
+                    CallsUtil.muteUnmuteCall(mute, callInfo, call, cdr, dao);
                 } catch (Exception exception) {
                     return status(INTERNAL_SERVER_ERROR).entity(exception.getMessage()).build();
                 }
