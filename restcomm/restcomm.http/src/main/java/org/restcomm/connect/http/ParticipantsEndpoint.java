@@ -24,11 +24,18 @@ import static akka.pattern.Patterns.ask;
 import akka.util.Timeout;
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
+import com.sun.jersey.spi.resource.Singleton;
 import com.thoughtworks.xstream.XStream;
 import java.util.List;
 import java.util.concurrent.TimeUnit;
 import javax.annotation.PostConstruct;
 import javax.servlet.ServletContext;
+import javax.ws.rs.GET;
+import javax.ws.rs.HeaderParam;
+import javax.ws.rs.POST;
+import javax.ws.rs.Path;
+import javax.ws.rs.PathParam;
+import javax.ws.rs.Produces;
 import javax.ws.rs.core.Context;
 import javax.ws.rs.core.MediaType;
 import static javax.ws.rs.core.MediaType.APPLICATION_JSON;
@@ -48,6 +55,7 @@ import javax.ws.rs.core.UriInfo;
 import org.apache.commons.configuration.Configuration;
 import org.apache.shiro.authz.AuthorizationException;
 import org.restcomm.connect.commons.annotations.concurrency.NotThreadSafe;
+import org.restcomm.connect.commons.annotations.concurrency.ThreadSafe;
 import org.restcomm.connect.commons.configuration.RestcommConfiguration;
 import org.restcomm.connect.commons.dao.Sid;
 import org.restcomm.connect.dao.AccountsDao;
@@ -75,7 +83,9 @@ import scala.concurrent.duration.Duration;
 /**
  * @author maria-farooq@live.com (Maria Farooq)
  */
-@NotThreadSafe
+@Path("/Accounts/{accountSid}/Conferences/{conferenceSid}/Participants")
+@ThreadSafe
+@Singleton
 public abstract class ParticipantsEndpoint extends CallsEndpoint {
     @Context
     protected ServletContext context;
@@ -271,5 +281,35 @@ public abstract class ParticipantsEndpoint extends CallsEndpoint {
         } else {
             return null;
         }
+    }
+
+    @Path("/{callSid}")
+    @GET
+    @Produces({MediaType.APPLICATION_XML, MediaType.APPLICATION_JSON})
+    public Response getParticipantAsXml(@PathParam("accountSid") final String accountSid,
+            @PathParam("conferenceSid") final String conferenceSid,
+            @PathParam("callSid") final String callSid,
+            @HeaderParam("Accept") String accept) {
+        return getCall(accountSid, callSid, retrieveMediaType(accept));
+    }
+
+    @GET
+    @Produces({MediaType.APPLICATION_XML, MediaType.APPLICATION_JSON})
+    public Response getParticipants(@PathParam("accountSid") final String accountSid,
+            @PathParam("conferenceSid") final String conferenceSid,
+            @Context UriInfo info,
+            @HeaderParam("Accept") String accept) {
+        return getCalls(accountSid, conferenceSid, info, retrieveMediaType(accept));
+    }
+
+    @Path("/{callSid}")
+    @POST
+    @Produces({MediaType.APPLICATION_XML, MediaType.APPLICATION_JSON})
+    public Response modifyCall(@PathParam("accountSid") final String accountSid,
+            @PathParam("conferenceSid") final String conferenceSid,
+            @PathParam("callSid") final String callSid,
+            final MultivaluedMap<String, String> data,
+            @HeaderParam("Accept") String accept) {
+        return updateCall(accountSid, callSid, data, retrieveMediaType(accept));
     }
 }

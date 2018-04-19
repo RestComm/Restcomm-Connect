@@ -60,19 +60,31 @@ import org.restcomm.connect.identity.passwords.PasswordValidatorFactory;
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
 import com.thoughtworks.xstream.XStream;
+import javax.ws.rs.DELETE;
+import javax.ws.rs.GET;
+import javax.ws.rs.HeaderParam;
+import javax.ws.rs.POST;
+import javax.ws.rs.PUT;
+import javax.ws.rs.Path;
+import javax.ws.rs.PathParam;
+import javax.ws.rs.Produces;
+import static javax.ws.rs.core.Response.ok;
+import static javax.ws.rs.core.Response.status;
+import org.restcomm.connect.commons.annotations.concurrency.ThreadSafe;
+import org.restcomm.connect.http.security.PermissionEvaluator;
 
 /**
  * @author quintana.thomas@gmail.com (Thomas Quintana)
  */
-@NotThreadSafe
-public abstract class ClientsEndpoint extends SecuredEndpoint {
+@Path("/Accounts/{accountSid}/Clients")
+@ThreadSafe
+public abstract class ClientsEndpoint extends AbstractEndpoint {
     @Context
-    protected ServletContext context;
-    protected Configuration configuration;
+    private ServletContext context;
+    private Configuration configuration;
     protected ClientsDao dao;
-    protected Gson gson;
-    protected XStream xstream;
-    protected AccountsDao accountsDao;
+    private Gson gson;
+    private XStream xstream;
 
     public ClientsEndpoint() {
         super();
@@ -82,7 +94,6 @@ public abstract class ClientsEndpoint extends SecuredEndpoint {
     public void init() {
         final DaoManager storage = (DaoManager) context.getAttribute(DaoManager.class.getName());
         dao = storage.getClientsDao();
-        accountsDao = storage.getAccountsDao();
         configuration = (Configuration) context.getAttribute(Configuration.class.getName());
         configuration = configuration.subset("runtime-settings");
         super.init(configuration);
@@ -315,5 +326,67 @@ public abstract class ClientsEndpoint extends SecuredEndpoint {
             }
         }
         return client;
+    }
+
+    private Response deleteClient(final String accountSid, final String sid) {
+        Account operatedAccount =super.accountsDao.getAccount(accountSid);
+        secure(operatedAccount, "RestComm:Delete:Clients");
+        Client client = dao.getClient(new Sid(sid));
+        if (client != null) {
+            secure(operatedAccount, client.getAccountSid(), PermissionEvaluator.SecuredType.SECURED_STANDARD);
+            dao.removeClient(new Sid(sid));
+            return ok().build();
+        } else {
+            return status(Response.Status.NOT_FOUND).build();
+        }
+    }
+
+    @Path("/{sid}")
+    @DELETE
+    public Response deleteClientAsXml(@PathParam("accountSid") final String accountSid, @PathParam("sid") final String sid) {
+        return deleteClient(accountSid, sid);
+    }
+
+    @Path("/{sid}")
+    @GET
+    @Produces({MediaType.APPLICATION_XML, MediaType.APPLICATION_JSON})
+    public Response getClientAsXml(@PathParam("accountSid") final String accountSid,
+            @PathParam("sid") final String sid,
+            @HeaderParam("Accept") String accept) {
+        return getClient(accountSid, sid, retrieveMediaType(accept));
+    }
+
+    @GET
+    @Produces({MediaType.APPLICATION_XML, MediaType.APPLICATION_JSON})
+    public Response getClients(@PathParam("accountSid") final String accountSid,
+            @HeaderParam("Accept") String accept) {
+        return getClients(accountSid, retrieveMediaType(accept));
+    }
+
+    @POST
+    @Produces({MediaType.APPLICATION_XML, MediaType.APPLICATION_JSON})
+    public Response putClient(@PathParam("accountSid") final String accountSid,
+            final MultivaluedMap<String, String> data,
+            @HeaderParam("Accept") String accept) {
+        return putClient(accountSid, data, retrieveMediaType(accept));
+    }
+
+    @Path("/{sid}")
+    @POST
+    @Produces({MediaType.APPLICATION_XML, MediaType.APPLICATION_JSON})
+    public Response updateClientAsXmlPost(@PathParam("accountSid") final String accountSid, @PathParam("sid") final String sid,
+            final MultivaluedMap<String, String> data,
+            @HeaderParam("Accept") String accept) {
+        return updateClient(accountSid, sid, data, retrieveMediaType(accept));
+    }
+
+    @Path("/{sid}")
+    @PUT
+    @Produces({MediaType.APPLICATION_XML, MediaType.APPLICATION_JSON})
+    public Response updateClientAsXmlPut(@PathParam("accountSid") final String accountSid,
+            @PathParam("sid") final String sid,
+            final MultivaluedMap<String, String> data,
+            @HeaderParam("Accept") String accept) {
+        return updateClient(accountSid, sid, data, retrieveMediaType(accept));
     }
 }

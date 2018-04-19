@@ -29,6 +29,11 @@ import java.util.ArrayList;
 import java.util.List;
 import javax.annotation.PostConstruct;
 import javax.servlet.ServletContext;
+import javax.ws.rs.GET;
+import javax.ws.rs.HeaderParam;
+import javax.ws.rs.Path;
+import javax.ws.rs.PathParam;
+import javax.ws.rs.Produces;
 import javax.ws.rs.core.Context;
 import javax.ws.rs.core.MediaType;
 import static javax.ws.rs.core.MediaType.APPLICATION_JSON;
@@ -46,8 +51,10 @@ import org.apache.commons.configuration.Configuration;
 import org.restcomm.connect.commons.amazonS3.RecordingSecurityLevel;
 import org.restcomm.connect.commons.amazonS3.S3AccessTool;
 import org.restcomm.connect.commons.annotations.concurrency.NotThreadSafe;
+import org.restcomm.connect.commons.annotations.concurrency.ThreadSafe;
 import org.restcomm.connect.commons.configuration.RestcommConfiguration;
 import org.restcomm.connect.commons.dao.Sid;
+import org.restcomm.connect.dao.AccountsDao;
 import org.restcomm.connect.dao.DaoManager;
 import org.restcomm.connect.dao.RecordingsDao;
 import org.restcomm.connect.dao.entities.Account;
@@ -58,22 +65,25 @@ import org.restcomm.connect.dao.entities.RestCommResponse;
 import org.restcomm.connect.http.converter.RecordingConverter;
 import org.restcomm.connect.http.converter.RecordingListConverter;
 import org.restcomm.connect.http.converter.RestCommResponseConverter;
+import org.restcomm.connect.http.security.PermissionEvaluator.SecuredType;
 
 /**
  * @author quintana.thomas@gmail.com (Thomas Quintana)
  */
-@NotThreadSafe
-public abstract class RecordingsEndpoint extends SecuredEndpoint {
+@Path("/Accounts/{accountSid}/Recordings")
+@ThreadSafe
+public abstract class RecordingsEndpoint extends AbstractEndpoint {
     @Context
-    protected ServletContext context;
-    protected Configuration configuration;
-    protected RecordingsDao dao;
-    protected Gson gson;
-    protected XStream xstream;
-    protected S3AccessTool s3AccessTool;
-    protected RecordingSecurityLevel securityLevel = RecordingSecurityLevel.SECURE;
-    protected RecordingListConverter listConverter;
-    protected String instanceId;
+    private ServletContext context;
+    private Configuration configuration;
+    private AccountsDao accountsDao;
+    private RecordingsDao dao;
+    private Gson gson;
+    private XStream xstream;
+    private S3AccessTool s3AccessTool;
+    private RecordingSecurityLevel securityLevel = RecordingSecurityLevel.SECURE;
+    private RecordingListConverter listConverter;
+    private String instanceId;
 
     public RecordingsEndpoint() {
         super();
@@ -86,6 +96,7 @@ public abstract class RecordingsEndpoint extends SecuredEndpoint {
         Configuration amazonS3Configuration = configuration.subset("amazon-s3");
         configuration = configuration.subset("runtime-settings");
         super.init(configuration);
+        this.accountsDao = storage.getAccountsDao();
         dao = storage.getRecordingsDao();
         final RecordingConverter converter = new RecordingConverter(configuration);
         listConverter = new RecordingListConverter(configuration);
@@ -318,6 +329,38 @@ public abstract class RecordingsEndpoint extends SecuredEndpoint {
             }
         }
         return status(Response.Status.NOT_FOUND).build();
+    }
+
+    @Path("/{sid}.wav")
+    @GET
+    @Produces({MediaType.APPLICATION_XML, MediaType.APPLICATION_JSON})
+    public Response getRecordingAsWav(@PathParam("accountSid") final String accountSid,
+            @PathParam("sid") final String sid) {
+        return getRecordingFile(accountSid, sid);
+    }
+
+    @Path("/{sid}.mp4")
+    @GET
+    @Produces({MediaType.APPLICATION_XML, MediaType.APPLICATION_JSON})
+    public Response getRecordingAsMp4(@PathParam("accountSid") final String accountSid, @PathParam("sid") final String sid) {
+        return getRecordingFile(accountSid, sid);
+    }
+
+    @Path("/{sid}")
+    @GET
+    @Produces({MediaType.APPLICATION_XML, MediaType.APPLICATION_JSON})
+    public Response getRecordingAsXml(@PathParam("accountSid") final String accountSid,
+            @PathParam("sid") final String sid,
+            @HeaderParam("Accept") String accept) {
+        return getRecording(accountSid, sid, retrieveMediaType(accept));
+    }
+
+    @GET
+    @Produces({MediaType.APPLICATION_XML, MediaType.APPLICATION_JSON})
+    public Response getRecordings(@PathParam("accountSid") final String accountSid,
+            @Context UriInfo info,
+            @HeaderParam("Accept") String accept) {
+        return getRecordings(accountSid, info, retrieveMediaType(accept));
     }
 
 }

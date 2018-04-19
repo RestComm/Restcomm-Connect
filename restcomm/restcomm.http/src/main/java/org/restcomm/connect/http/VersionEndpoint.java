@@ -25,6 +25,10 @@ import com.google.gson.GsonBuilder;
 import com.thoughtworks.xstream.XStream;
 import javax.annotation.PostConstruct;
 import javax.servlet.ServletContext;
+import javax.ws.rs.GET;
+import javax.ws.rs.Path;
+import javax.ws.rs.PathParam;
+import javax.ws.rs.Produces;
 import javax.ws.rs.core.Context;
 import javax.ws.rs.core.MediaType;
 import static javax.ws.rs.core.MediaType.*;
@@ -35,6 +39,7 @@ import org.apache.log4j.Logger;
 import org.restcomm.connect.commons.Version;
 import org.restcomm.connect.commons.VersionEntity;
 import org.restcomm.connect.commons.annotations.concurrency.ThreadSafe;
+import org.restcomm.connect.dao.AccountsDao;
 import org.restcomm.connect.dao.DaoManager;
 import org.restcomm.connect.dao.UsageDao;
 import org.restcomm.connect.dao.entities.RestCommResponse;
@@ -45,16 +50,18 @@ import org.restcomm.connect.http.converter.VersionConverter;
  * @author <a href="mailto:gvagenas@gmail.com">gvagenas</a>
  *
  */
+@Path("/Accounts/{accountSid}/Version")
 @ThreadSafe
-public class VersionEndpoint extends SecuredEndpoint {
+public class VersionEndpoint extends AbstractEndpoint {
     private static Logger logger = Logger.getLogger(VersionEndpoint.class);
 
     @Context
-    protected ServletContext context;
-    protected Configuration configuration;
-    protected UsageDao dao;
-    protected Gson gson;
-    protected XStream xstream;
+    private ServletContext context;
+    private Configuration configuration;
+    private UsageDao dao;
+    private Gson gson;
+    private XStream xstream;
+    private AccountsDao accountsDao;
 
     @PostConstruct
     public void init() {
@@ -96,6 +103,13 @@ public class VersionEndpoint extends SecuredEndpoint {
         } else {
             return null;
         }
+    }
+
+    @GET
+    @Produces({MediaType.APPLICATION_XML, MediaType.APPLICATION_JSON})
+    public Response getVersion(@PathParam("accountSid") final String accountSid,
+            @HeaderParam("Accept") String accept) {
+        return getVersion(accountSid, retrieveMediaType(accept));
     }
 
 }

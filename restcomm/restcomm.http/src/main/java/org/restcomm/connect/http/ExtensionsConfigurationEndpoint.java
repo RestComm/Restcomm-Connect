@@ -25,6 +25,16 @@ import com.thoughtworks.xstream.XStream;
 
 
 import javax.annotation.PostConstruct;
+import javax.annotation.security.RolesAllowed;
+import javax.servlet.ServletContext;
+import javax.ws.rs.GET;
+import javax.ws.rs.HeaderParam;
+import javax.ws.rs.POST;
+import javax.ws.rs.Path;
+import javax.ws.rs.PathParam;
+import javax.ws.rs.Produces;
+import javax.ws.rs.QueryParam;
+import javax.ws.rs.core.Context;
 import javax.ws.rs.core.MediaType;
 import static javax.ws.rs.core.MediaType.APPLICATION_JSON;
 import static javax.ws.rs.core.MediaType.APPLICATION_JSON_TYPE;
@@ -47,16 +57,21 @@ import org.restcomm.connect.extension.api.ConfigurationException;
 import org.restcomm.connect.extension.api.ExtensionConfiguration;
 import org.restcomm.connect.http.converter.ExtensionConfigurationConverter;
 import org.restcomm.connect.http.converter.RestCommResponseConverter;
+import static org.restcomm.connect.http.security.AccountPrincipal.SUPER_ADMIN_ROLE;
 
 /**
  * Created by gvagenas on 12/10/2016.
  */
-public class  ExtensionsConfigurationEndpoint extends SecuredEndpoint {
-    protected Configuration allConfiguration;
-    protected Configuration configuration;
-    protected Gson gson;
-    protected XStream xstream;
-    protected ExtensionsConfigurationDao extensionsConfigurationDao;
+@Path("/ExtensionsConfiguration")
+@RolesAllowed(SUPER_ADMIN_ROLE)
+public class  ExtensionsConfigurationEndpoint extends AbstractEndpoint {
+    private Configuration allConfiguration;
+    private Configuration configuration;
+    private Gson gson;
+    private XStream xstream;
+    private ExtensionsConfigurationDao extensionsConfigurationDao;
+    @Context
+    private ServletContext context;
 
     public ExtensionsConfigurationEndpoint() { super(); }
 
@@ -272,5 +287,30 @@ public class  ExtensionsConfigurationEndpoint extends SecuredEndpoint {
         }
 
         return new ExtensionConfiguration(existingExtensionSid, existingExtensionName, enabled, configurationData, configurationType, dateCreated ,DateTime.now());
+    }
+
+    @Path("/{extensionId}")
+    @GET
+    @Produces({MediaType.APPLICATION_XML, MediaType.APPLICATION_JSON})
+    public Response getConfigurationAsXml(@PathParam("extensionId") final String extension,
+            @QueryParam("AccountSid") Sid accountSid,
+            @HeaderParam("Accept") String accept) {
+        return getConfiguration(extension, accountSid, retrieveMediaType(accept));
+    }
+
+    @POST
+    @Produces({MediaType.APPLICATION_XML, MediaType.APPLICATION_JSON})
+    public Response postConfigurationAsXml(final MultivaluedMap<String, String> data,
+            @HeaderParam("Accept") String accept) {
+        return postConfiguration(data, retrieveMediaType(accept));
+    }
+
+    @Path("/{extensionSid}")
+    @POST
+    @Produces({MediaType.APPLICATION_XML, MediaType.APPLICATION_JSON})
+    public Response updateConfigurationAsXml(@PathParam("extensionSid") final String extensionSid,
+                                                  final MultivaluedMap<String, String> data,
+                                                  @HeaderParam("Accept") String accept) {
+        return updateConfiguration(extensionSid, data, retrieveMediaType(accept));
     }
 }

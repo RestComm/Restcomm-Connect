@@ -29,6 +29,11 @@ import java.net.URI;
 import java.util.concurrent.TimeUnit;
 import javax.annotation.PostConstruct;
 import javax.servlet.ServletContext;
+import javax.ws.rs.HeaderParam;
+import javax.ws.rs.POST;
+import javax.ws.rs.Path;
+import javax.ws.rs.PathParam;
+import javax.ws.rs.Produces;
 import javax.ws.rs.core.Context;
 import javax.ws.rs.core.MediaType;
 import static javax.ws.rs.core.MediaType.APPLICATION_JSON;
@@ -65,7 +70,8 @@ import scala.concurrent.duration.Duration;
  * @author <a href="mailto:gvagenas@gmail.com">gvagenas</a>
  *
  */
-public class UssdPushEndpoint extends SecuredEndpoint {
+@Path("/Accounts/{accountSid}/UssdPush")
+public class UssdPushEndpoint extends AbstractEndpoint {
 
     @Context
     protected ServletContext context;
@@ -208,4 +214,11 @@ public class UssdPushEndpoint extends SecuredEndpoint {
         }
     }
 
+    @POST
+    @Produces({MediaType.APPLICATION_XML, MediaType.APPLICATION_JSON})
+    public Response putCall(@PathParam("accountSid") final String accountSid,
+            final MultivaluedMap<String, String> data,
+            @HeaderParam("Accept") String accept) {
+        return putCall(accountSid, data, retrieveMediaType(accept));
+    }
 }

@@ -26,6 +26,7 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.regex.Pattern;
 import javax.annotation.PostConstruct;
+import javax.inject.Inject;
 import javax.servlet.ServletContext;
 import javax.ws.rs.core.Context;
 import javax.ws.rs.core.MediaType;
@@ -36,12 +37,16 @@ import static javax.ws.rs.core.Response.status;
 import org.apache.commons.configuration.Configuration;
 import org.restcomm.connect.commons.annotations.concurrency.ThreadSafe;
 import org.restcomm.connect.commons.loader.ObjectInstantiationException;
+import org.restcomm.connect.dao.AccountsDao;
+import org.restcomm.connect.dao.DaoManager;
 import org.restcomm.connect.dao.entities.AvailablePhoneNumber;
 import org.restcomm.connect.dao.entities.AvailablePhoneNumberList;
 import org.restcomm.connect.dao.entities.RestCommResponse;
 import org.restcomm.connect.http.converter.AvailablePhoneNumberConverter;
 import org.restcomm.connect.http.converter.AvailablePhoneNumberListConverter;
 import org.restcomm.connect.http.converter.RestCommResponseConverter;
+import org.restcomm.connect.http.security.PermissionEvaluator;
+import org.restcomm.connect.identity.UserIdentityContext;
 import org.restcomm.connect.provisioning.number.api.PhoneNumber;
 import org.restcomm.connect.provisioning.number.api.PhoneNumberProvisioningManager;
 import org.restcomm.connect.provisioning.number.api.PhoneNumberProvisioningManagerProvider;
@@ -52,12 +57,15 @@ import org.restcomm.connect.provisioning.number.api.PhoneNumberSearchFilters;
  * @author jean.deruelle@telestax.com
  */
 @ThreadSafe
-public abstract class AvailablePhoneNumbersEndpoint extends SecuredEndpoint {
+public abstract class AvailablePhoneNumbersEndpoint extends AbstractEndpoint {
     @Context
-    protected ServletContext context;
-    protected PhoneNumberProvisioningManager phoneNumberProvisioningManager;
+    private ServletContext context;
+    private PhoneNumberProvisioningManager phoneNumberProvisioningManager;
     private XStream xstream;
-    protected Gson gson;
+    private Gson gson;
+
+    @Inject
+    private PermissionEvaluator permissionEvaluator;
 
     public AvailablePhoneNumbersEndpoint() {
         super();
@@ -67,7 +75,6 @@ public abstract class AvailablePhoneNumbersEndpoint extends SecuredEndpoint {
     public void init() throws ObjectInstantiationException {
         configuration = (Configuration) context.getAttribute(Configuration.class.getName());
         super.init(configuration.subset("runtime-settings"));
-
         /*
         phoneNumberProvisioningManager = (PhoneNumberProvisioningManager) context.getAttribute("PhoneNumberProvisioningManager");
         if(phoneNumberProvisioningManager == null) {
@@ -97,8 +104,14 @@ public abstract class AvailablePhoneNumbersEndpoint extends SecuredEndpoint {
         gson = builder.create();
     }
 
-    protected Response getAvailablePhoneNumbers(final String accountSid, final String isoCountryCode, PhoneNumberSearchFilters listFilters, String filterPattern, final MediaType responseType) {
-        secure(accountsDao.getAccount(accountSid), "RestComm:Read:AvailablePhoneNumbers");
+    protected Response getAvailablePhoneNumbers(final String accountSid,
+            final String isoCountryCode,
+            PhoneNumberSearchFilters listFilters,
+            String filterPattern,
+            final MediaType responseType,
+            UserIdentityContext userIdentityContext) {
+        permissionEvaluator.secure(accountsDao.getAccount(accountSid),
+                "RestComm:Read:AvailablePhoneNumbers", userIdentityContext);
         String searchPattern = "";
         if (filterPattern != null && !filterPattern.isEmpty()) {
             for(int i = 0; i < filterPattern.length(); i ++) {

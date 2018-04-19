@@ -44,6 +44,12 @@ import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.TimeUnit;
 import javax.annotation.PostConstruct;
 import javax.servlet.ServletContext;
+import javax.ws.rs.GET;
+import javax.ws.rs.HeaderParam;
+import javax.ws.rs.POST;
+import javax.ws.rs.Path;
+import javax.ws.rs.PathParam;
+import javax.ws.rs.Produces;
 import javax.ws.rs.core.Context;
 import javax.ws.rs.core.MediaType;
 import static javax.ws.rs.core.MediaType.*;
@@ -55,6 +61,7 @@ import static javax.ws.rs.core.Response.status;
 import javax.ws.rs.core.UriInfo;
 import org.apache.commons.configuration.Configuration;
 import org.restcomm.connect.commons.annotations.concurrency.NotThreadSafe;
+import org.restcomm.connect.commons.annotations.concurrency.ThreadSafe;
 import org.restcomm.connect.commons.configuration.RestcommConfiguration;
 import org.restcomm.connect.commons.dao.Sid;
 import org.restcomm.connect.commons.faulttolerance.RestcommUntypedActor;
@@ -82,8 +89,9 @@ import scala.concurrent.duration.Duration;
 /**
  * @author quintana.thomas@gmail.com (Thomas Quintana)
  */
-@NotThreadSafe
-public abstract class SmsMessagesEndpoint extends SecuredEndpoint {
+@Path("/Accounts/{accountSid}/SMS/Messages")
+@ThreadSafe
+public abstract class SmsMessagesEndpoint extends AbstractEndpoint {
     @Context
     protected ServletContext context;
     protected ActorSystem system;
@@ -401,5 +409,30 @@ public abstract class SmsMessagesEndpoint extends SecuredEndpoint {
                 context.stop(self);
             }
         }
+    }
+
+    @Path("/{sid}")
+    @GET
+    @Produces({MediaType.APPLICATION_XML, MediaType.APPLICATION_JSON})
+    public Response getSmsMessageAsXml(@PathParam("accountSid") final String accountSid,
+            @PathParam("sid") final String sid,
+            @HeaderParam("Accept") String accept) {
+        return getSmsMessage(accountSid, sid, retrieveMediaType(accept));
+    }
+
+    @GET
+    @Produces({MediaType.APPLICATION_XML, MediaType.APPLICATION_JSON})
+    public Response getSmsMessages(@PathParam("accountSid") final String accountSid,
+            @Context UriInfo info,
+            @HeaderParam("Accept") String accept) {
+        return getSmsMessages(accountSid, info, retrieveMediaType(acept));
+    }
+
+    @POST
+    @Produces({MediaType.APPLICATION_XML, MediaType.APPLICATION_JSON})
+    public Response putSmsMessage(@PathParam("accountSid") final String accountSid,
+            final MultivaluedMap<String, String> data,
+            @HeaderParam("Accept") String accept) {
+        return putSmsMessage(accountSid, data, retrieveMediaType(accept));
     }
 }

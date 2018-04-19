@@ -26,6 +26,11 @@ import java.text.ParseException;
 import java.util.List;
 import javax.annotation.PostConstruct;
 import javax.servlet.ServletContext;
+import javax.ws.rs.GET;
+import javax.ws.rs.HeaderParam;
+import javax.ws.rs.Path;
+import javax.ws.rs.PathParam;
+import javax.ws.rs.Produces;
 import javax.ws.rs.core.Context;
 import javax.ws.rs.core.MediaType;
 import static javax.ws.rs.core.MediaType.APPLICATION_JSON;
@@ -42,6 +47,7 @@ import javax.ws.rs.core.UriInfo;
 import org.apache.commons.configuration.Configuration;
 import org.apache.shiro.authz.AuthorizationException;
 import org.restcomm.connect.commons.annotations.concurrency.NotThreadSafe;
+import org.restcomm.connect.commons.annotations.concurrency.ThreadSafe;
 import org.restcomm.connect.commons.dao.Sid;
 import org.restcomm.connect.dao.ConferenceDetailRecordsDao;
 import org.restcomm.connect.dao.DaoManager;
@@ -57,8 +63,9 @@ import org.restcomm.connect.http.converter.ConferenceDetailRecordListConverter;
  * @author quintana.thomas@gmail.com (Thomas Quintana)
  * @author maria-farooq@live.com (Maria Farooq)
  */
-@NotThreadSafe
-public abstract class ConferencesEndpoint extends SecuredEndpoint {
+@Path("/Accounts/{accountSid}/Conferences")
+@ThreadSafe
+public abstract class ConferencesEndpoint extends AbstractEndpoint {
     @Context
     protected ServletContext context;
     protected Configuration configuration;
@@ -188,6 +195,23 @@ public abstract class ConferencesEndpoint extends SecuredEndpoint {
         } else {
             return null;
         }
+    }
+
+    @Path("/{sid}")
+    @GET
+    @Produces({MediaType.APPLICATION_XML, MediaType.APPLICATION_JSON})
+    public Response getConferenceAsXml(@PathParam("accountSid") final String accountSid,
+            @PathParam("sid") final String sid,
+            @HeaderParam("Accept") String accept) {
+        return getConference(accountSid, sid, retrieveMediaType(accept));
+    }
+
+    @GET
+    @Produces({MediaType.APPLICATION_XML, MediaType.APPLICATION_JSON})
+    public Response getConferences(@PathParam("accountSid") final String accountSid,
+            @Context UriInfo info,
+            @HeaderParam("Accept") String accept) {
+        return getConferences(accountSid, info, retrieveMediaType(accept));
     }
 
 }

@@ -26,12 +26,22 @@ import com.google.i18n.phonenumbers.NumberParseException.ErrorType;
 import com.google.i18n.phonenumbers.PhoneNumberUtil;
 import com.google.i18n.phonenumbers.PhoneNumberUtil.PhoneNumberFormat;
 import com.google.i18n.phonenumbers.Phonenumber.PhoneNumber;
+import com.sun.jersey.spi.container.ResourceFilters;
 import com.thoughtworks.xstream.XStream;
 import java.net.URI;
 import java.util.ArrayList;
 import java.util.List;
 import javax.annotation.PostConstruct;
+import javax.annotation.security.RolesAllowed;
 import javax.servlet.ServletContext;
+import javax.ws.rs.DELETE;
+import javax.ws.rs.GET;
+import javax.ws.rs.HeaderParam;
+import javax.ws.rs.POST;
+import javax.ws.rs.PUT;
+import javax.ws.rs.Path;
+import javax.ws.rs.PathParam;
+import javax.ws.rs.Produces;
 import javax.ws.rs.core.Context;
 import javax.ws.rs.core.MediaType;
 import static javax.ws.rs.core.MediaType.APPLICATION_JSON;
@@ -51,7 +61,7 @@ import static javax.ws.rs.core.Response.status;
 import javax.ws.rs.core.UriInfo;
 import org.apache.commons.configuration.Configuration;
 import org.joda.time.DateTime;
-import org.restcomm.connect.commons.annotations.concurrency.NotThreadSafe;
+import org.restcomm.connect.commons.annotations.concurrency.ThreadSafe;
 import org.restcomm.connect.commons.dao.Sid;
 import org.restcomm.connect.commons.loader.ObjectInstantiationException;
 import org.restcomm.connect.dao.DaoManager;
@@ -70,6 +80,9 @@ import org.restcomm.connect.http.converter.AvailableCountriesList;
 import org.restcomm.connect.http.converter.IncomingPhoneNumberConverter;
 import org.restcomm.connect.http.converter.IncomingPhoneNumberListConverter;
 import org.restcomm.connect.http.converter.RestCommResponseConverter;
+import org.restcomm.connect.http.filters.ExtensionFilter;
+import static org.restcomm.connect.http.security.AccountPrincipal.SUPER_ADMIN_ROLE;
+import org.restcomm.connect.http.security.PermissionEvaluator.SecuredType;
 import org.restcomm.connect.provisioning.number.api.PhoneNumberParameters;
 import org.restcomm.connect.provisioning.number.api.PhoneNumberProvisioningManager;
 import org.restcomm.connect.provisioning.number.api.PhoneNumberProvisioningManagerProvider;
@@ -81,8 +94,9 @@ import org.restcomm.connect.provisioning.number.api.PhoneNumberType;
  * @author jean.deruelle@telestax.com
  * @author maria.farooq@telestax.com
  */
-@NotThreadSafe
-public abstract class IncomingPhoneNumbersEndpoint extends SecuredEndpoint {
+@Path("/Accounts/{accountSid}/IncomingPhoneNumbers")
+@ThreadSafe
+public abstract class IncomingPhoneNumbersEndpoint extends AbstractEndpoint {
     @Context
     protected ServletContext context;
     protected PhoneNumberProvisioningManager phoneNumberProvisioningManager;
@@ -751,5 +765,154 @@ public abstract class IncomingPhoneNumbersEndpoint extends SecuredEndpoint {
             return phoneNumberProvisioningManager.updateNumber(convertIncomingPhoneNumbertoPhoneNumber(incomingPhoneNumber), phoneNumberParameters);
         }
         return true;
+    }
+
+    @Path("/{sid}")
+    @DELETE
+    public Response deleteIncomingPhoneNumberAsXml(@PathParam("accountSid") final String accountSid,
+            @PathParam("sid") final String sid) {
+        return super.deleteIncomingPhoneNumber(accountSid, sid);
+    }
+
+    @Path("/{sid}")
+    @GET
+    @Produces({MediaType.APPLICATION_XML, MediaType.APPLICATION_JSON})
+    public Response getIncomingPhoneNumberAsXml(@PathParam("accountSid") final String accountSid,
+            @PathParam("sid") final String sid,
+            @HeaderParam("Accept") String accept) {
+        MediaType acceptType = retrieveMediaType(accept);
+        return getIncomingPhoneNumber(accountSid, sid, acceptType);
+    }
+
+
+    @Path("/AvailableCountries")
+    @GET
+    @Produces({MediaType.APPLICATION_XML, MediaType.APPLICATION_JSON})
+    public Response getAvailableCountriesAsXml(@PathParam("accountSid") final String accountSid,
+            @HeaderParam("Accept") String accept) {
+        MediaType acceptType = retrieveMediaType(accept);
+        return getAvailableCountries(accountSid, acceptType);
+    }
+
+    @GET
+    @Produces({MediaType.APPLICATION_XML, MediaType.APPLICATION_JSON})
+    public Response getIncomingPhoneNumbers(@PathParam("accountSid") final String accountSid,
+            @Context UriInfo info,
+            @HeaderParam("Accept") String accept) {
+        MediaType acceptType = retrieveMediaType(accept);
+        return getIncomingPhoneNumbers(accountSid, PhoneNumberType.Global,info, acceptType);
+    }
+
+    @POST
+    @ResourceFilters({ ExtensionFilter.class })
+    @Produces({MediaType.APPLICATION_XML, MediaType.APPLICATION_JSON})
+    public Response putIncomingPhoneNumber(@PathParam("accountSid") final String accountSid,
+            final MultivaluedMap<String, String> data,
+            @HeaderParam("Accept") String accept) {
+        MediaType acceptType = retrieveMediaType(accept);
+        return putIncomingPhoneNumber(accountSid, data, PhoneNumberType.Global, acceptType);
+    }
+
+    @Path("/{sid}")
+    @PUT
+    @Produces({MediaType.APPLICATION_XML, MediaType.APPLICATION_JSON})
+    public Response updateIncomingPhoneNumberAsXml(@PathParam("accountSid") final String accountSid,
+            @PathParam("sid") final String sid,
+            final MultivaluedMap<String, String> data,
+            @HeaderParam("Accept") String accept) {
+        MediaType acceptType = retrieveMediaType(accept);
+        return updateIncomingPhoneNumber(accountSid, sid, data, acceptType);
+    }
+
+    @Path("/{sid}")
+    @POST
+    @Produces({MediaType.APPLICATION_XML, MediaType.APPLICATION_JSON})
+    public Response updateIncomingPhoneNumberAsXmlPost(@PathParam("accountSid") final String accountSid,
+            @PathParam("sid") final String sid,
+            final MultivaluedMap<String, String> data,
+            @HeaderParam("Accept") String accept) {
+        MediaType acceptType = retrieveMediaType(accept);
+        return updateIncomingPhoneNumber(accountSid, sid, data, acceptType);
+    }
+
+    // Local Numbers
+
+    @Path("/Local")
+    @GET
+    @Produces({MediaType.APPLICATION_XML, MediaType.APPLICATION_JSON})
+    public Response getIncomingLocalPhoneNumbersAsXml(@PathParam("accountSid") final String accountSid,
+            @Context UriInfo info,
+            @HeaderParam("Accept") String accept) {
+        MediaType acceptType = retrieveMediaType(accept);
+        return getIncomingPhoneNumbers(accountSid,PhoneNumberType.Local,info, acceptType);
+    }
+
+    @Path("/Local")
+    @POST
+    @ResourceFilters({ ExtensionFilter.class })
+    @Produces({MediaType.APPLICATION_XML, MediaType.APPLICATION_JSON})
+    public Response putIncomingLocalPhoneNumberAsXml(@PathParam("accountSid") final String accountSid,
+            final MultivaluedMap<String, String> data,
+            @HeaderParam("Accept") String accept) {
+        MediaType acceptType = retrieveMediaType(accept);
+        return putIncomingPhoneNumber(accountSid, data, PhoneNumberType.Local, acceptType);
+    }
+
+    // Toll Free Numbers
+
+    @Path("/TollFree")
+    @GET
+    @Produces({MediaType.APPLICATION_XML, MediaType.APPLICATION_JSON})
+    public Response getIncomingTollFreePhoneNumbersAsXml(@PathParam("accountSid") final String accountSid,
+            @Context UriInfo info,
+            @HeaderParam("Accept") String accept) {
+        MediaType acceptType = retrieveMediaType(accept);
+        return getIncomingPhoneNumbers(accountSid,PhoneNumberType.TollFree,info, acceptType);
+    }
+
+    @Path("/TollFree")
+    @POST
+    @ResourceFilters({ ExtensionFilter.class })
+    @Produces({MediaType.APPLICATION_XML, MediaType.APPLICATION_JSON})
+    public Response putIncomingTollFreePhoneNumberAsXml(@PathParam("accountSid") final String accountSid,
+            final MultivaluedMap<String, String> data,
+            @HeaderParam("Accept") String accept) {
+        MediaType acceptType = retrieveMediaType(accept);
+        return putIncomingPhoneNumber(accountSid, data, PhoneNumberType.TollFree, acceptType);
+    }
+
+    // Mobile Numbers
+
+    @Path("/Mobile")
+    @GET
+    @Produces({MediaType.APPLICATION_XML, MediaType.APPLICATION_JSON})
+    public Response getIncomingMobilePhoneNumbersAsXml(@PathParam("accountSid") final String accountSid,
+            @Context UriInfo info,
+            @HeaderParam("Accept") String accept) {
+        MediaType acceptType = retrieveMediaType(accept);
+        return getIncomingPhoneNumbers(accountSid,PhoneNumberType.Mobile,info, acceptType);
+    }
+
+    @Path("/Mobile")
+    @POST
+    @ResourceFilters({ ExtensionFilter.class })
+    @Produces({MediaType.APPLICATION_XML, MediaType.APPLICATION_JSON})
+    public Response putIncomingMobilePhoneNumberAsXml(@PathParam("accountSid") final String accountSid,
+            final MultivaluedMap<String, String> data,
+            @HeaderParam("Accept") String accept) {
+        MediaType acceptType = retrieveMediaType(accept);
+        return putIncomingPhoneNumber(accountSid, data, PhoneNumberType.Mobile, acceptType);
+    }
+
+
+    @Path("/migrate")
+    @POST
+    @RolesAllowed(SUPER_ADMIN_ROLE)
+    @Produces({MediaType.APPLICATION_XML, MediaType.APPLICATION_JSON})
+    public Response migrateIncomingPhoneNumbersAsXml(@PathParam("accountSid") final String accountSid,
+            final MultivaluedMap<String, String> data,
+            @HeaderParam("Accept") String accept) {
+        MediaType acceptType = retrieveMediaType(accept);
+        return migrateIncomingPhoneNumbers(accountSid, data, acceptType);
     }
 }

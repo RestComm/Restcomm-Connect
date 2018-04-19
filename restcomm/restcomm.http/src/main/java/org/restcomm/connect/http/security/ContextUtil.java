@@ -17,27 +17,14 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>
  *
  */
-package org.restcomm.connect.http;
 
+package org.restcomm.connect.http.security;
 
-import javax.ws.rs.POST;
-import javax.ws.rs.Path;
-import javax.ws.rs.PathParam;
-import javax.ws.rs.Produces;
-import javax.ws.rs.core.MediaType;
-import javax.ws.rs.core.MultivaluedMap;
-import javax.ws.rs.core.Response;
+import javax.ws.rs.core.SecurityContext;
+import org.restcomm.connect.identity.UserIdentityContext;
 
-/**
- * @author <a href="mailto:gvagenas@gmail.com">gvagenas</a>
- *
- */
-@Path("/Accounts/{accountSid}/UssdPush")
-public class UssdPushXmlEndpoint extends UssdPushEndpoint{
-
-    @POST
-    @Produces({MediaType.APPLICATION_XML, MediaType.APPLICATION_JSON})
-    public Response putCall(@PathParam("accountSid") final String accountSid, final MultivaluedMap<String, String> data) {
-        return putCall(accountSid, data, retrieveMediaType());
+public class ContextUtil {
+    public static UserIdentityContext convert(SecurityContext sec) {
+        return null;
     }
 }
