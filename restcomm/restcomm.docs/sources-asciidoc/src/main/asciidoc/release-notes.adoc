@@ -35,6 +35,9 @@ The folowing tags are used to categorize and state the scope of a change
 // Things to consider during migration from previous release
 * Clients password are considered to be MD5 hashed in DB. Database migration
 scripts are available in **commercial** version. Database migration script will ensure existing clients passwords are properly migrated.
+** Database migration script will automatically take a backup of complete database before making any changes
+** Please take a backup of restcomm clients table (to be used in case we need to rollback as explained below)
+** In case of rollback to older version, kindly restore restcomm clients table only.
 
 === External Dependencies Updates
 // any dependencies
