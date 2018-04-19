@@ -89,7 +89,7 @@ public abstract class PermissionEvaluator {
      * @param userIdentityContext
      * @return
      */
-    protected boolean isSuperAdmin(UserIdentityContext userIdentityContext) {
+    public boolean isSuperAdmin(UserIdentityContext userIdentityContext) {
         //SuperAdmin Account is the one the is
         //1. Has no parent, this is the top account
         //2. Is ACTIVE

@@ -60,6 +60,7 @@ import org.restcomm.connect.identity.passwords.PasswordValidatorFactory;
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
 import com.thoughtworks.xstream.XStream;
+import javax.inject.Inject;
 import javax.ws.rs.DELETE;
 import javax.ws.rs.GET;
 import javax.ws.rs.HeaderParam;
@@ -70,8 +71,12 @@ import javax.ws.rs.PathParam;
 import javax.ws.rs.Produces;
 import static javax.ws.rs.core.Response.ok;
 import static javax.ws.rs.core.Response.status;
+import javax.ws.rs.core.SecurityContext;
 import org.restcomm.connect.commons.annotations.concurrency.ThreadSafe;
+import org.restcomm.connect.http.security.ContextUtil;
 import org.restcomm.connect.http.security.PermissionEvaluator;
+import org.restcomm.connect.http.security.PermissionEvaluator.SecuredType;
+import org.restcomm.connect.identity.UserIdentityContext;
 
 /**
  * @author quintana.thomas@gmail.com (Thomas Quintana)
@@ -85,6 +90,9 @@ public abstract class ClientsEndpoint extends AbstractEndpoint {
     protected ClientsDao dao;
     private Gson gson;
     private XStream xstream;
+
+    @Inject
+    private PermissionEvaluator permissionEvaluator;
 
     public ClientsEndpoint() {
         super();
@@ -154,14 +162,21 @@ public abstract class ClientsEndpoint extends AbstractEndpoint {
         return builder.build();
     }
 
-    protected Response getClient(final String accountSid, final String sid, final MediaType responseType) {
+    protected Response getClient(final String accountSid,
+            final String sid,
+            final MediaType responseType,
+            UserIdentityContext userIdentityContext) {
         Account operatedAccount = accountsDao.getAccount(accountSid);
-        secure(operatedAccount, "RestComm:Read:Clients");
+        permissionEvaluator.secure(operatedAccount, "RestComm:Read:Clients",
+                userIdentityContext);
         final Client client = dao.getClient(new Sid(sid));
         if (client == null) {
             return status(NOT_FOUND).build();
         } else {
-            secure(operatedAccount, client.getAccountSid(), SecuredType.SECURED_STANDARD);
+            permissionEvaluator.secure(operatedAccount,
+                    client.getAccountSid(),
+                    SecuredType.SECURED_STANDARD,
+                    userIdentityContext);
             if (APPLICATION_XML_TYPE.equals(responseType)) {
                 final RestCommResponse response = new RestCommResponse(client);
                 return ok(xstream.toXML(response), APPLICATION_XML).build();
@@ -173,8 +188,11 @@ public abstract class ClientsEndpoint extends AbstractEndpoint {
         }
     }
 
-    protected Response getClients(final String accountSid, final MediaType responseType) {
-        secure(accountsDao.getAccount(accountSid), "RestComm:Read:Clients");
+    protected Response getClients(final String accountSid, final MediaType responseType,
+            UserIdentityContext userIdentityContext) {
+        permissionEvaluator.secure(accountsDao.getAccount(accountSid),
+                "RestComm:Read:Clients",
+                userIdentityContext);
         final List<Client> clients = dao.getClients(new Sid(accountSid));
         if (APPLICATION_XML_TYPE.equals(responseType)) {
             final RestCommResponse response = new RestCommResponse(new ClientList(clients));
@@ -205,9 +223,12 @@ public abstract class ClientsEndpoint extends AbstractEndpoint {
         return status;
     }
 
-    public Response putClient(final String accountSid, final MultivaluedMap<String, String> data, final MediaType responseType) {
+    public Response putClient(final String accountSid,
+            final MultivaluedMap<String, String> data,
+            final MediaType responseType,
+            UserIdentityContext userIdentityContext) {
         final Account account = accountsDao.getAccount(accountSid);
-        secure(account, "RestComm:Create:Clients");
+        permissionEvaluator.secure(account, "RestComm:Create:Clients",userIdentityContext);
         try {
             validate(data);
         } catch (final NullPointerException | IllegalArgumentException exception) {
@@ -240,14 +261,20 @@ public abstract class ClientsEndpoint extends AbstractEndpoint {
     }
 
     protected Response updateClient(final String accountSid, final String sid, final MultivaluedMap<String, String> data,
-            final MediaType responseType) {
+            final MediaType responseType,
+            UserIdentityContext userIdentityContext) {
         Account operatedAccount = accountsDao.getAccount(accountSid);
-        secure(operatedAccount, "RestComm:Modify:Clients");
+        permissionEvaluator.secure(operatedAccount,
+                "RestComm:Modify:Clients",
+                userIdentityContext);
         Client client = dao.getClient(new Sid(sid));
         if (client == null) {
             return status(NOT_FOUND).build();
         } else {
-            secure(operatedAccount, client.getAccountSid(), SecuredType.SECURED_STANDARD );
+            permissionEvaluator.secure(operatedAccount,
+                    client.getAccountSid(),
+                    SecuredType.SECURED_STANDARD,
+                    userIdentityContext);
             try {
                 final String realm = organizationsDao.getOrganization(accountsDao.getAccount(client.getAccountSid()).getOrganizationSid()).getDomainName();
                 client = update(client, realm, data);
@@ -328,12 +355,17 @@ public abstract class ClientsEndpoint extends AbstractEndpoint {
         return client;
     }
 
-    private Response deleteClient(final String accountSid, final String sid) {
+    private Response deleteClient(final String accountSid, final String sid,
+            UserIdentityContext userIdentityContext) {
         Account operatedAccount =super.accountsDao.getAccount(accountSid);
-        secure(operatedAccount, "RestComm:Delete:Clients");
+        permissionEvaluator.secure(operatedAccount,
+                "RestComm:Delete:Clients", userIdentityContext);
         Client client = dao.getClient(new Sid(sid));
         if (client != null) {
-            secure(operatedAccount, client.getAccountSid(), PermissionEvaluator.SecuredType.SECURED_STANDARD);
+            permissionEvaluator.secure(operatedAccount,
+                    client.getAccountSid(),
+                    PermissionEvaluator.SecuredType.SECURED_STANDARD,
+                    userIdentityContext);
             dao.removeClient(new Sid(sid));
             return ok().build();
         } else {
@@ -343,8 +375,10 @@ public abstract class ClientsEndpoint extends AbstractEndpoint {
 
     @Path("/{sid}")
     @DELETE
-    public Response deleteClientAsXml(@PathParam("accountSid") final String accountSid, @PathParam("sid") final String sid) {
-        return deleteClient(accountSid, sid);
+    public Response deleteClientAsXml(@PathParam("accountSid") final String accountSid,
+            @PathParam("sid") final String sid,
+            @Context SecurityContext sec) {
+        return deleteClient(accountSid, sid,ContextUtil.convert(sec));
     }
 
     @Path("/{sid}")
@@ -352,32 +386,41 @@ public abstract class ClientsEndpoint extends AbstractEndpoint {
     @Produces({MediaType.APPLICATION_XML, MediaType.APPLICATION_JSON})
     public Response getClientAsXml(@PathParam("accountSid") final String accountSid,
             @PathParam("sid") final String sid,
-            @HeaderParam("Accept") String accept) {
-        return getClient(accountSid, sid, retrieveMediaType(accept));
+            @HeaderParam("Accept") String accept,
+            @Context SecurityContext sec) {
+        return getClient(accountSid, sid, retrieveMediaType(accept),
+                ContextUtil.convert(sec));
     }
 
     @GET
     @Produces({MediaType.APPLICATION_XML, MediaType.APPLICATION_JSON})
     public Response getClients(@PathParam("accountSid") final String accountSid,
-            @HeaderParam("Accept") String accept) {
-        return getClients(accountSid, retrieveMediaType(accept));
+            @HeaderParam("Accept") String accept,
+            @Context SecurityContext sec) {
+        return getClients(accountSid, retrieveMediaType(accept),
+                ContextUtil.convert(sec));
     }
 
     @POST
     @Produces({MediaType.APPLICATION_XML, MediaType.APPLICATION_JSON})
     public Response putClient(@PathParam("accountSid") final String accountSid,
             final MultivaluedMap<String, String> data,
-            @HeaderParam("Accept") String accept) {
-        return putClient(accountSid, data, retrieveMediaType(accept));
+            @HeaderParam("Accept") String accept,
+            @Context SecurityContext sec) {
+        return putClient(accountSid, data, retrieveMediaType(accept),
+                ContextUtil.convert(sec));
     }
 
     @Path("/{sid}")
     @POST
     @Produces({MediaType.APPLICATION_XML, MediaType.APPLICATION_JSON})
-    public Response updateClientAsXmlPost(@PathParam("accountSid") final String accountSid, @PathParam("sid") final String sid,
+    public Response updateClientAsXmlPost(@PathParam("accountSid") final String accountSid,
+            @PathParam("sid") final String sid,
             final MultivaluedMap<String, String> data,
-            @HeaderParam("Accept") String accept) {
-        return updateClient(accountSid, sid, data, retrieveMediaType(accept));
+            @HeaderParam("Accept") String accept,
+            @Context SecurityContext sec) {
+        return updateClient(accountSid, sid, data, retrieveMediaType(accept),
+                ContextUtil.convert(sec));
     }
 
     @Path("/{sid}")
@@ -386,7 +429,9 @@ public abstract class ClientsEndpoint extends AbstractEndpoint {
     public Response updateClientAsXmlPut(@PathParam("accountSid") final String accountSid,
             @PathParam("sid") final String sid,
             final MultivaluedMap<String, String> data,
-            @HeaderParam("Accept") String accept) {
-        return updateClient(accountSid, sid, data, retrieveMediaType(accept));
+            @HeaderParam("Accept") String accept,
+            @Context SecurityContext sec) {
+        return updateClient(accountSid, sid, data, retrieveMediaType(accept),
+                ContextUtil.convert(sec));
     }
 }
