@@ -23,6 +23,7 @@ import org.restcomm.connect.commons.annotations.concurrency.Immutable;
 import org.restcomm.connect.commons.dao.Sid;
 import org.restcomm.connect.commons.telephony.CreateCallType;
 import org.restcomm.connect.dao.entities.MediaAttributes;
+import org.restcomm.connect.extension.api.ExtensionRequest;
 import org.restcomm.connect.extension.api.IExtensionCreateCallRequest;
 
 import java.net.URI;
@@ -36,7 +37,7 @@ import java.util.Map;
  * @author gvagenas@telestax.com
  */
 @Immutable
-public final class CreateCall implements IExtensionCreateCallRequest{
+public final class CreateCall extends ExtensionRequest implements IExtensionCreateCallRequest{
 
     private final String from;
     private final String to;

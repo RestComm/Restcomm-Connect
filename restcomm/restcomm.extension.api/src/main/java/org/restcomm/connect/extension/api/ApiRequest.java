@@ -24,7 +24,7 @@ import javax.ws.rs.core.MultivaluedMap;
 /**
  * Created by gvagenas on 10/10/2016.
  */
-public class ApiRequest {
+public class ApiRequest extends ExtensionRequest {
     public static enum Type {
         AVAILABLEPHONENUMBER,INCOMINGPHONENUMBER, CREATE_SUBACCOUNT
     };
