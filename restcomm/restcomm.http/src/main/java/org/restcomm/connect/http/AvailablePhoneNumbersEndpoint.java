@@ -37,8 +37,6 @@ import static javax.ws.rs.core.Response.status;
 import org.apache.commons.configuration.Configuration;
 import org.restcomm.connect.commons.annotations.concurrency.ThreadSafe;
 import org.restcomm.connect.commons.loader.ObjectInstantiationException;
-import org.restcomm.connect.dao.AccountsDao;
-import org.restcomm.connect.dao.DaoManager;
 import org.restcomm.connect.dao.entities.AvailablePhoneNumber;
 import org.restcomm.connect.dao.entities.AvailablePhoneNumberList;
 import org.restcomm.connect.dao.entities.RestCommResponse;

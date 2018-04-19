@@ -22,8 +22,6 @@ package org.restcomm.connect.http;
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
 import com.thoughtworks.xstream.XStream;
-
-
 import javax.annotation.PostConstruct;
 import javax.annotation.security.RolesAllowed;
 import javax.servlet.ServletContext;
