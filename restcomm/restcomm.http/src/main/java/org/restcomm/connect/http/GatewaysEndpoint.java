@@ -3,6 +3,7 @@ package org.restcomm.connect.http;
 import akka.actor.ActorRef;
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
+import com.sun.jersey.spi.resource.Singleton;
 import com.thoughtworks.xstream.XStream;
 import java.net.URI;
 import java.util.List;
@@ -49,6 +50,7 @@ import org.restcomm.connect.telephony.api.RegisterGateway;
 @Path("/Accounts/{accountSid}/Management/Gateways")
 @ThreadSafe
 @RolesAllowed(SUPER_ADMIN_ROLE)
+@Singleton
 public class GatewaysEndpoint extends AbstractEndpoint {
     @Context
     protected ServletContext context;

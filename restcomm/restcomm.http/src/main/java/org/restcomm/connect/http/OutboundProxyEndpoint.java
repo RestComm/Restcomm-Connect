@@ -25,6 +25,7 @@ import static akka.pattern.Patterns.ask;
 import akka.util.Timeout;
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
+import com.sun.jersey.spi.resource.Singleton;
 import com.thoughtworks.xstream.XStream;
 import java.util.Map;
 import java.util.concurrent.TimeUnit;
@@ -66,6 +67,7 @@ import scala.concurrent.duration.Duration;
 @Path("/Accounts/{accountSid}/OutboundProxy")
 @ThreadSafe
 @RolesAllowed(SUPER_ADMIN_ROLE)
+@Singleton
 public class OutboundProxyEndpoint extends AbstractEndpoint {
 
     @Context

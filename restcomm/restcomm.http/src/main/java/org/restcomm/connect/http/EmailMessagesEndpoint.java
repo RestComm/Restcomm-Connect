@@ -9,6 +9,7 @@ import akka.actor.UntypedActorContext;
 import akka.actor.UntypedActorFactory;
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
+import com.sun.jersey.spi.resource.Singleton;
 import com.thoughtworks.xstream.XStream;
 import javax.annotation.PostConstruct;
 import javax.inject.Inject;
@@ -55,6 +56,7 @@ import org.restcomm.connect.identity.UserIdentityContext;
  */
 @Path("/Accounts/{accountSid}/Email/Messages")
 @ThreadSafe
+@Singleton
 public class EmailMessagesEndpoint extends AbstractEndpoint {
     private static Logger logger = Logger.getLogger(EmailMessagesEndpoint.class);
     @Context

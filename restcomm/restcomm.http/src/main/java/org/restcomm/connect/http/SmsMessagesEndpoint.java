@@ -32,6 +32,7 @@ import com.google.gson.GsonBuilder;
 import com.google.i18n.phonenumbers.NumberParseException;
 import com.google.i18n.phonenumbers.PhoneNumberUtil;
 import com.google.i18n.phonenumbers.PhoneNumberUtil.PhoneNumberFormat;
+import com.sun.jersey.spi.resource.Singleton;
 import com.thoughtworks.xstream.XStream;
 import java.math.BigDecimal;
 import java.net.URI;
@@ -96,6 +97,7 @@ import scala.concurrent.duration.Duration;
  */
 @Path("/Accounts/{accountSid}/SMS/Messages")
 @ThreadSafe
+@Singleton
 public abstract class SmsMessagesEndpoint extends AbstractEndpoint {
     @Context
     protected ServletContext context;

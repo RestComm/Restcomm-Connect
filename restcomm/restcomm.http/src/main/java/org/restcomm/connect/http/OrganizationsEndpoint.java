@@ -22,6 +22,7 @@ package org.restcomm.connect.http;
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
 import com.sun.jersey.core.header.LinkHeader;
+import com.sun.jersey.spi.resource.Singleton;
 import com.thoughtworks.xstream.XStream;
 import java.net.URI;
 import java.util.List;
@@ -80,6 +81,7 @@ import org.restcomm.connect.identity.UserIdentityContext;
 @Path("/Organizations")
 @ThreadSafe
 @RolesAllowed(SUPER_ADMIN_ROLE)
+@Singleton
 public class OrganizationsEndpoint extends AbstractEndpoint {
     @Context
     private ServletContext context;
@@ -285,7 +287,7 @@ public class OrganizationsEndpoint extends AbstractEndpoint {
 
     public LinkHeader composeLink(Sid targetSid, UriInfo info) {
         String sid = targetSid.toString();
-        URI uri = info.getBaseUriBuilder().path(ProfileJsonEndpoint.class).path(sid).build();
+        URI uri = info.getBaseUriBuilder().path(ProfileEndpoint.class).path(sid).build();
         LinkHeader.LinkHeaderBuilder link = LinkHeader.uri(uri).parameter(TITLE_PARAM, "Profiles");
         return link.rel(PROFILE_REL_TYPE).build();
     }

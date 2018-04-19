@@ -21,6 +21,7 @@ package org.restcomm.connect.http;
 
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
+import com.sun.jersey.spi.resource.Singleton;
 import com.thoughtworks.xstream.XStream;
 import java.text.ParseException;
 import java.util.ArrayList;
@@ -65,6 +66,7 @@ import org.restcomm.connect.identity.UserIdentityContext;
  */
 @Path("/Accounts/{accountSid}/Notifications")
 @ThreadSafe
+@Singleton
 public abstract class NotificationsEndpoint extends AbstractEndpoint {
     @Context
     private ServletContext context;

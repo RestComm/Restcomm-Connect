@@ -21,6 +21,7 @@ package org.restcomm.connect.http;
 
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
+import com.sun.jersey.spi.resource.Singleton;
 import com.thoughtworks.xstream.XStream;
 import java.util.ArrayList;
 import java.util.List;
@@ -55,6 +56,7 @@ import org.restcomm.connect.provisioning.number.api.PhoneNumberSearchFilters;
  * @author jean.deruelle@telestax.com
  */
 @ThreadSafe
+@Singleton
 public abstract class AvailablePhoneNumbersEndpoint extends AbstractEndpoint {
     @Context
     private ServletContext context;

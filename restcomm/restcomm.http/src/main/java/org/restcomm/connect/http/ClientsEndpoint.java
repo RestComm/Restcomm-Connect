@@ -21,6 +21,7 @@ package org.restcomm.connect.http;
 
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
+import com.sun.jersey.spi.resource.Singleton;
 import com.thoughtworks.xstream.XStream;
 import java.net.URI;
 import java.util.List;
@@ -75,6 +76,7 @@ import org.restcomm.connect.identity.passwords.PasswordValidatorFactory;
  */
 @Path("/Accounts/{accountSid}/Clients")
 @ThreadSafe
+@Singleton
 public abstract class ClientsEndpoint extends AbstractEndpoint {
     @Context
     private ServletContext context;

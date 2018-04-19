@@ -23,6 +23,7 @@ package org.restcomm.connect.http;
 
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
+import com.sun.jersey.spi.resource.Singleton;
 import com.thoughtworks.xstream.XStream;
 import java.io.BufferedReader;
 import java.io.InputStream;
@@ -87,6 +88,7 @@ import org.restcomm.connect.identity.UserIdentityContext;
  */
 @Path("/Accounts/{accountSid}/Geolocation")
 @ThreadSafe
+@Singleton
 public abstract class GeolocationEndpoint extends AbstractEndpoint {
 
     @Context
