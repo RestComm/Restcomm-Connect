@@ -68,7 +68,6 @@ public class EndpointMockedTest {
     OrganizationsDao orgDao;
     ClientsDao clientsDao;
     UserIdentityContext userIdentityContext;
-    PermissionEvaluator evaluator;
 
 
     void init() throws URISyntaxException {
@@ -85,7 +84,6 @@ public class EndpointMockedTest {
         orgDao= Mockito.mock(OrganizationsDao.class);
         clientsDao= Mockito.mock(ClientsDao.class);
         userIdentityContext = Mockito.mock(UserIdentityContext.class);
-        evaluator = new PermissionEvaluator(servletContext);
 
         Set<String> roles = new HashSet();
         roles.add(ADMIN_ROLE);
@@ -100,7 +98,6 @@ public class EndpointMockedTest {
         // createt request mock
         request = Mockito.mock(HttpServletRequest.class);
         when(request.getHeader("Authorization")).thenReturn("Basic YWRtaW5pc3RyYXRvckBjb21wYW55LmNvbTo3N2Y4YzEyY2M3YjhmODQyM2U1YzM4YjAzNTI0OTE2Ng==");
-        evaluator.init();
     }
 
     private Configuration getConfiguration(String path, String homeDirectory, String rootUri) throws ConfigurationException {

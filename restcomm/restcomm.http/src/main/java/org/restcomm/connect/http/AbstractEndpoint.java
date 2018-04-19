@@ -42,6 +42,7 @@ import org.restcomm.connect.extension.api.ApiRequest;
 import org.restcomm.connect.extension.api.ExtensionType;
 import org.restcomm.connect.extension.api.RestcommExtensionGeneric;
 import org.restcomm.connect.extension.controller.ExtensionController;
+import org.restcomm.connect.http.security.PermissionEvaluator;
 
 /**
  * @author quintana.thomas@gmail.com (Thomas Quintana)
@@ -60,6 +61,7 @@ public abstract class AbstractEndpoint {
     protected ServletContext context;
     protected AccountsDao accountsDao;
     protected OrganizationsDao organizationsDao;
+    protected PermissionEvaluator permissionEvaluator;
 
     public AbstractEndpoint() {
         super();
@@ -89,6 +91,7 @@ public abstract class AbstractEndpoint {
                 logger.info("RestAPI extensions: "+(extensions != null ? extensions.size() : "0"));
             }
         }
+        permissionEvaluator = new PermissionEvaluator(context);
     }
 
     protected String getApiVersion(final MultivaluedMap<String, String> data) {

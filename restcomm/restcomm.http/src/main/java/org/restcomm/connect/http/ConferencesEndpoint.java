@@ -26,7 +26,6 @@ import com.thoughtworks.xstream.XStream;
 import java.text.ParseException;
 import java.util.List;
 import javax.annotation.PostConstruct;
-import javax.inject.Inject;
 import javax.servlet.ServletContext;
 import javax.ws.rs.GET;
 import javax.ws.rs.HeaderParam;
@@ -61,7 +60,6 @@ import org.restcomm.connect.dao.entities.RestCommResponse;
 import org.restcomm.connect.http.converter.ConferenceDetailRecordConverter;
 import org.restcomm.connect.http.converter.ConferenceDetailRecordListConverter;
 import org.restcomm.connect.http.security.ContextUtil;
-import org.restcomm.connect.http.security.PermissionEvaluator;
 import org.restcomm.connect.http.security.PermissionEvaluator.SecuredType;
 import org.restcomm.connect.identity.UserIdentityContext;
 
@@ -82,8 +80,8 @@ public class ConferencesEndpoint extends AbstractEndpoint {
     private XStream xstream;
     private ConferenceDetailRecordListConverter listConverter;
 
-    @Inject
-    private PermissionEvaluator permissionEvaluator;
+
+
 
     public ConferencesEndpoint() {
         super();

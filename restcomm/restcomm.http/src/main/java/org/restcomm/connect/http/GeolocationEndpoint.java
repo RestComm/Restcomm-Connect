@@ -33,7 +33,6 @@ import java.net.URL;
 import java.util.Arrays;
 import java.util.List;
 import javax.annotation.PostConstruct;
-import javax.inject.Inject;
 import javax.servlet.ServletContext;
 import javax.ws.rs.DELETE;
 import javax.ws.rs.GET;
@@ -79,7 +78,6 @@ import org.restcomm.connect.http.converter.GeolocationConverter;
 import org.restcomm.connect.http.converter.GeolocationListConverter;
 import org.restcomm.connect.http.converter.RestCommResponseConverter;
 import org.restcomm.connect.http.security.ContextUtil;
-import org.restcomm.connect.http.security.PermissionEvaluator;
 import org.restcomm.connect.http.security.PermissionEvaluator.SecuredType;
 import org.restcomm.connect.identity.UserIdentityContext;
 /**
@@ -104,8 +102,8 @@ public class GeolocationEndpoint extends AbstractEndpoint {
     private String cause;
     private String rStatus;
 
-    @Inject
-    private PermissionEvaluator permissionEvaluator;
+
+
 
     private static enum responseStatus {
         Queued("queued"), Sent("sent"), Processing("processing"), Successful("successful"), PartiallySuccessful(

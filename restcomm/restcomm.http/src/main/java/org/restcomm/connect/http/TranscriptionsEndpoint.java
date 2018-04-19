@@ -27,7 +27,6 @@ import java.text.ParseException;
 import java.util.ArrayList;
 import java.util.List;
 import javax.annotation.PostConstruct;
-import javax.inject.Inject;
 import javax.servlet.ServletContext;
 import javax.ws.rs.DELETE;
 import javax.ws.rs.GET;
@@ -57,7 +56,6 @@ import org.restcomm.connect.http.converter.RestCommResponseConverter;
 import org.restcomm.connect.http.converter.TranscriptionConverter;
 import org.restcomm.connect.http.converter.TranscriptionListConverter;
 import org.restcomm.connect.http.security.ContextUtil;
-import org.restcomm.connect.http.security.PermissionEvaluator;
 import org.restcomm.connect.http.security.PermissionEvaluator.SecuredType;
 import org.restcomm.connect.identity.UserIdentityContext;
 
@@ -76,8 +74,8 @@ public class TranscriptionsEndpoint extends AbstractEndpoint {
     private TranscriptionListConverter listConverter;
     private String instanceId;
 
-    @Inject
-    private PermissionEvaluator permissionEvaluator;
+
+
 
     public TranscriptionsEndpoint() {
         super();

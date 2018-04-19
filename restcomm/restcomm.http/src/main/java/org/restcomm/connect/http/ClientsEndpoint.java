@@ -26,7 +26,6 @@ import com.thoughtworks.xstream.XStream;
 import java.net.URI;
 import java.util.List;
 import javax.annotation.PostConstruct;
-import javax.inject.Inject;
 import javax.servlet.ServletContext;
 import javax.ws.rs.DELETE;
 import javax.ws.rs.GET;
@@ -85,8 +84,8 @@ public class ClientsEndpoint extends AbstractEndpoint {
     private Gson gson;
     private XStream xstream;
 
-    @Inject
-    private PermissionEvaluator permissionEvaluator;
+
+
 
     public ClientsEndpoint() {
         super();

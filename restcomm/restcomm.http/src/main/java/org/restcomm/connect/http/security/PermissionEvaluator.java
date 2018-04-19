@@ -41,8 +41,6 @@ import org.restcomm.connect.identity.shiro.RestcommRoles;
 
 import javax.servlet.ServletContext;
 import java.util.Set;
-import javax.annotation.PostConstruct;
-import javax.inject.Inject;
 import static org.restcomm.connect.http.security.AccountPrincipal.ADMIN_ROLE;
 
 
@@ -69,7 +67,7 @@ public class PermissionEvaluator {
     private AccountsDao accountsDao;
     private OrganizationsDao organizationsDao;
     private IdentityContext identityContext;
-    @Inject
+
     private ServletContext context;
 
 
@@ -78,12 +76,6 @@ public class PermissionEvaluator {
 
     public PermissionEvaluator(ServletContext context) {
         this.context = context;
-    }
-
-
-
-    @PostConstruct
-    public void init() {
         final DaoManager storage = (DaoManager) context.getAttribute(DaoManager.class.getName());
         this.accountsDao = storage.getAccountsDao();
         this.organizationsDao = storage.getOrganizationsDao();

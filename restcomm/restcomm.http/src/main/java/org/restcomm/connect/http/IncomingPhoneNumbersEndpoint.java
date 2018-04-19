@@ -34,7 +34,6 @@ import java.util.ArrayList;
 import java.util.List;
 import javax.annotation.PostConstruct;
 import javax.annotation.security.RolesAllowed;
-import javax.inject.Inject;
 import javax.servlet.ServletContext;
 import javax.ws.rs.DELETE;
 import javax.ws.rs.GET;
@@ -86,7 +85,6 @@ import org.restcomm.connect.http.converter.RestCommResponseConverter;
 import org.restcomm.connect.http.filters.ExtensionFilter;
 import static org.restcomm.connect.http.security.AccountPrincipal.SUPER_ADMIN_ROLE;
 import org.restcomm.connect.http.security.ContextUtil;
-import org.restcomm.connect.http.security.PermissionEvaluator;
 import org.restcomm.connect.http.security.PermissionEvaluator.SecuredType;
 import org.restcomm.connect.identity.UserIdentityContext;
 import org.restcomm.connect.provisioning.number.api.PhoneNumberParameters;
@@ -115,8 +113,8 @@ public class IncomingPhoneNumbersEndpoint extends AbstractEndpoint {
     private XStream xstream;
     private Gson gson;
 
-    @Inject
-    private PermissionEvaluator permissionEvaluator;
+
+
 
     public IncomingPhoneNumbersEndpoint() {
         super();
