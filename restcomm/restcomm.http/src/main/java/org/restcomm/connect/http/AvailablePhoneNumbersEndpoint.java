@@ -57,7 +57,7 @@ import org.restcomm.connect.provisioning.number.api.PhoneNumberSearchFilters;
  */
 @ThreadSafe
 @Singleton
-public abstract class AvailablePhoneNumbersEndpoint extends AbstractEndpoint {
+public class AvailablePhoneNumbersEndpoint extends AbstractEndpoint {
     @Context
     private ServletContext context;
     private PhoneNumberProvisioningManager phoneNumberProvisioningManager;

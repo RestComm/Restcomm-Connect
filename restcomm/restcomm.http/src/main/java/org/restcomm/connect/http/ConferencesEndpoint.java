@@ -72,7 +72,7 @@ import org.restcomm.connect.identity.UserIdentityContext;
 @Path("/Accounts/{accountSid}/Conferences")
 @ThreadSafe
 @Singleton
-public abstract class ConferencesEndpoint extends AbstractEndpoint {
+public class ConferencesEndpoint extends AbstractEndpoint {
     @Context
     protected ServletContext context;
     protected Configuration configuration;
