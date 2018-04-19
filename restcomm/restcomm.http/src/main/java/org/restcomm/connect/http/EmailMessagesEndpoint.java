@@ -12,6 +12,11 @@ import com.google.gson.GsonBuilder;
 import com.thoughtworks.xstream.XStream;
 import javax.annotation.PostConstruct;
 import javax.servlet.ServletContext;
+import javax.ws.rs.HeaderParam;
+import javax.ws.rs.POST;
+import javax.ws.rs.Path;
+import javax.ws.rs.PathParam;
+import javax.ws.rs.Produces;
 import javax.ws.rs.core.Context;
 import javax.ws.rs.core.MediaType;
 import static javax.ws.rs.core.MediaType.*;
@@ -24,6 +29,7 @@ import static javax.ws.rs.core.Response.status;
 import org.apache.commons.configuration.Configuration;
 import org.apache.log4j.Logger;
 import org.joda.time.DateTime;
+import org.restcomm.connect.commons.annotations.concurrency.ThreadSafe;
 import org.restcomm.connect.commons.faulttolerance.RestcommUntypedActor;
 import org.restcomm.connect.commons.patterns.Observe;
 import org.restcomm.connect.commons.patterns.Observing;
@@ -42,7 +48,9 @@ import org.restcomm.connect.http.converter.RestCommResponseConverter;
 /**
  *  @author lefty .liblefty@telestax.com (Lefteris Banos)
  */
-public class EmailMessagesEndpoint extends SecuredEndpoint {
+@Path("/Accounts/{accountSid}/Email/Messages")
+@ThreadSafe
+public class EmailMessagesEndpoint extends AbstractEndpoint {
     private static Logger logger = Logger.getLogger(EmailMessagesEndpoint.class);
     @Context
     protected ServletContext context;
@@ -271,6 +279,14 @@ public class EmailMessagesEndpoint extends SecuredEndpoint {
         public InvalidEmailException(String message) {
             super(message);
         }
+    }
+
+    @POST
+    @Produces({MediaType.APPLICATION_XML, MediaType.APPLICATION_JSON})
+    public Response putEmailMessage(@PathParam("accountSid") final String accountSid,
+            final MultivaluedMap<String, String> data,
+            @HeaderParam("Accept") String accept) {
+        return putEmailMessage(accountSid, data, retrieveMediaType(accept));
     }
 
 }

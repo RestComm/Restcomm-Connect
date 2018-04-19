@@ -28,6 +28,7 @@ import com.google.gson.GsonBuilder;
 import com.google.i18n.phonenumbers.NumberParseException;
 import com.google.i18n.phonenumbers.PhoneNumberUtil;
 import com.google.i18n.phonenumbers.PhoneNumberUtil.PhoneNumberFormat;
+import com.sun.jersey.spi.resource.Singleton;
 import com.thoughtworks.xstream.XStream;
 import java.net.URI;
 import java.net.URL;
@@ -41,6 +42,12 @@ import java.util.concurrent.TimeUnit;
 import javax.annotation.PostConstruct;
 import javax.servlet.ServletContext;
 import javax.servlet.sip.SipServletResponse;
+import javax.ws.rs.GET;
+import javax.ws.rs.HeaderParam;
+import javax.ws.rs.POST;
+import javax.ws.rs.Path;
+import javax.ws.rs.PathParam;
+import javax.ws.rs.Produces;
 import javax.ws.rs.core.Context;
 import javax.ws.rs.core.MediaType;
 import static javax.ws.rs.core.MediaType.APPLICATION_JSON;
@@ -60,6 +67,7 @@ import javax.ws.rs.core.UriInfo;
 import org.apache.commons.configuration.Configuration;
 import org.restcomm.connect.commons.amazonS3.RecordingSecurityLevel;
 import org.restcomm.connect.commons.annotations.concurrency.NotThreadSafe;
+import org.restcomm.connect.commons.annotations.concurrency.ThreadSafe;
 import org.restcomm.connect.commons.configuration.RestcommConfiguration;
 import org.restcomm.connect.commons.dao.Sid;
 import org.restcomm.connect.commons.telephony.CreateCallType;
@@ -100,22 +108,24 @@ import scala.concurrent.duration.Duration;
  * @author quintana.thomas@gmail.com (Thomas Quintana)
  * @author gvagenas@gmail.com (George Vagenas)
  */
-@NotThreadSafe
-public abstract class CallsEndpoint extends SecuredEndpoint {
+@Path("/Accounts/{accountSid}/Calls")
+@ThreadSafe
+@Singleton
+public abstract class CallsEndpoint extends AbstractEndpoint {
     @Context
-    protected ServletContext context;
-    protected Configuration configuration;
-    protected ActorRef callManager;
-    protected DaoManager daos;
-    protected Gson gson;
-    protected GsonBuilder builder;
-    protected XStream xstream;
-    protected CallDetailRecordListConverter listConverter;
-    protected AccountsDao accountsDao;
-    protected RecordingsDao recordingsDao;
-    protected String instanceId;
-    protected RecordingSecurityLevel securityLevel = RecordingSecurityLevel.SECURE;
-    protected boolean normalizePhoneNumbers;
+    private ServletContext context;
+    private Configuration configuration;
+    private ActorRef callManager;
+    private DaoManager daos;
+    private Gson gson;
+    private GsonBuilder builder;
+    private XStream xstream;
+    private CallDetailRecordListConverter listConverter;
+    private AccountsDao accountsDao;
+    private RecordingsDao recordingsDao;
+    private String instanceId;
+    private RecordingSecurityLevel securityLevel = RecordingSecurityLevel.SECURE;
+    private boolean normalizePhoneNumbers;
 
     public CallsEndpoint() {
         super();
@@ -693,5 +703,52 @@ public abstract class CallsEndpoint extends SecuredEndpoint {
         }else{
             // Do Nothing. We can only mute/unMute in progress calls
         }
+    }
+
+    @Path("/{sid}")
+    @GET
+    @Produces({MediaType.APPLICATION_XML, MediaType.APPLICATION_JSON})
+    public Response getCallAsXml(@PathParam("accountSid") final String accountSid,
+            @PathParam("sid") final String sid,
+            @HeaderParam("Accept") String accept) {
+        return getCall(accountSid, sid, retrieveMediaType(accept));
+    }
+
+    // Issue 153: https://bitbucket.org/telestax/telscale-restcomm/issue/153
+    // Issue 110: https://bitbucket.org/telestax/telscale-restcomm/issue/110
+    @GET
+    @Produces({MediaType.APPLICATION_XML, MediaType.APPLICATION_JSON})
+    public Response getCalls(@PathParam("accountSid") final String accountSid,
+            @Context UriInfo info,
+            @HeaderParam("Accept") String accept) {
+        return getCalls(accountSid, info, retrieveMediaType(accept));
+    }
+
+    @POST
+    @Produces({MediaType.APPLICATION_XML, MediaType.APPLICATION_JSON})
+    public Response putCall(@PathParam("accountSid") final String accountSid,
+            final MultivaluedMap<String, String> data,
+            @HeaderParam("Accept") String accept) {
+        return putCall(accountSid, data, retrieveMediaType(accept));
+    }
+
+    // Issue 139: https://bitbucket.org/telestax/telscale-restcomm/issue/139
+    @Path("/{sid}")
+    @POST
+    @Produces({MediaType.APPLICATION_XML, MediaType.APPLICATION_JSON})
+    public Response modifyCall(@PathParam("accountSid") final String accountSid,
+            @PathParam("sid") final String sid,
+            final MultivaluedMap<String, String> data,
+            @HeaderParam("Accept") String accept) {
+        return updateCall(accountSid, sid, data, retrieveMediaType(accept));
+    }
+
+    @GET
+    @Path("/{callSid}/Recordings")
+    @Produces({MediaType.APPLICATION_XML, MediaType.APPLICATION_JSON})
+    public Response getRecordingsByCallXml(@PathParam("accountSid") String accountSid,
+            @PathParam("callSid") String callSid,
+            @HeaderParam("Accept") String accept) {
+        return getRecordingsByCall(accountSid, callSid, retrieveMediaType(accept));
     }
 }

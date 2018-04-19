@@ -27,8 +27,15 @@ import java.net.URI;
 import java.util.List;
 import java.util.regex.Pattern;
 import javax.annotation.PostConstruct;
+import javax.annotation.security.RolesAllowed;
 import javax.servlet.ServletContext;
 import javax.servlet.http.HttpServletRequest;
+import javax.ws.rs.GET;
+import javax.ws.rs.HeaderParam;
+import javax.ws.rs.PUT;
+import javax.ws.rs.Path;
+import javax.ws.rs.PathParam;
+import javax.ws.rs.Produces;
 import javax.ws.rs.core.Context;
 import javax.ws.rs.core.MediaType;
 import static javax.ws.rs.core.MediaType.APPLICATION_JSON;
@@ -46,6 +53,7 @@ import static javax.ws.rs.core.Response.status;
 import javax.ws.rs.core.UriInfo;
 import org.apache.commons.configuration.Configuration;
 import org.joda.time.DateTime;
+import org.restcomm.connect.commons.annotations.concurrency.ThreadSafe;
 import org.restcomm.connect.commons.dao.Sid;
 import org.restcomm.connect.dao.entities.Organization;
 import org.restcomm.connect.dao.entities.OrganizationList;
@@ -58,11 +66,16 @@ import static org.restcomm.connect.http.ProfileEndpoint.TITLE_PARAM;
 import org.restcomm.connect.http.converter.OrganizationConverter;
 import org.restcomm.connect.http.converter.OrganizationListConverter;
 import org.restcomm.connect.http.converter.RestCommResponseConverter;
+import static org.restcomm.connect.http.security.AccountPrincipal.ADMIN_ROLE;
+import static org.restcomm.connect.http.security.AccountPrincipal.SUPER_ADMIN_ROLE;
 
 /**
  * @author maria.farooq@telestax.com (Maria Farooq)
  */
-public class OrganizationsEndpoint extends SecuredEndpoint {
+@Path("/Organizations")
+@ThreadSafe
+@RolesAllowed(SUPER_ADMIN_ROLE)
+public class OrganizationsEndpoint extends AbstractEndpoint {
     @Context
     protected ServletContext context;
     protected DnsProvisioningManager dnsProvisioningManager;
@@ -266,5 +279,33 @@ public class OrganizationsEndpoint extends SecuredEndpoint {
         URI uri = info.getBaseUriBuilder().path(ProfileJsonEndpoint.class).path(sid).build();
         LinkHeader.LinkHeaderBuilder link = LinkHeader.uri(uri).parameter(TITLE_PARAM, "Profiles");
         return link.rel(PROFILE_REL_TYPE).build();
+    }
+
+    @Path("/{organizationSid}")
+    @GET
+    @Produces({MediaType.APPLICATION_XML, MediaType.APPLICATION_JSON})
+    @RolesAllowed({SUPER_ADMIN_ROLE, ADMIN_ROLE})
+    public Response getOrganizationAsXml(@PathParam("organizationSid") final String organizationSid,
+            @Context UriInfo info,
+            @HeaderParam("Accept") String accept) {
+        return getOrganization(organizationSid, retrieveMediaType(accept), info);
+    }
+
+    @GET
+    @RolesAllowed(SUPER_ADMIN_ROLE)
+    @Produces({MediaType.APPLICATION_XML, MediaType.APPLICATION_JSON})
+    public Response getOrganizations(@Context UriInfo info,
+            @HeaderParam("Accept") String accept) {
+        return getOrganizations(info, retrieveMediaType(accept));
+    }
+
+    @Path("/{domainName}")
+    @PUT
+    @RolesAllowed(SUPER_ADMIN_ROLE)
+    @Produces({MediaType.APPLICATION_XML, MediaType.APPLICATION_JSON})
+    public Response putOrganizationPut(@PathParam("domainName") final String domainName,
+            @Context UriInfo info,
+            @HeaderParam("Accept") String accept) {
+        return putOrganization(domainName, info, retrieveMediaType(accept));
     }
 }

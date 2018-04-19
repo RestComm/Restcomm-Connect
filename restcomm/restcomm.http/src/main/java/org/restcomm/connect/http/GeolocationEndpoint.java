@@ -33,6 +33,14 @@ import java.util.Arrays;
 import java.util.List;
 import javax.annotation.PostConstruct;
 import javax.servlet.ServletContext;
+import javax.ws.rs.DELETE;
+import javax.ws.rs.GET;
+import javax.ws.rs.HeaderParam;
+import javax.ws.rs.POST;
+import javax.ws.rs.PUT;
+import javax.ws.rs.Path;
+import javax.ws.rs.PathParam;
+import javax.ws.rs.Produces;
 import javax.ws.rs.core.Context;
 import javax.ws.rs.core.MediaType;
 import static javax.ws.rs.core.MediaType.APPLICATION_JSON;
@@ -52,7 +60,7 @@ import org.apache.http.client.methods.HttpGet;
 import org.apache.http.impl.client.HttpClientBuilder;
 import org.apache.log4j.Logger;
 import org.joda.time.DateTime;
-import org.restcomm.connect.commons.annotations.concurrency.NotThreadSafe;
+import org.restcomm.connect.commons.annotations.concurrency.ThreadSafe;
 import org.restcomm.connect.commons.dao.Sid;
 import org.restcomm.connect.commons.util.StringUtils;
 import org.restcomm.connect.dao.AccountsDao;
@@ -67,12 +75,14 @@ import org.restcomm.connect.http.converter.ClientListConverter;
 import org.restcomm.connect.http.converter.GeolocationConverter;
 import org.restcomm.connect.http.converter.GeolocationListConverter;
 import org.restcomm.connect.http.converter.RestCommResponseConverter;
+import org.restcomm.connect.http.security.PermissionEvaluator.SecuredType;
 /**
  * @author <a href="mailto:fernando.mendioroz@telestax.com"> Fernando Mendioroz </a>
  *
  */
-@NotThreadSafe
-public abstract class GeolocationEndpoint extends SecuredEndpoint {
+@Path("/Accounts/{accountSid}/Geolocation")
+@ThreadSafe
+public abstract class GeolocationEndpoint extends AbstractEndpoint {
 
     @Context
     protected ServletContext context;
@@ -746,6 +756,107 @@ public abstract class GeolocationEndpoint extends SecuredEndpoint {
             WGS84_validation = false;
             return WGS84_validation;
         }
+    }
+
+    @Path("/Immediate/{sid}")
+    @DELETE
+    public Response deleteImmediateGeolocationAsXml(@PathParam("accountSid") final String accountSid,
+                                                    @PathParam("sid") final String sid) {
+        return deleteGeolocation(accountSid, sid);
+    }
+
+    @Path("/Immediate/{sid}")
+    @GET
+    @Produces({MediaType.APPLICATION_XML, MediaType.APPLICATION_JSON})
+    public Response getImmediateGeolocationAsXml(@PathParam("accountSid") final String accountSid,
+                                                 @PathParam("sid") final String sid,
+                                                 @HeaderParam("Accept") String accept) {
+        return getGeolocation(accountSid, sid, retrieveMediaType(accept));
+    }
+
+    @Path("/Immediate")
+    @POST
+    @Produces({MediaType.APPLICATION_XML, MediaType.APPLICATION_JSON})
+    public Response putImmediateGeolocationXmlPost(@PathParam("accountSid") final String accountSid,
+                                                   final MultivaluedMap<String, String> data,
+                                                   @HeaderParam("Accept") String accept) {
+        return putGeolocation(accountSid, data, Geolocation.GeolocationType.Immediate, retrieveMediaType(accept));
+    }
+
+    @Path("/Immediate/{sid}")
+    @POST
+    @Produces({MediaType.APPLICATION_XML, MediaType.APPLICATION_JSON})
+    public Response putImmediateGeolocationAsXmlPost(@PathParam("accountSid") final String accountSid,
+                                                     @PathParam("sid") final String sid,
+                                                     final MultivaluedMap<String, String> data,
+                                                     @HeaderParam("Accept") String accept) {
+        return updateGeolocation(accountSid, sid, data, retrieveMediaType(accept));
+    }
+
+    @Path("/Immediate/{sid}")
+    @PUT
+    @Produces({MediaType.APPLICATION_XML, MediaType.APPLICATION_JSON})
+    public Response updateImmediateGeolocationAsXmlPut(@PathParam("accountSid") final String accountSid,
+                                                       @PathParam("sid") final String sid,
+                                                       final MultivaluedMap<String, String> data,
+                                                       @HeaderParam("Accept") String accept) {
+        return updateGeolocation(accountSid, sid, data, retrieveMediaType(accept));
+    }
+
+    /*******************************************/
+    // *** Notification type of Geolocation ***//
+    /*******************************************/
+
+    @Path("/Notification/{sid}")
+    @DELETE
+    public Response deleteNotificationGeolocationAsXml(@PathParam("accountSid") final String accountSid,
+                                                       @PathParam("sid") final String sid) {
+        return deleteGeolocation(accountSid, sid);
+    }
+
+    @Path("/Notification/{sid}")
+    @GET
+    @Produces({MediaType.APPLICATION_XML, MediaType.APPLICATION_JSON})
+    public Response getNotificationGeolocationAsXml(@PathParam("accountSid") final String accountSid,
+                                                    @PathParam("sid") final String sid,
+                                                    @HeaderParam("Accept") String accept) {
+        return getGeolocation(accountSid, sid, retrieveMediaType(accept));
+    }
+
+    @Path("/Notification")
+    @POST
+    @Produces({MediaType.APPLICATION_XML, MediaType.APPLICATION_JSON})
+    public Response putNotificationGeolocationXmlPost(@PathParam("accountSid") final String accountSid,
+                                                      final MultivaluedMap<String, String> data,
+                                                      @HeaderParam("Accept") String accept) {
+        return putGeolocation(accountSid, data, Geolocation.GeolocationType.Notification, retrieveMediaType(accept));
+    }
+
+    @Path("/Notification/{sid}")
+    @POST
+    @Produces({MediaType.APPLICATION_XML, MediaType.APPLICATION_JSON})
+    public Response putNotificationGeolocationAsXmlPost(@PathParam("accountSid") final String accountSid,
+                                                        @PathParam("sid") final String sid,
+                                                        final MultivaluedMap<String, String> data,
+                                                        @HeaderParam("Accept") String accept) {
+        return updateGeolocation(accountSid, sid, data, retrieveMediaType(accept));
+    }
+
+    @Path("/Notification/{sid}")
+    @PUT
+    @Produces({MediaType.APPLICATION_XML, MediaType.APPLICATION_JSON})
+    public Response updateNotificationGeolocationAsXmlPut(@PathParam("accountSid") final String accountSid,
+                                                          @PathParam("sid") final String sid,
+                                                          final MultivaluedMap<String, String> data,
+                                                          @HeaderParam("Accept") String accept) {
+        return updateGeolocation(accountSid, sid, data, retrieveMediaType(accept));
+    }
+
+    @GET
+    @Produces({MediaType.APPLICATION_XML, MediaType.APPLICATION_JSON})
+    public Response getGeolocationsAsXml(@PathParam("accountSid") final String accountSid,
+            @HeaderParam("Accept") String accept) {
+        return getGeolocations(accountSid, retrieveMediaType(accept));
     }
 
 }

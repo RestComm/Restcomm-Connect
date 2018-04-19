@@ -30,6 +30,14 @@ import java.net.URI;
 import java.util.List;
 import javax.annotation.PostConstruct;
 import javax.servlet.ServletContext;
+import javax.ws.rs.DELETE;
+import javax.ws.rs.GET;
+import javax.ws.rs.HeaderParam;
+import javax.ws.rs.POST;
+import javax.ws.rs.PUT;
+import javax.ws.rs.Path;
+import javax.ws.rs.PathParam;
+import javax.ws.rs.Produces;
 import javax.ws.rs.core.Context;
 import javax.ws.rs.core.MediaType;
 import static javax.ws.rs.core.MediaType.APPLICATION_JSON;
@@ -45,6 +53,7 @@ import static javax.ws.rs.core.Response.status;
 import org.apache.commons.configuration.Configuration;
 import org.joda.time.DateTime;
 import org.restcomm.connect.commons.annotations.concurrency.NotThreadSafe;
+import org.restcomm.connect.commons.annotations.concurrency.ThreadSafe;
 import org.restcomm.connect.commons.dao.Sid;
 import org.restcomm.connect.dao.DaoManager;
 import org.restcomm.connect.dao.OutgoingCallerIdsDao;
@@ -59,8 +68,9 @@ import org.restcomm.connect.http.converter.RestCommResponseConverter;
 /**
  * @author quintana.thomas@gmail.com (Thomas Quintana)
  */
-@NotThreadSafe
-public abstract class OutgoingCallerIdsEndpoint extends SecuredEndpoint {
+@Path("/Accounts/{accountSid}/OutgoingCallerIds")
+@ThreadSafe
+public abstract class OutgoingCallerIdsEndpoint extends AbstractEndpoint {
     @Context
     protected ServletContext context;
     protected Configuration configuration;
@@ -198,5 +208,56 @@ public abstract class OutgoingCallerIdsEndpoint extends SecuredEndpoint {
         } catch (final NumberParseException exception) {
             throw new IllegalArgumentException("Invalid phone number.");
         }
+    }
+
+    private Response deleteOutgoingCallerId(String accountSid, String sid) {
+        Account operatedAccount = super.accountsDao.getAccount(accountSid);
+        secure(operatedAccount, "RestComm:Delete:OutgoingCallerIds");
+        OutgoingCallerId oci = dao.getOutgoingCallerId(new Sid(sid));
+        if (oci != null) {
+            secure(operatedAccount,String.valueOf(oci.getAccountSid()), SecuredType.SECURED_STANDARD );
+        } // TODO return a NOT_FOUND status code here if oci==null maybe ?
+        dao.removeOutgoingCallerId(new Sid(sid));
+        return ok().build();
+    }
+
+    @Path("/{sid}")
+    @DELETE
+    public Response deleteOutgoingCallerIdAsXml(@PathParam("accountSid") String accountSid, @PathParam("sid") String sid) {
+        return deleteOutgoingCallerId(accountSid, sid);
+    }
+
+    @Path("/{sid}")
+    @GET
+    @Produces({MediaType.APPLICATION_XML, MediaType.APPLICATION_JSON})
+    public Response getCallerIdAsXml(@PathParam("accountSid") final String accountSid,
+            @PathParam("sid") final String sid,
+            @HeaderParam("Accept") String accept) {
+        return getCallerId(accountSid, sid, retrieveMediaType(accept));
+    }
+
+    @GET
+    @Produces({MediaType.APPLICATION_XML, MediaType.APPLICATION_JSON})
+    public Response getCallerIds(@PathParam("accountSid") final String accountSid,
+            @HeaderParam("Accept") String accept) {
+        return getCallerIds(accountSid, retrieveMediaType(accept));
+    }
+
+    @POST
+    @Produces({MediaType.APPLICATION_XML, MediaType.APPLICATION_JSON})
+    public Response putOutgoingCallerId(@PathParam("accountSid") final String accountSid,
+            final MultivaluedMap<String, String> data,
+            @HeaderParam("Accept") String accept) {
+        return putOutgoingCallerId(accountSid, data, retrieveMediaType(accept));
+    }
+
+    @Path("/{sid}")
+    @PUT
+    @Produces({MediaType.APPLICATION_XML, MediaType.APPLICATION_JSON})
+    public Response updateOutgoingCallerIdAsXml(@PathParam("accountSid") final String accountSid,
+            @PathParam("sid") final String sid,
+            final MultivaluedMap<String, String> data,
+            @HeaderParam("Accept") String accept) {
+        return updateOutgoingCallerId(accountSid, sid, data, retrieveMediaType(accept));
     }
 }

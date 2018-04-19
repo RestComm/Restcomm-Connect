@@ -24,14 +24,24 @@ import com.google.i18n.phonenumbers.PhoneNumberUtil;
 import com.google.i18n.phonenumbers.Phonenumber.PhoneNumber;
 import java.math.BigInteger;
 import java.net.URI;
-import javax.ws.rs.HeaderParam;
+import java.util.List;
+import javax.servlet.ServletContext;
+import javax.ws.rs.core.Context;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.MultivaluedMap;
 import org.apache.commons.configuration.Configuration;
+import org.apache.log4j.Logger;
 import org.joda.time.DateTime;
 import org.restcomm.connect.commons.annotations.concurrency.NotThreadSafe;
 import org.restcomm.connect.commons.dao.Sid;
 import org.restcomm.connect.commons.util.StringUtils;
+import org.restcomm.connect.dao.AccountsDao;
+import org.restcomm.connect.dao.DaoManager;
+import org.restcomm.connect.dao.OrganizationsDao;
+import org.restcomm.connect.extension.api.ApiRequest;
+import org.restcomm.connect.extension.api.ExtensionType;
+import org.restcomm.connect.extension.api.RestcommExtensionGeneric;
+import org.restcomm.connect.extension.controller.ExtensionController;
 
 /**
  * @author quintana.thomas@gmail.com (Thomas Quintana)
@@ -39,19 +49,23 @@ import org.restcomm.connect.commons.util.StringUtils;
  */
 @NotThreadSafe
 public abstract class AbstractEndpoint {
+    protected Logger logger = Logger.getLogger(AbstractEndpoint.class);
 
     private String defaultApiVersion;
     protected Configuration configuration;
     protected String baseRecordingsPath;
-
-    @HeaderParam("Accept")
-    String accept;
+    //List of extensions for RestAPI
+    protected List<RestcommExtensionGeneric> extensions;
+    @Context
+    protected ServletContext context;
+    protected AccountsDao accountsDao;
+    protected OrganizationsDao organizationsDao;
 
     public AbstractEndpoint() {
         super();
     }
 
-    protected MediaType retrieveMediaType() {
+    protected MediaType retrieveMediaType(String accept) {
         if (accept.contains("json")) {
              return MediaType.APPLICATION_JSON_TYPE;
         }
@@ -62,6 +76,15 @@ public abstract class AbstractEndpoint {
         final String path = configuration.getString("recordings-path");
         baseRecordingsPath = StringUtils.addSuffixIfNotPresent(path, "/");
         defaultApiVersion = configuration.getString("api-version");
+        extensions = ExtensionController.getInstance().getExtensions(ExtensionType.RestApi);
+        final DaoManager storage = (DaoManager) context.getAttribute(DaoManager.class.getName());
+        this.accountsDao = storage.getAccountsDao();
+        this.organizationsDao = storage.getOrganizationsDao();
+        if (logger.isInfoEnabled()) {
+            if (extensions != null) {
+                logger.info("RestAPI extensions: "+(extensions != null ? extensions.size() : "0"));
+            }
+        }
     }
 
     protected String getApiVersion(final MultivaluedMap<String, String> data) {
@@ -181,5 +204,15 @@ public abstract class AbstractEndpoint {
         } else {
             return "<RestcommResponse><Message>" + message + "</Message><Error>"+ error +"</Error></RestcommResponse>";
         }
+    }
+
+    protected boolean executePreApiAction(final ApiRequest apiRequest) {
+        ExtensionController ec = ExtensionController.getInstance();
+        return ec.executePreApiAction(apiRequest, extensions).isAllowed();
+    }
+
+    protected boolean executePostApiAction(final ApiRequest apiRequest) {
+        ExtensionController ec = ExtensionController.getInstance();
+        return ec.executePostApiAction(apiRequest, extensions).isAllowed();
     }
 }

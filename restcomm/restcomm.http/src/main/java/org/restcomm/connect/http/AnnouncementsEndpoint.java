@@ -10,12 +10,19 @@ import static akka.pattern.Patterns.ask;
 import akka.util.Timeout;
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
+import com.sun.jersey.spi.resource.Singleton;
 import com.thoughtworks.xstream.XStream;
 import java.net.URI;
 import java.util.concurrent.TimeUnit;
 import javax.annotation.PostConstruct;
 import javax.annotation.PreDestroy;
+import javax.inject.Inject;
 import javax.servlet.ServletContext;
+import javax.ws.rs.HeaderParam;
+import javax.ws.rs.POST;
+import javax.ws.rs.Path;
+import javax.ws.rs.PathParam;
+import javax.ws.rs.Produces;
 import javax.ws.rs.core.Context;
 import javax.ws.rs.core.MediaType;
 import static javax.ws.rs.core.MediaType.APPLICATION_JSON;
@@ -25,16 +32,23 @@ import static javax.ws.rs.core.MediaType.APPLICATION_XML_TYPE;
 import javax.ws.rs.core.MultivaluedMap;
 import javax.ws.rs.core.Response;
 import static javax.ws.rs.core.Response.ok;
+import javax.ws.rs.core.SecurityContext;
 import org.apache.commons.configuration.Configuration;
 import org.apache.log4j.Logger;
+import org.restcomm.connect.commons.annotations.concurrency.ThreadSafe;
 import org.restcomm.connect.commons.cache.DiskCacheFactory;
 import org.restcomm.connect.commons.cache.DiskCacheRequest;
 import org.restcomm.connect.commons.dao.Sid;
+import org.restcomm.connect.dao.AccountsDao;
+import org.restcomm.connect.dao.DaoManager;
 import org.restcomm.connect.dao.entities.Announcement;
 import org.restcomm.connect.dao.entities.RestCommResponse;
 import org.restcomm.connect.http.converter.AnnouncementConverter;
 import org.restcomm.connect.http.converter.AnnouncementListConverter;
 import org.restcomm.connect.http.converter.RestCommResponseConverter;
+import org.restcomm.connect.http.security.ContextUtil;
+import org.restcomm.connect.http.security.PermissionEvaluator;
+import org.restcomm.connect.identity.UserIdentityContext;
 import org.restcomm.connect.tts.api.SpeechSynthesizerRequest;
 import org.restcomm.connect.tts.api.SpeechSynthesizerResponse;
 import scala.concurrent.Await;
@@ -44,7 +58,10 @@ import scala.concurrent.duration.Duration;
 /**
  * @author <a href="mailto:gvagenas@gmail.com">George Vagenas</a>
  */
-public abstract class AnnouncementsEndpoint extends SecuredEndpoint {
+@Path("/Accounts/{accountSid}/Announcements")
+@ThreadSafe
+@Singleton
+public abstract class AnnouncementsEndpoint extends AbstractEndpoint {
     private static Logger logger = Logger.getLogger(AnnouncementsEndpoint.class);
 
     @Context
@@ -57,6 +74,10 @@ public abstract class AnnouncementsEndpoint extends SecuredEndpoint {
     protected XStream xstream;
     private URI uri;
     private ActorSystem system;
+    private AccountsDao accountsDao;
+
+    @Inject
+    PermissionEvaluator permissionEvaluator;
 
     public AnnouncementsEndpoint() {
         super();
@@ -68,6 +89,8 @@ public abstract class AnnouncementsEndpoint extends SecuredEndpoint {
         configuration = (Configuration) context.getAttribute(Configuration.class.getName());
         Configuration ttsConfiguration = configuration.subset("speech-synthesizer");
         runtime = configuration.subset("runtime-settings");
+        final DaoManager storage = (DaoManager) context.getAttribute(DaoManager.class.getName());
+        this.accountsDao = storage.getAccountsDao();
         synthesizer = tts(ttsConfiguration);
         super.init(runtime);
         final AnnouncementConverter converter = new AnnouncementConverter(configuration);
@@ -83,8 +106,10 @@ public abstract class AnnouncementsEndpoint extends SecuredEndpoint {
     }
 
     public Response putAnnouncement(final String accountSid, final MultivaluedMap<String, String> data,
-            final MediaType responseType) throws Exception {
-        secure(accountsDao.getAccount(accountSid), "RestComm:Create:Announcements");
+            final MediaType responseType,
+            UserIdentityContext userIdentityContext) throws Exception {
+        permissionEvaluator.secure(accountsDao.getAccount(accountSid), "RestComm:Create:Announcements",
+                userIdentityContext);
         if(cache == null)
             createCacheActor(accountSid);
 
@@ -186,5 +211,14 @@ public abstract class AnnouncementsEndpoint extends SecuredEndpoint {
         }
         system.stop(cache);
         system.stop(synthesizer);
+    }
+
+    @POST
+    @Produces({MediaType.APPLICATION_XML, MediaType.APPLICATION_JSON})
+    public Response putAnnouncement(@PathParam("accountSid") final String accountSid,
+            final MultivaluedMap<String, String> data,
+            @HeaderParam("Accept") String accept,
+            @Context SecurityContext sec) throws Exception {
+        return putAnnouncement(accountSid, data, retrieveMediaType(accept),ContextUtil.convert(sec));
     }
 }

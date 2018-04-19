@@ -26,6 +26,11 @@ import java.util.List;
 import java.util.regex.Pattern;
 import javax.annotation.PostConstruct;
 import javax.servlet.ServletContext;
+import javax.ws.rs.GET;
+import javax.ws.rs.HeaderParam;
+import javax.ws.rs.Path;
+import javax.ws.rs.PathParam;
+import javax.ws.rs.Produces;
 import javax.ws.rs.core.Context;
 import javax.ws.rs.core.MediaType;
 import static javax.ws.rs.core.MediaType.*;
@@ -52,8 +57,9 @@ import org.restcomm.connect.http.converter.UsageListConverter;
  * @author charles.roufay@telestax.com (Charles Roufay)
  * @author brainslog@gmail.com (Alexandre Mendonca)
  */
+@Path("/Accounts/{accountSid}/Usage/Records")
 @ThreadSafe
-public abstract class UsageEndpoint extends SecuredEndpoint {
+public abstract class UsageEndpoint extends AbstractEndpoint {
   @Context
   protected ServletContext context;
   protected Configuration configuration;
@@ -156,4 +162,14 @@ public abstract class UsageEndpoint extends SecuredEndpoint {
       }
     }
   }
+
+    @Path("/{subresource}")
+    @GET
+    @Produces({MediaType.APPLICATION_XML, MediaType.APPLICATION_JSON})
+    public Response getUsageAsXml(@PathParam("accountSid") final String accountSid,
+            @PathParam("subresource") final String subresource,
+            @Context UriInfo info,
+            @HeaderParam("Accept") String accept) {
+      return getUsage(accountSid, subresource, info, retrieveMediaType(accept));
+    }
 }
