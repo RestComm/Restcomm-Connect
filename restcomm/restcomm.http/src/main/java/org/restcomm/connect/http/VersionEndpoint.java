@@ -24,8 +24,10 @@ import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
 import com.thoughtworks.xstream.XStream;
 import javax.annotation.PostConstruct;
+import javax.inject.Inject;
 import javax.servlet.ServletContext;
 import javax.ws.rs.GET;
+import javax.ws.rs.HeaderParam;
 import javax.ws.rs.Path;
 import javax.ws.rs.PathParam;
 import javax.ws.rs.Produces;
@@ -34,6 +36,7 @@ import javax.ws.rs.core.MediaType;
 import static javax.ws.rs.core.MediaType.*;
 import javax.ws.rs.core.Response;
 import static javax.ws.rs.core.Response.ok;
+import javax.ws.rs.core.SecurityContext;
 import org.apache.commons.configuration.Configuration;
 import org.apache.log4j.Logger;
 import org.restcomm.connect.commons.Version;
@@ -45,6 +48,9 @@ import org.restcomm.connect.dao.UsageDao;
 import org.restcomm.connect.dao.entities.RestCommResponse;
 import org.restcomm.connect.http.converter.RestCommResponseConverter;
 import org.restcomm.connect.http.converter.VersionConverter;
+import org.restcomm.connect.http.security.ContextUtil;
+import org.restcomm.connect.http.security.PermissionEvaluator;
+import org.restcomm.connect.identity.UserIdentityContext;
 
 /**
  * @author <a href="mailto:gvagenas@gmail.com">gvagenas</a>
@@ -62,6 +68,9 @@ public class VersionEndpoint extends AbstractEndpoint {
     private Gson gson;
     private XStream xstream;
     private AccountsDao accountsDao;
+
+    @Inject
+    private PermissionEvaluator permissionEvaluator;
 
     @PostConstruct
     public void init() {
@@ -82,8 +91,13 @@ public class VersionEndpoint extends AbstractEndpoint {
         xstream.registerConverter(new RestCommResponseConverter(configuration));
     }
 
-    protected Response getVersion(final String accountSid, final MediaType mediaType) {
-        secure(accountsDao.getAccount(accountSid), "RestComm:Read:Usage");
+    protected Response getVersion(final String accountSid,
+            final MediaType mediaType,
+            UserIdentityContext userIdentityContext
+    ) {
+        permissionEvaluator.secure(accountsDao.getAccount(accountSid),
+                "RestComm:Read:Usage",
+                userIdentityContext);
 
         VersionEntity versionEntity = Version.getVersionEntity();
 
@@ -108,8 +122,10 @@ public class VersionEndpoint extends AbstractEndpoint {
     @GET
     @Produces({MediaType.APPLICATION_XML, MediaType.APPLICATION_JSON})
     public Response getVersion(@PathParam("accountSid") final String accountSid,
-            @HeaderParam("Accept") String accept) {
-        return getVersion(accountSid, retrieveMediaType(accept));
+            @HeaderParam("Accept") String accept,
+            @Context SecurityContext sec) {
+        return getVersion(accountSid, retrieveMediaType(accept),
+                ContextUtil.convert(sec));
     }
 
 }
