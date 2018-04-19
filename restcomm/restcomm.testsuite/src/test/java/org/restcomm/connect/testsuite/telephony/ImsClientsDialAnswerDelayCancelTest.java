@@ -37,7 +37,7 @@ import org.cafesip.sipunit.SipCall;
 import org.cafesip.sipunit.SipPhone;
 import org.cafesip.sipunit.SipStack;
 import org.cafesip.sipunit.SipTransaction;
-import org.jboss.arquillian.container.mss.extension.SipStackTool;
+import org.restcomm.connect.testsuite.SipStackTool;
 import org.jboss.arquillian.container.test.api.Deployer;
 import org.jboss.arquillian.container.test.api.Deployment;
 import org.jboss.arquillian.junit.Arquillian;
@@ -48,21 +48,22 @@ import org.jboss.shrinkwrap.resolver.api.maven.Maven;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.BeforeClass;
+import org.junit.FixMethodOrder;
 import org.junit.Rule;
 import org.junit.Test;
-import org.junit.FixMethodOrder;
-import org.junit.runners.MethodSorters;
+import org.junit.experimental.categories.Category;
 import org.junit.runner.RunWith;
+import org.junit.runners.MethodSorters;
 import org.restcomm.connect.commons.Version;
+import org.restcomm.connect.commons.annotations.FeatureAltTests;
+import org.restcomm.connect.commons.annotations.SequentialClassTests;
+import org.restcomm.connect.commons.annotations.UnstableTests;
+import org.restcomm.connect.testsuite.SipStackTool;
 import org.restcomm.connect.testsuite.http.RestcommCallsTool;
 import org.restcomm.connect.testsuite.telephony.security.DigestServerAuthenticationMethod;
 
 import com.github.tomakehurst.wiremock.junit.WireMockRule;
 import com.google.gson.JsonObject;
-import org.junit.experimental.categories.Category;
-import org.restcomm.connect.commons.annotations.FeatureAltTests;
-import org.restcomm.connect.commons.annotations.SequentialClassTests;
-import org.restcomm.connect.commons.annotations.UnstableTests;
 
 /**
  * Test for clients with or without VoiceURL (Bitbucket issue 115). Clients without VoiceURL can dial anything.

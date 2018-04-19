@@ -4,13 +4,10 @@
 
     <parent>
         <groupId>org.restcomm</groupId>
-        <artifactId>restcomm-parent</artifactId>
-        <version>4.0.1</version>
+        <artifactId>restcomm-connect-root</artifactId>
+        <version>9.0.0-SNAPSHOT</version>
     </parent>
-
-    <groupId>org.restcomm</groupId>
     <artifactId>restcomm-connect</artifactId>
-    <version>8.3.2-SNAPSHOT</version>
     <packaging>pom</packaging>
     <name>RestComm-Connect</name>
     <description>A unified communications platform for web developers.</description>
@@ -115,9 +112,7 @@
         <scalatest.version>1.9.1</scalatest.version>
         <hsqldb.version>2.3.2</hsqldb.version>
         <sip-ri.version>1.2.293</sip-ri.version>
-        <arquillian.version>1.0.3.Final</arquillian.version>
-        <mss.arquillian.version>1.0.3</mss.arquillian.version>
-        <mss.shrinkwrap.version>1.0.2</mss.shrinkwrap.version>
+        <arquillian.version>1.1.13.Final</arquillian.version>
         <shrinkwrap.resolver.version>2.2.6</shrinkwrap.resolver.version>
         <sipunit.version>2.0.4</sipunit.version>
         <!--tomcat.version>6.0.35</tomcat.version -->
@@ -141,7 +136,6 @@
         <jacocoArgLine />
     </properties>
     <modules>
-        <!-- <module>restcomm.docs</module> -->
         <module>restcomm.application</module>
         <module>restcomm.commons</module>
         <module>restcomm.dao</module>
@@ -165,7 +159,6 @@
         <module>restcomm.telephony</module>
         <module>restcomm.tts.api</module>
         <module>restcomm.tts.voicerss</module>
-        <module>restcomm.testsuite</module>
         <module>restcomm.ui</module>
         <module>restcomm.tts.att</module>
         <module>restcomm.ussd</module>
@@ -186,129 +179,6 @@
 
     <dependencyManagement>
         <dependencies>
-            <!-- INTERNAL MODULES -->
-            <dependency>
-                <groupId>org.restcomm</groupId>
-                <artifactId>restcomm-connect.sdr.api</artifactId>
-                <version>${project.version}</version>            
-            </dependency>      
-            <dependency>
-                <groupId>org.restcomm</groupId>
-                <artifactId>restcomm-connect.core</artifactId>
-                <version>${project.version}</version>       
-            </dependency>                  
-            <dependency>
-                <groupId>org.restcomm</groupId>
-                <artifactId>restcomm-connect.mrb.api</artifactId>
-                <version>${project.version}</version>                        
-            </dependency>
-
-            <dependency>
-                <groupId>org.restcomm</groupId>
-                <artifactId>restcomm-connect.mrb</artifactId>
-                <version>${project.version}</version>                        
-            </dependency> 
-            <dependency>
-                <groupId>org.restcomm</groupId>
-                <artifactId>restcomm-connect.application</artifactId>
-                <version>${project.version}</version>   
-                <type>war</type>                
-            </dependency>                                     
-            <dependency>
-                <groupId>org.restcomm</groupId>
-                <artifactId>restcomm-connect.extension.api</artifactId>
-                <version>${project.version}</version>                        
-            </dependency>
-            <dependency>
-                <groupId>org.restcomm</groupId>
-                <artifactId>restcomm-connect.extension.controller</artifactId>
-                <version>${project.version}</version>
-            </dependency> 
-            <dependency>
-                <groupId>org.restcomm</groupId>
-                <artifactId>restcomm-connect.monitoring.service</artifactId>
-                <version>${project.version}</version>            
-            </dependency>  
-            <dependency>
-                <groupId>org.restcomm</groupId>
-                <artifactId>restcomm-connect.dao</artifactId>
-                <version>${project.version}</version>                
-            </dependency>
-            <dependency>
-                <groupId>org.restcomm</groupId>
-                <artifactId>restcomm-connect.telephony</artifactId>
-                <version>${project.version}</version>                
-            </dependency>            
-            <dependency>
-                <groupId>org.restcomm</groupId>
-                <artifactId>restcomm-connect.telephony.api</artifactId>
-                <version>${project.version}</version>                
-            </dependency>
-
-            <dependency>
-                <groupId>org.restcomm</groupId>
-                <artifactId>restcomm-connect.http</artifactId>
-                <version>${project.version}</version>                
-            </dependency>  
-            <dependency>
-                <groupId>org.restcomm</groupId>
-                <artifactId>restcomm-connect.extension.api</artifactId>
-                <version>${project.version}</version>                
-            </dependency>
-
-            <dependency>
-                <groupId>org.restcomm</groupId>
-                <artifactId>restcomm-connect.testsuite</artifactId>
-                <version>${project.version}</version>  
-            </dependency>                
-
-            <dependency>
-                <groupId>org.restcomm</groupId>
-                <artifactId>restcomm-connect.commons</artifactId>
-                <version>${project.version}</version>  
-            </dependency> 
-            <dependency>
-                <groupId>org.restcomm</groupId>
-                <artifactId>restcomm-connect.email.api</artifactId>
-                <version>${project.version}</version> 
-            </dependency> 
-            
-            <dependency>
-                <groupId>org.restcomm</groupId>
-                <artifactId>restcomm-connect.sms</artifactId>
-                <version>${project.version}</version> 
-            </dependency>
-            <dependency>
-                <groupId>org.restcomm</groupId>
-                <artifactId>restcomm-connect.mgcp</artifactId>
-                <version>${project.version}</version> 
-            </dependency>   
-            
-            <dependency>
-                <groupId>org.restcomm</groupId>
-                <artifactId>restcomm-connect.mscontrol.api</artifactId>
-                <version>${project.version}</version>                         
-            </dependency>
-
-            <dependency>
-                <groupId>org.restcomm</groupId>
-                <artifactId>restcomm-connect.mscontrol.mms</artifactId>
-                <version>${project.version}</version>                         
-            </dependency>
-            <dependency>
-                <groupId>org.restcomm</groupId>
-                <artifactId>restcomm-connect.dns.api</artifactId>
-                <version>${project.version}</version>                         
-            </dependency>  
-            <dependency>
-                <groupId>org.restcomm</groupId>
-                <artifactId>restcomm-connect-management</artifactId>
-                <version>${project.version}</version>
-                <type>war</type>                
-            </dependency>
-            <!-- END OF INTERNAL MODULES -->                
-            
-            
             <!-- SMPP Testing -->
 
             <dependency>
@@ -426,16 +296,16 @@
             </dependency>
 
             <dependency>
-                <groupId>javax.servlet</groupId>
-                <artifactId>javax.servlet-api</artifactId>
-                <version>3.0.1</version>
-                <scope>provided</scope>
-            </dependency>
-            <dependency>
                 <groupId>org.mobicents.servlet.sip</groupId>
                 <artifactId>sip-servlets-spec</artifactId>
                 <version>${sipservletapi.version}</version>
                 <scope>provided</scope>
+            </dependency>
+            <dependency>
+                    <groupId>org.mobicents.servlet.sip</groupId>
+                    <artifactId>sip-servlets-client</artifactId>
+                    <version>${sipservletapi.version}</version>
+                    <scope>provided</scope>
             </dependency>
 
             <!--dependency> <groupId>org.apache.tomcat</groupId> <artifactId>servlet-api</artifactId>
@@ -451,6 +321,12 @@
                 <groupId>org.apache.shiro</groupId>
                 <artifactId>shiro-web</artifactId>
                 <version>${shiroweb.version}</version>
+            </dependency>
+
+            <dependency>
+                <groupId>javax.ws.rs</groupId>
+                <artifactId>jsr311-api</artifactId>
+                <version>1.0</version>
             </dependency>
 
             <dependency>
@@ -555,19 +431,6 @@
                 <scope>test</scope>
             </dependency>
 
-            <dependency>
-                <groupId>org.apache.tomcat</groupId>
-                <artifactId>tomcat-coyote</artifactId>
-                <version>${tomcat7.version}</version>
-                <scope>provided</scope>
-            </dependency>
-
-            <dependency>
-                <groupId>org.apache.tomcat</groupId>
-                <artifactId>tomcat-jasper</artifactId>
-                <version>${tomcat7.version}</version>
-                <scope>provided</scope>
-            </dependency>
 
             <dependency>
                 <groupId>javax.sip</groupId>
@@ -575,19 +438,6 @@
                 <version>${sip-ri.version}</version>
                 <scope>test</scope>
             </dependency>
-
-            <dependency>
-                <groupId>org.mobicents.servlet.sip.containers</groupId>
-                <artifactId>sip-servlets-catalina-7</artifactId>
-                <version>${sipservletapi.version}</version>
-                <scope>provided</scope>
-            </dependency>
-            
-            <dependency>
-                <groupId>org.mobicents.servlet.sip</groupId>
-                <artifactId>sip-servlets-core-api</artifactId>
-                <version>${sipservletapi.version}</version>
-            </dependency>            
 
             <dependency>
                 <groupId>org.mobicents.servlet.sip</groupId>
@@ -603,44 +453,11 @@
             </dependency>
 
             <dependency>
-                <groupId>org.mobicents.arquillian.container</groupId>
-                <artifactId>mss-tomcat-embedded-7</artifactId>
-                <version>${mss.arquillian.version}</version>
-                <scope>test</scope>
-                <exclusions>
-                    <exclusion>
-                        <groupId>com.telscale.licensing</groupId>
-                        <artifactId>lce-core</artifactId>
-                    </exclusion>
-                    <exclusion>
-                        <groupId>org.mobicents.sipunit</groupId>
-                        <artifactId>*</artifactId>
-                    </exclusion>
-                </exclusions>
-            </dependency>
-            
-            <dependency>
-                <groupId>org.apache.tomcat</groupId>
-                <artifactId>tomcat-catalina</artifactId>
-                <version>${tomcat7.version}</version>
-            </dependency>             
-
-            <dependency>
                 <groupId>org.jboss.arquillian.junit</groupId>
                 <artifactId>arquillian-junit-container</artifactId>
                 <version>${arquillian.version}</version>
+                <scope>test</scope>
             </dependency>
-            
-            <dependency>
-                <groupId>org.mobicents.arquillian.container</groupId>
-                <artifactId>mss-arquillian-mediaserver-api</artifactId>
-                <version>${mss.arquillian.version}</version>
-            </dependency>
-            <dependency>
-                <groupId>org.mobicents.arquillian.container</groupId>
-                <artifactId>mss-arquillian-mediaserver-extension</artifactId>
-                <version>${mss.arquillian.version}</version>
-            </dependency>                       
 
             <dependency>
                 <groupId>org.jboss.shrinkwrap.resolver</groupId>
@@ -655,12 +472,6 @@
                 <version>${shrinkwrap.resolver.version}</version>
                 <scope>test</scope>
             </dependency>
-            
-            <dependency>
-                <groupId>com.cloudhopper</groupId>
-                <artifactId>ch-commons-util</artifactId>
-                <version>${ch-commons-util.version}</version>
-            </dependency>            
 
             <dependency>
                 <groupId>org.mobicents.sipunit</groupId>
@@ -699,45 +510,18 @@
             </dependency>
 
             <dependency>
+                <groupId>javax.servlet</groupId>
+                <artifactId>javax.servlet-api</artifactId>
+                <version>3.1.0</version>
+                <scope>provided</scope>
+            </dependency>
+
+            <dependency>
                 <groupId>org.mockito</groupId>
                 <artifactId>mockito-core</artifactId>
                 <version>${mockito-core.version}</version>
                 <scope>test</scope>
             </dependency>
-            
-            <dependency>
-                <groupId>org.mobicents.servlet.sip.containers</groupId>
-                <artifactId>sip-servlets-tomcat-7</artifactId>
-                <version>${sipservletapi.version}</version>
-            </dependency>
-            <dependency>
-                <groupId>org.mobicents.servlet.sip</groupId>
-                <artifactId>sip-servlets-impl</artifactId>
-                <version>${sipservletapi.version}</version>
-            </dependency>
-            <dependency>
-                <groupId>org.mobicents.servlet.sip</groupId>
-                <artifactId>sip-servlets-client</artifactId>
-                <version>${sipservletapi.version}</version>
-            </dependency>
-            <dependency>
-                <groupId>org.mobicents.commtesting</groupId>
-                <artifactId>mgcpUnit</artifactId>
-                <version>${mgcpunit.version}</version>
-            </dependency>
-            <dependency>
-                    <groupId>org.mobicents.media</groupId>
-                    <artifactId>concurrent</artifactId>
-                    <version>${mobicents.mgcp.impl.version}</version>
-            </dependency>
-            <dependency>
-                <groupId>com.github.tomakehurst</groupId>
-                <artifactId>wiremock</artifactId>
-                <version>1.57</version>
-                <!-- Include this if you have dependency conflicts for Guava, Jetty, Jackson
-                or Apache HTTP Client -->
-                <classifier>standalone</classifier>
-            </dependency>                                                                       
         </dependencies>
     </dependencyManagement>
 
@@ -746,80 +530,74 @@
         <dependency>
             <groupId>junit</groupId>
             <artifactId>junit</artifactId>
+            <version>${junit.version}</version>
             <scope>test</scope>
         </dependency>
 
         <dependency>
             <groupId>org.scalatest</groupId>
             <artifactId>scalatest_2.9.1</artifactId>
+            <version>${scalatest.version}</version>
             <scope>test</scope>
         </dependency>
 
         <dependency>
             <groupId>com.typesafe.akka</groupId>
             <artifactId>akka-testkit_2.10</artifactId>
-            <scope>test</scope>
-        </dependency>
-
-        <dependency>
-            <groupId>org.apache.tomcat</groupId>
-            <artifactId>tomcat-coyote</artifactId>
-            <scope>test</scope>
-        </dependency>
-
-        <dependency>
-            <groupId>org.apache.tomcat</groupId>
-            <artifactId>tomcat-jasper</artifactId>
+            <version>${akka.version}</version>
             <scope>test</scope>
         </dependency>
 
         <dependency>
             <groupId>javax.sip</groupId>
             <artifactId>jain-sip-ri</artifactId>
+            <version>${sip-ri.version}</version>
             <scope>test</scope>
         </dependency>
 
-        <dependency>
-            <groupId>org.mobicents.servlet.sip.containers</groupId>
-            <artifactId>sip-servlets-catalina-7</artifactId>
-            <scope>test</scope>
-        </dependency>
 
         <dependency>
             <groupId>org.mobicents.servlet.sip</groupId>
             <artifactId>sip-servlets-application-router</artifactId>
+            <version>${sipservletapi.version}</version>
             <scope>test</scope>
         </dependency>
 
         <dependency>
             <groupId>org.hsqldb</groupId>
             <artifactId>hsqldb</artifactId>
+            <version>${hsqldb.version}</version>
             <scope>test</scope>
         </dependency>
 
         <dependency>
             <groupId>org.mobicents.sipunit</groupId>
             <artifactId>sipunit</artifactId>
+            <version>${sipunit.version}</version>
             <scope>test</scope>
         </dependency>
         <dependency>
             <groupId>org.mobicents</groupId>
             <artifactId>checkstyle</artifactId>
+            <version>${mobicents.checkstyle.version}</version>
         </dependency>
 
         <dependency>
             <groupId>commons-codec</groupId>
             <artifactId>commons-codec</artifactId>
+            <version>${commons-codec.version}</version>
         </dependency>
 
         <dependency>
             <groupId>commons-lang</groupId>
             <artifactId>commons-lang</artifactId>
+            <version>${commons-lang.version}</version>
         </dependency>
 
         <dependency>
             <groupId>org.mockito</groupId>
             <artifactId>mockito-core</artifactId>
+            <version>${mockito-core.version}</version>
             <scope>test</scope>
         </dependency>
 
@@ -861,6 +639,7 @@
             <plugin>
                 <groupId>org.apache.maven.plugins</groupId>
                 <artifactId>maven-checkstyle-plugin</artifactId>
+                <version>${checkstyle.plugin.version}</version>
                 <configuration>
                     <configLocation>/checkstyle/checkstyle.xml</configLocation>
                     <consoleOutput>true</consoleOutput>
@@ -993,7 +772,7 @@
                     <groupId>org.apache.maven.plugins</groupId>
                     <artifactId>maven-checkstyle-plugin</artifactId>
                     <version>${checkstyle.plugin.version}</version>
-                </plugin>                
+                </plugin>
             </plugins>
         </pluginManagement>
     </build>
@@ -1003,6 +782,12 @@
             <id>docs</id>
             <modules>
                 <module>restcomm.docs</module>
+            </modules>
+        </profile>
+        <profile>
+            <id>testsuite</id>
+            <modules>
+                <module>restcomm.testsuite</module>
             </modules>
         </profile>
         <profile>
@@ -1086,6 +871,7 @@
                             </execution>
                         </executions>
                     </plugin>
+
                 </plugins>
             </build>
         </profile>
@@ -1156,5 +942,4 @@
             </snapshots>
         </pluginRepository>
     </pluginRepositories>
-
 </project>

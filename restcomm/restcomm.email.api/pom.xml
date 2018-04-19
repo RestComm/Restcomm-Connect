@@ -3,7 +3,7 @@
     <parent>
         <groupId>org.restcomm</groupId>
         <artifactId>restcomm-connect</artifactId>
-        <version>8.3.2-SNAPSHOT</version>
+        <version>9.0.0-SNAPSHOT</version>
     </parent>
 
     <artifactId>restcomm-connect.email.api</artifactId>
@@ -21,37 +21,11 @@
             <version>${project.version}</version>
         </dependency>
 
-        <!--<dependency>-->
-            <!--<groupId>org.slf4j</groupId>-->
-            <!--<artifactId>slf4j-log4j12</artifactId>-->
-            <!--<version>1.5.5</version>-->
-        <!--</dependency>-->
-
-        <!--<dependency>-->
-            <!--<groupId>commons-configuration</groupId>-->
-            <!--<artifactId>commons-configuration</artifactId>-->
-        <!--</dependency>-->
-
-        <!--<dependency>-->
-            <!--<groupId>org.apache.httpcomponents</groupId>-->
-            <!--<artifactId>httpclient</artifactId>-->
-        <!--</dependency>-->
-
-        <!--<dependency>-->
-            <!--<groupId>junit</groupId>-->
-            <!--<artifactId>junit</artifactId>-->
-            <!--<scope>test</scope>-->
-        <!--</dependency>-->
-
-        <!--<dependency>-->
-            <!--<groupId>org.scalatest</groupId>-->
-            <!--<artifactId>scalatest_2.9.1</artifactId>-->
-        <!--</dependency>-->
-
-        <!--<dependency>-->
-            <!--<groupId>com.typesafe.akka</groupId>-->
-            <!--<artifactId>akka-testkit_2.10</artifactId>-->
-        <!--</dependency>-->
+        <dependency>
+            <groupId>javax.servlet</groupId>
+            <artifactId>javax.servlet-api</artifactId>
+            <scope>provided</scope>
+        </dependency>
 
     </dependencies>
 

@@ -4,7 +4,7 @@
 	<parent>
 		<groupId>org.restcomm</groupId>
 		<artifactId>restcomm-connect</artifactId>
-		<version>8.3.2-SNAPSHOT</version>
+		<version>9.0.0-SNAPSHOT</version>
 	</parent>
 
 	<artifactId>restcomm-connect.identity</artifactId>
@@ -44,22 +44,6 @@
 			<artifactId>javax.servlet-api</artifactId>
 			<scope>provided</scope>
 		</dependency>		
-
-		<dependency>
-			<groupId>com.sun.jersey</groupId>
-			<artifactId>jersey-server</artifactId>
-		</dependency>
-
-		<dependency>
-			<groupId>com.sun.jersey</groupId>
-			<artifactId>jersey-client</artifactId>
-		</dependency>
-
-		<dependency>
-			<groupId>com.sun.jersey</groupId>
-			<artifactId>jersey-servlet</artifactId>
-			<version>${jersey.version}</version>
-		</dependency>
 
 		<dependency>
 			<groupId>com.thoughtworks.xstream</groupId>

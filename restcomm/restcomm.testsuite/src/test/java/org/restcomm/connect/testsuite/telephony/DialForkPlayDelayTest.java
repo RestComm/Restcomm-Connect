@@ -9,10 +9,10 @@ import static com.github.tomakehurst.wiremock.client.WireMock.stubFor;
 import static com.github.tomakehurst.wiremock.client.WireMock.urlEqualTo;
 import static com.github.tomakehurst.wiremock.client.WireMock.urlPathEqualTo;
 import static com.github.tomakehurst.wiremock.client.WireMock.urlPathMatching;
-import com.github.tomakehurst.wiremock.junit.WireMockRule;
-import com.github.tomakehurst.wiremock.verification.LoggedRequest;
-import com.google.gson.JsonArray;
-import com.google.gson.JsonObject;
+import static org.cafesip.sipunit.SipAssert.assertLastOperationSuccess;
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertTrue;
+
 import java.net.MalformedURLException;
 import java.net.URL;
 import java.text.ParseException;
@@ -21,44 +21,39 @@ import java.util.Arrays;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.concurrent.ExecutorService;
-import java.util.concurrent.Executors;
-import java.util.logging.Level;
+
 import javax.sip.address.SipURI;
 import javax.sip.message.Response;
+
 import org.apache.log4j.Logger;
-import static org.cafesip.sipunit.SipAssert.assertLastOperationSuccess;
 import org.cafesip.sipunit.SipCall;
 import org.cafesip.sipunit.SipPhone;
 import org.cafesip.sipunit.SipStack;
-import org.cafesip.sipunit.SipTransaction;
-import org.jboss.arquillian.container.mss.extension.SipStackTool;
 import org.jboss.arquillian.container.test.api.Deployer;
 import org.jboss.arquillian.container.test.api.Deployment;
 import org.jboss.arquillian.junit.Arquillian;
 import org.jboss.arquillian.test.api.ArquillianResource;
 import org.jboss.shrinkwrap.api.spec.WebArchive;
 import org.junit.After;
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertNotNull;
-import static org.junit.Assert.assertTrue;
 import org.junit.Before;
 import org.junit.BeforeClass;
 import org.junit.FixMethodOrder;
-import org.junit.Ignore;
 import org.junit.Rule;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
 import org.junit.runner.RunWith;
 import org.junit.runners.MethodSorters;
 import org.restcomm.connect.commons.annotations.FeatureAltTests;
-import org.restcomm.connect.commons.annotations.FeatureExpTests;
 import org.restcomm.connect.commons.annotations.SequentialClassTests;
-import org.restcomm.connect.commons.annotations.UnstableTests;
 import org.restcomm.connect.testsuite.NetworkPortAssigner;
+import org.restcomm.connect.testsuite.SipStackTool;
 import org.restcomm.connect.testsuite.WebArchiveUtil;
 import org.restcomm.connect.testsuite.http.RestcommCallsTool;
 import org.restcomm.connect.testsuite.tools.MonitoringServiceTool;
+
+import com.github.tomakehurst.wiremock.junit.WireMockRule;
+import com.github.tomakehurst.wiremock.verification.LoggedRequest;
+import com.google.gson.JsonObject;
 
 /**
  * Tests for the Dial Forking timeout, this test class is being tested with 2 seconds audio file, that can make RC in

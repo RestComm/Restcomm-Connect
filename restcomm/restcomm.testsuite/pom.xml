@@ -4,11 +4,15 @@
     <parent>
         <artifactId>restcomm-connect</artifactId>
         <groupId>org.restcomm</groupId>
-        <version>8.3.2-SNAPSHOT</version>
+        <version>9.0.0-SNAPSHOT</version>
     </parent>
     <modelVersion>4.0.0</modelVersion>
 
     <artifactId>restcomm-connect.testsuite</artifactId>
+
+    <properties>
+        <sip.servlets.wildfly.version>3.2.0-105</sip.servlets.wildfly.version>
+    </properties>
 
     <dependencies>
         <!-- Testing -->
@@ -93,10 +97,6 @@
             <artifactId>shiro-web</artifactId>
         </dependency>
 
-        <dependency>
-            <groupId>com.sun.jersey</groupId>
-            <artifactId>jersey-server</artifactId>
-        </dependency>
 
         <dependency>
             <groupId>com.sun.jersey</groupId>
@@ -129,74 +129,57 @@
             <groupId>javax.sip</groupId>
             <artifactId>jain-sip-ri</artifactId>
         </dependency>
-        
+
         <dependency>
-                <groupId>org.jboss.arquillian.junit</groupId>
-                <artifactId>arquillian-junit-container</artifactId>
-                <version>${arquillian.version}</version>
-                <scope>compile</scope>
+            <groupId>org.jboss.arquillian.junit</groupId>
+            <artifactId>arquillian-junit-container</artifactId>
+            <version>${arquillian.version}</version>
+            <scope>compile</scope>
         </dependency>
 
         <dependency>
-                <groupId>org.jboss.shrinkwrap.resolver</groupId>
-                <artifactId>shrinkwrap-resolver-impl-maven</artifactId>
-                <version>${shrinkwrap.resolver.version}</version>
-                <scope>compile</scope>
+            <groupId>org.jboss.shrinkwrap.resolver</groupId>
+            <artifactId>shrinkwrap-resolver-impl-maven</artifactId>
+            <version>${shrinkwrap.resolver.version}</version>
+            <scope>compile</scope>
         </dependency>
-        
-        <dependency>
-                <groupId>org.jboss.shrinkwrap.resolver</groupId>
-                <artifactId>shrinkwrap-resolver-api-maven</artifactId>
-                <version>${shrinkwrap.resolver.version}</version>
-                <scope>compile</scope>
-        </dependency>        
 
         <dependency>
-                <groupId>org.jboss.shrinkwrap.resolver</groupId>
-                <artifactId>shrinkwrap-resolver-api-maven-archive</artifactId>
-                <version>${shrinkwrap.resolver.version}</version>
-                <scope>compile</scope>
-        </dependency>   
+            <groupId>org.jboss.shrinkwrap.resolver</groupId>
+            <artifactId>shrinkwrap-resolver-api-maven</artifactId>
+            <version>${shrinkwrap.resolver.version}</version>
+            <scope>compile</scope>
+        </dependency>
 
         <dependency>
-                <groupId>org.jboss.shrinkwrap.resolver</groupId>
-                <artifactId>shrinkwrap-resolver-impl-maven-archive</artifactId>
-                <version>${shrinkwrap.resolver.version}</version>
-                <scope>compile</scope>
-        </dependency>        
+            <groupId>org.jboss.shrinkwrap.resolver</groupId>
+            <artifactId>shrinkwrap-resolver-api-maven-archive</artifactId>
+            <version>${shrinkwrap.resolver.version}</version>
+            <scope>compile</scope>
+        </dependency>
 
-        <!--Dependencies for Tomcat-7 -->
         <dependency>
-            <groupId>org.mobicents.servlet.sip.containers</groupId>
-            <artifactId>sip-servlets-catalina-7</artifactId>
-            <version>${sipservletapi.version}</version>
+            <groupId>org.jboss.shrinkwrap.resolver</groupId>
+            <artifactId>shrinkwrap-resolver-impl-maven-archive</artifactId>
+            <version>${shrinkwrap.resolver.version}</version>
+            <scope>compile</scope>
+        </dependency>
+
+        <!--Dependencies for wildfly10 -->
+        <dependency>
+            <groupId>org.mobicents.sipunit</groupId>
+            <artifactId>sipunit</artifactId>
             <scope>compile</scope>
         </dependency>
         <dependency>
-            <groupId>org.mobicents.servlet.sip.containers</groupId>
-            <artifactId>sip-servlets-tomcat-7</artifactId>
-            <version>${sipservletapi.version}</version>
-            <scope>compile</scope>            
-        </dependency>
-        <dependency>
-            <groupId>org.mobicents.arquillian.container</groupId>
-            <artifactId>mss-tomcat-embedded-7</artifactId>
-            <version>${mss.arquillian.version}</version>
-            <scope>compile</scope>            
+            <groupId>org.wildfly.arquillian</groupId>
+            <artifactId>wildfly-arquillian-container-managed</artifactId>
+            <version>2.1.0.Final</version>
+            <scope>test</scope>
         </dependency>
 
-        <!--Dependencies for Tomcat-7 -->
+        <!--Dependencies for wildfly10 -->
 
-        <!--Dependencies for Tomcat-6 -->
-        <!-- <dependency> <groupId>org.mobicents.servlet.sip.containers</groupId>
-        <artifactId>sip-servlets-catalina-6</artifactId> <version>${sipservletapi.version}</version>
-        <scope>test</scope> </dependency> <dependency> <groupId>org.mobicents.servlet.sip.containers</groupId>
-        <artifactId>sip-servlets-tomcat-jboss4</artifactId> <version>${sipservletapi.version}</version>
-        <scope>test</scope> </dependency> <dependency> <groupId>org.mobicents.arquillian.container</groupId>
-        <artifactId>mss-tomcat-embedded-6</artifactId> <version>${mss.arquillian.version}</version>
-        <scope>test</scope> </dependency> -->
-
-        <!--Dependencies for Tomcat-6 -->
 
         <dependency>
             <groupId>com.cloudhopper</groupId>
@@ -253,7 +236,7 @@
             <groupId>javax.sip</groupId>
             <artifactId>jain-sip-api</artifactId>
             <version>1.2</version>
-            <scope>test</scope>
+            <scope>compile</scope>
         </dependency>
 
         <dependency>
@@ -285,19 +268,7 @@
             <scope>test</scope>
         </dependency>
 
-        <dependency>
-            <groupId>org.apache.tomcat</groupId>
-            <artifactId>tomcat-coyote</artifactId>
-            <version>${tomcat7.version}</version>
-            <scope>test</scope>
-        </dependency>
 
-        <dependency>
-            <groupId>org.apache.tomcat</groupId>
-            <artifactId>tomcat-jasper</artifactId>
-            <version>${tomcat7.version}</version>
-            <scope>test</scope>
-        </dependency>
 
         <dependency>
             <groupId>org.mockito</groupId>
@@ -322,34 +293,18 @@
         </dependency>
 
         <dependency>
-            <groupId>org.apache.tomcat</groupId>
-            <artifactId>tomcat-catalina</artifactId>
-            <version>${tomcat7.version}</version>
-        </dependency>
-
-        <dependency>
             <groupId>org.mobicents.commtesting</groupId>
             <artifactId>mgcpUnit</artifactId>
             <version>${mgcpunit.version}</version>
             <scope>test</scope>
         </dependency>
-        <dependency>
-            <groupId>org.mobicents.arquillian.container</groupId>
-            <artifactId>mss-arquillian-mediaserver-api</artifactId>
-            <version>${mss.arquillian.version}</version>
-            <scope>compile</scope>
-        </dependency>
+
         <dependency>
             <groupId>javax.servlet</groupId>
             <artifactId>javax.servlet-api</artifactId>
             <scope>provided</scope>
         </dependency>
-        <dependency>
-            <groupId>org.mobicents.arquillian.container</groupId>
-            <artifactId>mss-arquillian-mediaserver-extension</artifactId>
-            <version>${mss.arquillian.version}</version>
-            <scope>compile</scope>
-        </dependency>
+
         <dependency>
             <groupId>com.icegreen</groupId>
             <artifactId>greenmail</artifactId>
@@ -387,22 +342,48 @@
             <scope>test</scope>
         </dependency>
 
-		<dependency>
-			<groupId>org.restcomm</groupId>
-			<artifactId>restcomm-connect.monitoring.service</artifactId>
-			<version>${project.version}</version>
-			<scope>test</scope>
-		</dependency>
-	
-		<dependency>
-			<groupId>org.restcomm.smpp</groupId>
-			<artifactId>smpp-extensions</artifactId>
-		</dependency>
+        <dependency>
+            <groupId>org.restcomm</groupId>
+            <artifactId>restcomm-connect.monitoring.service</artifactId>
+            <version>${project.version}</version>
+            <scope>test</scope>
+        </dependency>
+
+        <dependency>
+            <groupId>org.restcomm.smpp</groupId>
+            <artifactId>smpp-extensions</artifactId>
+        </dependency>
 
     </dependencies>
 
     <build>
         <plugins>
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-dependency-plugin</artifactId>
+                <executions>
+                    <execution>
+                        <id>unpack</id>
+                        <phase>process-test-classes</phase>
+                        <goals>
+                            <goal>unpack</goal>
+                        </goals>
+                        <configuration>
+                            <artifactItems>
+                                <artifactItem>
+                                    <groupId>org.mobicents.servlet.sip</groupId>
+                                    <artifactId>sip-servlets-wildfly-10</artifactId>
+                                    <version>${sip.servlets.wildfly.version}</version>
+                                    <type>zip</type>
+                                    <classifier>assembly</classifier>
+                                </artifactItem>
+                            </artifactItems>
+                            <includes>**/**</includes>
+                            <excludes>**/mobicents-dar.properties, **/click2call.**, **/media-jsr309-servlet.**, **/websockets-sip-servlet.**</excludes>
+                        </configuration>
+                    </execution>
+                </executions>
+            </plugin>
             <plugin>
                 <artifactId>maven-compiler-plugin</artifactId>
                 <configuration>
@@ -467,9 +448,41 @@
                 <artifactId>maven-surefire-plugin</artifactId>
                 <version>2.19.1</version>
                 <configuration>
-                    <argLine>-Xms256m -Xmx2048m -XX:MaxPermSize=1024m ${jacocoArgLine}</argLine>
+                    <argLine>-Xms256m -Xmx2048m ${jacocoArgLine}</argLine>
                     <reuseForks>false</reuseForks>
+                    <systemPropertyVariables>
+                        <java.util.logging.manager>org.jboss.logmanager.LogManager</java.util.logging.manager>
+                        <jboss.home>${project.basedir}/target/dependency/restcomm-sip-servlets-${sip.servlets.wildfly.version}-wildfly-10.0.0.Final</jboss.home>
+                        <arquillian.launch>wildfly10-managed</arquillian.launch>
+                    </systemPropertyVariables>
+                    <redirectTestOutputToFile>false</redirectTestOutputToFile>
                 </configuration>
+            </plugin>
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-resources-plugin</artifactId>
+                <executions>
+                    <execution>
+                        <id>copy-dar-file</id>
+                        <phase>process-test-classes</phase>
+                        <goals>
+                            <goal>copy-resources</goal>
+                        </goals>
+                        <configuration>
+                            <outputDirectory>${project.basedir}/target/dependency/restcomm-sip-servlets-${sip.servlets.wildfly.version}-wildfly-10.0.0.Final/standalone/configuration/dars/</outputDirectory>
+                            <overwrite>true</overwrite>
+                            <resources>
+                                <resource>
+                                    <directory>${project.basedir}/src/test/resources</directory>
+                                    <includes>
+                                        <include>mobicents-dar.properties</include>
+                                    </includes>
+                                    <filtering>false</filtering>
+                                </resource>
+                            </resources>
+                        </configuration>
+                    </execution>
+                </executions>
             </plugin>
         </plugins>
     </build>
@@ -537,7 +550,7 @@
                                 every forked JVM/test class-->
                                 <arquillian_http_port>${surefire.forkNumber}509</arquillian_http_port>
                                 <arquillian_sip_port>${surefire.forkNumber}508</arquillian_sip_port>
-                            </systemPropertyVariables>                            
+                            </systemPropertyVariables>
                         </configuration>
                     </plugin>
                 </plugins>

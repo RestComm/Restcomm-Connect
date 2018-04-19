@@ -33,25 +33,16 @@ import static org.cafesip.sipunit.SipAssert.assertLastOperationSuccess;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertTrue;
-import static org.mockito.Mockito.mock;
-import static org.mockito.Mockito.when;
 
 import java.net.MalformedURLException;
 import java.net.URL;
 import java.net.UnknownHostException;
 import java.text.ParseException;
 import java.util.Arrays;
-import java.util.HashSet;
 import java.util.Iterator;
-import java.util.LinkedList;
 import java.util.List;
-import java.util.Queue;
-import java.util.Set;
-import java.util.concurrent.ConcurrentLinkedQueue;
 
 import javax.sip.Dialog;
-import javax.sip.ListeningPoint;
-import javax.sip.address.Hop;
 import javax.sip.address.SipURI;
 import javax.sip.message.Response;
 
@@ -60,10 +51,6 @@ import org.cafesip.sipunit.Credential;
 import org.cafesip.sipunit.SipCall;
 import org.cafesip.sipunit.SipPhone;
 import org.cafesip.sipunit.SipStack;
-import org.jboss.arquillian.container.mobicents.api.annotations.GetDeployableContainer;
-import org.jboss.arquillian.container.mss.extension.ContainerManagerTool;
-import org.jboss.arquillian.container.mss.extension.SipStackTool;
-import org.jboss.arquillian.container.spi.client.container.DeploymentException;
 import org.jboss.arquillian.container.test.api.Deployer;
 import org.jboss.arquillian.container.test.api.Deployment;
 import org.jboss.arquillian.junit.Arquillian;
@@ -75,36 +62,26 @@ import org.junit.After;
 import org.junit.Before;
 import org.junit.BeforeClass;
 import org.junit.FixMethodOrder;
-import org.junit.Ignore;
 import org.junit.Rule;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
 import org.junit.runner.RunWith;
 import org.junit.runners.MethodSorters;
-import org.mobicents.ext.javax.sip.dns.DNSLookupPerformer;
-import org.mobicents.ext.javax.sip.dns.DefaultDNSLookupPerformer;
 import org.restcomm.connect.commons.Version;
+import org.restcomm.connect.commons.annotations.FeatureAltTests;
+import org.restcomm.connect.commons.annotations.FeatureExpTests;
 import org.restcomm.connect.commons.annotations.SequentialClassTests;
 import org.restcomm.connect.commons.annotations.WithInMinsTests;
+import org.restcomm.connect.testsuite.SipStackTool;
 import org.restcomm.connect.testsuite.http.RestcommCallsTool;
 import org.restcomm.connect.testsuite.http.RestcommConferenceParticipantsTool;
 import org.restcomm.connect.testsuite.http.RestcommConferenceTool;
 import org.restcomm.connect.testsuite.tools.MonitoringServiceTool;
-import org.xbill.DNS.DClass;
-import org.xbill.DNS.NAPTRRecord;
-import org.xbill.DNS.Name;
-import org.xbill.DNS.Record;
-import org.xbill.DNS.SRVRecord;
-import org.xbill.DNS.TextParseException;
 
 import com.github.tomakehurst.wiremock.junit.WireMockRule;
 import com.github.tomakehurst.wiremock.verification.LoggedRequest;
 import com.google.gson.JsonArray;
 import com.google.gson.JsonObject;
-
-import gov.nist.javax.sip.stack.HopImpl;
-import org.restcomm.connect.commons.annotations.FeatureAltTests;
-import org.restcomm.connect.commons.annotations.FeatureExpTests;
 
 /**
  * Test for Dial Action attribute for organization
@@ -132,9 +109,6 @@ public class DialActionOrganizationSBCTest {
     private Deployer deployer;
     @ArquillianResource
     URL deploymentUrl;
-
-	@GetDeployableContainer
-	private ContainerManagerTool containerManager;
 
     @Rule
     public WireMockRule wireMockRule = new WireMockRule(8090); // No-args constructor defaults to port 8080
@@ -248,116 +222,6 @@ public class DialActionOrganizationSBCTest {
 
         pstnSipStack = tool8.initializeSipStack(SipStack.PROTOCOL_UDP, "127.0.0.1", "5070", "127.0.0.1:5080");
         pstnPhone = pstnSipStack.createSipPhone("127.0.0.1", SipStack.PROTOCOL_UDP, 5080, pstnContact);
-
-    }
-
-    private void mockDNSLookup(String host, String transport) throws TextParseException {
-        DNSLookupPerformer dnsLookupPerformer = mock(DefaultDNSLookupPerformer.class);
-        //mocking the DNS Lookups to match our test cases
-        containerManager.getSipStandardService().getSipApplicationDispatcher().getDNSServerLocator().setDnsLookupPerformer(dnsLookupPerformer);
-
-        Set<String> supportedTransports = new HashSet<String>();
-        supportedTransports.add(TRANSPORT.toUpperCase());
-        supportedTransports.add(ListeningPoint.TCP.toUpperCase());
-        supportedTransports.add(ListeningPoint.TLS.toUpperCase());
-
-        Queue<Hop> hops = new ConcurrentLinkedQueue();
-        hops = new ConcurrentLinkedQueue();
-        //dont use "localhost" or DNS will not work (wouldnt be external)
-        hops.add(new HopImpl("127.0.0.1", 5080, transport));
-        when(dnsLookupPerformer.locateHopsForNonNumericAddressWithPort("localhost", 5080, transport)).thenReturn(hops);
-        when(dnsLookupPerformer.locateHopsForNonNumericAddressWithPort("localhost", 5082, transport)).thenReturn(null);
-        when(dnsLookupPerformer.locateHopsForNonNumericAddressWithPort("localhost", 5081, transport)).thenReturn(null);
-
-        List<NAPTRRecord> mockedNAPTRRecords = new LinkedList<NAPTRRecord>();
-        // mocking the name because localhost is not absolute and localhost. cannot be resolved
-        Name name = mock(Name.class);
-        when(name.isAbsolute()).thenReturn(true);
-        when(name.toString()).thenReturn("localhost");
-        mockedNAPTRRecords.add(new NAPTRRecord(new Name(host + "."), DClass.IN, 1000, 0, 0, "s", "SIP+D2U", "", new Name("_sip._" + TRANSPORT.toLowerCase() + "." + host + ".")));
-        when(dnsLookupPerformer.performNAPTRLookup(host, false, supportedTransports)).thenReturn(mockedNAPTRRecords);
-        List<Record> mockedSRVRecords = new LinkedList<Record>();
-        mockedSRVRecords.add(new SRVRecord(new Name("_sip._" + TRANSPORT.toLowerCase() + "." + host + "."), DClass.IN, 1000L, 1, 0, 5080, name));
-        mockedSRVRecords.add(new SRVRecord(new Name("_sip._" + TRANSPORT.toLowerCase() + "." + host + "."), DClass.IN, 1000L, 0, 0, 5081, name));
-        when(dnsLookupPerformer.performSRVLookup("_sip._" + TRANSPORT.toLowerCase() + "." + host)).thenReturn(mockedSRVRecords);
-        List<Record> mockedSRVTCPRecords = new LinkedList<Record>();
-        mockedSRVTCPRecords.add(new SRVRecord(new Name("_sips._" + ListeningPoint.TCP.toLowerCase() + "." + host + "."), DClass.IN, 1000L, 1, 0, 5080, name));
-        mockedSRVTCPRecords.add(new SRVRecord(new Name("_sips._" + ListeningPoint.TCP.toLowerCase() + "." + host + "."), DClass.IN, 1000L, 0, 0, 5081, name));
-//		mockedSRVTLSRecords.add(new SRVRecord(new Name("_sips._" + ListeningPoint.TLS.toLowerCase() + "." + host + "."), DClass.IN, 1000L, 1, 0, 5081, name));
-        when(dnsLookupPerformer.performSRVLookup("_sips._" + ListeningPoint.TCP.toLowerCase() + "." + host)).thenReturn(mockedSRVTCPRecords);
-
-        List<Record> mockedSRVTLSRecords = new LinkedList<Record>();
-        mockedSRVTLSRecords.add(new SRVRecord(new Name("_sips._" + ListeningPoint.TCP.toLowerCase() + "." + host + "."), DClass.IN, 1000L, 1, 0, 5080, name));
-        mockedSRVTLSRecords.add(new SRVRecord(new Name("_sips._" + ListeningPoint.TCP.toLowerCase() + "." + host + "."), DClass.IN, 1000L, 0, 0, 5081, name));
-//		mockedSRVTLSRecords.add(new SRVRecord(new Name("_sips._" + ListeningPoint.TLS.toLowerCase() + "." + host + "."), DClass.IN, 1000L, 1, 0, 5081, name));
-        when(dnsLookupPerformer.performSRVLookup("_sips._" + ListeningPoint.TLS.toLowerCase() + "." + host)).thenReturn(mockedSRVTLSRecords);
-    }
-
-    @Ignore
-    @Test
-    public void testDialSipNumberSameAndDifferentOrganization() throws ParseException, InterruptedException, DeploymentException, TextParseException{
-    	stubFor(get(urlPathEqualTo("/1111"))
-                .willReturn(aResponse()
-                        .withStatus(200)
-                        .withHeader("Content-Type", "text/xml")
-                        .withBody(dialSipRcmlOrg2)));
-    	/*
-    	 * test case:
-    	 * bob@org3 will dial a sip number X@org2
-    	 * X is mapped on an RCML that dials sip like <Dial><Sip>sip:Y@org2.restcomm.com</Sip></Dial>
-    	 *
-    	 */
-
-    	//Reload Context
-    	//containerManagercontainerManager.reloadContext();
-
-    	mockDNSLookup(HOST_ORG2, TRANSPORT);
-
-        //bob@org3 will dial a sip number X@org3
-    	SipURI uri = bobSipStackOrg3.getAddressFactory().createSipURI(null, "127.0.0.1:5080");
-        assertTrue(bobPhoneOrg3.register(uri, "bob", clientPassword, "sip:bob@127.0.0.1:5092", 3600, 3600));
-        Credential c = new Credential("org3.restcomm.com", "bob", clientPassword);
-        bobPhoneOrg3.addUpdateCredential(c);
-
-        final SipCall bobCallOrg3 = bobPhoneOrg3.createSipCall();
-        bobCallOrg3.initiateOutgoingCall(bobContactOrg3, dialRestcommOrg3, null, body, "application", "sdp", null, null);
-        assertLastOperationSuccess(bobCallOrg3);
-        assertTrue(bobCallOrg3.waitForAuthorisation(3000));
-        assertTrue(bobCallOrg3.waitOutgoingCallResponse(5 * 1000));
-        int responseBobOrg3 = bobCallOrg3.getLastReceivedResponse().getStatusCode();
-        logger.info("responseBobOrg3: "+responseBobOrg3);
-        assertTrue(responseBobOrg3 == Response.TRYING || responseBobOrg3 == Response.RINGING);
-
-        if (responseBobOrg3 == Response.TRYING) {
-            assertTrue(bobCallOrg3.waitOutgoingCallResponse(5 * 1000));
-            assertEquals(Response.RINGING, bobCallOrg3.getLastReceivedResponse().getStatusCode());
-        }
-
-        assertTrue(bobCallOrg3.waitOutgoingCallResponse(5 * 1000));
-        assertEquals(Response.OK, bobCallOrg3.getLastReceivedResponse().getStatusCode());
-        bobCallOrg3.sendInviteOkAck();
-        assertTrue(!(bobCallOrg3.getLastReceivedResponse().getStatusCode() >= 400));
-
-        Thread.sleep(2000);
-
-        int liveCalls = MonitoringServiceTool.getInstance().getStatistics(deploymentUrl.toString(), superAdminAccountSid, adminAuthToken);
-        int liveCallsArraySize = MonitoringServiceTool.getInstance().getLiveCallsArraySize(deploymentUrl.toString(), superAdminAccountSid, adminAuthToken);
-        logger.info("&&&&& LiveCalls: "+liveCalls);
-        logger.info("&&&&& LiveCallsArraySize: "+liveCallsArraySize);
-        assertEquals(2, liveCalls);
-        assertEquals(2, liveCallsArraySize);
-
-        Thread.sleep(3000);
-
-        bobCallOrg3.disconnect();
-
-        Thread.sleep(5000);
-        liveCalls = MonitoringServiceTool.getInstance().getStatistics(deploymentUrl.toString(), superAdminAccountSid, adminAuthToken);
-        liveCallsArraySize = MonitoringServiceTool.getInstance().getLiveCallsArraySize(deploymentUrl.toString(), superAdminAccountSid, adminAuthToken);
-        logger.info("&&&&& LiveCalls: "+liveCalls);
-        logger.info("&&&&& LiveCallsArraySize: "+liveCallsArraySize);
-        assertEquals(0, liveCalls);
-        assertEquals(0, liveCallsArraySize);
 
     }
 
