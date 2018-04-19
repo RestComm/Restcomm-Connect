@@ -10,7 +10,6 @@ import static akka.pattern.Patterns.ask;
 import akka.util.Timeout;
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
-import com.sun.jersey.spi.resource.Singleton;
 import com.thoughtworks.xstream.XStream;
 import java.net.URI;
 import java.util.concurrent.TimeUnit;
@@ -60,7 +59,6 @@ import scala.concurrent.duration.Duration;
  */
 @Path("/Accounts/{accountSid}/Announcements")
 @ThreadSafe
-@Singleton
 public class AnnouncementsEndpoint extends AbstractEndpoint {
     private static Logger logger = Logger.getLogger(AnnouncementsEndpoint.class);
 
