@@ -1,0 +1,58 @@
+= Restcomm-Connect Release Notes
+
+These notes group both Community and Telscale changes in a single document.
+
+=== Tags
+
+The folowing tags are used to categorize and state the scope of a change
+
+* **security improvement** tags changes related to security
+* **commercial** tags changes that are available only in the commercial RestcommOne product
+
+
+//add release-notes with newer on top
+== 8.4.0 version
+=== New Features
+// New features (whether major or minor) go here
+* Clients passwords are now hashed in DB - **security improvement**
+* Profiles allow arbitrary properties to be saved/retrieved.
+* Added configurable SBC mode which if enabled will disable all NAT handling operations
+
+=== Breaking Changes
+// draws attention to functionality that is getting removed
+* Accessing Olympus WebRTC from Console now requires to login again. This because of the new feature to hash passwords
+* Removed default clients `alice` and `bob`
+
+=== Bug Fixes
+// any difference in functionality
+* Dial Timeout does not cancel task when Callee is busy
+* Configurable inbound/outbound SMPP encoding
+* Race condition on sending BYE to incoming call for a dial fork scenario
+* Fixed SDR event for SMS - **commercial**
+* Fixed REFER (Call Transfer) support to work with organizations
+
+
+=== Migration Notes
+// Things to consider during migration from previous release
+* Clients password are considered to be MD5 hashed in DB. Database migration
+scripts are available in **commercial** version. Database migration script will ensure existing clients passwords are properly migrated.
+** Database migration script will automatically take a backup of complete database before making any changes
+** Please take a backup of restcomm clients table (to be used in case we need to rollback as explained below)
+** In case of rollback to older version, kindly restore restcomm clients table only.
+
+=== External Dependencies Updates
+// any dependencies
+* Console updated to version **__8.4.0__**
+** Integrated Feature Access Control (FAC) limitations
+** Updated Console Look & Feel to match new Restcomm branding
+** Implemented new Sign In page in Console
+** Use Designer location in Console from configuration file
+* Designer updated to version **__1.2.0-131__**
+** Integrated Feature Access Control (FAC) limitations
+** Improved Designer performance with better xstream usage
+** Designer Look & Feel to match new Restcomm branding
+* Olympus WebRTC Demo updated to version **__1.1.0-167__**
+** Fixed an issue in WebRTC Demo jain-sip library, parsing some headers
+** Improve WebRTC Demo UX by showing incoming call screen on top even if caller is not the selected contact
+** Add additional configuration to WebRTC Demo for specifying client-specific parameters
+** Improve WebRTC Xirsys integration by checking for actual success response and using domain property as namespace (now required)

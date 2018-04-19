@@ -144,4 +144,12 @@ public final class DigestAuthentication {
         ha1 = DigestAuthentication.H(username+":"+realm+":"+password, algorithm);
         return ha1;
     }
+
+
+    //USed for unit testing
+    public static String HA1(String username, String realm, String password, String algorithm){
+        String ha1 = "";
+        ha1 = DigestAuthentication.H(username+":"+realm+":"+password, algorithm);
+        return ha1;
+    }
 }
