@@ -1,8 +1,19 @@
 package org.restcomm.connect.extension.controller;
 
+import org.restcomm.connect.commons.dao.Sid;
+import org.restcomm.connect.dao.AccountsDao;
+import org.restcomm.connect.dao.ClientsDao;
+import org.restcomm.connect.dao.DaoManager;
+import org.restcomm.connect.dao.ExtensionsConfigurationDao;
+import org.restcomm.connect.dao.OrganizationsDao;
+import org.restcomm.connect.dao.entities.Account;
+import org.restcomm.connect.dao.entities.Client;
+import org.restcomm.connect.dao.entities.Organization;
 import org.restcomm.connect.extension.api.ApiRequest;
+import org.restcomm.connect.extension.api.ExtensionConfiguration;
 import org.restcomm.connect.extension.api.ExtensionResponse;
 import org.restcomm.connect.extension.api.ExtensionType;
+import org.restcomm.connect.extension.api.ExtensionContext;
 import org.restcomm.connect.extension.api.IExtensionRequest;
 import org.restcomm.connect.extension.api.RestcommExtension;
 import org.restcomm.connect.extension.api.RestcommExtensionGeneric;
@@ -11,10 +22,12 @@ import org.apache.log4j.Logger;
 import java.util.List;
 import java.util.concurrent.CopyOnWriteArrayList;
 
+import javax.servlet.ServletContext;
+
 /**
  * Created by gvagenas on 21/09/16.
  */
-public class ExtensionController {
+public class ExtensionController implements ExtensionContext{
     private static Logger logger = Logger.getLogger(ExtensionController.class);
 
     private static ExtensionController instance;
@@ -24,12 +37,21 @@ public class ExtensionController {
     private List restApiExtensions;
     private List featureAccessControlExtensions;
 
+    private DaoManager daoManager;
+
+    private ServletContext context;
+
     private ExtensionController(){
         this.callManagerExtensions = new CopyOnWriteArrayList();
         this.smsSessionExtensions = new CopyOnWriteArrayList();
         this.ussdCallManagerExtensions = new CopyOnWriteArrayList();
         this.restApiExtensions = new CopyOnWriteArrayList();
         this.featureAccessControlExtensions = new CopyOnWriteArrayList();
+    }
+
+    public void init(ServletContext context) {
+        this.context = context;
+        daoManager = (DaoManager)context.getAttribute(DaoManager.class.getName());
     }
 
     public static ExtensionController getInstance() {
@@ -281,5 +303,30 @@ public class ExtensionController {
             }
         }
         return response;
+    }
+
+    @Override
+    public ExtensionConfiguration getEffectiveConfiguration(String extensionSid, String scopeSid) {
+        ExtensionsConfigurationDao ecd = daoManager.getExtensionsConfigurationDao();
+        ClientsDao cd = daoManager.getClientsDao();
+        AccountsDao ad = daoManager.getAccountsDao();
+        OrganizationsDao od = daoManager.getOrganizationsDao();
+        ExtensionConfiguration extCfg = ecd.getAccountExtensionConfiguration(scopeSid, extensionSid);
+
+        Sid sid = new Sid(scopeSid);
+        Client client = cd.getClient(sid);
+        Account account = ad.getAccount(sid);
+        Organization organization = od.getOrganization(sid);
+
+        //check parent
+
+        //check org
+
+        //check default
+        if(extCfg==null) {
+            //if no account specific entry is defined, we use the extension config
+            extCfg = ecd.getConfigurationBySid(new Sid(extensionSid));
+        }
+        return extCfg;
     }
 }

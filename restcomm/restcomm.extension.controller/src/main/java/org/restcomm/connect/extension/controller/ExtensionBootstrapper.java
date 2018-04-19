@@ -20,6 +20,7 @@
  */
 package org.restcomm.connect.extension.controller;
 
+import org.restcomm.connect.extension.api.ExtensionContext;
 import org.restcomm.connect.extension.api.RestcommExtensionGeneric;
 import org.apache.commons.configuration.Configuration;
 import org.apache.commons.configuration.HierarchicalConfiguration;
@@ -43,6 +44,8 @@ public class ExtensionBootstrapper {
     public ExtensionBootstrapper(final ServletContext context, final Configuration configuration) {
         this.configuration = configuration;
         this.context = context;
+        this.context.setAttribute(ExtensionContext.class.getName(), ExtensionController.getInstance());
+        ExtensionController.getInstance().init(this.context);
     }
 
     public void start() throws ClassNotFoundException, IllegalAccessException, InstantiationException {
