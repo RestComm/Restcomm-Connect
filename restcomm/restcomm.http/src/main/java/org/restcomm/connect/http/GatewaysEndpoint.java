@@ -8,6 +8,7 @@ import java.net.URI;
 import java.util.List;
 import javax.annotation.PostConstruct;
 import javax.annotation.security.RolesAllowed;
+import javax.inject.Inject;
 import javax.servlet.ServletContext;
 import javax.ws.rs.DELETE;
 import javax.ws.rs.GET;
@@ -41,6 +42,8 @@ import org.restcomm.connect.http.converter.GatewayConverter;
 import org.restcomm.connect.http.converter.GatewayListConverter;
 import org.restcomm.connect.http.converter.RestCommResponseConverter;
 import static org.restcomm.connect.http.security.AccountPrincipal.SUPER_ADMIN_ROLE;
+import org.restcomm.connect.http.security.PermissionEvaluator;
+import org.restcomm.connect.identity.UserIdentityContext;
 import org.restcomm.connect.telephony.api.RegisterGateway;
 
 @Path("/Accounts/{accountSid}/Management/Gateways")
@@ -54,6 +57,9 @@ public class GatewaysEndpoint extends AbstractEndpoint {
     protected Gson gson;
     protected XStream xstream;
     private ActorRef proxyManager;
+
+    @Inject
+    private PermissionEvaluator permissionEvaluator;
 
     public GatewaysEndpoint() {
         super();
@@ -206,16 +212,22 @@ public class GatewaysEndpoint extends AbstractEndpoint {
         return result;
     }
 
-    private Response deleteGateway(final String accountSid, final String sid) {
-        secure(super.accountsDao.getAccount(accountSid), "RestComm:Modify:Gateways");
+    private Response deleteGateway(final String accountSid,
+            final String sid,
+            UserIdentityContext userIdentityContext) {
+        permissionEvaluator.secure(super.accountsDao.getAccount(accountSid),
+                "RestComm:Modify:Gateways",
+                userIdentityContext);
         dao.removeGateway(new Sid(sid));
         return ok().build();
     }
 
     @Path("/{sid}")
     @DELETE
-    public Response deleteGatewayAsXml(@PathParam("accountSid") final String accountSid, @PathParam("sid") final String sid) {
-        return deleteGateway(accountSid, sid);
+    public Response deleteGatewayAsXml(@PathParam("accountSid") final String accountSid,
+            @PathParam("sid") final String sid,
+            UserIdentityContext userIdentityContext) {
+        return deleteGateway(accountSid, sid,userIdentityContext);
     }
 
     @Path("/{sid}")

@@ -32,6 +32,7 @@ import java.net.URL;
 import java.util.Arrays;
 import java.util.List;
 import javax.annotation.PostConstruct;
+import javax.inject.Inject;
 import javax.servlet.ServletContext;
 import javax.ws.rs.DELETE;
 import javax.ws.rs.GET;
@@ -52,6 +53,7 @@ import javax.ws.rs.core.Response;
 import static javax.ws.rs.core.Response.Status.*;
 import static javax.ws.rs.core.Response.ok;
 import static javax.ws.rs.core.Response.status;
+import javax.ws.rs.core.SecurityContext;
 import org.apache.commons.configuration.Configuration;
 import org.apache.http.HttpEntity;
 import org.apache.http.HttpResponse;
@@ -75,7 +77,10 @@ import org.restcomm.connect.http.converter.ClientListConverter;
 import org.restcomm.connect.http.converter.GeolocationConverter;
 import org.restcomm.connect.http.converter.GeolocationListConverter;
 import org.restcomm.connect.http.converter.RestCommResponseConverter;
+import org.restcomm.connect.http.security.ContextUtil;
+import org.restcomm.connect.http.security.PermissionEvaluator;
 import org.restcomm.connect.http.security.PermissionEvaluator.SecuredType;
+import org.restcomm.connect.identity.UserIdentityContext;
 /**
  * @author <a href="mailto:fernando.mendioroz@telestax.com"> Fernando Mendioroz </a>
  *
@@ -96,6 +101,9 @@ public abstract class GeolocationEndpoint extends AbstractEndpoint {
     private static final String NotificationGT = Geolocation.GeolocationType.Notification.toString();
     private String cause;
     private String rStatus;
+
+    @Inject
+    private PermissionEvaluator permissionEvaluator;
 
     private static enum responseStatus {
         Queued("queued"), Sent("sent"), Processing("processing"), Successful("successful"), PartiallySuccessful(
@@ -139,10 +147,16 @@ public abstract class GeolocationEndpoint extends AbstractEndpoint {
         xstream.registerConverter(new RestCommResponseConverter(configuration));
     }
 
-    protected Response getGeolocation(final String accountSid, final String sid, final MediaType responseType) {
+    protected Response getGeolocation(final String accountSid,
+            final String sid,
+            final MediaType responseType,
+            UserIdentityContext userIdentityContext) {
         Account account;
         try {
-            secure(account = accountsDao.getAccount(accountSid), "RestComm:Read:Geolocation");
+            account = accountsDao.getAccount(accountSid);
+            permissionEvaluator.secure(account,
+                    "RestComm:Read:Geolocation",
+                    userIdentityContext);
         } catch (final Exception exception) {
             return status(UNAUTHORIZED).build();
         }
@@ -155,7 +169,10 @@ public abstract class GeolocationEndpoint extends AbstractEndpoint {
             return status(NOT_FOUND).build();
         } else {
             try {
-                secure(account, geolocation.getAccountSid(), SecuredType.SECURED_APP);
+                permissionEvaluator.secure(account,
+                        geolocation.getAccountSid(),
+                        SecuredType.SECURED_APP,
+                        userIdentityContext);
             } catch (final Exception exception) {
                 return status(UNAUTHORIZED).build();
             }
@@ -170,11 +187,16 @@ public abstract class GeolocationEndpoint extends AbstractEndpoint {
         }
     }
 
-    protected Response getGeolocations(final String accountSid, final MediaType responseType) {
+    protected Response getGeolocations(final String accountSid,
+            final MediaType responseType,
+            UserIdentityContext userIdentityContext) {
         Account account;
         try {
             account = accountsDao.getAccount(accountSid);
-            secure(account, "RestComm:Read:Geolocation", SecuredType.SECURED_APP);
+            permissionEvaluator.secure(account,
+                    "RestComm:Read:Geolocation",
+                    SecuredType.SECURED_APP,
+                    userIdentityContext);
         } catch (final Exception exception) {
             return status(UNAUTHORIZED).build();
         }
@@ -189,13 +211,22 @@ public abstract class GeolocationEndpoint extends AbstractEndpoint {
         }
     }
 
-    protected Response deleteGeolocation(final String accountSid, final String sid) {
+    protected Response deleteGeolocation(final String accountSid,
+            final String sid,
+            UserIdentityContext userIdentityContext) {
         Account account;
         try {
-            secure(account = accountsDao.getAccount(accountSid), "RestComm:Delete:Geolocation");
+            account = accountsDao.getAccount(accountSid);
+            permissionEvaluator.secure(account,
+                    "RestComm:Delete:Geolocation",
+                    userIdentityContext);
             Geolocation geolocation = dao.getGeolocation(new Sid(sid));
             if (geolocation != null) {
-                secure(account, geolocation.getAccountSid(), SecuredType.SECURED_APP);
+                permissionEvaluator.secure(account,
+                        geolocation.getAccountSid(),
+                        SecuredType.SECURED_APP,
+                        userIdentityContext
+                );
             }
         } catch (final Exception exception) {
             return status(UNAUTHORIZED).build();
@@ -204,12 +235,18 @@ public abstract class GeolocationEndpoint extends AbstractEndpoint {
         return ok().build();
     }
 
-    public Response putGeolocation(final String accountSid, final MultivaluedMap<String, String> data,
-                                   GeolocationType geolocationType, final MediaType responseType) {
+    public Response putGeolocation(final String accountSid,
+            final MultivaluedMap<String, String> data,
+            GeolocationType geolocationType,
+            final MediaType responseType,
+            UserIdentityContext userIdentityContext) {
         Account account;
         try {
             account = accountsDao.getAccount(accountSid);
-            secure(account, "RestComm:Create:Geolocation", SecuredType.SECURED_APP);
+            permissionEvaluator.secure(account,
+                    "RestComm:Create:Geolocation",
+                    SecuredType.SECURED_APP,
+                    userIdentityContext);
         } catch (final Exception exception) {
             return status(UNAUTHORIZED).build();
         }
@@ -533,11 +570,17 @@ public abstract class GeolocationEndpoint extends AbstractEndpoint {
         return builder.build();
     }
 
-    protected Response updateGeolocation(final String accountSid, final String sid, final MultivaluedMap<String, String> data,
-                                         final MediaType responseType) {
+    protected Response updateGeolocation(final String accountSid,
+            final String sid,
+            final MultivaluedMap<String, String> data,
+            final MediaType responseType,
+            UserIdentityContext userIdentityContext) {
         Account account;
         try {
-            secure(account = accountsDao.getAccount(accountSid), "RestComm:Modify:Geolocation");
+            account = accountsDao.getAccount(accountSid);
+            permissionEvaluator.secure(account,
+                    "RestComm:Modify:Geolocation",
+                    userIdentityContext);
         } catch (final Exception exception) {
             return status(UNAUTHORIZED).build();
         }
@@ -546,7 +589,10 @@ public abstract class GeolocationEndpoint extends AbstractEndpoint {
             return status(NOT_FOUND).build();
         } else {
             try {
-                secure(account, geolocation.getAccountSid(), SecuredType.SECURED_APP);
+                permissionEvaluator.secure(account,
+                        geolocation.getAccountSid(),
+                        SecuredType.SECURED_APP,
+                        userIdentityContext);
             } catch (final NullPointerException exception) {
                 return status(BAD_REQUEST).entity(exception.getMessage()).build();
             } catch (final Exception exception) {
@@ -761,8 +807,9 @@ public abstract class GeolocationEndpoint extends AbstractEndpoint {
     @Path("/Immediate/{sid}")
     @DELETE
     public Response deleteImmediateGeolocationAsXml(@PathParam("accountSid") final String accountSid,
-                                                    @PathParam("sid") final String sid) {
-        return deleteGeolocation(accountSid, sid);
+                                                    @PathParam("sid") final String sid,
+                                                    @Context SecurityContext sec) {
+        return deleteGeolocation(accountSid, sid, ContextUtil.convert(sec));
     }
 
     @Path("/Immediate/{sid}")
@@ -770,8 +817,10 @@ public abstract class GeolocationEndpoint extends AbstractEndpoint {
     @Produces({MediaType.APPLICATION_XML, MediaType.APPLICATION_JSON})
     public Response getImmediateGeolocationAsXml(@PathParam("accountSid") final String accountSid,
                                                  @PathParam("sid") final String sid,
-                                                 @HeaderParam("Accept") String accept) {
-        return getGeolocation(accountSid, sid, retrieveMediaType(accept));
+                                                 @HeaderParam("Accept") String accept,
+                                                 @Context SecurityContext sec) {
+        return getGeolocation(accountSid, sid, retrieveMediaType(accept),
+                ContextUtil.convert(sec));
     }
 
     @Path("/Immediate")
@@ -779,8 +828,13 @@ public abstract class GeolocationEndpoint extends AbstractEndpoint {
     @Produces({MediaType.APPLICATION_XML, MediaType.APPLICATION_JSON})
     public Response putImmediateGeolocationXmlPost(@PathParam("accountSid") final String accountSid,
                                                    final MultivaluedMap<String, String> data,
-                                                   @HeaderParam("Accept") String accept) {
-        return putGeolocation(accountSid, data, Geolocation.GeolocationType.Immediate, retrieveMediaType(accept));
+                                                   @HeaderParam("Accept") String accept,
+                                                   @Context SecurityContext sec) {
+        return putGeolocation(accountSid,
+                data,
+                Geolocation.GeolocationType.Immediate,
+                retrieveMediaType(accept),
+                ContextUtil.convert(sec));
     }
 
     @Path("/Immediate/{sid}")
@@ -789,8 +843,10 @@ public abstract class GeolocationEndpoint extends AbstractEndpoint {
     public Response putImmediateGeolocationAsXmlPost(@PathParam("accountSid") final String accountSid,
                                                      @PathParam("sid") final String sid,
                                                      final MultivaluedMap<String, String> data,
-                                                     @HeaderParam("Accept") String accept) {
-        return updateGeolocation(accountSid, sid, data, retrieveMediaType(accept));
+                                                     @HeaderParam("Accept") String accept,
+                                                     @Context SecurityContext sec) {
+        return updateGeolocation(accountSid, sid, data, retrieveMediaType(accept),
+                ContextUtil.convert(sec));
     }
 
     @Path("/Immediate/{sid}")
@@ -799,8 +855,10 @@ public abstract class GeolocationEndpoint extends AbstractEndpoint {
     public Response updateImmediateGeolocationAsXmlPut(@PathParam("accountSid") final String accountSid,
                                                        @PathParam("sid") final String sid,
                                                        final MultivaluedMap<String, String> data,
-                                                       @HeaderParam("Accept") String accept) {
-        return updateGeolocation(accountSid, sid, data, retrieveMediaType(accept));
+                                                       @HeaderParam("Accept") String accept,
+                                                       @Context SecurityContext sec) {
+        return updateGeolocation(accountSid, sid, data, retrieveMediaType(accept),
+                ContextUtil.convert(sec));
     }
 
     /*******************************************/
@@ -810,8 +868,9 @@ public abstract class GeolocationEndpoint extends AbstractEndpoint {
     @Path("/Notification/{sid}")
     @DELETE
     public Response deleteNotificationGeolocationAsXml(@PathParam("accountSid") final String accountSid,
-                                                       @PathParam("sid") final String sid) {
-        return deleteGeolocation(accountSid, sid);
+                                                       @PathParam("sid") final String sid,
+                                                       @Context SecurityContext sec) {
+        return deleteGeolocation(accountSid, sid,ContextUtil.convert(sec));
     }
 
     @Path("/Notification/{sid}")
@@ -819,8 +878,10 @@ public abstract class GeolocationEndpoint extends AbstractEndpoint {
     @Produces({MediaType.APPLICATION_XML, MediaType.APPLICATION_JSON})
     public Response getNotificationGeolocationAsXml(@PathParam("accountSid") final String accountSid,
                                                     @PathParam("sid") final String sid,
-                                                    @HeaderParam("Accept") String accept) {
-        return getGeolocation(accountSid, sid, retrieveMediaType(accept));
+                                                    @HeaderParam("Accept") String accept,
+                                                    @Context SecurityContext sec) {
+        return getGeolocation(accountSid, sid, retrieveMediaType(accept),
+                ContextUtil.convert(sec));
     }
 
     @Path("/Notification")
@@ -828,8 +889,13 @@ public abstract class GeolocationEndpoint extends AbstractEndpoint {
     @Produces({MediaType.APPLICATION_XML, MediaType.APPLICATION_JSON})
     public Response putNotificationGeolocationXmlPost(@PathParam("accountSid") final String accountSid,
                                                       final MultivaluedMap<String, String> data,
-                                                      @HeaderParam("Accept") String accept) {
-        return putGeolocation(accountSid, data, Geolocation.GeolocationType.Notification, retrieveMediaType(accept));
+                                                      @HeaderParam("Accept") String accept,
+                                                      @Context SecurityContext sec) {
+        return putGeolocation(accountSid,
+                data,
+                Geolocation.GeolocationType.Notification,
+                retrieveMediaType(accept),
+                ContextUtil.convert(sec));
     }
 
     @Path("/Notification/{sid}")
@@ -838,8 +904,13 @@ public abstract class GeolocationEndpoint extends AbstractEndpoint {
     public Response putNotificationGeolocationAsXmlPost(@PathParam("accountSid") final String accountSid,
                                                         @PathParam("sid") final String sid,
                                                         final MultivaluedMap<String, String> data,
-                                                        @HeaderParam("Accept") String accept) {
-        return updateGeolocation(accountSid, sid, data, retrieveMediaType(accept));
+                                                        @HeaderParam("Accept") String accept,
+                                                        @Context SecurityContext sec) {
+        return updateGeolocation(accountSid,
+                sid,
+                data,
+                retrieveMediaType(accept),
+                ContextUtil.convert(sec));
     }
 
     @Path("/Notification/{sid}")
@@ -848,15 +919,23 @@ public abstract class GeolocationEndpoint extends AbstractEndpoint {
     public Response updateNotificationGeolocationAsXmlPut(@PathParam("accountSid") final String accountSid,
                                                           @PathParam("sid") final String sid,
                                                           final MultivaluedMap<String, String> data,
-                                                          @HeaderParam("Accept") String accept) {
-        return updateGeolocation(accountSid, sid, data, retrieveMediaType(accept));
+                                                          @HeaderParam("Accept") String accept,
+                                                          @Context SecurityContext sec) {
+        return updateGeolocation(accountSid,
+                sid,
+                data,
+                retrieveMediaType(accept),
+                ContextUtil.convert(sec));
     }
 
     @GET
     @Produces({MediaType.APPLICATION_XML, MediaType.APPLICATION_JSON})
     public Response getGeolocationsAsXml(@PathParam("accountSid") final String accountSid,
-            @HeaderParam("Accept") String accept) {
-        return getGeolocations(accountSid, retrieveMediaType(accept));
+            @HeaderParam("Accept") String accept,
+            @Context SecurityContext sec) {
+        return getGeolocations(accountSid,
+                retrieveMediaType(accept),
+                ContextUtil.convert(sec));
     }
 
 }

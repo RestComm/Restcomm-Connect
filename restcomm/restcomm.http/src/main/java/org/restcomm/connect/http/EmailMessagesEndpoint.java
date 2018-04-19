@@ -11,6 +11,7 @@ import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
 import com.thoughtworks.xstream.XStream;
 import javax.annotation.PostConstruct;
+import javax.inject.Inject;
 import javax.servlet.ServletContext;
 import javax.ws.rs.HeaderParam;
 import javax.ws.rs.POST;
@@ -26,6 +27,7 @@ import static javax.ws.rs.core.Response.Status.BAD_REQUEST;
 import static javax.ws.rs.core.Response.Status.INTERNAL_SERVER_ERROR;
 import static javax.ws.rs.core.Response.ok;
 import static javax.ws.rs.core.Response.status;
+import javax.ws.rs.core.SecurityContext;
 import org.apache.commons.configuration.Configuration;
 import org.apache.log4j.Logger;
 import org.joda.time.DateTime;
@@ -43,6 +45,9 @@ import org.restcomm.connect.email.api.EmailResponse;
 import org.restcomm.connect.email.api.Mail;
 import org.restcomm.connect.http.converter.EmailMessageConverter;
 import org.restcomm.connect.http.converter.RestCommResponseConverter;
+import org.restcomm.connect.http.security.ContextUtil;
+import org.restcomm.connect.http.security.PermissionEvaluator;
+import org.restcomm.connect.identity.UserIdentityContext;
 
 
 /**
@@ -64,6 +69,9 @@ public class EmailMessagesEndpoint extends AbstractEndpoint {
 
     // Send the email.
     protected Mail emailMsg;
+
+    @Inject
+    private PermissionEvaluator permissionEvaluator;
 
     public EmailMessagesEndpoint() {
         super();
@@ -134,8 +142,13 @@ public class EmailMessagesEndpoint extends AbstractEndpoint {
     }
 
     @SuppressWarnings("unchecked")
-    protected Response putEmailMessage(final String accountSid, final MultivaluedMap<String, String> data, final MediaType responseType) {
-        secure(accountsDao.getAccount(accountSid), "RestComm:Create:EmailMessages"); //need to fix for Emails.
+    protected Response putEmailMessage(final String accountSid,
+            final MultivaluedMap<String, String> data,
+            final MediaType responseType,
+            UserIdentityContext userIdentityContext) {
+        permissionEvaluator.secure(accountsDao.getAccount(accountSid),
+                "RestComm:Create:EmailMessages",
+                userIdentityContext); //need to fix for Emails.
         try {
             validate(data);
             normalize(data);
@@ -285,8 +298,10 @@ public class EmailMessagesEndpoint extends AbstractEndpoint {
     @Produces({MediaType.APPLICATION_XML, MediaType.APPLICATION_JSON})
     public Response putEmailMessage(@PathParam("accountSid") final String accountSid,
             final MultivaluedMap<String, String> data,
-            @HeaderParam("Accept") String accept) {
-        return putEmailMessage(accountSid, data, retrieveMediaType(accept));
+            @HeaderParam("Accept") String accept,
+            @Context SecurityContext sec) {
+        return putEmailMessage(accountSid, data, retrieveMediaType(accept),
+                ContextUtil.convert(sec));
     }
 
 }
