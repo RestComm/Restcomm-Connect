@@ -21,12 +21,13 @@ package org.restcomm.connect.sms.api;
 
 import org.apache.commons.configuration.Configuration;
 import org.restcomm.connect.commons.annotations.concurrency.Immutable;
+import org.restcomm.connect.extension.api.ExtensionRequest;
 import org.restcomm.connect.extension.api.IExtensionCreateSmsSessionRequest;
 /**
  * @author quintana.thomas@gmail.com (Thomas Quintana)
  */
 @Immutable
-public final class CreateSmsSession implements IExtensionCreateSmsSessionRequest {
+public final class CreateSmsSession extends ExtensionRequest implements IExtensionCreateSmsSessionRequest {
     private final String from;
     private final String to;
     private final String accountSid;

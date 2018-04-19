@@ -37,4 +37,14 @@ public interface IExtensionRequest {
      * @param set to allow/restrict request
      */
     void setAllowed(boolean allowed);
+
+    /**
+     * @param set ExtensionContext
+     */
+    void setExtensionContext(ExtensionContext ec);
+
+    /**
+     * @param set ExtensionContext
+     */
+    ExtensionContext getExtensionContext();
 }

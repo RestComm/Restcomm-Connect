@@ -130,7 +130,7 @@ public class ExtensionController implements ExtensionContext{
         // extensionResponse
         ExtensionResponse response = new ExtensionResponse();
         if (extensions != null && extensions.size() > 0) {
-
+            ier.setExtensionContext(this);
             for (RestcommExtensionGeneric extension : extensions) {
                 if(logger.isInfoEnabled()) {
                     logger.info( extension.getName()+" is enabled="+extension.isEnabled());
@@ -160,7 +160,7 @@ public class ExtensionController implements ExtensionContext{
     public ExtensionResponse executePostOutboundAction(final IExtensionRequest er, List<RestcommExtensionGeneric> extensions) {
         ExtensionResponse response = new ExtensionResponse();
         if (extensions != null && extensions.size() > 0) {
-
+            er.setExtensionContext(this);
             for (RestcommExtensionGeneric extension : extensions) {
                 if(logger.isInfoEnabled()) {
                     logger.info( extension.getName()+" is enabled="+extension.isEnabled());
@@ -190,6 +190,7 @@ public class ExtensionController implements ExtensionContext{
     public ExtensionResponse executePreInboundAction(final IExtensionRequest er, List<RestcommExtensionGeneric> extensions) {
         ExtensionResponse response = new ExtensionResponse();
         if (extensions != null && extensions.size() > 0) {
+            er.setExtensionContext(this);
             for (RestcommExtensionGeneric extension : extensions) {
                 if(logger.isInfoEnabled()) {
                     logger.info( extension.getName()+" is enabled="+extension.isEnabled());
@@ -219,6 +220,7 @@ public class ExtensionController implements ExtensionContext{
     public ExtensionResponse executePostInboundAction(final IExtensionRequest er,  List<RestcommExtensionGeneric> extensions) {
         ExtensionResponse response = new ExtensionResponse();
         if (extensions != null && extensions.size() > 0) {
+            er.setExtensionContext(this);
             for (RestcommExtensionGeneric extension : extensions) {
                 if(logger.isInfoEnabled()) {
                     logger.info( extension.getName()+" is enabled="+extension.isEnabled());
@@ -249,6 +251,7 @@ public class ExtensionController implements ExtensionContext{
         ExtensionResponse response = new ExtensionResponse();
 
         if (extensions != null && extensions.size() > 0) {
+            apiRequest.setExtensionContext(this);
             for (RestcommExtensionGeneric extension : extensions) {
                 if(logger.isInfoEnabled()) {
                     logger.info( extension.getName()+" is enabled="+extension.isEnabled());
@@ -279,6 +282,7 @@ public class ExtensionController implements ExtensionContext{
         ExtensionResponse response = new ExtensionResponse();
 
         if (extensions != null && extensions.size() > 0) {
+            apiRequest.setExtensionContext(this);
             for (RestcommExtensionGeneric extension : extensions) {
                 if(logger.isInfoEnabled()) {
                     logger.info( extension.getName()+" is enabled="+extension.isEnabled());
@@ -313,9 +317,22 @@ public class ExtensionController implements ExtensionContext{
         OrganizationsDao od = daoManager.getOrganizationsDao();
 
         Sid sid = new Sid(scopeSid);
-        Client client = cd.getClient(sid);
-        Account account = ad.getAccount(sid);
-        Organization organization = od.getOrganization(sid);
+        Sid.Type t = Sid.getType(sid);
+        Client client = null;
+        Account account = null;
+        Organization organization = null;
+
+        switch(t) {
+            case CLIENT:
+                client = cd.getClient(sid);
+                break;
+            case ACCOUNT:
+                account = ad.getAccount(sid);
+                break;
+            case ORGANIZATION:
+                organization = od.getOrganization(sid);
+                break;
+        }
 
         //FIXME: might not be optimized
         //preliminary check for all scopes: client, acc, org
