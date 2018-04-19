@@ -4,6 +4,7 @@ import static org.junit.Assert.*;
 
 import org.junit.Test;
 import org.restcomm.connect.commons.dao.Sid;
+import org.restcomm.connect.commons.dao.Sid.Type;
 
 public class SidTest {
 
@@ -51,4 +52,19 @@ public class SidTest {
 		}
 	}
 
+    @Test
+    public void testGetType() {
+        try{
+            for(Type t : Sid.Type.values()) {
+                //TODO: mock static class RestcommConfiguration
+                if(!t.equals(Type.CALL)) {
+                    Sid s = Sid.generate(t);
+                    Type t2 = Sid.getType(s);
+
+                    assertEquals(t, t2);
+                }
+            }
+        }catch(Exception e){
+        }
+    }
 }
