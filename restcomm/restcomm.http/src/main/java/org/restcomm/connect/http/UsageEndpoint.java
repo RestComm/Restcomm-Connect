@@ -67,7 +67,7 @@ import org.restcomm.connect.identity.UserIdentityContext;
 @Path("/Accounts/{accountSid}/Usage/Records")
 @ThreadSafe
 @Singleton
-public abstract class UsageEndpoint extends AbstractEndpoint {
+public class UsageEndpoint extends AbstractEndpoint {
   @Context
   protected ServletContext context;
   protected Configuration configuration;

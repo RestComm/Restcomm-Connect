@@ -77,7 +77,7 @@ import org.restcomm.connect.identity.passwords.PasswordValidatorFactory;
 @Path("/Accounts/{accountSid}/Clients")
 @ThreadSafe
 @Singleton
-public abstract class ClientsEndpoint extends AbstractEndpoint {
+public class ClientsEndpoint extends AbstractEndpoint {
     @Context
     private ServletContext context;
     private Configuration configuration;

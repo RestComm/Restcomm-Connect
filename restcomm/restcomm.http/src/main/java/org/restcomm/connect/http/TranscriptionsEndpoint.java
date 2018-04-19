@@ -66,7 +66,7 @@ import org.restcomm.connect.identity.UserIdentityContext;
  */
 @Path("/Accounts/{accountSid}/Transcriptions")
 @Singleton
-public abstract class TranscriptionsEndpoint extends AbstractEndpoint {
+public class TranscriptionsEndpoint extends AbstractEndpoint {
     @Context
     private ServletContext context;
     private Configuration configuration;

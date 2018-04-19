@@ -89,7 +89,7 @@ import org.restcomm.connect.identity.UserIdentityContext;
 @Path("/Accounts/{accountSid}/Geolocation")
 @ThreadSafe
 @Singleton
-public abstract class GeolocationEndpoint extends AbstractEndpoint {
+public class GeolocationEndpoint extends AbstractEndpoint {
 
     @Context
     protected ServletContext context;

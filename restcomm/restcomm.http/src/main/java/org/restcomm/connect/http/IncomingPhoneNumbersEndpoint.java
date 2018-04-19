@@ -103,7 +103,7 @@ import org.restcomm.connect.provisioning.number.api.PhoneNumberType;
 @Path("/Accounts/{accountSid}/IncomingPhoneNumbers")
 @ThreadSafe
 @Singleton
-public abstract class IncomingPhoneNumbersEndpoint extends AbstractEndpoint {
+public class IncomingPhoneNumbersEndpoint extends AbstractEndpoint {
     @Context
     private ServletContext context;
     private PhoneNumberProvisioningManager phoneNumberProvisioningManager;

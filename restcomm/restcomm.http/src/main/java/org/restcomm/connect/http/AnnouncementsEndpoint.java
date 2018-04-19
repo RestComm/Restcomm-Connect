@@ -61,7 +61,7 @@ import scala.concurrent.duration.Duration;
 @Path("/Accounts/{accountSid}/Announcements")
 @ThreadSafe
 @Singleton
-public abstract class AnnouncementsEndpoint extends AbstractEndpoint {
+public class AnnouncementsEndpoint extends AbstractEndpoint {
     private static Logger logger = Logger.getLogger(AnnouncementsEndpoint.class);
 
     @Context

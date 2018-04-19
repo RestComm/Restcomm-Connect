@@ -67,7 +67,7 @@ import org.restcomm.connect.identity.UserIdentityContext;
 @Path("/Accounts/{accountSid}/Notifications")
 @ThreadSafe
 @Singleton
-public abstract class NotificationsEndpoint extends AbstractEndpoint {
+public class NotificationsEndpoint extends AbstractEndpoint {
     @Context
     private ServletContext context;
     private Configuration configuration;

@@ -77,7 +77,7 @@ import org.restcomm.connect.identity.UserIdentityContext;
 @Path("/Accounts/{accountSid}/OutgoingCallerIds")
 @ThreadSafe
 @Singleton
-public abstract class OutgoingCallerIdsEndpoint extends AbstractEndpoint {
+public class OutgoingCallerIdsEndpoint extends AbstractEndpoint {
     @Context
     private ServletContext context;
     private Configuration configuration;

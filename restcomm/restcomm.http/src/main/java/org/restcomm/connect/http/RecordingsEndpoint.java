@@ -78,7 +78,7 @@ import org.restcomm.connect.identity.UserIdentityContext;
 @Path("/Accounts/{accountSid}/Recordings")
 @ThreadSafe
 @Singleton
-public abstract class RecordingsEndpoint extends AbstractEndpoint {
+public class RecordingsEndpoint extends AbstractEndpoint {
     @Context
     private ServletContext context;
     private Configuration configuration;

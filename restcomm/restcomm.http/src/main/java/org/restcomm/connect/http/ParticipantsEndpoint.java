@@ -91,7 +91,7 @@ import scala.concurrent.duration.Duration;
 @Path("/Accounts/{accountSid}/Conferences/{conferenceSid}/Participants")
 @ThreadSafe
 @Singleton
-public abstract class ParticipantsEndpoint extends CallsEndpoint {
+public class ParticipantsEndpoint extends CallsEndpoint {
     @Context
     private ServletContext context;
     private Configuration configuration;

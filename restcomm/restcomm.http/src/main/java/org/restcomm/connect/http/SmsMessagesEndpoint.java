@@ -98,7 +98,7 @@ import scala.concurrent.duration.Duration;
 @Path("/Accounts/{accountSid}/SMS/Messages")
 @ThreadSafe
 @Singleton
-public abstract class SmsMessagesEndpoint extends AbstractEndpoint {
+public class SmsMessagesEndpoint extends AbstractEndpoint {
     @Context
     protected ServletContext context;
     protected ActorSystem system;
