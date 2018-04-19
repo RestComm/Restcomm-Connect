@@ -9,7 +9,6 @@ import java.net.URI;
 import java.util.List;
 import javax.annotation.PostConstruct;
 import javax.annotation.security.RolesAllowed;
-import javax.inject.Inject;
 import javax.servlet.ServletContext;
 import javax.ws.rs.DELETE;
 import javax.ws.rs.GET;
@@ -43,7 +42,6 @@ import org.restcomm.connect.http.converter.GatewayConverter;
 import org.restcomm.connect.http.converter.GatewayListConverter;
 import org.restcomm.connect.http.converter.RestCommResponseConverter;
 import static org.restcomm.connect.http.security.AccountPrincipal.SUPER_ADMIN_ROLE;
-import org.restcomm.connect.http.security.PermissionEvaluator;
 import org.restcomm.connect.identity.UserIdentityContext;
 import org.restcomm.connect.telephony.api.RegisterGateway;
 
@@ -60,8 +58,8 @@ public class GatewaysEndpoint extends AbstractEndpoint {
     protected XStream xstream;
     private ActorRef proxyManager;
 
-    @Inject
-    private PermissionEvaluator permissionEvaluator;
+
+
 
     public GatewaysEndpoint() {
         super();

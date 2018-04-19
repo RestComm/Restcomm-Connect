@@ -27,7 +27,6 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.regex.Pattern;
 import javax.annotation.PostConstruct;
-import javax.inject.Inject;
 import javax.servlet.ServletContext;
 import javax.ws.rs.core.Context;
 import javax.ws.rs.core.MediaType;
@@ -44,7 +43,6 @@ import org.restcomm.connect.dao.entities.RestCommResponse;
 import org.restcomm.connect.http.converter.AvailablePhoneNumberConverter;
 import org.restcomm.connect.http.converter.AvailablePhoneNumberListConverter;
 import org.restcomm.connect.http.converter.RestCommResponseConverter;
-import org.restcomm.connect.http.security.PermissionEvaluator;
 import org.restcomm.connect.identity.UserIdentityContext;
 import org.restcomm.connect.provisioning.number.api.PhoneNumber;
 import org.restcomm.connect.provisioning.number.api.PhoneNumberProvisioningManager;
@@ -64,8 +62,8 @@ public class AvailablePhoneNumbersEndpoint extends AbstractEndpoint {
     private XStream xstream;
     private Gson gson;
 
-    @Inject
-    private PermissionEvaluator permissionEvaluator;
+
+
 
     public AvailablePhoneNumbersEndpoint() {
         super();

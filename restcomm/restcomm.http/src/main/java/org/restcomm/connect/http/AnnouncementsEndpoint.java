@@ -15,7 +15,6 @@ import java.net.URI;
 import java.util.concurrent.TimeUnit;
 import javax.annotation.PostConstruct;
 import javax.annotation.PreDestroy;
-import javax.inject.Inject;
 import javax.servlet.ServletContext;
 import javax.ws.rs.HeaderParam;
 import javax.ws.rs.POST;
@@ -46,7 +45,6 @@ import org.restcomm.connect.http.converter.AnnouncementConverter;
 import org.restcomm.connect.http.converter.AnnouncementListConverter;
 import org.restcomm.connect.http.converter.RestCommResponseConverter;
 import org.restcomm.connect.http.security.ContextUtil;
-import org.restcomm.connect.http.security.PermissionEvaluator;
 import org.restcomm.connect.identity.UserIdentityContext;
 import org.restcomm.connect.tts.api.SpeechSynthesizerRequest;
 import org.restcomm.connect.tts.api.SpeechSynthesizerResponse;
@@ -63,19 +61,19 @@ public class AnnouncementsEndpoint extends AbstractEndpoint {
     private static Logger logger = Logger.getLogger(AnnouncementsEndpoint.class);
 
     @Context
-    protected ServletContext context;
-    protected Configuration configuration;
-    protected Configuration runtime;
-    protected ActorRef synthesizer;
-    protected ActorRef cache;
-    protected Gson gson;
-    protected XStream xstream;
+    private ServletContext context;
+    private Configuration configuration;
+    private Configuration runtime;
+    private ActorRef synthesizer;
+    private ActorRef cache;
+    private Gson gson;
+    private XStream xstream;
     private URI uri;
     private ActorSystem system;
     private AccountsDao accountsDao;
 
-    @Inject
-    PermissionEvaluator permissionEvaluator;
+
+
 
     public AnnouncementsEndpoint() {
         super();

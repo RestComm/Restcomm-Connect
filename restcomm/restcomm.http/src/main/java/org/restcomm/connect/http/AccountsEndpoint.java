@@ -30,7 +30,6 @@ import java.util.ArrayList;
 import java.util.List;
 import javax.annotation.PostConstruct;
 import javax.annotation.security.RolesAllowed;
-import javax.inject.Inject;
 import javax.mail.internet.AddressException;
 import javax.mail.internet.InternetAddress;
 import javax.servlet.ServletContext;
@@ -118,16 +117,15 @@ public class AccountsEndpoint extends AbstractEndpoint {
     private ProfileAssociationsDao profileAssociationsDao;
     private ProfileService profileService;
 
-    @Inject
-    PermissionEvaluator permissionEvaluator;
+
+
 
     public AccountsEndpoint() {
         super();
     }
 
-    public AccountsEndpoint(ServletContext context,PermissionEvaluator eval) {
+    public AccountsEndpoint(ServletContext context) {
         super(context);
-        permissionEvaluator = eval;
     }
 
     @PostConstruct

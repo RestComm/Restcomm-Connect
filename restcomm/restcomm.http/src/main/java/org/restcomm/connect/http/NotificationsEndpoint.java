@@ -27,7 +27,6 @@ import java.text.ParseException;
 import java.util.ArrayList;
 import java.util.List;
 import javax.annotation.PostConstruct;
-import javax.inject.Inject;
 import javax.servlet.ServletContext;
 import javax.ws.rs.GET;
 import javax.ws.rs.HeaderParam;
@@ -57,7 +56,6 @@ import org.restcomm.connect.http.converter.NotificationConverter;
 import org.restcomm.connect.http.converter.NotificationListConverter;
 import org.restcomm.connect.http.converter.RestCommResponseConverter;
 import org.restcomm.connect.http.security.ContextUtil;
-import org.restcomm.connect.http.security.PermissionEvaluator;
 import org.restcomm.connect.http.security.PermissionEvaluator.SecuredType;
 import org.restcomm.connect.identity.UserIdentityContext;
 
@@ -77,8 +75,8 @@ public class NotificationsEndpoint extends AbstractEndpoint {
     private NotificationListConverter listConverter;
     private String instanceId;
 
-    @Inject
-    private PermissionEvaluator permissionEvaluator;
+
+
 
     public NotificationsEndpoint() {
         super();

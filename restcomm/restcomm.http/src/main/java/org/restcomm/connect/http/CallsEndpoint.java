@@ -40,7 +40,6 @@ import java.util.List;
 import java.util.concurrent.CopyOnWriteArrayList;
 import java.util.concurrent.TimeUnit;
 import javax.annotation.PostConstruct;
-import javax.inject.Inject;
 import javax.servlet.ServletContext;
 import javax.servlet.sip.SipServletResponse;
 import javax.ws.rs.GET;
@@ -89,11 +88,8 @@ import org.restcomm.connect.http.converter.RecordingConverter;
 import org.restcomm.connect.http.converter.RecordingListConverter;
 import org.restcomm.connect.http.converter.RestCommResponseConverter;
 import org.restcomm.connect.http.security.ContextUtil;
-import org.restcomm.connect.http.security.PermissionEvaluator;
 import org.restcomm.connect.http.security.PermissionEvaluator.SecuredType;
 import org.restcomm.connect.identity.UserIdentityContext;
-import org.restcomm.connect.mscontrol.api.messages.Mute;
-import org.restcomm.connect.mscontrol.api.messages.Unmute;
 import org.restcomm.connect.telephony.api.CallInfo;
 import org.restcomm.connect.telephony.api.CallManagerResponse;
 import org.restcomm.connect.telephony.api.CallResponse;
@@ -132,8 +128,8 @@ public class CallsEndpoint extends AbstractEndpoint {
     private RecordingSecurityLevel securityLevel = RecordingSecurityLevel.SECURE;
     private boolean normalizePhoneNumbers;
 
-    @Inject
-    private PermissionEvaluator permissionEvaluator;
+
+
 
     public CallsEndpoint() {
         super();

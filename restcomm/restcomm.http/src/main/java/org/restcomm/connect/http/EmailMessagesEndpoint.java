@@ -12,7 +12,6 @@ import com.google.gson.GsonBuilder;
 import com.sun.jersey.spi.resource.Singleton;
 import com.thoughtworks.xstream.XStream;
 import javax.annotation.PostConstruct;
-import javax.inject.Inject;
 import javax.servlet.ServletContext;
 import javax.ws.rs.HeaderParam;
 import javax.ws.rs.POST;
@@ -47,7 +46,6 @@ import org.restcomm.connect.email.api.Mail;
 import org.restcomm.connect.http.converter.EmailMessageConverter;
 import org.restcomm.connect.http.converter.RestCommResponseConverter;
 import org.restcomm.connect.http.security.ContextUtil;
-import org.restcomm.connect.http.security.PermissionEvaluator;
 import org.restcomm.connect.identity.UserIdentityContext;
 
 
@@ -72,8 +70,8 @@ public class EmailMessagesEndpoint extends AbstractEndpoint {
     // Send the email.
     protected Mail emailMsg;
 
-    @Inject
-    private PermissionEvaluator permissionEvaluator;
+
+
 
     public EmailMessagesEndpoint() {
         super();

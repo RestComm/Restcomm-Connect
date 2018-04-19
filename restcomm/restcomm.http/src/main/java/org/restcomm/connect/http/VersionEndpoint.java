@@ -25,7 +25,6 @@ import com.google.gson.GsonBuilder;
 import com.sun.jersey.spi.resource.Singleton;
 import com.thoughtworks.xstream.XStream;
 import javax.annotation.PostConstruct;
-import javax.inject.Inject;
 import javax.servlet.ServletContext;
 import javax.ws.rs.GET;
 import javax.ws.rs.HeaderParam;
@@ -50,7 +49,6 @@ import org.restcomm.connect.dao.entities.RestCommResponse;
 import org.restcomm.connect.http.converter.RestCommResponseConverter;
 import org.restcomm.connect.http.converter.VersionConverter;
 import org.restcomm.connect.http.security.ContextUtil;
-import org.restcomm.connect.http.security.PermissionEvaluator;
 import org.restcomm.connect.identity.UserIdentityContext;
 
 /**
@@ -71,8 +69,8 @@ public class VersionEndpoint extends AbstractEndpoint {
     private XStream xstream;
     private AccountsDao accountsDao;
 
-    @Inject
-    private PermissionEvaluator permissionEvaluator;
+
+
 
     @PostConstruct
     public void init() {

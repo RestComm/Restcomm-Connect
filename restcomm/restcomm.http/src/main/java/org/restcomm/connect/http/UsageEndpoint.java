@@ -26,7 +26,6 @@ import com.thoughtworks.xstream.XStream;
 import java.util.List;
 import java.util.regex.Pattern;
 import javax.annotation.PostConstruct;
-import javax.inject.Inject;
 import javax.servlet.ServletContext;
 import javax.servlet.http.HttpServletRequest;
 import javax.ws.rs.GET;
@@ -57,7 +56,6 @@ import org.restcomm.connect.http.converter.RestCommResponseConverter;
 import org.restcomm.connect.http.converter.UsageConverter;
 import org.restcomm.connect.http.converter.UsageListConverter;
 import org.restcomm.connect.http.security.ContextUtil;
-import org.restcomm.connect.http.security.PermissionEvaluator;
 import org.restcomm.connect.identity.UserIdentityContext;
 
 /**
@@ -79,8 +77,8 @@ public class UsageEndpoint extends AbstractEndpoint {
     @Context
     private HttpServletRequest servletRequest;
 
-    @Inject
-    private PermissionEvaluator permissionEvaluator;
+
+
 
   public UsageEndpoint() {
     super();

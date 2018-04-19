@@ -29,7 +29,6 @@ import com.thoughtworks.xstream.XStream;
 import java.util.List;
 import java.util.concurrent.TimeUnit;
 import javax.annotation.PostConstruct;
-import javax.inject.Inject;
 import javax.servlet.ServletContext;
 import javax.ws.rs.GET;
 import javax.ws.rs.HeaderParam;
@@ -74,7 +73,6 @@ import org.restcomm.connect.http.converter.RecordingConverter;
 import org.restcomm.connect.http.converter.RecordingListConverter;
 import org.restcomm.connect.http.converter.RestCommResponseConverter;
 import org.restcomm.connect.http.security.ContextUtil;
-import org.restcomm.connect.http.security.PermissionEvaluator;
 import org.restcomm.connect.http.security.PermissionEvaluator.SecuredType;
 import org.restcomm.connect.identity.UserIdentityContext;
 import org.restcomm.connect.telephony.api.CallInfo;
@@ -105,8 +103,8 @@ public class ParticipantsEndpoint extends AbstractEndpoint {
     private RecordingsDao recordingsDao;
     private String instanceId;
 
-    @Inject
-    private PermissionEvaluator permissionEvaluator;
+
+
 
     public ParticipantsEndpoint() {
         super();

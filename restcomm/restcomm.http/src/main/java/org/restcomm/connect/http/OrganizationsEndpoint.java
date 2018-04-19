@@ -29,7 +29,6 @@ import java.util.List;
 import java.util.regex.Pattern;
 import javax.annotation.PostConstruct;
 import javax.annotation.security.RolesAllowed;
-import javax.inject.Inject;
 import javax.servlet.ServletContext;
 import javax.ws.rs.GET;
 import javax.ws.rs.HeaderParam;
@@ -72,7 +71,6 @@ import org.restcomm.connect.http.converter.RestCommResponseConverter;
 import static org.restcomm.connect.http.security.AccountPrincipal.ADMIN_ROLE;
 import static org.restcomm.connect.http.security.AccountPrincipal.SUPER_ADMIN_ROLE;
 import org.restcomm.connect.http.security.ContextUtil;
-import org.restcomm.connect.http.security.PermissionEvaluator;
 import org.restcomm.connect.identity.UserIdentityContext;
 
 /**
@@ -95,8 +93,8 @@ public class OrganizationsEndpoint extends AbstractEndpoint {
     private Pattern pattern;
     private ProfileService profileService;
 
-    @Inject
-    private PermissionEvaluator permissionEvaluator;
+
+
 
     private OrganizationListConverter listConverter;
 

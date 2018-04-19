@@ -29,7 +29,6 @@ import com.thoughtworks.xstream.XStream;
 import java.net.URI;
 import java.util.concurrent.TimeUnit;
 import javax.annotation.PostConstruct;
-import javax.inject.Inject;
 import javax.servlet.ServletContext;
 import javax.ws.rs.HeaderParam;
 import javax.ws.rs.POST;
@@ -60,7 +59,6 @@ import org.restcomm.connect.http.converter.CallDetailRecordConverter;
 import org.restcomm.connect.http.converter.CallDetailRecordListConverter;
 import org.restcomm.connect.http.converter.RestCommResponseConverter;
 import org.restcomm.connect.http.security.ContextUtil;
-import org.restcomm.connect.http.security.PermissionEvaluator;
 import org.restcomm.connect.identity.UserIdentityContext;
 import org.restcomm.connect.telephony.api.CallInfo;
 import org.restcomm.connect.telephony.api.CallManagerResponse;
@@ -90,8 +88,8 @@ public class UssdPushEndpoint extends AbstractEndpoint {
     private XStream xstream;
     private CallDetailRecordListConverter listConverter;
 
-    @Inject
-    private PermissionEvaluator permissionEvaluator;
+
+
 
     public UssdPushEndpoint() {
         super();
