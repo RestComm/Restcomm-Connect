@@ -25,6 +25,7 @@ import org.restcomm.connect.identity.UserIdentityContext;
 
 public class ContextUtil {
     public static UserIdentityContext convert(SecurityContext sec) {
-        return null;
+        AccountPrincipal principal = (AccountPrincipal)sec.getUserPrincipal();
+        return principal.getIdentityContext();
     }
 }
