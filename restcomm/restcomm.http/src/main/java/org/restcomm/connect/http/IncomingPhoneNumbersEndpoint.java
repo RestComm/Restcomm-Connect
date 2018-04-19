@@ -27,6 +27,7 @@ import com.google.i18n.phonenumbers.PhoneNumberUtil;
 import com.google.i18n.phonenumbers.PhoneNumberUtil.PhoneNumberFormat;
 import com.google.i18n.phonenumbers.Phonenumber.PhoneNumber;
 import com.sun.jersey.spi.container.ResourceFilters;
+import com.sun.jersey.spi.resource.Singleton;
 import com.thoughtworks.xstream.XStream;
 import java.net.URI;
 import java.util.ArrayList;
@@ -101,6 +102,7 @@ import org.restcomm.connect.provisioning.number.api.PhoneNumberType;
  */
 @Path("/Accounts/{accountSid}/IncomingPhoneNumbers")
 @ThreadSafe
+@Singleton
 public abstract class IncomingPhoneNumbersEndpoint extends AbstractEndpoint {
     @Context
     private ServletContext context;

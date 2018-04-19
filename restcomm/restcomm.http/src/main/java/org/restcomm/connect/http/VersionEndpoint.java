@@ -22,6 +22,7 @@ package org.restcomm.connect.http;
 
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
+import com.sun.jersey.spi.resource.Singleton;
 import com.thoughtworks.xstream.XStream;
 import javax.annotation.PostConstruct;
 import javax.inject.Inject;
@@ -58,6 +59,7 @@ import org.restcomm.connect.identity.UserIdentityContext;
  */
 @Path("/Accounts/{accountSid}/Version")
 @ThreadSafe
+@Singleton
 public class VersionEndpoint extends AbstractEndpoint {
     private static Logger logger = Logger.getLogger(VersionEndpoint.class);
 

@@ -21,6 +21,7 @@ package org.restcomm.connect.http;
 
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
+import com.sun.jersey.spi.resource.Singleton;
 import com.thoughtworks.xstream.XStream;
 import java.text.ParseException;
 import java.util.List;
@@ -70,6 +71,7 @@ import org.restcomm.connect.identity.UserIdentityContext;
  */
 @Path("/Accounts/{accountSid}/Conferences")
 @ThreadSafe
+@Singleton
 public abstract class ConferencesEndpoint extends AbstractEndpoint {
     @Context
     protected ServletContext context;

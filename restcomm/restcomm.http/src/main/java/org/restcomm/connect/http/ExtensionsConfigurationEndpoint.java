@@ -21,6 +21,7 @@ package org.restcomm.connect.http;
 
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
+import com.sun.jersey.spi.resource.Singleton;
 import com.thoughtworks.xstream.XStream;
 import javax.annotation.PostConstruct;
 import javax.annotation.security.RolesAllowed;
@@ -62,6 +63,7 @@ import static org.restcomm.connect.http.security.AccountPrincipal.SUPER_ADMIN_RO
  */
 @Path("/ExtensionsConfiguration")
 @RolesAllowed(SUPER_ADMIN_ROLE)
+@Singleton
 public class  ExtensionsConfigurationEndpoint extends AbstractEndpoint {
     private Configuration allConfiguration;
     private Configuration configuration;

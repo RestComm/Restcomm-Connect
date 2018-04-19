@@ -25,6 +25,7 @@ import com.google.i18n.phonenumbers.NumberParseException;
 import com.google.i18n.phonenumbers.PhoneNumberUtil;
 import com.google.i18n.phonenumbers.PhoneNumberUtil.PhoneNumberFormat;
 import com.google.i18n.phonenumbers.Phonenumber.PhoneNumber;
+import com.sun.jersey.spi.resource.Singleton;
 import com.thoughtworks.xstream.XStream;
 import java.net.URI;
 import java.util.List;
@@ -75,6 +76,7 @@ import org.restcomm.connect.identity.UserIdentityContext;
  */
 @Path("/Accounts/{accountSid}/OutgoingCallerIds")
 @ThreadSafe
+@Singleton
 public abstract class OutgoingCallerIdsEndpoint extends AbstractEndpoint {
     @Context
     private ServletContext context;

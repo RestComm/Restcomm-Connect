@@ -859,7 +859,7 @@ public class AccountsEndpoint extends AbstractEndpoint {
 
     public LinkHeader composeLink(Sid targetSid, UriInfo info) {
         String sid = targetSid.toString();
-        URI uri = info.getBaseUriBuilder().path(ProfileJsonEndpoint.class).path(sid).build();
+        URI uri = info.getBaseUriBuilder().path(ProfileEndpoint.class).path(sid).build();
         LinkHeader.LinkHeaderBuilder link = LinkHeader.uri(uri).parameter(TITLE_PARAM, "Profiles");
         return link.rel(PROFILE_REL_TYPE).build();
     }
