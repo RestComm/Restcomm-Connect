@@ -28,6 +28,7 @@ import java.text.ParseException;
 import java.util.ArrayList;
 import java.util.List;
 import javax.annotation.PostConstruct;
+import javax.inject.Inject;
 import javax.servlet.ServletContext;
 import javax.ws.rs.GET;
 import javax.ws.rs.HeaderParam;
@@ -46,6 +47,7 @@ import static javax.ws.rs.core.Response.Status.NOT_FOUND;
 import static javax.ws.rs.core.Response.ok;
 import static javax.ws.rs.core.Response.status;
 import static javax.ws.rs.core.Response.temporaryRedirect;
+import javax.ws.rs.core.SecurityContext;
 import javax.ws.rs.core.UriInfo;
 import org.apache.commons.configuration.Configuration;
 import org.restcomm.connect.commons.amazonS3.RecordingSecurityLevel;
@@ -65,7 +67,10 @@ import org.restcomm.connect.dao.entities.RestCommResponse;
 import org.restcomm.connect.http.converter.RecordingConverter;
 import org.restcomm.connect.http.converter.RecordingListConverter;
 import org.restcomm.connect.http.converter.RestCommResponseConverter;
+import org.restcomm.connect.http.security.ContextUtil;
+import org.restcomm.connect.http.security.PermissionEvaluator;
 import org.restcomm.connect.http.security.PermissionEvaluator.SecuredType;
+import org.restcomm.connect.identity.UserIdentityContext;
 
 /**
  * @author quintana.thomas@gmail.com (Thomas Quintana)
@@ -84,6 +89,9 @@ public abstract class RecordingsEndpoint extends AbstractEndpoint {
     private RecordingSecurityLevel securityLevel = RecordingSecurityLevel.SECURE;
     private RecordingListConverter listConverter;
     private String instanceId;
+
+    @Inject
+    private PermissionEvaluator permissionEvaluator;
 
     public RecordingsEndpoint() {
         super();
@@ -135,14 +143,22 @@ public abstract class RecordingsEndpoint extends AbstractEndpoint {
         instanceId = RestcommConfiguration.getInstance().getMain().getInstanceId();
     }
 
-    protected Response getRecording(final String accountSid, final String sid, final MediaType responseType) {
+    protected Response getRecording(final String accountSid,
+            final String sid,
+            final MediaType responseType,
+            UserIdentityContext userIdentityContext) {
         Account operatedAccount = accountsDao.getAccount(accountSid);
-        secure(operatedAccount, "RestComm:Read:Recordings");
+        permissionEvaluator.secure(operatedAccount,
+                "RestComm:Read:Recordings",
+                userIdentityContext);
         final Recording recording = dao.getRecording(new Sid(sid));
         if (recording == null) {
             return status(NOT_FOUND).build();
         } else {
-            secure(operatedAccount, recording.getAccountSid(), SecuredType.SECURED_STANDARD);
+            permissionEvaluator.secure(operatedAccount,
+                    recording.getAccountSid(),
+                    SecuredType.SECURED_STANDARD,
+                    userIdentityContext);
             if (APPLICATION_JSON_TYPE.equals(responseType)) {
                 return ok(gson.toJson(recording), APPLICATION_JSON).build();
             } else if (APPLICATION_XML_TYPE.equals(responseType)) {
@@ -154,8 +170,13 @@ public abstract class RecordingsEndpoint extends AbstractEndpoint {
         }
     }
 
-    protected Response getRecordings(final String accountSid, UriInfo info, final MediaType responseType) {
-        secure(accountsDao.getAccount(accountSid), "RestComm:Read:Recordings");
+    protected Response getRecordings(final String accountSid,
+            UriInfo info,
+            final MediaType responseType,
+            UserIdentityContext userIdentityContext) {
+        permissionEvaluator.secure(accountsDao.getAccount(accountSid),
+                "RestComm:Read:Recordings",
+                userIdentityContext);
 
         boolean localInstanceOnly = true;
         try {
@@ -250,8 +271,13 @@ public abstract class RecordingsEndpoint extends AbstractEndpoint {
         }
     }
 
-    protected Response getRecordingsByCall(final String accountSid, final String callSid, final MediaType responseType) {
-        secure(accountsDao.getAccount(accountSid), "RestComm:Read:Recordings");
+    protected Response getRecordingsByCall(final String accountSid,
+            final String callSid,
+            final MediaType responseType,
+            UserIdentityContext userIdentityContext) {
+        permissionEvaluator.secure(accountsDao.getAccount(accountSid),
+                "RestComm:Read:Recordings",
+                userIdentityContext);
 
         final List<Recording> recordings = dao.getRecordingsByCall(new Sid(callSid));
         if (APPLICATION_JSON_TYPE.equals(responseType)) {
@@ -351,16 +377,24 @@ public abstract class RecordingsEndpoint extends AbstractEndpoint {
     @Produces({MediaType.APPLICATION_XML, MediaType.APPLICATION_JSON})
     public Response getRecordingAsXml(@PathParam("accountSid") final String accountSid,
             @PathParam("sid") final String sid,
-            @HeaderParam("Accept") String accept) {
-        return getRecording(accountSid, sid, retrieveMediaType(accept));
+            @HeaderParam("Accept") String accept,
+            @Context SecurityContext sec) {
+        return getRecording(accountSid,
+                sid,
+                retrieveMediaType(accept),
+                ContextUtil.convert(sec));
     }
 
     @GET
     @Produces({MediaType.APPLICATION_XML, MediaType.APPLICATION_JSON})
     public Response getRecordings(@PathParam("accountSid") final String accountSid,
             @Context UriInfo info,
-            @HeaderParam("Accept") String accept) {
-        return getRecordings(accountSid, info, retrieveMediaType(accept));
+            @HeaderParam("Accept") String accept,
+            @Context SecurityContext sec) {
+        return getRecordings(accountSid,
+                info,
+                retrieveMediaType(accept),
+                ContextUtil.convert(sec));
     }
 
 }
