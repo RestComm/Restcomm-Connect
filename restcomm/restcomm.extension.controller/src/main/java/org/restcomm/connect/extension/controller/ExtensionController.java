@@ -311,16 +311,47 @@ public class ExtensionController implements ExtensionContext{
         ClientsDao cd = daoManager.getClientsDao();
         AccountsDao ad = daoManager.getAccountsDao();
         OrganizationsDao od = daoManager.getOrganizationsDao();
-        ExtensionConfiguration extCfg = ecd.getAccountExtensionConfiguration(scopeSid, extensionSid);
 
         Sid sid = new Sid(scopeSid);
         Client client = cd.getClient(sid);
         Account account = ad.getAccount(sid);
         Organization organization = od.getOrganization(sid);
 
-        //check parent
+        //FIXME: might not be optimized
+        //preliminary check for all scopes: client, acc, org
+        ExtensionConfiguration extCfg = ecd.getAccountExtensionConfiguration(scopeSid, extensionSid);
 
-        //check org
+        //the scopeSid was a client
+        if(client!= null && extCfg==null) {
+            account = ad.getAccount(client.getAccountSid());
+        }
+
+        //the scopeSid was an account
+        if(account!=null && extCfg==null) {
+            extCfg = ecd.getAccountExtensionConfiguration(account.getSid().toString(), extensionSid);
+            if(extCfg==null) {
+                List<String> lineage = ad.getAccountLineage(sid);
+                for(String currSid : lineage) {
+                    if(logger.isInfoEnabled()) {
+                        logger.info("checking "+ currSid);
+                    }
+                    extCfg = ecd.getAccountExtensionConfiguration(currSid, extensionSid);
+                    if(extCfg != null) {
+                        break;
+                    }
+                }
+                organization = od.getOrganization(account.getOrganizationSid());
+            }
+        }
+
+        //the scopeSid was an org
+        if(organization!= null && extCfg==null) {
+            //it is assumed that lineage will always have identical org, so we only check the originating account
+            extCfg = ecd.getAccountExtensionConfiguration(organization.getSid().toString(), extensionSid);
+            if(logger.isInfoEnabled()) {
+                logger.info("checking "+ account.getOrganizationSid().toString());
+            }
+        }
 
         //check default
         if(extCfg==null) {
