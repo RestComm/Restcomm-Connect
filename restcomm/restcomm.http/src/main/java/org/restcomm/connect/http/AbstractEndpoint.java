@@ -65,6 +65,10 @@ public abstract class AbstractEndpoint {
         super();
     }
 
+    public AbstractEndpoint(ServletContext context) {
+        this.context = context;
+    }
+
     protected MediaType retrieveMediaType(String accept) {
         if (accept.contains("json")) {
              return MediaType.APPLICATION_JSON_TYPE;

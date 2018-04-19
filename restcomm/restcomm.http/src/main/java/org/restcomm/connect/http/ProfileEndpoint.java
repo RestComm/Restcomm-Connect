@@ -47,12 +47,14 @@ import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
 import javax.ws.rs.core.Response.ResponseBuilder;
 import javax.ws.rs.core.Response.Status;
+import static javax.ws.rs.core.Response.status;
 import javax.ws.rs.core.SecurityContext;
 import javax.ws.rs.core.UriInfo;
 import org.apache.commons.configuration.Configuration;
 import org.apache.commons.io.IOUtils;
 import org.apache.log4j.Logger;
 import org.restcomm.connect.commons.dao.Sid;
+import org.restcomm.connect.core.service.api.ProfileService;
 import org.restcomm.connect.dao.AccountsDao;
 import org.restcomm.connect.dao.DaoManager;
 import org.restcomm.connect.dao.OrganizationsDao;
@@ -65,8 +67,6 @@ import static org.restcomm.connect.dao.entities.Profile.DEFAULT_PROFILE_SID;
 import org.restcomm.connect.dao.entities.ProfileAssociation;
 import org.restcomm.connect.http.exceptionmappers.CustomReasonPhraseType;
 import org.restcomm.connect.http.security.AccountPrincipal;
-import static javax.ws.rs.core.Response.status;
-import org.restcomm.connect.core.service.api.ProfileService;
 
 public class ProfileEndpoint {
 
@@ -294,11 +294,11 @@ public class ProfileEndpoint {
         LinkHeaderBuilder link = null;
         switch (extractSidPrefix(targetSid)) {
             case ACCOUNTS_PREFIX:
-                uri = info.getBaseUriBuilder().path(AccountsXmlEndpoint.class).path(sid).build();
+                uri = info.getBaseUriBuilder().path(AccountsEndpoint.class).path(sid).build();
                 link = LinkHeader.uri(uri).parameter(TITLE_PARAM, "Accounts");
                 break;
             case ORGANIZATIONS_PREFIX:
-                uri = info.getBaseUriBuilder().path(AccountsXmlEndpoint.class).path(sid).build();
+                uri = info.getBaseUriBuilder().path(AccountsEndpoint.class).path(sid).build();
                 link = LinkHeader.uri(uri).parameter(TITLE_PARAM, "Organizations");
                 break;
             default:

@@ -56,7 +56,7 @@ import static org.restcomm.connect.http.security.AccountPrincipal.ADMIN_ROLE;
  *
  * @author orestis.tsakiridis@telestax.com (Orestis Tsakiridis)
  */
-public abstract class PermissionEvaluator {
+public class PermissionEvaluator {
 
     // types of secured resources used to apply different policies to applications, numbers etc.
     public enum SecuredType {
@@ -75,6 +75,12 @@ public abstract class PermissionEvaluator {
 
     public PermissionEvaluator() {
     }
+
+    public PermissionEvaluator(ServletContext context) {
+        this.context = context;
+    }
+
+
 
     @PostConstruct
     public void init() {

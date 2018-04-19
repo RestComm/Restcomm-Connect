@@ -29,6 +29,7 @@ import com.thoughtworks.xstream.XStream;
 import java.net.URI;
 import java.util.List;
 import javax.annotation.PostConstruct;
+import javax.inject.Inject;
 import javax.servlet.ServletContext;
 import javax.ws.rs.DELETE;
 import javax.ws.rs.GET;
@@ -50,9 +51,9 @@ import static javax.ws.rs.core.Response.Status.BAD_REQUEST;
 import static javax.ws.rs.core.Response.Status.NOT_FOUND;
 import static javax.ws.rs.core.Response.ok;
 import static javax.ws.rs.core.Response.status;
+import javax.ws.rs.core.SecurityContext;
 import org.apache.commons.configuration.Configuration;
 import org.joda.time.DateTime;
-import org.restcomm.connect.commons.annotations.concurrency.NotThreadSafe;
 import org.restcomm.connect.commons.annotations.concurrency.ThreadSafe;
 import org.restcomm.connect.commons.dao.Sid;
 import org.restcomm.connect.dao.DaoManager;
@@ -64,6 +65,10 @@ import org.restcomm.connect.dao.entities.RestCommResponse;
 import org.restcomm.connect.http.converter.OutgoingCallerIdConverter;
 import org.restcomm.connect.http.converter.OutgoingCallerIdListConverter;
 import org.restcomm.connect.http.converter.RestCommResponseConverter;
+import org.restcomm.connect.http.security.ContextUtil;
+import org.restcomm.connect.http.security.PermissionEvaluator;
+import org.restcomm.connect.http.security.PermissionEvaluator.SecuredType;
+import org.restcomm.connect.identity.UserIdentityContext;
 
 /**
  * @author quintana.thomas@gmail.com (Thomas Quintana)
@@ -72,11 +77,14 @@ import org.restcomm.connect.http.converter.RestCommResponseConverter;
 @ThreadSafe
 public abstract class OutgoingCallerIdsEndpoint extends AbstractEndpoint {
     @Context
-    protected ServletContext context;
-    protected Configuration configuration;
-    protected OutgoingCallerIdsDao dao;
-    protected Gson gson;
-    protected XStream xstream;
+    private ServletContext context;
+    private Configuration configuration;
+    private OutgoingCallerIdsDao dao;
+    private Gson gson;
+    private XStream xstream;
+
+    @Inject
+    private PermissionEvaluator permissionEvaluator;
 
     public OutgoingCallerIdsEndpoint() {
         super();
@@ -122,14 +130,21 @@ public abstract class OutgoingCallerIdsEndpoint extends AbstractEndpoint {
                 PhoneNumberFormat.E164), uri);
     }
 
-    protected Response getCallerId(final String accountSid, final String sid, final MediaType responseType) {
+    protected Response getCallerId(final String accountSid,
+            final String sid,
+            final MediaType responseType,
+            UserIdentityContext userIdentityContext) {
         Account operatedAccount = accountsDao.getAccount(accountSid);
-        secure(operatedAccount, "RestComm:Read:OutgoingCallerIds");
+        permissionEvaluator.secure(operatedAccount, "RestComm:Read:OutgoingCallerIds",
+                userIdentityContext);
         final OutgoingCallerId outgoingCallerId = dao.getOutgoingCallerId(new Sid(sid));
         if (outgoingCallerId == null) {
             return status(NOT_FOUND).build();
         } else {
-            secure(operatedAccount, outgoingCallerId.getAccountSid(), SecuredType.SECURED_STANDARD);
+            permissionEvaluator.secure(operatedAccount,
+                    outgoingCallerId.getAccountSid(),
+                    SecuredType.SECURED_STANDARD,
+                    userIdentityContext);
             if (APPLICATION_JSON_TYPE.equals(responseType)) {
                 return ok(gson.toJson(outgoingCallerId), APPLICATION_JSON).build();
             } else if (APPLICATION_XML_TYPE.equals(responseType)) {
@@ -141,8 +156,12 @@ public abstract class OutgoingCallerIdsEndpoint extends AbstractEndpoint {
         }
     }
 
-    protected Response getCallerIds(final String accountSid, final MediaType responseType) {
-        secure(accountsDao.getAccount(accountSid), "RestComm:Read:OutgoingCallerIds");
+    protected Response getCallerIds(final String accountSid,
+            final MediaType responseType,
+            UserIdentityContext userIdentityContext) {
+        permissionEvaluator.secure(accountsDao.getAccount(accountSid),
+                "RestComm:Read:OutgoingCallerIds",
+                userIdentityContext);
         final List<OutgoingCallerId> outgoingCallerIds = dao.getOutgoingCallerIds(new Sid(accountSid));
         if (APPLICATION_JSON_TYPE.equals(responseType)) {
             return ok(gson.toJson(outgoingCallerIds), APPLICATION_JSON).build();
@@ -154,9 +173,13 @@ public abstract class OutgoingCallerIdsEndpoint extends AbstractEndpoint {
         }
     }
 
-    protected Response putOutgoingCallerId(final String accountSid, final MultivaluedMap<String, String> data,
-            final MediaType responseType) {
-        secure(accountsDao.getAccount(accountSid), "RestComm:Create:OutgoingCallerIds");
+    protected Response putOutgoingCallerId(final String accountSid,
+            final MultivaluedMap<String, String> data,
+            final MediaType responseType,
+            UserIdentityContext userIdentityContext) {
+        permissionEvaluator.secure(accountsDao.getAccount(accountSid),
+                "RestComm:Create:OutgoingCallerIds",
+                userIdentityContext);
         try {
             validate(data);
         } catch (final NullPointerException exception) {
@@ -174,15 +197,23 @@ public abstract class OutgoingCallerIdsEndpoint extends AbstractEndpoint {
         }
     }
 
-    protected Response updateOutgoingCallerId(final String accountSid, final String sid,
-            final MultivaluedMap<String, String> data, final MediaType responseType) {
+    protected Response updateOutgoingCallerId(final String accountSid,
+            final String sid,
+            final MultivaluedMap<String, String> data,
+            final MediaType responseType,
+            UserIdentityContext userIdentityContext) {
         Account operatedAccount = accountsDao.getAccount(accountSid);
-        secure(operatedAccount, "RestComm:Modify:OutgoingCallerIds");
+        permissionEvaluator.secure(operatedAccount,
+                "RestComm:Modify:OutgoingCallerIds",
+                userIdentityContext);
         OutgoingCallerId outgoingCallerId = dao.getOutgoingCallerId(new Sid(sid));
         if (outgoingCallerId == null) {
             return status(NOT_FOUND).build();
         } else {
-            secure(operatedAccount, outgoingCallerId.getAccountSid(), SecuredType.SECURED_STANDARD);
+            permissionEvaluator.secure(operatedAccount,
+                    outgoingCallerId.getAccountSid(),
+                    SecuredType.SECURED_STANDARD,
+                    userIdentityContext);
             if (data.containsKey("FriendlyName")) {
                 final String friendlyName = data.getFirst("FriendlyName");
                 outgoingCallerId = outgoingCallerId.setFriendlyName(friendlyName);
@@ -210,12 +241,19 @@ public abstract class OutgoingCallerIdsEndpoint extends AbstractEndpoint {
         }
     }
 
-    private Response deleteOutgoingCallerId(String accountSid, String sid) {
+    private Response deleteOutgoingCallerId(String accountSid,
+            String sid,
+            UserIdentityContext userIdentityContext) {
         Account operatedAccount = super.accountsDao.getAccount(accountSid);
-        secure(operatedAccount, "RestComm:Delete:OutgoingCallerIds");
+        permissionEvaluator.secure(operatedAccount,
+                "RestComm:Delete:OutgoingCallerIds",
+                userIdentityContext);
         OutgoingCallerId oci = dao.getOutgoingCallerId(new Sid(sid));
         if (oci != null) {
-            secure(operatedAccount,String.valueOf(oci.getAccountSid()), SecuredType.SECURED_STANDARD );
+            permissionEvaluator.secure(operatedAccount,
+                    String.valueOf(oci.getAccountSid()),
+                    SecuredType.SECURED_STANDARD,
+                    userIdentityContext);
         } // TODO return a NOT_FOUND status code here if oci==null maybe ?
         dao.removeOutgoingCallerId(new Sid(sid));
         return ok().build();
@@ -223,8 +261,10 @@ public abstract class OutgoingCallerIdsEndpoint extends AbstractEndpoint {
 
     @Path("/{sid}")
     @DELETE
-    public Response deleteOutgoingCallerIdAsXml(@PathParam("accountSid") String accountSid, @PathParam("sid") String sid) {
-        return deleteOutgoingCallerId(accountSid, sid);
+    public Response deleteOutgoingCallerIdAsXml(@PathParam("accountSid") String accountSid,
+            @PathParam("sid") String sid,
+            UserIdentityContext userIdentityContext) {
+        return deleteOutgoingCallerId(accountSid, sid, userIdentityContext);
     }
 
     @Path("/{sid}")
@@ -232,23 +272,29 @@ public abstract class OutgoingCallerIdsEndpoint extends AbstractEndpoint {
     @Produces({MediaType.APPLICATION_XML, MediaType.APPLICATION_JSON})
     public Response getCallerIdAsXml(@PathParam("accountSid") final String accountSid,
             @PathParam("sid") final String sid,
-            @HeaderParam("Accept") String accept) {
-        return getCallerId(accountSid, sid, retrieveMediaType(accept));
+            @HeaderParam("Accept") String accept,
+            @Context SecurityContext sec) {
+        return getCallerId(accountSid, sid, retrieveMediaType(accept),
+                ContextUtil.convert(sec));
     }
 
     @GET
     @Produces({MediaType.APPLICATION_XML, MediaType.APPLICATION_JSON})
     public Response getCallerIds(@PathParam("accountSid") final String accountSid,
-            @HeaderParam("Accept") String accept) {
-        return getCallerIds(accountSid, retrieveMediaType(accept));
+            @HeaderParam("Accept") String accept,
+            @Context SecurityContext sec) {
+        return getCallerIds(accountSid, retrieveMediaType(accept),
+                ContextUtil.convert(sec));
     }
 
     @POST
     @Produces({MediaType.APPLICATION_XML, MediaType.APPLICATION_JSON})
     public Response putOutgoingCallerId(@PathParam("accountSid") final String accountSid,
             final MultivaluedMap<String, String> data,
-            @HeaderParam("Accept") String accept) {
-        return putOutgoingCallerId(accountSid, data, retrieveMediaType(accept));
+            @HeaderParam("Accept") String accept,
+            @Context SecurityContext sec) {
+        return putOutgoingCallerId(accountSid, data, retrieveMediaType(accept),
+                ContextUtil.convert(sec));
     }
 
     @Path("/{sid}")
@@ -257,7 +303,9 @@ public abstract class OutgoingCallerIdsEndpoint extends AbstractEndpoint {
     public Response updateOutgoingCallerIdAsXml(@PathParam("accountSid") final String accountSid,
             @PathParam("sid") final String sid,
             final MultivaluedMap<String, String> data,
-            @HeaderParam("Accept") String accept) {
-        return updateOutgoingCallerId(accountSid, sid, data, retrieveMediaType(accept));
+            @HeaderParam("Accept") String accept,
+            @Context SecurityContext sec) {
+        return updateOutgoingCallerId(accountSid, sid, data, retrieveMediaType(accept),
+                ContextUtil.convert(sec));
     }
 }

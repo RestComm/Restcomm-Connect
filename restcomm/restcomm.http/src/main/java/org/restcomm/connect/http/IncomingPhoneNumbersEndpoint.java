@@ -33,6 +33,7 @@ import java.util.ArrayList;
 import java.util.List;
 import javax.annotation.PostConstruct;
 import javax.annotation.security.RolesAllowed;
+import javax.inject.Inject;
 import javax.servlet.ServletContext;
 import javax.ws.rs.DELETE;
 import javax.ws.rs.GET;
@@ -58,6 +59,7 @@ import static javax.ws.rs.core.Response.Status.OK;
 import static javax.ws.rs.core.Response.noContent;
 import static javax.ws.rs.core.Response.ok;
 import static javax.ws.rs.core.Response.status;
+import javax.ws.rs.core.SecurityContext;
 import javax.ws.rs.core.UriInfo;
 import org.apache.commons.configuration.Configuration;
 import org.joda.time.DateTime;
@@ -82,7 +84,10 @@ import org.restcomm.connect.http.converter.IncomingPhoneNumberListConverter;
 import org.restcomm.connect.http.converter.RestCommResponseConverter;
 import org.restcomm.connect.http.filters.ExtensionFilter;
 import static org.restcomm.connect.http.security.AccountPrincipal.SUPER_ADMIN_ROLE;
+import org.restcomm.connect.http.security.ContextUtil;
+import org.restcomm.connect.http.security.PermissionEvaluator;
 import org.restcomm.connect.http.security.PermissionEvaluator.SecuredType;
+import org.restcomm.connect.identity.UserIdentityContext;
 import org.restcomm.connect.provisioning.number.api.PhoneNumberParameters;
 import org.restcomm.connect.provisioning.number.api.PhoneNumberProvisioningManager;
 import org.restcomm.connect.provisioning.number.api.PhoneNumberProvisioningManagerProvider;
@@ -98,15 +103,18 @@ import org.restcomm.connect.provisioning.number.api.PhoneNumberType;
 @ThreadSafe
 public abstract class IncomingPhoneNumbersEndpoint extends AbstractEndpoint {
     @Context
-    protected ServletContext context;
-    protected PhoneNumberProvisioningManager phoneNumberProvisioningManager;
-    protected IncomingPhoneNumberListConverter listConverter;
+    private ServletContext context;
+    private PhoneNumberProvisioningManager phoneNumberProvisioningManager;
+    private IncomingPhoneNumberListConverter listConverter;
     PhoneNumberParameters phoneNumberParameters;
     String callbackPort = "";
     private IncomingPhoneNumbersDao dao;
     private OrganizationsDao organizationsDao;
     private XStream xstream;
-    protected Gson gson;
+    private Gson gson;
+
+    @Inject
+    private PermissionEvaluator permissionEvaluator;
 
     public IncomingPhoneNumbersEndpoint() {
         super();
@@ -254,9 +262,14 @@ public abstract class IncomingPhoneNumbersEndpoint extends AbstractEndpoint {
         return friendlyName;
     }
 
-    protected Response getIncomingPhoneNumber(final String accountSid, final String sid, final MediaType responseType) {
+    protected Response getIncomingPhoneNumber(final String accountSid,
+            final String sid,
+            final MediaType responseType,
+            UserIdentityContext userIdentityContext) {
         Account operatedAccount = accountsDao.getAccount(accountSid);
-        secure(operatedAccount, "RestComm:Read:IncomingPhoneNumbers");
+        permissionEvaluator.secure(operatedAccount,
+                "RestComm:Read:IncomingPhoneNumbers",
+                userIdentityContext);
         try{
             final IncomingPhoneNumber incomingPhoneNumber = dao.getIncomingPhoneNumber(new Sid(sid));
             if (incomingPhoneNumber == null) {
@@ -266,7 +279,10 @@ public abstract class IncomingPhoneNumbersEndpoint extends AbstractEndpoint {
                 if (operatedAccount == null) {
                     return status(BAD_REQUEST).build();
                 }
-                secure(operatedAccount, incomingPhoneNumber.getAccountSid(), SecuredType.SECURED_STANDARD);
+                permissionEvaluator.secure(operatedAccount,
+                        incomingPhoneNumber.getAccountSid(),
+                        SecuredType.SECURED_STANDARD,
+                        userIdentityContext);
                 if (APPLICATION_JSON_TYPE.equals(responseType)) {
                     return ok(gson.toJson(incomingPhoneNumber), APPLICATION_JSON).build();
                 } else if (APPLICATION_XML_TYPE.equals(responseType)) {
@@ -282,8 +298,12 @@ public abstract class IncomingPhoneNumbersEndpoint extends AbstractEndpoint {
         }
     }
 
-    protected Response getAvailableCountries(final String accountSid, final MediaType responseType) {
-        secure(accountsDao.getAccount(accountSid), "RestComm:Read:IncomingPhoneNumbers");
+    protected Response getAvailableCountries(final String accountSid,
+            final MediaType responseType,
+            UserIdentityContext userIdentityContext) {
+        permissionEvaluator.secure(accountsDao.getAccount(accountSid),
+                "RestComm:Read:IncomingPhoneNumbers",
+                userIdentityContext);
         List<String> countries = phoneNumberProvisioningManager.getAvailableCountries();
         if (countries == null) {
             countries = new ArrayList<String>();
@@ -299,9 +319,14 @@ public abstract class IncomingPhoneNumbersEndpoint extends AbstractEndpoint {
         }
     }
 
-    protected Response getIncomingPhoneNumbers(final String accountSid, final PhoneNumberType phoneNumberType, UriInfo info,
-        final MediaType responseType) {
-        secure(accountsDao.getAccount(accountSid), "RestComm:Read:IncomingPhoneNumbers");
+    protected Response getIncomingPhoneNumbers(final String accountSid,
+            final PhoneNumberType phoneNumberType,
+            UriInfo info,
+        final MediaType responseType,
+        UserIdentityContext userIdentityContext) {
+        permissionEvaluator.secure(accountsDao.getAccount(accountSid),
+                "RestComm:Read:IncomingPhoneNumbers",
+                userIdentityContext);
         try{
             String phoneNumberFilter = info.getQueryParameters().getFirst("PhoneNumber");
             String friendlyNameFilter = info.getQueryParameters().getFirst("FriendlyName");
@@ -357,10 +382,15 @@ public abstract class IncomingPhoneNumbersEndpoint extends AbstractEndpoint {
         }
     }
 
-    protected Response putIncomingPhoneNumber(final String accountSid, final MultivaluedMap<String, String> data,
-        PhoneNumberType phoneNumberType, final MediaType responseType) {
+    protected Response putIncomingPhoneNumber(final String accountSid,
+            final MultivaluedMap<String, String> data,
+        PhoneNumberType phoneNumberType,
+        final MediaType responseType,
+        UserIdentityContext userIdentityContext) {
         Account account = accountsDao.getAccount(accountSid);
-        secure(account, "RestComm:Create:IncomingPhoneNumbers");
+        permissionEvaluator.secure(account,
+                "RestComm:Create:IncomingPhoneNumbers",
+                userIdentityContext);
         try {
             validate(data);
         } catch (final NullPointerException exception) {
@@ -453,16 +483,24 @@ public abstract class IncomingPhoneNumbersEndpoint extends AbstractEndpoint {
         }
     }
 
-    public Response updateIncomingPhoneNumber(final String accountSid, final String sid,
-            final MultivaluedMap<String, String> data, final MediaType responseType) {
+    public Response updateIncomingPhoneNumber(final String accountSid,
+            final String sid,
+            final MultivaluedMap<String, String> data,
+            final MediaType responseType,
+            UserIdentityContext userIdentityContext) {
         Account operatedAccount = accountsDao.getAccount(accountSid);
-        secure(operatedAccount, "RestComm:Modify:IncomingPhoneNumbers");
+        permissionEvaluator.secure(operatedAccount,
+                "RestComm:Modify:IncomingPhoneNumbers",
+                userIdentityContext);
         try{
             final IncomingPhoneNumber incomingPhoneNumber = dao.getIncomingPhoneNumber(new Sid(sid));
             if (incomingPhoneNumber == null) {
                 return status(NOT_FOUND).build();
             }
-            secure(operatedAccount, incomingPhoneNumber.getAccountSid(), SecuredType.SECURED_STANDARD );
+            permissionEvaluator.secure(operatedAccount,
+                    incomingPhoneNumber.getAccountSid(),
+                    SecuredType.SECURED_STANDARD,
+                    userIdentityContext);
             boolean updated = true;
             updated = updateNumberAtPhoneNumberProvisioningManager(incomingPhoneNumber, organizationsDao.getOrganization(operatedAccount.getOrganizationSid()));
             if(updated) {
@@ -614,15 +652,22 @@ public abstract class IncomingPhoneNumbersEndpoint extends AbstractEndpoint {
         return incomingPhoneNumber;
     }
 
-    public Response deleteIncomingPhoneNumber(final String accountSid, final String sid) {
+    public Response deleteIncomingPhoneNumber(final String accountSid,
+            final String sid,
+            UserIdentityContext userIdentityContext) {
             Account operatedAccount = accountsDao.getAccount(accountSid);
-            secure(operatedAccount, "RestComm:Delete:IncomingPhoneNumbers");
+            permissionEvaluator.secure(operatedAccount,
+                    "RestComm:Delete:IncomingPhoneNumbers",
+                    userIdentityContext);
         try{
             final IncomingPhoneNumber incomingPhoneNumber = dao.getIncomingPhoneNumber(new Sid(sid));
             if (incomingPhoneNumber == null) {
                 return status(NOT_FOUND).build();
             }
-            secure(operatedAccount, incomingPhoneNumber.getAccountSid(), SecuredType.SECURED_STANDARD);
+            permissionEvaluator.secure(operatedAccount,
+                    incomingPhoneNumber.getAccountSid(),
+                    SecuredType.SECURED_STANDARD,
+                    userIdentityContext);
             if(phoneNumberProvisioningManager != null && (incomingPhoneNumber.isPureSip() == null || !incomingPhoneNumber.isPureSip())) {
                 phoneNumberProvisioningManager.cancelNumber(convertIncomingPhoneNumbertoPhoneNumber(incomingPhoneNumber));
             }
@@ -667,9 +712,14 @@ public abstract class IncomingPhoneNumbersEndpoint extends AbstractEndpoint {
      * @param responseType
      * @return
      */
-    protected Response migrateIncomingPhoneNumbers(String targetAccountSid, MultivaluedMap<String, String> data, MediaType responseType) {
+    protected Response migrateIncomingPhoneNumbers(String targetAccountSid,
+            MultivaluedMap<String, String> data,
+            MediaType responseType,
+            UserIdentityContext userIdentityContext) {
         Account effectiveAccount = userIdentityContext.getEffectiveAccount();
-        secure(effectiveAccount, "RestComm:Modify:IncomingPhoneNumbers");
+        permissionEvaluator.secure(effectiveAccount,
+                "RestComm:Modify:IncomingPhoneNumbers",
+                 userIdentityContext);
         try{
             Account targetAccount = accountsDao.getAccount(targetAccountSid);
             // this is to avoid if mistakenly provided super admin account as targetAccountSid
@@ -770,8 +820,11 @@ public abstract class IncomingPhoneNumbersEndpoint extends AbstractEndpoint {
     @Path("/{sid}")
     @DELETE
     public Response deleteIncomingPhoneNumberAsXml(@PathParam("accountSid") final String accountSid,
-            @PathParam("sid") final String sid) {
-        return super.deleteIncomingPhoneNumber(accountSid, sid);
+            @PathParam("sid") final String sid,
+            @Context SecurityContext sec) {
+        return deleteIncomingPhoneNumber(accountSid,
+                sid,
+                ContextUtil.convert(sec));
     }
 
     @Path("/{sid}")
@@ -779,9 +832,13 @@ public abstract class IncomingPhoneNumbersEndpoint extends AbstractEndpoint {
     @Produces({MediaType.APPLICATION_XML, MediaType.APPLICATION_JSON})
     public Response getIncomingPhoneNumberAsXml(@PathParam("accountSid") final String accountSid,
             @PathParam("sid") final String sid,
-            @HeaderParam("Accept") String accept) {
+            @HeaderParam("Accept") String accept,
+            @Context SecurityContext sec) {
         MediaType acceptType = retrieveMediaType(accept);
-        return getIncomingPhoneNumber(accountSid, sid, acceptType);
+        return getIncomingPhoneNumber(accountSid,
+                sid,
+                acceptType,
+                ContextUtil.convert(sec));
     }
 
 
@@ -789,18 +846,26 @@ public abstract class IncomingPhoneNumbersEndpoint extends AbstractEndpoint {
     @GET
     @Produces({MediaType.APPLICATION_XML, MediaType.APPLICATION_JSON})
     public Response getAvailableCountriesAsXml(@PathParam("accountSid") final String accountSid,
-            @HeaderParam("Accept") String accept) {
+            @HeaderParam("Accept") String accept,
+            @Context SecurityContext sec) {
         MediaType acceptType = retrieveMediaType(accept);
-        return getAvailableCountries(accountSid, acceptType);
+        return getAvailableCountries(accountSid,
+                acceptType,
+                ContextUtil.convert(sec));
     }
 
     @GET
     @Produces({MediaType.APPLICATION_XML, MediaType.APPLICATION_JSON})
     public Response getIncomingPhoneNumbers(@PathParam("accountSid") final String accountSid,
             @Context UriInfo info,
-            @HeaderParam("Accept") String accept) {
+            @HeaderParam("Accept") String accept,
+            @Context SecurityContext sec) {
         MediaType acceptType = retrieveMediaType(accept);
-        return getIncomingPhoneNumbers(accountSid, PhoneNumberType.Global,info, acceptType);
+        return getIncomingPhoneNumbers(accountSid,
+                PhoneNumberType.Global,
+                info,
+                acceptType,
+                ContextUtil.convert(sec));
     }
 
     @POST
@@ -808,9 +873,14 @@ public abstract class IncomingPhoneNumbersEndpoint extends AbstractEndpoint {
     @Produces({MediaType.APPLICATION_XML, MediaType.APPLICATION_JSON})
     public Response putIncomingPhoneNumber(@PathParam("accountSid") final String accountSid,
             final MultivaluedMap<String, String> data,
-            @HeaderParam("Accept") String accept) {
+            @HeaderParam("Accept") String accept,
+            @Context SecurityContext sec) {
         MediaType acceptType = retrieveMediaType(accept);
-        return putIncomingPhoneNumber(accountSid, data, PhoneNumberType.Global, acceptType);
+        return putIncomingPhoneNumber(accountSid,
+                data,
+                PhoneNumberType.Global,
+                acceptType,
+                ContextUtil.convert(sec));
     }
 
     @Path("/{sid}")
@@ -819,9 +889,14 @@ public abstract class IncomingPhoneNumbersEndpoint extends AbstractEndpoint {
     public Response updateIncomingPhoneNumberAsXml(@PathParam("accountSid") final String accountSid,
             @PathParam("sid") final String sid,
             final MultivaluedMap<String, String> data,
-            @HeaderParam("Accept") String accept) {
+            @HeaderParam("Accept") String accept,
+            @Context SecurityContext sec) {
         MediaType acceptType = retrieveMediaType(accept);
-        return updateIncomingPhoneNumber(accountSid, sid, data, acceptType);
+        return updateIncomingPhoneNumber(accountSid,
+                sid,
+                data,
+                acceptType,
+                ContextUtil.convert(sec));
     }
 
     @Path("/{sid}")
@@ -830,9 +905,14 @@ public abstract class IncomingPhoneNumbersEndpoint extends AbstractEndpoint {
     public Response updateIncomingPhoneNumberAsXmlPost(@PathParam("accountSid") final String accountSid,
             @PathParam("sid") final String sid,
             final MultivaluedMap<String, String> data,
-            @HeaderParam("Accept") String accept) {
+            @HeaderParam("Accept") String accept,
+            @Context SecurityContext sec) {
         MediaType acceptType = retrieveMediaType(accept);
-        return updateIncomingPhoneNumber(accountSid, sid, data, acceptType);
+        return updateIncomingPhoneNumber(accountSid,
+                sid,
+                data,
+                acceptType,
+                ContextUtil.convert(sec));
     }
 
     // Local Numbers
@@ -842,9 +922,14 @@ public abstract class IncomingPhoneNumbersEndpoint extends AbstractEndpoint {
     @Produces({MediaType.APPLICATION_XML, MediaType.APPLICATION_JSON})
     public Response getIncomingLocalPhoneNumbersAsXml(@PathParam("accountSid") final String accountSid,
             @Context UriInfo info,
-            @HeaderParam("Accept") String accept) {
+            @HeaderParam("Accept") String accept,
+            @Context SecurityContext sec) {
         MediaType acceptType = retrieveMediaType(accept);
-        return getIncomingPhoneNumbers(accountSid,PhoneNumberType.Local,info, acceptType);
+        return getIncomingPhoneNumbers(accountSid,
+                PhoneNumberType.Local,
+                info,
+                acceptType,
+                ContextUtil.convert(sec));
     }
 
     @Path("/Local")
@@ -853,9 +938,14 @@ public abstract class IncomingPhoneNumbersEndpoint extends AbstractEndpoint {
     @Produces({MediaType.APPLICATION_XML, MediaType.APPLICATION_JSON})
     public Response putIncomingLocalPhoneNumberAsXml(@PathParam("accountSid") final String accountSid,
             final MultivaluedMap<String, String> data,
-            @HeaderParam("Accept") String accept) {
+            @HeaderParam("Accept") String accept,
+            @Context SecurityContext sec) {
         MediaType acceptType = retrieveMediaType(accept);
-        return putIncomingPhoneNumber(accountSid, data, PhoneNumberType.Local, acceptType);
+        return putIncomingPhoneNumber(accountSid,
+                data,
+                PhoneNumberType.Local,
+                acceptType,
+                ContextUtil.convert(sec));
     }
 
     // Toll Free Numbers
@@ -865,9 +955,14 @@ public abstract class IncomingPhoneNumbersEndpoint extends AbstractEndpoint {
     @Produces({MediaType.APPLICATION_XML, MediaType.APPLICATION_JSON})
     public Response getIncomingTollFreePhoneNumbersAsXml(@PathParam("accountSid") final String accountSid,
             @Context UriInfo info,
-            @HeaderParam("Accept") String accept) {
+            @HeaderParam("Accept") String accept,
+            @Context SecurityContext sec) {
         MediaType acceptType = retrieveMediaType(accept);
-        return getIncomingPhoneNumbers(accountSid,PhoneNumberType.TollFree,info, acceptType);
+        return getIncomingPhoneNumbers(accountSid,
+                PhoneNumberType.TollFree,
+                info,
+                acceptType,
+                ContextUtil.convert(sec));
     }
 
     @Path("/TollFree")
@@ -876,9 +971,14 @@ public abstract class IncomingPhoneNumbersEndpoint extends AbstractEndpoint {
     @Produces({MediaType.APPLICATION_XML, MediaType.APPLICATION_JSON})
     public Response putIncomingTollFreePhoneNumberAsXml(@PathParam("accountSid") final String accountSid,
             final MultivaluedMap<String, String> data,
-            @HeaderParam("Accept") String accept) {
+            @HeaderParam("Accept") String accept,
+            @Context SecurityContext sec) {
         MediaType acceptType = retrieveMediaType(accept);
-        return putIncomingPhoneNumber(accountSid, data, PhoneNumberType.TollFree, acceptType);
+        return putIncomingPhoneNumber(accountSid,
+                data,
+                PhoneNumberType.TollFree,
+                acceptType,
+                ContextUtil.convert(sec));
     }
 
     // Mobile Numbers
@@ -888,9 +988,14 @@ public abstract class IncomingPhoneNumbersEndpoint extends AbstractEndpoint {
     @Produces({MediaType.APPLICATION_XML, MediaType.APPLICATION_JSON})
     public Response getIncomingMobilePhoneNumbersAsXml(@PathParam("accountSid") final String accountSid,
             @Context UriInfo info,
-            @HeaderParam("Accept") String accept) {
+            @HeaderParam("Accept") String accept,
+            @Context SecurityContext sec) {
         MediaType acceptType = retrieveMediaType(accept);
-        return getIncomingPhoneNumbers(accountSid,PhoneNumberType.Mobile,info, acceptType);
+        return getIncomingPhoneNumbers(accountSid,
+                PhoneNumberType.Mobile,
+                info,
+                acceptType,
+                ContextUtil.convert(sec));
     }
 
     @Path("/Mobile")
@@ -899,9 +1004,13 @@ public abstract class IncomingPhoneNumbersEndpoint extends AbstractEndpoint {
     @Produces({MediaType.APPLICATION_XML, MediaType.APPLICATION_JSON})
     public Response putIncomingMobilePhoneNumberAsXml(@PathParam("accountSid") final String accountSid,
             final MultivaluedMap<String, String> data,
-            @HeaderParam("Accept") String accept) {
+            @HeaderParam("Accept") String accept,
+            @Context SecurityContext sec) {
         MediaType acceptType = retrieveMediaType(accept);
-        return putIncomingPhoneNumber(accountSid, data, PhoneNumberType.Mobile, acceptType);
+        return putIncomingPhoneNumber(accountSid, data,
+                PhoneNumberType.Mobile,
+                acceptType,
+                ContextUtil.convert(sec));
     }
 
 
@@ -911,8 +1020,11 @@ public abstract class IncomingPhoneNumbersEndpoint extends AbstractEndpoint {
     @Produces({MediaType.APPLICATION_XML, MediaType.APPLICATION_JSON})
     public Response migrateIncomingPhoneNumbersAsXml(@PathParam("accountSid") final String accountSid,
             final MultivaluedMap<String, String> data,
-            @HeaderParam("Accept") String accept) {
+            @HeaderParam("Accept") String accept,
+            @Context SecurityContext sec) {
         MediaType acceptType = retrieveMediaType(accept);
-        return migrateIncomingPhoneNumbers(accountSid, data, acceptType);
+        return migrateIncomingPhoneNumbers(accountSid, data,
+                acceptType,
+                ContextUtil.convert(sec));
     }
 }
