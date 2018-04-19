@@ -28,6 +28,7 @@ import java.util.List;
 import java.util.regex.Pattern;
 import javax.annotation.PostConstruct;
 import javax.annotation.security.RolesAllowed;
+import javax.inject.Inject;
 import javax.servlet.ServletContext;
 import javax.servlet.http.HttpServletRequest;
 import javax.ws.rs.GET;
@@ -50,11 +51,13 @@ import static javax.ws.rs.core.Response.Status.INTERNAL_SERVER_ERROR;
 import static javax.ws.rs.core.Response.Status.NOT_FOUND;
 import static javax.ws.rs.core.Response.ok;
 import static javax.ws.rs.core.Response.status;
+import javax.ws.rs.core.SecurityContext;
 import javax.ws.rs.core.UriInfo;
 import org.apache.commons.configuration.Configuration;
 import org.joda.time.DateTime;
 import org.restcomm.connect.commons.annotations.concurrency.ThreadSafe;
 import org.restcomm.connect.commons.dao.Sid;
+import org.restcomm.connect.core.service.api.ProfileService;
 import org.restcomm.connect.dao.entities.Organization;
 import org.restcomm.connect.dao.entities.OrganizationList;
 import org.restcomm.connect.dao.entities.Profile;
@@ -68,6 +71,9 @@ import org.restcomm.connect.http.converter.OrganizationListConverter;
 import org.restcomm.connect.http.converter.RestCommResponseConverter;
 import static org.restcomm.connect.http.security.AccountPrincipal.ADMIN_ROLE;
 import static org.restcomm.connect.http.security.AccountPrincipal.SUPER_ADMIN_ROLE;
+import org.restcomm.connect.http.security.ContextUtil;
+import org.restcomm.connect.http.security.PermissionEvaluator;
+import org.restcomm.connect.identity.UserIdentityContext;
 
 /**
  * @author maria.farooq@telestax.com (Maria Farooq)
@@ -77,26 +83,26 @@ import static org.restcomm.connect.http.security.AccountPrincipal.SUPER_ADMIN_RO
 @RolesAllowed(SUPER_ADMIN_ROLE)
 public class OrganizationsEndpoint extends AbstractEndpoint {
     @Context
-    protected ServletContext context;
-    protected DnsProvisioningManager dnsProvisioningManager;
-    protected Gson gson;
-    protected XStream xstream;
-    protected final String MSG_EMPTY_DOMAIN_NAME = "domain name can not be empty. Please, choose a valid name and try again.";
-    protected final String MSG_INVALID_DOMAIN_NAME_PATTERN= "Total Length of domain_name can be upto 255 Characters. It can contain only letters, number and hyphen - sign.. Please, choose a valid name and try again.";
-    protected final String MSG_DOMAIN_NAME_NOT_AVAILABLE = "This domain name is not available. Please, choose a different name and try again.";
-    protected String SUB_DOMAIN_NAME_VALIDATION_PATTERN="[A-Za-z0-9\\-]{1,255}";
-    protected Pattern pattern;
+    private ServletContext context;
+    private DnsProvisioningManager dnsProvisioningManager;
+    private Gson gson;
+    private XStream xstream;
+    private final String MSG_EMPTY_DOMAIN_NAME = "domain name can not be empty. Please, choose a valid name and try again.";
+    private final String MSG_INVALID_DOMAIN_NAME_PATTERN= "Total Length of domain_name can be upto 255 Characters. It can contain only letters, number and hyphen - sign.. Please, choose a valid name and try again.";
+    private final String MSG_DOMAIN_NAME_NOT_AVAILABLE = "This domain name is not available. Please, choose a different name and try again.";
+    private final String SUB_DOMAIN_NAME_VALIDATION_PATTERN="[A-Za-z0-9\\-]{1,255}";
+    private Pattern pattern;
+    private ProfileService profileService;
 
-    protected OrganizationListConverter listConverter;
+    @Inject
+    private PermissionEvaluator permissionEvaluator;
+
+    private OrganizationListConverter listConverter;
 
     public OrganizationsEndpoint() {
         super();
     }
 
-    // used for testing
-    public OrganizationsEndpoint(ServletContext context, HttpServletRequest request) {
-        super(context, request);
-    }
 
     @PostConstruct
     void init() {
@@ -113,6 +119,7 @@ public class OrganizationsEndpoint extends AbstractEndpoint {
             logger.error("Unable to get dnsProvisioningManager", e);
         }
         pattern = Pattern.compile(SUB_DOMAIN_NAME_VALIDATION_PATTERN);
+        profileService = (ProfileService)context.getAttribute(ProfileService.class.getName());
     }
 
     private void registerConverters(){
@@ -135,10 +142,13 @@ public class OrganizationsEndpoint extends AbstractEndpoint {
      * @param responseType
      * @return
      */
-    protected Response getOrganization(final String organizationSid, final MediaType responseType,
-             UriInfo info) {
+    protected Response getOrganization(final String organizationSid,
+            final MediaType responseType,
+             UriInfo info,
+             UserIdentityContext userIdentityContext) {
         //First check if the account has the required permissions in general, this way we can fail fast and avoid expensive DAO operations
-        checkPermission("RestComm:Read:Organizations");
+        permissionEvaluator.checkPermission("RestComm:Read:Organizations",
+                userIdentityContext);
         Organization organization = null;
 
         if (!Sid.pattern.matcher(organizationSid).matches()) {
@@ -146,7 +156,7 @@ public class OrganizationsEndpoint extends AbstractEndpoint {
         } else {
             try {
                 //if account is not super admin then allow to read only affiliated organization
-                if (!isSuperAdmin()) {
+                if (!permissionEvaluator.isSuperAdmin(userIdentityContext)) {
                     if (userIdentityContext.getEffectiveAccount().getOrganizationSid().equals(new Sid(organizationSid))) {
                         organization = organizationsDao.getOrganization(new Sid(organizationSid));
                     } else {
@@ -287,8 +297,12 @@ public class OrganizationsEndpoint extends AbstractEndpoint {
     @RolesAllowed({SUPER_ADMIN_ROLE, ADMIN_ROLE})
     public Response getOrganizationAsXml(@PathParam("organizationSid") final String organizationSid,
             @Context UriInfo info,
-            @HeaderParam("Accept") String accept) {
-        return getOrganization(organizationSid, retrieveMediaType(accept), info);
+            @HeaderParam("Accept") String accept,
+            @Context SecurityContext sec) {
+        return getOrganization(organizationSid,
+                retrieveMediaType(accept),
+                info,
+                ContextUtil.convert(sec));
     }
 
     @GET
