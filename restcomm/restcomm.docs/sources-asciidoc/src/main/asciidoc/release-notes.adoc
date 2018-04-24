@@ -29,12 +29,16 @@ The folowing tags are used to categorize and state the scope of a change
 * Configurable inbound/outbound SMPP encoding
 * Race condition on sending BYE to incoming call for a dial fork scenario
 * Fixed SDR event for SMS - **commercial**
+* Fixed REFER (Call Transfer) support to work with organizations
 
 
 === Migration Notes
 // Things to consider during migration from previous release
 * Clients password are considered to be MD5 hashed in DB. Database migration
 scripts are available in **commercial** version. Database migration script will ensure existing clients passwords are properly migrated.
+** Database migration script will automatically take a backup of complete database before making any changes
+** Please take a backup of restcomm clients table (to be used in case we need to rollback as explained below)
+** In case of rollback to older version, kindly restore restcomm clients table only.
 
 === External Dependencies Updates
 // any dependencies
@@ -43,11 +47,11 @@ scripts are available in **commercial** version. Database migration script will 
 ** Updated Console Look & Feel to match new Restcomm branding
 ** Implemented new Sign In page in Console
 ** Use Designer location in Console from configuration file
-* Designer updated to version **__1.2.0-131__**
+* Designer updated to version **__1.2.0-139__**
 ** Integrated Feature Access Control (FAC) limitations
 ** Improved Designer performance with better xstream usage
 ** Designer Look & Feel to match new Restcomm branding
-* Olympus WebRTC Demo updated to version **__1.1.0-167__**
+* Olympus WebRTC Demo updated to version **__1.1.0-176__**
 ** Fixed an issue in WebRTC Demo jain-sip library, parsing some headers
 ** Improve WebRTC Demo UX by showing incoming call screen on top even if caller is not the selected contact
 ** Add additional configuration to WebRTC Demo for specifying client-specific parameters

@@ -26,6 +26,8 @@ import static javax.ws.rs.core.MediaType.APPLICATION_XML;
 import static javax.ws.rs.core.MediaType.APPLICATION_XML_TYPE;
 import javax.ws.rs.core.MultivaluedMap;
 import javax.ws.rs.core.Response;
+import javax.ws.rs.core.SecurityContext;
+
 import static javax.ws.rs.core.Response.Status.BAD_REQUEST;
 import static javax.ws.rs.core.Response.Status.NOT_FOUND;
 import static javax.ws.rs.core.Response.ok;
@@ -41,6 +43,8 @@ import org.restcomm.connect.dao.entities.RestCommResponse;
 import org.restcomm.connect.http.converter.GatewayConverter;
 import org.restcomm.connect.http.converter.GatewayListConverter;
 import org.restcomm.connect.http.converter.RestCommResponseConverter;
+import org.restcomm.connect.http.security.ContextUtil;
+
 import static org.restcomm.connect.http.security.AccountPrincipal.SUPER_ADMIN_ROLE;
 import org.restcomm.connect.identity.UserIdentityContext;
 import org.restcomm.connect.telephony.api.RegisterGateway;
@@ -226,8 +230,8 @@ public class GatewaysEndpoint extends AbstractEndpoint {
     @DELETE
     public Response deleteGatewayAsXml(@PathParam("accountSid") final String accountSid,
             @PathParam("sid") final String sid,
-            UserIdentityContext userIdentityContext) {
-        return deleteGateway(accountSid, sid,userIdentityContext);
+            @Context SecurityContext sec) {
+        return deleteGateway(accountSid, sid,ContextUtil.convert(sec));
     }
 
     @Path("/{sid}")

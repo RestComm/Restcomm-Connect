@@ -26,6 +26,7 @@ import org.restcomm.connect.commons.util.DigestAuthentication;
 import java.util.HashMap;
 import java.util.Map;
 
+import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
 
 public class DigestAuthenticationTest {
@@ -33,18 +34,13 @@ public class DigestAuthenticationTest {
     private String client = "alice0000000";
     private String domain = "org0000000.restcomm.com";
     private String password = "1234";
-    private String proxyAuthHeader = "Digest username=\"alice0000000\"," +
-            "realm=\"org0000000.restcomm.com\"," +
-            "cnonce=\"6b8b4567\"," +
-            "nc=00000001," +
-            "qop=auth,uri=\"sip:172.31.44.214:5080\"," +
-            "nonce=\"39656532346436332d633335612d346\"," +
-            "response=\"00e135e06e2474d1d0318fb66a2bc473\"," +
-            "algorithm=MD5\n";
+    private String proxyAuthHeader = "Digest username=\"alice0000000\",realm=\"org0000000.restcomm.com\",cnonce=\"6b8b4567\",nc=00000001,qop=auth,uri=\"sip:172.31.45.30:5080\",nonce=\"61343361383534392d633237372d343\",response=\"bc322276e42a123c53c2ed6f53d5e7c7\",algorithm=MD5";
 
     @Test
     public void testAuth(){
         String hashedPass = DigestAuthentication.HA1(client, domain, password, "MD5");
+
+        assertEquals("9b11a2924d0881aca84f9db97f834d99", hashedPass);
 
         assertTrue(permitted(proxyAuthHeader, "INVITE", hashedPass));
 
