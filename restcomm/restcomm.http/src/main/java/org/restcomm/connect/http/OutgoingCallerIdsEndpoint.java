@@ -76,15 +76,13 @@ import org.restcomm.connect.identity.UserIdentityContext;
 @ThreadSafe
 @Singleton
 public class OutgoingCallerIdsEndpoint extends AbstractEndpoint {
+
     @Context
     private ServletContext context;
     private Configuration configuration;
     private OutgoingCallerIdsDao dao;
     private Gson gson;
     private XStream xstream;
-
-
-
 
     public OutgoingCallerIdsEndpoint() {
         super();
@@ -263,8 +261,8 @@ public class OutgoingCallerIdsEndpoint extends AbstractEndpoint {
     @DELETE
     public Response deleteOutgoingCallerIdAsXml(@PathParam("accountSid") String accountSid,
             @PathParam("sid") String sid,
-            UserIdentityContext userIdentityContext) {
-        return deleteOutgoingCallerId(accountSid, sid, userIdentityContext);
+            @Context SecurityContext sec) {
+        return deleteOutgoingCallerId(accountSid, sid, ContextUtil.convert(sec));
     }
 
     @Path("/{sid}")
