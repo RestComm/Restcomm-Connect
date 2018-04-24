@@ -1244,7 +1244,7 @@ public class VoiceInterpreter extends BaseVoiceInterpreter {
             case RINGING:
                 break;
             case CANCELED:
-                if (is(initializingBridge) || is(acquiringOutboundCallInfo) || is(bridging) || is(bridged)) {
+                if (is(creatingBridge) || is(initializingBridge) || is(acquiringOutboundCallInfo) || is(bridging) || is(bridged)) {
                     //This is a canceled branch from a previous forking call. We need to destroy the branch
 //                    removeDialBranch(message, sender);
                     callManager.tell(new DestroyCall(sender), self());
