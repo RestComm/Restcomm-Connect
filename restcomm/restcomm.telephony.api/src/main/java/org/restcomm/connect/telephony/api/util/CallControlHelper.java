@@ -31,6 +31,7 @@ import javax.servlet.sip.SipServletRequest;
 import javax.servlet.sip.SipServletResponse;
 import javax.servlet.sip.SipURI;
 
+import org.apache.log4j.Logger;
 import org.restcomm.connect.dao.ClientsDao;
 import org.restcomm.connect.dao.DaoManager;
 import org.restcomm.connect.dao.entities.Client;
@@ -47,6 +48,7 @@ import org.restcomm.connect.commons.util.DigestAuthentication;
  *
  */
 public class CallControlHelper {
+    private static Logger logger = Logger.getLogger(CallControlHelper.class);
 
     static boolean permitted(final String authorization, final String method, DaoManager daoManager, final Sid organizationSid) {
         final Map<String, String> map = authHeaderToMap(authorization);
@@ -66,8 +68,16 @@ public class CallControlHelper {
             final String password2 = client.getPassword();
             final String result = DigestAuthentication.response(algorithm, user, realm, "", password2, nonce, nc, cnonce,
                     method, uri, null, qop);
+            if (logger.isDebugEnabled()) {
+                String msg = String.format("Provided response [%s], generated response [%s]", response, result);
+                logger.debug(msg);
+            }
             return result.equals(response);
         } else {
+            if (logger.isDebugEnabled()) {
+                String msg = String.format("Authorization check failed, [if(client==null) evaluates %s] or [if(client.getStatus()==Client.ENABLED) evaluates %s]", client!=null, Client.ENABLED == client.getStatus());
+                logger.debug(msg);
+            }
             return false;
         }
     }
@@ -85,6 +95,10 @@ public class CallControlHelper {
         final String authorization = request.getHeader("Proxy-Authorization");
         final String method = request.getMethod();
         if (authorization == null || !CallControlHelper.permitted(authorization, method, storage, organizationSid)) {
+            if (logger.isDebugEnabled()) {
+                String msg = String.format("Either authorization header is null [if(authorization==null) evaluates %s], or CallControlHelper.permitted() method failed, will send \"407 Proxy Authentication required\"", authorization==null);
+                logger.debug(msg);
+            }
             authenticate(request, storage.getOrganizationsDao().getOrganization(organizationSid).getDomainName());
             return false;
         } else {
