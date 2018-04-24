@@ -4,13 +4,13 @@ import org.restcomm.connect.commons.dao.Sid;
 import org.restcomm.connect.dao.AccountsDao;
 import org.restcomm.connect.dao.ClientsDao;
 import org.restcomm.connect.dao.DaoManager;
-import org.restcomm.connect.dao.ExtensionsConfigurationDao;
+import org.restcomm.connect.dao.ExtensionsRulesDao;
 import org.restcomm.connect.dao.OrganizationsDao;
 import org.restcomm.connect.dao.entities.Account;
 import org.restcomm.connect.dao.entities.Client;
 import org.restcomm.connect.dao.entities.Organization;
 import org.restcomm.connect.extension.api.ApiRequest;
-import org.restcomm.connect.extension.api.ExtensionConfiguration;
+import org.restcomm.connect.extension.api.ExtensionRules;
 import org.restcomm.connect.extension.api.ExtensionResponse;
 import org.restcomm.connect.extension.api.ExtensionType;
 import org.restcomm.connect.extension.api.ExtensionContext;
@@ -310,8 +310,8 @@ public class ExtensionController implements ExtensionContext{
     }
 
     @Override
-    public ExtensionConfiguration getEffectiveConfiguration(String extensionSid, String scopeSid) {
-        ExtensionsConfigurationDao ecd = daoManager.getExtensionsConfigurationDao();
+    public ExtensionRules getEffectiveExtensionRules (String extensionSid, String scopeSid) {
+        ExtensionsRulesDao erd = daoManager.getExtensionsRulesDao();
         ClientsDao cd = daoManager.getClientsDao();
         AccountsDao ad = daoManager.getAccountsDao();
         OrganizationsDao od = daoManager.getOrganizationsDao();
@@ -336,24 +336,24 @@ public class ExtensionController implements ExtensionContext{
 
         //FIXME: might not be optimized
         //preliminary check for all scopes: client, acc, org
-        ExtensionConfiguration extCfg = ecd.getAccountExtensionConfiguration(scopeSid, extensionSid);
+        ExtensionRules extRules = erd.getAccountExtensionRules(scopeSid, extensionSid);
 
         //the scopeSid was a client
-        if(client!= null && extCfg==null) {
+        if(client!= null && extRules==null) {
             account = ad.getAccount(client.getAccountSid());
         }
 
         //the scopeSid was an account
-        if(account!=null && extCfg==null) {
-            extCfg = ecd.getAccountExtensionConfiguration(account.getSid().toString(), extensionSid);
-            if(extCfg==null) {
+        if(account!=null && extRules==null) {
+            extRules = erd.getAccountExtensionRules(account.getSid().toString(), extensionSid);
+            if(extRules==null) {
                 List<String> lineage = ad.getAccountLineage(sid);
                 for(String currSid : lineage) {
                     if(logger.isInfoEnabled()) {
                         logger.info("checking "+ currSid);
                     }
-                    extCfg = ecd.getAccountExtensionConfiguration(currSid, extensionSid);
-                    if(extCfg != null) {
+                    extRules = erd.getAccountExtensionRules(currSid, extensionSid);
+                    if(extRules != null) {
                         break;
                     }
                 }
@@ -362,19 +362,19 @@ public class ExtensionController implements ExtensionContext{
         }
 
         //the scopeSid was an org
-        if(organization!= null && extCfg==null) {
+        if(organization!= null && extRules==null) {
             //it is assumed that lineage will always have identical org, so we only check the originating account
-            extCfg = ecd.getAccountExtensionConfiguration(organization.getSid().toString(), extensionSid);
+            extRules = erd.getAccountExtensionRules(organization.getSid().toString(), extensionSid);
             if(logger.isInfoEnabled()) {
                 logger.info("checking "+ account.getOrganizationSid().toString());
             }
         }
 
         //check default
-        if(extCfg==null) {
+        if(extRules==null) {
             //if no account specific entry is defined, we use the extension config
-            extCfg = ecd.getConfigurationBySid(new Sid(extensionSid));
+            extRules = erd.getExtensionRulesBySid(new Sid(extensionSid));
         }
-        return extCfg;
+        return extRules;
     }
 }

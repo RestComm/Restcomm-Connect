@@ -20,7 +20,6 @@
 
 package org.restcomm.connect.extension.mock;
 
-import java.util.Calendar;
 import javax.servlet.ServletContext;
 import org.joda.time.DateTime;
 import org.junit.Assert;
@@ -29,10 +28,10 @@ import org.mockito.Mockito;
 import static org.mockito.Mockito.when;
 import org.restcomm.connect.commons.dao.Sid;
 import org.restcomm.connect.dao.DaoManager;
-import org.restcomm.connect.dao.ExtensionsConfigurationDao;
+import org.restcomm.connect.dao.ExtensionsRulesDao;
 import org.restcomm.connect.extension.api.ApiRequest;
-import org.restcomm.connect.extension.api.ExtensionConfiguration;
-import static org.restcomm.connect.extension.api.ExtensionConfiguration.configurationType.JSON;
+import org.restcomm.connect.extension.api.ExtensionRules;
+import static org.restcomm.connect.extension.api.ExtensionRules.configurationType.JSON;
 import org.restcomm.connect.extension.api.ExtensionRequest;
 import org.restcomm.connect.extension.api.ExtensionResponse;
 
@@ -51,22 +50,22 @@ public class DBExtensionMockTest {
 
         ServletContext sCtx = Mockito.mock(ServletContext.class);
         DaoManager daoMng = Mockito.mock(DaoManager.class);
-        ExtensionsConfigurationDao extDao = Mockito.mock(ExtensionsConfigurationDao.class);
+        ExtensionsRulesDao extDao = Mockito.mock(ExtensionsRulesDao.class);
 
 
         public ExtensionCollaborators(String confJson) {
             when(sCtx.getAttribute(DaoManager.class.getName())).
                     thenReturn(daoMng);
-            when(daoMng.getExtensionsConfigurationDao()).
+            when(daoMng.getExtensionsRulesDao()).
                     thenReturn(extDao);
-            ExtensionConfiguration extConf = new ExtensionConfiguration(Sid.
+            ExtensionRules extConf = new ExtensionRules(Sid.
                     generate(Sid.Type.EXTENSION_CONFIGURATION),
                     "simple_db",
                     true,
                     confJson,
                     JSON,
                     new DateTime(),new DateTime());
-            when(extDao.getConfigurationByName("simple_db")).thenReturn(null);
+            when(extDao.getExtensionRulesByName("simple_db")).thenReturn(null);
         }
     }
 

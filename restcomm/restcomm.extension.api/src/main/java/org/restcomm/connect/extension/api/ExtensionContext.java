@@ -21,5 +21,5 @@
 package org.restcomm.connect.extension.api;
 
 public interface ExtensionContext {
-    ExtensionConfiguration getEffectiveConfiguration(String extensionSid, String scopeSid);
+    ExtensionRules getEffectiveExtensionRules (String extensionSid, String scopeSid);
 }
