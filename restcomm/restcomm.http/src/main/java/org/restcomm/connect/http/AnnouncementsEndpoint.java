@@ -18,7 +18,6 @@ import javax.annotation.PreDestroy;
 import javax.servlet.ServletContext;
 import javax.ws.rs.HeaderParam;
 import javax.ws.rs.POST;
-import javax.ws.rs.Path;
 import javax.ws.rs.PathParam;
 import javax.ws.rs.Produces;
 import javax.ws.rs.core.Context;
@@ -53,10 +52,12 @@ import scala.concurrent.Future;
 import scala.concurrent.duration.Duration;
 
 /**
+ * requested by specific customer,no longer used
  * @author <a href="mailto:gvagenas@gmail.com">George Vagenas</a>
  */
-@Path("/Accounts/{accountSid}/Announcements")
+//@Path("/Accounts/{accountSid}/Announcements")
 @ThreadSafe
+@Deprecated()
 public class AnnouncementsEndpoint extends AbstractEndpoint {
     private static Logger logger = Logger.getLogger(AnnouncementsEndpoint.class);
 
