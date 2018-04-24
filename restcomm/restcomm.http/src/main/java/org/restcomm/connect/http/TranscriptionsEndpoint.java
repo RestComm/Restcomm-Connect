@@ -237,17 +237,17 @@ public class TranscriptionsEndpoint extends AbstractEndpoint {
     @DELETE
     public Response deleteTranscription(@PathParam("accountSid") String accountSid,
             @PathParam("sid") String sid,
-            UserIdentityContext userIdentityContext) {
+            @Context SecurityContext sec) {
         Account operatedAccount = super.accountsDao.getAccount(accountSid);
         permissionEvaluator.secure(operatedAccount,
                 "RestComm:Delete:Transcriptions",
-                userIdentityContext);
+                ContextUtil.convert(sec));
         Transcription transcription = dao.getTranscription(new Sid(sid));
         if (transcription != null) {
             permissionEvaluator.secure(operatedAccount,
                     String.valueOf(transcription.getAccountSid()),
                     SecuredType.SECURED_STANDARD,
-                    userIdentityContext);
+                    ContextUtil.convert(sec));
         }
         // TODO return NOT_FOUND if transcrtiption==null
         dao.removeTranscription(new Sid(sid));
