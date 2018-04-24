@@ -26,7 +26,7 @@ import org.junit.Test;
 import org.mockito.Mockito;
 import static org.mockito.Mockito.when;
 import org.restcomm.connect.dao.DaoManager;
-import org.restcomm.connect.dao.ExtensionsConfigurationDao;
+import org.restcomm.connect.dao.ExtensionsRulesDao;
 import org.restcomm.connect.extension.api.ApiRequest;
 import org.restcomm.connect.extension.api.ExtensionRequest;
 import org.restcomm.connect.extension.api.ExtensionResponse;
@@ -45,15 +45,15 @@ public class AllowingExtensionMockTest {
 
         ServletContext sCtx = Mockito.mock(ServletContext.class);
         DaoManager daoMng = Mockito.mock(DaoManager.class);
-        ExtensionsConfigurationDao extDao = Mockito.mock(ExtensionsConfigurationDao.class);
+        ExtensionsRulesDao extDao = Mockito.mock(ExtensionsRulesDao.class);
 
 
         public ExtensionCollaborators() {
             when(sCtx.getAttribute(DaoManager.class.getName())).
                     thenReturn(daoMng);
-            when(daoMng.getExtensionsConfigurationDao()).
+            when(daoMng.getExtensionsRulesDao()).
                     thenReturn(extDao);
-            when(extDao.getConfigurationByName("allowing")).thenReturn(null);
+            when(extDao.getExtensionRulesByName("allowing")).thenReturn(null);
         }
     }
 
@@ -68,7 +68,7 @@ public class AllowingExtensionMockTest {
         Assert.assertTrue(response.isAllowed());
         response = extension.postInboundAction(far);
         Assert.assertTrue(response.isAllowed());
-        
+
         response = extension.preOutboundAction(far);
         Assert.assertTrue(response.isAllowed());
         response = extension.postOutboundAction(far);

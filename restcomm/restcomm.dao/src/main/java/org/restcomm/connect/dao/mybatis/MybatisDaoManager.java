@@ -37,7 +37,7 @@ import org.restcomm.connect.dao.CallDetailRecordsDao;
 import org.restcomm.connect.dao.ClientsDao;
 import org.restcomm.connect.dao.ConferenceDetailRecordsDao;
 import org.restcomm.connect.dao.DaoManager;
-import org.restcomm.connect.dao.ExtensionsConfigurationDao;
+import org.restcomm.connect.dao.ExtensionsRulesDao;
 import org.restcomm.connect.dao.GatewaysDao;
 import org.restcomm.connect.dao.GeolocationDao;
 import org.restcomm.connect.dao.HttpCookiesDao;
@@ -90,7 +90,7 @@ public final class MybatisDaoManager implements DaoManager {
     private InstanceIdDao instanceIdDao;
     private MediaServersDao mediaServersDao;
     private MediaResourceBrokerDao mediaResourceBrokerDao;
-    private ExtensionsConfigurationDao extensionsConfigurationDao;
+    private ExtensionsRulesDao extensionsRulesDao;
     private GeolocationDao geolocationDao;
     private ProfileAssociationsDao profileAssociationsDao;
     private OrganizationsDao organizationsDao;
@@ -216,8 +216,8 @@ public final class MybatisDaoManager implements DaoManager {
     }
 
     @Override
-    public ExtensionsConfigurationDao getExtensionsConfigurationDao() {
-        return extensionsConfigurationDao;
+    public ExtensionsRulesDao getExtensionsRulesDao () {
+        return extensionsRulesDao;
     }
 
     @Override
@@ -311,7 +311,7 @@ public final class MybatisDaoManager implements DaoManager {
         instanceIdDao = new MybatisInstanceIdDao(sessions);
         mediaServersDao = new MybatisMediaServerDao(sessions);
         mediaResourceBrokerDao = new MybatisMediaResourceBrokerDao(sessions);
-        extensionsConfigurationDao = new MybatisExtensionsConfigurationDao(sessions);
+        extensionsRulesDao = new MybatisExtensionsRulesDao(sessions);
         geolocationDao = new MybatisGeolocationDao(sessions);
         profileAssociationsDao = new MybatisProfileAssociationsDao(sessions);
         organizationsDao = new MybatisOrganizationDao(sessions);

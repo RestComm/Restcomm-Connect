@@ -27,7 +27,7 @@ import com.thoughtworks.xstream.io.HierarchicalStreamWriter;
 import org.apache.commons.configuration.Configuration;
 import org.restcomm.connect.commons.annotations.concurrency.ThreadSafe;
 import org.restcomm.connect.commons.util.StringUtils;
-import org.restcomm.connect.extension.api.ExtensionConfiguration;
+import org.restcomm.connect.extension.api.ExtensionRules;
 
 import java.lang.reflect.Type;
 
@@ -35,7 +35,7 @@ import java.lang.reflect.Type;
  * @author gvagenas@gmail.com
  */
 @ThreadSafe
-public final class ExtensionConfigurationConverter extends AbstractConverter implements JsonSerializer<ExtensionConfiguration> {
+public final class ExtensionConfigurationConverter extends AbstractConverter implements JsonSerializer<ExtensionRules> {
     private final String apiVersion;
     private final String rootUri;
 
@@ -48,37 +48,37 @@ public final class ExtensionConfigurationConverter extends AbstractConverter imp
     @SuppressWarnings("rawtypes")
     @Override
     public boolean canConvert(final Class klass) {
-        return ExtensionConfiguration.class.equals(klass);
+        return ExtensionRules.class.equals(klass);
     }
 
     @Override
     public void marshal(final Object object, final HierarchicalStreamWriter writer, final MarshallingContext context) {
-        final ExtensionConfiguration extensionConfiguration = (ExtensionConfiguration) object;
-        writer.startNode("ExtensionConfiguration");
-        writeSid(extensionConfiguration.getSid(),writer);
+        final ExtensionRules extensionRules = (ExtensionRules) object;
+        writer.startNode("ExtensionRules");
+        writeSid(extensionRules.getSid(),writer);
         writer.startNode("Extension");
-        writer.setValue(extensionConfiguration.getExtensionName());
+        writer.setValue(extensionRules.getExtensionName());
         writer.endNode();
         writer.startNode("Configuration");
-        writer.setValue(extensionConfiguration.getConfigurationData().toString());
+        writer.setValue(extensionRules.getConfigurationData().toString());
         writer.endNode();
         writer.startNode("Configuration Type");
-        writer.setValue(extensionConfiguration.getConfigurationType().name());
+        writer.setValue(extensionRules.getConfigurationType().name());
         writer.endNode();
-        writeDateCreated(extensionConfiguration.getDateCreated(),writer);
-        writeDateCreated(extensionConfiguration.getDateUpdated(), writer);
+        writeDateCreated(extensionRules.getDateCreated(),writer);
+        writeDateCreated(extensionRules.getDateUpdated(), writer);
         writer.endNode();
     }
 
     @Override
-    public JsonElement serialize(final ExtensionConfiguration extensionConfiguration, final Type type, final JsonSerializationContext context) {
+    public JsonElement serialize(final ExtensionRules extensionRules, final Type type, final JsonSerializationContext context) {
         final JsonObject object = new JsonObject();
-        writeSid(extensionConfiguration.getSid(), object);
-        object.addProperty("extension", extensionConfiguration.getExtensionName());
-        object.addProperty("configuration", extensionConfiguration.getConfigurationData().toString());
-        object.addProperty("configuration type", extensionConfiguration.getConfigurationType().name());
-        writeDateCreated(extensionConfiguration.getDateCreated(), object);
-        writeDateUpdated(extensionConfiguration.getDateUpdated(), object);
+        writeSid(extensionRules.getSid(), object);
+        object.addProperty("extension", extensionRules.getExtensionName());
+        object.addProperty("configuration", extensionRules.getConfigurationData().toString());
+        object.addProperty("configuration type", extensionRules.getConfigurationType().name());
+        writeDateCreated(extensionRules.getDateCreated(), object);
+        writeDateUpdated(extensionRules.getDateUpdated(), object);
         return object;
     }
 }

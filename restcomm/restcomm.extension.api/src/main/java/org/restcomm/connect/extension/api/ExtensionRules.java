@@ -25,7 +25,7 @@ import org.restcomm.connect.commons.dao.Sid;
 /**
  * Created by gvagenas on 12/10/2016.
  */
-public class ExtensionConfiguration {
+public class ExtensionRules {
     public enum configurationType {
         XML, JSON
     }
@@ -37,8 +37,8 @@ public class ExtensionConfiguration {
     private DateTime dateCreated;
     private DateTime dateUpdated;
 
-    public ExtensionConfiguration(Sid sid, String extensionName, boolean enabled, Object configurationData,
-                                  configurationType configurationType, DateTime dateCreated, DateTime dateUpdated) {
+    public ExtensionRules (Sid sid, String extensionName, boolean enabled, Object configurationData,
+                           configurationType configurationType, DateTime dateCreated, DateTime dateUpdated) {
         this.sid = sid;
         this.extensionName = extensionName;
         this.enabled = enabled;
@@ -48,8 +48,8 @@ public class ExtensionConfiguration {
         this.dateUpdated = dateUpdated;
     }
 
-    public ExtensionConfiguration(Sid sid, String extensionName, boolean enabled, Object configurationData,
-                                  configurationType configurationType, DateTime dateCreated) {
+    public ExtensionRules (Sid sid, String extensionName, boolean enabled, Object configurationData,
+                           configurationType configurationType, DateTime dateCreated) {
         this(sid, extensionName, enabled, configurationData, configurationType, dateCreated, DateTime.now());
     }
 

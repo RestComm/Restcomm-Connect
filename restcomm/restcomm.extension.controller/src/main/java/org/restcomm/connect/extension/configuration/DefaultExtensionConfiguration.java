@@ -32,9 +32,9 @@ import org.apache.maven.artifact.versioning.DefaultArtifactVersion;
 import org.joda.time.DateTime;
 import org.restcomm.connect.commons.dao.Sid;
 import org.restcomm.connect.dao.DaoManager;
-import org.restcomm.connect.dao.ExtensionsConfigurationDao;
+import org.restcomm.connect.dao.ExtensionsRulesDao;
 import org.restcomm.connect.extension.api.ConfigurationException;
-import org.restcomm.connect.extension.api.ExtensionConfiguration;
+import org.restcomm.connect.extension.api.ExtensionRules;
 
 import com.google.gson.Gson;
 import com.google.gson.JsonArray;
@@ -55,8 +55,8 @@ public class DefaultExtensionConfiguration {
 
     private static final Logger logger = Logger.getLogger(DefaultExtensionConfiguration.class);
     private boolean workingWithLocalConf;
-    private ExtensionsConfigurationDao extensionConfigurationDao;
-    private ExtensionConfiguration extensionConfiguration;
+    private ExtensionsRulesDao extensionsRulesDao;
+    private ExtensionRules extensionRules;
     private JsonObject configurationJsonObj;
     private JsonParser jsonParser;
     private DaoManager daoManager;
@@ -84,7 +84,7 @@ public class DefaultExtensionConfiguration {
     public void init(final DaoManager daoManager, String extensionName, String localConfigPath) throws ConfigurationException {
         try {
             this.setDaoManager(daoManager);
-            this.extensionConfigurationDao = daoManager.getExtensionsConfigurationDao();
+            this.extensionsRulesDao = daoManager.getExtensionsRulesDao();
 
             if (extensionName.isEmpty() && localConfigPath.isEmpty()) {
                 throw new ConfigurationException("extensionName or local config cant be empty");
@@ -105,26 +105,26 @@ public class DefaultExtensionConfiguration {
                 }
                 defVersion = new DefaultArtifactVersion(defaultConfigurationJsonObj.get("version").getAsString());
             }
-        // Load extensionConfiguration from DB
-        extensionConfiguration = extensionConfigurationDao.getConfigurationByName(extensionName);
+        // Load extensionRules from DB
+        extensionRules = extensionsRulesDao.getExtensionRulesByName(extensionName);
 
             // try fetch sid from name
-            if (extensionConfiguration == null) {
-                // If extensionConfiguration from DB is null then add the default values to DB
+            if (extensionRules == null) {
+                // If extensionRules from DB is null then add the default values to DB
                 this.sid = Sid.generate(Sid.Type.EXTENSION_CONFIGURATION);
-                extensionConfiguration = new ExtensionConfiguration(sid, this.extensionName, true,
-                        defaultConfigurationJsonObj.toString(), ExtensionConfiguration.configurationType.JSON, DateTime.now());
-                extensionConfigurationDao.addConfiguration(extensionConfiguration);
+                extensionRules = new ExtensionRules(sid, this.extensionName, true,
+                        defaultConfigurationJsonObj.toString(), ExtensionRules.configurationType.JSON, DateTime.now());
+                extensionsRulesDao.addExtensionRules(extensionRules);
 
             } else {
                 // Get configuration object
-                this.sid = extensionConfiguration.getSid();
+                this.sid = extensionRules.getSid();
                 // try get default config data
                 JsonObject dbConfiguration = null;
 
                 DefaultArtifactVersion currentVersion = null;
                 try {
-                    dbConfiguration = (JsonObject) jsonParser.parse((String) extensionConfiguration.getConfigurationData());
+                    dbConfiguration = (JsonObject) jsonParser.parse((String) extensionRules.getConfigurationData());
                     if (dbConfiguration.get("version") != null) {
                         currentVersion = new DefaultArtifactVersion(dbConfiguration.get("version").getAsString());
                     }
@@ -146,10 +146,10 @@ public class DefaultExtensionConfiguration {
                         }
                         dbConfiguration.addProperty("version", defaultConfigurationJsonObj.get("version").getAsString());
 
-                        extensionConfiguration = new ExtensionConfiguration(extensionConfiguration.getSid(), extensionName,
-                                extensionConfiguration.isEnabled(), dbConfiguration.toString(),
-                                ExtensionConfiguration.configurationType.JSON, DateTime.now());
-                        extensionConfigurationDao.updateConfiguration(extensionConfiguration);
+                        extensionRules = new ExtensionRules(extensionRules.getSid(), extensionName,
+                                extensionRules.isEnabled(), dbConfiguration.toString(),
+                                ExtensionRules.configurationType.JSON, DateTime.now());
+                        extensionsRulesDao.updateExtensionRules(extensionRules);
                     }
                     configurationJsonObj = dbConfiguration;
                     // Load Specific Configuration Map
@@ -193,9 +193,9 @@ public class DefaultExtensionConfiguration {
 
     public void reloadConfiguration() {
         if (!workingWithLocalConf) {
-            if (extensionConfigurationDao.isLatestVersionByName(extensionName, extensionConfiguration.getDateUpdated())) {
-                extensionConfiguration = extensionConfigurationDao.getConfigurationByName(extensionName);
-                String updatedConf = (String) extensionConfiguration.getConfigurationData();
+            if (extensionsRulesDao.isLatestVersionByName(extensionName, extensionRules.getDateUpdated())) {
+                extensionRules = extensionsRulesDao.getExtensionRulesByName(extensionName);
+                String updatedConf = (String) extensionRules.getConfigurationData();
                 configurationJsonObj = (JsonObject) jsonParser.parse(updatedConf);
                 // loadSpecificConfigurationMap(configurationJsonObj);
                 if (logger.isInfoEnabled()) {
@@ -207,8 +207,8 @@ public class DefaultExtensionConfiguration {
 
     public boolean isEnabled() {
         reloadConfiguration();
-        if (extensionConfiguration != null) {
-            return extensionConfiguration.isEnabled();
+        if (extensionRules != null) {
+            return extensionRules.isEnabled();
         } else {
             return true;
         }

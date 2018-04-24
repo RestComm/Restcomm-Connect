@@ -22,57 +22,57 @@ package org.restcomm.connect.dao;
 import org.joda.time.DateTime;
 import org.restcomm.connect.commons.dao.Sid;
 import org.restcomm.connect.extension.api.ConfigurationException;
-import org.restcomm.connect.extension.api.ExtensionConfiguration;
+import org.restcomm.connect.extension.api.ExtensionRules;
 
 import java.util.List;
 
 /**
  * Created by gvagenas on 11/10/2016.
  */
-public interface ExtensionsConfigurationDao {
+public interface ExtensionsRulesDao {
     /**
-     * Add a new ExtensionConfiguration
-     * @param extensionConfiguration
+     * Add a new ExtensionRules
+     * @param extensionRules
      */
-    void addConfiguration(ExtensionConfiguration extensionConfiguration) throws ConfigurationException;
+    void addExtensionRules (ExtensionRules extensionRules) throws ConfigurationException;
 
     /**
-     * Update an existing ExtensionConfiguration
-     * @param extensionConfiguration
+     * Update an existing ExtensionRules
+     * @param extensionRules
      */
-    void updateConfiguration(ExtensionConfiguration extensionConfiguration) throws ConfigurationException;
+    void updateExtensionRules (ExtensionRules extensionRules) throws ConfigurationException;
 
     /**
      * Get extension configuration by extension name
      * @param extensionName
-     * @return ExtensionConfiguration
+     * @return ExtensionRules
      */
-    ExtensionConfiguration getConfigurationByName(String extensionName);
+    ExtensionRules getExtensionRulesByName (String extensionName);
 
     /**
      * Get extension configuration by Sid
      * @param extensionSid
-     * @return ExtensionConfiguration
+     * @return ExtensionRules
      */
-    ExtensionConfiguration getConfigurationBySid(Sid extensionSid);
+    ExtensionRules getExtensionRulesBySid (Sid extensionSid);
 
     /**
      * Get all extension configuration
-     * @return List<ExtensionConfiguration>
+     * @return List<ExtensionRules>
      */
-    List<ExtensionConfiguration> getAllConfiguration();
+    List<ExtensionRules> getAllExtensionRules ();
 
     /**
      * Delete extension configuration by extension name
      * @param extensionName
      */
-    void deleteConfigurationByName(String extensionName);
+    void deleteExtensionRulesByName (String extensionName);
 
     /**
      * Delete extension configuration by Sid
      * @param extensionSid
      */
-    void deleteConfigurationBySid(Sid extensionSid);
+    void deleteExtensionRulesBySid (Sid extensionSid);
 
     /**
      * Check if there is a newer version of the configuration in the DB using extension name
@@ -93,37 +93,37 @@ public interface ExtensionsConfigurationDao {
 
     /**
      * Validate extension configuration based on the type of the configuration data
-     * @param extensionConfiguration
+     * @param extensionRules
      * @return
      */
-    boolean validate(ExtensionConfiguration extensionConfiguration);
+    boolean validate(ExtensionRules extensionRules);
 
     /**
-     * Get account specific ExtensionConfiguration
+     * Get account specific ExtensionRules
      * @param accountSid
      * @param extensionSid
-     * @return ExtensionConfiguration
+     * @return ExtensionRules
      */
-    ExtensionConfiguration getAccountExtensionConfiguration(String accountSid, String extensionSid);
+    ExtensionRules getAccountExtensionRules (String accountSid, String extensionSid);
 
     /**
-     * Add a new account specific ExtensionConfiguration
-     * @param extensionConfiguration
+     * Add a new account specific ExtensionRules
+     * @param extensionRules
      * @param accountSid
      */
-    void addAccountExtensionConfiguration(ExtensionConfiguration extensionConfiguration, Sid accountSid) throws ConfigurationException;
+    void addAccountExtensionRules (ExtensionRules extensionRules, Sid accountSid) throws ConfigurationException;
 
     /**
-     * Update an existing account specific ExtensionConfiguration
-     * @param extensionConfiguration
+     * Update an existing account specific ExtensionRules
+     * @param extensionRules
      * @param accountSid
      */
-    void updateAccountExtensionConfiguration(ExtensionConfiguration extensionConfiguration, Sid accountSid) throws ConfigurationException;
+    void updateAccountExtensionRules (ExtensionRules extensionRules, Sid accountSid) throws ConfigurationException;
 
     /**
-     * Delete account specific ExtensionConfiguration
+     * Delete account specific ExtensionRules
      * @param accountSid
      * @param extensionSid
      */
-    void deleteAccountExtensionConfiguration(String accountSid, String extensionSid);
+    void deleteAccountExtensionRules (String accountSid, String extensionSid);
 }
