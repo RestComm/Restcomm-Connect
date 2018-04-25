@@ -11,6 +11,26 @@ The folowing tags are used to categorize and state the scope of a change
 
 
 //add release-notes with newer on top
+== 8.5.0 version
+=== New Features
+// New features (whether major or minor) go here
+* REST API performance improvements.
+
+=== Breaking Changes
+// draws attention to functionality that is getting removed
+
+
+=== Bug Fixes
+// any difference in functionality
+
+
+
+=== Migration Notes
+// Things to consider during migration from previous release
+
+=== External Dependencies Updates
+// any dependencies
+
 == 8.4.0 version
 === New Features
 // New features (whether major or minor) go here
