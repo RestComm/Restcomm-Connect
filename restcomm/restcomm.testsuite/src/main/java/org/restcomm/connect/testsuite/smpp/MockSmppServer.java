@@ -18,6 +18,7 @@ import org.apache.log4j.Logger;
 
 import com.cloudhopper.commons.charset.Charset;
 import com.cloudhopper.commons.charset.CharsetUtil;
+import com.cloudhopper.smpp.SmppConstants;
 import com.cloudhopper.smpp.SmppServerConfiguration;
 import com.cloudhopper.smpp.SmppServerHandler;
 import com.cloudhopper.smpp.SmppServerSession;
@@ -34,7 +35,6 @@ import com.cloudhopper.smpp.type.SmppChannelException;
 import com.cloudhopper.smpp.type.SmppProcessingException;
 
 import org.restcomm.connect.sms.smpp.SmppInboundMessageEntity;
-import org.restcomm.connect.sms.smpp.DataCoding;
 
 public class MockSmppServer {
 
@@ -87,11 +87,7 @@ public class MockSmppServer {
         //http://stackoverflow.com/a/25885741
         try {
             byte[] textBytes;
-            if (CharsetUtil.CHARSET_UCS_2 == charset) {
-                textBytes = smppMessage.getBytes();
-            } else {
-                textBytes = CharsetUtil.encode(smppMessage, charset);
-            }
+            textBytes = CharsetUtil.encode(smppMessage, charset);
 
             DeliverSm deliver = new DeliverSm();
 
@@ -99,9 +95,9 @@ public class MockSmppServer {
             deliver.setDestAddress(new Address((byte) 0x01, (byte) 0x01, smppTo));
             deliver.setShortMessage(textBytes);
             if (CharsetUtil.CHARSET_UCS_2 == charset) {
-                deliver.setDataCoding(DataCoding.DATA_CODING_UCS2);
+                deliver.setDataCoding(SmppConstants.DATA_CODING_UCS2);
             } else {
-                deliver.setDataCoding(DataCoding.DATA_CODING_GSM7);
+                deliver.setDataCoding(SmppConstants.DATA_CODING_DEFAULT);
             }
             logger.info("deliver.getDataCoding: " + deliver.getDataCoding());
 
@@ -211,10 +207,14 @@ public class MockSmppServer {
 
             // mimic how long processing could take on a slower smsc
             //processing received SMPP message from Restcomm
+
             String decodedPduMessage = null;
+            byte dcs = 0;
             String destSmppAddress = null;
             String sourceSmppAddress = null;
             boolean isDeliveryReceipt = false;
+            //FIXME: make MockSmppServer configurable
+            Charset charset = CharsetUtil.CHARSET_UTF_8;
 
             if (pduRequest.toString().toLowerCase().contains("enquire_link")) {
                 //logger.info("This is a response to the enquire_link, therefore, do NOTHING ");
@@ -225,7 +225,13 @@ public class MockSmppServer {
 
                 try {
                     SubmitSm deliverSm = (SubmitSm) pduRequest;
-                    decodedPduMessage = CharsetUtil.CHARSET_MODIFIED_UTF8.decode(deliverSm.getShortMessage());
+
+                    dcs = deliverSm.getDataCoding();
+                    if(dcs==SmppConstants.DATA_CODING_UCS2) {
+                        charset = CharsetUtil.CHARSET_UCS_2;
+                    }
+
+                    decodedPduMessage = CharsetUtil.decode(deliverSm.getShortMessage(), charset);
                     destSmppAddress = deliverSm.getDestAddress().getAddress();
                     sourceSmppAddress = deliverSm.getSourceAddress().getAddress();
                     if (deliverSm.getRegisteredDelivery() == (byte) 0x01) {
@@ -237,7 +243,8 @@ public class MockSmppServer {
                     logger.info("********DeliverSm Exception******* " + e);
                 }
 
-                smppInboundMessageEntity = new SmppInboundMessageEntity(destSmppAddress, sourceSmppAddress, decodedPduMessage, CharsetUtil.CHARSET_GSM, isDeliveryReceipt);
+
+                smppInboundMessageEntity = new SmppInboundMessageEntity(destSmppAddress, sourceSmppAddress, decodedPduMessage, charset, isDeliveryReceipt);
                 messageReceived = true;
             }
             return pduRequest.createResponse();
