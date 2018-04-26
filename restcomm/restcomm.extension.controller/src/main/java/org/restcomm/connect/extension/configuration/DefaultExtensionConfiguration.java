@@ -263,4 +263,8 @@ public class DefaultExtensionConfiguration {
     public JsonObject getCurrentConf() {
         return configurationJsonObj;
     }
+
+    public boolean isWorkingWithLocalConf() {
+        return workingWithLocalConf;
+    }
 }
