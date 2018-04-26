@@ -38,6 +38,7 @@ import org.apache.ibatis.session.SqlSession;
 import org.apache.ibatis.session.SqlSessionFactory;
 import org.joda.time.DateTime;
 import org.restcomm.connect.commons.annotations.concurrency.NotThreadSafe;
+import org.restcomm.connect.commons.configuration.sets.impl.MainConfigurationSetImpl;
 import org.restcomm.connect.commons.dao.Sid;
 import org.restcomm.connect.dao.ClientsDao;
 import org.restcomm.connect.dao.entities.Client;
@@ -176,8 +177,12 @@ public final class MybatisClientsDao implements ClientsDao {
         final Sid voiceApplicationSid = readSid(map.get("voice_application_sid"));
         final URI uri = readUri(map.get("uri"));
         final String pushClientIdentity = readString(map.get("push_client_identity"));
+        String passwordAlgorithm = MainConfigurationSetImpl.CLEAR_TEXT_PASSWORD;
+        if (map.containsKey("password_algorithm")) {
+            passwordAlgorithm = readString(map.get("password_algorithm"));
+        }
         return new Client(sid, dateCreated, dateUpdated, accountSid, apiVersion, friendlyName, login, password, status,
-                voiceUrl, voiceMethod, voiceFallbackUrl, voiceFallbackMethod, voiceApplicationSid, uri, pushClientIdentity);
+                voiceUrl, voiceMethod, voiceFallbackUrl, voiceFallbackMethod, voiceApplicationSid, uri, pushClientIdentity, passwordAlgorithm);
     }
 
 
@@ -200,6 +205,7 @@ public final class MybatisClientsDao implements ClientsDao {
         map.put("voice_application_sid", writeSid(client.getVoiceApplicationSid()));
         map.put("uri", writeUri(client.getUri()));
         map.put("push_client_identity", client.getPushClientIdentity());
+        map.put("password_algorithm", client.getPasswordAlgorithm());
         return map;
     }
 }
