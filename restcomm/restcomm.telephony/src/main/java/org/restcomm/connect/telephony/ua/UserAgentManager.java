@@ -23,6 +23,7 @@ import akka.actor.ActorRef;
 import akka.actor.ReceiveTimeout;
 import akka.event.Logging;
 import akka.event.LoggingAdapter;
+
 import org.apache.commons.configuration.Configuration;
 import org.joda.time.DateTime;
 import org.restcomm.connect.commons.configuration.RestcommConfiguration;
@@ -53,6 +54,7 @@ import javax.servlet.sip.SipServletRequest;
 import javax.servlet.sip.SipServletResponse;
 import javax.servlet.sip.SipSession;
 import javax.servlet.sip.SipURI;
+
 import java.io.IOException;
 import java.net.UnknownHostException;
 import java.util.HashMap;
@@ -94,6 +96,8 @@ public final class UserAgentManager extends RestcommUntypedActor {
     private String imsProxyAddress;
     private int imsProxyPort;
     private String imsDomain;
+    private String clientAlgorithm;
+    private String clientQop;
 
     public UserAgentManager(final Configuration configuration, final SipFactory factory, final DaoManager storage,
             final ServletContext servletContext) {
@@ -103,6 +107,8 @@ public final class UserAgentManager extends RestcommUntypedActor {
         monitoringService = (ActorRef) servletContext.getAttribute(MonitoringService.class.getName());
         final Configuration runtime = configuration.subset("runtime-settings");
         this.authenticateUsers = runtime.getBoolean("authenticate");
+        clientAlgorithm = RestcommConfiguration.getInstance().getMain().getClientAlgorithm();
+        clientQop = RestcommConfiguration.getInstance().getMain().getClientQOP();
         this.factory = factory;
         this.storage = storage;
         pingInterval = runtime.getInt("ping-interval", 60);
@@ -229,6 +235,10 @@ public final class UserAgentManager extends RestcommUntypedActor {
     private String header(final String nonce, final String realm, final String scheme) {
         final StringBuilder buffer = new StringBuilder();
         buffer.append(scheme).append(" ");
+        if(clientAlgorithm != null && !clientAlgorithm.isEmpty()){
+            buffer.append("algorithm=\"").append(clientAlgorithm).append("\", ");
+            buffer.append("qop=\"").append(clientQop).append("\", ");
+        }
         buffer.append("realm=\"").append(realm).append("\", ");
         buffer.append("nonce=\"").append(nonce).append("\"");
         return buffer.toString();
@@ -241,6 +251,7 @@ public final class UserAgentManager extends RestcommUntypedActor {
         final SipURI uri = (SipURI) request.getTo().getURI();
         final String realm = uri.getHost();
         final String header = header(nonce, realm, "Digest");
+
         response.addHeader("Proxy-Authenticate", header);
         response.send();
     }
@@ -462,9 +473,9 @@ public final class UserAgentManager extends RestcommUntypedActor {
             return false;
         }
         if (client != null && Client.ENABLED == client.getStatus()) {
-            final String password = client.getPassword();
-            final String result = DigestAuthentication.response(algorithm, user, realm, password, nonce, nc, cnonce, method,
-                    uri, null, qop);
+            final String password2 = client.getPassword();
+            final String result = DigestAuthentication.response(algorithm, user, realm, "", password2, nonce, nc, cnonce,
+                    method, uri, null, qop);
             return result.equals(response);
         } else {
             return false;

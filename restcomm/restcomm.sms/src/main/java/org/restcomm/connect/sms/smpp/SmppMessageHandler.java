@@ -66,6 +66,7 @@ import org.restcomm.connect.telephony.api.FeatureAccessRequest;
 import org.restcomm.smpp.parameter.TlvSet;
 
 import com.cloudhopper.commons.charset.CharsetUtil;
+import com.cloudhopper.smpp.SmppConstants;
 import com.cloudhopper.smpp.pdu.SubmitSm;
 import com.cloudhopper.smpp.tlv.Tlv;
 import com.cloudhopper.smpp.type.Address;
@@ -357,11 +358,11 @@ public class SmppMessageHandler extends RestcommUntypedActor {
         submit0.setSourceAddress(new Address((byte) smppTonNpiValue, (byte) smppTonNpiValue, request.getSmppFrom()));
         submit0.setDestAddress(new Address((byte) smppTonNpiValue, (byte) smppTonNpiValue, request.getSmppTo()));
         if (CharsetUtil.CHARSET_UCS_2 == request.getSmppEncoding()) {
-            submit0.setDataCoding(DataCoding.DATA_CODING_UCS2);
+            submit0.setDataCoding(SmppConstants.DATA_CODING_UCS2);
             textBytes = CharsetUtil.encode(request.getSmppContent(), CharsetUtil.CHARSET_UCS_2);
         } else {
-            submit0.setDataCoding(DataCoding.DATA_CODING_GSM7);
-            textBytes = CharsetUtil.encode(request.getSmppContent(), request.getSmppEncoding());
+            submit0.setDataCoding(SmppConstants.DATA_CODING_DEFAULT);
+            textBytes = CharsetUtil.encode(request.getSmppContent(), SmppClientOpsThread.getOutboundDefaultEncoding());
         }
 
         //TODO reverted from https://telestax.atlassian.net/browse/RESTCOMM-1595 as it caused SMS loop at SMSC

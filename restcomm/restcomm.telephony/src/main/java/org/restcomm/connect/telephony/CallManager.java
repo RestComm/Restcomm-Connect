@@ -217,6 +217,7 @@ public final class CallManager extends RestcommUntypedActor {
 
     private boolean actAsProxyOut;
     private List<ProxyRule> proxyOutRules;
+
     private boolean isActAsProxyOutUseFromHeader;
 
     // Push notification server
@@ -555,7 +556,6 @@ public final class CallManager extends RestcommUntypedActor {
             // Make sure we force clients to authenticate.
             if (!authenticateUsers // https://github.com/Mobicents/RestComm/issues/29 Allow disabling of SIP authentication
                     || CallControlHelper.checkAuthentication(request, storage, sourceOrganizationSid)) {
-
                 // if the client has authenticated, try to redirect to the Client VoiceURL app
                 // otherwise continue trying to process the Client invite
                 if (redirectToClientVoiceApp(self, request, accounts, applications, client)) {

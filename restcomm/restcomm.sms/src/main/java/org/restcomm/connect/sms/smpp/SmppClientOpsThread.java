@@ -25,6 +25,7 @@ import akka.actor.ActorRef;
 import com.cloudhopper.commons.charset.CharsetUtil;
 import com.cloudhopper.commons.charset.Charset;
 import com.cloudhopper.smpp.PduAsyncResponse;
+import com.cloudhopper.smpp.SmppConstants;
 import com.cloudhopper.smpp.SmppSession;
 import com.cloudhopper.smpp.SmppSessionConfiguration;
 import com.cloudhopper.smpp.SmppSessionHandler;
@@ -59,6 +60,10 @@ public class SmppClientOpsThread implements Runnable {
     private Object waitObject = new Object();
     private final DefaultSmppClient clientBootstrap;
     private static SmppSession getSmppSession;
+    //FIXME: like getSmppSession, this is bad design
+    //this assumes singular SMPP connection all the time,so it works
+    private static Charset outboundEncoding;
+    private static Charset inboundEncoding;
     protected volatile boolean started = true;
     private static int sipPort;
 
@@ -294,6 +299,8 @@ public class SmppClientOpsThread implements Runnable {
         public ClientSmppSessionHandler(Smpp esme) {
             super();
             this.esme = esme;
+            inboundEncoding = esme.getInboundDefaultEncoding();
+            outboundEncoding = esme.getOutboundDefaultEncoding();
         }
 
         @Override
@@ -352,18 +359,20 @@ public class SmppClientOpsThread implements Runnable {
 
                 DeliverSm deliverSm = (DeliverSm) pduRequest;
                 try {
-                    String decodedPduMessage = CharsetUtil.CHARSET_MODIFIED_UTF8.decode(deliverSm.getShortMessage());
+                    byte dcs = deliverSm.getDataCoding();
                     String destSmppAddress = deliverSm.getDestAddress().getAddress();
                     String sourceSmppAddress = deliverSm.getSourceAddress().getAddress();
-                    Charset charset;
-                    if (DataCoding.DATA_CODING_UCS2 == deliverSm.getDataCoding()) {
-                        charset = CharsetUtil.CHARSET_UCS_2;
-                    } else {
-                        charset = CharsetUtil.CHARSET_GSM;
+
+                    //this default esme encoding only applies to DCS==0
+                    Charset encoding = esme.getInboundDefaultEncoding();
+                    if(dcs == SmppConstants.DATA_CODING_UCS2) {
+                        encoding = CharsetUtil.CHARSET_UCS_2;
                     }
+
+                    String decodedPduMessage = CharsetUtil.decode(deliverSm.getShortMessage(), encoding);
                     //send received SMPP PDU message to restcomm
                     try {
-                        sendSmppMessageToRestcomm(decodedPduMessage, destSmppAddress, sourceSmppAddress, charset);
+                        sendSmppMessageToRestcomm(decodedPduMessage, destSmppAddress, sourceSmppAddress, encoding);
                     } catch (IOException | ServletException e) {
                         logger.error("Exception while trying to dispatch incoming SMPP message to Restcomm: " + e);
                     }
@@ -428,5 +437,13 @@ public class SmppClientOpsThread implements Runnable {
         String inboundMessage = smppMessage;
         SmppInboundMessageEntity smppInboundMessage = new SmppInboundMessageEntity(to, from, inboundMessage, charset);
         smppMessageHandler.tell(smppInboundMessage, null);
+    }
+
+    public static Charset getInboundDefaultEncoding() {
+        return inboundEncoding;
+    }
+
+    public static Charset getOutboundDefaultEncoding() {
+        return outboundEncoding;
     }
 }
