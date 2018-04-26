@@ -41,6 +41,7 @@ import javax.ws.rs.core.Response;
 
 import org.apache.commons.configuration.Configuration;
 import org.restcomm.connect.commons.annotations.concurrency.NotThreadSafe;
+import org.restcomm.connect.commons.configuration.RestcommConfiguration;
 import org.restcomm.connect.commons.dao.Sid;
 import org.restcomm.connect.commons.util.ClientLoginConstrains;
 import org.restcomm.connect.dao.AccountsDao;
@@ -115,6 +116,7 @@ public abstract class ClientsEndpoint extends SecuredEndpoint {
         String realm = organizationsDao.getOrganization(accountsDao.getAccount(accountSid).getOrganizationSid()).getDomainName();
 
         builder.setPassword(username, password, realm);
+        builder.setPasswordAlgorithm(RestcommConfiguration.getInstance().getMain().getClientAlgorithm());
         builder.setStatus(getStatus(data));
         URI voiceUrl = getUrl("VoiceUrl", data);
         if (voiceUrl != null && voiceUrl.toString().equals("")) {
