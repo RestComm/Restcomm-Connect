@@ -288,9 +288,6 @@ public class DialForkWithSBCTest {
         // Register Maria
         SipURI mariaUri = mariaSipStack.getAddressFactory().createSipURI(null, restcommContact);
         assertTrue(mariaPhone.register(mariaUri, "maria", "1234", mariaContact, 3600, 3600));
-        // Register Bob
-        SipURI bobUri = bobSipStack.getAddressFactory().createSipURI(null, restcommContact);
-        assertTrue(bobPhone.register(bobUri, "bob", "1234", bobContact, 3600, 3600));
         
         // Prepare Alice to receive call
         final SipCall aliceCall = alicePhone.createSipCall();
