@@ -19,11 +19,10 @@
 
 package org.restcomm.connect.telephony.api.events;
 
-import org.mobicents.commons.utils.SidUtil;
-import org.restcomm.connect.telephony.api.events.UssdStreamEvent;
-
+import java.util.UUID;
 import org.junit.Test;
-import static org.junit.Assert.assertEquals;
+
+import static org.junit.Assert.assertNotNull;
 
 /**
  * @author laslo.horvat@telestax.com (Laslo Horvat)
@@ -33,12 +32,10 @@ public class UssdStreamEventTest {
     @Test
     public void buildUssdStreamEventTest() {
         UssdStreamEvent expected = UssdStreamEvent.builder()
-            .accountSid(SidUtil.randomSid())
-            .sid(SidUtil.randomSid())
-            .to(SidUtil.randomSid())
-            .from(SidUtil.randomSid())
-            .status(UssdStreamEvent.Status.COMPLETED)
-            .direction(UssdStreamEvent.Direction.INBOUND)
+            .setTo(UUID.randomUUID().toString())
+            .setFrom(UUID.randomUUID().toString())
+            .setStatus(UssdStreamEvent.Status.completed)
+            .setDirection(UssdStreamEvent.Direction.inbound)
             .build();
 
         assertNotNull(expected);
