@@ -1969,6 +1969,7 @@ public abstract class BaseVoiceInterpreter extends RestcommUntypedActor {
                 recording = builder.build();
                 final RecordingsDao recordings = storage.getRecordingsDao();
                 recordings.addRecording(recording, recordingMediaType);
+                getContext().system().eventStream().publish(recording);
 
                 Attribute attribute = null;
 
