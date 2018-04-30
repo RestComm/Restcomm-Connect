@@ -309,41 +309,26 @@ public final class SmsSession extends RestcommUntypedActor {
         }
 
         monitoringService.tell(new TextMessage(last.from(), last.to(), TextMessage.SmsState.OUTBOUND), self());
-        final ClientsDao clients = storage.getClientsDao();
-        String to;
-        if (last.to().toLowerCase().startsWith("client")) {
-            to = last.to().replaceAll("client:","");
-        } else {
-            to = last.to();
-        }
-        final Client toClient = clients.getClient(to, fromOrganizationSid);
-
-        long delay = 0;
-        if (toClient == null) {
-            //We will send using the SMPP link only if:
-            // 1. This SMS is not for a registered client
-            // 2, SMPP is activated
-            if (smppActivated) {
-                if(logger.isInfoEnabled()) {
-                    logger.info("Destination is not a local registered client, therefore, sending through SMPP to:  " + last.to() );
+        if (last.to().toLowerCase().startsWith("client:")) {
+            final ClientsDao clients = storage.getClientsDao();
+            final Client toClient = clients.getClient(last.to().substring(7), fromOrganizationSid);
+            final long delay = pushNotificationServerHelper.sendPushNotificationIfNeeded(toClient.getPushClientIdentity());
+            system.scheduler().scheduleOnce(Duration.create(delay, TimeUnit.MILLISECONDS), new Runnable() {
+                @Override
+                public void run() {
+                    sendUsingSip(toClient, (SmsSessionRequest) message);
                 }
-                if (sendUsingSmpp(last.from(), last.to(), last.body(), tlvSet, charset))
-                    return;
+            }, system.dispatcher());
+        } else if (smppActivated) {
+            if(logger.isInfoEnabled()) {
+                logger.info("Destination is not a local registered client, therefore, sending through SMPP to:  " + last.to() );
             }
+            sendUsingSmpp(last.from(), last.to(), last.body(), tlvSet, charset);
         } else {
-            delay = pushNotificationServerHelper.sendPushNotificationIfNeeded(toClient.getPushClientIdentity());
+            sendUsingSip(null, (SmsSessionRequest) message);
         }
-        system.scheduler().scheduleOnce(Duration.create(delay, TimeUnit.MILLISECONDS), new Runnable() {
-            @Override
-            public void run() {
-                sendUsingSip(toClient, (SmsSessionRequest) message);
-            }
-        }, system.dispatcher());
     }
 
-    private boolean sendUsingSmpp(String from, String to, String body, Charset encoding) {
-        return sendUsingSmpp(from, to, body, null, encoding);
-    }
     private boolean sendUsingSmpp(String from, String to, String body, TlvSet tlvSet, Charset encoding) {
         if ((SmppClientOpsThread.getSmppSession() != null && SmppClientOpsThread.getSmppSession().isBound()) && smppMessageHandler != null) {
             if(logger.isInfoEnabled()) {
