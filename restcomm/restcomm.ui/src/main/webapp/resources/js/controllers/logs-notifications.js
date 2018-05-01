@@ -100,7 +100,7 @@ rcMod.controller('LogsNotificationsCtrl', function ($scope, $resource, $timeout,
       params["ErrorCode"] = search.error_code;
     }
     if(search.request_url) {
-      params["RequestUrl"] = search.request_url;
+      params["RequestUrl"] = ('%' + search.request_url + '%');
     }
     if(search.message_text) {
       params["MessageText"] = search.message_text;
