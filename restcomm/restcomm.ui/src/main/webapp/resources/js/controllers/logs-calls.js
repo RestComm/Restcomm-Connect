@@ -65,10 +65,10 @@ rcMod.controller('LogsCallsCtrl', function($scope, $resource, $timeout, $uibModa
       params["EndTime"] = search.end_time;
     }
     if(search.from) {
-      params["From"] = search.from;
+      params["From"] = (search.from + '%');
     }
     if(search.to) {
-      params["To"] = search.to;
+      params["To"] = (search.to + '%');
     }
     if(search.status) {
       params["Status"] = search.status;
