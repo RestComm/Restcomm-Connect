@@ -83,7 +83,7 @@ public final class DigestAuthentication {
         validate(user, realm, password, nonce, method, uri, algorithm);
         String ha1;
 
-        if(!password2.isEmpty()){
+        if(password2 != null && !password2.isEmpty()){
             ha1 = password2;
         }else{
             final String a1 = A1(algorithm, user, realm, password, nonce, cnonce);

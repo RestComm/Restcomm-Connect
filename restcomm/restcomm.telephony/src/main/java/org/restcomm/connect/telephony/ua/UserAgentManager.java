@@ -27,6 +27,7 @@ import akka.event.LoggingAdapter;
 import org.apache.commons.configuration.Configuration;
 import org.joda.time.DateTime;
 import org.restcomm.connect.commons.configuration.RestcommConfiguration;
+import org.restcomm.connect.commons.configuration.sets.impl.MainConfigurationSetImpl;
 import org.restcomm.connect.commons.dao.Sid;
 import org.restcomm.connect.commons.faulttolerance.RestcommUntypedActor;
 import org.restcomm.connect.commons.util.DigestAuthentication;
@@ -459,7 +460,7 @@ public final class UserAgentManager extends RestcommUntypedActor {
     private boolean permitted(final String authorization, final String method, SipURI sipURI) {
         final Map<String, String> map = toMap(authorization);
         final String user = map.get("username").trim();
-        final String algorithm = map.get("algorithm");
+        final String authHeaderAlgorithm = map.get("algorithm");
         final String realm = map.get("realm");
         final String uri = map.get("uri");
         final String nonce = map.get("nonce");
@@ -473,9 +474,16 @@ public final class UserAgentManager extends RestcommUntypedActor {
             return false;
         }
         if (client != null && Client.ENABLED == client.getStatus()) {
-            final String password2 = client.getPassword();
-            final String result = DigestAuthentication.response(algorithm, user, realm, "", password2, nonce, nc, cnonce,
-                    method, uri, null, qop);
+            final String password = client.getPassword();
+            final String clientPasswordAlgorithm = client.getPasswordAlgorithm();
+            String result;
+            if (clientPasswordAlgorithm.equals(MainConfigurationSetImpl.CLEAR_TEXT_PASSWORD)) {
+                result = DigestAuthentication.response(authHeaderAlgorithm, user, realm, password, "", nonce, nc, cnonce,
+                        method, uri, null, qop);
+            } else {
+                result = DigestAuthentication.response(authHeaderAlgorithm, user, realm, "", password, nonce, nc, cnonce,
+                        method, uri, null, qop);
+            }
             return result.equals(response);
         } else {
             return false;
