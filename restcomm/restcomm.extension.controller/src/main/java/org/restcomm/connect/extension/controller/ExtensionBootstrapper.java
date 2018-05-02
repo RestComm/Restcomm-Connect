@@ -43,6 +43,7 @@ public class ExtensionBootstrapper {
     public ExtensionBootstrapper(final ServletContext context, final Configuration configuration) {
         this.configuration = configuration;
         this.context = context;
+        ExtensionController.getInstance().init(this.context);
     }
 
     public void start() throws ClassNotFoundException, IllegalAccessException, InstantiationException {

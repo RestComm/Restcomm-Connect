@@ -21,9 +21,10 @@
 package org.restcomm.connect.telephony.api;
 
 import org.restcomm.connect.commons.dao.Sid;
+import org.restcomm.connect.extension.api.ExtensionRequest;
 import org.restcomm.connect.extension.api.IExtensionFeatureAccessRequest;
 
-public class FeatureAccessRequest implements IExtensionFeatureAccessRequest {
+public class FeatureAccessRequest extends ExtensionRequest implements IExtensionFeatureAccessRequest {
 
     public enum Feature {
         OUTBOUND_VOICE("outbound-voice"), INBOUND_VOICE("inbound-voice"), OUTBOUND_SMS("outbound-sms"),

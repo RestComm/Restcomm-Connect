@@ -20,31 +20,6 @@
  */
 package org.restcomm.connect.extension.api;
 
-public interface IExtensionRequest {
-
-    /**
-     * @return the accountId as String
-     * FIXME: should this be at this level?
-     */
-    String getAccountSid();
-
-    /**
-     * @return whether request should proceed
-     */
-    boolean isAllowed();
-
-    /**
-     * @param set to allow/restrict request
-     */
-    void setAllowed(boolean allowed);
-
-    /**
-     * @param set ExtensionContext
-     */
-    void setExtensionContext(ExtensionContext ec);
-
-    /**
-     * @param set ExtensionContext
-     */
-    ExtensionContext getExtensionContext();
+public interface ExtensionContext {
+    ExtensionRules getEffectiveExtensionRules (String extensionSid, String scopeSid);
 }

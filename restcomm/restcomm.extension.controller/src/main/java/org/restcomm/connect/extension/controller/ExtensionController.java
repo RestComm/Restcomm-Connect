@@ -1,8 +1,19 @@
 package org.restcomm.connect.extension.controller;
 
+import org.restcomm.connect.commons.dao.Sid;
+import org.restcomm.connect.dao.AccountsDao;
+import org.restcomm.connect.dao.ClientsDao;
+import org.restcomm.connect.dao.DaoManager;
+import org.restcomm.connect.dao.ExtensionsRulesDao;
+import org.restcomm.connect.dao.OrganizationsDao;
+import org.restcomm.connect.dao.entities.Account;
+import org.restcomm.connect.dao.entities.Client;
+import org.restcomm.connect.dao.entities.Organization;
 import org.restcomm.connect.extension.api.ApiRequest;
+import org.restcomm.connect.extension.api.ExtensionRules;
 import org.restcomm.connect.extension.api.ExtensionResponse;
 import org.restcomm.connect.extension.api.ExtensionType;
+import org.restcomm.connect.extension.api.ExtensionContext;
 import org.restcomm.connect.extension.api.IExtensionRequest;
 import org.restcomm.connect.extension.api.RestcommExtension;
 import org.restcomm.connect.extension.api.RestcommExtensionGeneric;
@@ -11,10 +22,12 @@ import org.apache.log4j.Logger;
 import java.util.List;
 import java.util.concurrent.CopyOnWriteArrayList;
 
+import javax.servlet.ServletContext;
+
 /**
  * Created by gvagenas on 21/09/16.
  */
-public class ExtensionController {
+public class ExtensionController implements ExtensionContext{
     private static Logger logger = Logger.getLogger(ExtensionController.class);
 
     private static ExtensionController instance;
@@ -24,12 +37,21 @@ public class ExtensionController {
     private List restApiExtensions;
     private List featureAccessControlExtensions;
 
+    private DaoManager daoManager;
+
+    private ServletContext context;
+
     private ExtensionController(){
         this.callManagerExtensions = new CopyOnWriteArrayList();
         this.smsSessionExtensions = new CopyOnWriteArrayList();
         this.ussdCallManagerExtensions = new CopyOnWriteArrayList();
         this.restApiExtensions = new CopyOnWriteArrayList();
         this.featureAccessControlExtensions = new CopyOnWriteArrayList();
+    }
+
+    public void init(ServletContext context) {
+        this.context = context;
+        daoManager = (DaoManager)context.getAttribute(DaoManager.class.getName());
     }
 
     public static ExtensionController getInstance() {
@@ -108,7 +130,7 @@ public class ExtensionController {
         // extensionResponse
         ExtensionResponse response = new ExtensionResponse();
         if (extensions != null && extensions.size() > 0) {
-
+            ier.setExtensionContext(this);
             for (RestcommExtensionGeneric extension : extensions) {
                 if(logger.isInfoEnabled()) {
                     logger.info( extension.getName()+" is enabled="+extension.isEnabled());
@@ -138,7 +160,7 @@ public class ExtensionController {
     public ExtensionResponse executePostOutboundAction(final IExtensionRequest er, List<RestcommExtensionGeneric> extensions) {
         ExtensionResponse response = new ExtensionResponse();
         if (extensions != null && extensions.size() > 0) {
-
+            er.setExtensionContext(this);
             for (RestcommExtensionGeneric extension : extensions) {
                 if(logger.isInfoEnabled()) {
                     logger.info( extension.getName()+" is enabled="+extension.isEnabled());
@@ -168,6 +190,7 @@ public class ExtensionController {
     public ExtensionResponse executePreInboundAction(final IExtensionRequest er, List<RestcommExtensionGeneric> extensions) {
         ExtensionResponse response = new ExtensionResponse();
         if (extensions != null && extensions.size() > 0) {
+            er.setExtensionContext(this);
             for (RestcommExtensionGeneric extension : extensions) {
                 if(logger.isInfoEnabled()) {
                     logger.info( extension.getName()+" is enabled="+extension.isEnabled());
@@ -197,6 +220,7 @@ public class ExtensionController {
     public ExtensionResponse executePostInboundAction(final IExtensionRequest er,  List<RestcommExtensionGeneric> extensions) {
         ExtensionResponse response = new ExtensionResponse();
         if (extensions != null && extensions.size() > 0) {
+            er.setExtensionContext(this);
             for (RestcommExtensionGeneric extension : extensions) {
                 if(logger.isInfoEnabled()) {
                     logger.info( extension.getName()+" is enabled="+extension.isEnabled());
@@ -227,6 +251,7 @@ public class ExtensionController {
         ExtensionResponse response = new ExtensionResponse();
 
         if (extensions != null && extensions.size() > 0) {
+            apiRequest.setExtensionContext(this);
             for (RestcommExtensionGeneric extension : extensions) {
                 if(logger.isInfoEnabled()) {
                     logger.info( extension.getName()+" is enabled="+extension.isEnabled());
@@ -257,6 +282,7 @@ public class ExtensionController {
         ExtensionResponse response = new ExtensionResponse();
 
         if (extensions != null && extensions.size() > 0) {
+            apiRequest.setExtensionContext(this);
             for (RestcommExtensionGeneric extension : extensions) {
                 if(logger.isInfoEnabled()) {
                     logger.info( extension.getName()+" is enabled="+extension.isEnabled());
@@ -281,5 +307,74 @@ public class ExtensionController {
             }
         }
         return response;
+    }
+
+    @Override
+    public ExtensionRules getEffectiveExtensionRules (String extensionSid, String scopeSid) {
+        ExtensionsRulesDao erd = daoManager.getExtensionsRulesDao();
+        ClientsDao cd = daoManager.getClientsDao();
+        AccountsDao ad = daoManager.getAccountsDao();
+        OrganizationsDao od = daoManager.getOrganizationsDao();
+
+        Sid sid = new Sid(scopeSid);
+        Sid.Type t = Sid.getType(sid);
+        Client client = null;
+        Account account = null;
+        Organization organization = null;
+
+        switch(t) {
+            case CLIENT:
+                client = cd.getClient(sid);
+                break;
+            case ACCOUNT:
+                account = ad.getAccount(sid);
+                break;
+            case ORGANIZATION:
+                organization = od.getOrganization(sid);
+                break;
+        }
+
+        //FIXME: might not be optimized
+        //preliminary check for all scopes: client, acc, org
+        ExtensionRules extRules = erd.getAccountExtensionRules(scopeSid, extensionSid);
+
+        //the scopeSid was a client
+        if(client!= null && extRules==null) {
+            account = ad.getAccount(client.getAccountSid());
+        }
+
+        //the scopeSid was an account
+        if(account!=null && extRules==null) {
+            extRules = erd.getAccountExtensionRules(account.getSid().toString(), extensionSid);
+            if(extRules==null) {
+                List<String> lineage = ad.getAccountLineage(sid);
+                for(String currSid : lineage) {
+                    if(logger.isInfoEnabled()) {
+                        logger.info("checking "+ currSid);
+                    }
+                    extRules = erd.getAccountExtensionRules(currSid, extensionSid);
+                    if(extRules != null) {
+                        break;
+                    }
+                }
+                organization = od.getOrganization(account.getOrganizationSid());
+            }
+        }
+
+        //the scopeSid was an org
+        if(organization!= null && extRules==null) {
+            //it is assumed that lineage will always have identical org, so we only check the originating account
+            extRules = erd.getAccountExtensionRules(organization.getSid().toString(), extensionSid);
+            if(logger.isInfoEnabled()) {
+                logger.info("checking "+ account.getOrganizationSid().toString());
+            }
+        }
+
+        //check default
+        if(extRules==null) {
+            //if no account specific entry is defined, we use the extension config
+            extRules = erd.getExtensionRulesBySid(new Sid(extensionSid));
+        }
+        return extRules;
     }
 }

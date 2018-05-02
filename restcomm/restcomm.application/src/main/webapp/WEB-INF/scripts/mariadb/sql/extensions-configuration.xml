@@ -22,35 +22,35 @@
 <!--
   @author gvagenas@telestax.com (George Vagenas)
 -->
-<mapper namespace="org.restcomm.connect.dao.ExtensionsConfigurationDao">
-  <insert id="addConfiguration" parameterType="map">
+<mapper namespace="org.restcomm.connect.dao.ExtensionsRulesDao">
+  <insert id="addExtensionRules" parameterType="map">
     INSERT INTO restcomm_extensions_configuration (sid, extension, configuration_data, configuration_type,
     date_created, date_updated, enabled) VALUES (#{sid}, #{extension}, #{configuration_data}, #{configuration_type},
     #{date_created}, #{date_updated}, #{enabled});
   </insert>
 
-  <update id="updateConfiguration" parameterType="map">
+  <update id="updateExtensionRules" parameterType="map">
     UPDATE restcomm_extensions_configuration SET configuration_data=#{configuration_data}, configuration_type=#{configuration_type}, date_updated=#{date_updated}, enabled=#{enabled}
     WHERE sid=#{sid}
   </update>
 
-  <select id="getConfigurationByName" parameterType="map" resultType="hashmap">
+  <select id="getExtensionRulesByName" parameterType="map" resultType="hashmap">
     SELECT * FROM restcomm_extensions_configuration WHERE extension=#{extension};
   </select>
 
-  <select id="getConfigurationBySid" parameterType="map" resultType="hashmap">
+  <select id="getExtensionRulesBySid" parameterType="map" resultType="hashmap">
     SELECT * FROM restcomm_extensions_configuration WHERE sid=#{sid};
   </select>
 
-  <select id="getAllConfiguration" parameterType="map" resultType="hashmap">
+  <select id="getAllExtensionRules" parameterType="map" resultType="hashmap">
     SELECT * FROM restcomm_extensions_configuration;
   </select>
 
-  <delete id="deleteConfigurationBySid" parameterType="string">
+  <delete id="deleteExtensionRulesBySid" parameterType="string">
     DELETE FROM restcomm_extensions_configuration WHERE sid=#{sid};
   </delete>
 
-  <delete id="deleteConfigurationByName" parameterType="string">
+  <delete id="deleteExtensionRulesByName" parameterType="string">
     DELETE FROM restcomm_extensions_configuration WHERE extension=#{extension};
   </delete>
 
@@ -62,22 +62,22 @@
     SELECT date_updated FROM restcomm_extensions_configuration WHERE sid=#{sid};
   </select>
 
-  <select id="getAccountExtensionConfiguration" parameterType="map" resultType="hashmap">
+  <select id="getAccountExtensionRules" parameterType="map" resultType="hashmap">
     SELECT configuration_data, account_sid AS "sid", extension_sid AS "extension" FROM restcomm_accounts_extensions
     WHERE account_sid=#{account_sid} AND extension_sid=#{extension_sid};
   </select>
 
-  <insert id="addAccountExtensionConfiguration" parameterType="map">
+  <insert id="addAccountExtensionRules" parameterType="map">
     INSERT INTO restcomm_accounts_extensions (account_sid, extension_sid, configuration_data)
     VALUES (#{account_sid}, #{extension_sid}, #{configuration_data});
   </insert>
 
-  <update id="updateAccountExtensionConfiguration" parameterType="map">
+  <update id="updateAccountExtensionRules" parameterType="map">
     UPDATE restcomm_accounts_extensions SET configuration_data=#{configuration_data}
     WHERE account_sid=#{account_sid} AND extension_sid=#{extension_sid};
   </update>
 
-  <delete id="deleteAccountExtensionConfiguration" parameterType="map">
+  <delete id="deleteAccountExtensionRules" parameterType="map">
     DELETE FROM restcomm_accounts_extensions
     WHERE account_sid=#{account_sid} AND extension_sid=#{extension_sid};
   </delete>

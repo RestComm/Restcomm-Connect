@@ -23,6 +23,8 @@ package org.restcomm.connect.extension.api;
 public class ExtensionRequest implements IExtensionRequest{
     private boolean allowed = true;
     private String accountSid;
+    private ExtensionContext extensionContext;
+
     public ExtensionRequest() {
         this("", true);
     }
@@ -56,6 +58,24 @@ public class ExtensionRequest implements IExtensionRequest{
     @Override
     public void setAllowed(boolean allowed) {
         this.allowed = allowed;
+    }
+
+    /**
+     * setExtensionContext
+     * @param ExtensionContext
+     */
+    @Override
+    public void setExtensionContext(ExtensionContext ec) {
+        this.extensionContext = ec;
+    }
+
+    /**
+     * getExtensionContext
+     * @return the current ExtensionContext
+     */
+    @Override
+    public ExtensionContext getExtensionContext() {
+        return this.extensionContext;
     }
 
 }

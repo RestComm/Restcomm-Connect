@@ -41,34 +41,34 @@ import org.apache.commons.configuration.Configuration;
 import org.joda.time.DateTime;
 import org.restcomm.connect.commons.dao.Sid;
 import org.restcomm.connect.dao.DaoManager;
-import org.restcomm.connect.dao.ExtensionsConfigurationDao;
+import org.restcomm.connect.dao.ExtensionsRulesDao;
 import org.restcomm.connect.dao.entities.RestCommResponse;
 import org.restcomm.connect.extension.api.ConfigurationException;
-import org.restcomm.connect.extension.api.ExtensionConfiguration;
+import org.restcomm.connect.extension.api.ExtensionRules;
 import org.restcomm.connect.http.converter.ExtensionConfigurationConverter;
 import org.restcomm.connect.http.converter.RestCommResponseConverter;
 
 /**
  * Created by gvagenas on 12/10/2016.
  */
-public class  ExtensionsConfigurationEndpoint extends SecuredEndpoint {
+public class ExtensionsRulesEndpoint extends SecuredEndpoint {
     protected Configuration allConfiguration;
     protected Configuration configuration;
     protected Gson gson;
     protected XStream xstream;
-    protected ExtensionsConfigurationDao extensionsConfigurationDao;
+    protected ExtensionsRulesDao extensionsRulesDao;
 
-    public ExtensionsConfigurationEndpoint() { super(); }
+    public ExtensionsRulesEndpoint () { super(); }
 
     @PostConstruct
     void init() {
         allConfiguration = (Configuration) context.getAttribute(Configuration.class.getName());
         configuration = allConfiguration.subset("runtime-settings");
         super.init(configuration);
-        extensionsConfigurationDao = ((DaoManager) context.getAttribute(DaoManager.class.getName())).getExtensionsConfigurationDao();
+        extensionsRulesDao = ((DaoManager) context.getAttribute(DaoManager.class.getName())).getExtensionsRulesDao();
         final ExtensionConfigurationConverter converter = new ExtensionConfigurationConverter(configuration);
         final GsonBuilder builder = new GsonBuilder();
-        builder.registerTypeAdapter(ExtensionConfiguration.class, converter);
+        builder.registerTypeAdapter(ExtensionRules.class, converter);
         builder.setPrettyPrinting();
         gson = builder.create();
         xstream = new XStream();
@@ -84,11 +84,11 @@ public class  ExtensionsConfigurationEndpoint extends SecuredEndpoint {
      * @param responseType
      * @return
      */
-    protected Response getConfiguration(final String extensionId, final Sid accountSid, final MediaType responseType) {
+    protected Response getRules (final String extensionId, final Sid accountSid, final MediaType responseType) {
         //Parameter "extensionId" could be the extension Sid or extension name.
 
-        ExtensionConfiguration extensionConfiguration = null;
-        ExtensionConfiguration extensionAccountConfiguration = null;
+        ExtensionRules extensionRules = null;
+        ExtensionRules extensionAccountRules = null;
         Sid extensionSid = null;
         String extensionName = null;
 
@@ -100,13 +100,13 @@ public class  ExtensionsConfigurationEndpoint extends SecuredEndpoint {
 
         if (Sid.pattern.matcher(extensionId).matches()) {
             try {
-                extensionConfiguration = extensionsConfigurationDao.getConfigurationBySid(extensionSid);
+                extensionRules = extensionsRulesDao.getExtensionRulesBySid(extensionSid);
             } catch (Exception e) {
                 return status(NOT_FOUND).build();
             }
         } else {
             try {
-                extensionConfiguration = extensionsConfigurationDao.getConfigurationByName(extensionName);
+                extensionRules = extensionsRulesDao.getExtensionRulesByName(extensionName);
             } catch (Exception e) {
                 return status(NOT_FOUND).build();
             }
@@ -114,24 +114,24 @@ public class  ExtensionsConfigurationEndpoint extends SecuredEndpoint {
 
         if (accountSid!=null) {
             if(extensionSid == null ){
-                extensionSid = extensionConfiguration.getSid();
+                extensionSid = extensionRules.getSid();
             }
             try {
-                extensionAccountConfiguration = extensionsConfigurationDao.getAccountExtensionConfiguration(accountSid.toString(), extensionSid.toString());
-                extensionConfiguration.setConfigurationData(extensionAccountConfiguration.getConfigurationData(), extensionAccountConfiguration.getConfigurationType());
+                extensionAccountRules = extensionsRulesDao.getAccountExtensionRules(accountSid.toString(), extensionSid.toString());
+                extensionRules.setConfigurationData(extensionAccountRules.getConfigurationData(), extensionAccountRules.getConfigurationType());
             } catch (Exception e) {
                 return status(NOT_FOUND).build();
             }
         }
 
-        if (extensionConfiguration == null) {
+        if (extensionRules == null) {
             return status(NOT_FOUND).build();
         } else {
             if (APPLICATION_XML_TYPE.equals(responseType)) {
-                final RestCommResponse response = new RestCommResponse(extensionConfiguration);
+                final RestCommResponse response = new RestCommResponse(extensionRules);
                 return ok(xstream.toXML(response), APPLICATION_XML).build();
             } else if (APPLICATION_JSON_TYPE.equals(responseType)) {
-                return ok(gson.toJson(extensionConfiguration), APPLICATION_JSON).build();
+                return ok(gson.toJson(extensionRules), APPLICATION_JSON).build();
             } else {
                 return null;
             }
@@ -146,26 +146,26 @@ public class  ExtensionsConfigurationEndpoint extends SecuredEndpoint {
         }
     }
 
-    private ExtensionConfiguration createFrom(final MultivaluedMap<String, String> data, final MediaType responseType) {
+    private ExtensionRules createFrom(final MultivaluedMap<String, String> data, final MediaType responseType) {
         validate(data);
         Sid sid = Sid.generate(Sid.Type.EXTENSION_CONFIGURATION);
         String extension = data.getFirst("ExtensionName");
         boolean enabled = Boolean.parseBoolean(data.getFirst("Enabled"));
         Object configurationData = data.getFirst("ConfigurationData");
-        ExtensionConfiguration.configurationType configurationType = null;
+        ExtensionRules.configurationType configurationType = null;
         if (responseType.equals(APPLICATION_JSON_TYPE)) {
-            configurationType = ExtensionConfiguration.configurationType.JSON;
+            configurationType = ExtensionRules.configurationType.JSON;
         } else if (responseType.equals(APPLICATION_XML_TYPE)) {
-            configurationType = ExtensionConfiguration.configurationType.XML;
+            configurationType = ExtensionRules.configurationType.XML;
         }
         DateTime dateCreated = DateTime.now();
         DateTime dateUpdated = DateTime.now();
-        ExtensionConfiguration extensionConfiguration = new ExtensionConfiguration(sid, extension, enabled, configurationData, configurationType, dateCreated, dateUpdated);
+        ExtensionRules extensionRules = new ExtensionRules(sid, extension, enabled, configurationData, configurationType, dateCreated, dateUpdated);
 
-        return extensionConfiguration;
+        return extensionRules;
     }
 
-    protected Response postConfiguration(final MultivaluedMap<String, String> data, final MediaType responseType) {
+    protected Response postRules (final MultivaluedMap<String, String> data, final MediaType responseType) {
 
         Sid accountSid = null;
 
@@ -175,16 +175,16 @@ public class  ExtensionsConfigurationEndpoint extends SecuredEndpoint {
         }
         //if extension doesnt exist, add new extension
         String extensionName = data.getFirst("ExtensionName");
-        ExtensionConfiguration extensionConfiguration = extensionsConfigurationDao.getConfigurationByName(extensionName);
+        ExtensionRules extensionRules = extensionsRulesDao.getExtensionRulesByName(extensionName);
 
-        if(extensionConfiguration==null){
+        if(extensionRules ==null){
             try {
-                extensionConfiguration = createFrom(data, responseType);
+                extensionRules = createFrom(data, responseType);
             } catch (final NullPointerException exception) {
                 return status(BAD_REQUEST).entity(exception.getMessage()).build();
             }
             try {
-                extensionsConfigurationDao.addConfiguration(extensionConfiguration);
+                extensionsRulesDao.addExtensionRules(extensionRules);
             } catch (ConfigurationException exception) {
                 return status(NOT_ACCEPTABLE).entity(exception.getMessage()).build();
             }
@@ -193,35 +193,35 @@ public class  ExtensionsConfigurationEndpoint extends SecuredEndpoint {
             try {
                 Object configurationData = data.getFirst("ConfigurationData");
                 // if accountSid exists, then this configuration is account specific, if it doesnt then its global config
-                extensionConfiguration.setConfigurationData(configurationData, extensionConfiguration.getConfigurationType());
-                extensionsConfigurationDao.addAccountExtensionConfiguration(extensionConfiguration, accountSid);
+                extensionRules.setConfigurationData(configurationData, extensionRules.getConfigurationType());
+                extensionsRulesDao.addAccountExtensionRules(extensionRules, accountSid);
             } catch (ConfigurationException exception) {
                 return status(NOT_ACCEPTABLE).entity(exception.getMessage()).build();
             }
         }
 
         if (APPLICATION_JSON_TYPE.equals(responseType)) {
-            return ok(gson.toJson(extensionConfiguration), APPLICATION_JSON).build();
+            return ok(gson.toJson(extensionRules), APPLICATION_JSON).build();
         } else if (APPLICATION_XML_TYPE.equals(responseType)) {
-            final RestCommResponse response = new RestCommResponse(extensionConfiguration);
+            final RestCommResponse response = new RestCommResponse(extensionRules);
             return ok(xstream.toXML(response), APPLICATION_XML).build();
         } else {
             return null;
         }
     }
 
-    protected Response updateConfiguration(String extensionSid, MultivaluedMap<String, String> data, MediaType responseType) {
+    protected Response updateRules (String extensionSid, MultivaluedMap<String, String> data, MediaType responseType) {
 
         if (!Sid.pattern.matcher(extensionSid).matches()) {
             return status(BAD_REQUEST).build();
         }
 
-        ExtensionConfiguration extensionConfiguration = extensionsConfigurationDao.getConfigurationBySid(new Sid(extensionSid));
-        if (extensionConfiguration == null) {
+        ExtensionRules extensionRules = extensionsRulesDao.getExtensionRulesBySid(new Sid(extensionSid));
+        if (extensionRules == null) {
             return status(NOT_FOUND).build();
         }
 
-        ExtensionConfiguration updatedExtensionConfiguration = null;
+        ExtensionRules updatedExtensionRules = null;
         Sid accountSid = null;
         String accountSidQuery = data.getFirst("AccountSid");
         if(accountSidQuery != null && !accountSidQuery.isEmpty()){
@@ -229,48 +229,48 @@ public class  ExtensionsConfigurationEndpoint extends SecuredEndpoint {
         }
 
         try {
-            updatedExtensionConfiguration = prepareUpdatedConfiguration(extensionConfiguration, data, responseType);
+            updatedExtensionRules = prepareUpdatedRules(extensionRules, data, responseType);
         } catch (final NullPointerException exception) {
             return status(BAD_REQUEST).entity(exception.getMessage()).build();
         }
 
         try {
             if (accountSid==null) {
-                extensionsConfigurationDao.updateConfiguration(updatedExtensionConfiguration);
+                extensionsRulesDao.updateExtensionRules(updatedExtensionRules);
             } else {
-                extensionsConfigurationDao.updateAccountExtensionConfiguration(updatedExtensionConfiguration, accountSid);
+                extensionsRulesDao.updateAccountExtensionRules(updatedExtensionRules, accountSid);
             }
         } catch (ConfigurationException exception) {
             return status(NOT_ACCEPTABLE).entity(exception.getMessage()).build();
         }
 
         if (APPLICATION_JSON_TYPE.equals(responseType)) {
-            return ok(gson.toJson(updatedExtensionConfiguration), APPLICATION_JSON).build();
+            return ok(gson.toJson(updatedExtensionRules), APPLICATION_JSON).build();
         } else if (APPLICATION_XML_TYPE.equals(responseType)) {
-            final RestCommResponse response = new RestCommResponse(updatedExtensionConfiguration);
+            final RestCommResponse response = new RestCommResponse(updatedExtensionRules);
             return ok(xstream.toXML(response), APPLICATION_XML).build();
         } else {
             return null;
         }
     }
 
-    private ExtensionConfiguration prepareUpdatedConfiguration(ExtensionConfiguration existingExtensionConfiguration, MultivaluedMap<String, String> data, MediaType responseType) {
+    private ExtensionRules prepareUpdatedRules (ExtensionRules existingExtensionRules, MultivaluedMap<String, String> data, MediaType responseType) {
         validate(data);
-        Sid existingExtensionSid = existingExtensionConfiguration.getSid();
-        String existingExtensionName = existingExtensionConfiguration.getExtensionName();
-        boolean enabled = existingExtensionConfiguration.isEnabled();
+        Sid existingExtensionSid = existingExtensionRules.getSid();
+        String existingExtensionName = existingExtensionRules.getExtensionName();
+        boolean enabled = existingExtensionRules.isEnabled();
         if (data.getFirst("Enabled") != null) {
             enabled = Boolean.parseBoolean(data.getFirst("Enabled"));
         }
         Object configurationData = data.getFirst("ConfigurationData");
-        DateTime dateCreated = existingExtensionConfiguration.getDateCreated();
-        ExtensionConfiguration.configurationType configurationType = null;
+        DateTime dateCreated = existingExtensionRules.getDateCreated();
+        ExtensionRules.configurationType configurationType = null;
         if (responseType.equals(APPLICATION_JSON_TYPE)) {
-            configurationType = ExtensionConfiguration.configurationType.JSON;
+            configurationType = ExtensionRules.configurationType.JSON;
         } else if (responseType.equals(APPLICATION_XML_TYPE)) {
-            configurationType = ExtensionConfiguration.configurationType.XML;
+            configurationType = ExtensionRules.configurationType.XML;
         }
 
-        return new ExtensionConfiguration(existingExtensionSid, existingExtensionName, enabled, configurationData, configurationType, dateCreated ,DateTime.now());
+        return new ExtensionRules(existingExtensionSid, existingExtensionName, enabled, configurationData, configurationType, dateCreated ,DateTime.now());
     }
 }

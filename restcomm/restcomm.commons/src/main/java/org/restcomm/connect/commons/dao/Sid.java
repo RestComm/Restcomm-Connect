@@ -31,12 +31,59 @@ import org.restcomm.connect.commons.configuration.RestcommConfiguration;
  */
 @Immutable
 public final class Sid {
+
+    private static String CALL_SID_STRING = "ID[a-zA-Z0-9]{32}-CA[a-zA-Z0-9]{32}";
     public static final Pattern pattern = Pattern.compile("[a-zA-Z0-9]{34}");
-    public static final Pattern callSidPattern = Pattern.compile("ID[a-zA-Z0-9]{32}-CA[a-zA-Z0-9]{32}");
+    public static final Pattern callSidPattern = Pattern.compile(CALL_SID_STRING);
+
     private final String id;
 
     public enum Type {
-        ACCOUNT, APPLICATION, ANNOUNCEMENT, CALL, CLIENT, CONFERENCE, GATEWAY, INVALID, NOTIFICATION, PHONE_NUMBER, RECORDING, REGISTRATION, SHORT_CODE, SMS_MESSAGE, TRANSCRIPTION, INSTANCE, EXTENSION_CONFIGURATION, GEOLOCATION, ORGANIZATION, PROFILE
+        CALL(null, CALL_SID_STRING),
+        ACCOUNT("AC"),
+        APPLICATION("AP"),
+        ANNOUNCEMENT("AN"),
+
+        CLIENT("CL"),
+        CONFERENCE("CF"),
+        GATEWAY("GW"),
+
+        NOTIFICATION("NO"),
+        PHONE_NUMBER("PN"),
+        RECORDING("RE"),
+        REGISTRATION("RG"),
+        SHORT_CODE("SC"),
+        SMS_MESSAGE("SM"),
+        TRANSCRIPTION("TR"),
+        INSTANCE("ID"),
+        EXTENSION_CONFIGURATION("EX"),
+        GEOLOCATION("GL"),
+        ORGANIZATION("OR"),
+        PROFILE("PR"),
+        INVALID("IN");
+
+        private final String prefix;
+        private final String regex;
+        private final Pattern pattern;
+        private static final String UUID_PATTERN = "[a-zA-Z0-9]{32}";
+        private Type(final String prefix) {
+            this(prefix, null);
+        }
+        private Type(final String prefix, String regex) {
+            this.prefix = prefix;
+            if(regex==null) {
+                this.regex = prefix + UUID_PATTERN;
+            }else{
+                this.regex = regex;
+            }
+            pattern = Pattern.compile(this.regex);
+        }
+        public String getPrefix() {
+            return prefix;
+        }
+        public boolean isType(Sid sid) {
+            return pattern.matcher(sid.toString()).matches();
+        }
     };
 
     private static final Sid INVALID_SID = new Sid("IN00000000000000000000000000000000");
@@ -49,6 +96,18 @@ public final class Sid {
         } else {
             throw new IllegalArgumentException(id + " is an INVALID_SID sid value.");
         }
+    }
+
+    public static Type getType(Sid sid) {
+        Type res = Type.INVALID;
+
+        for(Type type: Type.values()) {
+            if(type.isType(sid)) {
+                res = type;
+                break;
+            }
+        }
+        return res;
     }
 
     @Override
@@ -74,7 +133,7 @@ public final class Sid {
         String token = new Md5Hash(string).toString();
         switch (type) {
             case ACCOUNT: {
-                return new Sid("AC" + token);
+                return new Sid(type.getPrefix() + token);
             }
             default: {
                 return generate(type);
@@ -85,66 +144,32 @@ public final class Sid {
     public static Sid generate(final Type type) {
         final String uuid = UUID.randomUUID().toString().replace("-", "");
         switch (type) {
-            case ACCOUNT: {
-                return new Sid("AC" + uuid);
-            }
-            case APPLICATION: {
-                return new Sid("AP" + uuid);
-            }
-            case ANNOUNCEMENT: {
-                return new Sid("AN" + uuid);
-            }
             case CALL: {
                 //https://github.com/RestComm/Restcomm-Connect/issues/1907
                 return new Sid(RestcommConfiguration.getInstance().getMain().getInstanceId() + "-CA" + uuid);
             }
-            case CLIENT: {
-                return new Sid("CL" + uuid);
-            }
-            case CONFERENCE: {
-                return new Sid("CF" + uuid);
-            }
-            case GATEWAY: {
-                return new Sid("GW" + uuid);
-            }
-            case INVALID: {
+            case INVALID:{
                 return INVALID_SID;
             }
-            case NOTIFICATION: {
-                return new Sid("NO" + uuid);
-            }
-            case PHONE_NUMBER: {
-                return new Sid("PN" + uuid);
-            }
-            case RECORDING: {
-                return new Sid("RE" + uuid);
-            }
-            case REGISTRATION: {
-                return new Sid("RG" + uuid);
-            }
-            case SHORT_CODE: {
-                return new Sid("SC" + uuid);
-            }
-            case SMS_MESSAGE: {
-                return new Sid("SM" + uuid);
-            }
-            case TRANSCRIPTION: {
-                return new Sid("TR" + uuid);
-            }
-            case INSTANCE: {
-                return new Sid("ID" + uuid);
-            }
-            case EXTENSION_CONFIGURATION: {
-                return new Sid("EX" + uuid);
-            }
-            case GEOLOCATION: {
-                return new Sid("GL" + uuid);
-            }
-            case ORGANIZATION: {
-                return new Sid("OR" + uuid);
-            }
-            case PROFILE: {
-                return new Sid("PR" + uuid);
+            case ACCOUNT:
+            case APPLICATION:
+            case ANNOUNCEMENT:
+            case CLIENT:
+            case CONFERENCE:
+            case GATEWAY:
+            case NOTIFICATION:
+            case PHONE_NUMBER:
+            case RECORDING:
+            case REGISTRATION:
+            case SHORT_CODE:
+            case SMS_MESSAGE:
+            case TRANSCRIPTION:
+            case INSTANCE:
+            case EXTENSION_CONFIGURATION:
+            case GEOLOCATION:
+            case ORGANIZATION:
+            case PROFILE:{
+                return new Sid(type.getPrefix() + uuid);
             }
             default: {
                 return null;
@@ -164,4 +189,5 @@ public final class Sid {
     public String toString() {
         return id;
     }
+
 }
