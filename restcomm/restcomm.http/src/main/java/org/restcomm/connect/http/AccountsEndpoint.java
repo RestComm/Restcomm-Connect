@@ -482,7 +482,7 @@ public class AccountsEndpoint extends SecuredEndpoint {
         builder.setAccountSid(accountSid);
         builder.setApiVersion(getApiVersion(data));
         builder.setLogin(data.getFirst("Login"));
-        builder.setPassword(data.getFirst("Login"), password, organizationsDao.getOrganization(accountsDao.getAccount(accountSid).getOrganizationSid()).getDomainName());
+        builder.setPassword(data.getFirst("Login"), password, organizationsDao.getOrganization(accountsDao.getAccount(accountSid).getOrganizationSid()).getDomainName(), "");
         builder.setFriendlyName(data.getFirst("FriendlyName"));
         builder.setStatus(Client.ENABLED);
         final StringBuilder buffer = new StringBuilder();
