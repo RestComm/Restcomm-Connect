@@ -79,6 +79,7 @@ rcMod.controller('LogsCallsCtrl', function($scope, $resource, $timeout, $uibModa
     if (search.sub_accounts) {
       params["SubAccounts"] = search.sub_accounts;
     }
+    $scope.hasCriteria = !_.isEmpty(params);
     params["Reverse"] = $scope.reverse;
 
     return params;

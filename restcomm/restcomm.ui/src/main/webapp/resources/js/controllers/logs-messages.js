@@ -95,6 +95,7 @@ rcMod.controller('LogsMessagesCtrl', function ($scope, $resource, $timeout, $uib
     if(search.body) {
       params["Body"] = search.body;
     }
+    $scope.hasCriteria = !_.isEmpty(params);
 
     return params;
   }

@@ -105,6 +105,7 @@ rcMod.controller('LogsNotificationsCtrl', function ($scope, $resource, $timeout,
     if(search.message_text) {
       params["MessageText"] = search.message_text;
     }
+    $scope.hasCriteria = !_.isEmpty(params);
 
     return params;
   }

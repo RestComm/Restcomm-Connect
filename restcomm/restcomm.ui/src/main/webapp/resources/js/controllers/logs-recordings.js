@@ -104,6 +104,7 @@ rcMod.controller('LogsRecordingsCtrl', function($scope, $resource, $timeout, $ui
       // FIXME: using '%' at start doesn't fully work... why?
       params["CallSid"] = (search.call_sid + '%');
     }
+    $scope.hasCriteria = !_.isEmpty(params);
 
     return params;
   }
