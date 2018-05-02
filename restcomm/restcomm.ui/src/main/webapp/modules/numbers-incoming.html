@@ -16,10 +16,16 @@
 <div class="row">
     <div class="col-md-12">
 
-        <div ng-hide="!numbersList || numbersList.length > 0" class="jumbotron rc-no-items">
+        <div ng-show="!query.phone_number && (!numbersList || (numbersList && numbersList.length === 0))" class="jumbotron rc-no-items">
             <h1><i class="fa fa-globe"></i> </h1>
             <h2>No incoming numbers</h2>
             <h5>Register one now!</h5>
+        </div>
+
+        <div ng-show="query.phone_number && (!numbersList || (numbersList && numbersList.length === 0))" class="jumbotron rc-no-items">
+            <h1><i class="fa fa-search"></i> </h1>
+            <h2>No numbers found for "{{ query.phone_number }}"</h2>
+            <h5>Please update your search and try again.</h5>
         </div>
 
         <table ng-show="(numbersList | filter:query).length > 0" class="table table-hover rc-list numbers-list" ng-cloak>

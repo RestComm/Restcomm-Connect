@@ -23,13 +23,19 @@
         </div>
         <hr>
 
-        <div ng-hide="filtered.length > 0" class="jumbotron rc-no-items">
+        <div ng-show="!search.friendly_name && (!subAccountsList || (filtered.length === 0))" class="jumbotron rc-no-items">
             <h1><i class="fa fa-users"></i> </h1>
             <h2>No Sub Accounts</h2>
             <h5>Why don't you get some friends in?</h5>
         </div>
 
-        <table ng-show="(subAccountsList | filter:search).length > 0" class="table table-hover rc-list sub-accounts-list" ng-cloak>
+        <div ng-show="search.friendly_name && (!subAccountsList || (filtered.length === 0))" class="jumbotron rc-no-items">
+            <h1><i class="fa fa-search"></i> </h1>
+            <h2>No accounts found for "{{ search.friendly_name }}"</h2>
+            <h5>Please update your search and try again.</h5>
+        </div>
+
+        <table ng-show="filtered.length > 0" class="table table-hover rc-list sub-accounts-list" ng-cloak>
             <thead>
             <th class="sub-accounts-list-name" rc-list-sort by="predicate" order="'friendly_name'" reverse="reverse">Name</th>
             <th class="sub-accounts-list-account-sid">Account SID</th>
