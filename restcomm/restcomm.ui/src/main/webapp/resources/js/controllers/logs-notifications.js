@@ -26,7 +26,8 @@ rcMod.controller('LogsNotificationsCtrl', function ($scope, $resource, $timeout,
 
   $scope.setEntryLimit = function(limit) {
     $scope.entryLimit = limit;
-    $scope.noOfPages = Math.ceil($scope.filtered.length / $scope.entryLimit);
+    $scope.currentPage = 1;
+    $scope.getNotificationsLogsList($scope.currentPage-1);
   };
 
 /*
