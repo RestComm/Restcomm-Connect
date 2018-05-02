@@ -780,17 +780,6 @@ confRcmlserver() {
     echo "Configured <rcmlserver/>. base-url set to '$RVD_URL'"
 }
 
-
-#Auto Configure RMS Networking, if  MANUAL_SETUP=false.
-configRMSNetworking() {
-    if [[ "$MANUAL_SETUP" == "false" || "$MANUAL_SETUP" == "FALSE" ]]; then
-        sed -i "s|BIND_ADDRESS=.*|BIND_ADDRESS=${BIND_ADDRESS}|" $RESTCOMM_BIN/restcomm/mediaserver.conf
-        sed -i "s|MGCP_ADDRESS=.*|MGCP_ADDRESS=${BIND_ADDRESS}|" $RESTCOMM_BIN/restcomm/mediaserver.conf
-        sed -i "s|NETWORK=.*|NETWORK=${BIND_NETWORK}|" $RESTCOMM_BIN/restcomm/mediaserver.conf
-        sed -i "s|SUBNET=.*|SUBNET=${BIND_SUBNET_MASK}|" $RESTCOMM_BIN/restcomm/mediaserver.conf
-    fi
-}
-
 configAsrDriver() {
     if [ ! -z "$MG_ASR_DRIVERS" ] && [ ! -z "$MG_ASR_DRIVER_DEFAULT" ]; then
         FILE=$RESTCOMM_DEPLOY/WEB-INF/conf/restcomm.xml
@@ -909,7 +898,6 @@ configPushNotificationServer
 otherRestCommConf
 confRcmlserver
 confRVD
-configRMSNetworking
 configAsrDriver
 configDnsProvisioningManager
 configConferenceTimeout

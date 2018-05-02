@@ -20,10 +20,6 @@ NoSslRestConf(){
 	mv $FILE.bak $FILE
 	sed -e "s/<.*connector name=\"http\".*>/<connector name=\"http\" protocol=\"HTTP\/1.1\" scheme=\"http\" socket-binding=\"http\"\/> /" $FILE > $FILE.bak
 	mv $FILE.bak $FILE
-
-    sed -i "s|SSL_ENABLED=.*|SSL_ENABLED=false|" $RESTCOMM_BIN/restcomm/mediaserver.conf
-    sed -i "s|SSL_KEYSTORE=.*|SSL_KEYSTORE=restcomm.jks|" $RESTCOMM_BIN/restcomm/mediaserver.conf
-    sed -i "s|SSL_PASSWORD=.*|SSL_PASSWORD=changeme|" $RESTCOMM_BIN/restcomm/mediaserver.conf
 }
 
 ####funcitions for SECURESSL="SELF" || SECURESSL="AUTH" ####
@@ -197,10 +193,6 @@ SslRMSConf(){
 	    else
 		    CERTIFICATION_FILE="$RESTCOMM_CONF/$TRUSTSTORE_FILE"
 	    fi
-
-        sed -i "s|SSL_ENABLED=.*|SSL_ENABLED=true|" $RESTCOMM_BIN/restcomm/mediaserver.conf
-        sed -i "s|SSL_KEYSTORE=.*|SSL_KEYSTORE=${CERTIFICATION_FILE}|" $RESTCOMM_BIN/restcomm/mediaserver.conf
-        sed -i "s|SSL_PASSWORD=.*|SSL_PASSWORD=${TRUSTSTORE_PASSWORD}|" $RESTCOMM_BIN/restcomm/mediaserver.conf
     fi
 }
 
