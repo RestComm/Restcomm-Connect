@@ -8,7 +8,7 @@ BASEDIR=$RESTCOMM_HOME
 
 # Copy Media Server configuration overrides to configuration folder
 copyConfiguration(){
-    cp $BASEDIR/bin/restcomm/media-extra.yml $BASEDIR/mediaserver/conf
+    cp -f $BASEDIR/bin/restcomm/media-extra.yml $BASEDIR/mediaserver/conf
 }
 
 # MAIN
