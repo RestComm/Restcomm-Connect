@@ -161,10 +161,11 @@ public final class SmppService extends RestcommUntypedActor {
             long enquireLinkDelay = smppConfiguration.getLong("connections.connection(" + count + ").enquirelinkdelay");
             String inboundCharacterEncoding = smppConfiguration.getString("connections.connection(" + count + ").inboundencoding");
             String outboundCharacterEncoding = smppConfiguration.getString("connections.connection(" + count + ").outboundencoding");
+            boolean messagePayloadFlag = smppConfiguration.getBoolean("connections.connection(" + count + ").messagepayloadflag");
 
             Smpp smpp = new Smpp(name, systemId, peerIp, peerPort, bindtype, password, systemType, interfaceVersion, address,
                     connectTimeout, windowSize, windowWaitTimeout, requestExpiryTimeout, windowMonitorInterval,
-                    countersEnabled, logBytes, enquireLinkDelay, inboundCharacterEncoding, outboundCharacterEncoding);
+                    countersEnabled, logBytes, enquireLinkDelay, inboundCharacterEncoding, outboundCharacterEncoding, messagePayloadFlag);
 
             this.smppList.add(smpp);
 
