@@ -1,0 +1,62 @@
+mediaserver:
+
+  network:
+    address: 127.0.0.1
+    externalAddress: null
+    network: 127.0.0.1
+    subnet: 255.255.255.255
+    sbc: false
+
+  controller:
+    mgcp:
+      address: 127.0.0.1
+      port: 2427
+
+  media:
+    timeout: 0
+    halfOpenDuration: 300
+    maxDuration: 14400
+    lowPort: 34534
+    highPort: 65534
+    jitterBuffer:
+      size: 50
+    codecs:
+      - pcmu
+      - pcma
+      - opus
+      - l16
+      - gsm
+      - g729
+      - telephone-event
+
+  resources:
+    player:
+      connectionTimeout: 2000
+      cache:
+        enabled: false
+        size: 100
+    dtmfDetector:
+      dbi: -35
+      toneDuration: 100
+      toneInterval: 20
+    dtmfGenerator:
+      toneVolume: -20
+      toneDuration: 100
+
+  dtls:
+    minVersion: 1.0
+    maxVersion: 1.2
+    cipherSuites: TLS_ECDHE_ECDSA_WITH_AES_128_GCM_SHA256,TLS_ECDHE_ECDSA_WITH_CHACHA20_POLY1305_SHA256,TLS_ECDHE_ECDSA_WITH_AES_128_CBC_SHA,TLS_ECDHE_ECDSA_WITH_AES_256_CBC_SHA
+    certificate:
+      path: "../conf/dtls/x509-server-ecdsa.pem"
+      key: "../conf/dtls/x509-server-key-ecdsa.pem"
+      algorithm: ecdsa
+
+  ssl:
+    keyStore: null
+    keyStorePassword: null
+    trustStore: null
+    trustStorePassword: null
+    trustStoreType: null
+    debug: null
+

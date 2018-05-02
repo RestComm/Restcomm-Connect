@@ -9,7 +9,7 @@ RESTCOMM_HOME=$(cd $BASEDIR/../../ && pwd)
 MS_HOME=$RESTCOMM_HOME/mediaserver
 
 stopMediaServer() {
-    source $BASEDIR/stop-mediaserver.sh
+    source $MS_HOME/bin/stop-mediaserver.sh
 }
 
 stopRestComm() {
