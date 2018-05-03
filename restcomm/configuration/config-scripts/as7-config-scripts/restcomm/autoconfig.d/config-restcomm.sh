@@ -494,6 +494,8 @@ configSMPPAccount() {
 	destinationMap="$8"
 	inboundEncoding="$9"
 	outboundEncoding="${10}"
+	messagePayloadFlag="${11}"
+	autoDetectDcsFlag="${12}"
 
 
 	sed -i "s|<smpp class=\"org.restcomm.connect.sms.smpp.SmppService\" activateSmppConnection =\".*\">|<smpp class=\"org.restcomm.connect.sms.smpp.SmppService\" activateSmppConnection =\"$activate\">|g" $FILE
@@ -536,6 +538,12 @@ configSMPPAccount() {
         fi
         if [ ! -z "${outboundEncoding}" ]; then
             xmlstarlet ed -L -P -u  "/restcomm/smpp/connections/connection/outboundencoding" -v $outboundEncoding $FILE
+        fi
+        if [ ! -z "${messagePayloadFlag}" ]; then
+            xmlstarlet ed -L -P -u  "/restcomm/smpp/connections/connection/messagepayloadflag" -v $messagePayloadFlag $FILE
+        fi
+        if [ ! -z "${autoDetectDcsFlag}" ]; then
+            xmlstarlet ed -L -P -u  "/restcomm/smpp/connections/connection/autodetectdcsflag" -v $autoDetectDcsFlag $FILE
         fi
 		echo 'Configured SMPP Account Details'
 
@@ -900,7 +908,7 @@ configSpeechRecognizer "$ISPEECH_KEY"
 configSpeechSynthesizers
 configTelestaxProxy "$ACTIVE_PROXY" "$TP_LOGIN" "$TP_PASSWORD" "$INSTANCE_ID" "$PROXY_IP" "$SITE_ID"
 configMediaServerManager "$MGCP_ADDRESS" "$MS_ADDRESS" "$MEDIASERVER_EXTERNAL_ADDRESS"
-configSMPPAccount "$SMPP_ACTIVATE" "$SMPP_SYSTEM_ID" "$SMPP_PASSWORD" "$SMPP_SYSTEM_TYPE" "$SMPP_PEER_IP" "$SMPP_PEER_PORT" "$SMPP_SOURCE_MAP" "$SMPP_DEST_MAP" "$SMPP_INBOUND_ENCODING" "$SMPP_OUTBOUND_ENCODING"
+configSMPPAccount "$SMPP_ACTIVATE" "$SMPP_SYSTEM_ID" "$SMPP_PASSWORD" "$SMPP_SYSTEM_TYPE" "$SMPP_PEER_IP" "$SMPP_PEER_PORT" "$SMPP_SOURCE_MAP" "$SMPP_DEST_MAP" "$SMPP_INBOUND_ENCODING" "$SMPP_OUTBOUND_ENCODING" "$SMPP_MESSAGE_PAYLOAD_FLAG" "$SMPP_AUTO_DETECT_DCS_FLAG"
 configRestCommURIs
 updateRecordingsPath
 configHypertextPort

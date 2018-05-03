@@ -168,6 +168,7 @@ public class SmppMessageHandler extends RestcommUntypedActor {
     static final int ERROR_NOTIFICATION = 0;
     static final int WARNING_NOTIFICATION = 1;
     private static final int CONTENT_LENGTH_MAX = 140;
+    private static final int DATA_CODING_AUTODETECT = 0x80;
 
     // used for sending warning and error logs to notification engine and to the console
     private void sendNotification(String errMessage, int errCode, String errType, boolean createNotification) {
@@ -354,6 +355,7 @@ public class SmppMessageHandler extends RestcommUntypedActor {
 
         byte[] textBytes;
         int smppTonNpiValue = Integer.parseInt(SmppService.getSmppTonNpiValue());
+        boolean autodetectdcs = SmppClientOpsThread.getAutoDetectDcsFlag();
         // add delivery receipt
         //submit0.setRegisteredDelivery(SmppConstants.REGISTERED_DELIVERY_SMSC_RECEIPT_REQUESTED);
         SubmitSm submit0 = new SubmitSm();
@@ -365,6 +367,9 @@ public class SmppMessageHandler extends RestcommUntypedActor {
         } else {
             submit0.setDataCoding(SmppConstants.DATA_CODING_DEFAULT);
             textBytes = CharsetUtil.encode(request.getSmppContent(), SmppClientOpsThread.getOutboundDefaultEncoding());
+        }
+        if(autodetectdcs) {
+            submit0.setDataCoding((byte) DATA_CODING_AUTODETECT);
         }
 
         boolean payloadFlag = SmppClientOpsThread.getMessagePayloadFlag();

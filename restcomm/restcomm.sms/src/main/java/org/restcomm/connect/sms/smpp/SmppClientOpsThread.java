@@ -67,6 +67,7 @@ public class SmppClientOpsThread implements Runnable {
     private static Charset outboundEncoding;
     private static Charset inboundEncoding;
     private static boolean messagePayloadFlag;
+    private static boolean autoDetectDcsFlag;
     protected volatile boolean started = true;
     private static int sipPort;
 
@@ -305,6 +306,7 @@ public class SmppClientOpsThread implements Runnable {
             inboundEncoding = esme.getInboundDefaultEncoding();
             outboundEncoding = esme.getOutboundDefaultEncoding();
             messagePayloadFlag = esme.getMessagePayloadFlag();
+            autoDetectDcsFlag = esme.getAutoDetectDcsFlag();
         }
 
         @Override
@@ -373,10 +375,15 @@ public class SmppClientOpsThread implements Runnable {
                         encoding = CharsetUtil.CHARSET_UCS_2;
                     }
 
-                    byte[] pduMessage = new byte[] {};
+                    byte[] pduMessage = deliverSm.getShortMessage();
+                    int smsLength = deliverSm.getShortMessageLength();
+                    byte esmClass = deliverSm.getEsmClass();
+                    byte msgType = (byte)(((esmClass) >> 2) & 0x0f);
+                    if(logger.isDebugEnabled()) {
+                        logger.debug("deliverSm="+deliverSm.toString()+" getShortMessage message body " + Arrays.toString(pduMessage)+" smsLength="+smsLength+" esmClass="+Byte.toString(esmClass)+" msgType="+Byte.toString(msgType));
+                    }
                     //check message_payload
-                    if(deliverSm.getShortMessageLength() == 0) {
-                        pduMessage = deliverSm.getShortMessage();
+                    if(smsLength > 0) {
                         if(logger.isInfoEnabled()) {
                             logger.info("Using message from message body " + Arrays.toString(pduMessage));
                         }
@@ -394,11 +401,17 @@ public class SmppClientOpsThread implements Runnable {
                         }
                     }
                     String decodedPduMessage = CharsetUtil.decode(pduMessage, encoding);
-                    //send received SMPP PDU message to restcomm
-                    try {
-                        sendSmppMessageToRestcomm(decodedPduMessage, destSmppAddress, sourceSmppAddress, encoding);
-                    } catch (IOException | ServletException e) {
-                        logger.error("Exception while trying to dispatch incoming SMPP message to Restcomm: " + e);
+                    //send received SMPP PDU message to restcomm only if not DLR
+                    if (msgType == 0x0) {
+                        try {
+                            sendSmppMessageToRestcomm(decodedPduMessage, destSmppAddress, sourceSmppAddress, encoding);
+                        } catch (IOException | ServletException e) {
+                            logger.error("Exception while trying to dispatch incoming SMPP message to Restcomm: " + e);
+                        }
+                    } else {
+                       if(logger.isInfoEnabled()) {
+                           logger.info("Message is not normal request, esmClass:" + esmClass +", Using message from message body " + decodedPduMessage);
+                        }
                     }
                 } catch (Exception e) {
                     logger.error("Exception while trying to process incoming SMPP message to Restcomm: " + e);
@@ -473,5 +486,10 @@ public class SmppClientOpsThread implements Runnable {
 
     public static boolean getMessagePayloadFlag() {
         return messagePayloadFlag;
+    }
+
+
+    public static boolean getAutoDetectDcsFlag() {
+        return autoDetectDcsFlag;
     }
 }
