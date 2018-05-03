@@ -81,7 +81,7 @@ public final class ClientsDaoTest extends DaoTest {
         builder.setApiVersion("2012-04-24");
         builder.setFriendlyName("Alice");
         builder.setLogin("alice");
-        builder.setPassword("alice", "1234", realm);
+        builder.setPassword("alice", "1234", realm, "");
         builder.setStatus(Client.ENABLED);
         builder.setVoiceUrl(url);
         builder.setVoiceMethod(method);
@@ -168,7 +168,7 @@ public final class ClientsDaoTest extends DaoTest {
         builder.setApiVersion("2012-04-24");
         builder.setFriendlyName("Tom");
         builder.setLogin("tom");
-        builder.setPassword("tom", "1234", realm);
+        builder.setPassword("tom", "1234", realm, "");
         builder.setStatus(Client.ENABLED);
         builder.setVoiceUrl(url);
         builder.setVoiceMethod(method);
@@ -215,7 +215,7 @@ public final class ClientsDaoTest extends DaoTest {
         builder.setApiVersion("2012-04-24");
         builder.setFriendlyName("Tom");
         builder.setLogin("tom");
-        builder.setPassword("tom", "1234", realm);
+        builder.setPassword("tom", "1234", realm, "");
         builder.setStatus(Client.ENABLED);
         builder.setVoiceUrl(url);
         builder.setVoiceMethod(method);

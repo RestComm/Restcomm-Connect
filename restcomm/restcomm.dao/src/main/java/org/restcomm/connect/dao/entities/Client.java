@@ -256,9 +256,14 @@ public final class Client {
          * @param login
          * @param password
          * @param realm
+         * @param algorithm TODO
          */
-        public void setPassword(final String login, final String password, final String realm) {
-            this.password = DigestAuthentication.HA1(login, realm, password);
+        public void setPassword(final String login, final String password, final String realm, String algorithm) {
+            if(!algorithm.isEmpty()) {
+                this.password = DigestAuthentication.HA1(login, realm, password);
+            }else {
+                this.password = password;
+            }
         }
 
         public void setStatus(final int status) {

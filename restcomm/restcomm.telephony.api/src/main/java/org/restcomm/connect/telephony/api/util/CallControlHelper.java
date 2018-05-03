@@ -65,7 +65,14 @@ public class CallControlHelper {
         final Client client = clients.getClient(user, organizationSid);
         //only allow if client algo is identical to system algo
         if (client != null && Client.ENABLED == client.getStatus()) {
-            final String password2 = client.getPassword();
+            String password = "";
+            String password2 = "";
+            //if password is empty or clear
+            if(client.getPasswordAlgorithm().isEmpty()) {
+                password = client.getPassword();
+            }else {
+                password2 = client.getPassword();
+            }
             final String result = DigestAuthentication.response(algorithm, user, realm, "", password2, nonce, nc, cnonce,
                     method, uri, null, qop);
             if (logger.isDebugEnabled()) {
