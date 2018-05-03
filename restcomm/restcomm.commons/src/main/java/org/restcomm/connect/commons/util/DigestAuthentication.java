@@ -68,7 +68,7 @@ public final class DigestAuthentication {
      * @param user
      * @param realm
      * @param password
-     * @param password2
+     * @param clientPasswordAlgorithm
      * @param nonce
      * @param nc
      * @param cnonce
