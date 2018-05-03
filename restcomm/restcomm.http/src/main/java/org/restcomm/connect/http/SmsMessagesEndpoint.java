@@ -32,6 +32,7 @@ import com.google.gson.GsonBuilder;
 import com.google.i18n.phonenumbers.NumberParseException;
 import com.google.i18n.phonenumbers.PhoneNumberUtil;
 import com.google.i18n.phonenumbers.PhoneNumberUtil.PhoneNumberFormat;
+import com.sun.jersey.spi.resource.Singleton;
 import com.thoughtworks.xstream.XStream;
 import java.math.BigDecimal;
 import java.net.URI;
@@ -44,6 +45,12 @@ import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.TimeUnit;
 import javax.annotation.PostConstruct;
 import javax.servlet.ServletContext;
+import javax.ws.rs.GET;
+import javax.ws.rs.HeaderParam;
+import javax.ws.rs.POST;
+import javax.ws.rs.Path;
+import javax.ws.rs.PathParam;
+import javax.ws.rs.Produces;
 import javax.ws.rs.core.Context;
 import javax.ws.rs.core.MediaType;
 import static javax.ws.rs.core.MediaType.*;
@@ -52,9 +59,10 @@ import javax.ws.rs.core.Response;
 import static javax.ws.rs.core.Response.Status.*;
 import static javax.ws.rs.core.Response.ok;
 import static javax.ws.rs.core.Response.status;
+import javax.ws.rs.core.SecurityContext;
 import javax.ws.rs.core.UriInfo;
 import org.apache.commons.configuration.Configuration;
-import org.restcomm.connect.commons.annotations.concurrency.NotThreadSafe;
+import org.restcomm.connect.commons.annotations.concurrency.ThreadSafe;
 import org.restcomm.connect.commons.configuration.RestcommConfiguration;
 import org.restcomm.connect.commons.dao.Sid;
 import org.restcomm.connect.commons.faulttolerance.RestcommUntypedActor;
@@ -69,6 +77,9 @@ import org.restcomm.connect.dao.entities.SmsMessageList;
 import org.restcomm.connect.http.converter.RestCommResponseConverter;
 import org.restcomm.connect.http.converter.SmsMessageConverter;
 import org.restcomm.connect.http.converter.SmsMessageListConverter;
+import org.restcomm.connect.http.security.ContextUtil;
+import org.restcomm.connect.http.security.PermissionEvaluator.SecuredType;
+import org.restcomm.connect.identity.UserIdentityContext;
 import org.restcomm.connect.sms.api.CreateSmsSession;
 import org.restcomm.connect.sms.api.SmsServiceResponse;
 import org.restcomm.connect.sms.api.SmsSessionAttribute;
@@ -82,8 +93,10 @@ import scala.concurrent.duration.Duration;
 /**
  * @author quintana.thomas@gmail.com (Thomas Quintana)
  */
-@NotThreadSafe
-public abstract class SmsMessagesEndpoint extends SecuredEndpoint {
+@Path("/Accounts/{accountSid}/SMS/Messages")
+@ThreadSafe
+@Singleton
+public class SmsMessagesEndpoint extends AbstractEndpoint {
     @Context
     protected ServletContext context;
     protected ActorSystem system;
@@ -96,6 +109,9 @@ public abstract class SmsMessagesEndpoint extends SecuredEndpoint {
     protected String instanceId;
 
     private boolean normalizePhoneNumbers;
+
+
+
 
     public SmsMessagesEndpoint() {
         super();
@@ -129,14 +145,22 @@ public abstract class SmsMessagesEndpoint extends SecuredEndpoint {
         normalizePhoneNumbers = configuration.getBoolean("normalize-numbers-for-outbound-calls");
     }
 
-    protected Response getSmsMessage(final String accountSid, final String sid, final MediaType responseType) {
+    protected Response getSmsMessage(final String accountSid,
+            final String sid,
+            final MediaType responseType,
+            UserIdentityContext userIdentityContext) {
         Account operatedAccount = accountsDao.getAccount(accountSid);
-        secure(operatedAccount, "RestComm:Read:SmsMessages");
+        permissionEvaluator.secure(operatedAccount,
+                "RestComm:Read:SmsMessages",
+                userIdentityContext);
         final SmsMessage smsMessage = dao.getSmsMessage(new Sid(sid));
         if (smsMessage == null) {
             return status(NOT_FOUND).build();
         } else {
-            secure(operatedAccount, smsMessage.getAccountSid(), SecuredType.SECURED_STANDARD);
+            permissionEvaluator.secure(operatedAccount,
+                    smsMessage.getAccountSid(),
+                    SecuredType.SECURED_STANDARD,
+                    userIdentityContext);
             if (APPLICATION_JSON_TYPE.equals(responseType)) {
                 return ok(gson.toJson(smsMessage), APPLICATION_JSON).build();
             } else if (APPLICATION_XML_TYPE.equals(responseType)) {
@@ -148,8 +172,13 @@ public abstract class SmsMessagesEndpoint extends SecuredEndpoint {
         }
     }
 
-    protected Response getSmsMessages(final String accountSid, UriInfo info, final MediaType responseType) {
-        secure(accountsDao.getAccount(accountSid), "RestComm:Read:SmsMessages");
+    protected Response getSmsMessages(final String accountSid,
+            UriInfo info,
+            final MediaType responseType,
+            UserIdentityContext userIdentityContext) {
+        permissionEvaluator.secure(accountsDao.getAccount(accountSid),
+                "RestComm:Read:SmsMessages",
+                userIdentityContext);
 
         boolean localInstanceOnly = true;
         try {
@@ -271,9 +300,13 @@ public abstract class SmsMessagesEndpoint extends SecuredEndpoint {
     }
 
     @SuppressWarnings("unchecked")
-    protected Response putSmsMessage(final String accountSid, final MultivaluedMap<String, String> data,
-            final MediaType responseType) {
-        secure(accountsDao.getAccount(accountSid), "RestComm:Create:SmsMessages");
+    protected Response putSmsMessage(final String accountSid,
+            final MultivaluedMap<String, String> data,
+            final MediaType responseType,
+            UserIdentityContext userIdentityContext) {
+        permissionEvaluator.secure(accountsDao.getAccount(accountSid),
+                "RestComm:Create:SmsMessages",
+                userIdentityContext);
         try {
             validate(data);
             if(normalizePhoneNumbers)
@@ -401,5 +434,37 @@ public abstract class SmsMessagesEndpoint extends SecuredEndpoint {
                 context.stop(self);
             }
         }
+    }
+
+    @Path("/{sid}")
+    @GET
+    @Produces({MediaType.APPLICATION_XML, MediaType.APPLICATION_JSON})
+    public Response getSmsMessageAsXml(@PathParam("accountSid") final String accountSid,
+            @PathParam("sid") final String sid,
+            @HeaderParam("Accept") String accept,
+            @Context SecurityContext sec) {
+        return getSmsMessage(accountSid, sid,
+                retrieveMediaType(accept),
+                ContextUtil.convert(sec));
+    }
+
+    @GET
+    @Produces({MediaType.APPLICATION_XML, MediaType.APPLICATION_JSON})
+    public Response getSmsMessages(@PathParam("accountSid") final String accountSid,
+            @Context UriInfo info,
+            @HeaderParam("Accept") String accept,
+            @Context SecurityContext sec) {
+        return getSmsMessages(accountSid, info, retrieveMediaType(accept),
+                ContextUtil.convert(sec));
+    }
+
+    @POST
+    @Produces({MediaType.APPLICATION_XML, MediaType.APPLICATION_JSON})
+    public Response putSmsMessage(@PathParam("accountSid") final String accountSid,
+            final MultivaluedMap<String, String> data,
+            @HeaderParam("Accept") String accept,
+            @Context SecurityContext sec) {
+        return putSmsMessage(accountSid, data, retrieveMediaType(accept),
+                ContextUtil.convert(sec));
     }
 }

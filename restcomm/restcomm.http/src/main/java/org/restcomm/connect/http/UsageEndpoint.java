@@ -21,11 +21,18 @@ package org.restcomm.connect.http;
 
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
+import com.sun.jersey.spi.resource.Singleton;
 import com.thoughtworks.xstream.XStream;
 import java.util.List;
 import java.util.regex.Pattern;
 import javax.annotation.PostConstruct;
 import javax.servlet.ServletContext;
+import javax.servlet.http.HttpServletRequest;
+import javax.ws.rs.GET;
+import javax.ws.rs.HeaderParam;
+import javax.ws.rs.Path;
+import javax.ws.rs.PathParam;
+import javax.ws.rs.Produces;
 import javax.ws.rs.core.Context;
 import javax.ws.rs.core.MediaType;
 import static javax.ws.rs.core.MediaType.*;
@@ -33,6 +40,7 @@ import javax.ws.rs.core.Response;
 import static javax.ws.rs.core.Response.Status.NOT_FOUND;
 import static javax.ws.rs.core.Response.ok;
 import static javax.ws.rs.core.Response.status;
+import javax.ws.rs.core.SecurityContext;
 import javax.ws.rs.core.UriInfo;
 import org.apache.commons.configuration.Configuration;
 import org.joda.time.DateTime;
@@ -47,19 +55,30 @@ import org.restcomm.connect.dao.entities.UsageList;
 import org.restcomm.connect.http.converter.RestCommResponseConverter;
 import org.restcomm.connect.http.converter.UsageConverter;
 import org.restcomm.connect.http.converter.UsageListConverter;
+import org.restcomm.connect.http.security.ContextUtil;
+import org.restcomm.connect.identity.UserIdentityContext;
 
 /**
  * @author charles.roufay@telestax.com (Charles Roufay)
  * @author brainslog@gmail.com (Alexandre Mendonca)
  */
+@Path("/Accounts/{accountSid}/Usage/Records")
 @ThreadSafe
-public abstract class UsageEndpoint extends SecuredEndpoint {
+@Singleton
+public class UsageEndpoint extends AbstractEndpoint {
   @Context
   protected ServletContext context;
   protected Configuration configuration;
   protected UsageDao dao;
   protected Gson gson;
   protected XStream xstream;
+
+
+    @Context
+    private HttpServletRequest servletRequest;
+
+
+
 
   public UsageEndpoint() {
     super();
@@ -86,14 +105,20 @@ public abstract class UsageEndpoint extends SecuredEndpoint {
     xstream.registerConverter(new RestCommResponseConverter(configuration));
   }
 
-  protected Response getUsage(final String accountSid, final String subresource, UriInfo info, final MediaType responseType) {
-    secure(accountsDao.getAccount(accountSid), "RestComm:Read:Usage");
+  protected Response getUsage(final String accountSid,
+          final String subresource,
+          UriInfo info,
+          final MediaType responseType,
+          UserIdentityContext userIdentityContext) {
+    permissionEvaluator.secure(accountsDao.getAccount(accountSid),
+            "RestComm:Read:Usage",
+            userIdentityContext);
 
     String categoryStr = info.getQueryParameters().getFirst("Category");
     String startDateStr = info.getQueryParameters().getFirst("StartDate");
     String endDateStr = info.getQueryParameters().getFirst("EndDate");
     //pass in reqUri without query params
-    String reqUri = request.getServletPath() + "/" + info.getPath(false);
+    String reqUri = servletRequest.getServletPath() + "/" + info.getPath(false);
 
     Usage.Category category = categoryStr != null ? Usage.Category.valueOf(categoryStr) : null;
     DateTime startDate = new DateTime(0).withTimeAtStartOfDay();
@@ -156,4 +181,18 @@ public abstract class UsageEndpoint extends SecuredEndpoint {
       }
     }
   }
+
+    @Path("/{subresource}")
+    @GET
+    @Produces({MediaType.APPLICATION_XML, MediaType.APPLICATION_JSON})
+    public Response getUsageAsXml(@PathParam("accountSid") final String accountSid,
+            @PathParam("subresource") final String subresource,
+            @Context UriInfo info,
+            @HeaderParam("Accept") String accept,
+            @Context SecurityContext sec) {
+      return getUsage(accountSid,
+              subresource,
+              info, retrieveMediaType(accept),
+              ContextUtil.convert(sec));
+    }
 }
