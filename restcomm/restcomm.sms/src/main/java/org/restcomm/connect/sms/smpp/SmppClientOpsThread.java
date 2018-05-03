@@ -67,6 +67,7 @@ public class SmppClientOpsThread implements Runnable {
     private static Charset outboundEncoding;
     private static Charset inboundEncoding;
     private static boolean messagePayloadFlag;
+    private static boolean autoDetectDcsFlag;
     protected volatile boolean started = true;
     private static int sipPort;
 
@@ -305,6 +306,7 @@ public class SmppClientOpsThread implements Runnable {
             inboundEncoding = esme.getInboundDefaultEncoding();
             outboundEncoding = esme.getOutboundDefaultEncoding();
             messagePayloadFlag = esme.getMessagePayloadFlag();
+            autoDetectDcsFlag = esme.getAutoDetectDcsFlag();
         }
 
         @Override
@@ -473,5 +475,10 @@ public class SmppClientOpsThread implements Runnable {
 
     public static boolean getMessagePayloadFlag() {
         return messagePayloadFlag;
+    }
+
+
+    public static boolean getAutoDetectDcsFlag() {
+        return autoDetectDcsFlag;
     }
 }
