@@ -76,7 +76,10 @@ import org.restcomm.connect.http.converter.AccountListConverter;
 import org.restcomm.connect.http.converter.RestCommResponseConverter;
 import org.restcomm.connect.http.exceptionmappers.CustomReasonPhraseType;
 import org.restcomm.connect.http.exceptions.InsufficientPermission;
+import org.restcomm.connect.http.exceptions.InvalidEmailException;
 import org.restcomm.connect.http.exceptions.PasswordTooWeak;
+import org.restcomm.connect.http.exceptions.RcmlserverNotifyError;
+import org.restcomm.connect.identity.EmailValidator;
 import org.restcomm.connect.identity.passwords.PasswordValidator;
 import org.restcomm.connect.identity.passwords.PasswordValidatorFactory;
 import org.restcomm.connect.provisioning.number.api.PhoneNumberProvisioningManager;
@@ -528,7 +531,6 @@ public class AccountsEndpoint extends SecuredEndpoint {
             final String hash = new Md5Hash(data.getFirst("Password")).toString();
             accBuilder.setAuthToken(hash);
         }
-
         if (data.containsKey("Role")) {
             // Only allow role change for administrators. Multitenancy checks will take care of restricting the modification scope to sub-accounts.
             if (userIdentityContext.getEffectiveAccountRoles().contains(getAdministratorRole())) {
@@ -537,6 +539,18 @@ public class AccountsEndpoint extends SecuredEndpoint {
                 CustomReasonPhraseType stat = new CustomReasonPhraseType(Response.Status.FORBIDDEN, "Only Administrator allowed");
                 throw new WebApplicationException(status(stat).build());
             }
+        }
+        if (data.containsKey("EmailAddress")) {
+            String newEmailAddress = data.getFirst("EmailAddress").toLowerCase();
+            if (!EmailValidator.isValidEmailFormat(newEmailAddress)) {
+                CustomReasonPhraseType stat = new CustomReasonPhraseType(Response.Status.BAD_REQUEST, "Not allowed email address format");
+                throw new WebApplicationException(status(stat).build());
+            }
+            if (accountsDao.getAccount(newEmailAddress) != null) {
+                CustomReasonPhraseType stat = new CustomReasonPhraseType(Response.Status.CONFLICT, "This email address was already taken. Please, choose a different email address and try again.");
+                throw new WebApplicationException(status(stat).build());
+            }
+            accBuilder.setEmailAddress(newEmailAddress);
         }
 
         return accBuilder.build();
