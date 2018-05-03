@@ -115,8 +115,8 @@ public abstract class ClientsEndpoint extends SecuredEndpoint {
             throw new PasswordTooWeak();
         String realm = organizationsDao.getOrganization(accountsDao.getAccount(accountSid).getOrganizationSid()).getDomainName();
 
-        builder.setPassword(username, password, realm);
         builder.setPasswordAlgorithm(RestcommConfiguration.getInstance().getMain().getClientAlgorithm());
+        builder.setPassword(username, password, realm, RestcommConfiguration.getInstance().getMain().getClientAlgorithm());
         builder.setStatus(getStatus(data));
         URI voiceUrl = getUrl("VoiceUrl", data);
         if (voiceUrl != null && voiceUrl.toString().equals("")) {
