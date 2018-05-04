@@ -11,6 +11,13 @@ mediaserver:
     mgcp:
       address: 127.0.0.1
       port: 2427
+    endpoints:
+        - name: "mobicents/bridge/"
+          relay: splitter
+        - name: "mobicents/ivr/"
+          relay: mixer
+        - name: "mobicents/cnf/"
+          relay: mixer
 
   media:
     timeout: 0
@@ -18,8 +25,6 @@ mediaserver:
     maxDuration: 14400
     lowPort: 34534
     highPort: 65534
-    jitterBuffer:
-      size: 50
     codecs:
       - pcmu
       - pcma
@@ -39,9 +44,6 @@ mediaserver:
       dbi: -35
       toneDuration: 100
       toneInterval: 20
-    dtmfGenerator:
-      toneVolume: -20
-      toneDuration: 100
 
   dtls:
     minVersion: 1.0
@@ -58,5 +60,7 @@ mediaserver:
     trustStore: null
     trustStorePassword: null
     trustStoreType: null
-    debug: null
+
+media-plugin-vad-noise-threshold:
+  silenceLevel: 10
 
