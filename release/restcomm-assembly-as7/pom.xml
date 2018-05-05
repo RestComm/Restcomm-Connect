@@ -103,6 +103,46 @@
                             </execution>
                         </executions>
                     </plugin>
+                    <plugin>
+                        <groupId>io.fabric8</groupId>
+                        <artifactId>docker-maven-plugin</artifactId>
+                        <version>0.25.2</version>
+
+                        <configuration>
+                            <images>
+                                <image>
+                                    <name>restcomm/restcomm</name>
+                                    <build>
+                                        <tags>
+                                            <tag>${project.version}</tag>
+                                            <tag>latest</tag>
+                                        </tags>
+                                        <filter>${*}</filter>
+                                        <dockerFile>../../../Dockerfile_all-in-one</dockerFile>
+                                    </build>
+                                </image>
+                            </images>
+                        </configuration>
+                        <executions>
+                            <execution>
+                                <id>start</id>
+                                <phase>pre-integration-test</phase>
+                                <goals>
+                                    <!-- "build" should be used to create the images with the
+                                         artifact -->
+                                    <goal>build</goal>
+                                    <!--<goal>start</goal> not running any containers yet-->
+                                </goals>
+                            </execution>
+                            <execution>
+                                <id>stop</id>
+                                <phase>post-integration-test</phase>
+                                <goals>
+                                    <!--<goal>stop</goal>   not running any containers yet -->
+                                </goals>
+                            </execution>
+                        </executions>
+                    </plugin>
                 </plugins>
             </build>
         </profile>
@@ -164,6 +204,46 @@
                                 <phase>package</phase>
                                 <goals>
                                     <goal>single</goal>
+                                </goals>
+                            </execution>
+                        </executions>
+                    </plugin>
+                    <plugin>
+                        <groupId>io.fabric8</groupId>
+                        <artifactId>docker-maven-plugin</artifactId>
+                        <version>0.25.2</version>
+
+                        <configuration>
+                            <images>
+                                <image>
+                                    <name>restcomm/connect</name>
+                                    <build>
+                                        <tags>
+                                            <tag>${project.version}</tag>
+                                            <tag>latest</tag>
+                                        </tags>
+                                        <filter>${*}</filter>
+                                        <dockerFileDir>../../../Dockerfile_standalone</dockerFileDir>
+                                    </build>
+                                </image>
+                            </images>
+                        </configuration>
+                        <executions>
+                            <execution>
+                                <id>start</id>
+                                <phase>pre-integration-test</phase>
+                                <goals>
+                                    <!-- "build" should be used to create the images with the
+                                         artifact -->
+                                    <goal>build</goal>
+                                    <!--<goal>start</goal> not running any containers yet-->
+                                </goals>
+                            </execution>
+                            <execution>
+                                <id>stop</id>
+                                <phase>post-integration-test</phase>
+                                <goals>
+                                    <!--<goal>stop</goal>   not running any containers yet -->
                                 </goals>
                             </execution>
                         </executions>
