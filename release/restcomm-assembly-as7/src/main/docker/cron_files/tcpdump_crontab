@@ -1,0 +1,4 @@
+5 8 * * 0 root find /path/to/restcomm_trace_* -mtime +7 -exec rm {} \;
+# An empty line is required at the end of this file for a valid cron file.
+
+
