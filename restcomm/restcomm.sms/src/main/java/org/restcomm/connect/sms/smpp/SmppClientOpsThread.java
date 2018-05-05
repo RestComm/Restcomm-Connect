@@ -375,9 +375,13 @@ public class SmppClientOpsThread implements Runnable {
                         encoding = CharsetUtil.CHARSET_UCS_2;
                     }
 
-                    byte[] pduMessage = new byte[] {};
+                    byte[] pduMessage = deliverSm.getShortMessage();
+                    int smsLength = deliverSm.getShortMessageLength();
+                    byte esmClass = deliverSm.getEsmClass();
+
+                    logger.info("deliverSm="+deliverSm.toString()+" ;getShortMessage message body " + Arrays.toString(pduMessage)+" smsLength="+smsLength+" esmClass="+Byte.toString(esmClass));
                     //check message_payload
-                    if(deliverSm.getShortMessageLength() == 0) {
+                    if(pduMessage.length == 0) {
                         pduMessage = deliverSm.getShortMessage();
                         if(logger.isInfoEnabled()) {
                             logger.info("Using message from message body " + Arrays.toString(pduMessage));
