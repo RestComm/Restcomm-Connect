@@ -48,7 +48,7 @@ RUN mv /opt/Restcomm-JBoss-AS7-*/ ${install_dir} \
   && mkdir -p /opt/embed/ \
   && mkdir -p /etc/my_init.d
 
-ADD ./ca-startcom.der /opt/Restcomm-JBoss-AS7/ca-startcom.der
+ADD ./src/main/docker/ca-startcom.der /opt/Restcomm-JBoss-AS7/ca-startcom.der
 ADD ./src/main/docker/cron_files/tcpdump_crontab /etc/cron.d/restcommtcpdump-cron
 ADD ./src/main/docker/cron_files/core_crontab /etc/cron.d/restcommcore-cron
 
