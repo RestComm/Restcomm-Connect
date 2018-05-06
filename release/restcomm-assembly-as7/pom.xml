@@ -223,7 +223,7 @@
                                             <tag>latest</tag>
                                         </tags>
                                         <filter>${*}</filter>
-                                        <dockerFileDir>../../../Dockerfile_standalone</dockerFileDir>
+                                        <dockerFile>../../../Dockerfile_standalone</dockerFile>
                                     </build>
                                 </image>
                             </images>
