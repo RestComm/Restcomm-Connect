@@ -4,6 +4,7 @@
     <id>assembly</id>
     <formats>
         <format>zip</format>
+        <format>tar.gz</format>
     </formats>
     <baseDirectory>Restcomm-JBoss-AS7-${project.version}</baseDirectory>
     <fileSets>
