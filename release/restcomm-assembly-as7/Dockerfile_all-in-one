@@ -42,7 +42,7 @@ RUN add-apt-repository ppa:openjdk-r/ppa  -y \
 
 # one idea here would be to move to different dockerfiles per directory, in order to replace the `CONNECT_VERSION` parameter
 # and also keep multiple builds around, for different LTS versions...
-ADD target/Connect-JBoss-AS7-${CONNECT_VERSION}.tar.gz /opt/
+ADD target/Restcomm-JBoss-AS7-${CONNECT_VERSION}.tar.gz /opt/
 
 RUN mv /opt/Restcomm-JBoss-AS7-*/ ${install_dir} \
   && mkdir -p /opt/embed/ \
