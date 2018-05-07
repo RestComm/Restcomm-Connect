@@ -18,6 +18,8 @@
  */
 package org.restcomm.connect.testsuite.telephony.ua;
 
+import com.google.gson.Gson;
+import com.google.gson.JsonObject;
 import org.cafesip.sipunit.Credential;
 import org.cafesip.sipunit.SipPhone;
 import org.cafesip.sipunit.SipRequest;
@@ -38,11 +40,13 @@ import org.junit.experimental.categories.Category;
 import org.junit.runner.RunWith;
 import org.junit.runners.MethodSorters;
 import org.restcomm.connect.commons.Version;
+import org.restcomm.connect.commons.annotations.FeatureAltTests;
 import org.restcomm.connect.commons.annotations.ParallelClassTests;
 import org.restcomm.connect.commons.annotations.UnstableTests;
 import org.restcomm.connect.commons.annotations.WithInMinsTests;
 import org.restcomm.connect.testsuite.NetworkPortAssigner;
 import org.restcomm.connect.testsuite.WebArchiveUtil;
+import org.restcomm.connect.testsuite.http.RestcommOrganizationsTool;
 import org.restcomm.connect.testsuite.tools.MonitoringServiceTool;
 
 import javax.servlet.sip.SipServletResponse;
@@ -60,6 +64,7 @@ import java.util.logging.Logger;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
+import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertTrue;
 //import org.restcomm.connect.telephony.Version;
 
@@ -140,6 +145,12 @@ public final class UserAgentManagerClientAlgorithmTest {
     private static String suspendedPort = String.valueOf(NetworkPortAssigner.retrieveNextPortByFile());
     private String suspendedContact = "sip:suspended@127.0.0.1:" + suspendedPort;
 
+    private static SipStackTool tool10;
+    private SipStack sipStack10;
+    private SipPhone org1AlicePhone;
+    private static String org1AlicePort = String.valueOf(NetworkPortAssigner.retrieveNextPortByFile());
+    private String org1AliceContact = "sip:alice@org1.restcomm.com:" + suspendedPort;
+
 
     private static int restcommPort = 5080;
     private static int restcommHTTPPort = 8080;
@@ -160,6 +171,7 @@ public final class UserAgentManagerClientAlgorithmTest {
         tool7 = new SipStackTool("UserAgentTest7");
         tool8 = new SipStackTool("UserAgentTest8");
         tool9 = new SipStackTool("UserAgentTest9");
+        tool10 = new SipStackTool("UserAgentTest10");
     }
 
     public static void reconfigurePorts() {
@@ -200,6 +212,9 @@ public final class UserAgentManagerClientAlgorithmTest {
 
         sipStack9 = tool9.initializeSipStack(SipStack.PROTOCOL_UDP, "127.0.0.1", suspendedPort, restcommContact);
         suspendedPhone = sipStack9.createSipPhone("127.0.0.1", SipStack.PROTOCOL_UDP, restcommPort, suspendedContact);
+
+        sipStack10 = tool10.initializeSipStack(SipStack.PROTOCOL_UDP, "127.0.0.1", org1AlicePort, restcommContact);
+        org1AlicePhone = sipStack10.createSipPhone("127.0.0.1", SipStack.PROTOCOL_UDP, restcommPort, org1AliceContact);
     }
 
     @After
@@ -263,7 +278,14 @@ public final class UserAgentManagerClientAlgorithmTest {
         if (sipStack9 != null) {
             sipStack9.dispose();
         }
-//        deployer.undeploy("UserAgentTest");
+
+        if (org1AlicePhone != null) {
+            org1AlicePhone.dispose();
+        }
+        if (sipStack10 != null) {
+            sipStack10.dispose();
+        }
+
     }
 
     @Test
@@ -610,6 +632,52 @@ public final class UserAgentManagerClientAlgorithmTest {
 
         phone6.setAutoResponseOptionsRequests(true);
         phone7.setAutoResponseOptionsRequests(true);
+    }
+
+    @Test @Category(FeatureAltTests.class)
+    public void migrateClientsPasswordAndRegister() throws ParseException, InterruptedException, InvalidArgumentException {
+
+        Gson gson = new Gson();
+        String org1 = "OR11111111111111111111111111111111";
+
+        //register alice of organization (org1.restcomm.com)
+        SipURI uri = sipStack10.getAddressFactory().createSipURI(null, restcommContact);
+        Credential c = new Credential("org1.restcomm.com","alice", "1234");
+        org1AlicePhone.addUpdateCredential(c);
+
+        assertTrue(org1AlicePhone.register(uri, "alice", "1234", org1AliceContact, 3600, 3600));
+        Thread.sleep(500);
+        //alice should be registered successfully
+        assertEquals(1, MonitoringServiceTool.getInstance().getRegisteredUsers(deploymentUrl.toString(),adminAccountSid, adminAuthToken));
+
+        Thread.sleep(500);
+
+        assertTrue(org1AlicePhone.unregister(org1AliceContact, 3600));
+        Thread.sleep(500);
+        //alice should be registered successfully
+        assertEquals(0, MonitoringServiceTool.getInstance().getRegisteredUsers(deploymentUrl.toString(),adminAccountSid, adminAuthToken));
+
+        //Hash client's passwords of Org1
+        JsonObject clientsMigratedJsonObj = RestcommOrganizationsTool.getInstance().migrateClientsOfOrganization(deploymentUrl.toString(), adminAccountSid, adminAuthToken, org1);
+        assertNotNull(clientsMigratedJsonObj);
+
+        Map<String,String> migratedClients = new HashMap<>();
+        migratedClients = (Map<String,String>) gson.fromJson(clientsMigratedJsonObj, migratedClients.getClass());
+
+        assertNotNull(migratedClients);
+        assertEquals(4, migratedClients.size());
+
+        assertTrue(org1AlicePhone.register(uri, "alice", "1234", org1AliceContact, 3600, 3600));
+        Thread.sleep(500);
+        //alice should be registered successfully
+        assertEquals(1, MonitoringServiceTool.getInstance().getRegisteredUsers(deploymentUrl.toString(),adminAccountSid, adminAuthToken));
+
+        Thread.sleep(500);
+
+        assertTrue(org1AlicePhone.unregister(org1AliceContact, 3600));
+        Thread.sleep(500);
+        //alice should be registered successfully
+        assertEquals(0, MonitoringServiceTool.getInstance().getRegisteredUsers(deploymentUrl.toString(),adminAccountSid, adminAuthToken));
     }
 
     @Deployment(name = "UserAgentTest", managed = true, testable = false)

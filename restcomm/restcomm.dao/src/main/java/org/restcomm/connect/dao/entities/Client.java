@@ -25,6 +25,7 @@ import org.joda.time.DateTime;
 
 import org.restcomm.connect.commons.annotations.concurrency.Immutable;
 import org.restcomm.connect.commons.annotations.concurrency.NotThreadSafe;
+import org.restcomm.connect.commons.configuration.RestcommConfiguration;
 import org.restcomm.connect.commons.dao.Sid;
 import org.restcomm.connect.commons.util.DigestAuthentication;
 
@@ -161,7 +162,7 @@ public final class Client {
      */
     public Client setPassword(final String login, final String password, final String realm) {
         return new Client(sid, dateCreated, DateTime.now(), accountSid, apiVersion, friendlyName, login, DigestAuthentication.HA1(login, realm, password), status,
-                voiceUrl, voiceMethod, voiceFallbackUrl, voiceFallbackMethod, voiceApplicationSid, uri, pushClientIdentity, passwordAlgorithm);
+                voiceUrl, voiceMethod, voiceFallbackUrl, voiceFallbackMethod, voiceApplicationSid, uri, pushClientIdentity, RestcommConfiguration.getInstance().getMain().getClientAlgorithm());
     }
 
     public Client setStatus(final int status) {

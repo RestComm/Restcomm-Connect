@@ -24,9 +24,29 @@ import com.google.gson.GsonBuilder;
 import com.sun.jersey.core.header.LinkHeader;
 import com.sun.jersey.spi.resource.Singleton;
 import com.thoughtworks.xstream.XStream;
-import java.net.URI;
-import java.util.List;
-import java.util.regex.Pattern;
+import org.apache.commons.configuration.Configuration;
+import org.joda.time.DateTime;
+import org.restcomm.connect.commons.annotations.concurrency.ThreadSafe;
+import org.restcomm.connect.commons.dao.Sid;
+import org.restcomm.connect.core.service.api.ClientPasswordHashingService;
+import org.restcomm.connect.core.service.api.ProfileService;
+import org.restcomm.connect.dao.ClientsDao;
+import org.restcomm.connect.dao.DaoManager;
+import org.restcomm.connect.dao.entities.Client;
+import org.restcomm.connect.dao.entities.Organization;
+import org.restcomm.connect.dao.entities.OrganizationList;
+import org.restcomm.connect.dao.entities.Profile;
+import org.restcomm.connect.dao.entities.RestCommResponse;
+import org.restcomm.connect.dns.DnsProvisioningManager;
+import org.restcomm.connect.dns.DnsProvisioningManagerProvider;
+import org.restcomm.connect.http.converter.ClientConverter;
+import org.restcomm.connect.http.converter.ClientListConverter;
+import org.restcomm.connect.http.converter.OrganizationConverter;
+import org.restcomm.connect.http.converter.OrganizationListConverter;
+import org.restcomm.connect.http.converter.RestCommResponseConverter;
+import org.restcomm.connect.http.security.ContextUtil;
+import org.restcomm.connect.identity.UserIdentityContext;
+
 import javax.annotation.PostConstruct;
 import javax.annotation.security.RolesAllowed;
 import javax.servlet.ServletContext;
@@ -38,11 +58,18 @@ import javax.ws.rs.PathParam;
 import javax.ws.rs.Produces;
 import javax.ws.rs.core.Context;
 import javax.ws.rs.core.MediaType;
+import javax.ws.rs.core.Response;
+import javax.ws.rs.core.SecurityContext;
+import javax.ws.rs.core.UriInfo;
+import java.net.URI;
+import java.util.List;
+import java.util.Map;
+import java.util.regex.Pattern;
+
 import static javax.ws.rs.core.MediaType.APPLICATION_JSON;
 import static javax.ws.rs.core.MediaType.APPLICATION_JSON_TYPE;
 import static javax.ws.rs.core.MediaType.APPLICATION_XML;
 import static javax.ws.rs.core.MediaType.APPLICATION_XML_TYPE;
-import javax.ws.rs.core.Response;
 import static javax.ws.rs.core.Response.Status.BAD_REQUEST;
 import static javax.ws.rs.core.Response.Status.CONFLICT;
 import static javax.ws.rs.core.Response.Status.FORBIDDEN;
@@ -50,28 +77,10 @@ import static javax.ws.rs.core.Response.Status.INTERNAL_SERVER_ERROR;
 import static javax.ws.rs.core.Response.Status.NOT_FOUND;
 import static javax.ws.rs.core.Response.ok;
 import static javax.ws.rs.core.Response.status;
-import javax.ws.rs.core.SecurityContext;
-import javax.ws.rs.core.UriInfo;
-import org.apache.commons.configuration.Configuration;
-import org.joda.time.DateTime;
-import org.restcomm.connect.commons.annotations.concurrency.ThreadSafe;
-import org.restcomm.connect.commons.dao.Sid;
-import org.restcomm.connect.core.service.api.ProfileService;
-import org.restcomm.connect.dao.entities.Organization;
-import org.restcomm.connect.dao.entities.OrganizationList;
-import org.restcomm.connect.dao.entities.Profile;
-import org.restcomm.connect.dao.entities.RestCommResponse;
-import org.restcomm.connect.dns.DnsProvisioningManager;
-import org.restcomm.connect.dns.DnsProvisioningManagerProvider;
 import static org.restcomm.connect.http.ProfileEndpoint.PROFILE_REL_TYPE;
 import static org.restcomm.connect.http.ProfileEndpoint.TITLE_PARAM;
-import org.restcomm.connect.http.converter.OrganizationConverter;
-import org.restcomm.connect.http.converter.OrganizationListConverter;
-import org.restcomm.connect.http.converter.RestCommResponseConverter;
 import static org.restcomm.connect.http.security.AccountPrincipal.ADMIN_ROLE;
 import static org.restcomm.connect.http.security.AccountPrincipal.SUPER_ADMIN_ROLE;
-import org.restcomm.connect.http.security.ContextUtil;
-import org.restcomm.connect.identity.UserIdentityContext;
 
 /**
  * @author maria.farooq@telestax.com (Maria Farooq)
@@ -92,9 +101,9 @@ public class OrganizationsEndpoint extends AbstractEndpoint {
     private final String SUB_DOMAIN_NAME_VALIDATION_PATTERN="[A-Za-z0-9\\-]{1,255}";
     private Pattern pattern;
     private ProfileService profileService;
+    private ClientPasswordHashingService clientPasswordHashingService;
 
-
-
+    private ClientsDao clientsDao;
 
     private OrganizationListConverter listConverter;
 
@@ -110,6 +119,9 @@ public class OrganizationsEndpoint extends AbstractEndpoint {
 
         registerConverters();
 
+        final DaoManager storage = (DaoManager) context.getAttribute(DaoManager.class.getName());
+        clientsDao = storage.getClientsDao();
+
         // Make sure there is an authenticated account present when this endpoint is used
         // get manager from context or create it if it does not exist
         try {
@@ -119,20 +131,28 @@ public class OrganizationsEndpoint extends AbstractEndpoint {
         }
         pattern = Pattern.compile(SUB_DOMAIN_NAME_VALIDATION_PATTERN);
         profileService = (ProfileService)context.getAttribute(ProfileService.class.getName());
+        clientPasswordHashingService = (ClientPasswordHashingService) context.getAttribute(ClientPasswordHashingService.class.getName());
     }
 
     private void registerConverters(){
         final OrganizationConverter converter = new OrganizationConverter(configuration);
         listConverter = new OrganizationListConverter(configuration);
+
+        final ClientConverter clientConverter = new ClientConverter(configuration);
+        final ClientListConverter clientListConverter = new ClientListConverter(configuration);
+
         final GsonBuilder builder = new GsonBuilder();
         builder.serializeNulls();
         builder.registerTypeAdapter(Organization.class, converter);
+        builder.registerTypeAdapter(Client.class, converter);
         builder.setPrettyPrinting();
         gson = builder.create();
         xstream = new XStream();
         xstream.alias("RestcommResponse", RestCommResponse.class);
         xstream.registerConverter(converter);
         xstream.registerConverter(listConverter);
+        xstream.registerConverter(clientConverter);
+        xstream.registerConverter(clientListConverter);
         xstream.registerConverter(new RestCommResponseConverter(configuration));
     }
 
@@ -220,8 +240,8 @@ public class OrganizationsEndpoint extends AbstractEndpoint {
     /**
      * putOrganization create new organization
      * @param domainName
-     * @param data
-     * @param applicationJsonType
+     * @param info
+     * @param responseType
      * @return
      */
     protected Response putOrganization(String domainName, final UriInfo info,
@@ -283,6 +303,53 @@ public class OrganizationsEndpoint extends AbstractEndpoint {
         }
     }
 
+    /**
+     * Hash password for clients of the given organization
+     * @param organizationSid
+     * @param info
+     * @param responseType
+     * @return Response with List<Client> for the Clients that hashed the password
+     */
+    protected Response migrateClientsOrganization(final String organizationSid, UriInfo info, MediaType responseType, UserIdentityContext userIdentityContext) {
+
+        //First check if the account has the required permissions in general, this way we can fail fast and avoid expensive DAO operations
+        permissionEvaluator.checkPermission("RestComm:Read:Organizations", userIdentityContext);
+        Organization organization = null;
+
+        if (!Sid.pattern.matcher(organizationSid).matches()) {
+            return status(BAD_REQUEST).build();
+        } else {
+            try {
+                if (!permissionEvaluator.isSuperAdmin(userIdentityContext)) {
+                    return status(FORBIDDEN).build();
+                } else {
+                    organization = organizationsDao.getOrganization(new Sid(organizationSid));
+                }
+            } catch (Exception e) {
+                return status(NOT_FOUND).build();
+            }
+        }
+
+        if (organization == null) {
+            return status(NOT_FOUND).build();
+        } else {
+            Response.ResponseBuilder ok = Response.ok();
+
+            List<Client> clients = clientsDao.getClientsByOrg(organization.getSid());
+            Map<String, String> migratedClients = clientPasswordHashingService.hashClientPassword(clients, organization.getDomainName());
+
+
+            if (APPLICATION_XML_TYPE.equals(responseType)) {
+                final RestCommResponse response = new RestCommResponse(migratedClients);
+                return ok.type(APPLICATION_XML).entity(xstream.toXML(response)).build();
+            } else if (APPLICATION_JSON_TYPE.equals(responseType)) {
+                return ok.type(APPLICATION_JSON).entity(gson.toJson(migratedClients)).build();
+            } else {
+                return null;
+            }
+        }
+    }
+
     public LinkHeader composeLink(Sid targetSid, UriInfo info) {
         String sid = targetSid.toString();
         URI uri = info.getBaseUriBuilder().path(ProfileEndpoint.class).path(sid).build();
@@ -320,5 +387,15 @@ public class OrganizationsEndpoint extends AbstractEndpoint {
             @Context UriInfo info,
             @HeaderParam("Accept") String accept) {
         return putOrganization(domainName, info, retrieveMediaType(accept));
+    }
+
+    @Path("/{organizationSid}/Migrate")
+    @PUT
+    @RolesAllowed(SUPER_ADMIN_ROLE)
+    @Produces({MediaType.APPLICATION_XML, MediaType.APPLICATION_JSON})
+    public Response migrateClientsOrganizationPut(@PathParam("organizationSid") final String organizationSid,
+                                           @Context UriInfo info,
+                                           @HeaderParam("Accept") String accept, @Context SecurityContext sec) {
+        return migrateClientsOrganization(organizationSid, info, retrieveMediaType(accept), ContextUtil.convert(sec));
     }
 }
