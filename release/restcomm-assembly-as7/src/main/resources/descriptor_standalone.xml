@@ -18,35 +18,17 @@
                 <exclude>standalone/configuration/mss-sip-stack.properties</exclude>             
             </excludes>            
         </fileSet>
-        
-        <fileSet>
-            <directory>${project.build.directory}/dependency/restcomm-media-server</directory>
-            <outputDirectory>/mediaserver</outputDirectory>
-        </fileSet>           
         <fileSet>
             <!-- here we override some jboss/sipservlets files -->
             <directory>${project.basedir}/src/main/resources/assembly-resources</directory>
             <outputDirectory>/</outputDirectory>
+            <excludes>
+                <exclude>standalone/deployments/olympus.war.dodeploy</exclude>
+                <exclude>standalone/deployments/restcomm-rvd.war.dodeploy</exclude>
+            </excludes>
         </fileSet>                
     </fileSets>
-    <dependencySets>       
-        <dependencySet>
-            <outputDirectory>/standalone/deployments</outputDirectory>
-            <unpack>false</unpack>
-            <outputFileNameMapping>restcomm-rvd.war</outputFileNameMapping>
-            <includes>
-                <include>org.restcomm:restcomm-connect-rvd</include>
-            </includes>
-        </dependencySet>      
-        <dependencySet>
-            <outputDirectory>/standalone/deployments</outputDirectory>
-            <unpack>false</unpack>
-            <outputFileNameMapping>olympus.war</outputFileNameMapping>
-            <includes>
-                <include>org.mobicents.webrtc:webrtc-ui</include>
-            </includes>
-        </dependencySet>    
-        
+    <dependencySets>
         <dependencySet>
             <outputDirectory>/standalone/deployments/restcomm.war</outputDirectory>
             <unpack>true</unpack>
