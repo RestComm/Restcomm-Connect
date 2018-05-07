@@ -51,6 +51,7 @@ import static javax.ws.rs.core.Response.status;
 import javax.ws.rs.core.SecurityContext;
 import org.apache.commons.configuration.Configuration;
 import org.restcomm.connect.commons.annotations.concurrency.ThreadSafe;
+import org.restcomm.connect.commons.configuration.RestcommConfiguration;
 import org.restcomm.connect.commons.dao.Sid;
 import org.restcomm.connect.commons.util.ClientLoginConstrains;
 import org.restcomm.connect.dao.ClientsDao;

@@ -19,6 +19,10 @@
     SELECT "a_clients".* FROM "restcomm_clients" "a_clients" LEFT JOIN "restcomm_accounts" "b_accounts" ON "a_clients"."account_sid" = "b_accounts"."sid" WHERE "a_clients"."login"=#{login} and "b_accounts"."organization_sid"=#{organization_sid};
   </select>
 
+  <select id="getAllClientsByOrg" parameterType="map" resultType="hashmap">
+    SELECT "a_clients".* FROM "restcomm_clients" "a_clients" LEFT JOIN "restcomm_accounts" "b_accounts" ON "a_clients"."account_sid" = "b_accounts"."sid" WHERE "b_accounts"."organization_sid"=#{organization_sid};
+  </select>
+
   <select id="getClients" parameterType="string" resultType="hashmap">
     SELECT * FROM "restcomm_clients" WHERE "account_sid"=#{account_sid};
   </select>
