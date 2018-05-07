@@ -7,6 +7,7 @@ rcMod.controller('UserMenuCtrl', function($scope, $http, $resource, $rootScope, 
   $scope.PublicConfig = PublicConfig;
 
   /* watch location change and update root scope variable for rc-*-pills */
+  $rootScope.location = $location.path();
   $rootScope.$on('$locationChangeStart', function(/*event, next, current*/) {
     $rootScope.location = $location.path();
   });
