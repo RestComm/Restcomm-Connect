@@ -21,7 +21,7 @@
                 <artifactId>webrtc-ui</artifactId>
                 <version>[1.1,1.1.999)</version>
                 <type>war</type>
-            </dependency> 
+            </dependency>
             <dependency>
                 <groupId>org.mobicents.media</groupId>
                 <artifactId>media-server-standalone</artifactId>
@@ -44,11 +44,7 @@
         </dependencies>             
     </dependencyManagement>
     <modules>
-        <!--
-
-        <module>restcomm-assembly-docker</module>
-        -->
-        <module>restcomm-assembly-as7</module>        
+        <module>restcomm-assembly-as7</module>
         <module>restcomm-assembly-wildfly10</module>
     </modules>
 </project>
