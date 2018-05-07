@@ -204,6 +204,114 @@
                 <artifactId>restcomm-connect.mrb</artifactId>
                 <version>${project.version}</version>
             </dependency>
+            <dependency>
+                <groupId>org.restcomm</groupId>
+                <artifactId>restcomm-connect.application</artifactId>
+                <version>${project.version}</version>
+                <type>war</type>
+            </dependency>
+            <dependency>
+                <groupId>org.restcomm</groupId>
+                <artifactId>restcomm-connect.extension.api</artifactId>
+                <version>${project.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>org.restcomm</groupId>
+                <artifactId>restcomm-connect.extension.controller</artifactId>
+                <version>${project.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>org.restcomm</groupId>
+                <artifactId>restcomm-connect.monitoring.service</artifactId>
+                <version>${project.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>org.restcomm</groupId>
+                <artifactId>restcomm-connect.dao</artifactId>
+                <version>${project.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>org.restcomm</groupId>
+                <artifactId>restcomm-connect.telephony</artifactId>
+                <version>${project.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>org.restcomm</groupId>
+                <artifactId>restcomm-connect.telephony.api</artifactId>
+                <version>${project.version}</version>
+            </dependency>
+
+            <dependency>
+                <groupId>org.restcomm</groupId>
+                <artifactId>restcomm-connect.http</artifactId>
+                <version>${project.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>org.restcomm</groupId>
+                <artifactId>restcomm-connect.extension.api</artifactId>
+                <version>${project.version}</version>
+            </dependency>
+
+            <dependency>
+                <groupId>org.restcomm</groupId>
+                <artifactId>restcomm-connect.testsuite</artifactId>
+                <version>${project.version}</version>
+            </dependency>
+
+            <dependency>
+                <groupId>org.restcomm</groupId>
+                <artifactId>restcomm-connect.commons</artifactId>
+                <version>${project.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>org.restcomm</groupId>
+                <artifactId>restcomm-connect.email.api</artifactId>
+                <version>${project.version}</version>
+            </dependency>
+
+            <dependency>
+                <groupId>org.restcomm</groupId>
+                <artifactId>restcomm-connect.sms</artifactId>
+                <version>${project.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>org.restcomm</groupId>
+                <artifactId>restcomm-connect.mgcp</artifactId>
+                <version>${project.version}</version>
+            </dependency>
+
+            <dependency>
+                <groupId>org.restcomm</groupId>
+                <artifactId>restcomm-connect.mscontrol.api</artifactId>
+                <version>${project.version}</version>
+            </dependency>
+
+            <dependency>
+                <groupId>org.restcomm</groupId>
+                <artifactId>restcomm-connect.mscontrol.mms</artifactId>
+                <version>${project.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>org.restcomm</groupId>
+                <artifactId>restcomm-connect.dns.api</artifactId>
+                <version>${project.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>org.restcomm</groupId>
+                <artifactId>restcomm-connect-management</artifactId>
+                <version>${project.version}</version>
+                <type>war</type>
+            </dependency>
+            <!-- END OF INTERNAL MODULES -->
+
+
+            <!-- SMPP Testing -->
+
+            <dependency>
+                <groupId>org.restcomm</groupId>
+                <artifactId>restcomm-connect.sms.api</artifactId>
+                <version>${project.version}</version>
+            </dependency>
 
             <dependency>
                 <groupId>com.cloudhopper</groupId>
@@ -325,12 +433,6 @@
                 <version>${sipservletapi.version}</version>
                 <scope>provided</scope>
             </dependency>
-            <dependency>
-                    <groupId>org.mobicents.servlet.sip</groupId>
-                    <artifactId>sip-servlets-client</artifactId>
-                    <version>${sipservletapi.version}</version>
-                    <scope>provided</scope>
-            </dependency>
 
             <!--dependency> <groupId>org.apache.tomcat</groupId> <artifactId>servlet-api</artifactId>
             <version>${servlet-api.version}</version> </dependency -->
@@ -449,12 +551,38 @@
                 <scope>test</scope>
             </dependency>
 
+            <dependency>
+                <groupId>org.apache.tomcat</groupId>
+                <artifactId>tomcat-coyote</artifactId>
+                <version>${tomcat7.version}</version>
+                <scope>provided</scope>
+            </dependency>
+
+            <dependency>
+                <groupId>org.apache.tomcat</groupId>
+                <artifactId>tomcat-jasper</artifactId>
+                <version>${tomcat7.version}</version>
+                <scope>provided</scope>
+            </dependency>
 
             <dependency>
                 <groupId>javax.sip</groupId>
                 <artifactId>jain-sip-ri</artifactId>
                 <version>${sip-ri.version}</version>
                 <scope>test</scope>
+            </dependency>
+
+            <dependency>
+                <groupId>org.mobicents.servlet.sip.containers</groupId>
+                <artifactId>sip-servlets-catalina-7</artifactId>
+                <version>${sipservletapi.version}</version>
+                <scope>provided</scope>
+            </dependency>
+
+            <dependency>
+                <groupId>org.mobicents.servlet.sip</groupId>
+                <artifactId>sip-servlets-core-api</artifactId>
+                <version>${sipservletapi.version}</version>
             </dependency>
 
             <dependency>
@@ -630,25 +758,34 @@
         </dependency>
 
         <dependency>
+            <groupId>org.apache.tomcat</groupId>
+            <artifactId>tomcat-coyote</artifactId>
+            <scope>test</scope>
+        </dependency>
+
+        <dependency>
+            <groupId>org.apache.tomcat</groupId>
+            <artifactId>tomcat-jasper</artifactId>
+            <scope>test</scope>
+        </dependency>
+
+        <dependency>
             <groupId>javax.sip</groupId>
             <artifactId>jain-sip-ri</artifactId>
             <scope>test</scope>
         </dependency>
 
+        <dependency>
+            <groupId>org.mobicents.servlet.sip.containers</groupId>
+            <artifactId>sip-servlets-catalina-7</artifactId>
+            <scope>test</scope>
+        </dependency>
 
         <dependency>
             <groupId>org.mobicents.servlet.sip</groupId>
             <artifactId>sip-servlets-application-router</artifactId>
             <scope>test</scope>
         </dependency>
-
-        <dependency>
-            <groupId>javax.servlet</groupId>
-            <artifactId>javax.servlet-api</artifactId>
-            <version>3.1.0</version>
-            <scope>provided</scope>
-        </dependency>
-
 
         <dependency>
             <groupId>org.hsqldb</groupId>

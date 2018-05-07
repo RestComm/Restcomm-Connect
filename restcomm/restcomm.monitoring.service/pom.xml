@@ -74,7 +74,12 @@
 			<scope>provided</scope>
 		</dependency>
                 
-
+		<dependency>
+			<groupId>org.apache.tomcat</groupId>
+			<artifactId>tomcat-coyote</artifactId>
+			<scope>provided</scope>
+		</dependency>
+                                
         <dependency>
             <groupId>javax.sip</groupId>
             <artifactId>jain-sip-api</artifactId>
