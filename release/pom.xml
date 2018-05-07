@@ -45,7 +45,7 @@
     </dependencyManagement>
     <modules>
         <module>restcomm-assembly-as7</module>
-        <module>restcomm-assembly-wildfly10</module>
+        <!--<module>restcomm-assembly-wildfly10</module>-->
     </modules>
     <repositories>
         <repository>
