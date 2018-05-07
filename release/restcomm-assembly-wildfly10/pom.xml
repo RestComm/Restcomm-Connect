@@ -72,7 +72,7 @@
                             <artifactItems>
                                 <artifactItem>
                                     <groupId>org.mobicents.media</groupId>
-                                    <artifactId>media-server-standalone</artifactId>
+                                    <artifactId>server</artifactId>
                                     <type>zip</type>
                                     <classifier>assembly</classifier>
                                 </artifactItem>
@@ -87,7 +87,7 @@
                 <version>3.1.0</version>
                 <configuration>
                     <descriptors>
-                        <descriptor>src/assembly/descriptor.xml</descriptor>
+                        <descriptor>src/main/resources/descriptor.xml</descriptor>
                     </descriptors>
                     <finalName>Restcomm-JBoss-Wildfly10-${project.version}</finalName>
                     <appendAssemblyId>false</appendAssemblyId>
