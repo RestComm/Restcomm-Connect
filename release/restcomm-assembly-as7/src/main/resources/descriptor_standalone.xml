@@ -15,8 +15,10 @@
             <excludes>
                 <!-- these files will be overwriten later by restcomm files-->
                 <exclude>standalone/configuration/dars/mobicents-dar.properties</exclude>
-                <exclude>standalone/configuration/mss-sip-stack.properties</exclude>             
-            </excludes>            
+                <exclude>standalone/configuration/mss-sip-stack.properties</exclude>
+                <exclude>standalone/deployments/media-jsr309-servlet.war</exclude>
+                <exclude>standalone/deployments/click2call.war</exclude>
+            </excludes>
         </fileSet>
         <fileSet>
             <!-- here we override some jboss/sipservlets files -->
