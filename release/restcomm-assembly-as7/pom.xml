@@ -126,12 +126,16 @@
                         </configuration>
                         <executions>
                             <execution>
-                                <id>start</id>
-                                <phase>pre-integration-test</phase>
+                                <id>build</id>
+                                <phase>package</phase>
                                 <goals>
-                                    <!-- "build" should be used to create the images with the
-                                         artifact -->
                                     <goal>build</goal>
+                                </goals>
+                            </execution>
+                            <execution>
+                                <id>start</id>
+                                <phase>package</phase>
+                                <goals>
                                     <!--<goal>start</goal> not running any containers yet-->
                                 </goals>
                             </execution>
@@ -231,12 +235,16 @@
                         </configuration>
                         <executions>
                             <execution>
-                                <id>start</id>
-                                <phase>pre-integration-test</phase>
+                                <id>build</id>
+                                <phase>package</phase>
                                 <goals>
-                                    <!-- "build" should be used to create the images with the
-                                         artifact -->
                                     <goal>build</goal>
+                                </goals>
+                            </execution>
+                            <execution>
+                                <id>start</id>
+                                <phase>package</phase>
+                                <goals>
                                     <!--<goal>start</goal> not running any containers yet-->
                                 </goals>
                             </execution>
