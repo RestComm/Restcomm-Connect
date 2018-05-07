@@ -11,6 +11,26 @@ The folowing tags are used to categorize and state the scope of a change
 
 
 //add release-notes with newer on top
+== 8.5.0 version
+=== New Features
+// New features (whether major or minor) go here
+* REST API performance improvements.
+
+=== Breaking Changes
+// draws attention to functionality that is getting removed
+
+
+=== Bug Fixes
+// any difference in functionality
+
+
+
+=== Migration Notes
+// Things to consider during migration from previous release
+
+=== External Dependencies Updates
+// any dependencies
+
 == 8.4.0 version
 === New Features
 // New features (whether major or minor) go here
@@ -47,11 +67,11 @@ scripts are available in **commercial** version. Database migration script will 
 ** Updated Console Look & Feel to match new Restcomm branding
 ** Implemented new Sign In page in Console
 ** Use Designer location in Console from configuration file
-* Designer updated to version **__1.2.0-131__**
+* Designer updated to version **__1.2.0-139__**
 ** Integrated Feature Access Control (FAC) limitations
 ** Improved Designer performance with better xstream usage
 ** Designer Look & Feel to match new Restcomm branding
-* Olympus WebRTC Demo updated to version **__1.1.0-167__**
+* Olympus WebRTC Demo updated to version **__1.1.0-176__**
 ** Fixed an issue in WebRTC Demo jain-sip library, parsing some headers
 ** Improve WebRTC Demo UX by showing incoming call screen on top even if caller is not the selected contact
 ** Add additional configuration to WebRTC Demo for specifying client-specific parameters
