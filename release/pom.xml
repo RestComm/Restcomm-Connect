@@ -24,10 +24,10 @@
             </dependency>
             <dependency>
                 <groupId>org.mobicents.media</groupId>
-                <artifactId>media-server-standalone</artifactId>
+                <artifactId>server</artifactId>
                 <version>${mobicents.mgcp.impl.version}</version>
                 <type>zip</type>
-                <classifier>assembly</classifier>                
+                <classifier>assembly</classifier>
             </dependency>
             <dependency>
                 <groupId>org.restcomm</groupId>
@@ -47,4 +47,11 @@
         <module>restcomm-assembly-as7</module>
         <module>restcomm-assembly-wildfly10</module>
     </modules>
+    <repositories>
+        <repository>
+            <id>cxsnexus-releases</id>
+            <url>http://cxsnexus.restcomm.com/nexus/content/repositories/releases/</url>
+            <layout>default</layout>
+        </repository>
+    </repositories>
 </project>

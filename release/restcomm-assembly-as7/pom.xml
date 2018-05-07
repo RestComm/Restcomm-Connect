@@ -75,7 +75,7 @@
                                     <artifactItems>
                                         <artifactItem>
                                             <groupId>org.mobicents.media</groupId>
-                                            <artifactId>media-server-standalone</artifactId>
+                                            <artifactId>server</artifactId>
                                             <type>zip</type>
                                             <classifier>assembly</classifier>
                                         </artifactItem>
