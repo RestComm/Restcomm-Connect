@@ -90,7 +90,7 @@
                         <version>3.1.0</version>
                         <configuration>
                             <descriptors>
-                                <descriptor>src/main/resources/descriptor.xml</descriptor>
+                                <descriptor>src/main/resources/descriptor_all-in-one.xml</descriptor>
                             </descriptors>
                             <finalName>Restcomm-JBoss-AS7-${project.version}</finalName>
                             <appendAssemblyId>false</appendAssemblyId>
@@ -195,7 +195,7 @@
                         <version>3.1.0</version>
                         <configuration>
                             <descriptors>
-                                <descriptor>src/main/resources/descriptor.xml</descriptor>
+                                <descriptor>src/main/resources/descriptor_standalone.xml</descriptor>
                             </descriptors>
                             <finalName>Connect-JBoss-AS7-${project.version}</finalName>
                             <appendAssemblyId>false</appendAssemblyId>
