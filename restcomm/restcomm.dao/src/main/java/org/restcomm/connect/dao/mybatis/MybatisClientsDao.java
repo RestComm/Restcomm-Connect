@@ -19,6 +19,21 @@
  */
 package org.restcomm.connect.dao.mybatis;
 
+import org.apache.ibatis.session.SqlSession;
+import org.apache.ibatis.session.SqlSessionFactory;
+import org.joda.time.DateTime;
+import org.restcomm.connect.commons.annotations.concurrency.NotThreadSafe;
+import org.restcomm.connect.commons.configuration.RestcommConfiguration;
+import org.restcomm.connect.commons.dao.Sid;
+import org.restcomm.connect.dao.ClientsDao;
+import org.restcomm.connect.dao.entities.Client;
+
+import java.net.URI;
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+
 import static org.restcomm.connect.dao.DaoUtils.readDateTime;
 import static org.restcomm.connect.dao.DaoUtils.readInteger;
 import static org.restcomm.connect.dao.DaoUtils.readSid;
@@ -27,21 +42,6 @@ import static org.restcomm.connect.dao.DaoUtils.readUri;
 import static org.restcomm.connect.dao.DaoUtils.writeDateTime;
 import static org.restcomm.connect.dao.DaoUtils.writeSid;
 import static org.restcomm.connect.dao.DaoUtils.writeUri;
-
-import java.net.URI;
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
-
-import org.apache.ibatis.session.SqlSession;
-import org.apache.ibatis.session.SqlSessionFactory;
-import org.joda.time.DateTime;
-import org.restcomm.connect.commons.annotations.concurrency.NotThreadSafe;
-import org.restcomm.connect.commons.configuration.sets.impl.MainConfigurationSetImpl;
-import org.restcomm.connect.commons.dao.Sid;
-import org.restcomm.connect.dao.ClientsDao;
-import org.restcomm.connect.dao.entities.Client;
 
 /**
  * @author quintana.thomas@gmail.com (Thomas Quintana)
@@ -194,7 +194,7 @@ public final class MybatisClientsDao implements ClientsDao {
         final Sid voiceApplicationSid = readSid(map.get("voice_application_sid"));
         final URI uri = readUri(map.get("uri"));
         final String pushClientIdentity = readString(map.get("push_client_identity"));
-        String passwordAlgorithm = MainConfigurationSetImpl.CLEAR_TEXT_PASSWORD;
+        String passwordAlgorithm = RestcommConfiguration.getInstance().getMain().getClearTextPasswordAlgorithm();
         if (map.containsKey("password_algorithm")) {
             passwordAlgorithm = readString(map.get("password_algorithm"));
         }
