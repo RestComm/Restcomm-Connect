@@ -19,12 +19,11 @@
  */
 package org.restcomm.connect.commons.util;
 
-import java.security.MessageDigest;
-import java.security.NoSuchAlgorithmException;
-
 import org.restcomm.connect.commons.annotations.concurrency.ThreadSafe;
 import org.restcomm.connect.commons.configuration.RestcommConfiguration;
-import org.restcomm.connect.commons.configuration.sets.impl.MainConfigurationSetImpl;
+
+import java.security.MessageDigest;
+import java.security.NoSuchAlgorithmException;
 
 /**
  * @author quintana.thomas@gmail.com (Thomas Quintana)
@@ -84,7 +83,7 @@ public final class DigestAuthentication {
         validate(user, realm, password, nonce, method, uri, authHeaderAlgorithm);
         String ha1;
 
-        if (clientPasswordAlgorithm.equalsIgnoreCase(MainConfigurationSetImpl.CLEAR_TEXT_PASSWORD)) {
+        if (clientPasswordAlgorithm.equalsIgnoreCase(RestcommConfiguration.getInstance().getMain().getClearTextPasswordAlgorithm())) {
             final String a1 = A1(authHeaderAlgorithm, user, realm, password, nonce, cnonce);
             ha1 = H(a1, authHeaderAlgorithm);
         } else {

@@ -19,7 +19,7 @@
 
 package org.restcomm.connect.core.service.client;
 
-import org.restcomm.connect.commons.configuration.sets.impl.MainConfigurationSetImpl;
+import org.restcomm.connect.commons.configuration.RestcommConfiguration;
 import org.restcomm.connect.core.service.api.ClientPasswordHashingService;
 import org.restcomm.connect.dao.DaoManager;
 import org.restcomm.connect.dao.entities.Client;
@@ -49,7 +49,7 @@ public class ClientPasswordHashingServiceImpl implements ClientPasswordHashingSe
 
     @Override
     public String hashClientPassword (Client client, String domainName) {
-        if (client.getPasswordAlgorithm().equalsIgnoreCase(MainConfigurationSetImpl.CLEAR_TEXT_PASSWORD)) {
+        if (client.getPasswordAlgorithm().equalsIgnoreCase(RestcommConfiguration.getInstance().getMain().getClearTextPasswordAlgorithm())) {
             client = client.setPassword(client.getLogin(), client.getPassword(), domainName);
             daoManager.getClientsDao().updateClient(client);
             return client.getPasswordAlgorithm();
