@@ -215,6 +215,9 @@ public final class CallManager extends RestcommUntypedActor {
     private String imsDomain;
     private String imsAccount;
 
+    //Maximum P2P call length
+    private int maxP2PCallLength;
+
     private boolean actAsProxyOut;
     private List<ProxyRule> proxyOutRules;
 
@@ -326,6 +329,8 @@ public final class CallManager extends RestcommUntypedActor {
             }
             patchForNatB2BUASessions = false;
         }
+
+        maxP2PCallLength = runtime.getInt("max-p2p-call-length", 60);
 
         //Monitoring Service
         this.monitoring = (ActorRef) context.getAttribute(MonitoringService.class.getName());
@@ -1646,7 +1651,7 @@ public final class CallManager extends RestcommUntypedActor {
             ack.send();
             SipApplicationSession sipApplicationSession = request.getApplicationSession();
             // Defaulting the sip application session to 1h
-            sipApplicationSession.setExpires(60);
+            sipApplicationSession.setExpires(maxP2PCallLength);
         } else {
             if (logger.isInfoEnabled()) {
                 logger.info("Linked Response couldn't be found for ACK request");
