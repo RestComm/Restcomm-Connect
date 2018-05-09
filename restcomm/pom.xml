@@ -2,15 +2,13 @@
 <project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
     <modelVersion>4.0.0</modelVersion>
 
-    <parent>
-        <groupId>org.restcomm</groupId>
-        <artifactId>restcomm-parent</artifactId>
-        <version>4.0.1</version>
-    </parent>
-
+	<parent>
+		<groupId>org.restcomm</groupId>
+		<artifactId>restcomm-connect-root</artifactId>
+		<version>9.0.0-SNAPSHOT</version>
+	</parent>
     <groupId>org.restcomm</groupId>
     <artifactId>restcomm-connect</artifactId>
-    <version>9.0.0-SNAPSHOT</version>
     <packaging>pom</packaging>
     <name>RestComm-Connect</name>
     <description>A unified communications platform for web developers.</description>
@@ -141,7 +139,6 @@
         <jacocoArgLine />
     </properties>
     <modules>
-        <!-- <module>restcomm.docs</module> -->
         <module>restcomm.application</module>
         <module>restcomm.commons</module>
         <module>restcomm.dao</module>
@@ -165,7 +162,6 @@
         <module>restcomm.telephony</module>
         <module>restcomm.tts.api</module>
         <module>restcomm.tts.voicerss</module>
-        <module>restcomm.testsuite</module>
         <module>restcomm.ui</module>
         <module>restcomm.tts.att</module>
         <module>restcomm.ussd</module>
@@ -190,125 +186,125 @@
             <dependency>
                 <groupId>org.restcomm</groupId>
                 <artifactId>restcomm-connect.sdr.api</artifactId>
-                <version>${project.version}</version>            
-            </dependency>      
+                <version>${project.version}</version>
+            </dependency>
             <dependency>
                 <groupId>org.restcomm</groupId>
                 <artifactId>restcomm-connect.core</artifactId>
-                <version>${project.version}</version>       
-            </dependency>                  
+                <version>${project.version}</version>
+            </dependency>
             <dependency>
                 <groupId>org.restcomm</groupId>
                 <artifactId>restcomm-connect.mrb.api</artifactId>
-                <version>${project.version}</version>                        
+                <version>${project.version}</version>
             </dependency>
 
             <dependency>
                 <groupId>org.restcomm</groupId>
                 <artifactId>restcomm-connect.mrb</artifactId>
-                <version>${project.version}</version>                        
-            </dependency> 
+                <version>${project.version}</version>
+            </dependency>
             <dependency>
                 <groupId>org.restcomm</groupId>
                 <artifactId>restcomm-connect.application</artifactId>
-                <version>${project.version}</version>   
-                <type>war</type>                
-            </dependency>                                     
+                <version>${project.version}</version>
+                <type>war</type>
+            </dependency>
             <dependency>
                 <groupId>org.restcomm</groupId>
                 <artifactId>restcomm-connect.extension.api</artifactId>
-                <version>${project.version}</version>                        
+                <version>${project.version}</version>
             </dependency>
             <dependency>
                 <groupId>org.restcomm</groupId>
                 <artifactId>restcomm-connect.extension.controller</artifactId>
                 <version>${project.version}</version>
-            </dependency> 
+            </dependency>
             <dependency>
                 <groupId>org.restcomm</groupId>
                 <artifactId>restcomm-connect.monitoring.service</artifactId>
-                <version>${project.version}</version>            
-            </dependency>  
+                <version>${project.version}</version>
+            </dependency>
             <dependency>
                 <groupId>org.restcomm</groupId>
                 <artifactId>restcomm-connect.dao</artifactId>
-                <version>${project.version}</version>                
+                <version>${project.version}</version>
             </dependency>
             <dependency>
                 <groupId>org.restcomm</groupId>
                 <artifactId>restcomm-connect.telephony</artifactId>
-                <version>${project.version}</version>                
-            </dependency>            
+                <version>${project.version}</version>
+            </dependency>
             <dependency>
                 <groupId>org.restcomm</groupId>
                 <artifactId>restcomm-connect.telephony.api</artifactId>
-                <version>${project.version}</version>                
+                <version>${project.version}</version>
             </dependency>
 
             <dependency>
                 <groupId>org.restcomm</groupId>
                 <artifactId>restcomm-connect.http</artifactId>
-                <version>${project.version}</version>                
-            </dependency>  
+                <version>${project.version}</version>
+            </dependency>
             <dependency>
                 <groupId>org.restcomm</groupId>
                 <artifactId>restcomm-connect.extension.api</artifactId>
-                <version>${project.version}</version>                
+                <version>${project.version}</version>
             </dependency>
 
             <dependency>
                 <groupId>org.restcomm</groupId>
                 <artifactId>restcomm-connect.testsuite</artifactId>
-                <version>${project.version}</version>  
-            </dependency>                
+                <version>${project.version}</version>
+            </dependency>
 
             <dependency>
                 <groupId>org.restcomm</groupId>
                 <artifactId>restcomm-connect.commons</artifactId>
-                <version>${project.version}</version>  
-            </dependency> 
+                <version>${project.version}</version>
+            </dependency>
             <dependency>
                 <groupId>org.restcomm</groupId>
                 <artifactId>restcomm-connect.email.api</artifactId>
-                <version>${project.version}</version> 
-            </dependency> 
-            
+                <version>${project.version}</version>
+            </dependency>
+
             <dependency>
                 <groupId>org.restcomm</groupId>
                 <artifactId>restcomm-connect.sms</artifactId>
-                <version>${project.version}</version> 
+                <version>${project.version}</version>
             </dependency>
             <dependency>
                 <groupId>org.restcomm</groupId>
                 <artifactId>restcomm-connect.mgcp</artifactId>
-                <version>${project.version}</version> 
-            </dependency>   
-            
+                <version>${project.version}</version>
+            </dependency>
+
             <dependency>
                 <groupId>org.restcomm</groupId>
                 <artifactId>restcomm-connect.mscontrol.api</artifactId>
-                <version>${project.version}</version>                         
+                <version>${project.version}</version>
             </dependency>
 
             <dependency>
                 <groupId>org.restcomm</groupId>
                 <artifactId>restcomm-connect.mscontrol.mms</artifactId>
-                <version>${project.version}</version>                         
+                <version>${project.version}</version>
             </dependency>
             <dependency>
                 <groupId>org.restcomm</groupId>
                 <artifactId>restcomm-connect.dns.api</artifactId>
-                <version>${project.version}</version>                         
-            </dependency>  
+                <version>${project.version}</version>
+            </dependency>
             <dependency>
                 <groupId>org.restcomm</groupId>
                 <artifactId>restcomm-connect-management</artifactId>
                 <version>${project.version}</version>
-                <type>war</type>                
+                <type>war</type>
             </dependency>
-            <!-- END OF INTERNAL MODULES -->                
-            
-            
+            <!-- END OF INTERNAL MODULES -->
+
+
             <!-- SMPP Testing -->
 
             <dependency>
@@ -582,12 +578,12 @@
                 <version>${sipservletapi.version}</version>
                 <scope>provided</scope>
             </dependency>
-            
+
             <dependency>
                 <groupId>org.mobicents.servlet.sip</groupId>
                 <artifactId>sip-servlets-core-api</artifactId>
                 <version>${sipservletapi.version}</version>
-            </dependency>            
+            </dependency>
 
             <dependency>
                 <groupId>org.mobicents.servlet.sip</groupId>
@@ -618,19 +614,19 @@
                     </exclusion>
                 </exclusions>
             </dependency>
-            
+
             <dependency>
                 <groupId>org.apache.tomcat</groupId>
                 <artifactId>tomcat-catalina</artifactId>
                 <version>${tomcat7.version}</version>
-            </dependency>             
+            </dependency>
 
             <dependency>
                 <groupId>org.jboss.arquillian.junit</groupId>
                 <artifactId>arquillian-junit-container</artifactId>
                 <version>${arquillian.version}</version>
             </dependency>
-            
+
             <dependency>
                 <groupId>org.mobicents.arquillian.container</groupId>
                 <artifactId>mss-arquillian-mediaserver-api</artifactId>
@@ -640,7 +636,7 @@
                 <groupId>org.mobicents.arquillian.container</groupId>
                 <artifactId>mss-arquillian-mediaserver-extension</artifactId>
                 <version>${mss.arquillian.version}</version>
-            </dependency>                       
+            </dependency>
 
             <dependency>
                 <groupId>org.jboss.shrinkwrap.resolver</groupId>
@@ -655,12 +651,12 @@
                 <version>${shrinkwrap.resolver.version}</version>
                 <scope>test</scope>
             </dependency>
-            
+
             <dependency>
                 <groupId>com.cloudhopper</groupId>
                 <artifactId>ch-commons-util</artifactId>
                 <version>${ch-commons-util.version}</version>
-            </dependency>            
+            </dependency>
 
             <dependency>
                 <groupId>org.mobicents.sipunit</groupId>
@@ -704,7 +700,7 @@
                 <version>${mockito-core.version}</version>
                 <scope>test</scope>
             </dependency>
-            
+
             <dependency>
                 <groupId>org.mobicents.servlet.sip.containers</groupId>
                 <artifactId>sip-servlets-tomcat-7</artifactId>
@@ -737,7 +733,7 @@
                 <!-- Include this if you have dependency conflicts for Guava, Jetty, Jackson
                 or Apache HTTP Client -->
                 <classifier>standalone</classifier>
-            </dependency>                                                                       
+            </dependency>
         </dependencies>
     </dependencyManagement>
 
@@ -993,168 +989,109 @@
                     <groupId>org.apache.maven.plugins</groupId>
                     <artifactId>maven-checkstyle-plugin</artifactId>
                     <version>${checkstyle.plugin.version}</version>
-                </plugin>                
+                </plugin>
             </plugins>
         </pluginManagement>
     </build>
 
-    <profiles>
-        <profile>
-            <id>docs</id>
-            <modules>
-                <module>restcomm.docs</module>
-            </modules>
-        </profile>
-        <profile>
-            <id>set-git-hash</id>
-            <build>
-                <plugins>
-                    <plugin>
-                        <groupId>org.codehaus.mojo</groupId>
-                        <artifactId>buildnumber-maven-plugin</artifactId>
-                        <version>1.0</version>
-                        <executions>
-                            <execution>
-                                <phase>validate</phase>
-                                <goals>
-                                    <goal>create</goal>
-                                </goals>
-                            </execution>
-                        </executions>
-                        <configuration>
-                            <doCheck>false</doCheck>
-                            <doUpdate>false</doUpdate>
-                        </configuration>
-                    </plugin>
-                </plugins>
-            </build>
-        </profile>
-        <profile>
-            <id>maven-release</id>
-            <build>
-                <plugins>
-                    <plugin>
-                        <artifactId>maven-release-plugin</artifactId>
-                    </plugin>
-                </plugins>
-            </build>
-        </profile>
-        <profile>
-            <id>generate-javadoc</id>
-            <build>
-                <plugins>
-                    <plugin>
-                        <groupId>org.apache.maven.plugins</groupId>
-                        <artifactId>maven-javadoc-plugin</artifactId>
-                        <version>2.7</version>
-                        <configuration>
-                            <nohelp>true</nohelp>
-                        </configuration>
-                        <executions>
-                            <execution>
-                                <id>attach-javadoc</id>
-                                <phase>verify</phase>
-                                <goals>
-                                    <goal>jar</goal>
-                                </goals>
-                            </execution>
-                        </executions>
-                    </plugin>
-                </plugins>
-            </build>
-        </profile>
-        <profile>
-            <id>release-sign-artifacts</id>
-            <activation>
-                <property>
-                    <name>performRelease</name>
-                    <value>true</value>
-                </property>
-            </activation>
-            <build>
-                <plugins>
-                    <plugin>
-                        <groupId>org.apache.maven.plugins</groupId>
-                        <artifactId>maven-gpg-plugin</artifactId>
-                        <executions>
-                            <execution>
-                                <id>sign-artifacts</id>
-                                <phase>install</phase>
-                                <goals>
-                                    <goal>sign</goal>
-                                </goals>
-                            </execution>
-                        </executions>
-                    </plugin>
-                </plugins>
-            </build>
-        </profile>
-    </profiles>
+	<profiles>
+		<profile>
+			<id>docs</id>
+			<modules>
+				<module>restcomm.docs</module>
+			</modules>
+		</profile>
+		<profile>
+			<id>testsuite</id>
+			<modules>
+				<module>restcomm.testsuite</module>
+			</modules>
+		</profile>
+		<profile>
+			<id>set-git-hash</id>
+			<build>
+				<plugins>
+					<plugin>
+						<groupId>org.codehaus.mojo</groupId>
+						<artifactId>buildnumber-maven-plugin</artifactId>
+						<version>1.0</version>
+						<executions>
+							<execution>
+								<phase>validate</phase>
+								<goals>
+									<goal>create</goal>
+								</goals>
+							</execution>
+						</executions>
+						<configuration>
+							<doCheck>false</doCheck>
+							<doUpdate>false</doUpdate>
+						</configuration>
+					</plugin>
+				</plugins>
+			</build>
+		</profile>
+		<profile>
+			<id>maven-release</id>
+			<build>
+				<plugins>
+					<plugin>
+						<artifactId>maven-release-plugin</artifactId>
+					</plugin>
+				</plugins>
+			</build>
+		</profile>
+		<profile>
+			<id>generate-javadoc</id>
+			<build>
+				<plugins>
+					<plugin>
+						<groupId>org.apache.maven.plugins</groupId>
+						<artifactId>maven-javadoc-plugin</artifactId>
+						<version>2.7</version>
+						<configuration>
+							<nohelp>true</nohelp>
+						</configuration>
+						<executions>
+							<execution>
+								<id>attach-javadoc</id>
+								<phase>verify</phase>
+								<goals>
+									<goal>jar</goal>
+								</goals>
+							</execution>
+						</executions>
+					</plugin>
+				</plugins>
+			</build>
+		</profile>
+		<profile>
+			<id>release-sign-artifacts</id>
+			<activation>
+				<property>
+					<name>performRelease</name>
+					<value>true</value>
+				</property>
+			</activation>
+			<build>
+				<plugins>
+					<plugin>
+						<groupId>org.apache.maven.plugins</groupId>
+						<artifactId>maven-gpg-plugin</artifactId>
+						<executions>
+							<execution>
+								<id>sign-artifacts</id>
+								<phase>install</phase>
+								<goals>
+									<goal>sign</goal>
+								</goals>
+							</execution>
+						</executions>
+					</plugin>
+				</plugins>
+			</build>
+		</profile>
+	</profiles>
 
-    <repositories>
-        <repository>
-            <id>mobicents-public-repository-group</id>
-            <name>Mobicens Public Maven Repository Group</name>
-            <url>https://oss.sonatype.org/content/groups/public</url>
-            <layout>default</layout>
-            <releases>
-                <enabled>true</enabled>
-                <updatePolicy>never</updatePolicy>
-            </releases>
-            <snapshots>
-                <enabled>true</enabled>
-                <updatePolicy>never</updatePolicy>
-            </snapshots>
-        </repository>
-        <repository>
-            <id>jboss-public-repository-group</id>
-            <name>JBoss Public Maven Repository Group</name>
-            <url>https://repository.jboss.org/nexus/content/groups/public-jboss/</url>
-            <layout>default</layout>
-            <releases>
-                <enabled>true</enabled>
-                <updatePolicy>never</updatePolicy>
-            </releases>
-            <snapshots>
-                <enabled>true</enabled>
-                <updatePolicy>never</updatePolicy>
-            </snapshots>
-        </repository>
-
-        <!-- Local repository for the ATT TTS Java wrapper library -->
-        <!-- <repository> <id>project</id> <url>file:///${basedir}/restcomm.tts.att/lib</url>
-        </repository> -->
-    </repositories>
-
-    <pluginRepositories>
-        <pluginRepository>
-            <id>mobicents-public-repository-group</id>
-            <name>Mobicens Public Maven Repository Group</name>
-            <url>https://oss.sonatype.org/content/groups/public</url>
-            <layout>default</layout>
-            <releases>
-                <enabled>true</enabled>
-                <updatePolicy>never</updatePolicy>
-            </releases>
-            <snapshots>
-                <enabled>true</enabled>
-                <updatePolicy>never</updatePolicy>
-            </snapshots>
-        </pluginRepository>
-        <pluginRepository>
-            <id>jboss-public-repository-group</id>
-            <name>JBoss Public Maven Repository Group</name>
-            <url>https://repository.jboss.org/nexus/content/groups/public-jboss/</url>
-            <layout>default</layout>
-            <releases>
-                <enabled>true</enabled>
-                <updatePolicy>never</updatePolicy>
-            </releases>
-            <snapshots>
-                <enabled>true</enabled>
-                <updatePolicy>never</updatePolicy>
-            </snapshots>
-        </pluginRepository>
-    </pluginRepositories>
 
 </project>

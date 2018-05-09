@@ -1,0 +1,67 @@
+<assembly xmlns="http://maven.apache.org/ASSEMBLY/2.0.0"
+          xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+          xsi:schemaLocation="http://maven.apache.org/ASSEMBLY/2.0.0 http://maven.apache.org/xsd/assembly-2.0.0.xsd">
+    <id>assembly</id>
+    <formats>
+        <format>zip</format>
+    </formats>
+    <baseDirectory>Restcomm-JBoss-Wildfly10-${project.version}</baseDirectory>
+    <fileSets>
+        <!-- place sipservlets binary ditribution first -->
+        <fileSet>
+            <directory>${project.build.directory}/dependency/restcomm-sip-servlets-${sipservletapi.version}-wildfly-10.0.0.Final</directory>
+            <outputDirectory>/</outputDirectory>
+            <excludes>
+                <!-- these files will be overwriten later by restcomm files-->
+                <exclude>standalone/configuration/dars/mobicents-dar.properties</exclude>
+                <exclude>standalone/configuration/mss-sip-stack.properties</exclude>                
+            </excludes>            
+        </fileSet>
+        
+        <fileSet>
+            <directory>${project.build.directory}/dependency/restcomm-media-server</directory>
+            <outputDirectory>/mediaserver</outputDirectory>
+        </fileSet>           
+        <fileSet>
+            <!-- here we override some jboss/sipservlets files -->
+            <directory>${project.build.directory}/classes/assembly-resources</directory>
+            <outputDirectory>/</outputDirectory>
+        </fileSet>                
+    </fileSets>
+    <dependencySets>       
+        <dependencySet>
+            <outputDirectory>/standalone/deployments</outputDirectory>
+            <unpack>false</unpack>
+            <outputFileNameMapping>restcomm-rvd.war</outputFileNameMapping>
+            <includes>
+                <include>org.restcomm:restcomm-connect-rvd</include>
+            </includes>
+        </dependencySet>      
+        <dependencySet>
+            <outputDirectory>/standalone/deployments</outputDirectory>
+            <unpack>false</unpack>
+            <outputFileNameMapping>olympus.war</outputFileNameMapping>
+            <includes>
+                <include>org.mobicents.webrtc:webrtc-ui</include>
+            </includes>
+        </dependencySet>    
+        
+        <dependencySet>
+            <outputDirectory>/standalone/deployments/restcomm.war</outputDirectory>
+            <unpack>true</unpack>
+            <includes>
+                <include>org.restcomm:restcomm-connect.application</include>
+            </includes>
+        </dependencySet>
+        <dependencySet>
+            <unpack>false</unpack>            
+            <outputDirectory>/standalone/deployments</outputDirectory>
+            <outputFileNameMapping>restcomm-management.war</outputFileNameMapping>
+            <includes>
+                <include>org.restcomm:restcomm-connect-management</include>
+            </includes>
+        </dependencySet>                                 
+    </dependencySets>
+
+
+</assembly>

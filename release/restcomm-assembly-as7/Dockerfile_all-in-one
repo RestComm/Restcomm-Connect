@@ -1,0 +1,73 @@
+FROM phusion/baseimage:latest
+
+MAINTAINER George Vagenas - gvagenas@telestax.com
+MAINTAINER Jean Deruelle - jean.deruelle@telestax.com
+MAINTAINER Lefteris Banos - liblefty@telestax.com
+MAINTAINER Yorgos Saslis - yorgos.saslis@telestax.com
+
+ENV install_dir /opt/Restcomm-JBoss-AS7
+ARG CONNECT_VERSION
+
+# Use baseimage-docker's init system.
+CMD ["/sbin/my_init"]
+
+EXPOSE 5080/udp  5080/tcp 5081/tcp 5082/tcp 5083/tcp 8080/tcp 8443/tcp 5060/udp 5060/tcp 5061/tcp 5062/tcp 5063/tcp 80/tcp 443/tcp 9990/tcp 65000-65535/udp
+
+
+ENV DEBIAN_FRONTEND noninteractive
+ENV JAVA_HOME /usr/lib/jvm/java-1.7.0-openjdk-amd64
+
+RUN locale-gen en_US en_US.UTF-8 && dpkg-reconfigure locales
+
+RUN add-apt-repository ppa:openjdk-r/ppa  -y \
+  && apt-cache search mysql-client-core \
+  && apt-get update \
+  && apt-get install -y  screen \
+    wget \
+    ipcalc \
+    bsdtar \
+    openjdk-7-jdk \
+    mysql-client-core-5.7 \
+    openssl \
+    unzip \
+    nfs-common \
+    tcpdump \
+    dnsutils \
+    net-tools \
+    xmlstarlet \
+  && apt-get autoremove \
+  && apt-get autoclean \
+  && rm -rf /var/lib/apt/lists/*
+
+
+# one idea here would be to move to different dockerfiles per directory, in order to replace the `CONNECT_VERSION` parameter
+# and also keep multiple builds around, for different LTS versions...
+ADD target/Restcomm-JBoss-AS7-${CONNECT_VERSION}.tar.gz /opt/
+
+RUN mv /opt/Restcomm-JBoss-AS7-*/ ${install_dir} \
+  && mkdir -p /opt/embed/ \
+  && mkdir -p /etc/my_init.d
+
+ADD ./src/main/docker/ca-startcom.der /opt/Restcomm-JBoss-AS7/ca-startcom.der
+ADD ./src/main/docker/cron_files/tcpdump_crontab /etc/cron.d/restcommtcpdump-cron
+ADD ./src/main/docker/cron_files/core_crontab /etc/cron.d/restcommcore-cron
+ADD ./src/main/docker/cron_files/mediaserver_crontab /etc/cron.d/restcommmediaserver-cron
+ADD ./src/main/docker/scripts/dockercleanup.sh /opt/embed/dockercleanup.sh
+ADD ./src/main/docker/scripts/docker_do.sh   /opt/embed/restcomm_docker.sh
+
+ADD ./src/main/docker/scripts/restcomm_autoconf.sh /etc/my_init.d/restcomm1.sh
+ADD ./src/main/docker/scripts/restcomm_conf.sh /etc/my_init.d/restcomm2.sh
+ADD ./src/main/docker/scripts/restcomm_sslconf.sh /etc/my_init.d/restcomm3.sh
+ADD ./src/main/docker/scripts/restcomm_extconf.sh /etc/my_init.d/restcomm4.sh
+ADD ./src/main/docker/scripts/restcomm_toolsconf.sh /etc/my_init.d/restcomm5.sh
+ADD ./src/main/docker/scripts/restcomm-runlevels.sh /etc/my_init.d/restcomm6.sh
+ADD ./src/main/docker/scripts/restcomm_tag.sh /etc/my_init.d/restcomm7.sh
+
+ADD ./src/main/docker/scripts/restcomm_service.sh /tmp/restcomm_service.sh
+ADD ./src/main/docker/scripts/rms_service.sh /tmp/rms_service.sh
+ADD ./src/main/docker/scripts/start-mediaserver.sh /tmp/start-mediaserver.sh
+ADD ./src/main/docker/scripts/start-restcomm.sh /tmp/start-restcomm.sh
+
+RUN chmod +x /etc/my_init.d/restcomm*.sh
+
+

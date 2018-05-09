@@ -1,0 +1,3 @@
+5 8 * * 0 root find /opt/Restcomm-JBoss-AS7/standalone/log/server.log -mtime +7 -exec rm {} \;
+# An empty line is required at the end of this file for a valid cron file.
+
