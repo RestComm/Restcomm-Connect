@@ -28,7 +28,6 @@ import com.google.gson.GsonBuilder;
 import com.google.i18n.phonenumbers.NumberParseException;
 import com.google.i18n.phonenumbers.PhoneNumberUtil;
 import com.google.i18n.phonenumbers.PhoneNumberUtil.PhoneNumberFormat;
-import com.sun.jersey.spi.resource.Singleton;
 import com.thoughtworks.xstream.XStream;
 import java.net.URI;
 import java.net.URL;
@@ -42,12 +41,6 @@ import java.util.concurrent.TimeUnit;
 import javax.annotation.PostConstruct;
 import javax.servlet.ServletContext;
 import javax.servlet.sip.SipServletResponse;
-import javax.ws.rs.GET;
-import javax.ws.rs.HeaderParam;
-import javax.ws.rs.POST;
-import javax.ws.rs.Path;
-import javax.ws.rs.PathParam;
-import javax.ws.rs.Produces;
 import javax.ws.rs.core.Context;
 import javax.ws.rs.core.MediaType;
 import static javax.ws.rs.core.MediaType.APPLICATION_JSON;
@@ -63,11 +56,10 @@ import static javax.ws.rs.core.Response.Status.NOT_ACCEPTABLE;
 import static javax.ws.rs.core.Response.Status.NOT_FOUND;
 import static javax.ws.rs.core.Response.ok;
 import static javax.ws.rs.core.Response.status;
-import javax.ws.rs.core.SecurityContext;
 import javax.ws.rs.core.UriInfo;
 import org.apache.commons.configuration.Configuration;
 import org.restcomm.connect.commons.amazonS3.RecordingSecurityLevel;
-import org.restcomm.connect.commons.annotations.concurrency.ThreadSafe;
+import org.restcomm.connect.commons.annotations.concurrency.NotThreadSafe;
 import org.restcomm.connect.commons.configuration.RestcommConfiguration;
 import org.restcomm.connect.commons.dao.Sid;
 import org.restcomm.connect.commons.telephony.CreateCallType;
@@ -87,9 +79,8 @@ import org.restcomm.connect.http.converter.CallDetailRecordListConverter;
 import org.restcomm.connect.http.converter.RecordingConverter;
 import org.restcomm.connect.http.converter.RecordingListConverter;
 import org.restcomm.connect.http.converter.RestCommResponseConverter;
-import org.restcomm.connect.http.security.ContextUtil;
-import org.restcomm.connect.http.security.PermissionEvaluator.SecuredType;
-import org.restcomm.connect.identity.UserIdentityContext;
+import org.restcomm.connect.mscontrol.api.messages.Mute;
+import org.restcomm.connect.mscontrol.api.messages.Unmute;
 import org.restcomm.connect.telephony.api.CallInfo;
 import org.restcomm.connect.telephony.api.CallManagerResponse;
 import org.restcomm.connect.telephony.api.CallResponse;
@@ -109,27 +100,22 @@ import scala.concurrent.duration.Duration;
  * @author quintana.thomas@gmail.com (Thomas Quintana)
  * @author gvagenas@gmail.com (George Vagenas)
  */
-@Path("/Accounts/{accountSid}/Calls")
-@ThreadSafe
-@Singleton
-public class CallsEndpoint extends AbstractEndpoint {
+@NotThreadSafe
+public abstract class CallsEndpoint extends SecuredEndpoint {
     @Context
-    private ServletContext context;
-    private Configuration configuration;
-    private ActorRef callManager;
-    private DaoManager daos;
-    private Gson gson;
-    private GsonBuilder builder;
-    private XStream xstream;
-    private CallDetailRecordListConverter listConverter;
-    private AccountsDao accountsDao;
-    private RecordingsDao recordingsDao;
-    private String instanceId;
-    private RecordingSecurityLevel securityLevel = RecordingSecurityLevel.SECURE;
-    private boolean normalizePhoneNumbers;
-
-
-
+    protected ServletContext context;
+    protected Configuration configuration;
+    protected ActorRef callManager;
+    protected DaoManager daos;
+    protected Gson gson;
+    protected GsonBuilder builder;
+    protected XStream xstream;
+    protected CallDetailRecordListConverter listConverter;
+    protected AccountsDao accountsDao;
+    protected RecordingsDao recordingsDao;
+    protected String instanceId;
+    protected RecordingSecurityLevel securityLevel = RecordingSecurityLevel.SECURE;
+    protected boolean normalizePhoneNumbers;
 
     public CallsEndpoint() {
         super();
@@ -174,18 +160,15 @@ public class CallsEndpoint extends AbstractEndpoint {
         }
     }
 
-    protected Response getCall(final String accountSid, final String sid,
-            final MediaType responseType,
-            UserIdentityContext userIdentityContext) {
+    protected Response getCall(final String accountSid, final String sid, final MediaType responseType) {
         Account account = daos.getAccountsDao().getAccount(accountSid);
-        permissionEvaluator.secure(account, "RestComm:Read:Calls",userIdentityContext);
+        secure(account, "RestComm:Read:Calls");
         final CallDetailRecordsDao dao = daos.getCallDetailRecordsDao();
         final CallDetailRecord cdr = dao.getCallDetailRecord(new Sid(sid));
         if (cdr == null) {
             return status(NOT_FOUND).build();
         } else {
-            permissionEvaluator.secure(account, cdr.getAccountSid(),
-                    SecuredType.SECURED_STANDARD, userIdentityContext);
+            secure(account, cdr.getAccountSid(), SecuredType.SECURED_STANDARD);
             if (APPLICATION_XML_TYPE.equals(responseType)) {
                 final RestCommResponse response = new RestCommResponse(cdr);
                 return ok(xstream.toXML(response), APPLICATION_XML).build();
@@ -199,11 +182,9 @@ public class CallsEndpoint extends AbstractEndpoint {
 
     // Issue 153: https://bitbucket.org/telestax/telscale-restcomm/issue/153
     // Issue 110: https://bitbucket.org/telestax/telscale-restcomm/issue/110
-    protected Response getCalls(final String accountSid, UriInfo info,
-            MediaType responseType,
-            UserIdentityContext userIdentityContex) {
+    protected Response getCalls(final String accountSid, UriInfo info, MediaType responseType) {
         Account account = daos.getAccountsDao().getAccount(accountSid);
-        permissionEvaluator.secure(account, "RestComm:Read:Calls",userIdentityContex);
+        secure(account, "RestComm:Read:Calls");
 
         boolean localInstanceOnly = true;
         try {
@@ -351,11 +332,7 @@ public class CallsEndpoint extends AbstractEndpoint {
     }
 
     @SuppressWarnings("unchecked")
-    protected Response putCall(final String accountSid,
-            final MultivaluedMap<String,
-                    String> data,
-            final MediaType responseType,
-            UserIdentityContext userIdentityContex) {
+    protected Response putCall(final String accountSid, final MultivaluedMap<String, String> data, final MediaType responseType) {
         final Sid accountId;
         try {
             accountId = new Sid(accountSid);
@@ -363,8 +340,7 @@ public class CallsEndpoint extends AbstractEndpoint {
             return status(INTERNAL_SERVER_ERROR).entity(buildErrorResponseBody(exception.getMessage(),responseType)).build();
         }
 
-        permissionEvaluator.secure(daos.getAccountsDao().getAccount(accountSid),
-                "RestComm:Create:Calls", userIdentityContex);
+        secure(daos.getAccountsDao().getAccount(accountSid), "RestComm:Create:Calls");
 
         try {
             validate(data);
@@ -518,14 +494,10 @@ public class CallsEndpoint extends AbstractEndpoint {
 
     // Issue 139: https://bitbucket.org/telestax/telscale-restcomm/issue/139
     @SuppressWarnings("unchecked")
-    protected Response updateCall(final String sid,
-            final String callSid,
-            final MultivaluedMap<String, String> data,
-            final MediaType responseType,
-            UserIdentityContext userIdentityContex) {
+    protected Response updateCall(final String sid, final String callSid, final MultivaluedMap<String, String> data, final MediaType responseType) {
         final Sid accountSid = new Sid(sid);
         Account account = daos.getAccountsDao().getAccount(accountSid);
-        permissionEvaluator.secure(account, "RestComm:Modify:Calls", userIdentityContex);
+        secure(account, "RestComm:Modify:Calls");
 
         final Timeout expires = new Timeout(Duration.create(60, TimeUnit.SECONDS));
 
@@ -536,10 +508,8 @@ public class CallsEndpoint extends AbstractEndpoint {
 
             if (cdr != null) {
                 //allow super admin to perform LCM on any call - https://telestax.atlassian.net/browse/RESTCOMM-1171
-                if(!permissionEvaluator.isSuperAdmin(userIdentityContex)){
-                    permissionEvaluator.secure(account, cdr.getAccountSid(),
-                            SecuredType.SECURED_STANDARD,
-                            userIdentityContex);
+                if(!isSuperAdmin()){
+                    secure(account, cdr.getAccountSid(), SecuredType.SECURED_STANDARD);
                 }
             } else {
                 return Response.status(NOT_ACCEPTABLE).build();
@@ -619,7 +589,7 @@ public class CallsEndpoint extends AbstractEndpoint {
 
         if(mute != null && call != null){
             try{
-                CallsUtil.muteUnmuteCall(mute, callInfo, call, cdr, dao);
+                muteUnmuteCall(mute, callInfo, call, cdr, dao);
             } catch (Exception exception) {
                 return status(INTERNAL_SERVER_ERROR).entity(exception.getMessage()).build();
             }
@@ -679,12 +649,8 @@ public class CallsEndpoint extends AbstractEndpoint {
         }
     }
 
-    protected Response getRecordingsByCall(final String accountSid,
-            final String callSid,
-            final MediaType responseType,
-            UserIdentityContext userIdentityContext) {
-        permissionEvaluator.secure(accountsDao.getAccount(accountSid),
-                "RestComm:Read:Recordings", userIdentityContext);
+    protected Response getRecordingsByCall(final String accountSid, final String callSid, final MediaType responseType) {
+        secure(accountsDao.getAccount(accountSid), "RestComm:Read:Recordings");
 
         final List<Recording> recordings = recordingsDao.getRecordingsByCall(new Sid(callSid));
         if (APPLICATION_JSON_TYPE.equals(responseType)) {
@@ -698,57 +664,34 @@ public class CallsEndpoint extends AbstractEndpoint {
 
     }
 
-    @Path("/{sid}")
-    @GET
-    @Produces({MediaType.APPLICATION_XML, MediaType.APPLICATION_JSON})
-    public Response getCallAsXml(@PathParam("accountSid") final String accountSid,
-            @PathParam("sid") final String sid,
-            @HeaderParam("Accept") String accept,
-            @Context SecurityContext sec) {
-        return getCall(accountSid, sid, retrieveMediaType(accept),ContextUtil.convert(sec));
-    }
-
-    // Issue 153: https://bitbucket.org/telestax/telscale-restcomm/issue/153
-    // Issue 110: https://bitbucket.org/telestax/telscale-restcomm/issue/110
-    @GET
-    @Produces({MediaType.APPLICATION_XML, MediaType.APPLICATION_JSON})
-    public Response getCalls(@PathParam("accountSid") final String accountSid,
-            @Context UriInfo info,
-            @HeaderParam("Accept") String accept,
-            @Context SecurityContext sec) {
-        return getCalls(accountSid, info, retrieveMediaType(accept),ContextUtil.convert(sec));
-    }
-
-    @POST
-    @Produces({MediaType.APPLICATION_XML, MediaType.APPLICATION_JSON})
-    public Response putCall(@PathParam("accountSid") final String accountSid,
-            final MultivaluedMap<String, String> data,
-            @HeaderParam("Accept") String accept,
-            @Context SecurityContext sec) {
-        return putCall(accountSid, data, retrieveMediaType(accept),ContextUtil.convert(sec));
-    }
-
-    // Issue 139: https://bitbucket.org/telestax/telscale-restcomm/issue/139
-    @Path("/{sid}")
-    @POST
-    @Produces({MediaType.APPLICATION_XML, MediaType.APPLICATION_JSON})
-    public Response modifyCall(@PathParam("accountSid") final String accountSid,
-            @PathParam("sid") final String sid,
-            final MultivaluedMap<String, String> data,
-            @HeaderParam("Accept") String accept,
-            @Context SecurityContext sec) {
-        return updateCall(accountSid, sid, data, retrieveMediaType(accept),
-                ContextUtil.convert(sec));
-    }
-
-    @GET
-    @Path("/{callSid}/Recordings")
-    @Produces({MediaType.APPLICATION_XML, MediaType.APPLICATION_JSON})
-    public Response getRecordingsByCallXml(@PathParam("accountSid") String accountSid,
-            @PathParam("callSid") String callSid,
-            @HeaderParam("Accept") String accept,
-            @Context SecurityContext sec) {
-        return getRecordingsByCall(accountSid, callSid, retrieveMediaType(accept),
-                ContextUtil.convert(sec));
+    /**
+     * @param mute - true if we want to mute the call, false otherwise.
+     * @param callInfo - CallInfo
+     * @param call - ActorRef for the call
+     * @param cdr - CallDetailRecord of given call to update mute status in db
+     * @param dao - CallDetailRecordsDao for calls to update mute status in db
+     */
+    protected void muteUnmuteCall(Boolean mute, CallInfo callInfo, ActorRef call, CallDetailRecord cdr, CallDetailRecordsDao dao){
+        if(callInfo.state().name().equalsIgnoreCase("IN_PROGRESS") || callInfo.state().name().equalsIgnoreCase("in-progress")){
+            if(mute){
+                if(!callInfo.isMuted()){
+                    call.tell(new Mute(), null);
+                }else{
+                    if(logger.isInfoEnabled())
+                        logger.info("Call is already muted.");
+                }
+            }else{
+                if(callInfo.isMuted()){
+                    call.tell(new Unmute(), null);
+                }else{
+                    if(logger.isInfoEnabled())
+                        logger.info("Call is not muted.");
+                }
+            }
+            cdr = cdr.setMuted(mute);
+            dao.updateCallDetailRecord(cdr);
+        }else{
+            // Do Nothing. We can only mute/unMute in progress calls
+        }
     }
 }

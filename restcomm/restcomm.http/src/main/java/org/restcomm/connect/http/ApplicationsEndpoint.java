@@ -24,20 +24,11 @@ package org.restcomm.connect.http;
 import com.google.gson.FieldNamingPolicy;
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
-import com.sun.jersey.spi.resource.Singleton;
 import com.thoughtworks.xstream.XStream;
 import java.net.URI;
 import java.util.List;
 import javax.annotation.PostConstruct;
 import javax.servlet.ServletContext;
-import javax.ws.rs.DELETE;
-import javax.ws.rs.GET;
-import javax.ws.rs.HeaderParam;
-import javax.ws.rs.POST;
-import javax.ws.rs.PUT;
-import javax.ws.rs.Path;
-import javax.ws.rs.PathParam;
-import javax.ws.rs.Produces;
 import javax.ws.rs.core.Context;
 import javax.ws.rs.core.MediaType;
 import static javax.ws.rs.core.MediaType.APPLICATION_JSON;
@@ -50,10 +41,9 @@ import static javax.ws.rs.core.Response.Status.BAD_REQUEST;
 import static javax.ws.rs.core.Response.Status.NOT_FOUND;
 import static javax.ws.rs.core.Response.ok;
 import static javax.ws.rs.core.Response.status;
-import javax.ws.rs.core.SecurityContext;
 import javax.ws.rs.core.UriInfo;
 import org.apache.commons.configuration.Configuration;
-import org.restcomm.connect.commons.annotations.concurrency.ThreadSafe;
+import org.restcomm.connect.commons.annotations.concurrency.NotThreadSafe;
 import org.restcomm.connect.commons.dao.Sid;
 import org.restcomm.connect.dao.AccountsDao;
 import org.restcomm.connect.dao.ApplicationsDao;
@@ -67,17 +57,12 @@ import org.restcomm.connect.http.converter.ApplicationConverter;
 import org.restcomm.connect.http.converter.ApplicationListConverter;
 import org.restcomm.connect.http.converter.ApplicationNumberSummaryConverter;
 import org.restcomm.connect.http.converter.RestCommResponseConverter;
-import org.restcomm.connect.http.security.ContextUtil;
-import org.restcomm.connect.http.security.PermissionEvaluator.SecuredType;
-import org.restcomm.connect.identity.UserIdentityContext;
 
 /**
  * @author guilherme.jansen@telestax.com
  */
-@Path("/Accounts/{accountSid}/Applications")
-@ThreadSafe
-@Singleton
-public class ApplicationsEndpoint extends AbstractEndpoint {
+@NotThreadSafe
+public class ApplicationsEndpoint extends SecuredEndpoint {
     @Context
     protected ServletContext context;
     protected Configuration configuration;
@@ -85,9 +70,6 @@ public class ApplicationsEndpoint extends AbstractEndpoint {
     protected Gson gson;
     protected XStream xstream;
     protected AccountsDao accountsDao;
-
-
-
 
     public ApplicationsEndpoint() {
         super();
@@ -135,12 +117,9 @@ public class ApplicationsEndpoint extends AbstractEndpoint {
         return builder.build();
     }
 
-    protected Response getApplication(final String accountSid, final String sid,
-            final MediaType responseType,
-            UserIdentityContext userIdentityContext) {
+    protected Response getApplication(final String accountSid, final String sid, final MediaType responseType) {
         Account account;
-        permissionEvaluator.secure(account = accountsDao.getAccount(accountSid),
-                "RestComm:Read:Applications", userIdentityContext);
+        secure(account = accountsDao.getAccount(accountSid), "RestComm:Read:Applications");
         Application application = null;
         if (Sid.pattern.matcher(sid).matches()) {
             application = dao.getApplication(new Sid(sid));
@@ -158,8 +137,7 @@ public class ApplicationsEndpoint extends AbstractEndpoint {
         if (application == null) {
             return status(NOT_FOUND).build();
         } else {
-            permissionEvaluator.secure(account, application.getAccountSid(),
-                    SecuredType.SECURED_APP, userIdentityContext);
+            secure(account, application.getAccountSid(), SecuredType.SECURED_APP);
             if (APPLICATION_XML_TYPE.equals(responseType)) {
                 final RestCommResponse response = new RestCommResponse(application);
                 return ok(xstream.toXML(response), APPLICATION_XML).build();
@@ -171,14 +149,10 @@ public class ApplicationsEndpoint extends AbstractEndpoint {
         }
     }
 
-    protected Response getApplications(final String accountSid,
-            final MediaType responseType,
-            UriInfo uriInfo,
-            UserIdentityContext userIdentityContext) {
+    protected Response getApplications(final String accountSid, final MediaType responseType, UriInfo uriInfo) {
         Account account;
         account = accountsDao.getAccount(accountSid);
-        permissionEvaluator.secure(account, "RestComm:Read:Applications",
-                SecuredType.SECURED_APP, userIdentityContext);
+        secure(account, "RestComm:Read:Applications", SecuredType.SECURED_APP);
         // shall we also return number information with the application ?
         boolean includeNumbers = false;
         String tmp = uriInfo.getQueryParameters().getFirst("includeNumbers");
@@ -197,13 +171,10 @@ public class ApplicationsEndpoint extends AbstractEndpoint {
     }
 
     public Response putApplication(final String accountSid, final MultivaluedMap<String, String> data,
-            final MediaType responseType,
-            UserIdentityContext userIdentityContext) {
+            final MediaType responseType) {
         Account account;
         account = accountsDao.getAccount(accountSid);
-        permissionEvaluator.secure(account, "RestComm:Create:Applications",
-                SecuredType.SECURED_APP,
-                userIdentityContext);
+        secure(account, "RestComm:Create:Applications", SecuredType.SECURED_APP);
         try {
             validate(data);
         } catch (final NullPointerException exception) {
@@ -242,18 +213,14 @@ public class ApplicationsEndpoint extends AbstractEndpoint {
     }
 
     protected Response updateApplication(final String accountSid, final String sid, final MultivaluedMap<String, String> data,
-            final MediaType responseType,
-            UserIdentityContext userIdentityContext) {
+            final MediaType responseType) {
         Account account;
-        permissionEvaluator.secure(account = accountsDao.getAccount(accountSid),
-                "RestComm:Modify:Applications",userIdentityContext);
+        secure(account = accountsDao.getAccount(accountSid), "RestComm:Modify:Applications");
         final Application application = dao.getApplication(new Sid(sid));
         if (application == null) {
             return status(NOT_FOUND).build();
         } else {
-            permissionEvaluator.secure(account, application.getAccountSid(),
-                    SecuredType.SECURED_APP,
-                    userIdentityContext);
+            secure(account, application.getAccountSid(), SecuredType.SECURED_APP);
             final Application applicationUpdate = update(application, data);
             dao.updateApplication(applicationUpdate);
             if (APPLICATION_XML_TYPE.equals(responseType)) {
@@ -282,85 +249,6 @@ public class ApplicationsEndpoint extends AbstractEndpoint {
             result = result.setKind(Application.Kind.getValueOf(data.getFirst("Kind")));
         }
         return result;
-    }
-
-
-    private Response deleteApplication(final String accountSid, final String sid,
-            UserIdentityContext userIdentityContext) {
-        Account operatedAccount = accountsDao.getAccount(new Sid(accountSid));
-        permissionEvaluator.secure(operatedAccount, "RestComm:Modify:Applications",
-                SecuredType.SECURED_APP, userIdentityContext);
-        Application application = dao.getApplication(new Sid(sid));
-        if (application != null) {
-            permissionEvaluator.secure(operatedAccount,
-                    application.getAccountSid(), SecuredType.SECURED_APP,
-                    userIdentityContext);
-        }
-        dao.removeApplication(new Sid(sid));
-        return ok().build();
-    }
-
-    @GET
-    @Produces({MediaType.APPLICATION_XML, MediaType.APPLICATION_JSON})
-    public Response getApplications(@PathParam("accountSid") final String accountSid,
-            @Context UriInfo uriInfo,
-            @HeaderParam("Accept") String accept,
-            @Context SecurityContext sec) {
-        return getApplications(accountSid, retrieveMediaType(accept), uriInfo,
-                ContextUtil.convert(sec));
-    }
-
-    @Path("/{sid}")
-    @GET
-    @Produces({MediaType.APPLICATION_XML, MediaType.APPLICATION_JSON})
-    public Response getApplicationAsXml(@PathParam("accountSid") final String accountSid,
-            @PathParam("sid") final String sid,
-            @HeaderParam("Accept") String accept,
-            @Context SecurityContext sec) {
-        return getApplication(accountSid, sid, retrieveMediaType(accept),
-                ContextUtil.convert(sec));
-    }
-
-    @POST
-    @Produces({MediaType.APPLICATION_XML, MediaType.APPLICATION_JSON})
-    public Response putApplication(@PathParam("accountSid") String accountSid,
-            final MultivaluedMap<String, String> data,
-            @HeaderParam("Accept") String accept,
-            @Context SecurityContext sec) {
-        return putApplication(accountSid, data, retrieveMediaType(accept),
-                ContextUtil.convert(sec));
-    }
-
-    @Path("/{sid}")
-    @POST
-    @Produces({MediaType.APPLICATION_XML, MediaType.APPLICATION_JSON})
-    public Response updateApplicationAsXmlPost(@PathParam("accountSid") final String accountSid,
-            @PathParam("sid") final String sid,
-            final MultivaluedMap<String, String> data,
-            @HeaderParam("Accept") String accept,
-            @Context SecurityContext sec) {
-        return updateApplication(accountSid, sid, data, retrieveMediaType(accept),
-                ContextUtil.convert(sec));
-    }
-
-    @Path("/{sid}")
-    @PUT
-    @Produces({MediaType.APPLICATION_XML, MediaType.APPLICATION_JSON})
-    public Response updateApplicationAsXmlPut(@PathParam("accountSid") final String accountSid,
-            @PathParam("sid") final String sid,
-            final MultivaluedMap<String, String> data,
-            @HeaderParam("Accept") String accept,
-            @Context SecurityContext sec) {
-        return updateApplication(accountSid, sid, data, retrieveMediaType(accept),
-                ContextUtil.convert(sec));
-    }
-
-    @Path("/{sid}")
-    @DELETE
-    public Response deleteApplicationAsXml(@PathParam("accountSid") final String accountSid,
-            @PathParam("sid") final String sid,
-            @Context SecurityContext sec) {
-        return deleteApplication(accountSid, sid,ContextUtil.convert(sec));
     }
 
 }
