@@ -20,22 +20,17 @@
 package org.restcomm.connect.http;
 
 import com.sun.jersey.spi.container.ResourceFilters;
-import com.sun.jersey.spi.resource.Singleton;
 import javax.ws.rs.GET;
-import javax.ws.rs.HeaderParam;
 import javax.ws.rs.Path;
 import javax.ws.rs.PathParam;
 import javax.ws.rs.Produces;
 import javax.ws.rs.QueryParam;
-import javax.ws.rs.core.Context;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
 import static javax.ws.rs.core.Response.*;
 import static javax.ws.rs.core.Response.Status.*;
-import javax.ws.rs.core.SecurityContext;
 import org.restcomm.connect.commons.annotations.concurrency.ThreadSafe;
 import org.restcomm.connect.http.filters.ExtensionFilter;
-import org.restcomm.connect.http.security.ContextUtil;
 import org.restcomm.connect.provisioning.number.api.PhoneNumberSearchFilters;
 import org.restcomm.connect.provisioning.number.api.PhoneNumberType;
 
@@ -45,7 +40,6 @@ import org.restcomm.connect.provisioning.number.api.PhoneNumberType;
  */
 @Path("/Accounts/{accountSid}/AvailablePhoneNumbers/{IsoCountryCode}/Mobile")
 @ThreadSafe
-@Singleton
 public final class AvailablePhoneNumbersMobileXmlEndpoint extends AvailablePhoneNumbersEndpoint {
     public AvailablePhoneNumbersMobileXmlEndpoint() {
         super();
@@ -59,9 +53,7 @@ public final class AvailablePhoneNumbersMobileXmlEndpoint extends AvailablePhone
             @QueryParam("Contains") String filterPattern, @QueryParam("SmsEnabled") String smsEnabled,
             @QueryParam("MmsEnabled") String mmsEnabled, @QueryParam("VoiceEnabled") String voiceEnabled,
             @QueryParam("FaxEnabled") String faxEnabled, @QueryParam("UssdEnabled") String ussdEnabled,
-            @QueryParam("RangeSize") String rangeSize, @QueryParam("RangeIndex") String rangeIndex,
-            @HeaderParam("Accept") String accept,
-            @Context SecurityContext sec) {
+            @QueryParam("RangeSize") String rangeSize, @QueryParam("RangeIndex") String rangeIndex) {
         if (isoCountryCode != null && !isoCountryCode.isEmpty()) {
             int rangeSizeInt = -1;
             if (rangeSize != null && !rangeSize.isEmpty()) {
@@ -94,9 +86,7 @@ public final class AvailablePhoneNumbersMobileXmlEndpoint extends AvailablePhone
             PhoneNumberSearchFilters listFilters = new PhoneNumberSearchFilters(areaCode, null, smsEnabledBool,
                     mmsEnabledBool, voiceEnabledBool, faxEnabledBool, ussdEnabledBool, null, null, null, null, null,
                     null, null, rangeSizeInt, rangeIndexInt, PhoneNumberType.Mobile);
-            return getAvailablePhoneNumbers(accountSid, isoCountryCode,
-                    listFilters, filterPattern, retrieveMediaType(accept),
-                    ContextUtil.convert(sec));
+            return getAvailablePhoneNumbers(accountSid, isoCountryCode, listFilters, filterPattern, retrieveMediaType());
         } else {
             return status(BAD_REQUEST).build();
         }

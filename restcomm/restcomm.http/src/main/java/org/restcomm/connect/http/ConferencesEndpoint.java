@@ -21,17 +21,11 @@ package org.restcomm.connect.http;
 
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
-import com.sun.jersey.spi.resource.Singleton;
 import com.thoughtworks.xstream.XStream;
 import java.text.ParseException;
 import java.util.List;
 import javax.annotation.PostConstruct;
 import javax.servlet.ServletContext;
-import javax.ws.rs.GET;
-import javax.ws.rs.HeaderParam;
-import javax.ws.rs.Path;
-import javax.ws.rs.PathParam;
-import javax.ws.rs.Produces;
 import javax.ws.rs.core.Context;
 import javax.ws.rs.core.MediaType;
 import static javax.ws.rs.core.MediaType.APPLICATION_JSON;
@@ -44,11 +38,10 @@ import static javax.ws.rs.core.Response.Status.NOT_FOUND;
 import static javax.ws.rs.core.Response.Status.UNAUTHORIZED;
 import static javax.ws.rs.core.Response.ok;
 import static javax.ws.rs.core.Response.status;
-import javax.ws.rs.core.SecurityContext;
 import javax.ws.rs.core.UriInfo;
 import org.apache.commons.configuration.Configuration;
 import org.apache.shiro.authz.AuthorizationException;
-import org.restcomm.connect.commons.annotations.concurrency.ThreadSafe;
+import org.restcomm.connect.commons.annotations.concurrency.NotThreadSafe;
 import org.restcomm.connect.commons.dao.Sid;
 import org.restcomm.connect.dao.ConferenceDetailRecordsDao;
 import org.restcomm.connect.dao.DaoManager;
@@ -59,18 +52,13 @@ import org.restcomm.connect.dao.entities.ConferenceDetailRecordList;
 import org.restcomm.connect.dao.entities.RestCommResponse;
 import org.restcomm.connect.http.converter.ConferenceDetailRecordConverter;
 import org.restcomm.connect.http.converter.ConferenceDetailRecordListConverter;
-import org.restcomm.connect.http.security.ContextUtil;
-import org.restcomm.connect.http.security.PermissionEvaluator.SecuredType;
-import org.restcomm.connect.identity.UserIdentityContext;
 
 /**
  * @author quintana.thomas@gmail.com (Thomas Quintana)
  * @author maria-farooq@live.com (Maria Farooq)
  */
-@Path("/Accounts/{accountSid}/Conferences")
-@ThreadSafe
-@Singleton
-public class ConferencesEndpoint extends AbstractEndpoint {
+@NotThreadSafe
+public abstract class ConferencesEndpoint extends SecuredEndpoint {
     @Context
     protected ServletContext context;
     protected Configuration configuration;
@@ -79,9 +67,6 @@ public class ConferencesEndpoint extends AbstractEndpoint {
     private GsonBuilder builder;
     private XStream xstream;
     private ConferenceDetailRecordListConverter listConverter;
-
-
-
 
     public ConferencesEndpoint() {
         super();
@@ -107,13 +92,10 @@ public class ConferencesEndpoint extends AbstractEndpoint {
         xstream.registerConverter(listConverter);
     }
 
-    protected Response getConference(final String accountSid, final String sid,
-            final MediaType responseType,
-            UserIdentityContext userIdentityContext) {
+    protected Response getConference(final String accountSid, final String sid, final MediaType responseType) {
         Account account = daoManager.getAccountsDao().getAccount(accountSid);
         try {
-            permissionEvaluator.secure(account, "RestComm:Read:Conferences",
-                    userIdentityContext);
+            secure(account, "RestComm:Read:Conferences");
         } catch (final AuthorizationException exception) {
             return status(UNAUTHORIZED).build();
         }
@@ -124,9 +106,7 @@ public class ConferencesEndpoint extends AbstractEndpoint {
         } else {
             try {
                 //secureLevelControl(daoManager.getAccountsDao(), accountSid, String.valueOf(cdr.getAccountSid()));
-                permissionEvaluator.secure(account, cdr.getAccountSid(),
-                        SecuredType.SECURED_STANDARD,
-                        userIdentityContext);
+                secure(account, cdr.getAccountSid(), SecuredType.SECURED_STANDARD);
             } catch (final AuthorizationException exception) {
                 return status(UNAUTHORIZED).build();
             }
@@ -141,13 +121,10 @@ public class ConferencesEndpoint extends AbstractEndpoint {
         }
     }
 
-    protected Response getConferences(final String accountSid, UriInfo info,
-            MediaType responseType,
-            UserIdentityContext userIdentityContext) {
+    protected Response getConferences(final String accountSid, UriInfo info, MediaType responseType) {
         Account account = daoManager.getAccountsDao().getAccount(accountSid);
         try {
-            permissionEvaluator.secure(account, "RestComm:Read:Conferences",
-                    userIdentityContext);
+            secure(account, "RestComm:Read:Conferences");
             //secureLevelControl(daoManager.getAccountsDao(), accountSid, null);
         } catch (final AuthorizationException exception) {
             return status(UNAUTHORIZED).build();
@@ -211,27 +188,6 @@ public class ConferencesEndpoint extends AbstractEndpoint {
         } else {
             return null;
         }
-    }
-
-    @Path("/{sid}")
-    @GET
-    @Produces({MediaType.APPLICATION_XML, MediaType.APPLICATION_JSON})
-    public Response getConferenceAsXml(@PathParam("accountSid") final String accountSid,
-            @PathParam("sid") final String sid,
-            @HeaderParam("Accept") String accept,
-            @Context SecurityContext sec) {
-        return getConference(accountSid, sid, retrieveMediaType(accept),
-                ContextUtil.convert(sec));
-    }
-
-    @GET
-    @Produces({MediaType.APPLICATION_XML, MediaType.APPLICATION_JSON})
-    public Response getConferences(@PathParam("accountSid") final String accountSid,
-            @Context UriInfo info,
-            @HeaderParam("Accept") String accept,
-            @Context SecurityContext sec) {
-        return getConferences(accountSid, info, retrieveMediaType(accept),
-                ContextUtil.convert(sec));
     }
 
 }

@@ -22,11 +22,9 @@ package org.restcomm.connect.http;
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
 import com.sun.jersey.core.header.LinkHeader;
-import com.sun.jersey.spi.resource.Singleton;
 import com.thoughtworks.xstream.XStream;
 import org.apache.commons.configuration.Configuration;
 import org.joda.time.DateTime;
-import org.restcomm.connect.commons.annotations.concurrency.ThreadSafe;
 import org.restcomm.connect.commons.dao.Sid;
 import org.restcomm.connect.core.service.api.ClientPasswordHashingService;
 import org.restcomm.connect.core.service.api.ProfileService;
@@ -39,27 +37,16 @@ import org.restcomm.connect.dao.entities.Profile;
 import org.restcomm.connect.dao.entities.RestCommResponse;
 import org.restcomm.connect.dns.DnsProvisioningManager;
 import org.restcomm.connect.dns.DnsProvisioningManagerProvider;
-import org.restcomm.connect.http.converter.ClientConverter;
-import org.restcomm.connect.http.converter.ClientListConverter;
 import org.restcomm.connect.http.converter.OrganizationConverter;
 import org.restcomm.connect.http.converter.OrganizationListConverter;
 import org.restcomm.connect.http.converter.RestCommResponseConverter;
-import org.restcomm.connect.http.security.ContextUtil;
-import org.restcomm.connect.identity.UserIdentityContext;
 
 import javax.annotation.PostConstruct;
-import javax.annotation.security.RolesAllowed;
 import javax.servlet.ServletContext;
-import javax.ws.rs.GET;
-import javax.ws.rs.HeaderParam;
-import javax.ws.rs.PUT;
-import javax.ws.rs.Path;
-import javax.ws.rs.PathParam;
-import javax.ws.rs.Produces;
+import javax.servlet.http.HttpServletRequest;
 import javax.ws.rs.core.Context;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
-import javax.ws.rs.core.SecurityContext;
 import javax.ws.rs.core.UriInfo;
 import java.net.URI;
 import java.util.List;
@@ -79,17 +66,11 @@ import static javax.ws.rs.core.Response.ok;
 import static javax.ws.rs.core.Response.status;
 import static org.restcomm.connect.http.ProfileEndpoint.PROFILE_REL_TYPE;
 import static org.restcomm.connect.http.ProfileEndpoint.TITLE_PARAM;
-import static org.restcomm.connect.http.security.AccountPrincipal.ADMIN_ROLE;
-import static org.restcomm.connect.http.security.AccountPrincipal.SUPER_ADMIN_ROLE;
 
 /**
  * @author maria.farooq@telestax.com (Maria Farooq)
  */
-@Path("/Organizations")
-@ThreadSafe
-@RolesAllowed(SUPER_ADMIN_ROLE)
-@Singleton
-public class OrganizationsEndpoint extends AbstractEndpoint {
+public class OrganizationsEndpoint extends SecuredEndpoint {
     @Context
     private ServletContext context;
     private DnsProvisioningManager dnsProvisioningManager;
@@ -111,6 +92,10 @@ public class OrganizationsEndpoint extends AbstractEndpoint {
         super();
     }
 
+    // used for testing
+    public OrganizationsEndpoint(ServletContext context, HttpServletRequest request) {
+        super(context, request);
+    }
 
     @PostConstruct
     void init() {
@@ -137,22 +122,15 @@ public class OrganizationsEndpoint extends AbstractEndpoint {
     private void registerConverters(){
         final OrganizationConverter converter = new OrganizationConverter(configuration);
         listConverter = new OrganizationListConverter(configuration);
-
-        final ClientConverter clientConverter = new ClientConverter(configuration);
-        final ClientListConverter clientListConverter = new ClientListConverter(configuration);
-
         final GsonBuilder builder = new GsonBuilder();
         builder.serializeNulls();
         builder.registerTypeAdapter(Organization.class, converter);
-        builder.registerTypeAdapter(Client.class, converter);
         builder.setPrettyPrinting();
         gson = builder.create();
         xstream = new XStream();
         xstream.alias("RestcommResponse", RestCommResponse.class);
         xstream.registerConverter(converter);
         xstream.registerConverter(listConverter);
-        xstream.registerConverter(clientConverter);
-        xstream.registerConverter(clientListConverter);
         xstream.registerConverter(new RestCommResponseConverter(configuration));
     }
 
@@ -161,13 +139,10 @@ public class OrganizationsEndpoint extends AbstractEndpoint {
      * @param responseType
      * @return
      */
-    protected Response getOrganization(final String organizationSid,
-            final MediaType responseType,
-             UriInfo info,
-             UserIdentityContext userIdentityContext) {
+    protected Response getOrganization(final String organizationSid, final MediaType responseType,
+             UriInfo info) {
         //First check if the account has the required permissions in general, this way we can fail fast and avoid expensive DAO operations
-        permissionEvaluator.checkPermission("RestComm:Read:Organizations",
-                userIdentityContext);
+        checkPermission("RestComm:Read:Organizations");
         Organization organization = null;
 
         if (!Sid.pattern.matcher(organizationSid).matches()) {
@@ -175,7 +150,7 @@ public class OrganizationsEndpoint extends AbstractEndpoint {
         } else {
             try {
                 //if account is not super admin then allow to read only affiliated organization
-                if (!permissionEvaluator.isSuperAdmin(userIdentityContext)) {
+                if (!isSuperAdmin()) {
                     if (userIdentityContext.getEffectiveAccount().getOrganizationSid().equals(new Sid(organizationSid))) {
                         organization = organizationsDao.getOrganization(new Sid(organizationSid));
                     } else {
@@ -310,21 +285,15 @@ public class OrganizationsEndpoint extends AbstractEndpoint {
      * @param responseType
      * @return Response with List<Client> for the Clients that hashed the password
      */
-    protected Response migrateClientsOrganization(final String organizationSid, UriInfo info, MediaType responseType, UserIdentityContext userIdentityContext) {
+    protected Response migrateClientsOrganization(final String organizationSid, UriInfo info, MediaType responseType) {
 
-        //First check if the account has the required permissions in general, this way we can fail fast and avoid expensive DAO operations
-        permissionEvaluator.checkPermission("RestComm:Read:Organizations", userIdentityContext);
         Organization organization = null;
 
         if (!Sid.pattern.matcher(organizationSid).matches()) {
             return status(BAD_REQUEST).build();
         } else {
             try {
-                if (!permissionEvaluator.isSuperAdmin(userIdentityContext)) {
-                    return status(FORBIDDEN).build();
-                } else {
-                    organization = organizationsDao.getOrganization(new Sid(organizationSid));
-                }
+                organization = organizationsDao.getOrganization(new Sid(organizationSid));
             } catch (Exception e) {
                 return status(NOT_FOUND).build();
             }
@@ -352,50 +321,8 @@ public class OrganizationsEndpoint extends AbstractEndpoint {
 
     public LinkHeader composeLink(Sid targetSid, UriInfo info) {
         String sid = targetSid.toString();
-        URI uri = info.getBaseUriBuilder().path(ProfileEndpoint.class).path(sid).build();
+        URI uri = info.getBaseUriBuilder().path(ProfileJsonEndpoint.class).path(sid).build();
         LinkHeader.LinkHeaderBuilder link = LinkHeader.uri(uri).parameter(TITLE_PARAM, "Profiles");
         return link.rel(PROFILE_REL_TYPE).build();
-    }
-
-    @Path("/{organizationSid}")
-    @GET
-    @Produces({MediaType.APPLICATION_XML, MediaType.APPLICATION_JSON})
-    @RolesAllowed({SUPER_ADMIN_ROLE, ADMIN_ROLE})
-    public Response getOrganizationAsXml(@PathParam("organizationSid") final String organizationSid,
-            @Context UriInfo info,
-            @HeaderParam("Accept") String accept,
-            @Context SecurityContext sec) {
-        return getOrganization(organizationSid,
-                retrieveMediaType(accept),
-                info,
-                ContextUtil.convert(sec));
-    }
-
-    @GET
-    @RolesAllowed(SUPER_ADMIN_ROLE)
-    @Produces({MediaType.APPLICATION_XML, MediaType.APPLICATION_JSON})
-    public Response getOrganizations(@Context UriInfo info,
-            @HeaderParam("Accept") String accept) {
-        return getOrganizations(info, retrieveMediaType(accept));
-    }
-
-    @Path("/{domainName}")
-    @PUT
-    @RolesAllowed(SUPER_ADMIN_ROLE)
-    @Produces({MediaType.APPLICATION_XML, MediaType.APPLICATION_JSON})
-    public Response putOrganizationPut(@PathParam("domainName") final String domainName,
-            @Context UriInfo info,
-            @HeaderParam("Accept") String accept) {
-        return putOrganization(domainName, info, retrieveMediaType(accept));
-    }
-
-    @Path("/{organizationSid}/Migrate")
-    @PUT
-    @RolesAllowed(SUPER_ADMIN_ROLE)
-    @Produces({MediaType.APPLICATION_XML, MediaType.APPLICATION_JSON})
-    public Response migrateClientsOrganizationPut(@PathParam("organizationSid") final String organizationSid,
-                                           @Context UriInfo info,
-                                           @HeaderParam("Accept") String accept, @Context SecurityContext sec) {
-        return migrateClientsOrganization(organizationSid, info, retrieveMediaType(accept), ContextUtil.convert(sec));
     }
 }

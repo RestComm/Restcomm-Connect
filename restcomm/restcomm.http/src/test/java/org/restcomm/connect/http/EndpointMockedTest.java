@@ -21,7 +21,6 @@
 package org.restcomm.connect.http;
 
 import java.net.URISyntaxException;
-import java.util.HashSet;
 import org.apache.commons.configuration.Configuration;
 import org.apache.commons.configuration.ConfigurationException;
 import org.apache.commons.configuration.XMLConfiguration;
@@ -33,16 +32,11 @@ import org.mockito.Mockito;
 import javax.servlet.ServletContext;
 import javax.servlet.http.HttpServletRequest;
 import java.util.List;
-import java.util.Set;
-import static org.apache.shiro.web.filter.mgt.DefaultFilter.roles;
 
 import static org.mockito.Mockito.when;
 import org.restcomm.connect.dao.ClientsDao;
 import org.restcomm.connect.dao.OrganizationsDao;
-import static org.restcomm.connect.http.security.AccountPrincipal.ADMIN_ROLE;
-import org.restcomm.connect.http.security.PermissionEvaluator;
 import org.restcomm.connect.identity.IdentityContext;
-import org.restcomm.connect.identity.UserIdentityContext;
 
 /**
  * Base class for unit testing restcomm endpoints by mocking the following dependent components:
@@ -67,7 +61,6 @@ public class EndpointMockedTest {
     HttpServletRequest request;
     OrganizationsDao orgDao;
     ClientsDao clientsDao;
-    UserIdentityContext userIdentityContext;
 
 
     void init() throws URISyntaxException {
@@ -83,12 +76,6 @@ public class EndpointMockedTest {
         accountsDao = Mockito.mock(AccountsDao.class);
         orgDao= Mockito.mock(OrganizationsDao.class);
         clientsDao= Mockito.mock(ClientsDao.class);
-        userIdentityContext = Mockito.mock(UserIdentityContext.class);
-
-        Set<String> roles = new HashSet();
-        roles.add(ADMIN_ROLE);
-        when (userIdentityContext.getEffectiveAccountRoles()).thenReturn(roles);
-
         when(servletContext.getAttribute(Configuration.class.getName())).thenReturn(conf);
         when(daoManager.getAccountsDao()).thenReturn(accountsDao);
         when(daoManager.getOrganizationsDao()).thenReturn(orgDao);

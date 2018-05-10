@@ -24,18 +24,11 @@ import static akka.pattern.Patterns.ask;
 import akka.util.Timeout;
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
-import com.sun.jersey.spi.resource.Singleton;
 import com.thoughtworks.xstream.XStream;
 import java.util.List;
 import java.util.concurrent.TimeUnit;
 import javax.annotation.PostConstruct;
 import javax.servlet.ServletContext;
-import javax.ws.rs.GET;
-import javax.ws.rs.HeaderParam;
-import javax.ws.rs.POST;
-import javax.ws.rs.Path;
-import javax.ws.rs.PathParam;
-import javax.ws.rs.Produces;
 import javax.ws.rs.core.Context;
 import javax.ws.rs.core.MediaType;
 import static javax.ws.rs.core.MediaType.APPLICATION_JSON;
@@ -51,11 +44,10 @@ import static javax.ws.rs.core.Response.Status.NOT_FOUND;
 import static javax.ws.rs.core.Response.Status.UNAUTHORIZED;
 import static javax.ws.rs.core.Response.ok;
 import static javax.ws.rs.core.Response.status;
-import javax.ws.rs.core.SecurityContext;
 import javax.ws.rs.core.UriInfo;
 import org.apache.commons.configuration.Configuration;
 import org.apache.shiro.authz.AuthorizationException;
-import org.restcomm.connect.commons.annotations.concurrency.ThreadSafe;
+import org.restcomm.connect.commons.annotations.concurrency.NotThreadSafe;
 import org.restcomm.connect.commons.configuration.RestcommConfiguration;
 import org.restcomm.connect.commons.dao.Sid;
 import org.restcomm.connect.dao.AccountsDao;
@@ -72,9 +64,6 @@ import org.restcomm.connect.http.converter.ConferenceParticipantConverter;
 import org.restcomm.connect.http.converter.RecordingConverter;
 import org.restcomm.connect.http.converter.RecordingListConverter;
 import org.restcomm.connect.http.converter.RestCommResponseConverter;
-import org.restcomm.connect.http.security.ContextUtil;
-import org.restcomm.connect.http.security.PermissionEvaluator.SecuredType;
-import org.restcomm.connect.identity.UserIdentityContext;
 import org.restcomm.connect.telephony.api.CallInfo;
 import org.restcomm.connect.telephony.api.CallResponse;
 import org.restcomm.connect.telephony.api.GetCall;
@@ -86,25 +75,20 @@ import scala.concurrent.duration.Duration;
 /**
  * @author maria-farooq@live.com (Maria Farooq)
  */
-@Path("/Accounts/{accountSid}/Conferences/{conferenceSid}/Participants")
-@ThreadSafe
-@Singleton
-public class ParticipantsEndpoint extends AbstractEndpoint {
+@NotThreadSafe
+public abstract class ParticipantsEndpoint extends CallsEndpoint {
     @Context
-    private ServletContext context;
-    private Configuration configuration;
-    private ActorRef callManager;
-    private DaoManager daos;
-    private Gson gson;
-    private GsonBuilder builder;
-    private XStream xstream;
-    private CallDetailRecordListConverter listConverter;
-    private AccountsDao accountsDao;
-    private RecordingsDao recordingsDao;
-    private String instanceId;
-
-
-
+    protected ServletContext context;
+    protected Configuration configuration;
+    protected ActorRef callManager;
+    protected DaoManager daos;
+    protected Gson gson;
+    protected GsonBuilder builder;
+    protected XStream xstream;
+    protected CallDetailRecordListConverter listConverter;
+    protected AccountsDao accountsDao;
+    protected RecordingsDao recordingsDao;
+    protected String instanceId;
 
     public ParticipantsEndpoint() {
         super();
@@ -139,15 +123,10 @@ public class ParticipantsEndpoint extends AbstractEndpoint {
         instanceId = RestcommConfiguration.getInstance().getMain().getInstanceId();
     }
 
-    protected Response getCall(final String accountSid,
-            final String sid,
-            final MediaType responseType,
-            UserIdentityContext userIdentityContext) {
+    protected Response getCall(final String accountSid, final String sid, final MediaType responseType) {
         Account account = daos.getAccountsDao().getAccount(accountSid);
         try {
-            permissionEvaluator.secure(account,
-                    "RestComm:Read:Calls",
-                    userIdentityContext);
+            secure(account, "RestComm:Read:Calls");
         } catch (final AuthorizationException exception) {
             return status(UNAUTHORIZED).build();
         }
@@ -157,10 +136,7 @@ public class ParticipantsEndpoint extends AbstractEndpoint {
             return status(NOT_FOUND).build();
         } else {
             try {
-                permissionEvaluator.secure(account,
-                        cdr.getAccountSid(),
-                        SecuredType.SECURED_STANDARD,
-                        userIdentityContext);
+                secure(account, cdr.getAccountSid(), SecuredType.SECURED_STANDARD);
             } catch (final AuthorizationException exception) {
                 return status(UNAUTHORIZED).build();
             }
@@ -175,16 +151,10 @@ public class ParticipantsEndpoint extends AbstractEndpoint {
         }
     }
 
-    protected Response getCalls(final String accountSid,
-            final String conferenceSid,
-            UriInfo info,
-            MediaType responseType,
-            UserIdentityContext userIdentityContext) {
+    protected Response getCalls(final String accountSid, final String conferenceSid, UriInfo info, MediaType responseType) {
         Account account = daos.getAccountsDao().getAccount(accountSid);
         try {
-            permissionEvaluator.secure(account,
-                    "RestComm:Read:Calls",
-                    userIdentityContext);
+            secure(account, "RestComm:Read:Calls");
         } catch (final AuthorizationException exception) {
             return status(UNAUTHORIZED).build();
         } catch (Exception e) {
@@ -239,17 +209,11 @@ public class ParticipantsEndpoint extends AbstractEndpoint {
     }
 
     @SuppressWarnings("unchecked")
-    protected Response updateCall(final String sid,
-            final String callSid,
-            final MultivaluedMap<String, String> data,
-            final MediaType responseType,
-            UserIdentityContext userIdentityContext) {
+    protected Response updateCall(final String sid, final String callSid, final MultivaluedMap<String, String> data, final MediaType responseType) {
         final Sid accountSid = new Sid(sid);
         Account account = daos.getAccountsDao().getAccount(accountSid);
         try {
-            permissionEvaluator.secure(account,
-                    "RestComm:Modify:Calls",
-                    userIdentityContext);
+            secure(account, "RestComm:Modify:Calls");
         } catch (final AuthorizationException exception) {
             return status(UNAUTHORIZED).build();
         }
@@ -262,10 +226,7 @@ public class ParticipantsEndpoint extends AbstractEndpoint {
 
             if (cdr != null) {
                 try {
-                    permissionEvaluator.secure(account,
-                            cdr.getAccountSid(),
-                            SecuredType.SECURED_STANDARD,
-                            userIdentityContext);
+                    secure(account, cdr.getAccountSid(), SecuredType.SECURED_STANDARD);
                 } catch (final AuthorizationException exception) {
                     return status(UNAUTHORIZED).build();
                 }
@@ -297,7 +258,7 @@ public class ParticipantsEndpoint extends AbstractEndpoint {
 
             if(call != null){
                 try{
-                    CallsUtil.muteUnmuteCall(mute, callInfo, call, cdr, dao);
+                    muteUnmuteCall(mute, callInfo, call, cdr, dao);
                 } catch (Exception exception) {
                     return status(INTERNAL_SERVER_ERROR).entity(exception.getMessage()).build();
                 }
@@ -310,49 +271,5 @@ public class ParticipantsEndpoint extends AbstractEndpoint {
         } else {
             return null;
         }
-    }
-
-    @Path("/{callSid}")
-    @GET
-    @Produces({MediaType.APPLICATION_XML, MediaType.APPLICATION_JSON})
-    public Response getParticipantAsXml(@PathParam("accountSid") final String accountSid,
-            @PathParam("conferenceSid") final String conferenceSid,
-            @PathParam("callSid") final String callSid,
-            @HeaderParam("Accept") String accept,
-            @Context SecurityContext sec) {
-        return getCall(accountSid,
-                callSid,
-                retrieveMediaType(accept),
-                ContextUtil.convert(sec));
-    }
-
-    @GET
-    @Produces({MediaType.APPLICATION_XML, MediaType.APPLICATION_JSON})
-    public Response getParticipants(@PathParam("accountSid") final String accountSid,
-            @PathParam("conferenceSid") final String conferenceSid,
-            @Context UriInfo info,
-            @HeaderParam("Accept") String accept,
-            @Context SecurityContext sec) {
-        return getCalls(accountSid,
-                conferenceSid,
-                info,
-                retrieveMediaType(accept),
-                ContextUtil.convert(sec));
-    }
-
-    @Path("/{callSid}")
-    @POST
-    @Produces({MediaType.APPLICATION_XML, MediaType.APPLICATION_JSON})
-    public Response modifyCall(@PathParam("accountSid") final String accountSid,
-            @PathParam("conferenceSid") final String conferenceSid,
-            @PathParam("callSid") final String callSid,
-            final MultivaluedMap<String, String> data,
-            @HeaderParam("Accept") String accept,
-            @Context SecurityContext sec) {
-        return updateCall(accountSid,
-                callSid,
-                data,
-                retrieveMediaType(accept),
-                ContextUtil.convert(sec));
     }
 }
