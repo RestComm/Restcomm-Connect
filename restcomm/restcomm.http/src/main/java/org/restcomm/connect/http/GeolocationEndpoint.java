@@ -23,7 +23,6 @@ package org.restcomm.connect.http;
 
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
-import com.sun.jersey.spi.resource.Singleton;
 import com.thoughtworks.xstream.XStream;
 import java.io.BufferedReader;
 import java.io.InputStream;
@@ -34,14 +33,6 @@ import java.util.Arrays;
 import java.util.List;
 import javax.annotation.PostConstruct;
 import javax.servlet.ServletContext;
-import javax.ws.rs.DELETE;
-import javax.ws.rs.GET;
-import javax.ws.rs.HeaderParam;
-import javax.ws.rs.POST;
-import javax.ws.rs.PUT;
-import javax.ws.rs.Path;
-import javax.ws.rs.PathParam;
-import javax.ws.rs.Produces;
 import javax.ws.rs.core.Context;
 import javax.ws.rs.core.MediaType;
 import static javax.ws.rs.core.MediaType.APPLICATION_JSON;
@@ -53,7 +44,6 @@ import javax.ws.rs.core.Response;
 import static javax.ws.rs.core.Response.Status.*;
 import static javax.ws.rs.core.Response.ok;
 import static javax.ws.rs.core.Response.status;
-import javax.ws.rs.core.SecurityContext;
 import org.apache.commons.configuration.Configuration;
 import org.apache.http.HttpEntity;
 import org.apache.http.HttpResponse;
@@ -62,7 +52,7 @@ import org.apache.http.client.methods.HttpGet;
 import org.apache.http.impl.client.HttpClientBuilder;
 import org.apache.log4j.Logger;
 import org.joda.time.DateTime;
-import org.restcomm.connect.commons.annotations.concurrency.ThreadSafe;
+import org.restcomm.connect.commons.annotations.concurrency.NotThreadSafe;
 import org.restcomm.connect.commons.dao.Sid;
 import org.restcomm.connect.commons.util.StringUtils;
 import org.restcomm.connect.dao.AccountsDao;
@@ -77,17 +67,12 @@ import org.restcomm.connect.http.converter.ClientListConverter;
 import org.restcomm.connect.http.converter.GeolocationConverter;
 import org.restcomm.connect.http.converter.GeolocationListConverter;
 import org.restcomm.connect.http.converter.RestCommResponseConverter;
-import org.restcomm.connect.http.security.ContextUtil;
-import org.restcomm.connect.http.security.PermissionEvaluator.SecuredType;
-import org.restcomm.connect.identity.UserIdentityContext;
 /**
  * @author <a href="mailto:fernando.mendioroz@telestax.com"> Fernando Mendioroz </a>
  *
  */
-@Path("/Accounts/{accountSid}/Geolocation")
-@ThreadSafe
-@Singleton
-public class GeolocationEndpoint extends AbstractEndpoint {
+@NotThreadSafe
+public abstract class GeolocationEndpoint extends SecuredEndpoint {
 
     @Context
     protected ServletContext context;
@@ -101,9 +86,6 @@ public class GeolocationEndpoint extends AbstractEndpoint {
     private static final String NotificationGT = Geolocation.GeolocationType.Notification.toString();
     private String cause;
     private String rStatus;
-
-
-
 
     private static enum responseStatus {
         Queued("queued"), Sent("sent"), Processing("processing"), Successful("successful"), PartiallySuccessful(
@@ -147,16 +129,10 @@ public class GeolocationEndpoint extends AbstractEndpoint {
         xstream.registerConverter(new RestCommResponseConverter(configuration));
     }
 
-    protected Response getGeolocation(final String accountSid,
-            final String sid,
-            final MediaType responseType,
-            UserIdentityContext userIdentityContext) {
+    protected Response getGeolocation(final String accountSid, final String sid, final MediaType responseType) {
         Account account;
         try {
-            account = accountsDao.getAccount(accountSid);
-            permissionEvaluator.secure(account,
-                    "RestComm:Read:Geolocation",
-                    userIdentityContext);
+            secure(account = accountsDao.getAccount(accountSid), "RestComm:Read:Geolocation");
         } catch (final Exception exception) {
             return status(UNAUTHORIZED).build();
         }
@@ -169,10 +145,7 @@ public class GeolocationEndpoint extends AbstractEndpoint {
             return status(NOT_FOUND).build();
         } else {
             try {
-                permissionEvaluator.secure(account,
-                        geolocation.getAccountSid(),
-                        SecuredType.SECURED_APP,
-                        userIdentityContext);
+                secure(account, geolocation.getAccountSid(), SecuredType.SECURED_APP);
             } catch (final Exception exception) {
                 return status(UNAUTHORIZED).build();
             }
@@ -187,16 +160,11 @@ public class GeolocationEndpoint extends AbstractEndpoint {
         }
     }
 
-    protected Response getGeolocations(final String accountSid,
-            final MediaType responseType,
-            UserIdentityContext userIdentityContext) {
+    protected Response getGeolocations(final String accountSid, final MediaType responseType) {
         Account account;
         try {
             account = accountsDao.getAccount(accountSid);
-            permissionEvaluator.secure(account,
-                    "RestComm:Read:Geolocation",
-                    SecuredType.SECURED_APP,
-                    userIdentityContext);
+            secure(account, "RestComm:Read:Geolocation", SecuredType.SECURED_APP);
         } catch (final Exception exception) {
             return status(UNAUTHORIZED).build();
         }
@@ -211,22 +179,13 @@ public class GeolocationEndpoint extends AbstractEndpoint {
         }
     }
 
-    protected Response deleteGeolocation(final String accountSid,
-            final String sid,
-            UserIdentityContext userIdentityContext) {
+    protected Response deleteGeolocation(final String accountSid, final String sid) {
         Account account;
         try {
-            account = accountsDao.getAccount(accountSid);
-            permissionEvaluator.secure(account,
-                    "RestComm:Delete:Geolocation",
-                    userIdentityContext);
+            secure(account = accountsDao.getAccount(accountSid), "RestComm:Delete:Geolocation");
             Geolocation geolocation = dao.getGeolocation(new Sid(sid));
             if (geolocation != null) {
-                permissionEvaluator.secure(account,
-                        geolocation.getAccountSid(),
-                        SecuredType.SECURED_APP,
-                        userIdentityContext
-                );
+                secure(account, geolocation.getAccountSid(), SecuredType.SECURED_APP);
             }
         } catch (final Exception exception) {
             return status(UNAUTHORIZED).build();
@@ -235,18 +194,12 @@ public class GeolocationEndpoint extends AbstractEndpoint {
         return ok().build();
     }
 
-    public Response putGeolocation(final String accountSid,
-            final MultivaluedMap<String, String> data,
-            GeolocationType geolocationType,
-            final MediaType responseType,
-            UserIdentityContext userIdentityContext) {
+    public Response putGeolocation(final String accountSid, final MultivaluedMap<String, String> data,
+                                   GeolocationType geolocationType, final MediaType responseType) {
         Account account;
         try {
             account = accountsDao.getAccount(accountSid);
-            permissionEvaluator.secure(account,
-                    "RestComm:Create:Geolocation",
-                    SecuredType.SECURED_APP,
-                    userIdentityContext);
+            secure(account, "RestComm:Create:Geolocation", SecuredType.SECURED_APP);
         } catch (final Exception exception) {
             return status(UNAUTHORIZED).build();
         }
@@ -570,17 +523,11 @@ public class GeolocationEndpoint extends AbstractEndpoint {
         return builder.build();
     }
 
-    protected Response updateGeolocation(final String accountSid,
-            final String sid,
-            final MultivaluedMap<String, String> data,
-            final MediaType responseType,
-            UserIdentityContext userIdentityContext) {
+    protected Response updateGeolocation(final String accountSid, final String sid, final MultivaluedMap<String, String> data,
+                                         final MediaType responseType) {
         Account account;
         try {
-            account = accountsDao.getAccount(accountSid);
-            permissionEvaluator.secure(account,
-                    "RestComm:Modify:Geolocation",
-                    userIdentityContext);
+            secure(account = accountsDao.getAccount(accountSid), "RestComm:Modify:Geolocation");
         } catch (final Exception exception) {
             return status(UNAUTHORIZED).build();
         }
@@ -589,10 +536,7 @@ public class GeolocationEndpoint extends AbstractEndpoint {
             return status(NOT_FOUND).build();
         } else {
             try {
-                permissionEvaluator.secure(account,
-                        geolocation.getAccountSid(),
-                        SecuredType.SECURED_APP,
-                        userIdentityContext);
+                secure(account, geolocation.getAccountSid(), SecuredType.SECURED_APP);
             } catch (final NullPointerException exception) {
                 return status(BAD_REQUEST).entity(exception.getMessage()).build();
             } catch (final Exception exception) {
@@ -802,140 +746,6 @@ public class GeolocationEndpoint extends AbstractEndpoint {
             WGS84_validation = false;
             return WGS84_validation;
         }
-    }
-
-    @Path("/Immediate/{sid}")
-    @DELETE
-    public Response deleteImmediateGeolocationAsXml(@PathParam("accountSid") final String accountSid,
-                                                    @PathParam("sid") final String sid,
-                                                    @Context SecurityContext sec) {
-        return deleteGeolocation(accountSid, sid, ContextUtil.convert(sec));
-    }
-
-    @Path("/Immediate/{sid}")
-    @GET
-    @Produces({MediaType.APPLICATION_XML, MediaType.APPLICATION_JSON})
-    public Response getImmediateGeolocationAsXml(@PathParam("accountSid") final String accountSid,
-                                                 @PathParam("sid") final String sid,
-                                                 @HeaderParam("Accept") String accept,
-                                                 @Context SecurityContext sec) {
-        return getGeolocation(accountSid, sid, retrieveMediaType(accept),
-                ContextUtil.convert(sec));
-    }
-
-    @Path("/Immediate")
-    @POST
-    @Produces({MediaType.APPLICATION_XML, MediaType.APPLICATION_JSON})
-    public Response putImmediateGeolocationXmlPost(@PathParam("accountSid") final String accountSid,
-                                                   final MultivaluedMap<String, String> data,
-                                                   @HeaderParam("Accept") String accept,
-                                                   @Context SecurityContext sec) {
-        return putGeolocation(accountSid,
-                data,
-                Geolocation.GeolocationType.Immediate,
-                retrieveMediaType(accept),
-                ContextUtil.convert(sec));
-    }
-
-    @Path("/Immediate/{sid}")
-    @POST
-    @Produces({MediaType.APPLICATION_XML, MediaType.APPLICATION_JSON})
-    public Response putImmediateGeolocationAsXmlPost(@PathParam("accountSid") final String accountSid,
-                                                     @PathParam("sid") final String sid,
-                                                     final MultivaluedMap<String, String> data,
-                                                     @HeaderParam("Accept") String accept,
-                                                     @Context SecurityContext sec) {
-        return updateGeolocation(accountSid, sid, data, retrieveMediaType(accept),
-                ContextUtil.convert(sec));
-    }
-
-    @Path("/Immediate/{sid}")
-    @PUT
-    @Produces({MediaType.APPLICATION_XML, MediaType.APPLICATION_JSON})
-    public Response updateImmediateGeolocationAsXmlPut(@PathParam("accountSid") final String accountSid,
-                                                       @PathParam("sid") final String sid,
-                                                       final MultivaluedMap<String, String> data,
-                                                       @HeaderParam("Accept") String accept,
-                                                       @Context SecurityContext sec) {
-        return updateGeolocation(accountSid, sid, data, retrieveMediaType(accept),
-                ContextUtil.convert(sec));
-    }
-
-    /*******************************************/
-    // *** Notification type of Geolocation ***//
-    /*******************************************/
-
-    @Path("/Notification/{sid}")
-    @DELETE
-    public Response deleteNotificationGeolocationAsXml(@PathParam("accountSid") final String accountSid,
-                                                       @PathParam("sid") final String sid,
-                                                       @Context SecurityContext sec) {
-        return deleteGeolocation(accountSid, sid,ContextUtil.convert(sec));
-    }
-
-    @Path("/Notification/{sid}")
-    @GET
-    @Produces({MediaType.APPLICATION_XML, MediaType.APPLICATION_JSON})
-    public Response getNotificationGeolocationAsXml(@PathParam("accountSid") final String accountSid,
-                                                    @PathParam("sid") final String sid,
-                                                    @HeaderParam("Accept") String accept,
-                                                    @Context SecurityContext sec) {
-        return getGeolocation(accountSid, sid, retrieveMediaType(accept),
-                ContextUtil.convert(sec));
-    }
-
-    @Path("/Notification")
-    @POST
-    @Produces({MediaType.APPLICATION_XML, MediaType.APPLICATION_JSON})
-    public Response putNotificationGeolocationXmlPost(@PathParam("accountSid") final String accountSid,
-                                                      final MultivaluedMap<String, String> data,
-                                                      @HeaderParam("Accept") String accept,
-                                                      @Context SecurityContext sec) {
-        return putGeolocation(accountSid,
-                data,
-                Geolocation.GeolocationType.Notification,
-                retrieveMediaType(accept),
-                ContextUtil.convert(sec));
-    }
-
-    @Path("/Notification/{sid}")
-    @POST
-    @Produces({MediaType.APPLICATION_XML, MediaType.APPLICATION_JSON})
-    public Response putNotificationGeolocationAsXmlPost(@PathParam("accountSid") final String accountSid,
-                                                        @PathParam("sid") final String sid,
-                                                        final MultivaluedMap<String, String> data,
-                                                        @HeaderParam("Accept") String accept,
-                                                        @Context SecurityContext sec) {
-        return updateGeolocation(accountSid,
-                sid,
-                data,
-                retrieveMediaType(accept),
-                ContextUtil.convert(sec));
-    }
-
-    @Path("/Notification/{sid}")
-    @PUT
-    @Produces({MediaType.APPLICATION_XML, MediaType.APPLICATION_JSON})
-    public Response updateNotificationGeolocationAsXmlPut(@PathParam("accountSid") final String accountSid,
-                                                          @PathParam("sid") final String sid,
-                                                          final MultivaluedMap<String, String> data,
-                                                          @HeaderParam("Accept") String accept,
-                                                          @Context SecurityContext sec) {
-        return updateGeolocation(accountSid,
-                sid,
-                data,
-                retrieveMediaType(accept),
-                ContextUtil.convert(sec));
-    }
-
-    @GET
-    @Produces({MediaType.APPLICATION_XML, MediaType.APPLICATION_JSON})
-    public Response getGeolocationsAsXml(@PathParam("accountSid") final String accountSid,
-            @HeaderParam("Accept") String accept,
-            @Context SecurityContext sec) {
-        return getGeolocations(accountSid,
-                retrieveMediaType(accept),
-                ContextUtil.convert(sec));
     }
 
 }
