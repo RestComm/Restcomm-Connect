@@ -23,19 +23,40 @@ import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
 import com.sun.jersey.core.header.LinkHeader;
 import com.thoughtworks.xstream.XStream;
-import java.net.URI;
-import java.util.List;
-import java.util.regex.Pattern;
+import org.apache.commons.configuration.Configuration;
+import org.joda.time.DateTime;
+import org.restcomm.connect.commons.dao.Sid;
+import org.restcomm.connect.core.service.api.ClientPasswordHashingService;
+import org.restcomm.connect.core.service.api.ProfileService;
+import org.restcomm.connect.dao.ClientsDao;
+import org.restcomm.connect.dao.DaoManager;
+import org.restcomm.connect.dao.entities.Client;
+import org.restcomm.connect.dao.entities.Organization;
+import org.restcomm.connect.dao.entities.OrganizationList;
+import org.restcomm.connect.dao.entities.Profile;
+import org.restcomm.connect.dao.entities.RestCommResponse;
+import org.restcomm.connect.dns.DnsProvisioningManager;
+import org.restcomm.connect.dns.DnsProvisioningManagerProvider;
+import org.restcomm.connect.http.converter.OrganizationConverter;
+import org.restcomm.connect.http.converter.OrganizationListConverter;
+import org.restcomm.connect.http.converter.RestCommResponseConverter;
+
 import javax.annotation.PostConstruct;
 import javax.servlet.ServletContext;
 import javax.servlet.http.HttpServletRequest;
 import javax.ws.rs.core.Context;
 import javax.ws.rs.core.MediaType;
+import javax.ws.rs.core.Response;
+import javax.ws.rs.core.UriInfo;
+import java.net.URI;
+import java.util.List;
+import java.util.Map;
+import java.util.regex.Pattern;
+
 import static javax.ws.rs.core.MediaType.APPLICATION_JSON;
 import static javax.ws.rs.core.MediaType.APPLICATION_JSON_TYPE;
 import static javax.ws.rs.core.MediaType.APPLICATION_XML;
 import static javax.ws.rs.core.MediaType.APPLICATION_XML_TYPE;
-import javax.ws.rs.core.Response;
 import static javax.ws.rs.core.Response.Status.BAD_REQUEST;
 import static javax.ws.rs.core.Response.Status.CONFLICT;
 import static javax.ws.rs.core.Response.Status.FORBIDDEN;
@@ -43,38 +64,29 @@ import static javax.ws.rs.core.Response.Status.INTERNAL_SERVER_ERROR;
 import static javax.ws.rs.core.Response.Status.NOT_FOUND;
 import static javax.ws.rs.core.Response.ok;
 import static javax.ws.rs.core.Response.status;
-import javax.ws.rs.core.UriInfo;
-import org.apache.commons.configuration.Configuration;
-import org.joda.time.DateTime;
-import org.restcomm.connect.commons.dao.Sid;
-import org.restcomm.connect.dao.entities.Organization;
-import org.restcomm.connect.dao.entities.OrganizationList;
-import org.restcomm.connect.dao.entities.Profile;
-import org.restcomm.connect.dao.entities.RestCommResponse;
-import org.restcomm.connect.dns.DnsProvisioningManager;
-import org.restcomm.connect.dns.DnsProvisioningManagerProvider;
 import static org.restcomm.connect.http.ProfileEndpoint.PROFILE_REL_TYPE;
 import static org.restcomm.connect.http.ProfileEndpoint.TITLE_PARAM;
-import org.restcomm.connect.http.converter.OrganizationConverter;
-import org.restcomm.connect.http.converter.OrganizationListConverter;
-import org.restcomm.connect.http.converter.RestCommResponseConverter;
 
 /**
  * @author maria.farooq@telestax.com (Maria Farooq)
  */
 public class OrganizationsEndpoint extends SecuredEndpoint {
     @Context
-    protected ServletContext context;
-    protected DnsProvisioningManager dnsProvisioningManager;
-    protected Gson gson;
-    protected XStream xstream;
-    protected final String MSG_EMPTY_DOMAIN_NAME = "domain name can not be empty. Please, choose a valid name and try again.";
-    protected final String MSG_INVALID_DOMAIN_NAME_PATTERN= "Total Length of domain_name can be upto 255 Characters. It can contain only letters, number and hyphen - sign.. Please, choose a valid name and try again.";
-    protected final String MSG_DOMAIN_NAME_NOT_AVAILABLE = "This domain name is not available. Please, choose a different name and try again.";
-    protected String SUB_DOMAIN_NAME_VALIDATION_PATTERN="[A-Za-z0-9\\-]{1,255}";
-    protected Pattern pattern;
+    private ServletContext context;
+    private DnsProvisioningManager dnsProvisioningManager;
+    private Gson gson;
+    private XStream xstream;
+    private final String MSG_EMPTY_DOMAIN_NAME = "domain name can not be empty. Please, choose a valid name and try again.";
+    private final String MSG_INVALID_DOMAIN_NAME_PATTERN= "Total Length of domain_name can be upto 255 Characters. It can contain only letters, number and hyphen - sign.. Please, choose a valid name and try again.";
+    private final String MSG_DOMAIN_NAME_NOT_AVAILABLE = "This domain name is not available. Please, choose a different name and try again.";
+    private final String SUB_DOMAIN_NAME_VALIDATION_PATTERN="[A-Za-z0-9\\-]{1,255}";
+    private Pattern pattern;
+    private ProfileService profileService;
+    private ClientPasswordHashingService clientPasswordHashingService;
 
-    protected OrganizationListConverter listConverter;
+    private ClientsDao clientsDao;
+
+    private OrganizationListConverter listConverter;
 
     public OrganizationsEndpoint() {
         super();
@@ -92,6 +104,9 @@ public class OrganizationsEndpoint extends SecuredEndpoint {
 
         registerConverters();
 
+        final DaoManager storage = (DaoManager) context.getAttribute(DaoManager.class.getName());
+        clientsDao = storage.getClientsDao();
+
         // Make sure there is an authenticated account present when this endpoint is used
         // get manager from context or create it if it does not exist
         try {
@@ -100,6 +115,8 @@ public class OrganizationsEndpoint extends SecuredEndpoint {
             logger.error("Unable to get dnsProvisioningManager", e);
         }
         pattern = Pattern.compile(SUB_DOMAIN_NAME_VALIDATION_PATTERN);
+        profileService = (ProfileService)context.getAttribute(ProfileService.class.getName());
+        clientPasswordHashingService = (ClientPasswordHashingService) context.getAttribute(ClientPasswordHashingService.class.getName());
     }
 
     private void registerConverters(){
@@ -198,8 +215,8 @@ public class OrganizationsEndpoint extends SecuredEndpoint {
     /**
      * putOrganization create new organization
      * @param domainName
-     * @param data
-     * @param applicationJsonType
+     * @param info
+     * @param responseType
      * @return
      */
     protected Response putOrganization(String domainName, final UriInfo info,
@@ -255,6 +272,47 @@ public class OrganizationsEndpoint extends SecuredEndpoint {
                 return ok(xstream.toXML(response), APPLICATION_XML).build();
             } else if (APPLICATION_JSON_TYPE.equals(responseType)) {
                 return ok(gson.toJson(organization), APPLICATION_JSON).build();
+            } else {
+                return null;
+            }
+        }
+    }
+
+    /**
+     * Hash password for clients of the given organization
+     * @param organizationSid
+     * @param info
+     * @param responseType
+     * @return Response with List<Client> for the Clients that hashed the password
+     */
+    protected Response migrateClientsOrganization(final String organizationSid, UriInfo info, MediaType responseType) {
+
+        Organization organization = null;
+
+        if (!Sid.pattern.matcher(organizationSid).matches()) {
+            return status(BAD_REQUEST).build();
+        } else {
+            try {
+                organization = organizationsDao.getOrganization(new Sid(organizationSid));
+            } catch (Exception e) {
+                return status(NOT_FOUND).build();
+            }
+        }
+
+        if (organization == null) {
+            return status(NOT_FOUND).build();
+        } else {
+            Response.ResponseBuilder ok = Response.ok();
+
+            List<Client> clients = clientsDao.getClientsByOrg(organization.getSid());
+            Map<String, String> migratedClients = clientPasswordHashingService.hashClientPassword(clients, organization.getDomainName());
+
+
+            if (APPLICATION_XML_TYPE.equals(responseType)) {
+                final RestCommResponse response = new RestCommResponse(migratedClients);
+                return ok.type(APPLICATION_XML).entity(xstream.toXML(response)).build();
+            } else if (APPLICATION_JSON_TYPE.equals(responseType)) {
+                return ok.type(APPLICATION_JSON).entity(gson.toJson(migratedClients)).build();
             } else {
                 return null;
             }

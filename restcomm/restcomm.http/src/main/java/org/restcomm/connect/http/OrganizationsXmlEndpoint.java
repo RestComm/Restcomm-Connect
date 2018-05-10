@@ -19,7 +19,7 @@
  */
 package org.restcomm.connect.http;
 
-import static org.restcomm.connect.http.security.AccountPrincipal.SUPER_ADMIN_ROLE;
+import org.restcomm.connect.commons.annotations.concurrency.ThreadSafe;
 
 import javax.annotation.security.RolesAllowed;
 import javax.ws.rs.GET;
@@ -31,8 +31,9 @@ import javax.ws.rs.core.Context;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
 import javax.ws.rs.core.UriInfo;
-import org.restcomm.connect.commons.annotations.concurrency.ThreadSafe;
+
 import static org.restcomm.connect.http.security.AccountPrincipal.ADMIN_ROLE;
+import static org.restcomm.connect.http.security.AccountPrincipal.SUPER_ADMIN_ROLE;
 
 /**
  * @author maria farooq
@@ -67,5 +68,14 @@ public final class OrganizationsXmlEndpoint extends OrganizationsEndpoint {
     @Produces({MediaType.APPLICATION_XML, MediaType.APPLICATION_JSON})
     public Response putOrganizationPut(@PathParam("domainName") final String domainName, @Context UriInfo info) {
         return putOrganization(domainName, info, retrieveMediaType());
+    }
+
+    @Path("/{organizationSid}/Migrate")
+    @PUT
+    @RolesAllowed(SUPER_ADMIN_ROLE)
+    @Produces({MediaType.APPLICATION_XML, MediaType.APPLICATION_JSON})
+    public Response migrateClientsOrganizationPut(@PathParam("organizationSid") final String organizationSid,
+                                                  @Context UriInfo info) {
+        return migrateClientsOrganization(organizationSid, info, retrieveMediaType());
     }
 }
