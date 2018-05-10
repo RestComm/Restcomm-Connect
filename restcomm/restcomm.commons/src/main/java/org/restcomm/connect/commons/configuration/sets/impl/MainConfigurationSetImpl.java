@@ -52,6 +52,7 @@ public class MainConfigurationSetImpl extends ConfigurationSet implements MainCo
     private static final String HTTP_ROUTES_PORT = "http-client.routes-port";
     private static final String HTTP_ROUTES_CONN = "http-client.routes-conn";
     private static final String CONFERENCE_TIMEOUT_KEY = "runtime-settings.conference-timeout";
+    private static final String CLEAR_TEXT_PASSWORD_ALGORITHM = "cleartext";
     private static final String DEFAULT_CLIENT_PASSWORD = "MD5";
     private static final String DEFAULT_CLIENT_QOP = "auth";
     private static final long CONFERENCE_TIMEOUT_DEFAULT = 14400; //4 hours in seconds
@@ -288,4 +289,7 @@ public class MainConfigurationSetImpl extends ConfigurationSet implements MainCo
     public String getClientQOP() {
         return clientQOP;
     }
+
+    @Override
+    public String getClearTextPasswordAlgorithm() { return CLEAR_TEXT_PASSWORD_ALGORITHM; }
 }
