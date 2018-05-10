@@ -47,6 +47,8 @@ public class Smpp {
 
     private Charset inboundCharacterEncoding;
     private Charset outboundCharacterEncoding;
+    private boolean messagePayloadFlag;
+    private boolean autoDetectDcsFlag;
 
     // not used as of today, but later we can allow users to stop each SMPP
     private boolean started = true;
@@ -56,7 +58,7 @@ public class Smpp {
     public Smpp(String name, String systemId, String peerIp, int peerPort, SmppBindType smppBindType, String password,
             String systemType, byte interfaceVersion, Address address, long connectTimeout, int windowSize,
             long windowWaitTimeout, long requestExpiryTimeout, long windowMonitorInterval, boolean countersEnabled,
-            boolean logBytes, long enquireLinkDelay, String inboundCharacterEncoding, String outboundCharacterEncoding) {
+            boolean logBytes, long enquireLinkDelay, String inboundCharacterEncoding, String outboundCharacterEncoding, boolean messagePayloadFlag, boolean autoDetectDcsFlag) {
         super();
         this.name = name;
         this.systemId = systemId;
@@ -91,6 +93,8 @@ public class Smpp {
                 logger.info("Charset " + outboundCharacterEncoding+ " does not exist. Outbound encoding is set to default " + DEFAULT_SMPP_OUTBOUND_ENCODING + "\n" + e.getMessage());
             }
         }
+        this.messagePayloadFlag = messagePayloadFlag;
+        this.autoDetectDcsFlag = autoDetectDcsFlag;
     }
 
     public String getName() {
@@ -234,6 +238,14 @@ public class Smpp {
     }
     public Charset getOutboundDefaultEncoding() {
         return outboundCharacterEncoding;
+    }
+
+    public boolean getMessagePayloadFlag() {
+        return messagePayloadFlag;
+    }
+
+    public boolean getAutoDetectDcsFlag() {
+        return autoDetectDcsFlag;
     }
 
     public boolean isStarted() {
