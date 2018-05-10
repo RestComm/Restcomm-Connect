@@ -83,7 +83,7 @@ public final class DigestAuthentication {
         validate(user, realm, password, nonce, method, uri, authHeaderAlgorithm);
         String ha1;
 
-        if (clientPasswordAlgorithm.equalsIgnoreCase("cleartext")) {
+        if (clientPasswordAlgorithm.equalsIgnoreCase(RestcommConfiguration.getInstance().getMain().getClearTextPasswordAlgorithm())) {
             final String a1 = A1(authHeaderAlgorithm, user, realm, password, nonce, cnonce);
             ha1 = H(a1, authHeaderAlgorithm);
         } else {
