@@ -1168,6 +1168,24 @@ public final class Call extends RestcommUntypedActor implements TransitionEndLis
                     if(invite.getSession().getState() != SipSession.State.CONFIRMED) {
                         final UntypedActorContext context = getContext();
                         context.setReceiveTimeout(Duration.Undefined());
+                        // additional information for https://telestax.atlassian.net/browse/RESTCOMM-2085
+                        StringBuilder s = new StringBuilder();
+                        s.append("Preparing to send CANCEL for Call ").append(self().path()).append(" DUMP:[ ");
+                        s.append("Call[fsmState=").append(fsm.state());
+                        s.append(";message=").append(message.getClass().getName()).append("] ");
+                        s.append("SipServletRequest[sessionState=").append(invite.getSession().getState().name());
+                        s.append(";sessionId=").append(invite.getSession().getId());
+                        s.append(";sessionCallId=").append(invite.getSession().getCallId());
+                        s.append(";isSessionValid=").append(invite.getSession().isValid());
+                        s.append(";isSessionReadyToInvalidate=").append(invite.getSession().isReadyToInvalidate());
+                        //javax.sip.Transaction t = ((SipServletRequestImpl) invite).getTransaction();
+                        //s.append(";sessionTransaction=").append(t == null ? "null" : t.toString());
+                        //s.append(";sessionTransactionState=").append(t == null ? "null" : t.getState().toString());
+                        s.append(";applicationSession=").append(invite.getSession().getApplicationSession());
+                        s.append(";applicationSessionName=").append(invite.getSession().getApplicationSession().getApplicationName());
+                        s.append(";applicationSessionExpiration=").append(invite.getSession().getApplicationSession().getExpirationTime());
+                        s.append("] ]");
+                        logger.debug(s.toString());
                         final SipServletRequest cancel = invite.createCancel();
                         addCustomHeaders(cancel);
                         cancel.send();
@@ -1193,7 +1211,11 @@ public final class Call extends RestcommUntypedActor implements TransitionEndLis
                     strBuffer.append(" , invite is NULL! ");
                 }
                 strBuffer.append(" Exception: "+e.getMessage());
-                logger.warning(strBuffer.toString());
+                if(logger.isDebugEnabled()){
+                    logger.debug(strBuffer.toString(), e);
+                } else {
+                    logger.warning(strBuffer.toString());
+                }
             }
             msController.tell(new CloseMediaSession(), source);
             //Github issue 2261 - https://github.com/RestComm/Restcomm-Connect/issues/2261
