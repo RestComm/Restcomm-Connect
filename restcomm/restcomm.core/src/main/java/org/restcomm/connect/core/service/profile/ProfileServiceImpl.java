@@ -48,6 +48,7 @@ public class ProfileServiceImpl implements ProfileService {
     @Override
     public Profile retrieveEffectiveProfileByAccountSid(Sid accountSid) {
         Profile profile = null;
+        Sid orginalRequestedAccount = accountSid;
         Sid currentAccount = accountSid;
         Account lastAccount = null;
 
@@ -65,8 +66,8 @@ public class ProfileServiceImpl implements ProfileService {
         } while (profile == null && currentAccount != null);
 
         // if profile is not found in account hierarchy,try org
-        if (profile == null && lastAccount != null) {
-            Sid organizationSid = lastAccount.getOrganizationSid();
+        if (profile == null) {
+            Sid organizationSid = daoManager.getAccountsDao().getAccount(orginalRequestedAccount).getOrganizationSid();
             profile = retrieveExplicitlyAssociatedProfile(organizationSid);
         }
 
