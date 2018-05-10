@@ -24,12 +24,6 @@ rcMod.controller('NumbersCtrl', function ($scope, $resource, $uibModal, $dialog,
     );
   };
 
-  $scope.$watch('query.phone_number', function (phoneNumber) {
-    if (phoneNumber !== undefined) {
-      $scope.getNumbersList(0);
-    }
-  });
-
   // add incoming number -----------------------------------------------------
 /*
 // no modal is used for number registration any more
@@ -96,9 +90,6 @@ rcMod.controller('NumbersCtrl', function ($scope, $resource, $uibModal, $dialog,
     var params = {};
     params["SortBy"] = $scope.predicate;
     params["Reverse"] = $scope.reverse;
-    if ($scope.query && $scope.query.phone_number) {
-      params['PhoneNumber'] = $scope.query.phone_number;
-    }
 
     return params;
   };

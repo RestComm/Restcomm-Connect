@@ -44,7 +44,7 @@ public class AccountsEndpointMockedTest extends EndpointMockedTest {
     @Test
     public void endpointInitializedAndBasicAuthorizationWork() throws ConfigurationException, URISyntaxException {
         init(); // setup default mocking values
-        AccountsEndpoint endpoint = new AccountsEndpoint(servletContext);
+        AccountsEndpoint endpoint = new AccountsEndpoint(servletContext,request);
         endpoint.init();
     }
 
@@ -57,15 +57,13 @@ public class AccountsEndpointMockedTest extends EndpointMockedTest {
         when(accountsDao.getAccount(any(String.class))).thenReturn(account);
         when(accountsDao.getAccountToAuthenticate(any(String.class))).thenReturn(account);
         when(orgDao.getOrganization(any(Sid.class))).thenReturn(organization);
-        when (userIdentityContext.getEffectiveAccount()).thenReturn(account);
 
-        AccountsEndpoint endpoint = new AccountsEndpoint(servletContext);
+
+        AccountsEndpoint endpoint = new AccountsEndpoint(servletContext,request);
         endpoint.init();
         MultivaluedMapImpl multivaluedMapImpl = new MultivaluedMapImpl();
         multivaluedMapImpl.putSingle("Status", "active");
-        Response updateAccount = endpoint.updateAccount(account.getSid().toString(),
-                multivaluedMapImpl,  MediaType.APPLICATION_JSON_TYPE,
-                userIdentityContext);
+        Response updateAccount = endpoint.updateAccount(account.getSid().toString(), multivaluedMapImpl,  MediaType.APPLICATION_JSON_TYPE);
         assertEquals(200, updateAccount.getStatus());
     }
 

@@ -21,7 +21,6 @@ package org.restcomm.connect.http;
 
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
-import com.sun.jersey.spi.resource.Singleton;
 import com.thoughtworks.xstream.XStream;
 import java.util.ArrayList;
 import java.util.List;
@@ -43,7 +42,6 @@ import org.restcomm.connect.dao.entities.RestCommResponse;
 import org.restcomm.connect.http.converter.AvailablePhoneNumberConverter;
 import org.restcomm.connect.http.converter.AvailablePhoneNumberListConverter;
 import org.restcomm.connect.http.converter.RestCommResponseConverter;
-import org.restcomm.connect.identity.UserIdentityContext;
 import org.restcomm.connect.provisioning.number.api.PhoneNumber;
 import org.restcomm.connect.provisioning.number.api.PhoneNumberProvisioningManager;
 import org.restcomm.connect.provisioning.number.api.PhoneNumberProvisioningManagerProvider;
@@ -54,16 +52,12 @@ import org.restcomm.connect.provisioning.number.api.PhoneNumberSearchFilters;
  * @author jean.deruelle@telestax.com
  */
 @ThreadSafe
-@Singleton
-public class AvailablePhoneNumbersEndpoint extends AbstractEndpoint {
+public abstract class AvailablePhoneNumbersEndpoint extends SecuredEndpoint {
     @Context
-    private ServletContext context;
-    private PhoneNumberProvisioningManager phoneNumberProvisioningManager;
+    protected ServletContext context;
+    protected PhoneNumberProvisioningManager phoneNumberProvisioningManager;
     private XStream xstream;
-    private Gson gson;
-
-
-
+    protected Gson gson;
 
     public AvailablePhoneNumbersEndpoint() {
         super();
@@ -73,6 +67,7 @@ public class AvailablePhoneNumbersEndpoint extends AbstractEndpoint {
     public void init() throws ObjectInstantiationException {
         configuration = (Configuration) context.getAttribute(Configuration.class.getName());
         super.init(configuration.subset("runtime-settings"));
+
         /*
         phoneNumberProvisioningManager = (PhoneNumberProvisioningManager) context.getAttribute("PhoneNumberProvisioningManager");
         if(phoneNumberProvisioningManager == null) {
@@ -102,14 +97,8 @@ public class AvailablePhoneNumbersEndpoint extends AbstractEndpoint {
         gson = builder.create();
     }
 
-    protected Response getAvailablePhoneNumbers(final String accountSid,
-            final String isoCountryCode,
-            PhoneNumberSearchFilters listFilters,
-            String filterPattern,
-            final MediaType responseType,
-            UserIdentityContext userIdentityContext) {
-        permissionEvaluator.secure(accountsDao.getAccount(accountSid),
-                "RestComm:Read:AvailablePhoneNumbers", userIdentityContext);
+    protected Response getAvailablePhoneNumbers(final String accountSid, final String isoCountryCode, PhoneNumberSearchFilters listFilters, String filterPattern, final MediaType responseType) {
+        secure(accountsDao.getAccount(accountSid), "RestComm:Read:AvailablePhoneNumbers");
         String searchPattern = "";
         if (filterPattern != null && !filterPattern.isEmpty()) {
             for(int i = 0; i < filterPattern.length(); i ++) {

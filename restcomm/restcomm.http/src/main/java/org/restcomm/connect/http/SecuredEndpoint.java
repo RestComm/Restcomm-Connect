@@ -17,8 +17,9 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>
  *
  */
-package org.restcomm.connect.http.security;
+package org.restcomm.connect.http;
 
+import org.apache.commons.configuration.Configuration;
 import org.apache.commons.lang.NotImplementedException;
 import org.apache.log4j.Logger;
 import org.apache.shiro.authz.Permission;
@@ -31,6 +32,10 @@ import org.restcomm.connect.dao.OrganizationsDao;
 import org.restcomm.connect.dao.entities.Account;
 import org.restcomm.connect.dao.entities.Organization;
 import org.restcomm.connect.dao.exceptions.AccountHierarchyDepthCrossed;
+import org.restcomm.connect.extension.api.ApiRequest;
+import org.restcomm.connect.extension.api.ExtensionType;
+import org.restcomm.connect.extension.api.RestcommExtensionGeneric;
+import org.restcomm.connect.extension.controller.ExtensionController;
 import org.restcomm.connect.http.exceptions.AuthorizationException;
 import org.restcomm.connect.http.exceptions.InsufficientPermission;
 import org.restcomm.connect.http.exceptions.OperatedAccountMissing;
@@ -40,12 +45,17 @@ import org.restcomm.connect.identity.UserIdentityContext;
 import org.restcomm.connect.identity.shiro.RestcommRoles;
 
 import javax.servlet.ServletContext;
+import javax.servlet.http.HttpServletRequest;
+import javax.ws.rs.core.Context;
+import java.util.List;
 import java.util.Set;
-import static org.restcomm.connect.http.security.AccountPrincipal.ADMIN_ROLE;
+import org.restcomm.connect.core.service.api.ProfileService;
 
 
 /**
- * PermissionEvaluator.
+ * Security layer endpoint. It will scan the request for security related assets and populate the
+ * UserIdentityContext accordingly. Extend the class and use checkAuthenticatedAccount*() methods to apply security rules to
+ * your endpoint.
  *
  * How to use it:
  * - use checkAuthenticatedAccount() method to check that a user (any user) is authenticated.
@@ -54,7 +64,7 @@ import static org.restcomm.connect.http.security.AccountPrincipal.ADMIN_ROLE;
  *
  * @author orestis.tsakiridis@telestax.com (Orestis Tsakiridis)
  */
-public class PermissionEvaluator {
+public abstract class SecuredEndpoint extends AbstractEndpoint {
 
     // types of secured resources used to apply different policies to applications, numbers etc.
     public enum SecuredType {
@@ -62,32 +72,52 @@ public class PermissionEvaluator {
         SECURED_ACCOUNT, SECURED_STANDARD
     }
 
-    private Logger logger = Logger.getLogger(PermissionEvaluator.class);
+    protected Logger logger = Logger.getLogger(SecuredEndpoint.class);
 
-    private AccountsDao accountsDao;
-    private OrganizationsDao organizationsDao;
-    private IdentityContext identityContext;
+    protected UserIdentityContext userIdentityContext;
+    protected AccountsDao accountsDao;
+    protected OrganizationsDao organizationsDao;
+    protected IdentityContext identityContext;
+    @Context
+    protected ServletContext context;
+    @Context
+    HttpServletRequest request;
 
-    private ServletContext context;
+    //List of extensions for RestAPI
+    protected List<RestcommExtensionGeneric> extensions;
+    protected ProfileService profileService;
 
-
-    public PermissionEvaluator() {
+    public SecuredEndpoint() {
+        super();
     }
 
-    public PermissionEvaluator(ServletContext context) {
+    // used for testing
+    public SecuredEndpoint(ServletContext context, HttpServletRequest request) {
         this.context = context;
+        this.request = request;
+    }
+
+    protected void init(final Configuration configuration) {
+        super.init(configuration);
         final DaoManager storage = (DaoManager) context.getAttribute(DaoManager.class.getName());
         this.accountsDao = storage.getAccountsDao();
         this.organizationsDao = storage.getOrganizationsDao();
         this.identityContext = (IdentityContext) context.getAttribute(IdentityContext.class.getName());
+        this.userIdentityContext = new UserIdentityContext(request, accountsDao);
+        extensions = ExtensionController.getInstance().getExtensions(ExtensionType.RestApi);
+        if (logger.isInfoEnabled()) {
+            if (extensions != null) {
+                logger.info("RestAPI extensions: "+(extensions != null ? extensions.size() : "0"));
+            }
+        }
+        profileService = (ProfileService)context.getAttribute(ProfileService.class.getName());
     }
 
     /**
      * Checks if the effective account is a super account (top level account)
-     * @param userIdentityContext
      * @return
      */
-    public boolean isSuperAdmin(UserIdentityContext userIdentityContext) {
+    protected boolean isSuperAdmin() {
         //SuperAdmin Account is the one the is
         //1. Has no parent, this is the top account
         //2. Is ACTIVE
@@ -97,21 +127,18 @@ public class PermissionEvaluator {
 
     /**
      * Checks if the operated account is a direct child of effective account
-     * @param operatedAccount
      * @return
      */
-    public boolean isDirectChildOfAccount(final Account effectiveAccount,
-            final Account operatedAccount) {
+    protected boolean isDirectChildOfAccount(final Account effectiveAccount, final Account operatedAccount) {
         return operatedAccount.getParentSid().equals(effectiveAccount.getSid());
     }
 
     /**
      * Checks if the effective account is a super account (top level account)
      *
-     * @param userIdentityContext
      */
-    public void allowOnlySuperAdmin(UserIdentityContext userIdentityContext) {
-        if (!isSuperAdmin(userIdentityContext)) {
+    protected void allowOnlySuperAdmin() {
+        if (!isSuperAdmin()) {
             throw new InsufficientPermission();
         }
     }
@@ -122,20 +149,17 @@ public class PermissionEvaluator {
      * Administrator is granted access regardless of permissions.
      *
      * @param permission - e.g. 'RestComm:Create:Accounts'
-     * @param userIdentityContext
      */
-    public void checkPermission(final String permission,
-            UserIdentityContext userIdentityContext) {
+    protected void checkPermission(final String permission) {
         //checkAuthenticatedAccount(); // ok there is a valid authenticated account
         if ( checkPermission(permission, userIdentityContext.getEffectiveAccountRoles()) != AuthOutcome.OK )
             throw new InsufficientPermission();
     }
 
     // boolean overloaded form of checkAuthenticatedAccount(permission)
-    public boolean isSecuredByPermission(final String permission,
-            UserIdentityContext userIdentityContext) {
+    protected boolean isSecuredByPermission(final String permission) {
         try {
-            checkPermission(permission,userIdentityContext);
+            checkPermission(permission);
             return true;
         } catch (AuthorizationException e) {
             return false;
@@ -148,41 +172,35 @@ public class PermissionEvaluator {
      *
      * @param operatedAccount
      * @param permission
-     * @param userIdentityContext
      * @throws AuthorizationException
      */
-    public void secure(final Account operatedAccount,
-            final String permission,
-            UserIdentityContext userIdentityContext) throws AuthorizationException {
-        secure(operatedAccount, permission, SecuredType.SECURED_STANDARD,
-                userIdentityContext);
+    protected void secure(final Account operatedAccount, final String permission) throws AuthorizationException {
+        secure(operatedAccount, permission, SecuredType.SECURED_STANDARD);
     }
 
     /**
      * @param operatedAccount
      * @param permission
      * @param type
-     * @param userIdentityContext
      * @throws AuthorizationException
      */
-    public void secure(final Account operatedAccount, final String permission, SecuredType type,
-            UserIdentityContext userIdentityContext) throws AuthorizationException {
-        checkPermission(permission,userIdentityContext); // check an authenticated account allowed to do "permission" is available
-        checkOrganization(operatedAccount,userIdentityContext); // check if valid organization is attached with this account.
+    protected void secure(final Account operatedAccount, final String permission, SecuredType type) throws AuthorizationException {
+        checkPermission(permission); // check an authenticated account allowed to do "permission" is available
+        checkOrganization(operatedAccount); // check if valid organization is attached with this account.
         if (operatedAccount == null) {
             // if operatedAccount is NULL, we'll probably return a 404. But let's handle that in a central place.
             throw new OperatedAccountMissing();
         }
         if (type == SecuredType.SECURED_STANDARD) {
-            if (secureLevelControl(operatedAccount, null,userIdentityContext) != AuthOutcome.OK )
+            if (secureLevelControl(operatedAccount, null) != AuthOutcome.OK )
                 throw new InsufficientPermission();
         } else
         if (type == SecuredType.SECURED_APP) {
-            if (secureLevelControlApplications(operatedAccount,null,userIdentityContext) != AuthOutcome.OK)
+            if (secureLevelControlApplications(operatedAccount,null) != AuthOutcome.OK)
                 throw new InsufficientPermission();
         } else
         if (type == SecuredType.SECURED_ACCOUNT) {
-            if (secureLevelControlAccounts(operatedAccount,userIdentityContext) != AuthOutcome.OK)
+            if (secureLevelControlAccounts(operatedAccount) != AuthOutcome.OK)
                 throw new InsufficientPermission();
         }
     }
@@ -191,8 +209,7 @@ public class PermissionEvaluator {
      * @param account
      * @throws IllegalStateException
      */
-    private void checkOrganization(Account account,
-            UserIdentityContext userIdentityContext) throws IllegalStateException {
+    private void checkOrganization(Account account) throws IllegalStateException {
         Sid organizationSid = account.getOrganizationSid();
         if(organizationSid == null){
             String errorMsg = "there is no organization assosiate with this account: "+account.getSid();
@@ -211,22 +228,20 @@ public class PermissionEvaluator {
      * @param operatedAccount
      * @param resourceAccountSid
      * @param type
-     * @param userIdentityContext
      * @throws AuthorizationException
      */
-    public void secure(final Account operatedAccount, final Sid resourceAccountSid, SecuredType type,
-            UserIdentityContext userIdentityContext) throws AuthorizationException {
+    protected void secure(final Account operatedAccount, final Sid resourceAccountSid, SecuredType type) throws AuthorizationException {
         if (operatedAccount == null) {
             // if operatedAccount is NULL, we'll probably return a 404. But let's handle that in a central place.
             throw new OperatedAccountMissing();
         }
         String resourceAccountSidString = resourceAccountSid == null ? null : resourceAccountSid.toString();
         if (type == SecuredType.SECURED_APP) {
-            if (secureLevelControlApplications(operatedAccount, resourceAccountSidString,userIdentityContext) != AuthOutcome.OK)
+            if (secureLevelControlApplications(operatedAccount, resourceAccountSidString) != AuthOutcome.OK)
                 throw new InsufficientPermission();
         } else
         if (type == SecuredType.SECURED_STANDARD){
-            if (secureLevelControl(operatedAccount, resourceAccountSidString,userIdentityContext) != AuthOutcome.OK)
+            if (secureLevelControl(operatedAccount, resourceAccountSidString) != AuthOutcome.OK)
                 throw new InsufficientPermission();
         } else
         if (type == SecuredType.SECURED_ACCOUNT)
@@ -252,7 +267,7 @@ public class PermissionEvaluator {
      * @param role
      * @return true if the role exists in the Account. Otherwise it returns false.
      */
-    public boolean hasAccountRole(final String role,UserIdentityContext userIdentityContext) {
+    protected boolean hasAccountRole(final String role) {
         if (userIdentityContext.getEffectiveAccount() != null) {
             return userIdentityContext.getEffectiveAccountRoles().contains(role);
         }
@@ -318,8 +333,7 @@ public class PermissionEvaluator {
      * @param resourceAccountSid the account SID property of the operated resource e.g. the accountSid of a DID.
      *
      */
-    private AuthOutcome secureLevelControl(Account operatedAccount, String resourceAccountSid,
-            UserIdentityContext userIdentityContext) {
+    private AuthOutcome secureLevelControl(Account operatedAccount, String resourceAccountSid) {
         Account operatingAccount = userIdentityContext.getEffectiveAccount();
         String operatingAccountSid = null;
         if (operatingAccount != null)
@@ -362,8 +376,7 @@ public class PermissionEvaluator {
      * @param applicationAccountSid
      * @return
      */
-    private AuthOutcome secureLevelControlApplications(Account operatedAccount, String applicationAccountSid,
-            UserIdentityContext userIdentityContext) {
+    private AuthOutcome secureLevelControlApplications(Account operatedAccount, String applicationAccountSid) {
         /*
         // disabled strict policy that prevented access to sub-account applications
 
@@ -380,7 +393,7 @@ public class PermissionEvaluator {
         */
 
         // use the more liberal default policy that applies to other entities for applications too
-        return secureLevelControl(operatedAccount, applicationAccountSid, userIdentityContext);
+        return secureLevelControl(operatedAccount, applicationAccountSid);
     }
 
     /** Applies the following access control rules:
@@ -393,8 +406,7 @@ public class PermissionEvaluator {
      * @param operatedAccount
      * @return
      */
-    private AuthOutcome secureLevelControlAccounts(Account operatedAccount,
-            UserIdentityContext userIdentityContext) throws AccountHierarchyDepthCrossed {
+    private AuthOutcome secureLevelControlAccounts(Account operatedAccount) throws AccountHierarchyDepthCrossed {
         // operatingAccount and operatedAccount are not null
         Account operatingAccount = userIdentityContext.getEffectiveAccount();
         String operatingAccountSid = operatingAccount.getSid().toString();
@@ -424,9 +436,17 @@ public class PermissionEvaluator {
      * .
      * @return the administrator role as string
      */
-    public String getAdministratorRole() {
-        return ADMIN_ROLE;
+    protected String getAdministratorRole() {
+        return "Administrator";
     }
 
+    protected boolean executePreApiAction(final ApiRequest apiRequest) {
+        ExtensionController ec = ExtensionController.getInstance();
+        return ec.executePreApiAction(apiRequest, extensions).isAllowed();
+    }
 
+    protected boolean executePostApiAction(final ApiRequest apiRequest) {
+        ExtensionController ec = ExtensionController.getInstance();
+        return ec.executePostApiAction(apiRequest, extensions).isAllowed();
+    }
 }
