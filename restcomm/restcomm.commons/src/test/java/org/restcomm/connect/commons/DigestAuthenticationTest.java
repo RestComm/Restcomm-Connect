@@ -57,8 +57,8 @@ public class DigestAuthenticationTest {
         final String cnonce = map.get("cnonce");
         final String qop = map.get("qop");
         final String response = map.get("response");
-        final String password2 = clientPassword;
-        final String result = DigestAuthentication.response(algorithm, user, realm, "", password2, nonce, nc, cnonce,
+        final String password = clientPassword;
+        final String result = DigestAuthentication.response(algorithm, user, realm, password, "MD5", nonce, nc, cnonce,
                 method, uri, null, qop);
         return result.equals(response);
     }

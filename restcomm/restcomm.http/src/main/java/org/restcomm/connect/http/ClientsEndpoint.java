@@ -51,6 +51,7 @@ import static javax.ws.rs.core.Response.status;
 import javax.ws.rs.core.SecurityContext;
 import org.apache.commons.configuration.Configuration;
 import org.restcomm.connect.commons.annotations.concurrency.ThreadSafe;
+import org.restcomm.connect.commons.configuration.RestcommConfiguration;
 import org.restcomm.connect.commons.dao.Sid;
 import org.restcomm.connect.commons.util.ClientLoginConstrains;
 import org.restcomm.connect.dao.ClientsDao;
@@ -126,7 +127,8 @@ public class ClientsEndpoint extends AbstractEndpoint {
             throw new PasswordTooWeak();
         String realm = organizationsDao.getOrganization(accountsDao.getAccount(accountSid).getOrganizationSid()).getDomainName();
 
-        builder.setPassword(username, password, realm);
+        builder.setPasswordAlgorithm(RestcommConfiguration.getInstance().getMain().getClientAlgorithm());
+        builder.setPassword(username, password, realm, RestcommConfiguration.getInstance().getMain().getClientAlgorithm());
         builder.setStatus(getStatus(data));
         URI voiceUrl = getUrl("VoiceUrl", data);
         if (voiceUrl != null && voiceUrl.toString().equals("")) {

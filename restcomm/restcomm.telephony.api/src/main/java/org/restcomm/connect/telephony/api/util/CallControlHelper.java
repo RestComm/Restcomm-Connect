@@ -34,6 +34,7 @@ import javax.servlet.sip.SipURI;
 import org.apache.log4j.Logger;
 import org.restcomm.connect.dao.ClientsDao;
 import org.restcomm.connect.dao.DaoManager;
+import org.restcomm.connect.dao.entities.Account;
 import org.restcomm.connect.dao.entities.Client;
 import org.restcomm.connect.commons.configuration.RestcommConfiguration;
 import org.restcomm.connect.commons.dao.Sid;
@@ -50,10 +51,10 @@ import org.restcomm.connect.commons.util.DigestAuthentication;
 public class CallControlHelper {
     private static Logger logger = Logger.getLogger(CallControlHelper.class);
 
-    static boolean permitted(final String authorization, final String method, DaoManager daoManager, final Sid organizationSid) {
+    public static boolean permitted(final String authorization, final String method, DaoManager daoManager, final Sid organizationSid) {
         final Map<String, String> map = authHeaderToMap(authorization);
         final String user = map.get("username");
-        final String algorithm = map.get("algorithm");
+        final String authHeaderAlgorithm = map.get("algorithm");
         final String realm = map.get("realm");
         final String uri = map.get("uri");
         final String nonce = map.get("nonce");
@@ -63,10 +64,15 @@ public class CallControlHelper {
         final String response = map.get("response");
         final ClientsDao clients = daoManager.getClientsDao();
         final Client client = clients.getClient(user, organizationSid);
-        //only allow if client algo is identical to system algo
+
+        if (client != null && daoManager.getAccountsDao().getAccount(client.getAccountSid()).getStatus() != Account.Status.ACTIVE) {
+            return false;
+        }
+
         if (client != null && Client.ENABLED == client.getStatus()) {
-            final String password2 = client.getPassword();
-            final String result = DigestAuthentication.response(algorithm, user, realm, "", password2, nonce, nc, cnonce,
+            final String password = client.getPassword();
+            final String clientPasswordAlgorithm = client.getPasswordAlgorithm();
+            final String result = DigestAuthentication.response(authHeaderAlgorithm, user, realm, password,clientPasswordAlgorithm, nonce, nc, cnonce,
                     method, uri, null, qop);
             if (logger.isDebugEnabled()) {
                 String msg = String.format("Provided response [%s], generated response [%s]", response, result);
