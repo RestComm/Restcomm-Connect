@@ -36,6 +36,7 @@ import com.cloudhopper.smpp.pdu.EnquireLink;
 import com.cloudhopper.smpp.pdu.EnquireLinkResp;
 import com.cloudhopper.smpp.pdu.PduRequest;
 import com.cloudhopper.smpp.pdu.PduResponse;
+import com.cloudhopper.smpp.tlv.Tlv;
 import com.cloudhopper.smpp.type.Address;
 import com.cloudhopper.smpp.type.RecoverablePduException;
 import com.cloudhopper.smpp.type.UnrecoverablePduException;
@@ -43,6 +44,7 @@ import org.apache.log4j.Logger;
 
 import javax.servlet.ServletException;
 import java.io.IOException;
+import java.util.Arrays;
 import java.util.Iterator;
 import java.util.List;
 import java.util.concurrent.CopyOnWriteArrayList;
@@ -64,6 +66,8 @@ public class SmppClientOpsThread implements Runnable {
     //this assumes singular SMPP connection all the time,so it works
     private static Charset outboundEncoding;
     private static Charset inboundEncoding;
+    private static boolean messagePayloadFlag;
+    private static boolean autoDetectDcsFlag;
     protected volatile boolean started = true;
     private static int sipPort;
 
@@ -301,6 +305,8 @@ public class SmppClientOpsThread implements Runnable {
             this.esme = esme;
             inboundEncoding = esme.getInboundDefaultEncoding();
             outboundEncoding = esme.getOutboundDefaultEncoding();
+            messagePayloadFlag = esme.getMessagePayloadFlag();
+            autoDetectDcsFlag = esme.getAutoDetectDcsFlag();
         }
 
         @Override
@@ -369,12 +375,43 @@ public class SmppClientOpsThread implements Runnable {
                         encoding = CharsetUtil.CHARSET_UCS_2;
                     }
 
-                    String decodedPduMessage = CharsetUtil.decode(deliverSm.getShortMessage(), encoding);
-                    //send received SMPP PDU message to restcomm
-                    try {
-                        sendSmppMessageToRestcomm(decodedPduMessage, destSmppAddress, sourceSmppAddress, encoding);
-                    } catch (IOException | ServletException e) {
-                        logger.error("Exception while trying to dispatch incoming SMPP message to Restcomm: " + e);
+                    byte[] pduMessage = deliverSm.getShortMessage();
+                    int smsLength = deliverSm.getShortMessageLength();
+                    byte esmClass = deliverSm.getEsmClass();
+                    byte msgType = (byte)(((esmClass) >> 2) & 0x0f);
+                    if(logger.isDebugEnabled()) {
+                        logger.debug("deliverSm="+deliverSm.toString()+" getShortMessage message body " + Arrays.toString(pduMessage)+" smsLength="+smsLength+" esmClass="+Byte.toString(esmClass)+" msgType="+Byte.toString(msgType));
+                    }
+                    //check message_payload
+                    if(smsLength > 0) {
+                        if(logger.isInfoEnabled()) {
+                            logger.info("Using message from message body " + Arrays.toString(pduMessage));
+                        }
+                    } else {
+                        Tlv msgPayload = deliverSm.getOptionalParameter(SmppConstants.TAG_MESSAGE_PAYLOAD);
+
+                        if(msgPayload!=null) {
+                            pduMessage = msgPayload.getValue();
+                            if(logger.isInfoEnabled()) {
+                                logger.info("Using message from TAG_MESSAGE_PAYLOAD " + Arrays.toString(pduMessage));
+                            }
+                        } else {
+                            //TODO: what else do we do?
+                            logger.error("incoming message has no message body nor message_payload");
+                        }
+                    }
+                    String decodedPduMessage = CharsetUtil.decode(pduMessage, encoding);
+                    //send received SMPP PDU message to restcomm only if not DLR
+                    if (msgType == 0x0) {
+                        try {
+                            sendSmppMessageToRestcomm(decodedPduMessage, destSmppAddress, sourceSmppAddress, encoding);
+                        } catch (IOException | ServletException e) {
+                            logger.error("Exception while trying to dispatch incoming SMPP message to Restcomm: " + e);
+                        }
+                    } else {
+                       if(logger.isInfoEnabled()) {
+                           logger.info("Message is not normal request, esmClass:" + esmClass +", Using message from message body " + decodedPduMessage);
+                        }
                     }
                 } catch (Exception e) {
                     logger.error("Exception while trying to process incoming SMPP message to Restcomm: " + e);
@@ -445,5 +482,14 @@ public class SmppClientOpsThread implements Runnable {
 
     public static Charset getOutboundDefaultEncoding() {
         return outboundEncoding;
+    }
+
+    public static boolean getMessagePayloadFlag() {
+        return messagePayloadFlag;
+    }
+
+
+    public static boolean getAutoDetectDcsFlag() {
+        return autoDetectDcsFlag;
     }
 }
