@@ -42,6 +42,6 @@
   <update id="updateClient" parameterType="map">
     UPDATE restcomm_clients SET friendly_name=#{friendly_name}, password=#{password}, status=#{status}, voice_url=#{voice_url},
     voice_method=#{voice_method}, voice_fallback_url=#{voice_fallback_url}, voice_fallback_method=#{voice_fallback_method},
-    voice_application_sid=#{voice_application_sid}, push_client_identity=#{push_client_identity}. password_algorithm=#{password_algorithm} WHERE sid=#{sid};
+    voice_application_sid=#{voice_application_sid}, push_client_identity=#{push_client_identity}, password_algorithm=#{password_algorithm} WHERE sid=#{sid};
   </update>
 </mapper>
