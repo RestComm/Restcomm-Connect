@@ -30,13 +30,11 @@ The folowing tags are used to categorize and state the scope of a change
 // Things to consider during migration from previous release
 
 === External Dependencies Updates
-* Console updated to version **__8.4.0__**
-** Using New Number filtering API
-** Enhanced partial matching on Log search
-** Fixed pagination in Log search
+* Console updated to version **__8.4.1__**
+** In tables, differentiate between no items and not matching search
+** Match partial results in logs search
+** Fix pagination issues in Notifications Logs
 ** Introduced encrypted password for Clients
-* Designer updated to version **__1.2.0-139__**
-* Olympus WebRTC Demo updated to version **__1.1.0-176__**
 
 == 8.4.0 version 2018-04-19
 === New Features
