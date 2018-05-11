@@ -83,6 +83,7 @@ import org.restcomm.connect.dao.CallDetailRecordsDao;
 import org.restcomm.connect.dao.ClientsDao;
 import org.restcomm.connect.dao.DaoManager;
 import org.restcomm.connect.dao.NotificationsDao;
+import org.restcomm.connect.dao.OrganizationsDao;
 import org.restcomm.connect.dao.RegistrationsDao;
 import org.restcomm.connect.dao.common.OrganizationUtil;
 import org.restcomm.connect.dao.entities.Account;
@@ -1108,6 +1109,7 @@ public final class CallManager extends RestcommUntypedActor {
 
         CallDetailRecord cdr = null;
         CallDetailRecordsDao dao = storage.getCallDetailRecordsDao();
+        OrganizationsDao orgDao = storage.getOrganizationsDao();
 
         SipServletResponse servletResponse = null;
 
@@ -1165,7 +1167,7 @@ public final class CallManager extends RestcommUntypedActor {
 
         String phone = cdr.getTo();
         Sid sourceOrganizationSid = storage.getAccountsDao().getAccount(cdr.getAccountSid()).getOrganizationSid();
-        Sid destOrg = SIPOrganizationUtil.searchOrganizationBySIPRequest(storage.getOrganizationsDao(), request);
+        Sid destOrg = orgDao.getOrganizationByDomainName(((SipURI) request.getAddressHeader("Refer-To").getURI()).getHost()).getSid();
         IncomingPhoneNumber number = numberSelector.searchNumber(phone, sourceOrganizationSid, destOrg);
 
         if (number == null || (number.getReferUrl() == null && number.getReferApplicationSid() == null)) {
