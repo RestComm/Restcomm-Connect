@@ -11,27 +11,34 @@ The folowing tags are used to categorize and state the scope of a change
 
 
 //add release-notes with newer on top
-== 8.5.0 version
+== 8.4.1 version 2018-05-11
 === New Features
 // New features (whether major or minor) go here
-* REST API performance improvements.
+* SMS long messages support
+* New Clients password migration tool
+
 
 === Breaking Changes
 // draws attention to functionality that is getting removed
 
 
 === Bug Fixes
-// any difference in functionality
-
+* Profile Service using correct requesting account for organization resolution.
 
 
 === Migration Notes
 // Things to consider during migration from previous release
 
 === External Dependencies Updates
-// any dependencies
+* Console updated to version **__8.4.0__**
+** Using New Number filtering API
+** Enhanced partial matching on Log search
+** Fixed pagination in Log search
+** Introduced encrypted password for Clients
+* Designer updated to version **__1.2.0-139__**
+* Olympus WebRTC Demo updated to version **__1.1.0-176__**
 
-== 8.4.0 version
+== 8.4.0 version 2018-04-19
 === New Features
 // New features (whether major or minor) go here
 * Clients passwords are now hashed in DB - **security improvement**
