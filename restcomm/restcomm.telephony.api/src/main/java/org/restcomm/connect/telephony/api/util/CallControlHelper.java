@@ -81,7 +81,7 @@ public class CallControlHelper {
             return result.equals(response);
         } else {
             if (logger.isDebugEnabled()) {
-                String msg = String.format("Authorization check failed, [if(client==null) evaluates %s] or [if(client.getStatus()==Client.ENABLED) evaluates %s]", client!=null, Client.ENABLED == client.getStatus());
+                String msg = String.format("Authorization check failed, [if(client!=null) evaluates %s] or [if(client.getStatus()==Client.ENABLED) evaluates %s]", client!=null, client != null ? Client.ENABLED == client.getStatus() : "client is null");
                 logger.debug(msg);
             }
             return false;
