@@ -3,11 +3,21 @@ package org.restcomm.connect.http;
 import akka.actor.ActorRef;
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
+import com.sun.jersey.spi.resource.Singleton;
 import com.thoughtworks.xstream.XStream;
 import java.net.URI;
 import java.util.List;
 import javax.annotation.PostConstruct;
+import javax.annotation.security.RolesAllowed;
 import javax.servlet.ServletContext;
+import javax.ws.rs.DELETE;
+import javax.ws.rs.GET;
+import javax.ws.rs.HeaderParam;
+import javax.ws.rs.POST;
+import javax.ws.rs.PUT;
+import javax.ws.rs.Path;
+import javax.ws.rs.PathParam;
+import javax.ws.rs.Produces;
 import javax.ws.rs.core.Context;
 import javax.ws.rs.core.MediaType;
 import static javax.ws.rs.core.MediaType.APPLICATION_JSON;
@@ -16,6 +26,8 @@ import static javax.ws.rs.core.MediaType.APPLICATION_XML;
 import static javax.ws.rs.core.MediaType.APPLICATION_XML_TYPE;
 import javax.ws.rs.core.MultivaluedMap;
 import javax.ws.rs.core.Response;
+import javax.ws.rs.core.SecurityContext;
+
 import static javax.ws.rs.core.Response.Status.BAD_REQUEST;
 import static javax.ws.rs.core.Response.Status.NOT_FOUND;
 import static javax.ws.rs.core.Response.ok;
@@ -31,10 +43,17 @@ import org.restcomm.connect.dao.entities.RestCommResponse;
 import org.restcomm.connect.http.converter.GatewayConverter;
 import org.restcomm.connect.http.converter.GatewayListConverter;
 import org.restcomm.connect.http.converter.RestCommResponseConverter;
+import org.restcomm.connect.http.security.ContextUtil;
+
+import static org.restcomm.connect.http.security.AccountPrincipal.SUPER_ADMIN_ROLE;
+import org.restcomm.connect.identity.UserIdentityContext;
 import org.restcomm.connect.telephony.api.RegisterGateway;
 
+@Path("/Accounts/{accountSid}/Management/Gateways")
 @ThreadSafe
-public class GatewaysEndpoint extends SecuredEndpoint {
+@RolesAllowed(SUPER_ADMIN_ROLE)
+@Singleton
+public class GatewaysEndpoint extends AbstractEndpoint {
     @Context
     protected ServletContext context;
     protected Configuration configuration;
@@ -42,6 +61,9 @@ public class GatewaysEndpoint extends SecuredEndpoint {
     protected Gson gson;
     protected XStream xstream;
     private ActorRef proxyManager;
+
+
+
 
     public GatewaysEndpoint() {
         super();
@@ -192,5 +214,67 @@ public class GatewaysEndpoint extends SecuredEndpoint {
             result = result.setTimeToLive(Integer.parseInt(data.getFirst("TTL")));
         }
         return result;
+    }
+
+    private Response deleteGateway(final String accountSid,
+            final String sid,
+            UserIdentityContext userIdentityContext) {
+        permissionEvaluator.secure(super.accountsDao.getAccount(accountSid),
+                "RestComm:Modify:Gateways",
+                userIdentityContext);
+        dao.removeGateway(new Sid(sid));
+        return ok().build();
+    }
+
+    @Path("/{sid}")
+    @DELETE
+    public Response deleteGatewayAsXml(@PathParam("accountSid") final String accountSid,
+            @PathParam("sid") final String sid,
+            @Context SecurityContext sec) {
+        return deleteGateway(accountSid, sid,ContextUtil.convert(sec));
+    }
+
+    @Path("/{sid}")
+    @GET
+    @Produces({MediaType.APPLICATION_XML, MediaType.APPLICATION_JSON})
+    public Response getGatewayAsXml(@PathParam("accountSid") final String accountSid,
+            @PathParam("sid") final String sid,
+            @HeaderParam("Accept") String accept) {
+        return getGateway(accountSid, sid, retrieveMediaType(accept));
+    }
+
+    @GET
+    @Produces({MediaType.APPLICATION_XML, MediaType.APPLICATION_JSON})
+    public Response getGatewaysList(@PathParam("accountSid") final String accountSid,
+            @HeaderParam("Accept") String accept) {
+        return getGateways(accountSid, retrieveMediaType(accept));
+    }
+
+    @POST
+    @Produces({MediaType.APPLICATION_XML, MediaType.APPLICATION_JSON})
+    public Response createGateway(@PathParam("accountSid") final String accountSid,
+            final MultivaluedMap<String, String> data,
+            @HeaderParam("Accept") String accept) {
+        return putGateway(accountSid, data, retrieveMediaType(accept));
+    }
+
+    @Path("/{sid}")
+    @POST
+    @Produces({MediaType.APPLICATION_XML, MediaType.APPLICATION_JSON})
+    public Response updateGatewayAsXmlPost(@PathParam("accountSid") final String accountSid,
+            @PathParam("sid") final String sid,
+            final MultivaluedMap<String, String> data,
+            @HeaderParam("Accept") String accept) {
+        return updateGateway(accountSid, sid, data, retrieveMediaType(accept));
+    }
+
+    @Path("/{sid}")
+    @PUT
+    @Produces({MediaType.APPLICATION_XML, MediaType.APPLICATION_JSON})
+    public Response updateGatewayAsXmlPut(@PathParam("accountSid") final String accountSid,
+            @PathParam("sid") final String sid,
+            final MultivaluedMap<String, String> data,
+            @HeaderParam("Accept") String accept) {
+        return updateGateway(accountSid, sid, data, retrieveMediaType(accept));
     }
 }

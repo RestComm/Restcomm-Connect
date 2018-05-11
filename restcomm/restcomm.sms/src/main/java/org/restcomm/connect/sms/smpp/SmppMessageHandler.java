@@ -22,6 +22,7 @@ package org.restcomm.connect.sms.smpp;
 import java.io.IOException;
 import java.net.URI;
 import java.net.URISyntaxException;
+import java.util.Arrays;
 import java.util.Collection;
 import java.util.List;
 
@@ -66,6 +67,7 @@ import org.restcomm.connect.telephony.api.FeatureAccessRequest;
 import org.restcomm.smpp.parameter.TlvSet;
 
 import com.cloudhopper.commons.charset.CharsetUtil;
+import com.cloudhopper.smpp.SmppConstants;
 import com.cloudhopper.smpp.pdu.SubmitSm;
 import com.cloudhopper.smpp.tlv.Tlv;
 import com.cloudhopper.smpp.type.Address;
@@ -165,6 +167,8 @@ public class SmppMessageHandler extends RestcommUntypedActor {
 
     static final int ERROR_NOTIFICATION = 0;
     static final int WARNING_NOTIFICATION = 1;
+    private static final int CONTENT_LENGTH_MAX = 140;
+    private static final int DATA_CODING_AUTODETECT = 0x80;
 
     // used for sending warning and error logs to notification engine and to the console
     private void sendNotification(String errMessage, int errCode, String errType, boolean createNotification) {
@@ -351,19 +355,25 @@ public class SmppMessageHandler extends RestcommUntypedActor {
 
         byte[] textBytes;
         int smppTonNpiValue = Integer.parseInt(SmppService.getSmppTonNpiValue());
+        boolean autodetectdcs = SmppClientOpsThread.getAutoDetectDcsFlag();
         // add delivery receipt
         //submit0.setRegisteredDelivery(SmppConstants.REGISTERED_DELIVERY_SMSC_RECEIPT_REQUESTED);
         SubmitSm submit0 = new SubmitSm();
         submit0.setSourceAddress(new Address((byte) smppTonNpiValue, (byte) smppTonNpiValue, request.getSmppFrom()));
         submit0.setDestAddress(new Address((byte) smppTonNpiValue, (byte) smppTonNpiValue, request.getSmppTo()));
         if (CharsetUtil.CHARSET_UCS_2 == request.getSmppEncoding()) {
-            submit0.setDataCoding(DataCoding.DATA_CODING_UCS2);
+            submit0.setDataCoding(SmppConstants.DATA_CODING_UCS2);
             textBytes = CharsetUtil.encode(request.getSmppContent(), CharsetUtil.CHARSET_UCS_2);
         } else {
-            submit0.setDataCoding(DataCoding.DATA_CODING_GSM7);
-            textBytes = CharsetUtil.encode(request.getSmppContent(), request.getSmppEncoding());
+            submit0.setDataCoding(SmppConstants.DATA_CODING_DEFAULT);
+            textBytes = CharsetUtil.encode(request.getSmppContent(), SmppClientOpsThread.getOutboundDefaultEncoding());
+        }
+        if(autodetectdcs) {
+            submit0.setDataCoding((byte) DATA_CODING_AUTODETECT);
         }
 
+        boolean payloadFlag = SmppClientOpsThread.getMessagePayloadFlag();
+        int contentLength = request.getSmppContent().length();
         //TODO reverted from https://telestax.atlassian.net/browse/RESTCOMM-1595 as it caused SMS loop at SMSC
         //TODO the delivery receipt should be introduced only together with the remaining/pending DLR implementation
         //TODO the DLR implementation should be configurable (on/off)
@@ -371,9 +381,14 @@ public class SmppMessageHandler extends RestcommUntypedActor {
         //set the delivery flag to true
         //submit0.setRegisteredDelivery((byte) 1);
 
-        submit0.setShortMessage(textBytes);
-
         TlvSet tlvSet = request.getTlvSet();
+
+        logger.info("payloadFlag="+payloadFlag+" contentLength="+contentLength+" textBytes="+Arrays.toString(textBytes));
+        if(payloadFlag || (contentLength> CONTENT_LENGTH_MAX)) {
+            tlvSet.addOptionalParameter(new Tlv(SmppConstants.TAG_MESSAGE_PAYLOAD, textBytes));
+        } else {
+            submit0.setShortMessage(textBytes);
+        }
 
         if (tlvSet != null) {
             for (Tlv tlv : (Collection<Tlv>) tlvSet.getOptionalParameters()) {
