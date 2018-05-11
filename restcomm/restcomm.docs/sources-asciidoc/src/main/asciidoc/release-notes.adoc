@@ -14,7 +14,7 @@ The folowing tags are used to categorize and state the scope of a change
 == 8.4.1 version 2018-05-11
 === New Features
 // New features (whether major or minor) go here
-* SMS long messages support
+* SMS outbound long messages support
 * New Clients password migration tool
 
 
