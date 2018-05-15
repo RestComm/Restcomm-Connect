@@ -19,11 +19,11 @@
  */
 package org.restcomm.connect.commons.util;
 
-import java.security.MessageDigest;
-import java.security.NoSuchAlgorithmException;
-
 import org.restcomm.connect.commons.annotations.concurrency.ThreadSafe;
 import org.restcomm.connect.commons.configuration.RestcommConfiguration;
+
+import java.security.MessageDigest;
+import java.security.NoSuchAlgorithmException;
 
 /**
  * @author quintana.thomas@gmail.com (Thomas Quintana)
@@ -56,18 +56,18 @@ public final class DigestAuthentication {
         }
     }
 
-    public static String response(final String algorithm, final String user, final String realm, final String password,
+    public static String response(final String authHeaderAlgorithm, final String user, final String realm, final String password,
     final String nonce, final String nc, final String cnonce, final String method, final String uri, String body,
     final String qop) {
-        return response(algorithm, user, realm, password, "", nonce, nc, cnonce, method, uri, body, qop);
+        return response(authHeaderAlgorithm, user, realm, password, RestcommConfiguration.getInstance().getMain().getClientAlgorithm(), nonce, nc, cnonce, method, uri, body, qop);
     }
 
     /**
-     * @param algorithm
+     * @param authHeaderAlgorithm
      * @param user
      * @param realm
      * @param password
-     * @param password2
+     * @param clientPasswordAlgorithm
      * @param nonce
      * @param nc
      * @param cnonce
@@ -77,24 +77,24 @@ public final class DigestAuthentication {
      * @param qop
      * @return
      */
-    public static String response(final String algorithm, final String user, final String realm, final String password,
-            String password2, final String nonce, final String nc, final String cnonce, final String method, final String uri,
+    public static String response(final String authHeaderAlgorithm, final String user, final String realm, final String password,
+            final String clientPasswordAlgorithm, final String nonce, final String nc, final String cnonce, final String method, final String uri,
             String body, final String qop) {
-        validate(user, realm, password, nonce, method, uri, algorithm);
+        validate(user, realm, password, nonce, method, uri, authHeaderAlgorithm);
         String ha1;
 
-        if(!password2.isEmpty()){
-            ha1 = password2;
-        }else{
-            final String a1 = A1(algorithm, user, realm, password, nonce, cnonce);
-            ha1 = H(a1, algorithm);
+        if (clientPasswordAlgorithm.equalsIgnoreCase("cleartext")) {
+            final String a1 = A1(authHeaderAlgorithm, user, realm, password, nonce, cnonce);
+            ha1 = H(a1, authHeaderAlgorithm);
+        } else {
+            ha1 = password;
         }
 
-        final String a2 = A2(algorithm, method, uri, body, qop);
+        final String a2 = A2(authHeaderAlgorithm, method, uri, body, qop);
         if (cnonce != null && qop != null && nc != null && (qop.equalsIgnoreCase("auth") || qop.equalsIgnoreCase("auth-int"))) {
-            return KD(ha1, nonce + ":" + nc + ":" + cnonce + ":" + qop + ":" + H(a2, algorithm), algorithm);
+            return KD(ha1, nonce + ":" + nc + ":" + cnonce + ":" + qop + ":" + H(a2, authHeaderAlgorithm), authHeaderAlgorithm);
         } else {
-            return KD(ha1, nonce + ":" + H(a2, algorithm), algorithm);
+            return KD(ha1, nonce + ":" + H(a2, authHeaderAlgorithm), authHeaderAlgorithm);
         }
     }
 

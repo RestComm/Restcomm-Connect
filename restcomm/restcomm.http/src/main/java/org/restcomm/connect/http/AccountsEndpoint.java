@@ -19,48 +19,60 @@
  */
 package org.restcomm.connect.http;
 
+import com.google.gson.Gson;
+import com.google.gson.GsonBuilder;
+import com.sun.jersey.core.header.LinkHeader;
+import com.sun.jersey.core.util.MultivaluedMapImpl;
+import com.sun.jersey.spi.resource.Singleton;
+import com.thoughtworks.xstream.XStream;
+import java.net.URI;
+import java.util.ArrayList;
+import java.util.List;
+import javax.annotation.PostConstruct;
+import javax.annotation.security.RolesAllowed;
+import javax.mail.internet.AddressException;
+import javax.mail.internet.InternetAddress;
+import javax.servlet.ServletContext;
+import javax.ws.rs.Consumes;
+import javax.ws.rs.GET;
+import javax.ws.rs.HeaderParam;
+import javax.ws.rs.POST;
+import javax.ws.rs.PUT;
+import javax.ws.rs.Path;
+import javax.ws.rs.PathParam;
+import javax.ws.rs.Produces;
+import javax.ws.rs.WebApplicationException;
+import javax.ws.rs.core.Context;
+import javax.ws.rs.core.MediaType;
+import static javax.ws.rs.core.MediaType.APPLICATION_FORM_URLENCODED;
 import static javax.ws.rs.core.MediaType.APPLICATION_JSON;
 import static javax.ws.rs.core.MediaType.APPLICATION_JSON_TYPE;
 import static javax.ws.rs.core.MediaType.APPLICATION_XML;
 import static javax.ws.rs.core.MediaType.APPLICATION_XML_TYPE;
-import static javax.ws.rs.core.Response.ok;
-import static javax.ws.rs.core.Response.status;
+import javax.ws.rs.core.MultivaluedMap;
+import javax.ws.rs.core.Response;
 import static javax.ws.rs.core.Response.Status.BAD_REQUEST;
 import static javax.ws.rs.core.Response.Status.CONFLICT;
 import static javax.ws.rs.core.Response.Status.NOT_FOUND;
 import static javax.ws.rs.core.Response.Status.PRECONDITION_FAILED;
-import static org.restcomm.connect.http.ProfileEndpoint.PROFILE_REL_TYPE;
-import static org.restcomm.connect.http.ProfileEndpoint.TITLE_PARAM;
-
-import java.net.URI;
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Map;
-
-import javax.annotation.PostConstruct;
-import javax.mail.internet.AddressException;
-import javax.mail.internet.InternetAddress;
-import javax.servlet.ServletContext;
-import javax.servlet.http.HttpServletRequest;
-import javax.ws.rs.WebApplicationException;
-import javax.ws.rs.core.MediaType;
-import javax.ws.rs.core.MultivaluedMap;
-import javax.ws.rs.core.Response;
+import static javax.ws.rs.core.Response.ok;
+import static javax.ws.rs.core.Response.status;
+import javax.ws.rs.core.SecurityContext;
 import javax.ws.rs.core.UriInfo;
-
 import org.apache.commons.configuration.Configuration;
 import org.apache.shiro.crypto.hash.Md5Hash;
 import org.joda.time.DateTime;
+import org.restcomm.connect.commons.annotations.concurrency.ThreadSafe;
 import org.restcomm.connect.commons.configuration.RestcommConfiguration;
 import org.restcomm.connect.commons.configuration.sets.RcmlserverConfigurationSet;
 import org.restcomm.connect.commons.dao.Sid;
 import org.restcomm.connect.commons.util.ClientLoginConstrains;
+import org.restcomm.connect.core.service.api.ProfileService;
 import org.restcomm.connect.dao.ClientsDao;
 import org.restcomm.connect.dao.DaoManager;
 import org.restcomm.connect.dao.IncomingPhoneNumbersDao;
 import org.restcomm.connect.dao.ProfileAssociationsDao;
 import org.restcomm.connect.dao.entities.Account;
-import org.restcomm.connect.dao.entities.Account.Status;
 import org.restcomm.connect.dao.entities.AccountList;
 import org.restcomm.connect.dao.entities.Client;
 import org.restcomm.connect.dao.entities.IncomingPhoneNumber;
@@ -69,6 +81,8 @@ import org.restcomm.connect.dao.entities.Profile;
 import org.restcomm.connect.dao.entities.RestCommResponse;
 import org.restcomm.connect.extension.api.ApiRequest;
 import org.restcomm.connect.extension.controller.ExtensionController;
+import static org.restcomm.connect.http.ProfileEndpoint.PROFILE_REL_TYPE;
+import static org.restcomm.connect.http.ProfileEndpoint.TITLE_PARAM;
 import org.restcomm.connect.http.client.rcmlserver.RcmlserverApi;
 import org.restcomm.connect.http.client.rcmlserver.RcmlserverNotifications;
 import org.restcomm.connect.http.converter.AccountConverter;
@@ -77,39 +91,40 @@ import org.restcomm.connect.http.converter.RestCommResponseConverter;
 import org.restcomm.connect.http.exceptionmappers.CustomReasonPhraseType;
 import org.restcomm.connect.http.exceptions.InsufficientPermission;
 import org.restcomm.connect.http.exceptions.PasswordTooWeak;
+import static org.restcomm.connect.http.security.AccountPrincipal.SUPER_ADMIN_ROLE;
+import org.restcomm.connect.http.security.ContextUtil;
+import org.restcomm.connect.http.security.PermissionEvaluator.SecuredType;
+import org.restcomm.connect.identity.UserIdentityContext;
 import org.restcomm.connect.identity.passwords.PasswordValidator;
 import org.restcomm.connect.identity.passwords.PasswordValidatorFactory;
 import org.restcomm.connect.provisioning.number.api.PhoneNumberProvisioningManager;
 import org.restcomm.connect.provisioning.number.api.PhoneNumberProvisioningManagerProvider;
 
-import com.google.gson.Gson;
-import com.google.gson.GsonBuilder;
-import com.sun.jersey.core.header.LinkHeader;
-import com.sun.jersey.core.util.MultivaluedMapImpl;
-import com.thoughtworks.xstream.XStream;
-
 /**
  * @author quintana.thomas@gmail.com (Thomas Quintana)
  * @author maria-farooq@live.com (Maria Farooq)
  */
-public class AccountsEndpoint extends SecuredEndpoint {
-    protected Configuration runtimeConfiguration;
-    protected Configuration rootConfiguration; // top-level configuration element
-    protected Gson gson;
-    protected XStream xstream;
-    protected ClientsDao clientDao;
-    protected IncomingPhoneNumbersDao incomingPhoneNumbersDao;
+@Path("/Accounts")
+@ThreadSafe
+@Singleton
+public class AccountsEndpoint extends AbstractEndpoint {
+    private Configuration runtimeConfiguration;
+    private Configuration rootConfiguration; // top-level configuration element
+    private Gson gson;
+    private XStream xstream;
+    private ClientsDao clientDao;
     private ProfileAssociationsDao profileAssociationsDao;
+    private ProfileService profileService;
 
-    private Map<Status,Runnable> statusActionMap;
+
+
 
     public AccountsEndpoint() {
         super();
     }
 
-    // used for testing
-    public AccountsEndpoint(ServletContext context, HttpServletRequest request) {
-        super(context,request);
+    public AccountsEndpoint(ServletContext context) {
+        super(context);
     }
 
     @PostConstruct
@@ -117,9 +132,10 @@ public class AccountsEndpoint extends SecuredEndpoint {
         rootConfiguration = (Configuration) context.getAttribute(Configuration.class.getName());
         runtimeConfiguration = rootConfiguration.subset("runtime-settings");
         super.init(runtimeConfiguration);
-        clientDao = ((DaoManager) context.getAttribute(DaoManager.class.getName())).getClientsDao();
-        incomingPhoneNumbersDao = ((DaoManager) context.getAttribute(DaoManager.class.getName())).getIncomingPhoneNumbersDao();
-        profileAssociationsDao = ((DaoManager) context.getAttribute(DaoManager.class.getName())).getProfileAssociationsDao();
+        final DaoManager storage = (DaoManager) context.getAttribute(DaoManager.class.getName());
+        clientDao = storage.getClientsDao();
+        profileAssociationsDao = storage.getProfileAssociationsDao();
+        profileService = (ProfileService)context.getAttribute(ProfileService.class.getName());
         final AccountConverter converter = new AccountConverter(runtimeConfiguration);
         final GsonBuilder builder = new GsonBuilder();
         builder.registerTypeAdapter(Account.class, converter);
@@ -133,7 +149,10 @@ public class AccountsEndpoint extends SecuredEndpoint {
         // Make sure there is an authenticated account present when this endpoint is used
     }
 
-    private Account createFrom(final Sid accountSid, final MultivaluedMap<String, String> data, Account parent) throws PasswordTooWeak {
+    private Account createFrom(final Sid accountSid,
+            final MultivaluedMap<String, String> data,
+            Account parent,
+            UserIdentityContext userIdentityContext) throws PasswordTooWeak {
         validate(data);
 
         final DateTime now = DateTime.now();
@@ -157,7 +176,7 @@ public class AccountsEndpoint extends SecuredEndpoint {
             // user can add account in same organization
             if(!orgSid.equals(parent.getOrganizationSid())){
                 //only super admin can add account in organizations other than it belongs to
-                allowOnlySuperAdmin();
+                permissionEvaluator.allowOnlySuperAdmin(userIdentityContext);
                 if(organizationsDao.getOrganization(orgSid) == null){
                     throw new IllegalArgumentException("provided OrganizationSid does not exist");
                 }
@@ -177,10 +196,12 @@ public class AccountsEndpoint extends SecuredEndpoint {
         return new Account(sid, now, now, emailAddress, friendlyName, accountSid, type, status, authToken, role, uri, organizationSid);
     }
 
-    protected Response getAccount(final String accountSid, final MediaType responseType, UriInfo info) {
+    protected Response getAccount(final String accountSid, final MediaType responseType,
+            UriInfo info,
+            UserIdentityContext userIdentityContext) {
         //First check if the account has the required permissions in general, this way we can fail fast and avoid expensive DAO operations
         Account account = null;
-        checkPermission("RestComm:Read:Accounts");
+        permissionEvaluator.checkPermission("RestComm:Read:Accounts",userIdentityContext);
         if (Sid.pattern.matcher(accountSid).matches()) {
             try {
                 account = accountsDao.getAccount(new Sid(accountSid));
@@ -195,7 +216,7 @@ public class AccountsEndpoint extends SecuredEndpoint {
             }
         }
 
-        secure(account, "RestComm:Read:Accounts", SecuredType.SECURED_ACCOUNT );
+        permissionEvaluator.secure(account, "RestComm:Read:Accounts", SecuredType.SECURED_ACCOUNT,userIdentityContext );
 
         if (account == null) {
             return status(NOT_FOUND).build();
@@ -345,9 +366,10 @@ public class AccountsEndpoint extends SecuredEndpoint {
 
 
 
-    protected Response getAccounts(final UriInfo info, final MediaType responseType) {
+    protected Response getAccounts(final UriInfo info, final MediaType responseType,
+            UserIdentityContext userIdentityContext) {
         //First check if the account has the required permissions in general, this way we can fail fast and avoid expensive DAO operations
-        checkPermission("RestComm:Read:Accounts");
+        permissionEvaluator.checkPermission("RestComm:Read:Accounts",userIdentityContext);
         final Account account = userIdentityContext.getEffectiveAccount();
         if (account == null) {
             return status(NOT_FOUND).build();
@@ -361,10 +383,10 @@ public class AccountsEndpoint extends SecuredEndpoint {
                 String domainName = info.getQueryParameters().getFirst("DomainName");
 
                 if(organizationSid != null && !(organizationSid.trim().isEmpty())){
-                    allowOnlySuperAdmin();
+                    permissionEvaluator.allowOnlySuperAdmin(userIdentityContext);
                     accounts.addAll(accountsDao.getAccountsByOrganization(new Sid(organizationSid)));
                 } else if(domainName != null && !(domainName.trim().isEmpty())){
-                    allowOnlySuperAdmin();
+                    permissionEvaluator.allowOnlySuperAdmin(userIdentityContext);
                     Organization organization = organizationsDao.getOrganizationByDomainName(domainName);
                     if(organization == null){
                         return status(NOT_FOUND).build();
@@ -386,9 +408,10 @@ public class AccountsEndpoint extends SecuredEndpoint {
         }
     }
 
-    protected Response putAccount(final MultivaluedMap<String, String> data, final MediaType responseType) {
+    protected Response putAccount(final MultivaluedMap<String, String> data,
+            final MediaType responseType,UserIdentityContext userIdentityContext) {
         //First check if the account has the required permissions in general, this way we can fail fast and avoid expensive DAO operations
-        checkPermission("RestComm:Create:Accounts");
+        permissionEvaluator.checkPermission("RestComm:Create:Accounts",userIdentityContext);
         // check account level depth. If we're already at third level no sub-accounts are allowed to be created
         List<String> accountLineage = userIdentityContext.getEffectiveAccountLineage();
         if (accountLineage.size() >= 2) {
@@ -406,7 +429,7 @@ public class AccountsEndpoint extends SecuredEndpoint {
             final Account parent = accountsDao.getAccount(sid);
             Account account = null;
             try {
-                account = createFrom(sid, data, parent);
+                account = createFrom(sid, data, parent,userIdentityContext);
             } catch (IllegalArgumentException  illegalArgumentException) {
                 return status(BAD_REQUEST).entity(illegalArgumentException.getMessage()).build();
             }catch (final NullPointerException exception) {
@@ -422,8 +445,9 @@ public class AccountsEndpoint extends SecuredEndpoint {
             - only Administrators can choose a role for newly created accounts. Normal users will create accounts with the same role as their own.
          */
             if (accountsDao.getAccount(account.getSid()) == null && !account.getEmailAddress().equalsIgnoreCase("administrator@company.com")) {
-                if (parent.getStatus().equals(Account.Status.ACTIVE) && isSecuredByPermission("RestComm:Create:Accounts")) {
-                    if (!hasAccountRole(getAdministratorRole()) || !data.containsKey("Role")) {
+                if (parent.getStatus().equals(Account.Status.ACTIVE) &&
+                        permissionEvaluator.isSecuredByPermission("RestComm:Create:Accounts",userIdentityContext)) {
+                    if (!permissionEvaluator.hasAccountRole(permissionEvaluator.getAdministratorRole(),userIdentityContext) || !data.containsKey("Role")) {
                         account = account.setRole(parent.getRole());
                     }
                     accountsDao.addAccount(account);
@@ -482,7 +506,7 @@ public class AccountsEndpoint extends SecuredEndpoint {
         builder.setAccountSid(accountSid);
         builder.setApiVersion(getApiVersion(data));
         builder.setLogin(data.getFirst("Login"));
-        builder.setPassword(data.getFirst("Login"), password, organizationsDao.getOrganization(accountsDao.getAccount(accountSid).getOrganizationSid()).getDomainName());
+        builder.setPassword(data.getFirst("Login"), password, organizationsDao.getOrganization(accountsDao.getAccount(accountSid).getOrganizationSid()).getDomainName(), "");
         builder.setFriendlyName(data.getFirst("FriendlyName"));
         builder.setStatus(Client.ENABLED);
         final StringBuilder buffer = new StringBuilder();
@@ -499,7 +523,9 @@ public class AccountsEndpoint extends SecuredEndpoint {
      * @param data
      * @return a new instance with given account,and overriden fields from data
      */
-    private Account prepareAccountForUpdate(final Account account, final MultivaluedMap<String, String> data) {
+    private Account prepareAccountForUpdate(final Account account,
+            final MultivaluedMap<String, String> data,
+            UserIdentityContext userIdentityContext) {
         Account.Builder accBuilder = Account.builder();
         //copy full incoming account, and let override happen
         //in a separate instance later
@@ -531,7 +557,7 @@ public class AccountsEndpoint extends SecuredEndpoint {
 
         if (data.containsKey("Role")) {
             // Only allow role change for administrators. Multitenancy checks will take care of restricting the modification scope to sub-accounts.
-            if (userIdentityContext.getEffectiveAccountRoles().contains(getAdministratorRole())) {
+            if (userIdentityContext.getEffectiveAccountRoles().contains(permissionEvaluator.getAdministratorRole())) {
                 accBuilder.setRole(data.getFirst("Role"));
             } else {
                 CustomReasonPhraseType stat = new CustomReasonPhraseType(Response.Status.FORBIDDEN, "Only Administrator allowed");
@@ -575,17 +601,19 @@ public class AccountsEndpoint extends SecuredEndpoint {
     }
 
     protected Response updateAccount(final String identifier, final MultivaluedMap<String, String> data,
-            final MediaType responseType) {
+            final MediaType responseType,
+            UserIdentityContext userIdentityContext) {
         // First check if the account has the required permissions in general, this way we can fail fast and avoid expensive DAO
         // operations
-        checkPermission("RestComm:Modify:Accounts");
+        permissionEvaluator.checkPermission("RestComm:Modify:Accounts",userIdentityContext);
         Account account = getOperatingAccount(identifier);
 
         if (account == null) {
             return status(NOT_FOUND).build();
         } else {
             // since the operated account exists, first thing to do is make sure we have access
-            secure(account, "RestComm:Modify:Accounts", SecuredType.SECURED_ACCOUNT);
+            permissionEvaluator.secure(account, "RestComm:Modify:Accounts", SecuredType.SECURED_ACCOUNT,
+                    userIdentityContext);
 
             // if the account is already CLOSED, no updates are allowed
             if (account.getStatus() == Account.Status.CLOSED) {
@@ -595,12 +623,12 @@ public class AccountsEndpoint extends SecuredEndpoint {
             }
 
             Account modifiedAccount;
-            modifiedAccount = prepareAccountForUpdate(account, data);
+            modifiedAccount = prepareAccountForUpdate(account, data, userIdentityContext);
 
             // we are modifying status
             if (modifiedAccount.getStatus() != null &&
                     account.getStatus() != modifiedAccount.getStatus()) {
-                switchAccountStatusTree(modifiedAccount);
+                switchAccountStatusTree(modifiedAccount,userIdentityContext);
             }
 
             //update client only if friendlyname or password was changed
@@ -660,8 +688,10 @@ public class AccountsEndpoint extends SecuredEndpoint {
         }
     }
 
-    protected Response migrateAccountOrganization(final String identifier, final MultivaluedMap<String, String> data,
-                                              final MediaType responseType) {
+    protected Response migrateAccountOrganization(final String identifier,
+            final MultivaluedMap<String, String> data,
+                                              final MediaType responseType,
+                                              UserIdentityContext userIdentityContext) {
 
         Organization organization = getOrganization(data);
         //Validation 2 - Check if data contains Organization (either SID or domain name)
@@ -677,7 +707,7 @@ public class AccountsEndpoint extends SecuredEndpoint {
         }
 
         //Validation 4 - Only direct child of super admin account can be migrated to a new organization
-        if (!isDirectChildOfAccount(userIdentityContext.getEffectiveAccount(), operatingAccount)) {
+        if (!permissionEvaluator.isDirectChildOfAccount(userIdentityContext.getEffectiveAccount(), operatingAccount)) {
             return status(BAD_REQUEST).build();
         }
 
@@ -718,7 +748,8 @@ public class AccountsEndpoint extends SecuredEndpoint {
         }
     }
 
-    private void sendRVDStatusNotification(Account updatedAccount) {
+    private void sendRVDStatusNotification(Account updatedAccount,
+            UserIdentityContext userIdentityContext) {
         logger.debug("sendRVDStatusNotification");
         // set rcmlserverApi in case we need to also notify the application sever (RVD)
         RestcommConfiguration rcommConfiguration = RestcommConfiguration.getInstance();
@@ -745,13 +776,14 @@ public class AccountsEndpoint extends SecuredEndpoint {
      *
      * @param account
      */
-    private void switchAccountStatus(Account account, Account.Status status) {
+    private void switchAccountStatus(Account account, Account.Status status,
+            UserIdentityContext userIdentityContext) {
         if (logger.isDebugEnabled()) {
             logger.debug("Switching status for account:" + account.getSid() + ",status:" + status);
         }
         switch (status) {
             case CLOSED:
-                sendRVDStatusNotification(account);
+                sendRVDStatusNotification(account,userIdentityContext);
                 // then proceed to dependency removal
                 removeAccoundDependencies(account.getSid());
                 break;
@@ -769,7 +801,8 @@ public class AccountsEndpoint extends SecuredEndpoint {
      *
      * @param parentAccount
      */
-    private void switchAccountStatusTree(Account parentAccount) {
+    private void switchAccountStatusTree(Account parentAccount,
+            UserIdentityContext userIdentityContext) {
         logger.debug("Status transition requested");
         // transition child accounts
         List<String> subAccountsToSwitch = accountsDao.getSubAccountSidsRecursive(parentAccount.getSid());
@@ -781,7 +814,7 @@ public class AccountsEndpoint extends SecuredEndpoint {
                 String removedSid = subAccountsToSwitch.get(i);
                 try {
                     Account subAccount = accountsDao.getAccount(new Sid(removedSid));
-                    switchAccountStatus(subAccount, parentAccount.getStatus());
+                    switchAccountStatus(subAccount, parentAccount.getStatus(), userIdentityContext);
                 } catch (Exception e) {
                     // if anything bad happens, log the error and continue removing the rest of the accounts.
                     logger.error("Failed switching status (child) account '" + removedSid + "'");
@@ -789,7 +822,7 @@ public class AccountsEndpoint extends SecuredEndpoint {
             }
         }
         // switch parent account too
-        switchAccountStatus(parentAccount, parentAccount.getStatus());
+        switchAccountStatus(parentAccount, parentAccount.getStatus(), userIdentityContext);
     }
 
     private void validate(final MultivaluedMap<String, String> data) throws NullPointerException {
@@ -823,9 +856,72 @@ public class AccountsEndpoint extends SecuredEndpoint {
 
     public LinkHeader composeLink(Sid targetSid, UriInfo info) {
         String sid = targetSid.toString();
-        URI uri = info.getBaseUriBuilder().path(ProfileJsonEndpoint.class).path(sid).build();
+        URI uri = info.getBaseUriBuilder().path(ProfileEndpoint.class).path(sid).build();
         LinkHeader.LinkHeaderBuilder link = LinkHeader.uri(uri).parameter(TITLE_PARAM, "Profiles");
         return link.rel(PROFILE_REL_TYPE).build();
+    }
+
+    @Path("/{accountSid}")
+    @GET
+    @Produces({MediaType.APPLICATION_XML, MediaType.APPLICATION_JSON})
+    public Response getAccountAsXml(@PathParam("accountSid") final String accountSid,
+            @Context UriInfo info,
+            @HeaderParam("Accept") String accept,
+            @Context SecurityContext sec) {
+        return getAccount(accountSid, retrieveMediaType(accept), info, ContextUtil.convert(sec));
+    }
+
+    @GET
+    @Produces({MediaType.APPLICATION_XML, MediaType.APPLICATION_JSON})
+    public Response getAccounts(@Context UriInfo info,
+            @HeaderParam("Accept") String accept,
+            @Context SecurityContext sec) {
+        return getAccounts(info, retrieveMediaType(accept), ContextUtil.convert(sec));
+    }
+
+    @Consumes(APPLICATION_FORM_URLENCODED)
+    @POST
+    @Produces({MediaType.APPLICATION_XML, MediaType.APPLICATION_JSON})
+    public Response putAccount(final MultivaluedMap<String, String> data,
+            @HeaderParam("Accept") String accept,
+            @Context SecurityContext sec) {
+        return putAccount(data, retrieveMediaType(accept), ContextUtil.convert(sec));
+    }
+
+    //The {accountSid} could be the email address of the account we need to update. Later we check if this is SID or EMAIL
+    @Path("/{accountSid}")
+    @Consumes(APPLICATION_FORM_URLENCODED)
+    @POST
+    @Produces({MediaType.APPLICATION_XML, MediaType.APPLICATION_JSON})
+    public Response updateAccountAsXmlPost(@PathParam("accountSid") final String accountSid,
+            final MultivaluedMap<String, String> data,
+            @HeaderParam("Accept") String accept,
+            @Context SecurityContext sec) {
+        return updateAccount(accountSid, data, retrieveMediaType(accept), ContextUtil.convert(sec));
+    }
+
+    //The {accountSid} could be the email address of the account we need to update. Later we check if this is SID or EMAIL
+    @Path("/{accountSid}")
+    @Consumes(APPLICATION_FORM_URLENCODED)
+    @PUT
+    @Produces({MediaType.APPLICATION_XML, MediaType.APPLICATION_JSON})
+    public Response updateAccountAsXmlPut(@PathParam("accountSid") final String accountSid,
+            final MultivaluedMap<String, String> data,
+            @HeaderParam("Accept") String accept,
+            @Context SecurityContext sec) {
+        return updateAccount(accountSid, data, retrieveMediaType(accept), ContextUtil.convert(sec));
+    }
+
+    @Path("/migrate/{accountSid}")
+    @Consumes(APPLICATION_FORM_URLENCODED)
+    @POST
+    @RolesAllowed(SUPER_ADMIN_ROLE)
+    @Produces({MediaType.APPLICATION_XML, MediaType.APPLICATION_JSON})
+    public Response migrateAccount(@PathParam("accountSid") final String accountSid,
+            final MultivaluedMap<String, String> data,
+            @HeaderParam("Accept") String accept,
+            @Context SecurityContext sec) {
+        return migrateAccountOrganization(accountSid, data, retrieveMediaType(accept), ContextUtil.convert(sec));
     }
 
 }
