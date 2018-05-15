@@ -3,7 +3,7 @@
   <parent>
     <groupId>org.restcomm</groupId>
     <artifactId>restcomm-connect</artifactId>
-    <version>8.3.1-SNAPSHOT</version>
+    <version>8.3.2-232</version>
   </parent>
   <artifactId>restcomm-connect.dns.api</artifactId>
   
