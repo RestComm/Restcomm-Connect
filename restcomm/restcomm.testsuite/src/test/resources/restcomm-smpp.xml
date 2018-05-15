@@ -300,6 +300,8 @@
 				<!-- when no values are set, default value from code is MODIFIED-UTF8 inbound, GSM7 for outbound-->
 				<inboundencoding>UTF-8</inboundencoding>
 				<outboundencoding>UTF-8</outboundencoding>
+				<messagepayloadflag>false</messagepayloadflag>
+				<autodetectdcsflag>false</autodetectdcsflag>
 			</connection>
 		</connections>
 	</smpp>
