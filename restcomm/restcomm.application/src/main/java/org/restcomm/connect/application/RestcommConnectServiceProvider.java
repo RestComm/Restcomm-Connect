@@ -21,8 +21,11 @@
 package org.restcomm.connect.application;
 
 import javax.servlet.ServletContext;
+
+import org.restcomm.connect.core.service.api.ClientPasswordHashingService;
 import org.restcomm.connect.core.service.api.NumberSelectorService;
 import org.restcomm.connect.core.service.api.ProfileService;
+import org.restcomm.connect.core.service.client.ClientPasswordHashingServiceImpl;
 import org.restcomm.connect.core.service.number.NumberSelectorServiceImpl;
 import org.restcomm.connect.core.service.profile.ProfileServiceImpl;
 import org.restcomm.connect.dao.DaoManager;
@@ -37,6 +40,7 @@ public class RestcommConnectServiceProvider {
     // core services
     private NumberSelectorService numberSelector;
     private ProfileService profileService;
+    private ClientPasswordHashingService clientPasswordHashingService;
 
     public static RestcommConnectServiceProvider getInstance() {
         if (instance == null) {
@@ -46,7 +50,7 @@ public class RestcommConnectServiceProvider {
     }
 
     /**
-     * @param daoManager
+     * @param ctx
      */
     public void startServices(ServletContext ctx) {
         DaoManager daoManager = (DaoManager) ctx.getAttribute(DaoManager.class.getName());
@@ -55,6 +59,8 @@ public class RestcommConnectServiceProvider {
         ctx.setAttribute(NumberSelectorService.class.getName(), numberSelector);
         this.profileService = new ProfileServiceImpl(daoManager);
         ctx.setAttribute(ProfileService.class.getName(), profileService);
+        this.clientPasswordHashingService = new ClientPasswordHashingServiceImpl(daoManager);
+        ctx.setAttribute(ClientPasswordHashingService.class.getName(), clientPasswordHashingService);
     }
 
     /**
@@ -70,5 +76,7 @@ public class RestcommConnectServiceProvider {
     public ProfileService provideProfileService() {
         return profileService;
     }
+
+    public ClientPasswordHashingService clientPasswordHashingService() { return clientPasswordHashingService; }
 
 }

@@ -23,24 +23,20 @@ import akka.actor.ActorRef;
 import akka.actor.ReceiveTimeout;
 import akka.event.Logging;
 import akka.event.LoggingAdapter;
-
 import org.apache.commons.configuration.Configuration;
 import org.joda.time.DateTime;
 import org.restcomm.connect.commons.configuration.RestcommConfiguration;
 import org.restcomm.connect.commons.dao.Sid;
 import org.restcomm.connect.commons.faulttolerance.RestcommUntypedActor;
-import org.restcomm.connect.commons.util.DigestAuthentication;
-import org.restcomm.connect.dao.ClientsDao;
 import org.restcomm.connect.dao.DaoManager;
 import org.restcomm.connect.dao.RegistrationsDao;
 import org.restcomm.connect.dao.common.OrganizationUtil;
-import org.restcomm.connect.dao.entities.Account;
-import org.restcomm.connect.dao.entities.Client;
 import org.restcomm.connect.dao.entities.Registration;
 import org.restcomm.connect.monitoringservice.MonitoringService;
 import org.restcomm.connect.telephony.api.GetCall;
 import org.restcomm.connect.telephony.api.Hangup;
 import org.restcomm.connect.telephony.api.UserRegistration;
+import org.restcomm.connect.telephony.api.util.CallControlHelper;
 
 import javax.servlet.ServletContext;
 import javax.servlet.ServletException;
@@ -54,7 +50,6 @@ import javax.servlet.sip.SipServletRequest;
 import javax.servlet.sip.SipServletResponse;
 import javax.servlet.sip.SipSession;
 import javax.servlet.sip.SipURI;
-
 import java.io.IOException;
 import java.net.UnknownHostException;
 import java.util.HashMap;
@@ -311,7 +306,7 @@ public final class UserAgentManager extends RestcommUntypedActor {
                 } else if(authenticateUsers) { // https://github.com/Mobicents/RestComm/issues/29 Allow disabling of SIP authentication
                     final String authorization = request.getHeader("Proxy-Authorization");
                     if (authorization != null) {
-                      if (permitted(authorization, method, (SipURI) request.getFrom().getURI())) {
+                      if (CallControlHelper.permitted(authorization, method, storage, OrganizationUtil.getOrganizationSidBySipURIHost(storage, (SipURI) request.getFrom().getURI()))) {
                           register(message);
                       } else {
                           SipServletResponse response = ((SipServletRequest) message).createResponse(javax.servlet.sip.SipServletResponse.SC_FORBIDDEN); //Issue #935, Send 403 FORBIDDEN instead of issuing 407 again and again
@@ -454,32 +449,6 @@ public final class UserAgentManager extends RestcommUntypedActor {
     private void patch(final SipURI uri, final String address, final int port) throws UnknownHostException {
         uri.setHost(address);
         uri.setPort(port);
-    }
-
-    private boolean permitted(final String authorization, final String method, SipURI sipURI) {
-        final Map<String, String> map = toMap(authorization);
-        final String user = map.get("username").trim();
-        final String algorithm = map.get("algorithm");
-        final String realm = map.get("realm");
-        final String uri = map.get("uri");
-        final String nonce = map.get("nonce");
-        final String nc = map.get("nc");
-        final String cnonce = map.get("cnonce");
-        final String qop = map.get("qop");
-        final String response = map.get("response");
-        final ClientsDao clients = storage.getClientsDao();
-        final Client client = clients.getClient(user, OrganizationUtil.getOrganizationSidBySipURIHost(storage, sipURI));
-        if (client != null && storage.getAccountsDao().getAccount(client.getAccountSid()).getStatus() != Account.Status.ACTIVE) {
-            return false;
-        }
-        if (client != null && Client.ENABLED == client.getStatus()) {
-            final String password2 = client.getPassword();
-            final String result = DigestAuthentication.response(algorithm, user, realm, "", password2, nonce, nc, cnonce,
-                    method, uri, null, qop);
-            return result.equals(response);
-        } else {
-            return false;
-        }
     }
 
     private void ping(final String location, final String aor) throws ServletException {

@@ -1,6 +1,7 @@
 package org.restcomm.connect.core.service.profile;
 
-import static org.junit.Assert.*;
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertNull;
 import static org.mockito.Mockito.when;
 
 import java.sql.SQLException;
@@ -166,7 +167,7 @@ public class ProfileServiceTest {
 	}
 
     /**
-     * case 4: given: a profile is NOT explicitly assigned to an account nor to its parent, grand parent or organization:
+     * case 5: given: a profile is NOT explicitly assigned to an account nor to its parent, grand parent or organization:
      * calling retrieveEffectiveProfileByAccountSid by account sid SHOULD return DEFAULT profile
      * @throws SQLException 
      */
@@ -177,6 +178,49 @@ public class ProfileServiceTest {
     	returnDefaultProfile(mocks);
         Profile resultantProfile = mocks.profileService.retrieveEffectiveProfileByAccountSid(account.getSid());
         assertEquals(Profile.DEFAULT_PROFILE_SID, resultantProfile.getSid());
+	}
+
+    /**
+     * case 6: 
+     * </p>given 1: an account X is child of account Y.
+     * </p>given 2: X belongs to organization XO.
+     * </p>given 3: Y belongs to organization YO. (parent organization is different than child organization)
+     * </p>given 4: profile A is associated to organization XO
+     * </p>given 5: profile B is associated to organization YO
+     * </p>When retrieveEffectiveProfileByAccountSid (X) should return A.
+     * </p>calling retrieveEffectiveProfileByAccountSid by account sid SHOULD return that profile
+     * @throws SQLException 
+     */
+    @Test
+	public void retrieveEffectiveProfileByAccountSidCase6() throws SQLException {
+    	
+    	MockingService mocks = new MockingService();
+    	Profile expectedParentOrganizationProfile = returnProfile(mocks);
+    	Profile expectedChildOrganizationProfile = returnProfile(mocks);
+    	
+    	Sid parentOrganizationSid = Sid.generate(Sid.Type.ORGANIZATION);
+    	Sid childOrganizationSid = Sid.generate(Sid.Type.ORGANIZATION);
+    	
+        Sid acctSidParent = Sid.generate(Sid.Type.ACCOUNT);
+        Account.Builder builderParent = Account.builder();
+        builderParent.setSid(acctSidParent);
+        builderParent.setOrganizationSid(parentOrganizationSid);
+        Account accountParent = builderParent.build();
+        
+        Sid acctSid = Sid.generate(Sid.Type.ACCOUNT);
+        Account.Builder builder = Account.builder();
+        builder.setSid(acctSid);
+        builder.setOrganizationSid(childOrganizationSid);
+        builder.setParentSid(acctSidParent);
+        Account account = builder.build();
+
+        when (mocks.mockedAccountsDao.getAccount(acctSidParent)).thenReturn(accountParent);
+        when (mocks.mockedAccountsDao.getAccount(acctSid)).thenReturn(account);
+        returnProfileAssociation(new Sid(expectedParentOrganizationProfile.getSid()), parentOrganizationSid, mocks);
+        returnProfileAssociation(new Sid(expectedChildOrganizationProfile.getSid()), childOrganizationSid, mocks);
+        
+    	Profile resultantProfile = mocks.profileService.retrieveEffectiveProfileByAccountSid(account.getSid());
+        assertEquals(expectedChildOrganizationProfile.getSid(), resultantProfile.getSid());
 	}
 
     private Account returnValidAccount(MockingService mocks ) {
