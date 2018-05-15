@@ -43,10 +43,12 @@ import org.restcomm.connect.dao.AccountsDao;
 import org.restcomm.connect.dao.ApplicationsDao;
 import org.restcomm.connect.dao.DaoManager;
 import org.restcomm.connect.dao.NotificationsDao;
+import org.restcomm.connect.dao.SmsMessagesDao;
 import org.restcomm.connect.dao.common.OrganizationUtil;
 import org.restcomm.connect.dao.entities.Application;
 import org.restcomm.connect.dao.entities.IncomingPhoneNumber;
 import org.restcomm.connect.dao.entities.Notification;
+import org.restcomm.connect.dao.entities.SmsMessage;
 import org.restcomm.connect.extension.api.ExtensionResponse;
 //import org.restcomm.connect.extension.api.ExtensionRequest;
 //import org.restcomm.connect.extension.api.ExtensionResponse;
@@ -67,8 +69,12 @@ import org.restcomm.connect.telephony.api.FeatureAccessRequest;
 import org.restcomm.smpp.parameter.TlvSet;
 
 import com.cloudhopper.commons.charset.CharsetUtil;
+import com.cloudhopper.commons.util.windowing.WindowFuture;
 import com.cloudhopper.smpp.SmppConstants;
+import com.cloudhopper.smpp.pdu.PduRequest;
+import com.cloudhopper.smpp.pdu.PduResponse;
 import com.cloudhopper.smpp.pdu.SubmitSm;
+import com.cloudhopper.smpp.pdu.SubmitSmResp;
 import com.cloudhopper.smpp.tlv.Tlv;
 import com.cloudhopper.smpp.type.Address;
 import com.cloudhopper.smpp.type.RecoverablePduException;
@@ -129,6 +135,38 @@ public class SmppMessageHandler extends RestcommUntypedActor {
                 logger.info("SmppMessageHandler processing Outbound Message " + message.toString());
             }
             outbound((SmppOutboundMessageEntity) message);
+        } else if (message instanceof SmppDeliveryReceiptEntity){
+            SmppDeliveryReceiptEntity smppDeliveryReceiptEntity = (SmppDeliveryReceiptEntity)message;
+            SmsMessagesDao smsMessagesDao = storage.getSmsMessagesDao();
+            SmsMessage smsMessage = smsMessagesDao.getSmsMessage(smppDeliveryReceiptEntity.getDaoMessageSid());
+            //QUEUED("queued"), SENDING("sending"), SENT("sent"), FAILED("failed"), RECEIVED("received");
+            //"id:XXXXXXXXXX sub:001 dlvrd:000 submit date:YYMMDDHHMM done date:YYMMDDHHMM stat:ZZZZZZZ err:YYY text:none
+            //FIXME: this is Nexmo specific, we need to create spi and add various Providers
+            SmsMessage.Status status = null;
+            DateTime dateSent =smppDeliveryReceiptEntity.getDateSent();
+            //TODO: modify enum so we can do away with the switch
+            switch(smppDeliveryReceiptEntity.getStatus().toLowerCase()) {
+            case "queued":
+                status = SmsMessage.Status.QUEUED;
+                break;
+            case "sent":
+                status = SmsMessage.Status.SENT;
+                break;
+            case "failed":
+                status = SmsMessage.Status.FAILED;
+                break;
+            case "sending":
+                status = SmsMessage.Status.SENDING;
+                break;
+            case "received":
+                status = SmsMessage.Status.RECEIVED;
+                break;
+            }
+            if(status != null) {
+                smsMessage.setStatus(status);
+                smsMessage.setDateSent(dateSent);
+                smsMessagesDao.updateSmsMessage(smsMessage);
+            }
         } else if (message instanceof CreateSmsSession) {
             IExtensionCreateSmsSessionRequest ier = (CreateSmsSession) message;
             ier.setConfiguration(this.configuration);
@@ -352,6 +390,8 @@ public class SmppMessageHandler extends RestcommUntypedActor {
 //        if(logger.isInfoEnabled()) {
 //            logger.info("Message is Received by the SmppSessionOutbound Class");
 //        }
+        SmsMessagesDao smsDao = storage.getSmsMessagesDao();
+        SmsMessage msg = smsDao.getSmsMessage(request.getMessageSid());
 
         byte[] textBytes;
         int smppTonNpiValue = Integer.parseInt(SmppService.getSmppTonNpiValue());
@@ -379,11 +419,11 @@ public class SmppMessageHandler extends RestcommUntypedActor {
         //TODO the DLR implementation should be configurable (on/off)
         //TODO when enabling delivery receipts again, enable also SmppTest.testClientSentOutUsingSMPPDeliveryReceipt()
         //set the delivery flag to true
-        //submit0.setRegisteredDelivery((byte) 1);
+        submit0.setRegisteredDelivery((byte) 1);
 
         TlvSet tlvSet = request.getTlvSet();
 
-        logger.info("payloadFlag="+payloadFlag+" contentLength="+contentLength+" textBytes="+Arrays.toString(textBytes));
+        logger.info("body="+msg.getBody()+" msg.getStatus()="+msg.getStatus()+" payloadFlag="+payloadFlag+" contentLength="+contentLength+" textBytes="+Arrays.toString(textBytes));
         if(payloadFlag || (contentLength> CONTENT_LENGTH_MAX)) {
             tlvSet.addOptionalParameter(new Tlv(SmppConstants.TAG_MESSAGE_PAYLOAD, textBytes));
         } else {
@@ -399,9 +439,22 @@ public class SmppMessageHandler extends RestcommUntypedActor {
         }
         try {
             if (logger.isInfoEnabled()) {
-                logger.info("Sending SubmitSM for " + request);
+                logger.info("Sending SubmitSM for " + request+" messageSid="+request.getMessageSid());
             }
-            SmppClientOpsThread.getSmppSession().submit(submit0, 10000); //send message through SMPP connector
+            String value = request.getSmppContent();
+            submit0.setReferenceObject(request.getMessageSid());
+            WindowFuture<Integer,PduRequest,PduResponse> windowFuture = SmppClientOpsThread.getSmppSession().sendRequestPdu(submit0, 10000, false);
+            SubmitSmResp resp = (SubmitSmResp) windowFuture.getResponse();
+            //SubmitSmResp resp = SmppClientOpsThread.getSmppSession().submit(submit0, 10000); //send message through SMPP connector
+            if(resp!=null) {
+                String msgId = resp.getMessageId();
+                String resMsg = resp.getResultMessage();
+                logger.info("Resp toString "+resp.toString()+" msgId="+msgId +" resMsg="+resMsg);
+            }
+
+
+            //SmppClientOpsThread.getSmppSession().submit(submit0, 10000); //send message through SMPP connector
+            //SmppClientOpsThread.setResponse(resp_id, smsId);
         } catch (RecoverablePduException | UnrecoverablePduException | SmppTimeoutException | SmppChannelException | InterruptedException e) {
             logger.error("SMPP message cannot be sent : " + e);
         }
