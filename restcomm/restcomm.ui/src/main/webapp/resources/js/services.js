@@ -155,7 +155,11 @@ rcServices.factory('AuthService',function(RCommAccounts,$http, $location, Sessio
                 if (linkHeader) {
                   var m = linkHeader.match('.*<(.*)>.*title="Profiles"');
                   if (m && m[1]) {
-                    getProfile(m[1]);
+                    var p = getProfile(m[1]);
+                    $q.when(p).then(function() {
+                      deferred.resolve('OK'); // hmmm, what happens in case of an error ?
+                    });
+                    return; // deferred will be resolved as soon as getProfile() is done
                   }
                 }
                 deferred.resolve('OK');
@@ -234,9 +238,11 @@ rcServices.factory('AuthService',function(RCommAccounts,$http, $location, Sessio
         }}).then(
         function(response) { // success
           profile = response.data;
+          deferred.resolve(response.data);
         },
         function(response) { // error
           console.log('error retrieving profile', response);
+          deferred.reject();
         });
       return deferred.promise;
     }

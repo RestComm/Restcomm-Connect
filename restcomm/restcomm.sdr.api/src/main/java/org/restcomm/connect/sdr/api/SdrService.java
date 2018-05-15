@@ -25,6 +25,7 @@ import org.restcomm.connect.commons.stream.StreamEvent;
 import org.restcomm.connect.dao.entities.Recording;
 import org.restcomm.connect.dao.entities.SmsMessage;
 import org.restcomm.connect.telephony.api.CallInfoStreamEvent;
+import org.restcomm.connect.telephony.api.events.UssdStreamEvent;
 
 /**
  * @author oleg.agafonov@telestax.com (Oleg Agafonov)
@@ -40,6 +41,8 @@ public abstract class SdrService extends RestcommUntypedActor {
             onStartSdrService((StartSdrService) message, self, sender);
         } else if (message instanceof CallInfoStreamEvent) {
             onCallInfoStreamEvent((CallInfoStreamEvent) message, self, sender);
+        } else if (message instanceof UssdStreamEvent) {
+            onUssdStreamEvent((UssdStreamEvent) message, self, sender);
         } else if (message instanceof SmsMessage) {
             onSmsMessage((SmsMessage) message, self, sender);
         } else if (message instanceof Recording) {
@@ -52,6 +55,8 @@ public abstract class SdrService extends RestcommUntypedActor {
     protected abstract void onCallInfoStreamEvent(CallInfoStreamEvent message, ActorRef self, ActorRef sender);
 
     protected abstract void onSmsMessage(SmsMessage message, ActorRef self, ActorRef sender);
+
+    protected abstract void onUssdStreamEvent(UssdStreamEvent message, ActorRef self, ActorRef sender);
 
     protected abstract void onRecording(Recording recording, ActorRef self, ActorRef sender);
 }

@@ -63,4 +63,6 @@ public interface MainConfigurationSet {
     String getClientAlgorithm();
 
     String getClientQOP();
+
+    String getClearTextPasswordAlgorithm();
 }

@@ -11,27 +11,73 @@ The folowing tags are used to categorize and state the scope of a change
 
 
 //add release-notes with newer on top
-== 8.5.0 version
+== 8.4.1 version 2018-05-11
 === New Features
 // New features (whether major or minor) go here
-* REST API performance improvements.
+* SMS outbound long messages support
+* New Clients password migration tool
+
 
 === Breaking Changes
 // draws attention to functionality that is getting removed
 
 
 === Bug Fixes
-// any difference in functionality
-
+* Profile Service using correct requesting account for organization resolution.
 
 
 === Migration Notes
 // Things to consider during migration from previous release
 
-=== External Dependencies Updates
-// any dependencies
+*Important Note* Migration notes are applicable to Restcomm-Connect versions before 8.4.0. If you have upgraded to 8.4.0 already, you can ignore the notes here.
 
-== 8.4.0 version
+With the release of Restcomm-Connect 8.4.1, we provided a new method in the Organization REST API which can be used to migrate existing clients using clear text password to hashed password.
+
+Restcomm-Connect 8.4.1, will work just fine with either hashed or clear text client passwords (this might change in the future by forcing only hashed passwords)
+
+As part of the 8.4.1 release, we also provided a set of DB backup/restore bash scripts <<MySQL_Backup_Restore_Scripts.adoc#mysql-backup-restore-scripts,Mysql backup/restore scripts>>, that we recommend to use during the migration process.
+
+==== Migration steps - part 1
+
+Follow the steps below to upgrade DB schema
+
+* Use full backup database script to backup database - follow <<MySQL_Backup_Restore_Scripts.adoc#mysql-backup-restore-scripts,Mysql backup/restore scripts>>
+* Use database schema upgrade scripts to move DB schema to the latest - follow <<How to use Mysql schema upgrade scripts.adoc#mysql-schema-upgrade,How to use Mysql schema upgrade scripts>>
+
+*At this point, you can upgrade Restcomm-Connect instance.*
+
+==== Migration steps - part 2
+
+Migration of client passwords from clear text to hashed password, can be done using Organization REST API, see <<organization-api.adoc#organization,Restcomm API – Organization>>.
+
+Given you want to migrate clients of an Organization follow the steps below to backup `restcomm_clients` table and migrate client passwords from clear test to MD5 algorithm
+
+* Use Client full backup script to backup `restcomm_clients` table - follow <<MySQL_Backup_Restore_Scripts.adoc#mysql-backup-restore-scripts,Mysql backup/restore scripts>>
+* Use Client per Org backup script to backup `restcomm_client` table for the clients that belond to that specific Organization - follow <<MySQL_Backup_Restore_Scripts.adoc#mysql-backup-restore-scripts,Mysql backup/restore scripts>>
+* Use Organization REST API to migrate clients of the given Organization - check <<organization-api.adoc#organization,Restcomm API – Organization>>
+
+Repeat the process for all the Organizations as required
+
+==== Rollback steps
+In case something goes wrong during the migration/upgrade process, you can rollback changes and run the previous version of Restcomm-Connect
+
+Follow the steps below:
+
+1. Use previously generated Clients table backup files and the scripts provided to restore client passwords to clear text - follow <<MySQL_Backup_Restore_Scripts.adoc#mysql-backup-restore-scripts,Mysql backup/restore scripts>>
+2. Stop 8.4.1 instance
+3. Start old version instance.
+
+*You don't need to migrate DB schema*
+
+
+=== External Dependencies Updates
+* Console updated to version **__8.4.1__**
+** In tables, differentiate between no items and not matching search
+** Match partial results in logs search
+** Fix pagination issues in Notifications Logs
+** Introduced encrypted password for Clients
+
+== 8.4.0 version 2018-04-19
 === New Features
 // New features (whether major or minor) go here
 * Clients passwords are now hashed in DB - **security improvement**
