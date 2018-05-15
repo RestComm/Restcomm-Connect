@@ -193,6 +193,7 @@ public final class SmsSession extends RestcommUntypedActor {
             // Store the last sms event.
 
             last = new SmsSessionRequest (request.getSmppFrom(), request.getSmppTo(), request.getSmppContent(), encoding, request.getTlvSet(), null);
+
             if (initial == null) {
                 initial = last;
             }
@@ -235,6 +236,13 @@ public final class SmsSession extends RestcommUntypedActor {
             final SmsSessionAttribute attribute = (SmsSessionAttribute) message;
             attributes.put(attribute.name(), attribute.value());
             Object record = attributes.get("record");
+            try {
+                SmsMessage msg = (SmsMessage)record;
+                logger.debug ("SmsSessionAttribute "+msg.getSid());
+            } catch (Exception e) {
+                e.printStackTrace();
+            }
+
             if (record != null) {
                 system.eventStream().publish(record);
             }
@@ -290,6 +298,7 @@ public final class SmsSession extends RestcommUntypedActor {
         if (initial == null) {
             initial = last;
         }
+
         final Charset charset;
         if(logger.isInfoEnabled()) {
             logger.info("SMS encoding:  " + last.encoding() );
@@ -327,6 +336,7 @@ public final class SmsSession extends RestcommUntypedActor {
                 if(logger.isInfoEnabled()) {
                     logger.info("Destination is not a local registered client, therefore, sending through SMPP to:  " + last.to() );
                 }
+
                 if (sendUsingSmpp(last.from(), last.to(), last.body(), tlvSet, charset))
                     return;
             }
@@ -350,8 +360,17 @@ public final class SmsSession extends RestcommUntypedActor {
                 logger.info("SMPP session is available and connected, outbound message will be forwarded to :  " + to );
                 logger.info("Encoding:  " + encoding );
             }
+
+            SmsMessage record = (SmsMessage)this.attributes.get("record");
+            Sid sid = null;
+            if(record!=null) {
+                sid = record.getSid();
+                logger.error("record sid = "+sid.toString());
+            }else{
+                logger.error("record is null");
+            }
             try {
-                final SmppOutboundMessageEntity sms = new SmppOutboundMessageEntity(to, from, body, encoding, tlvSet);
+                final SmppOutboundMessageEntity sms = new SmppOutboundMessageEntity(to, from, body, encoding, tlvSet, sid);
                 smppMessageHandler.tell(sms, null);
             }catch (final Exception exception) {
                 // Log the exception.
