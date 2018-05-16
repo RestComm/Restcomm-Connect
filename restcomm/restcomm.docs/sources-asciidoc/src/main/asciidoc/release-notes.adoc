@@ -35,26 +35,26 @@ With the release of Restcomm-Connect 8.4.1, we provided a new method in the Orga
 
 Restcomm-Connect 8.4.1, will work just fine with either hashed or clear text client passwords (this might change in the future by forcing only hashed passwords)
 
-As part of the 8.4.1 release, we also provided a set of DB backup/restore bash scripts <<MySQL_Backup_Restore_Scripts.adoc#mysql-backup-restore-scripts,Mysql backup/restore scripts>>, that we recommend to use during the migration process.
+As part of the 8.4.1 release, we also provided a set of DB backup/restore bash scripts <<configuration/MySQL_Backup_Restore_Scripts.adoc#mysql-backup-restore-scripts,Mysql backup/restore scripts>>, that we recommend to use during the migration process.
 
 ==== Migration steps - part 1
 
 Follow the steps below to upgrade DB schema
 
-* Use full backup database script to backup database - follow <<MySQL_Backup_Restore_Scripts.adoc#mysql-backup-restore-scripts,Mysql backup/restore scripts>>
-* Use database schema upgrade scripts to move DB schema to the latest - follow <<How to use Mysql schema upgrade scripts.adoc#mysql-schema-upgrade,How to use Mysql schema upgrade scripts>>
+* Use full backup database script to backup database - follow <<configuration/MySQL_Backup_Restore_Scripts.html,Mysql backup/restore scripts>>
+* Use database schema upgrade scripts to move DB schema to the latest - follow <<configuration/How to use Mysql schema upgrade scripts.adoc#mysql-schema-upgrade,How to use Mysql schema upgrade scripts>>
 
 *At this point, you can upgrade Restcomm-Connect instance.*
 
 ==== Migration steps - part 2
 
-Migration of client passwords from clear text to hashed password, can be done using Organization REST API, see <<organization-api.adoc#organization,Restcomm API – Organization>>.
+Migration of client passwords from clear text to hashed password, can be done using Organization REST API, see <<api/organization-api.html#organization,Restcomm API – Organization>>.
 
 Given you want to migrate clients of an Organization follow the steps below to backup `restcomm_clients` table and migrate client passwords from clear test to MD5 algorithm
 
-* Use Client full backup script to backup `restcomm_clients` table - follow <<MySQL_Backup_Restore_Scripts.adoc#mysql-backup-restore-scripts,Mysql backup/restore scripts>>
-* Use Client per Org backup script to backup `restcomm_client` table for the clients that belond to that specific Organization - follow <<MySQL_Backup_Restore_Scripts.adoc#mysql-backup-restore-scripts,Mysql backup/restore scripts>>
-* Use Organization REST API to migrate clients of the given Organization - check <<organization-api.adoc#organization,Restcomm API – Organization>>
+* Use Client full backup script to backup `restcomm_clients` table - follow <<configuration/MySQL_Backup_Restore_Scripts.html,Mysql backup/restore scripts>>
+* Use Client per Org backup script to backup `restcomm_client` table for the clients that belond to that specific Organization - follow <<configuration/MySQL_Backup_Restore_Scripts.html,Mysql backup/restore scripts>>
+* Use Organization REST API to migrate clients of the given Organization - check <<api/organization-api.html#organization,Restcomm API – Organization>>
 
 Repeat the process for all the Organizations as required
 
@@ -63,7 +63,7 @@ In case something goes wrong during the migration/upgrade process, you can rollb
 
 Follow the steps below:
 
-1. Use previously generated Clients table backup files and the scripts provided to restore client passwords to clear text - follow <<MySQL_Backup_Restore_Scripts.adoc#mysql-backup-restore-scripts,Mysql backup/restore scripts>>
+1. Use previously generated Clients table backup files and the scripts provided to restore client passwords to clear text - follow <<MySQL_Backup_Restore_Scripts.adoc#mysql-backup-restore-scripts.html,Mysql backup/restore scripts>>
 2. Stop 8.4.1 instance
 3. Start old version instance.
 
