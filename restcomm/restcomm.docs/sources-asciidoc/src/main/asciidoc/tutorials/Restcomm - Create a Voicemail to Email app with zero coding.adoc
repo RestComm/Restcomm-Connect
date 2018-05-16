@@ -98,7 +98,7 @@ image:./images/matchupWH-746x684.png[matchupWH,width=746,height=684]
 * Finally, test the Zap.
 * Copy the `Webhook URL` to your web browser and add the following parameters:
 +
-`https\://zapier.com/hooks/catch/ealwr/?recordingUrl=testurl&destination=miss4eto@gmail.com`
+`https\://zapier.com/hooks/catch/ealwr/?recordingUrl=testurl&destination=\miss4eto@gmail.com`
 +
 * Your email will be different
 * This will return a Json object as shown below
