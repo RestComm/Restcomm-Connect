@@ -2,14 +2,15 @@ package org.restcomm.connect.sms.smpp;
 
 import org.joda.time.DateTime;
 import org.restcomm.connect.commons.dao.Sid;
+import org.restcomm.connect.dao.entities.SmsMessage;
 
 public class SmppDeliveryReceiptEntity {
     private Sid daoMessageSid;
     private String messageId;
-    private String status;
+    private SmsMessage.Status status;
     private DateTime dateSent;
 
-    public SmppDeliveryReceiptEntity(Sid daoMessageSid, String messageId, String status, DateTime dateSent) {
+    public SmppDeliveryReceiptEntity(Sid daoMessageSid, String messageId, SmsMessage.Status status, DateTime dateSent) {
         this.daoMessageSid = daoMessageSid;
         this.messageId = messageId;
         this.status = status;
@@ -32,11 +33,11 @@ public class SmppDeliveryReceiptEntity {
         this.messageId = messageId;
     }
 
-    public String getStatus() {
+    public SmsMessage.Status getStatus() {
         return status;
     }
 
-    public void setStatus(String status) {
+    public void setStatus(SmsMessage.Status status) {
         this.status = status;
     }
 

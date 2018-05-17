@@ -29,6 +29,7 @@ import com.cloudhopper.smpp.SmppConstants;
 import com.cloudhopper.smpp.SmppSession;
 import com.cloudhopper.smpp.SmppSessionConfiguration;
 import com.cloudhopper.smpp.SmppSessionHandler;
+import com.cloudhopper.smpp.impl.DefaultPduAsyncResponse;
 import com.cloudhopper.smpp.impl.DefaultSmppClient;
 import com.cloudhopper.smpp.impl.DefaultSmppSession;
 import com.cloudhopper.smpp.pdu.DeliverSm;
@@ -43,8 +44,10 @@ import com.cloudhopper.smpp.type.RecoverablePduException;
 import com.cloudhopper.smpp.type.UnrecoverablePduException;
 import org.apache.log4j.Logger;
 import org.joda.time.DateTime;
-import org.joda.time.format.DateTimeFormat;
 import org.restcomm.connect.commons.dao.Sid;
+import org.restcomm.connect.dao.entities.SmsMessage;
+import org.restcomm.connect.sms.smpp.dlr.provider.NexmoDlrParser;
+import org.restcomm.connect.sms.smpp.dlr.spi.DlrParser;
 
 import javax.servlet.ServletException;
 import java.io.IOException;
@@ -348,31 +351,30 @@ public class SmppClientOpsThread implements Runnable {
             logger.warn("ExpectedPduResponseReceived received for Smpp "
                     + this.esme.getName() + " PduAsyncResponse="
                     + pduAsyncResponse);
-            Object ref = null;
-            if(pduAsyncResponse.getRequest()!=null) {
-                ref = pduAsyncResponse.getRequest().getReferenceObject();
-            }
-            String key = ((SubmitSmResp)pduAsyncResponse).getMessageId();
-            if(key!=null) {
-                logger.info("message_id="+key);
-            }
-            //TODO: check key?
-            //add synchronized?
-            if(ref != null && ref instanceof Sid) {
-                Sid sid =(Sid)ref;
-                Map<Sid, Integer> entry;
-                if(!mapResp.containsKey(key)) {
-                    entry = new HashMap<Sid, Integer>();
-                    entry.put(sid, 1);
-                    logger.info("initial DLR key="+key+" sid="+sid+" "+((Integer)entry.get(sid)));
+
+            if (pduAsyncResponse instanceof DefaultPduAsyncResponse &&
+                pduAsyncResponse.getResponse() instanceof SubmitSmResp) {
+                String key = ((SubmitSmResp) pduAsyncResponse.getResponse()).getMessageId();
+
+                Object ref = pduAsyncResponse.getRequest().getReferenceObject();
+                //TODO: do we need to flush the mapResponse
+                if (ref != null && ref instanceof Sid) {
+                    Sid sid = (Sid) ref;
+                    Map<Sid, Integer> entry;
+                    if (!mapResp.containsKey(key)) {
+                        entry = new HashMap<Sid, Integer>();
+                        entry.put(sid, 1);
+                    } else {
+                        //to enable multiple DLRs for splitted messages
+                        entry = mapResp.get(key);
+                        entry.put(sid, ((Integer) entry.get(sid)) + 1);
+                    }
+                    mapResp.put(key, entry);
                 } else {
-                    entry = mapResp.get(key);
-                    entry.put(sid, ((Integer)entry.get(sid))+1);
-                    logger.info("DLR is from multiple segment key="+key+" sid="+sid+" "+((Integer)entry.get(sid)));
+                    logger.warn("PduAsyncResponse reference is null or not Sid");
                 }
-                mapResp.put(key, entry);
             } else {
-                logger.warn("PduAsyncResponse ref is null or not Sid");
+                logger.info("PduAsyncResponse not SubmitSmResp " + pduAsyncResponse.getClass().toString());
             }
 
         }
@@ -396,10 +398,11 @@ public class SmppClientOpsThread implements Runnable {
             //with the request
             if (pduRequest.toString().toLowerCase().contains("enquire_link")) {
                 //logger.info("This is a response to the enquire_link, therefore, do NOTHING ");
-            } else {
+            }
 
-                DeliverSm deliverSm = (DeliverSm) pduRequest;
+            if (!pduRequest.toString().toLowerCase().contains("enquire_link")) {
                 try {
+                    DeliverSm deliverSm = (DeliverSm) pduRequest;
                     byte dcs = deliverSm.getDataCoding();
                     String destSmppAddress = deliverSm.getDestAddress().getAddress();
                     String sourceSmppAddress = deliverSm.getSourceAddress().getAddress();
@@ -448,59 +451,36 @@ public class SmppClientOpsThread implements Runnable {
                        if(logger.isInfoEnabled()) {
                            logger.info("Message is not normal request, esmClass:" + esmClass +", Using message from message body " + decodedPduMessage);
                        }
+                       //TODO: create parser map
+                       //TODO: parse the provider header/TLV?
+                       DlrParser dlrParser = new NexmoDlrParser();
 
-                       //TODO: point to an array of provider specific functions
-                       Map<String,String> dlr = getMessageIdNexmo(decodedPduMessage);
-                       String messageId = dlr.get("id");
-                       String status = dlr.get("status");
-                       DateTime dateSent = null;
-                       try {
-                           //TODO: abstract Nexmo specific format
-                           dateSent = DateTime.parse(dlr.get("sent_date"), DateTimeFormat.forPattern("yyMMddkkmm"));
-                       } catch (Exception e) {
-                           e.printStackTrace();
-                       }
-                       if(messageId!=null) {
-                           logger.info("message_id="+messageId);
-                       }
-                       Map<Sid,Integer> entry = mapResp.get(messageId);
-                       //FIXME
+                       Map<String,String> dlrMap = dlrParser.parseMessage(decodedPduMessage);
+                       String dlrMessageId = dlrMap.get("id");
+                       SmsMessage.Status dlrStatus = dlrParser.getRestcommStatus(dlrMap.get("status"));
+                       DateTime dlrDateSent = dlrParser.getDate(dlrMap.get("sent_date"));
+
                        Sid daoMessageSid = null;
-                       try {
-                           daoMessageSid =  entry.keySet().iterator().next();
-                       } catch (Exception e){
-                           e.printStackTrace();
+                       if(mapResp.containsKey(dlrMessageId)) {
+                           Map<Sid,Integer> entry = mapResp.get(dlrMessageId);
+                           try {
+                               daoMessageSid =  entry.keySet().iterator().next();
+                               SmppDeliveryReceiptEntity smppDeliveryReceiptEntity = new SmppDeliveryReceiptEntity(daoMessageSid, dlrMessageId, dlrStatus, dlrDateSent);
+                               smppMessageHandler.tell(smppDeliveryReceiptEntity, null);
+                           } catch (Exception e){
+                               e.printStackTrace();
+                           }
+                       }else {
+                           if(logger.isInfoEnabled()) {
+                               logger.info("responseMessageId=" + dlrMessageId + " was never received! ");
+                           }
                        }
-
-                       SmppDeliveryReceiptEntity smppDeliveryReceiptEntity = new SmppDeliveryReceiptEntity(daoMessageSid, messageId, status, dateSent);
-                       smppMessageHandler.tell(smppDeliveryReceiptEntity, null);
-
                     }
                 } catch (Exception e) {
                     logger.error("Exception while trying to process incoming SMPP message to Restcomm: " + e);
                 }
             }
             return response;
-        }
-
-
-        private Map<String, String> getMessageIdNexmo(String decodedPduMessage) {
-            //"id:XXXXXXXXXX sub:001 dlvrd:000 submit date:YYMMDDHHMM done date:YYMMDDHHMM stat:ZZZZZZZ err:YYY text:none
-            Map<String,String> dlr = new HashMap<String, String>();
-            String messageId = decodedPduMessage.substring(4, 14);
-            String submit_date = decodedPduMessage.substring(44, 54);
-            String sent_date = decodedPduMessage.substring(65, 75);
-            String status = decodedPduMessage.substring(81, 89);
-            dlr.put("id", messageId);
-            dlr.put("submit_date", submit_date);
-            dlr.put("sent_date", sent_date);
-            dlr.put("status", status);
-            logger.info(messageId);
-            return dlr;
-        }
-
-        private void reassembleSplitMessage() {
-
         }
 
         @Override
