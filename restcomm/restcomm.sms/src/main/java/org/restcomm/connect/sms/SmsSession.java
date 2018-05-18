@@ -193,7 +193,6 @@ public final class SmsSession extends RestcommUntypedActor {
             // Store the last sms event.
 
             last = new SmsSessionRequest (request.getSmppFrom(), request.getSmppTo(), request.getSmppContent(), encoding, request.getTlvSet(), null);
-
             if (initial == null) {
                 initial = last;
             }
@@ -236,13 +235,6 @@ public final class SmsSession extends RestcommUntypedActor {
             final SmsSessionAttribute attribute = (SmsSessionAttribute) message;
             attributes.put(attribute.name(), attribute.value());
             Object record = attributes.get("record");
-            try {
-                SmsMessage msg = (SmsMessage)record;
-                logger.debug ("SmsSessionAttribute "+msg.getSid());
-            } catch (Exception e) {
-                e.printStackTrace();
-            }
-
             if (record != null) {
                 system.eventStream().publish(record);
             }
@@ -365,7 +357,9 @@ public final class SmsSession extends RestcommUntypedActor {
             Sid sid = null;
             if(record!=null) {
                 sid = record.getSid();
-                logger.error("record sid = "+sid.toString());
+                if(logger.isInfoEnabled()) {
+                    logger.info("record sid = "+sid.toString());
+                }
             }else{
                 logger.error("record is null");
             }

@@ -56,6 +56,8 @@ import java.util.HashMap;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
+import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.ConcurrentMap;
 import java.util.concurrent.CopyOnWriteArrayList;
 
 /**
@@ -77,7 +79,7 @@ public class SmppClientOpsThread implements Runnable {
     private static Charset inboundEncoding;
     private static boolean messagePayloadFlag;
     private static boolean autoDetectDcsFlag;
-    private static Map<String, Map<Sid, Integer>> mapResp;
+    private static ConcurrentMap<String, Map<Sid, Integer>> mapResp;
     protected volatile boolean started = true;
     private static int sipPort;
 
@@ -317,7 +319,7 @@ public class SmppClientOpsThread implements Runnable {
             outboundEncoding = esme.getOutboundDefaultEncoding();
             messagePayloadFlag = esme.getMessagePayloadFlag();
             autoDetectDcsFlag = esme.getAutoDetectDcsFlag();
-            mapResp = new HashMap<String,Map<Sid, Integer>>();
+            mapResp = new ConcurrentHashMap<String,Map<Sid, Integer>>();
         }
 
         @Override
@@ -357,7 +359,7 @@ public class SmppClientOpsThread implements Runnable {
                 String key = ((SubmitSmResp) pduAsyncResponse.getResponse()).getMessageId();
 
                 Object ref = pduAsyncResponse.getRequest().getReferenceObject();
-                //TODO: do we need to flush the mapResponse
+
                 if (ref != null && ref instanceof Sid) {
                     Sid sid = (Sid) ref;
                     Map<Sid, Integer> entry;
@@ -389,16 +391,7 @@ public class SmppClientOpsThread implements Runnable {
 
         @Override
         public PduResponse firePduRequestReceived(PduRequest pduRequest) {
-            // TODO : SMPP request received. Let RestComm know so it calls
-            // coresponding App
-
             PduResponse response = pduRequest.createResponse();
-            //Nexmo keeps sending enquire_link in response that causes
-            //problem with normal PDU request. This tells Restcomm SMPP to do Nothing
-            //with the request
-            if (pduRequest.toString().toLowerCase().contains("enquire_link")) {
-                //logger.info("This is a response to the enquire_link, therefore, do NOTHING ");
-            }
 
             if (!pduRequest.toString().toLowerCase().contains("enquire_link")) {
                 try {
@@ -470,6 +463,8 @@ public class SmppClientOpsThread implements Runnable {
                            } catch (Exception e){
                                e.printStackTrace();
                            }
+                           //TODO: shouldnt immediately remove this entry when we can handle all DLRs from split message
+                           mapResp.remove(dlrMessageId);
                        }else {
                            if(logger.isInfoEnabled()) {
                                logger.info("responseMessageId=" + dlrMessageId + " was never received! ");

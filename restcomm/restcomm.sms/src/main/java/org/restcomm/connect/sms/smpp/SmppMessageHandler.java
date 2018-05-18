@@ -139,7 +139,10 @@ public class SmppMessageHandler extends RestcommUntypedActor {
             SmsMessage.Status status = smppDeliveryReceiptEntity.getStatus();
             DateTime dateSent =smppDeliveryReceiptEntity.getDateSent();
 
-            logger.info("updte1="+smsMessage.toString()+" status="+status+" dateSent="+dateSent);
+            if(logger.isInfoEnabled()) {
+                logger.info("updating "+smsMessage.getSid()+" status="+status+" dateSent="+dateSent);
+            }
+
             if(smsMessage != null && status != null) {
                 smsMessagesDao.updateSmsMessage(smsMessage.setStatus(status).setDateSent(dateSent));
             }
