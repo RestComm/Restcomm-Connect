@@ -3,13 +3,27 @@ package org.restcomm.connect.sms.smpp.dlr.provider;
 import java.util.HashMap;
 import java.util.Map;
 
+import org.apache.log4j.Logger;
 import org.joda.time.DateTime;
 import org.joda.time.format.DateTimeFormat;
 import org.restcomm.connect.dao.entities.SmsMessage;
 import org.restcomm.connect.dao.entities.SmsMessage.Status;
 import org.restcomm.connect.sms.smpp.dlr.spi.DlrParser;
 
-public class NexmoDlrParser implements DlrParser {
+public class TelestaxDlrParser implements DlrParser {
+    private static final Logger logger = Logger.getLogger(TelestaxDlrParser.class);
+    private static final Map<String, SmsMessage.Status> statusMap;
+    static
+    {
+        statusMap = new HashMap<String, SmsMessage.Status>();
+        statusMap.put("ACCEPTD", SmsMessage.Status.QUEUED);
+        statusMap.put("EXPIRED", SmsMessage.Status.FAILED);
+        statusMap.put("DELETED", SmsMessage.Status.FAILED);
+        statusMap.put("UNDELIV", SmsMessage.Status.FAILED);
+        statusMap.put("REJECTD", SmsMessage.Status.FAILED);
+        statusMap.put("DELIVRD", SmsMessage.Status.DELIVERED);
+        statusMap.put("UNKNOWN", SmsMessage.Status.SENDING);
+    }
 
     @Override
     public Map<String, String> parseMessage(String message) {
@@ -70,33 +84,11 @@ public class NexmoDlrParser implements DlrParser {
         UNKNOWN Message is in invalid state
         REJECTD Message is in a rejected state
         */
-        //QUEUED("queued"), SENDING("sending"), SENT("sent"), FAILED("failed"), RECEIVED("received");
-        //what is the difference between SENT and SENDING? is the transition time long enough
-        //for there to be two separate states
-        //TODO: figure out proper mapping
-        //TODO: there might not be enough statuses in SmsStatus
         Status status = null;
-        switch (message) {
-        case "ACCEPTD":
-            status = SmsMessage.Status.QUEUED;
-            break;
-
-        case "EXPIRED":
-        case "DELETED":
-        case "UNDELIV":
-        case "REJECTD":
-            status = SmsMessage.Status.FAILED;
-            break;
-
-        case "DELIVRD":
-            status = SmsMessage.Status.RECEIVED;
-            break;
-
-        case "UNKNOWN":
-        default:
-            status = SmsMessage.Status.SENDING;
-            //status = SmsMessage.Status.SENT;
-            break;
+        if(statusMap.containsKey(message)) {
+            status = statusMap.get(message);
+        } else {
+            logger.error("received an unexpected Status message "+message);
         }
 
         return status;
