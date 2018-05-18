@@ -46,7 +46,7 @@ import org.apache.log4j.Logger;
 import org.joda.time.DateTime;
 import org.restcomm.connect.commons.dao.Sid;
 import org.restcomm.connect.dao.entities.SmsMessage;
-import org.restcomm.connect.sms.smpp.dlr.provider.NexmoDlrParser;
+import org.restcomm.connect.sms.smpp.dlr.provider.TelestaxDlrParser;
 import org.restcomm.connect.sms.smpp.dlr.spi.DlrParser;
 
 import javax.servlet.ServletException;
@@ -411,7 +411,7 @@ public class SmppClientOpsThread implements Runnable {
                     byte esmClass = deliverSm.getEsmClass();
                     byte msgType = (byte)(((esmClass) >> 2) & 0x0f);
                     if(logger.isDebugEnabled()) {
-                        logger.debug("deliverSm="+deliverSm.toString()+" getShortMessage message body " + Arrays.toString(pduMessage)+" smsLength="+smsLength+" esmClass="+Byte.toString(esmClass)+" msgType="+Byte.toString(msgType));
+                        logger.debug("deliverSm="+deliverSm.toString()+" smsLength="+smsLength+" esmClass="+Byte.toString(esmClass)+" msgType="+Byte.toString(msgType));
                     }
                     //check message_payload
                     if(smsLength > 0) {
@@ -444,9 +444,7 @@ public class SmppClientOpsThread implements Runnable {
                        if(logger.isInfoEnabled()) {
                            logger.info("Message is not normal request, esmClass:" + esmClass +", Using message from message body " + decodedPduMessage);
                        }
-                       //TODO: create parser map
-                       //TODO: parse the provider header/TLV?
-                       DlrParser dlrParser = new NexmoDlrParser();
+                       DlrParser dlrParser = new TelestaxDlrParser();
 
                        Map<String,String> dlrMap = dlrParser.parseMessage(decodedPduMessage);
                        String dlrMessageId = dlrMap.get("id");

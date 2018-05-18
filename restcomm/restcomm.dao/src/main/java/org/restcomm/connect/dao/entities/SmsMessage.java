@@ -257,7 +257,7 @@ public final class SmsMessage implements StreamEvent {
     }
 
     public enum Status {
-        QUEUED("queued"), SENDING("sending"), SENT("sent"), FAILED("failed"), RECEIVED("received");
+        QUEUED("queued"), SENDING("sending"), SENT("sent"), FAILED("failed"), RECEIVED("received"), DELIVERED("delivered");
 
         private final String text;
 
