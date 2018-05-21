@@ -27,13 +27,7 @@
   </delete>
   
   <update id="updateSmsMessage" parameterType="map">
-    UPDATE "restcomm_sms_messages"
-    <set>
-      <if test="date_sent != null">"date_sent"=#{date_sent},</if>
-      <if test="status != null">"status"=#{status},</if>
-      <if test="price != null">"price"=#{price}</if>
-    </set>
-    WHERE "sid"=#{sid};
+    UPDATE "restcomm_sms_messages" SET "date_sent"=#{date_sent}, "status"=#{status}, "price"=#{price} WHERE "sid"=#{sid};
   </update>
 
   <select id="getSmsMessagesPerAccountLastPerMinute" parameterType="map" resultType="int">
