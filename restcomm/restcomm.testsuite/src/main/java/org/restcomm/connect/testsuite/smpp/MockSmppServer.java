@@ -224,20 +224,20 @@ public class MockSmppServer {
                 logger.info("********Restcomm Message Received By SMPP Server*******");
 
                 try {
-                    SubmitSm deliverSm = (SubmitSm) pduRequest;
+                    SubmitSm submitSm = (SubmitSm) pduRequest;
 
-                    dcs = deliverSm.getDataCoding();
+                    dcs = submitSm.getDataCoding();
                     if(dcs==SmppConstants.DATA_CODING_UCS2) {
                         charset = CharsetUtil.CHARSET_UCS_2;
                     }
 
-                    decodedPduMessage = CharsetUtil.decode(deliverSm.getShortMessage(), charset);
-                    destSmppAddress = deliverSm.getDestAddress().getAddress();
-                    sourceSmppAddress = deliverSm.getSourceAddress().getAddress();
-                    if (deliverSm.getRegisteredDelivery() == (byte) 0x01) {
+                    decodedPduMessage = CharsetUtil.decode(submitSm.getShortMessage(), charset);
+                    destSmppAddress = submitSm.getDestAddress().getAddress();
+                    sourceSmppAddress = submitSm.getSourceAddress().getAddress();
+                    if (submitSm.getRegisteredDelivery() == (byte) 0x01) {
                         isDeliveryReceipt = true;
                     }
-                    logger.info("getDataCoding: " + deliverSm.getDataCoding());
+                    logger.info("getDataCoding: " + submitSm.getDataCoding());
                     //send received SMPP PDU message to restcomm
                 } catch (Exception e) {
                     logger.info("********DeliverSm Exception******* " + e);
