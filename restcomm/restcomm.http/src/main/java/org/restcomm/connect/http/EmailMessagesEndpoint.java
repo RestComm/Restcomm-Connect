@@ -12,6 +12,8 @@ import com.google.gson.GsonBuilder;
 import com.sun.jersey.spi.resource.Singleton;
 import com.thoughtworks.xstream.XStream;
 import javax.annotation.PostConstruct;
+import javax.mail.internet.ContentType;
+import javax.mail.internet.ParseException;
 import javax.servlet.ServletContext;
 import javax.ws.rs.HeaderParam;
 import javax.ws.rs.POST;
@@ -119,6 +121,21 @@ public class EmailMessagesEndpoint extends AbstractEndpoint {
             data.putSingle("Subject", subject.substring(0, 160));
         }
 
+        if (data.containsKey("Type")) {
+            final String contentType = data.getFirst("Type");
+            try {
+                ContentType cType = new ContentType(contentType);
+                if (cType.getParameter("charset") == null) {
+                    cType.setParameter("charset", "UTF-8");
+                }
+                data.remove("Type");
+                data.putSingle("Type", cType.toString());
+            }
+            catch (ParseException exception) {
+                throw new IllegalArgumentException(exception);
+            }
+        }
+
         if (data.containsKey("CC")) {
             final String cc = data.getFirst("CC");
             data.remove("CC");
@@ -159,13 +176,14 @@ public class EmailMessagesEndpoint extends AbstractEndpoint {
         final String recipient = data.getFirst("To");
         final String body = data.getFirst("Body");
         final String subject = data.getFirst("Subject");
+        final String type = data.containsKey("Type") ? data.getFirst("Type") : "text/plain";
         final String cc = data.containsKey("CC")?data.getFirst("CC"):" ";
         final String bcc = data.containsKey("BCC")?data.getFirst("BCC"):" ";
 
         try {
 
             // Send the email.
-            emailMsg = new Mail(sender, recipient, subject, body ,cc,bcc, DateTime.now(),accountSid);
+            emailMsg = new Mail(sender, recipient, subject, body ,cc, bcc, DateTime.now(), accountSid, type);
             if (mailerService == null){
                 mailerService = session(confemail);
             }
@@ -195,7 +213,7 @@ public class EmailMessagesEndpoint extends AbstractEndpoint {
         } else if (!data.containsKey("Body")) {
             throw new NullPointerException("Body can not be null.");
         } else if (!data.containsKey("Subject")) {
-            throw new NullPointerException("Body can not be null.");
+            throw new NullPointerException("Subject can not be null.");
         }
     }
 
