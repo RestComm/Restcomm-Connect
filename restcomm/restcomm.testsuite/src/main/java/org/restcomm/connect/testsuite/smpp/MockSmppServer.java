@@ -127,9 +127,6 @@ public class MockSmppServer {
                     101, 0, 32, 0, 32, 0, 32, 0, 32, 0, 32, 0, 32, 0, 32, 0, 32, 0, 32, 0, 32, 0, 32, 0, 32, 0, 32, 0,
                     32, 0, 32, 0, 32 };
             //textBytes = CharsetUtil.encode(smppMessage, charset);
-            
-            byte[] data;
-            
 
             DeliverSm deliver = new DeliverSm();
 
