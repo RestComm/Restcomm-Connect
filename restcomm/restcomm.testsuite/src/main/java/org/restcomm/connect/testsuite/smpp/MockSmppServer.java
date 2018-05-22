@@ -8,16 +8,12 @@ import java.util.concurrent.ThreadFactory;
 import java.util.concurrent.ThreadPoolExecutor;
 import java.util.concurrent.atomic.AtomicInteger;
 
-import com.cloudhopper.commons.util.windowing.WindowFuture;
-import com.cloudhopper.smpp.pdu.DeliverSm;
-import com.cloudhopper.smpp.pdu.DeliverSmResp;
-import com.cloudhopper.smpp.type.Address;
-import com.cloudhopper.smpp.type.SmppInvalidArgumentException;
-
 import org.apache.log4j.Logger;
+import org.restcomm.connect.sms.smpp.SmppInboundMessageEntity;
 
 import com.cloudhopper.commons.charset.Charset;
 import com.cloudhopper.commons.charset.CharsetUtil;
+import com.cloudhopper.commons.util.windowing.WindowFuture;
 import com.cloudhopper.smpp.SmppConstants;
 import com.cloudhopper.smpp.SmppServerConfiguration;
 import com.cloudhopper.smpp.SmppServerHandler;
@@ -28,13 +24,15 @@ import com.cloudhopper.smpp.impl.DefaultSmppServer;
 import com.cloudhopper.smpp.impl.DefaultSmppSessionHandler;
 import com.cloudhopper.smpp.pdu.BaseBind;
 import com.cloudhopper.smpp.pdu.BaseBindResp;
+import com.cloudhopper.smpp.pdu.DeliverSm;
+import com.cloudhopper.smpp.pdu.DeliverSmResp;
 import com.cloudhopper.smpp.pdu.PduRequest;
 import com.cloudhopper.smpp.pdu.PduResponse;
 import com.cloudhopper.smpp.pdu.SubmitSm;
+import com.cloudhopper.smpp.type.Address;
 import com.cloudhopper.smpp.type.SmppChannelException;
+import com.cloudhopper.smpp.type.SmppInvalidArgumentException;
 import com.cloudhopper.smpp.type.SmppProcessingException;
-
-import org.restcomm.connect.sms.smpp.SmppInboundMessageEntity;
 
 public class MockSmppServer {
 
@@ -113,6 +111,54 @@ public class MockSmppServer {
             }
         } catch (Exception e) {
             logger.fatal("Exception during sending SMPP message to Restcomm: " + e);
+        }
+    }
+
+    public void sendSmppDeliveryMessageToRestcomm(String smppMessage, String smppTo, String smppFrom, Charset charset) throws IOException, SmppInvalidArgumentException {
+        try {
+            byte[] textBytes = new byte[] { 0, 105, 0, 100, 0, 58, 0, 48, 0, 48, 0, 48, 0, 48, 0, 48, 0, 53, 0, 56, 0,
+                    48, 0, 52, 0, 57, 0, 32, 0, 115, 0, 117, 0, 98, 0, 58, 0, 48, 0, 48, 0, 49, 0, 32, 0, 100, 0, 108,
+                    0, 118, 0, 114, 0, 100, 0, 58, 0, 48, 0, 48, 0, 49, 0, 32, 0, 115, 0, 117, 0, 98, 0, 109, 0, 105, 0,
+                    116, 0, 32, 0, 100, 0, 97, 0, 116, 0, 101, 0, 58, 0, 49, 0, 56, 0, 48, 0, 53, 0, 49, 0, 55, 0, 48,
+                    0, 49, 0, 52, 0, 52, 0, 32, 0, 100, 0, 111, 0, 110, 0, 101, 0, 32, 0, 100, 0, 97, 0, 116, 0, 101, 0,
+                    58, 0, 49, 0, 56, 0, 48, 0, 53, 0, 49, 0, 55, 0, 48, 0, 49, 0, 52, 0, 52, 0, 32, 0, 115, 0, 116, 0,
+                    97, 0, 116, 0, 58, 0, 68, 0, 69, 0, 76, 0, 73, 0, 86, 0, 82, 0, 68, 0, 32, 0, 101, 0, 114, 0, 114,
+                    0, 58, 0, 48, 0, 48, 0, 48, 0, 32, 0, 116, 0, 101, 0, 120, 0, 116, 0, 58, 0, 110, 0, 111, 0, 110, 0,
+                    101, 0, 32, 0, 32, 0, 32, 0, 32, 0, 32, 0, 32, 0, 32, 0, 32, 0, 32, 0, 32, 0, 32, 0, 32, 0, 32, 0,
+                    32, 0, 32, 0, 32 };
+            //textBytes = CharsetUtil.encode(smppMessage, charset);
+            
+            byte[] data;
+            
+
+            DeliverSm deliver = new DeliverSm();
+
+            deliver.setSourceAddress(new Address((byte) 0x03, (byte) 0x00, smppFrom));
+            deliver.setDestAddress(new Address((byte) 0x01, (byte) 0x01, smppTo));
+            deliver.setShortMessage(textBytes);
+            deliver.setEsmClass((byte)0x04);
+            deliver.setDefaultMsgId((byte) 0x0000058049);
+            deliver.setCommandStatus(001);
+            if (CharsetUtil.CHARSET_UCS_2 == charset) {
+                deliver.setDataCoding(SmppConstants.DATA_CODING_UCS2);
+            } else {
+                deliver.setDataCoding(SmppConstants.DATA_CODING_DEFAULT);
+            }
+            logger.info("deliver.getDataCoding: " + deliver.getDataCoding());
+
+            WindowFuture<Integer, PduRequest, PduResponse> future = smppServerSession.sendRequestPdu(deliver, 10000, false);
+            if (!future.await()) {
+                logger.error("Failed to receive deliver_sm_resp within specified time");
+            } else if (future.isSuccess()) {
+                DeliverSmResp deliverSmResp = (DeliverSmResp) future.getResponse();
+                messageSent = true;
+                logger.info("deliver_sm_resp: commandStatus [" + deliverSmResp.getCommandStatus() + "=" + deliverSmResp.getResultMessage() + "]");
+            } else {
+                logger.error("Failed to properly receive deliver_sm_resp: " + future.getCause());
+            }
+        } catch (Exception e) {
+            logger.fatal("Exception during sending SMPP message to Restcomm: " + e);
+            logger.error("",e);
         }
     }
 

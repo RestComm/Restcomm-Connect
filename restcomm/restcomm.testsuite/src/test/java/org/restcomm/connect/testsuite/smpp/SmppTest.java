@@ -32,13 +32,12 @@ import org.junit.After;
 import org.junit.AfterClass;
 import org.junit.Before;
 import org.junit.BeforeClass;
-import org.junit.Ignore;
+import org.junit.FixMethodOrder;
 import org.junit.Rule;
 import org.junit.Test;
-import org.junit.FixMethodOrder;
-import org.junit.runners.MethodSorters;
 import org.junit.experimental.categories.Category;
 import org.junit.runner.RunWith;
+import org.junit.runners.MethodSorters;
 import org.restcomm.connect.commons.Version;
 import org.restcomm.connect.commons.annotations.BrokenTests;
 import org.restcomm.connect.commons.annotations.FeatureAltTests;
@@ -247,6 +246,27 @@ public class SmppTest {
 		assertTrue(inboundMessageEntity.getSmppFrom().equals(toPureSipProviderNumber));
 		assertTrue(inboundMessageEntity.getSmppContent().equals(msgBodyResp));
 	}
+	
+	@Test
+	public void testSendSMPPMessageWithDeliveryReceipt () throws SmppInvalidArgumentException, IOException, InterruptedException {
+
+        stubFor(get(urlPathEqualTo("/smsApp"))
+                .willReturn(aResponse()
+                        .withStatus(200)
+                        .withHeader("Content-Type", "text/xml")
+                        .withBody(smsEchoRcmlPureSipProviderNumber)));
+
+		mockSmppServer.sendSmppDeliveryMessageToRestcomm(msgBody,toPureSipProviderNumber,from,CharsetUtil.CHARSET_GSM);
+        Thread.sleep(2000);
+        assertTrue(mockSmppServer.isMessageSent());
+		Thread.sleep(2000);
+		assertTrue(mockSmppServer.isMessageReceived());
+		SmppInboundMessageEntity inboundMessageEntity = mockSmppServer.getSmppInboundMessageEntity();
+		assertNotNull(inboundMessageEntity);
+		assertTrue(inboundMessageEntity.getSmppTo().equals(from));
+		assertTrue(inboundMessageEntity.getSmppFrom().equals(toPureSipProviderNumber));
+		assertTrue(inboundMessageEntity.getSmppContent().equals(msgBodyResp));
+	}
 
     private String smsEchoRcmlUCS2 = "<Response><Sms to=\""+from+"\" from=\""+to+"\">"+msgBodyRespUCS2+"</Sms></Response>";
 	@Test
@@ -325,7 +345,6 @@ public class SmppTest {
     }
 
     @Test
-	@Ignore
     public void testClientSentOutUsingSMPPDeliveryReceipt() throws ParseException, InterruptedException {
         final String msg = "Test Message from Alice with Delivery Receipt";
         SipURI uri = aliceSipStack.getAddressFactory().createSipURI(null, "127.0.0.1:5080");
