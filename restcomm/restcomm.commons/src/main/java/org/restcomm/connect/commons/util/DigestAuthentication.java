@@ -127,8 +127,6 @@ public final class DigestAuthentication {
             throw new NullPointerException("The uri parameter may not be null.");
         } else if (nonce == null) {
             throw new NullPointerException("The nonce parameter may not be null.");
-        } else if (algorithm == null) {
-            throw new NullPointerException("The algorithm parameter may not be null.");
         }
     }
 
