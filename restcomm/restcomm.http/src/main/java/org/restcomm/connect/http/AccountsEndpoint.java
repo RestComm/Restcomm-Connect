@@ -53,6 +53,7 @@ import javax.ws.rs.core.MultivaluedMap;
 import javax.ws.rs.core.Response;
 import static javax.ws.rs.core.Response.Status.BAD_REQUEST;
 import static javax.ws.rs.core.Response.Status.CONFLICT;
+import static javax.ws.rs.core.Response.Status.FORBIDDEN;
 import static javax.ws.rs.core.Response.Status.NOT_FOUND;
 import static javax.ws.rs.core.Response.Status.PRECONDITION_FAILED;
 import static javax.ws.rs.core.Response.ok;
@@ -214,6 +215,13 @@ public class AccountsEndpoint extends AbstractEndpoint {
             } catch (Exception e) {
                 return status(NOT_FOUND).build();
             }
+        }
+
+        URI baseUri = info.getBaseUri();
+        Organization org = organizationsDao.getOrganization(account.getOrganizationSid());
+        String accountOrgDomain = org.getDomainName();
+        if (!accountOrgDomain.equalsIgnoreCase(baseUri.getHost().toString())) {
+            return status(FORBIDDEN).entity("Account is not allowed to access requested organization").build();
         }
 
         permissionEvaluator.secure(account, "RestComm:Read:Accounts", SecuredType.SECURED_ACCOUNT,userIdentityContext );
