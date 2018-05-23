@@ -20,7 +20,10 @@
 package org.restcomm.connect.testsuite.http;
 
 import com.google.gson.JsonObject;
+import com.sun.jersey.api.client.Client;
 import com.sun.jersey.api.client.ClientResponse;
+import com.sun.jersey.api.client.WebResource;
+import com.sun.jersey.api.client.filter.HTTPBasicAuthFilter;
 import org.apache.log4j.Logger;
 import org.jboss.arquillian.container.test.api.Deployer;
 import org.jboss.arquillian.container.test.api.Deployment;
@@ -46,8 +49,6 @@ import static org.junit.Assert.assertTrue;
 
 /**
  * @author <a href="mailto:gvagenas@gmail.com">gvagenas</a>
- * @author <a href="mailto:jean.deruelle@telestax.com">Jean Deruelle</a>
- * @author <a href="mailto:lyhungthinh@gmail.com">Thinh Ly</a>
  */
 
 @RunWith(Arquillian.class)
@@ -121,6 +122,20 @@ public class AccountsEndpointOrganizationsTest extends EndpointTest {
         assertEquals(403, accountResponse.getClientResponseStatus().getStatusCode());
     }
 
+    @Test
+    public void testRemoveClientOfOrg2UsingOrg3Credentials() {
+        String org2Url = "http://org2.restcomm.com:8080/restcomm";
+        String clientOfORg2 = "CLae6e420f425248d6a26948c17a9e2ach";
+
+        Client jerseyClient = Client.create();
+        jerseyClient.addFilter(new HTTPBasicAuthFilter(org2Username, org3AuthToken));
+        WebResource resource = jerseyClient.resource(org2Url).path("/2012-04-24/Accounts/" + org3AccountSid+ "/Clients/" + clientOfORg2);
+        ClientResponse response = resource.delete(ClientResponse.class);
+
+        //This request will fail because Client is trying to access resources of ORG2 using credentials of ORG3
+        //and security filter will drop this request because ORG3.domainName != Request.host
+        assertEquals(403, response.getStatus());
+    }
 
     @Deployment(name = "ClientsEndpointTest", managed = true, testable = false)
     public static WebArchive createWebArchiveNoGw() {
