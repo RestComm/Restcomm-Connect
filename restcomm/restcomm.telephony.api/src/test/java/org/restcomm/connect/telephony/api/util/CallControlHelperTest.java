@@ -20,15 +20,15 @@
 package org.restcomm.connect.telephony.api.util;
 
 import org.junit.Test;
-import static org.junit.Assert.*;
 import org.mockito.Mockito;
-import static org.mockito.Mockito.when;
 import org.restcomm.connect.commons.dao.Sid;
 import org.restcomm.connect.dao.AccountsDao;
 import org.restcomm.connect.dao.ClientsDao;
 import org.restcomm.connect.dao.DaoManager;
 import org.restcomm.connect.dao.entities.Account;
 import org.restcomm.connect.dao.entities.Client;
+import static org.junit.Assert.assertTrue;
+import static org.mockito.Mockito.when;
 
 public class CallControlHelperTest {
 
