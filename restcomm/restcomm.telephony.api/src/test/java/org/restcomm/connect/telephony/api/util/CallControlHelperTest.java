@@ -19,28 +19,17 @@
  */
 package org.restcomm.connect.telephony.api.util;
 
-import gov.nist.javax.sip.clientauthutils.AccountManager;
 import org.junit.Test;
 import static org.junit.Assert.*;
-import org.junit.runner.RunWith;
-import static org.mockito.Matchers.any;
 import org.mockito.Mockito;
 import static org.mockito.Mockito.when;
-import org.powermock.api.mockito.PowerMockito;
-import org.powermock.core.classloader.annotations.PrepareForTest;
-import org.powermock.modules.junit4.PowerMockRunner;
-import org.restcomm.connect.commons.configuration.RestcommConfiguration;
-import org.restcomm.connect.commons.configuration.sets.MainConfigurationSet;
 import org.restcomm.connect.commons.dao.Sid;
-import org.restcomm.connect.commons.util.DigestAuthentication;
 import org.restcomm.connect.dao.AccountsDao;
 import org.restcomm.connect.dao.ClientsDao;
 import org.restcomm.connect.dao.DaoManager;
 import org.restcomm.connect.dao.entities.Account;
 import org.restcomm.connect.dao.entities.Client;
 
-@RunWith(PowerMockRunner.class)
-@PrepareForTest(CallControlHelper.class)
 public class CallControlHelperTest {
 
     public CallControlHelperTest() {
