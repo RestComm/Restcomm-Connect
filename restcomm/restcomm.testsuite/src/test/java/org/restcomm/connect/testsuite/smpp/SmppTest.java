@@ -9,7 +9,10 @@ import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertTrue;
 
 import java.io.IOException;
+import java.net.URL;
 import java.text.ParseException;
+import java.util.HashMap;
+import java.util.Map;
 
 import javax.sip.address.SipURI;
 import javax.sip.message.Request;
@@ -44,13 +47,17 @@ import org.restcomm.connect.commons.annotations.FeatureAltTests;
 import org.restcomm.connect.commons.annotations.FeatureExpTests;
 import org.restcomm.connect.commons.annotations.SequentialClassTests;
 import org.restcomm.connect.commons.annotations.WithInSecsTests;
+import org.restcomm.connect.dao.entities.SmsMessage;
 import org.restcomm.connect.sms.smpp.SmppInboundMessageEntity;
+import org.restcomm.connect.testsuite.sms.SmsEndpointTool;
 
 import com.cloudhopper.commons.charset.Charset;
 import com.cloudhopper.commons.charset.CharsetUtil;
 import com.cloudhopper.smpp.type.SmppChannelException;
 import com.cloudhopper.smpp.type.SmppInvalidArgumentException;
 import com.github.tomakehurst.wiremock.junit.WireMockRule;
+import com.google.gson.JsonElement;
+import com.google.gson.JsonObject;
 
 /**
  * @author quintana.thomas@gmail.com (Thomas Quintana)
@@ -76,6 +83,9 @@ public class SmppTest {
 
 	@ArquillianResource
 	private Deployer deployer;
+
+    @ArquillianResource
+    URL deploymentUrl;
 	private static MockSmppServer mockSmppServer;
 
 	private static SipStackTool tool2;
@@ -248,7 +258,7 @@ public class SmppTest {
 	}
 	
 	@Test
-	public void testSendSMPPMessageWithDeliveryReceipt () throws SmppInvalidArgumentException, IOException, InterruptedException {
+	public void testSendSMPPMessageAndGetDeliveryReceipt () throws SmppInvalidArgumentException, IOException, InterruptedException, ParseException {
 
         stubFor(get(urlPathEqualTo("/smsApp"))
                 .willReturn(aResponse()
@@ -256,16 +266,105 @@ public class SmppTest {
                         .withHeader("Content-Type", "text/xml")
                         .withBody(smsEchoRcmlPureSipProviderNumber)));
 
-		mockSmppServer.sendSmppDeliveryMessageToRestcomm(msgBody,toPureSipProviderNumber,from,CharsetUtil.CHARSET_GSM);
-        Thread.sleep(2000);
-        assertTrue(mockSmppServer.isMessageSent());
-		Thread.sleep(2000);
+        final String from = "alice";
+        final String to = "9999"; // pstn (not a RC number)
+        // Send out SMS using SMPP
+        final String body="Test Message from Alice. "+System.currentTimeMillis();
+		SipURI uri = aliceSipStack.getAddressFactory().createSipURI(null, "127.0.0.1:5080");
+		assertTrue(alicePhone.register(uri, from, "1234", aliceContact, 3600, 3600));
+		Credential aliceCred = new Credential("127.0.0.1",from,"1234");
+		alicePhone.addUpdateCredential(aliceCred);
+
+
+		SipCall aliceCall = alicePhone.createSipCall();
+		aliceCall.initiateOutgoingMessage("sip:9999@127.0.0.1:5080", null, body);
+		aliceCall.waitForAuthorisation(8000);
+		Thread.sleep(5000);
 		assertTrue(mockSmppServer.isMessageReceived());
 		SmppInboundMessageEntity inboundMessageEntity = mockSmppServer.getSmppInboundMessageEntity();
 		assertNotNull(inboundMessageEntity);
-		assertTrue(inboundMessageEntity.getSmppTo().equals(from));
-		assertTrue(inboundMessageEntity.getSmppFrom().equals(toPureSipProviderNumber));
-		assertTrue(inboundMessageEntity.getSmppContent().equals(msgBodyResp));
+		assertTrue(inboundMessageEntity.getSmppTo().equals(to));
+		assertTrue(inboundMessageEntity.getSmppFrom().equals(from));
+		assertTrue(inboundMessageEntity.getSmppContent().equals(body));
+		
+		// Verify SMS CDR
+		Map<String, String> filters = new HashMap<String, String>();
+        filters.put("From", from);
+        filters.put("To", to);
+        filters.put("Body", body);
+		JsonObject smsCdrResult = SmsEndpointTool.getInstance().getSmsMessageListUsingFilter(deploymentUrl.toString(), adminAccountSid, adminAuthToken, filters);
+        assertNotNull(smsCdrResult);
+        JsonElement msgs = smsCdrResult.get("messages");
+        JsonObject smsCDR = msgs.getAsJsonArray().get(0).getAsJsonObject();
+        assertNotNull(smsCDR);
+        final String sid = smsCDR.get("sid").getAsString();
+        String status = smsCDR.get("status").getAsString();
+        String actualFrom = smsCDR.get("from").getAsString();
+        String actualTo = smsCDR.get("to").getAsString();
+        assertEquals(SmsMessage.Status.RECEIVED.toString(), status);
+        assertEquals("alice", actualFrom);
+        assertEquals("9999", actualTo);
+        
+        // Ask SMPP mock server to Send DLR to RC
+		mockSmppServer.sendSmppDeliveryMessageToRestcomm(MockSmppServer.SmppDeliveryStatus.DELIVRD);
+        Thread.sleep(2000);
+        
+        // ReCheck CDR to make sure we get updated status
+        smsCDR = SmsEndpointTool.getInstance().getSmsMessage(deploymentUrl.toString(), adminAccountSid, adminAuthToken, sid);
+        assertNotNull(smsCdrResult);
+        status = smsCDR.get("status").getAsString();
+        assertEquals(SmsMessage.Status.DELIVERED.toString(), status);
+	}
+	
+	@Test
+	@Category(value={FeatureExpTests.class})
+	public void testSendSMPPMessageViaAPIAndGetDeliveryReceipt () throws SmppInvalidArgumentException, IOException, InterruptedException, ParseException {
+
+        stubFor(get(urlPathEqualTo("/smsApp"))
+                .willReturn(aResponse()
+                        .withStatus(200)
+                        .withHeader("Content-Type", "text/xml")
+                        .withBody(smsEchoRcmlPureSipProviderNumber)));
+        
+        final String from = "alice";
+        final String to = "9999"; // pstn (not a RC number)
+        // Send out SMS using SMPP via rest api
+        final String body="Test Message from Alice. "+System.currentTimeMillis();
+        SmsEndpointTool.getInstance().createSms(deploymentUrl.toString(), adminAccountSid, adminAuthToken, "alice", "9999", body, null);
+
+        SmppInboundMessageEntity inboundMessageEntity = mockSmppServer.getSmppInboundMessageEntity();
+		assertNotNull(inboundMessageEntity);
+		assertTrue(inboundMessageEntity.getSmppTo().equals(to));
+		assertTrue(inboundMessageEntity.getSmppFrom().equals(from));
+		assertTrue(inboundMessageEntity.getSmppContent().equals(body));
+		
+		// Verify SMS CDR
+				Map<String, String> filters = new HashMap<String, String>();
+		        filters.put("From", from);
+		        filters.put("To", to);
+		        filters.put("Body", body);
+				JsonObject smsCdrResult = SmsEndpointTool.getInstance().getSmsMessageListUsingFilter(deploymentUrl.toString(), adminAccountSid, adminAuthToken, filters);
+		        assertNotNull(smsCdrResult);
+		        JsonElement msgs = smsCdrResult.get("messages");
+		        JsonObject smsCDR = msgs.getAsJsonArray().get(0).getAsJsonObject();
+		        assertNotNull(smsCDR);
+		        final String sid = smsCDR.get("sid").getAsString();
+		        String status = smsCDR.get("status").getAsString();
+		        String actualFrom = smsCDR.get("from").getAsString();
+		        String actualTo = smsCDR.get("to").getAsString();
+		        assertEquals(SmsMessage.Status.SENDING.toString(), status);
+		        assertEquals("alice", actualFrom);
+		        assertEquals("9999", actualTo);
+		        
+		        // Ask SMPP mock server to Send DLR to RC
+				mockSmppServer.sendSmppDeliveryMessageToRestcomm(MockSmppServer.SmppDeliveryStatus.DELIVRD);
+		        Thread.sleep(2000);
+		        
+		        // ReCheck CDR to make sure we get updated status
+		        smsCDR = SmsEndpointTool.getInstance().getSmsMessage(deploymentUrl.toString(), adminAccountSid, adminAuthToken, sid);
+		        assertNotNull(smsCdrResult);
+		        status = smsCDR.get("status").getAsString();
+		        assertEquals(SmsMessage.Status.DELIVERED.toString(), status);
 	}
 
     private String smsEchoRcmlUCS2 = "<Response><Sms to=\""+from+"\" from=\""+to+"\">"+msgBodyRespUCS2+"</Sms></Response>";
