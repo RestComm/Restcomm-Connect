@@ -46,7 +46,7 @@ import org.restcomm.connect.provisioning.number.api.PhoneNumberType;
 @Path("/Accounts/{accountSid}/AvailablePhoneNumbers/{IsoCountryCode}/Mobile")
 @ThreadSafe
 @Singleton
-public final class AvailablePhoneNumbersMobileXmlEndpoint extends AvailablePhoneNumbersEndpoint {
+public class AvailablePhoneNumbersMobileXmlEndpoint extends AvailablePhoneNumbersEndpoint {
     public AvailablePhoneNumbersMobileXmlEndpoint() {
         super();
     }
