@@ -38,12 +38,17 @@ public class MockSmppServer {
 
     private static final Logger logger = Logger.getLogger(MockSmppServer.class);
 
+    public static enum SmppDeliveryStatus {
+        ACCEPTD, EXPIRED, DELETED, UNDELIV, REJECTD, DELIVRD, UNKNOWN
+    }
+
     private final DefaultSmppServer smppServer;
     private static SmppServerSession smppServerSession;
     private static boolean linkEstablished = false;
     private static boolean messageSent = false;
     private static SmppInboundMessageEntity smppInboundMessageEntity;
     private static boolean messageReceived;
+    private String dlrPDU = "id: sub:001 dlvrd:001 submit date:1805170144 done date:1805170144 stat:%s err:000 text:none";
 
     public MockSmppServer() throws SmppChannelException {
         this(2776);
@@ -114,34 +119,21 @@ public class MockSmppServer {
         }
     }
 
-    public void sendSmppDeliveryMessageToRestcomm(String smppMessage, String smppTo, String smppFrom, Charset charset) throws IOException, SmppInvalidArgumentException {
+    /**
+     * @param status
+     * @throws IOException
+     * @throws SmppInvalidArgumentException
+     */
+    public void sendSmppDeliveryMessageToRestcomm(SmppDeliveryStatus status) throws IOException, SmppInvalidArgumentException {
         try {
-            byte[] textBytes = new byte[] { 0, 105, 0, 100, 0, 58, 0, 48, 0, 48, 0, 48, 0, 48, 0, 48, 0, 53, 0, 56, 0,
-                    48, 0, 52, 0, 57, 0, 32, 0, 115, 0, 117, 0, 98, 0, 58, 0, 48, 0, 48, 0, 49, 0, 32, 0, 100, 0, 108,
-                    0, 118, 0, 114, 0, 100, 0, 58, 0, 48, 0, 48, 0, 49, 0, 32, 0, 115, 0, 117, 0, 98, 0, 109, 0, 105, 0,
-                    116, 0, 32, 0, 100, 0, 97, 0, 116, 0, 101, 0, 58, 0, 49, 0, 56, 0, 48, 0, 53, 0, 49, 0, 55, 0, 48,
-                    0, 49, 0, 52, 0, 52, 0, 32, 0, 100, 0, 111, 0, 110, 0, 101, 0, 32, 0, 100, 0, 97, 0, 116, 0, 101, 0,
-                    58, 0, 49, 0, 56, 0, 48, 0, 53, 0, 49, 0, 55, 0, 48, 0, 49, 0, 52, 0, 52, 0, 32, 0, 115, 0, 116, 0,
-                    97, 0, 116, 0, 58, 0, 68, 0, 69, 0, 76, 0, 73, 0, 86, 0, 82, 0, 68, 0, 32, 0, 101, 0, 114, 0, 114,
-                    0, 58, 0, 48, 0, 48, 0, 48, 0, 32, 0, 116, 0, 101, 0, 120, 0, 116, 0, 58, 0, 110, 0, 111, 0, 110, 0,
-                    101, 0, 32, 0, 32, 0, 32, 0, 32, 0, 32, 0, 32, 0, 32, 0, 32, 0, 32, 0, 32, 0, 32, 0, 32, 0, 32, 0,
-                    32, 0, 32, 0, 32 };
-            //textBytes = CharsetUtil.encode(smppMessage, charset);
+            byte[] textBytes = String.format(dlrPDU, status).getBytes();
 
             DeliverSm deliver = new DeliverSm();
 
-            deliver.setSourceAddress(new Address((byte) 0x03, (byte) 0x00, smppFrom));
-            deliver.setDestAddress(new Address((byte) 0x01, (byte) 0x01, smppTo));
             deliver.setShortMessage(textBytes);
             deliver.setEsmClass((byte)0x04);
-            deliver.setDefaultMsgId((byte) 0x0000058049);
             deliver.setCommandStatus(001);
-            if (CharsetUtil.CHARSET_UCS_2 == charset) {
-                deliver.setDataCoding(SmppConstants.DATA_CODING_UCS2);
-            } else {
-                deliver.setDataCoding(SmppConstants.DATA_CODING_DEFAULT);
-            }
-            logger.info("deliver.getDataCoding: " + deliver.getDataCoding());
+            deliver.setDataCoding(SmppConstants.DATA_CODING_DEFAULT);
 
             WindowFuture<Integer, PduRequest, PduResponse> future = smppServerSession.sendRequestPdu(deliver, 10000, false);
             if (!future.await()) {
