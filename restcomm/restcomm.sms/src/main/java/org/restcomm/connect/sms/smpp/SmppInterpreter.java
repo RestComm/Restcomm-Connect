@@ -110,6 +110,8 @@ public class SmppInterpreter extends RestcommUntypedActor {
     private final Configuration runtime;
     // User specific configuration.
     private final Configuration configuration;
+    //Email configuration
+    private final Configuration emailconfiguration;
     // Information to reach the application that will be executed
     // by this interpreter.
     private final Sid accountId;
@@ -191,6 +193,7 @@ public class SmppInterpreter extends RestcommUntypedActor {
         this.storage = params.getStorage();
         this.runtime = params.getConfiguration().subset("runtime-settings");
         this.configuration = params.getConfiguration().subset("sms-aggregator");
+        this.emailconfiguration = params.getConfiguration().subset("smtp-service");
         this.accountId = params.getAccountId();
         this.version = params.getVersion();
         this.url = params.getUrl();
@@ -916,7 +919,7 @@ public class SmppInterpreter extends RestcommUntypedActor {
             // Send the email.
             final Mail emailMsg = new Mail(from, to, subject, verb.text(),cc,bcc);
             if (mailerService == null){
-                mailerService = mailer(configuration.subset("smtp-service"));
+                mailerService = mailer(emailconfiguration);
             }
             mailerService.tell(new EmailRequest(emailMsg), self());
         }
