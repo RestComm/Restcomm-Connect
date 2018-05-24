@@ -339,32 +339,32 @@ public class SmppTest {
 		assertTrue(inboundMessageEntity.getSmppContent().equals(body));
 		
 		// Verify SMS CDR
-				Map<String, String> filters = new HashMap<String, String>();
-		        filters.put("From", from);
-		        filters.put("To", to);
-		        filters.put("Body", body);
-				JsonObject smsCdrResult = SmsEndpointTool.getInstance().getSmsMessageListUsingFilter(deploymentUrl.toString(), adminAccountSid, adminAuthToken, filters);
-		        assertNotNull(smsCdrResult);
-		        JsonElement msgs = smsCdrResult.get("messages");
-		        JsonObject smsCDR = msgs.getAsJsonArray().get(0).getAsJsonObject();
-		        assertNotNull(smsCDR);
-		        final String sid = smsCDR.get("sid").getAsString();
-		        String status = smsCDR.get("status").getAsString();
-		        String actualFrom = smsCDR.get("from").getAsString();
-		        String actualTo = smsCDR.get("to").getAsString();
-		        assertEquals(SmsMessage.Status.SENDING.toString(), status);
-		        assertEquals("alice", actualFrom);
-		        assertEquals("9999", actualTo);
-		        
-		        // Ask SMPP mock server to Send DLR to RC
-				mockSmppServer.sendSmppDeliveryMessageToRestcomm(MockSmppServer.SmppDeliveryStatus.DELIVRD);
-		        Thread.sleep(2000);
-		        
-		        // ReCheck CDR to make sure we get updated status
-		        smsCDR = SmsEndpointTool.getInstance().getSmsMessage(deploymentUrl.toString(), adminAccountSid, adminAuthToken, sid);
-		        assertNotNull(smsCdrResult);
-		        status = smsCDR.get("status").getAsString();
-		        assertEquals(SmsMessage.Status.DELIVERED.toString(), status);
+		Map<String, String> filters = new HashMap<String, String>();
+        filters.put("From", from);
+        filters.put("To", to);
+        filters.put("Body", body);
+		JsonObject smsCdrResult = SmsEndpointTool.getInstance().getSmsMessageListUsingFilter(deploymentUrl.toString(), adminAccountSid, adminAuthToken, filters);
+        assertNotNull(smsCdrResult);
+        JsonElement msgs = smsCdrResult.get("messages");
+        JsonObject smsCDR = msgs.getAsJsonArray().get(0).getAsJsonObject();
+        assertNotNull(smsCDR);
+        final String sid = smsCDR.get("sid").getAsString();
+        String status = smsCDR.get("status").getAsString();
+        String actualFrom = smsCDR.get("from").getAsString();
+        String actualTo = smsCDR.get("to").getAsString();
+        assertEquals(SmsMessage.Status.SENDING.toString(), status);
+        assertEquals("alice", actualFrom);
+        assertEquals("9999", actualTo);
+        
+        // Ask SMPP mock server to Send DLR to RC
+		mockSmppServer.sendSmppDeliveryMessageToRestcomm(MockSmppServer.SmppDeliveryStatus.DELIVRD);
+        Thread.sleep(2000);
+        
+        // ReCheck CDR to make sure we get updated status
+        smsCDR = SmsEndpointTool.getInstance().getSmsMessage(deploymentUrl.toString(), adminAccountSid, adminAuthToken, sid);
+        assertNotNull(smsCdrResult);
+        status = smsCDR.get("status").getAsString();
+        assertEquals(SmsMessage.Status.DELIVERED.toString(), status);
 	}
 
     private String smsEchoRcmlUCS2 = "<Response><Sms to=\""+from+"\" from=\""+to+"\">"+msgBodyRespUCS2+"</Sms></Response>";
