@@ -319,7 +319,7 @@ public class SmppTest {
 	
 	@Test
 	@Category(value={FeatureExpTests.class})
-	public void testSendSMPPMessageAAViaAPIAndGetDeliveryReceipt () throws SmppInvalidArgumentException, IOException, InterruptedException, ParseException {
+	public void testSendSMPPMessageViaAPIAndGetDeliveryReceipt () throws SmppInvalidArgumentException, IOException, InterruptedException, ParseException {
 
         stubFor(get(urlPathEqualTo("/smsApp"))
                 .willReturn(aResponse()
