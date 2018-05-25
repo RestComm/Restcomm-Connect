@@ -107,6 +107,7 @@ import org.restcomm.connect.mscontrol.api.messages.StopMediaGroup;
 import org.restcomm.connect.mscontrol.api.messages.StopRecording;
 import org.restcomm.connect.mscontrol.api.messages.Unmute;
 import org.restcomm.connect.mscontrol.api.messages.UpdateMediaSession;
+import org.restcomm.connect.mscontrol.api.messages.RecordStoped;
 import org.restcomm.connect.telephony.api.Answer;
 import org.restcomm.connect.telephony.api.BridgeStateChanged;
 import org.restcomm.connect.telephony.api.CallFail;
@@ -226,6 +227,7 @@ public final class Call extends RestcommUntypedActor implements TransitionEndLis
     private boolean muted;
     private boolean webrtc;
     private boolean initialInviteOkSent;
+    private boolean isStoppingRecord = false;
 
     // Conferencing
     private ActorRef conference;
@@ -273,6 +275,8 @@ public final class Call extends RestcommUntypedActor implements TransitionEndLis
     private int callDuration;
     private DateTime recordingStart;
     private long recordingDuration;
+
+    private String msCompatibilityMode;
 
     private HttpRequestDescriptor requestCallback;
     ActorRef downloader = null;
@@ -445,6 +449,7 @@ public final class Call extends RestcommUntypedActor implements TransitionEndLis
         }
 
         this.enable200OkDelay = runtime.getBoolean("enable-200-ok-delay",false);
+        this.msCompatibilityMode = this.configuration.subset("mscontrol").getString("compatibility", "rms");
         if(!runtime.subset("ims-authentication").isEmpty()){
             final Configuration imsAuthentication = runtime.subset("ims-authentication");
             this.actAsImsUa = imsAuthentication.getBoolean("act-as-ims-ua");
@@ -759,6 +764,8 @@ public final class Call extends RestcommUntypedActor implements TransitionEndLis
             onCallHoldStateChange((CallHoldStateChange)message, sender);
         } else if (StopWaiting.class.equals(klass)) {
             onStopWaiting((StopWaiting)message, sender);
+        } else if (RecordStoped.class.equals(klass)) {
+            onRecordStoped((RecordStoped) message, sender);
         }
     }
 
@@ -803,6 +810,14 @@ public final class Call extends RestcommUntypedActor implements TransitionEndLis
                 messageRequest.send();
                 isOnHold = false;
             }
+        }
+    }
+
+    private void onRecordStoped (RecordStoped message, ActorRef sender) {
+        if (is(stopping)) {
+            isStoppingRecord = false;
+            msController.tell(new CloseMediaSession(), self());
+            context().setReceiveTimeout(Duration.create(2000, TimeUnit.MILLISECONDS));
         }
     }
 
@@ -1776,11 +1791,14 @@ public final class Call extends RestcommUntypedActor implements TransitionEndLis
                 }
             }
 
-            msController.tell(new CloseMediaSession(), source);
+            // If working with XMS and RC is trying to stop Recording, Should not send CloseMediaSession otherwise this signal will be Ignore by RC.
+            if (!isStoppingRecord || !msCompatibilityMode.equalsIgnoreCase("xms")) {
+                msController.tell(new CloseMediaSession(), source);
 
-            //Github issue 2261 - https://github.com/RestComm/Restcomm-Connect/issues/2261
-            //Set a ReceivedTimeout duration to make sure call doesn't block waiting for the response from MmsCallController
-            context().setReceiveTimeout(Duration.create(2000, TimeUnit.MILLISECONDS));
+                //Github issue 2261 - https://github.com/RestComm/Restcomm-Connect/issues/2261
+                //Set a ReceivedTimeout duration to make sure call doesn't block waiting for the response from MmsCallController
+                context().setReceiveTimeout(Duration.create(2000, TimeUnit.MILLISECONDS));
+            }
         }
     }
 
@@ -2091,6 +2109,7 @@ public final class Call extends RestcommUntypedActor implements TransitionEndLis
                 if (!direction.contains("outbound")) {
                     // Initial Call sent BYE
                     recording = false;
+                    isStoppingRecord = true;
                     if(logger.isInfoEnabled()) {
                         logger.info("Call Direction: " + direction);
                         logger.info("Initial Call - Will stop recording now");
