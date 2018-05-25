@@ -29,6 +29,7 @@ import com.cloudhopper.smpp.pdu.DeliverSmResp;
 import com.cloudhopper.smpp.pdu.PduRequest;
 import com.cloudhopper.smpp.pdu.PduResponse;
 import com.cloudhopper.smpp.pdu.SubmitSm;
+import com.cloudhopper.smpp.pdu.SubmitSmResp;
 import com.cloudhopper.smpp.type.Address;
 import com.cloudhopper.smpp.type.SmppChannelException;
 import com.cloudhopper.smpp.type.SmppInvalidArgumentException;
@@ -48,7 +49,12 @@ public class MockSmppServer {
     private static boolean messageSent = false;
     private static SmppInboundMessageEntity smppInboundMessageEntity;
     private static boolean messageReceived;
-    private String dlrPDU = "id: sub:001 dlvrd:001 submit date:1805170144 done date:1805170144 stat:%s err:000 text:none";
+    private static String smppMessageId;
+
+    private String getDlrMessage(final String smppMessageId, final SmppDeliveryStatus smppStatus){
+        String dlrFormat = "id:%s sub:001 dlvrd:001 submit date:1805170144 done date:1805170144 stat:%s err:000 text:none";
+        return String.format(dlrFormat, smppMessageId, smppStatus);
+    }
 
     public MockSmppServer() throws SmppChannelException {
         this(2776);
@@ -120,13 +126,14 @@ public class MockSmppServer {
     }
 
     /**
-     * @param status
+     * @param smppMessageId
+     * @param smppStatus
      * @throws IOException
      * @throws SmppInvalidArgumentException
      */
-    public void sendSmppDeliveryMessageToRestcomm(SmppDeliveryStatus status) throws IOException, SmppInvalidArgumentException {
+    public void sendSmppDeliveryMessageToRestcomm(String smppMessageId, SmppDeliveryStatus smppStatus) throws IOException, SmppInvalidArgumentException {
         try {
-            byte[] textBytes = String.format(dlrPDU, status).getBytes();
+            byte[] textBytes = getDlrMessage(smppMessageId, smppStatus).getBytes();
 
             DeliverSm deliver = new DeliverSm();
 
@@ -182,6 +189,10 @@ public class MockSmppServer {
 
     public int getPort() {
         return smppServer.getConfiguration().getPort();
+    }
+
+    public String getSmppMessageId(){
+        return smppMessageId;
     }
 
     private static class DefaultSmppServerHandler implements SmppServerHandler {
@@ -251,15 +262,16 @@ public class MockSmppServer {
             //FIXME: make MockSmppServer configurable
             Charset charset = CharsetUtil.CHARSET_UTF_8;
 
+            SubmitSm submitSm = null;
             if (pduRequest.toString().toLowerCase().contains("enquire_link")) {
                 //logger.info("This is a response to the enquire_link, therefore, do NOTHING ");
+                return pduRequest.createResponse();
             } else {
 
                 //smppOutBoundMessageReceivedByServer = true;
                 logger.info("********Restcomm Message Received By SMPP Server*******");
-
                 try {
-                    SubmitSm submitSm = (SubmitSm) pduRequest;
+                    submitSm = (SubmitSm) pduRequest;
 
                     dcs = submitSm.getDataCoding();
                     if(dcs==SmppConstants.DATA_CODING_UCS2) {
@@ -282,7 +294,11 @@ public class MockSmppServer {
                 smppInboundMessageEntity = new SmppInboundMessageEntity(destSmppAddress, sourceSmppAddress, decodedPduMessage, charset, isDeliveryReceipt);
                 messageReceived = true;
             }
-            return pduRequest.createResponse();
+            SubmitSmResp response = submitSm.createResponse();
+            final String smppMessageIdLocal = System.currentTimeMillis()+"";
+            response.setMessageId(smppMessageIdLocal);
+            smppMessageId = smppMessageIdLocal;
+            return response;
         }
     }
 }
