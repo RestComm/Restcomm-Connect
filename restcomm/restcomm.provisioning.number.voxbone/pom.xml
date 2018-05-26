@@ -4,7 +4,7 @@
 	<parent>
 		<groupId>org.restcomm</groupId>
 		<artifactId>restcomm-connect</artifactId>
-		<version>8.4.1-12</version>
+		<version>8.4.2-15</version>
 	</parent>
 
 	<artifactId>restcomm-connect.provisioning.number.voxbone</artifactId>
