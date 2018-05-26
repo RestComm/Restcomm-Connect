@@ -6,7 +6,7 @@ All Restcomm [docs](https://www.restcomm.com/docs/) and [downloads](https://www.
 
 
 
-RestComm
+Restcomm
 ========
 
 
