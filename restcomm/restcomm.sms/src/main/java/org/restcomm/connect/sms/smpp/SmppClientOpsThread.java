@@ -30,7 +30,7 @@ import java.util.concurrent.CopyOnWriteArrayList;
 import javax.servlet.ServletException;
 
 import org.apache.log4j.Logger;
-import org.restcomm.connect.sms.smpp.dlr.provider.NexmoDlrParser;
+import org.restcomm.connect.sms.smpp.dlr.provider.TelestaxDlrParser;
 import org.restcomm.connect.sms.smpp.dlr.spi.DLRPayload;
 import org.restcomm.connect.sms.smpp.dlr.spi.DlrParser;
 
@@ -414,7 +414,7 @@ public class SmppClientOpsThread implements Runnable {
                        if(logger.isInfoEnabled()) {
                            logger.info("Message is not normal request, esmClass:" + esmClass +", Using message from message body " + decodedPduMessage);
                        }
-                       DlrParser dlrParser = new NexmoDlrParser();
+                       DlrParser dlrParser = new TelestaxDlrParser();
 
                        DLRPayload dlrPayload = dlrParser.parseMessage(decodedPduMessage);
                        smppMessageHandler.tell(dlrPayload, null);

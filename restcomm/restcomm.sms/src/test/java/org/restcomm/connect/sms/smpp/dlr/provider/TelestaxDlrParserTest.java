@@ -11,12 +11,12 @@ import org.restcomm.connect.sms.smpp.dlr.spi.DlrParser;
  * @author mariafarooq
  *
  */
-public class NexmoDlrParserTest {
+public class TelestaxDlrParserTest {
 
     @Test
     public void parseInvalidDLR() {
         final String pduMessage = "submit date:invaliddate stat:invalidStat";
-        DlrParser parser = new NexmoDlrParser();
+        DlrParser parser = new TelestaxDlrParser();
         DLRPayload dlrMap = parser.parseMessage(pduMessage);
         Assert.assertNull(dlrMap.getId());
     }
@@ -24,7 +24,7 @@ public class NexmoDlrParserTest {
     @Test
     public void parseDLRMessageTest() {
         final String pduMessage = "id:0000058049 sub:001 dlvrd:001 submit date:1805170144 done date:1805170144 stat:DELIVRD err:000 text:none                ";
-        DlrParser parser = new NexmoDlrParser();
+        DlrParser parser = new TelestaxDlrParser();
         DLRPayload dlrMap = parser.parseMessage(pduMessage);
         Assert.assertEquals("0000058049", dlrMap.getId());
         Assert.assertEquals("001", dlrMap.getSub());

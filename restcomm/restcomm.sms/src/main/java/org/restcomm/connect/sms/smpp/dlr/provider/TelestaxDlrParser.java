@@ -12,9 +12,9 @@ import org.restcomm.connect.dao.entities.SmsMessage.Status;
 import org.restcomm.connect.sms.smpp.dlr.spi.DLRPayload;
 import org.restcomm.connect.sms.smpp.dlr.spi.DlrParser;
 
-public class NexmoDlrParser implements DlrParser {
+public class TelestaxDlrParser implements DlrParser {
 
-    private static final Logger logger = Logger.getLogger(NexmoDlrParser.class);
+    private static final Logger logger = Logger.getLogger(TelestaxDlrParser.class);
     private static final Map<String, SmsMessage.Status> statusMap;
 
     private static final String TAG_SEPARATOR = " ";
