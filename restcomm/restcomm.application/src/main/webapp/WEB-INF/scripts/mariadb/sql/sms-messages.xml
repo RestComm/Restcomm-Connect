@@ -18,6 +18,10 @@
     SELECT * FROM restcomm_sms_messages WHERE account_sid=#{account_sid};
   </select>
 
+  <select id="getSmsMessageBySmppMessageId" parameterType="string" resultType="hashmap">
+    SELECT * FROM restcomm_sms_messages WHERE smpp_message_id=#{smpp_message_id};
+  </select>
+
   <delete id="removeSmsMessage" parameterType="string">
     DELETE FROM restcomm_sms_messages WHERE sid=#{sid};
   </delete>
