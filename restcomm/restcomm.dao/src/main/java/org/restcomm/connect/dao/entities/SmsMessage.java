@@ -32,6 +32,7 @@ import org.restcomm.connect.commons.stream.StreamEvent;
 
 /**
  * @author quintana.thomas@gmail.com (Thomas Quintana)
+ * @author mariafarooq
  */
 @Immutable
 public final class SmsMessage implements StreamEvent {
@@ -51,10 +52,11 @@ public final class SmsMessage implements StreamEvent {
 
     private final String apiVersion;
     private final URI uri;
+    private final String smppMessageId;
 
     public SmsMessage(final Sid sid, final DateTime dateCreated, final DateTime dateUpdated, final DateTime dateSent,
             final Sid accountSid, final String sender, final String recipient, final String body, final Status status,
-            final Direction direction, final BigDecimal price, final Currency priceUnit, final String apiVersion, final URI uri) {
+            final Direction direction, final BigDecimal price, final Currency priceUnit, final String apiVersion, final URI uri, final String smppMessageId) {
         super();
         this.sid = sid;
         this.dateCreated = dateCreated;
@@ -70,6 +72,7 @@ public final class SmsMessage implements StreamEvent {
         this.priceUnit = priceUnit;
         this.apiVersion = apiVersion;
         this.uri = uri;
+        this.smppMessageId = smppMessageId;
     }
 
     public static Builder builder() {
@@ -132,14 +135,23 @@ public final class SmsMessage implements StreamEvent {
         return uri;
     }
 
+    public String getSmppMessageId() {
+        return smppMessageId;
+    }
+
     public SmsMessage setDateSent(final DateTime dateSent) {
         return new SmsMessage(sid, dateCreated, DateTime.now(), dateSent, accountSid, sender, recipient, body, status,
-                direction, price, priceUnit, apiVersion, uri);
+                direction, price, priceUnit, apiVersion, uri, smppMessageId);
     }
 
     public SmsMessage setStatus(final Status status) {
         return new SmsMessage(sid, dateCreated, DateTime.now(), dateSent, accountSid, sender, recipient, body, status,
-                direction, price, priceUnit, apiVersion, uri);
+                direction, price, priceUnit, apiVersion, uri, smppMessageId);
+    }
+
+    public SmsMessage setSmppMessageId(final String smppMessageId) {
+        return new SmsMessage(sid, dateCreated, DateTime.now(), dateSent, accountSid, sender, recipient, body, status,
+                direction, price, priceUnit, apiVersion, uri, smppMessageId);
     }
 
     @NotThreadSafe
@@ -158,6 +170,7 @@ public final class SmsMessage implements StreamEvent {
         private URI uri;
         private DateTime dateCreated;
         private DateTime dateUpdated;
+        private String smppMessageId;
 
         private Builder() {
             super();
@@ -171,7 +184,7 @@ public final class SmsMessage implements StreamEvent {
                 dateUpdated = dateCreated;
             }
             return new SmsMessage(sid, dateCreated, dateUpdated, dateSent, accountSid, sender, recipient, body, status, direction, price,
-                    priceUnit, apiVersion, uri);
+                    priceUnit, apiVersion, uri, smppMessageId);
         }
 
         public void setSid(final Sid sid) {
@@ -229,6 +242,10 @@ public final class SmsMessage implements StreamEvent {
         public void setDateUpdated(DateTime dateUpdated) {
             this.dateUpdated = dateUpdated;
         }
+
+        public void setSmppMessageId(String smppMessageId) {
+            this.smppMessageId = smppMessageId;
+        }
     }
 
     public enum Direction {
@@ -257,7 +274,7 @@ public final class SmsMessage implements StreamEvent {
     }
 
     public enum Status {
-        QUEUED("queued"), SENDING("sending"), SENT("sent"), FAILED("failed"), RECEIVED("received"), DELIVERED("delivered");
+        QUEUED("queued"), SENDING("sending"), SENT("sent"), FAILED("failed"), RECEIVED("received"), DELIVERED("delivered"), UNDELIVERED("undelivered");
 
         private final String text;
 

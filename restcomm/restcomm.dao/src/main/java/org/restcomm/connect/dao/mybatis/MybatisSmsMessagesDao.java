@@ -202,6 +202,7 @@ public final class MybatisSmsMessagesDao implements SmsMessagesDao {
         map.put("price_unit", writeCurrency(smsMessage.getPriceUnit()));
         map.put("api_version", smsMessage.getApiVersion());
         map.put("uri", writeUri(smsMessage.getUri()));
+        map.put("smpp_message_id", smsMessage.getSmppMessageId());
         return map;
     }
 
@@ -220,7 +221,8 @@ public final class MybatisSmsMessagesDao implements SmsMessagesDao {
         final Currency priceUnit = readCurrency(map.get("price_unit"));
         final String apiVersion = readString(map.get("api_version"));
         final URI uri = readUri(map.get("uri"));
+        final String smppMessageId = readString(map.get("smpp_message_id"));
         return new SmsMessage(sid, dateCreated, dateUpdated, dateSent, accountSid, sender, recipient, body, status, direction,
-                price, priceUnit, apiVersion, uri);
+                price, priceUnit, apiVersion, uri, smppMessageId);
     }
 }

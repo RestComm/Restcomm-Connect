@@ -44,4 +44,11 @@ public class SmppDeliveryReceiptEntity {
     public DateTime getDateSent() {
         return this.dateSent;
     }
+
+    @Override
+    public String toString() {
+        return "SmppDeliveryReceiptEntity [daoMessageSid=" + daoMessageSid + ", messageId=" + messageId + ", status="
+                + status + ", dateSent=" + dateSent + "]";
+    }
+
 }
