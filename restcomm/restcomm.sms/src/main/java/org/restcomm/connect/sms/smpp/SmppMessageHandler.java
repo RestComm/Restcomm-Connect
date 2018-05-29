@@ -132,19 +132,18 @@ public class SmppMessageHandler extends RestcommUntypedActor {
                 logger.info("SmppMessageHandler processing Outbound Message " + message.toString());
             }
             outbound((SmppOutboundMessageEntity) message);
-        } else if (message instanceof SmppDeliveryReceiptEntity){
+        } else if (message instanceof SmppDeliveryReceiptEntity) {
             SmppDeliveryReceiptEntity smppDeliveryReceiptEntity = (SmppDeliveryReceiptEntity)message;
             SmsMessagesDao smsMessagesDao = storage.getSmsMessagesDao();
             SmsMessage smsMessage = smsMessagesDao.getSmsMessage(smppDeliveryReceiptEntity.getDaoMessageSid());
             SmsMessage.Status status = smppDeliveryReceiptEntity.getStatus();
-            DateTime dateSent =smppDeliveryReceiptEntity.getDateSent();
 
             if(logger.isInfoEnabled()) {
-                logger.info("updating "+smsMessage.getSid()+" status="+status+" dateSent="+dateSent);
+                logger.info("SmppDeliveryReceiptEntity "+smppDeliveryReceiptEntity);
             }
 
             if(smsMessage != null && status != null) {
-                smsMessagesDao.updateSmsMessage(smsMessage.setStatus(status).setDateSent(dateSent));
+                smsMessagesDao.updateSmsMessage(smsMessage.setStatus(status));
             }
         } else if (message instanceof CreateSmsSession) {
             IExtensionCreateSmsSessionRequest ier = (CreateSmsSession) message;
