@@ -46,7 +46,7 @@ import org.apache.log4j.Logger;
 import org.joda.time.DateTime;
 import org.restcomm.connect.commons.dao.Sid;
 import org.restcomm.connect.dao.entities.SmsMessage;
-import org.restcomm.connect.sms.smpp.dlr.provider.TelestaxDlrParser;
+import org.restcomm.connect.sms.smpp.dlr.provider.NexmoDlrParser;
 import org.restcomm.connect.sms.smpp.dlr.spi.DlrParser;
 
 import javax.servlet.ServletException;
@@ -59,6 +59,7 @@ import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentMap;
 import java.util.concurrent.CopyOnWriteArrayList;
+import org.restcomm.connect.sms.smpp.dlr.spi.DLRPayload;
 
 /**
  * @author amit bhayani
@@ -444,12 +445,12 @@ public class SmppClientOpsThread implements Runnable {
                        if(logger.isInfoEnabled()) {
                            logger.info("Message is not normal request, esmClass:" + esmClass +", Using message from message body " + decodedPduMessage);
                        }
-                       DlrParser dlrParser = new TelestaxDlrParser();
+                       DlrParser dlrParser = new NexmoDlrParser();
 
-                       Map<String,String> dlrMap = dlrParser.parseMessage(decodedPduMessage);
-                       String dlrMessageId = dlrMap.get("id");
-                       SmsMessage.Status dlrStatus = dlrParser.getRestcommStatus(dlrMap.get("status"));
-                       DateTime dlrDateSent = dlrParser.getDate(dlrMap.get("sent_date"));
+                       DLRPayload dlrPayload = dlrParser.parseMessage(decodedPduMessage);
+                       String dlrMessageId = dlrPayload.getId();
+                       SmsMessage.Status dlrStatus = dlrPayload.getStat();
+                       DateTime dlrDateSent = dlrPayload.getDoneDate();
 
                        Sid daoMessageSid = null;
                        if(mapResp.containsKey(dlrMessageId)) {
