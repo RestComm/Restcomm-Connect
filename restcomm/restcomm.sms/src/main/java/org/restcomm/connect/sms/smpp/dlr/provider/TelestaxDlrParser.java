@@ -16,13 +16,13 @@ public class TelestaxDlrParser implements DlrParser {
     static
     {
         statusMap = new HashMap<String, SmsMessage.Status>();
-        statusMap.put("ACCEPTD", SmsMessage.Status.QUEUED);
+        statusMap.put("ACCEPTD", SmsMessage.Status.SENT);
+        statusMap.put("UNDELIV", SmsMessage.Status.UNDELIVERED);
         statusMap.put("EXPIRED", SmsMessage.Status.FAILED);
         statusMap.put("DELETED", SmsMessage.Status.FAILED);
-        statusMap.put("UNDELIV", SmsMessage.Status.FAILED);
         statusMap.put("REJECTD", SmsMessage.Status.FAILED);
         statusMap.put("DELIVRD", SmsMessage.Status.DELIVERED);
-        statusMap.put("UNKNOWN", SmsMessage.Status.SENDING);
+        statusMap.put("UNKNOWN", SmsMessage.Status.SENT);
     }
 
     @Override
