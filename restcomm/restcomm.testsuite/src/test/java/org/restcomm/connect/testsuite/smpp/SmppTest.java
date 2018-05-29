@@ -302,7 +302,7 @@ public class SmppTest {
         String status = smsCDR.get("status").getAsString();
         String actualFrom = smsCDR.get("from").getAsString();
         String actualTo = smsCDR.get("to").getAsString();
-        assertEquals(SmsMessage.Status.SENDING.toString(), status);
+        assertEquals(SmsMessage.Status.SENT.toString(), status);
         assertEquals("alice", actualFrom);
         assertEquals("9999", actualTo);
         
@@ -354,7 +354,7 @@ public class SmppTest {
         String status = smsCDR.get("status").getAsString();
         String actualFrom = smsCDR.get("from").getAsString();
         String actualTo = smsCDR.get("to").getAsString();
-        assertEquals(SmsMessage.Status.SENDING.toString(), status);
+        assertEquals(SmsMessage.Status.SENT.toString(), status);
         assertEquals("alice", actualFrom);
         assertEquals("9999", actualTo);
         
