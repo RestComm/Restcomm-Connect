@@ -166,12 +166,12 @@ public class SmppMessageHandler extends RestcommUntypedActor {
             context.stop(session);
         } else if (message instanceof PduAsyncResponse) {
 
-        	PduAsyncResponse pduAsyncResponse = (PduAsyncResponse) message;
+            PduAsyncResponse pduAsyncResponse = (PduAsyncResponse) message;
 
             if (pduAsyncResponse instanceof DefaultPduAsyncResponse && pduAsyncResponse.getResponse() instanceof SubmitSmResp) {
                 SubmitSmResp submitSmResp = (SubmitSmResp) pduAsyncResponse.getResponse();
                 String smppMessageId = submitSmResp.getMessageId();
-                
+
                 Object ref = pduAsyncResponse.getRequest().getReferenceObject();
 
                 if (ref != null && ref instanceof Sid) {
