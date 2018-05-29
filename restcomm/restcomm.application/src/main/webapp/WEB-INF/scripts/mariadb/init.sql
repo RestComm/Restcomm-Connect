@@ -232,7 +232,7 @@ sms_url MEDIUMTEXT,
 sms_method VARCHAR(4),
 sms_fallback_url MEDIUMTEXT,
 sms_fallback_method VARCHAR(4),
-uri MEDIUMTEXT NOT NULL
+uri MEDIUMTEXT NOT NULL,
 );
 
 CREATE TABLE restcomm_sms_messages (
@@ -248,7 +248,8 @@ status VARCHAR(20) NOT NULL,
 direction VARCHAR(14) NOT NULL,
 price VARCHAR(8) NOT NULL,
 api_version VARCHAR(10) NOT NULL,
-uri MEDIUMTEXT NOT NULL
+uri MEDIUMTEXT NOT NULL,
+smpp_message_id MEDIUMTEXT
 );
 
 CREATE TABLE restcomm_recordings (
