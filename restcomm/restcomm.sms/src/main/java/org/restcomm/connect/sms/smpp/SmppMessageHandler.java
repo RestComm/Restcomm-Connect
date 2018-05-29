@@ -65,12 +65,16 @@ import org.restcomm.connect.sms.SmsSession;
 import org.restcomm.connect.sms.api.CreateSmsSession;
 import org.restcomm.connect.sms.api.DestroySmsSession;
 import org.restcomm.connect.sms.api.SmsServiceResponse;
+import org.restcomm.connect.sms.smpp.dlr.spi.DLRPayload;
 import org.restcomm.connect.telephony.api.FeatureAccessRequest;
 import org.restcomm.smpp.parameter.TlvSet;
 
 import com.cloudhopper.commons.charset.CharsetUtil;
+import com.cloudhopper.smpp.PduAsyncResponse;
 import com.cloudhopper.smpp.SmppConstants;
+import com.cloudhopper.smpp.impl.DefaultPduAsyncResponse;
 import com.cloudhopper.smpp.pdu.SubmitSm;
+import com.cloudhopper.smpp.pdu.SubmitSmResp;
 import com.cloudhopper.smpp.tlv.Tlv;
 import com.cloudhopper.smpp.type.Address;
 import com.cloudhopper.smpp.type.RecoverablePduException;
@@ -132,18 +136,15 @@ public class SmppMessageHandler extends RestcommUntypedActor {
                 logger.info("SmppMessageHandler processing Outbound Message " + message.toString());
             }
             outbound((SmppOutboundMessageEntity) message);
-        } else if (message instanceof SmppDeliveryReceiptEntity) {
-            SmppDeliveryReceiptEntity smppDeliveryReceiptEntity = (SmppDeliveryReceiptEntity)message;
+        } else if (message instanceof DLRPayload) {
+            DLRPayload dLRPayload = (DLRPayload) message;
+            logger.info("DLRPayload " + dLRPayload);
             SmsMessagesDao smsMessagesDao = storage.getSmsMessagesDao();
-            SmsMessage smsMessage = smsMessagesDao.getSmsMessage(smppDeliveryReceiptEntity.getDaoMessageSid());
-            SmsMessage.Status status = smppDeliveryReceiptEntity.getStatus();
-
-            if(logger.isInfoEnabled()) {
-                logger.info("SmppDeliveryReceiptEntity "+smppDeliveryReceiptEntity);
-            }
-
-            if(smsMessage != null && status != null) {
-                smsMessagesDao.updateSmsMessage(smsMessage.setStatus(status));
+            SmsMessage smsMessage = smsMessagesDao.getSmsMessageBySmppMessageId(dLRPayload.getId());
+            if (smsMessage == null) {
+                logger.warning("responseMessageId=" + dLRPayload.getId() + " was never received! ");
+            } else {
+                smsMessagesDao.updateSmsMessage(smsMessage.setStatus(dLRPayload.getStat()));
             }
         } else if (message instanceof CreateSmsSession) {
             IExtensionCreateSmsSessionRequest ier = (CreateSmsSession) message;
@@ -163,6 +164,28 @@ public class SmppMessageHandler extends RestcommUntypedActor {
             final DestroySmsSession destroySmsSession = (DestroySmsSession) message;
             final ActorRef session = destroySmsSession.session();
             context.stop(session);
+        } else if (message instanceof PduAsyncResponse) {
+
+        	PduAsyncResponse pduAsyncResponse = (PduAsyncResponse) message;
+
+            if (pduAsyncResponse instanceof DefaultPduAsyncResponse && pduAsyncResponse.getResponse() instanceof SubmitSmResp) {
+                SubmitSmResp submitSmResp = (SubmitSmResp) pduAsyncResponse.getResponse();
+                String smppMessageId = submitSmResp.getMessageId();
+                
+                Object ref = pduAsyncResponse.getRequest().getReferenceObject();
+
+                if (ref != null && ref instanceof Sid) {
+                    Sid sid = (Sid) ref;
+                    SmsMessage smsMessage = storage.getSmsMessagesDao().getSmsMessage(sid);
+                    //update smppMessageId as well as status to SENT and date sent
+                    smsMessage = smsMessage.setSmppMessageId(smppMessageId).setStatus(SmsMessage.Status.SENT).setDateSent(DateTime.now());
+                    storage.getSmsMessagesDao().updateSmsMessage(smsMessage);
+                } else {
+                    logger.warning("PduAsyncResponse reference is null or not Sid");
+                }
+             } else {
+                logger.info("PduAsyncResponse not SubmitSmResp " + pduAsyncResponse.getClass().toString());
+            }
         }
     }
 

@@ -80,7 +80,6 @@ public class SmppClientOpsThread implements Runnable {
     private static Charset inboundEncoding;
     private static boolean messagePayloadFlag;
     private static boolean autoDetectDcsFlag;
-    private static ConcurrentMap<String, Map<Sid, Integer>> mapResp;
     protected volatile boolean started = true;
     private static int sipPort;
 
@@ -320,7 +319,6 @@ public class SmppClientOpsThread implements Runnable {
             outboundEncoding = esme.getOutboundDefaultEncoding();
             messagePayloadFlag = esme.getMessagePayloadFlag();
             autoDetectDcsFlag = esme.getAutoDetectDcsFlag();
-            mapResp = new ConcurrentHashMap<String,Map<Sid, Integer>>();
         }
 
         @Override
@@ -347,39 +345,16 @@ public class SmppClientOpsThread implements Runnable {
         }
 
         @Override
-        public void fireExpectedPduResponseReceived(
+        public void fireExpectedPduResponseReceived (
                 PduAsyncResponse pduAsyncResponse) {
             // TODO : SMPP Response received. Does RestComm need confirmation
             // for this?
-            logger.warn("ExpectedPduResponseReceived received for Smpp "
+            logger.info("ExpectedPduResponseReceived received for Smpp "
                     + this.esme.getName() + " PduAsyncResponse="
                     + pduAsyncResponse);
 
-            if (pduAsyncResponse instanceof DefaultPduAsyncResponse &&
-                pduAsyncResponse.getResponse() instanceof SubmitSmResp) {
-                String key = ((SubmitSmResp) pduAsyncResponse.getResponse()).getMessageId();
-
-                Object ref = pduAsyncResponse.getRequest().getReferenceObject();
-
-                if (ref != null && ref instanceof Sid) {
-                    Sid sid = (Sid) ref;
-                    Map<Sid, Integer> entry;
-                    if (!mapResp.containsKey(key)) {
-                        entry = new HashMap<Sid, Integer>();
-                        entry.put(sid, 1);
-                    } else {
-                        //to enable multiple DLRs for splitted messages
-                        entry = mapResp.get(key);
-                        entry.put(sid, ((Integer) entry.get(sid)) + 1);
-                    }
-                    mapResp.put(key, entry);
-                } else {
-                    logger.warn("PduAsyncResponse reference is null or not Sid");
-                }
-            } else {
-                logger.info("PduAsyncResponse not SubmitSmResp " + pduAsyncResponse.getClass().toString());
-            }
-
+            //forward this to smppMessageHandle so we can potentially update the message status
+            smppMessageHandler.tell(pduAsyncResponse, null);
         }
 
         @Override
@@ -448,27 +423,7 @@ public class SmppClientOpsThread implements Runnable {
                        DlrParser dlrParser = new NexmoDlrParser();
 
                        DLRPayload dlrPayload = dlrParser.parseMessage(decodedPduMessage);
-                       String dlrMessageId = dlrPayload.getId();
-                       SmsMessage.Status dlrStatus = dlrPayload.getStat();
-                       DateTime dlrDateSent = dlrPayload.getDoneDate();
-
-                       Sid daoMessageSid = null;
-                       if(mapResp.containsKey(dlrMessageId)) {
-                           Map<Sid,Integer> entry = mapResp.get(dlrMessageId);
-                           try {
-                               daoMessageSid =  entry.keySet().iterator().next();
-                               SmppDeliveryReceiptEntity smppDeliveryReceiptEntity = new SmppDeliveryReceiptEntity(daoMessageSid, dlrMessageId, dlrStatus, dlrDateSent);
-                               smppMessageHandler.tell(smppDeliveryReceiptEntity, null);
-                           } catch (Exception e){
-                               e.printStackTrace();
-                           }
-                           //TODO: shouldnt immediately remove this entry when we can handle all DLRs from split message
-                           mapResp.remove(dlrMessageId);
-                       }else {
-                           if(logger.isInfoEnabled()) {
-                               logger.info("responseMessageId=" + dlrMessageId + " was never received! ");
-                           }
-                       }
+                       smppMessageHandler.tell(dlrPayload, null);
                     }
                 } catch (Exception e) {
                     logger.error("Exception while trying to process incoming SMPP message to Restcomm: " + e);
