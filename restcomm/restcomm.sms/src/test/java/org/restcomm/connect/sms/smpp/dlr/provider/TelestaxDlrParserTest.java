@@ -7,9 +7,10 @@ import org.junit.Test;
 import org.restcomm.connect.dao.entities.SmsMessage;
 import org.restcomm.connect.sms.smpp.dlr.spi.DlrParser;
 
-import com.cloudhopper.commons.charset.CharsetUtil;
-import com.cloudhopper.smpp.type.SmppInvalidArgumentException;
-
+/**
+ * @author mariafarooq
+ *
+ */
 public class TelestaxDlrParserTest {
 
 	@Test
@@ -24,20 +25,14 @@ public class TelestaxDlrParserTest {
 	}
 	
 	@Test
-	public void getRestcommStatus() throws SmppInvalidArgumentException {
+	public void getRestcommStatusTest() {
 		DlrParser parser = new TelestaxDlrParser();
-		statusMap.put("ACCEPTD", SmsMessage.Status.QUEUED);
-        statusMap.put("EXPIRED", SmsMessage.Status.FAILED);
-        statusMap.put("DELETED", SmsMessage.Status.FAILED);
-        statusMap.put("UNDELIV", SmsMessage.Status.FAILED);
-        statusMap.put("REJECTD", SmsMessage.Status.FAILED);
-        statusMap.put("UNKNOWN", SmsMessage.Status.SENDING);
 		Assert.assertEquals(SmsMessage.Status.DELIVERED, parser.getRestcommStatus("DELIVRD"));
-		Assert.assertEquals(SmsMessage.Status.DELIVERED, parser.getRestcommStatus("DELIVRD"));
-		Assert.assertEquals(SmsMessage.Status.DELIVERED, parser.getRestcommStatus("DELIVRD"));
-		Assert.assertEquals(SmsMessage.Status.DELIVERED, parser.getRestcommStatus("DELIVRD"));
-		Assert.assertEquals(SmsMessage.Status.DELIVERED, parser.getRestcommStatus("DELIVRD"));
-		Assert.assertEquals(SmsMessage.Status.DELIVERED, parser.getRestcommStatus("DELIVRD"));
-		Assert.assertEquals(SmsMessage.Status.DELIVERED, parser.getRestcommStatus("DELIVRD"));
+		Assert.assertEquals(SmsMessage.Status.SENT, parser.getRestcommStatus("ACCEPTD"));
+		Assert.assertEquals(SmsMessage.Status.FAILED, parser.getRestcommStatus("EXPIRED"));
+		Assert.assertEquals(SmsMessage.Status.FAILED, parser.getRestcommStatus("DELETED"));
+		Assert.assertEquals(SmsMessage.Status.UNDELIVERED, parser.getRestcommStatus("UNDELIV"));
+		Assert.assertEquals(SmsMessage.Status.FAILED, parser.getRestcommStatus("REJECTD"));
+		Assert.assertEquals(SmsMessage.Status.SENT, parser.getRestcommStatus("UNKNOWN"));
 	}
 }
