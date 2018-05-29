@@ -204,4 +204,10 @@ public final class SmsMessagesDaoTest {
         // Validate the results.
         assertTrue(messages.getSmsMessages(account).size() == 0);
     }
+
+    @Test
+    public void testGetSmsMessageBySmppMessageID(){}
+
+    @Test
+    public void testUpdateSmsMessageDateSentAndStatus(){}
 }
