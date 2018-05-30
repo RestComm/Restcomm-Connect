@@ -895,7 +895,7 @@ public class VoiceInterpreter extends BaseVoiceInterpreter {
                 final boolean activeParser = parser != null;
                 final boolean noDialAction = action == null;
                 Object data = response.get();
-                msStopRingingTonePending = !(data instanceof CollectedResult);
+                msStopRingingTonePending = !((data instanceof CollectedResult) || enable200OkDelay);
                 // This place just happen when RC try to stop ringing tone, RC should wait for NTFY to be sure Ringing
                 // tone already finished to move to next verb.
                 // https://telestax.atlassian.net/browse/RESTCOMM-2087
