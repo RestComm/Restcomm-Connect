@@ -19,6 +19,9 @@
  */
 package org.restcomm.connect.dao.mybatis;
 
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertTrue;
+
 import java.io.InputStream;
 import java.math.BigDecimal;
 import java.net.URI;
@@ -30,11 +33,10 @@ import org.apache.ibatis.session.SqlSessionFactoryBuilder;
 import org.apache.log4j.Logger;
 import org.joda.time.DateTime;
 import org.junit.After;
-import static org.junit.Assert.*;
 import org.junit.Before;
 import org.junit.Test;
-import org.restcomm.connect.dao.SmsMessagesDao;
 import org.restcomm.connect.commons.dao.Sid;
+import org.restcomm.connect.dao.SmsMessagesDao;
 import org.restcomm.connect.dao.entities.SmsMessage;
 
 /**
@@ -112,6 +114,10 @@ public final class SmsMessagesDaoTest {
         messages.removeSmsMessage(sid);
         // Validate that the CDR was removed.
         assertTrue(messages.getSmsMessage(sid) == null);
+    }
+    
+    private SmsMessage createSms() {
+    	return createSms(Sid.generate(Sid.Type.ACCOUNT), SmsMessage.Direction.OUTBOUND_API, 0, DateTime.now());
     }
 
     private SmsMessage createSms(Sid account, SmsMessage.Direction direction, int i, DateTime date) {
@@ -206,8 +212,26 @@ public final class SmsMessagesDaoTest {
     }
 
     @Test
-    public void testGetSmsMessageBySmppMessageID(){}
+    public void testUpdateSmsMessageDateSentAndStatusAndGetBySmppMsgId(){
+    	final DateTime dateSent = DateTime.now();
+    	final SmsMessage.Status status = SmsMessage.Status.SENT;
+    	final String smppMessageId = "0000058049";
 
-    @Test
-    public void testUpdateSmsMessageDateSentAndStatus(){}
+    	// add a new msg
+    	SmsMessage smsMessage = createSms();
+    	final SmsMessagesDao messages = manager.getSmsMessagesDao();
+        messages.addSmsMessage(smsMessage);
+
+        //set status and dateSent
+    	smsMessage = smsMessage.setStatus(status).setDateSent(dateSent).setSmppMessageId(smppMessageId);
+    	messages.updateSmsMessage(smsMessage);
+        
+        //get SmsMessage By SmppMessageId
+        SmsMessage resultantSmsMessage = messages.getSmsMessageBySmppMessageId(smppMessageId);
+
+        //make assertions
+        assertEquals(smsMessage.getSmppMessageId(), resultantSmsMessage.getSmppMessageId());
+        assertEquals(smsMessage.getDateSent(), resultantSmsMessage.getDateSent());
+        assertEquals(smsMessage.getStatus(), resultantSmsMessage.getStatus());
+    }
 }
