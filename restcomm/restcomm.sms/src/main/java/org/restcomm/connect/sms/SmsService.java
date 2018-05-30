@@ -346,7 +346,7 @@ public final class SmsService extends RestcommUntypedActor {
                     builder.setSender(client.getLogin());
                     builder.setBody(new String(request.getRawContent()));
                     builder.setDirection(Direction.OUTBOUND_CALL);
-                    builder.setStatus(Status.RECEIVED);
+                    builder.setStatus(Status.SENDING);
                     builder.setPrice(new BigDecimal("0.00"));
                     // TODO implement currency property to be read from Configuration
                     builder.setPriceUnit(Currency.getInstance("USD"));

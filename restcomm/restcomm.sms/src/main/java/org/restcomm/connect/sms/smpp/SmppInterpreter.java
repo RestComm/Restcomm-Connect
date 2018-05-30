@@ -771,7 +771,7 @@ public class SmppInterpreter extends RestcommUntypedActor {
                 builder.setSender(from);
                 builder.setBody(body);
                 builder.setDirection(Direction.OUTBOUND_REPLY);
-                builder.setStatus(Status.RECEIVED);
+                builder.setStatus(Status.SENDING);
                 builder.setPrice(new BigDecimal("0.00"));
                 // TODO implement currency property to be read from Configuration
                 builder.setPriceUnit(Currency.getInstance("USD"));
