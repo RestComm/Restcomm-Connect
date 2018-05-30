@@ -290,6 +290,7 @@ public final class SmsSession extends RestcommUntypedActor {
         if (initial == null) {
             initial = last;
         }
+
         final Charset charset;
         if(logger.isInfoEnabled()) {
             logger.info("SMS encoding:  " + last.encoding() );
@@ -327,6 +328,7 @@ public final class SmsSession extends RestcommUntypedActor {
                 if(logger.isInfoEnabled()) {
                     logger.info("Destination is not a local registered client, therefore, sending through SMPP to:  " + last.to() );
                 }
+
                 if (sendUsingSmpp(last.from(), last.to(), last.body(), tlvSet, charset))
                     return;
             }
@@ -350,8 +352,19 @@ public final class SmsSession extends RestcommUntypedActor {
                 logger.info("SMPP session is available and connected, outbound message will be forwarded to :  " + to );
                 logger.info("Encoding:  " + encoding );
             }
+
+            SmsMessage record = (SmsMessage)this.attributes.get("record");
+            Sid sid = null;
+            if(record!=null) {
+                sid = record.getSid();
+                if(logger.isInfoEnabled()) {
+                    logger.info("record sid = "+sid.toString());
+                }
+            }else{
+                logger.error("record is null");
+            }
             try {
-                final SmppOutboundMessageEntity sms = new SmppOutboundMessageEntity(to, from, body, encoding, tlvSet);
+                final SmppOutboundMessageEntity sms = new SmppOutboundMessageEntity(to, from, body, encoding, tlvSet, sid);
                 smppMessageHandler.tell(sms, null);
             }catch (final Exception exception) {
                 // Log the exception.
