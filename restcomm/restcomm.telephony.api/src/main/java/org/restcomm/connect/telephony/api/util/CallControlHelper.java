@@ -54,7 +54,7 @@ public class CallControlHelper {
     public static boolean permitted(final String authorization, final String method, DaoManager daoManager, final Sid organizationSid) {
         final Map<String, String> map = authHeaderToMap(authorization);
         final String user = map.get("username");
-        final String authHeaderAlgorithm = map.get("algorithm");
+        String authHeaderAlgorithm = map.get("algorithm");
         final String realm = map.get("realm");
         final String uri = map.get("uri");
         final String nonce = map.get("nonce");
@@ -72,6 +72,9 @@ public class CallControlHelper {
         if (client != null && Client.ENABLED == client.getStatus()) {
             final String password = client.getPassword();
             final String clientPasswordAlgorithm = client.getPasswordAlgorithm();
+            if (authHeaderAlgorithm == null) {
+                authHeaderAlgorithm = clientPasswordAlgorithm;
+            }
             final String result = DigestAuthentication.response(authHeaderAlgorithm, user, realm, password,clientPasswordAlgorithm, nonce, nc, cnonce,
                     method, uri, null, qop);
             if (logger.isDebugEnabled()) {

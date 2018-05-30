@@ -46,7 +46,7 @@ import org.restcomm.connect.provisioning.number.api.PhoneNumberType;
 @Path("/Accounts/{accountSid}/AvailablePhoneNumbers/{IsoCountryCode}/TollFree")
 @ThreadSafe
 @Singleton
-public final class AvailablePhoneNumbersTollFreeXmlEndpoint extends AvailablePhoneNumbersEndpoint {
+public class AvailablePhoneNumbersTollFreeXmlEndpoint extends AvailablePhoneNumbersEndpoint {
     public AvailablePhoneNumbersTollFreeXmlEndpoint() {
         super();
     }
