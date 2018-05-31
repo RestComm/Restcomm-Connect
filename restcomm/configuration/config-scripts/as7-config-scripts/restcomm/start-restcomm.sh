@@ -132,8 +132,6 @@ echo "Looking for the IP Address, subnet, network and broadcast_address"
 fi
 
 BIND_ADDRESS="$PRIVATE_IP"
-BIND_NETWORK="$NETWORK"
-BIND_SUBNET_MASK="$SUBNET_MASK"
 
 if [[ -z "$STATIC_ADDRESS" ]]; then
 	STATIC_ADDRESS=$BIND_ADDRESS
@@ -158,7 +156,7 @@ if [[ "$MANUAL_SETUP" == "false" || "$MANUAL_SETUP" == "FALSE" ]]; then
 fi
 
 if [[ "$MS_EXTERNAL" == "false" || "$MS_EXTERNAL" == "FALSE" ]]; then
-    source $BASEDIR/start-mediaserver.sh
+    source $MMS_HOME/bin/start-mediaserver.sh
 fi
 # start restcomm in selected run mode
 startRestcomm "$RUN_MODE" "$BIND_ADDRESS"
