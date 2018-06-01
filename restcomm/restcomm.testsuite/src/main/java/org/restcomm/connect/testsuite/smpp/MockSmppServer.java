@@ -50,6 +50,7 @@ public class MockSmppServer {
     private static SmppInboundMessageEntity smppInboundMessageEntity;
     private static boolean messageReceived;
     private static String smppMessageId;
+    private static boolean sendFailureOnSubmitSmResponse;
 
     private String getDlrMessage(final String smppMessageId, final SmppDeliveryStatus smppStatus){
         String dlrFormat = "id:%s sub:001 dlvrd:001 submit date:1805170144 done date:1805170144 stat:%s err:000 text:none";
@@ -195,6 +196,14 @@ public class MockSmppServer {
         return smppMessageId;
     }
 
+    public static boolean isSendFailureOnSubmitSmResponse() {
+        return sendFailureOnSubmitSmResponse;
+    }
+
+    public static void setSendFailureOnSubmitSmResponse(boolean sendFailureOnSubmitSmResponse) {
+        MockSmppServer.sendFailureOnSubmitSmResponse = sendFailureOnSubmitSmResponse;
+    }
+
     private static class DefaultSmppServerHandler implements SmppServerHandler {
 
         @Override
@@ -290,13 +299,14 @@ public class MockSmppServer {
                     logger.info("********DeliverSm Exception******* " + e);
                 }
 
-
                 smppInboundMessageEntity = new SmppInboundMessageEntity(destSmppAddress, sourceSmppAddress, decodedPduMessage, charset, isDeliveryReceipt);
                 messageReceived = true;
             }
             SubmitSmResp response = submitSm.createResponse();
             final String smppMessageIdLocal = System.currentTimeMillis()+"";
             response.setMessageId(smppMessageIdLocal);
+            if(sendFailureOnSubmitSmResponse)
+                response.setCommandStatus(10);//just setting the status to one of error code: Source address invalid.
             smppMessageId = smppMessageIdLocal;
             return response;
         }
