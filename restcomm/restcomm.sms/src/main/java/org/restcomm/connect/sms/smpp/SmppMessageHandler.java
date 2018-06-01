@@ -122,10 +122,16 @@ public class SmppMessageHandler extends RestcommUntypedActor {
 
     @Override
     public void onReceive(Object message) throws Exception {
+        final Class<?> klass = message.getClass();
         final UntypedActorContext context = getContext();
         final ActorRef sender = sender();
         final ActorRef self = self();
         ExtensionController ec = ExtensionController.getInstance();
+
+        if (logger.isInfoEnabled()) {
+            logger.info(" ********** SmppMessageHandler " + self().path() + ", Processing Message: " + klass.getName()
+                    + " Sender is: " + sender.path() + " Message is: " + message);
+        }
         if (message instanceof SmppInboundMessageEntity) {
             if (logger.isInfoEnabled()) {
                 logger.info("SmppMessageHandler processing Inbound Message " + message.toString());
@@ -170,6 +176,10 @@ public class SmppMessageHandler extends RestcommUntypedActor {
 
             if (pduAsyncResponse instanceof DefaultPduAsyncResponse && pduAsyncResponse.getResponse() instanceof SubmitSmResp) {
                 SubmitSmResp submitSmResp = (SubmitSmResp) pduAsyncResponse.getResponse();
+                if (logger.isInfoEnabled()) {
+                    logger.info(" ********** SmppMessageHandler received SubmitSmResp: "+submitSmResp +"SubmitSmResp Status:"+submitSmResp.getCommandStatus());
+                }
+
                 String smppMessageId = submitSmResp.getMessageId();
 
                 Object ref = pduAsyncResponse.getRequest().getReferenceObject();
@@ -177,8 +187,13 @@ public class SmppMessageHandler extends RestcommUntypedActor {
                 if (ref != null && ref instanceof Sid) {
                     Sid sid = (Sid) ref;
                     SmsMessage smsMessage = storage.getSmsMessagesDao().getSmsMessage(sid);
-                    //update smppMessageId as well as status to SENT and date sent
-                    smsMessage = smsMessage.setSmppMessageId(smppMessageId).setStatus(SmsMessage.Status.SENT).setDateSent(DateTime.now());
+                    if (submitSmResp.getCommandStatus() != 0) {
+                        logger.warning(String.format("SubmitSmResp Failure! Message could not be sent Status Code %s Result Messages: %s", submitSmResp.getCommandStatus(), submitSmResp.getResultMessage()));
+                        smsMessage = smsMessage.setSmppMessageId(smppMessageId).setStatus(SmsMessage.Status.FAILED);
+                    } else {
+                        //update smppMessageId as well as status to SENT and date sent
+                        smsMessage = smsMessage.setSmppMessageId(smppMessageId).setStatus(SmsMessage.Status.SENT).setDateSent(DateTime.now());
+                    }
                     storage.getSmsMessagesDao().updateSmsMessage(smsMessage);
                 } else {
                     logger.warning("PduAsyncResponse reference is null or not Sid");

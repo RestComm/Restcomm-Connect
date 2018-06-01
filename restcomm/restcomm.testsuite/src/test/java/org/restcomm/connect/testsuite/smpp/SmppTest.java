@@ -518,6 +518,54 @@ public class SmppTest {
 		Request msgReceived = shoaibCall.getLastReceivedMessageRequest();
 		assertTrue(new String(msgReceived.getRawContent()).equals("Test Message from maria"));
 	}
+	
+	@Test
+	@Category(value={FeatureExpTests.class})
+	public void testSendSMPPMessageWithFailedStatus () throws SmppInvalidArgumentException, IOException, InterruptedException, ParseException {
+
+        stubFor(get(urlPathEqualTo("/smsApp"))
+                .willReturn(aResponse()
+                        .withStatus(200)
+                        .withHeader("Content-Type", "text/xml")
+                        .withBody(smsEchoRcmlPureSipProviderNumber)));
+        
+        //set submit_sm_resp to Failed
+        mockSmppServer.setSendFailureOnSubmitSmResponse(true);
+
+        final String from = "alice";
+        final String to = "9999"; // pstn (not a RC number)
+        // Send out SMS using SMPP via rest api
+        final String body="Test Message from Alice. "+System.currentTimeMillis();
+        SmsEndpointTool.getInstance().createSms(deploymentUrl.toString(), adminAccountSid, adminAuthToken, "alice", "9999", body, null);
+        Thread.sleep(5000);
+        SmppInboundMessageEntity inboundMessageEntity = mockSmppServer.getSmppInboundMessageEntity();
+		assertNotNull(inboundMessageEntity);
+		assertTrue(inboundMessageEntity.getSmppTo().equals(to));
+		assertTrue(inboundMessageEntity.getSmppFrom().equals(from));
+		assertTrue(inboundMessageEntity.getSmppContent().equals(body));
+		final String smppMessageId = mockSmppServer.getSmppMessageId();
+		
+		// Verify SMS CDR
+		Map<String, String> filters = new HashMap<String, String>();
+        filters.put("From", from);
+        filters.put("To", to);
+        filters.put("Body", body);
+		JsonObject smsCdrResult = SmsEndpointTool.getInstance().getSmsMessageListUsingFilter(deploymentUrl.toString(), adminAccountSid, adminAuthToken, filters);
+        assertNotNull(smsCdrResult);
+        JsonElement msgs = smsCdrResult.get("messages");
+        JsonObject smsCDR = msgs.getAsJsonArray().get(0).getAsJsonObject();
+        assertNotNull(smsCDR);
+        final String sid = smsCDR.get("sid").getAsString();
+        String status = smsCDR.get("status").getAsString();
+        String actualFrom = smsCDR.get("from").getAsString();
+        String actualTo = smsCDR.get("to").getAsString();
+        assertEquals(SmsMessage.Status.FAILED.toString(), status);
+        assertEquals("alice", actualFrom);
+        assertEquals("9999", actualTo);
+        
+        //set submit_sm_resp to Pass
+        mockSmppServer.setSendFailureOnSubmitSmResponse(false);
+	}
 
 	@Deployment(name = "SmppTests", managed = true, testable = false)
 	public static WebArchive createWebArchive() {
