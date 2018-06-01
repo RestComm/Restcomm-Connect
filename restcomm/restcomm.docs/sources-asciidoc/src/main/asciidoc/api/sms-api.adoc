@@ -31,7 +31,6 @@ A *SMS Message* resource represents an inbound or outbound SMS message.
 ==== Status Description
 |========================================================================================================
 |Status |Description
-|queued | This is not currently supported, as SMS is sent directly to provider.
 |sending | Restcomm has accepted the message and is sending it to provider. Applies to outbound message.
 |sent | Restcomm has already sent message to provider. Applies to outbound message.
 |failed | Message failed to progress in provider. Reason could be the message was expired, rejected or deleted by the provider.
