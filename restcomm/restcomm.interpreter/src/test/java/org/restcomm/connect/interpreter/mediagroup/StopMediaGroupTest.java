@@ -48,6 +48,7 @@ import org.restcomm.connect.http.client.HttpRequestDescriptor;
 import org.restcomm.connect.http.client.HttpResponseDescriptor;
 import org.restcomm.connect.interpreter.*;
 import org.restcomm.connect.interpreter.rcml.MockedActor;
+import org.restcomm.connect.mscontrol.api.messages.CollectedResult;
 import org.restcomm.connect.mscontrol.api.messages.MediaGroupResponse;
 import org.restcomm.connect.mscontrol.api.messages.Play;
 import org.restcomm.connect.mscontrol.api.messages.StopMediaGroup;
@@ -266,6 +267,8 @@ public class StopMediaGroupTest {
 
                 //emulate the response that comes from media server, through media group, reaching vi
                 interpreter.tell(new MediaGroupResponse<String>("stopped"), observer);
+                // After sending RQNT for stop ringing Tone, RMS will respond with NTFY.
+                interpreter.tell(new MediaGroupResponse<CollectedResult>(new CollectedResult("", false, false)), observer);
 
                 //check if vi asked for next verb, reaching End tag and consequently hangs up the call
                 expectMsgClass(Hangup.class);
@@ -378,6 +381,8 @@ public class StopMediaGroupTest {
 
                 //emulate the response that comes from media server, through media group, reaching vi
                 interpreter.tell(new MediaGroupResponse<String>("stopped"), observer);
+                // After sending RQNT for stop ringing Tone, RMS will respond with NTFY.
+                interpreter.tell(new MediaGroupResponse<CollectedResult>(new CollectedResult("", false, false)), observer);
 
                 //check if vi asked for next verb, reaching End tag and consequently hangs up the call
                 expectMsgClass(Hangup.class);

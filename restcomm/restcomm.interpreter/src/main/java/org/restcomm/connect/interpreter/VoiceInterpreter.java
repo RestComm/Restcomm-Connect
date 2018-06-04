@@ -233,6 +233,7 @@ public class VoiceInterpreter extends BaseVoiceInterpreter {
 
     // Controls if VI will wait MS response to move to the next verb
     protected boolean msResponsePending;
+    private boolean msStopRingingTonePending = false;
 
     private boolean callWaitingForAnswer = false;
 
@@ -888,13 +889,18 @@ public class VoiceInterpreter extends BaseVoiceInterpreter {
                 }
                 final JoinCalls bridgeCalls = new JoinCalls(call, outboundCall);
                 bridge.tell(bridgeCalls, self());
-            } else if (msResponsePending) {
-                // Move to next verb once media server completed Play
+            } else if (msResponsePending || msStopRingingTonePending) {
                 msResponsePending = false;
                 final boolean noBranches = dialBranches == null || dialBranches.size() == 0;
                 final boolean activeParser = parser != null;
                 final boolean noDialAction = action == null;
-                if (noBranches && activeParser && noDialAction) {
+                Object data = response.get();
+                msStopRingingTonePending = !((data instanceof CollectedResult) || enable200OkDelay);
+                // This place just happen when RC try to stop ringing tone, RC should wait for NTFY to be sure Ringing
+                // tone already finished to move to next verb.
+                // https://telestax.atlassian.net/browse/RESTCOMM-2087
+                if (noBranches && activeParser && noDialAction && !msStopRingingTonePending) {
+                    // Move to next verb once media server completed Play
                     final GetNextVerb next = new GetNextVerb();
                     parser.tell(next, self());
                 }
@@ -1327,6 +1333,11 @@ public class VoiceInterpreter extends BaseVoiceInterpreter {
                 if (!sender.equals(call)) {
                     if (dialBranches != null && dialBranches.contains(sender)) {
                         dialBranches.remove(sender);
+                    }
+                    if (dialBranches == null || dialBranches.size() == 0){
+                        // Stop playing the ringing tone from inbound call
+                        msResponsePending = true;
+                        call.tell(new StopMediaGroup(), self());
                     }
                     checkDialBranch(message,sender,action);
                 } else if (sender.equals(call)) {
