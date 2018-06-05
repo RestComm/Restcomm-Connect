@@ -38,8 +38,9 @@ public class MockPlayDelayMediaGateway extends MockMediaGateway {
         final NotificationRequest request = (NotificationRequest) message;
 
         MgcpEvent event = null;
-        if (request.getSignalRequests()[0].getEventIdentifier().getName().equalsIgnoreCase("es")
-                || request.getSignalRequests()[0].getEventIdentifier().getName().equalsIgnoreCase("pr")) {
+        if (!request.getSignalRequests()[0].getEventIdentifier().getParms().equalsIgnoreCase("sg=pa") &&
+                (request.getSignalRequests()[0].getEventIdentifier().getName().equalsIgnoreCase("es") ||
+                        request.getSignalRequests()[0].getEventIdentifier().getName().equalsIgnoreCase("pr"))) {
             //Looks like this is either an RQNT AU/ES or
             //recording max length reached and we got the original recording RQNT
             event = AUMgcpEvent.auoc.withParm("AU/pr ri=file://" + recordingFile.toPath() + " rc=100 dc=1");
