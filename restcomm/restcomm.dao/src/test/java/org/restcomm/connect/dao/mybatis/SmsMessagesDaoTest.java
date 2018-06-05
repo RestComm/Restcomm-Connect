@@ -35,6 +35,7 @@ import org.joda.time.DateTime;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
+import org.restcomm.connect.commons.dao.Error;
 import org.restcomm.connect.commons.dao.Sid;
 import org.restcomm.connect.dao.SmsMessagesDao;
 import org.restcomm.connect.dao.entities.SmsMessage;
@@ -233,5 +234,23 @@ public final class SmsMessagesDaoTest {
         assertEquals(smsMessage.getSmppMessageId(), resultantSmsMessage.getSmppMessageId());
         assertEquals(smsMessage.getDateSent(), resultantSmsMessage.getDateSent());
         assertEquals(smsMessage.getStatus(), resultantSmsMessage.getStatus());
+    }
+
+    @Test
+    public void testSmsMessageError() {
+    	// add a new msg
+    	SmsMessage smsMessage = createSms();
+    	final SmsMessagesDao messages = manager.getSmsMessagesDao();
+        messages.addSmsMessage(smsMessage);
+        
+        //update error message
+        smsMessage = smsMessage.setError(Error.QUEUE_OVERFLOW);
+        messages.updateSmsMessage(smsMessage);
+        
+        //get msg from DB
+        SmsMessage resultantSmsMessage = messages.getSmsMessage(smsMessage.getSid());
+        
+        //make assertions
+        assertEquals(Error.QUEUE_OVERFLOW, resultantSmsMessage.getError());
     }
 }
