@@ -28,6 +28,7 @@ import org.joda.time.DateTime;
 import org.restcomm.connect.commons.annotations.concurrency.Immutable;
 import org.restcomm.connect.commons.annotations.concurrency.NotThreadSafe;
 import org.restcomm.connect.commons.dao.Sid;
+import org.restcomm.connect.commons.dao.Error;
 import org.restcomm.connect.commons.stream.StreamEvent;
 
 /**
@@ -53,10 +54,12 @@ public final class SmsMessage implements StreamEvent {
     private final String apiVersion;
     private final URI uri;
     private final String smppMessageId;
+    private final Error error;
 
     public SmsMessage(final Sid sid, final DateTime dateCreated, final DateTime dateUpdated, final DateTime dateSent,
             final Sid accountSid, final String sender, final String recipient, final String body, final Status status,
-            final Direction direction, final BigDecimal price, final Currency priceUnit, final String apiVersion, final URI uri, final String smppMessageId) {
+            final Direction direction, final BigDecimal price, final Currency priceUnit, final String apiVersion, final URI uri,
+            final String smppMessageId, final Error error) {
         super();
         this.sid = sid;
         this.dateCreated = dateCreated;
@@ -73,6 +76,7 @@ public final class SmsMessage implements StreamEvent {
         this.apiVersion = apiVersion;
         this.uri = uri;
         this.smppMessageId = smppMessageId;
+        this.error = error;
     }
 
     public static Builder builder() {
@@ -139,19 +143,28 @@ public final class SmsMessage implements StreamEvent {
         return smppMessageId;
     }
 
+    public Error getError() {
+        return error;
+    }
+
     public SmsMessage setDateSent(final DateTime dateSent) {
         return new SmsMessage(sid, dateCreated, DateTime.now(), dateSent, accountSid, sender, recipient, body, status,
-                direction, price, priceUnit, apiVersion, uri, smppMessageId);
+                direction, price, priceUnit, apiVersion, uri, smppMessageId, error);
     }
 
     public SmsMessage setStatus(final Status status) {
         return new SmsMessage(sid, dateCreated, DateTime.now(), dateSent, accountSid, sender, recipient, body, status,
-                direction, price, priceUnit, apiVersion, uri, smppMessageId);
+                direction, price, priceUnit, apiVersion, uri, smppMessageId, error);
     }
 
     public SmsMessage setSmppMessageId(final String smppMessageId) {
         return new SmsMessage(sid, dateCreated, DateTime.now(), dateSent, accountSid, sender, recipient, body, status,
-                direction, price, priceUnit, apiVersion, uri, smppMessageId);
+                direction, price, priceUnit, apiVersion, uri, smppMessageId, error);
+    }
+
+    public SmsMessage setError(final Error error) {
+        return new SmsMessage(sid, dateCreated, DateTime.now(), dateSent, accountSid, sender, recipient, body, status,
+                direction, price, priceUnit, apiVersion, uri, smppMessageId, error);
     }
 
     @NotThreadSafe
@@ -171,6 +184,7 @@ public final class SmsMessage implements StreamEvent {
         private DateTime dateCreated;
         private DateTime dateUpdated;
         private String smppMessageId;
+        private Error error;
 
         private Builder() {
             super();
@@ -184,7 +198,7 @@ public final class SmsMessage implements StreamEvent {
                 dateUpdated = dateCreated;
             }
             return new SmsMessage(sid, dateCreated, dateUpdated, dateSent, accountSid, sender, recipient, body, status, direction, price,
-                    priceUnit, apiVersion, uri, smppMessageId);
+                    priceUnit, apiVersion, uri, smppMessageId, error);
         }
 
         public void setSid(final Sid sid) {
@@ -245,6 +259,10 @@ public final class SmsMessage implements StreamEvent {
 
         public void setSmppMessageId(String smppMessageId) {
             this.smppMessageId = smppMessageId;
+        }
+
+        public void setError(Error error) {
+            this.error = error;
         }
     }
 
