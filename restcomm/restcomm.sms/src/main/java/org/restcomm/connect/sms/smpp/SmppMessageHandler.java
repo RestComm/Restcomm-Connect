@@ -151,8 +151,7 @@ public class SmppMessageHandler extends RestcommUntypedActor {
                 logger.warning("responseMessageId=" + dLRPayload.getId() + " was never received! ");
             } else {
                 // Clean correlation to SMPP Message ID because SMPP identifiers are may repeat after a given time frame
-                smsMessage.setSmppMessageId(null);
-                smsMessagesDao.updateSmsMessage(smsMessage.setStatus(dLRPayload.getStat()));
+                smsMessagesDao.updateSmsMessage(smsMessage.setSmppMessageId(null).setStatus(dLRPayload.getStat()));
             }
         } else if (message instanceof CreateSmsSession) {
             IExtensionCreateSmsSessionRequest ier = (CreateSmsSession) message;
@@ -187,6 +186,15 @@ public class SmppMessageHandler extends RestcommUntypedActor {
                 Object ref = pduAsyncResponse.getRequest().getReferenceObject();
 
                 if (ref != null && ref instanceof Sid) {
+                    // BS-230: Ensure there is no other message sharing same SMPP Message ID
+                    SmsMessage existingMessage = this.storage.getSmsMessagesDao().getSmsMessageBySmppMessageId(smppMessageId);
+                    if (existingMessage != null) {
+                        // Cut correlation between SMS and SMPP Message ID and update message to a final state
+                        existingMessage = existingMessage.setSmppMessageId(null);
+                        logger.warning("Correlation between SmsMessage " + existingMessage.getSid() + " and SMPP Message " + smppMessageId + " expired.");
+                        this.storage.getSmsMessagesDao().updateSmsMessage(existingMessage);
+                    }
+
                     Sid sid = (Sid) ref;
                     SmsMessage smsMessage = storage.getSmsMessagesDao().getSmsMessage(sid);
                     if (submitSmResp.getCommandStatus() != 0) {
