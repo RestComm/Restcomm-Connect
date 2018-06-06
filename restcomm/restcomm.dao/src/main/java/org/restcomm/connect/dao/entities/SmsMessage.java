@@ -35,7 +35,7 @@ import org.restcomm.connect.commons.stream.StreamEvent;
  * @author mariafarooq
  */
 @Immutable
-public final class SmsMessage implements StreamEvent {
+public class SmsMessage implements StreamEvent {
     public static final int MAX_SIZE = 160;
     private final Sid sid;
     private final DateTime dateCreated;

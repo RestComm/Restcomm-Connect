@@ -21,19 +21,54 @@ package org.restcomm.connect.sms.smpp;
 
 import java.util.ArrayList;
 import java.util.List;
-import org.junit.Test;
-import static org.junit.Assert.*;
-import org.restcomm.connect.dao.entities.IncomingPhoneNumber;
 
+import akka.actor.Actor;
+import akka.actor.ActorRef;
+import akka.actor.ActorSystem;
+import akka.actor.Props;
+import akka.japi.Creator;
+import akka.testkit.JavaTestKit;
+import org.apache.commons.configuration.Configuration;
+import org.junit.AfterClass;
+import org.junit.BeforeClass;
+import org.junit.Ignore;
+import org.junit.Test;
+
+import static org.junit.Assert.*;
+import static org.mockito.Mockito.*;
+
+import org.restcomm.connect.core.service.api.NumberSelectorService;
+import org.restcomm.connect.dao.DaoManager;
+import org.restcomm.connect.dao.SmsMessagesDao;
+import org.restcomm.connect.dao.entities.IncomingPhoneNumber;
+import org.restcomm.connect.dao.entities.SmsMessage;
+import org.restcomm.connect.monitoringservice.MonitoringService;
+import org.restcomm.connect.sms.smpp.dlr.spi.DLRPayload;
+
+import javax.servlet.ServletContext;
+import javax.servlet.sip.SipFactory;
+
+/**
+ * @author Henrique Rosa (henrique.rosa@telestax.com)
+ */
 public class SmppMessageHandlerTest {
 
-    public SmppMessageHandlerTest() {
+    private static ActorSystem system;
+
+    @BeforeClass
+    public static void beforeAll() {
+        system = ActorSystem.create();
+    }
+
+    @AfterClass
+    public static void afterAll() {
+        system.shutdown();
     }
 
     @Test
     public void testRemover() {
         List<IncomingPhoneNumber> numbers = new ArrayList();
-        IncomingPhoneNumber.Builder builder =  IncomingPhoneNumber.builder();
+        IncomingPhoneNumber.Builder builder = IncomingPhoneNumber.builder();
 
         builder.setPhoneNumber("123.");
         numbers.add(builder.build());
@@ -82,6 +117,97 @@ public class SmppMessageHandlerTest {
         numbers.add(builder.build());
         RegexRemover.removeRegexes(numbers);
         assertEquals(3, numbers.size());
+    }
+
+    @Test
+    public void testOnReceiveDlrPayload() {
+        new JavaTestKit(system) {
+            {
+                // given
+                final ServletContext servletContext = mock(ServletContext.class);
+                final Configuration configuration = mock(Configuration.class);
+                final SipFactory sipFactory = mock(SipFactory.class);
+                final MonitoringService monitoringService = mock(MonitoringService.class);
+                final NumberSelectorService numberSelectorService = mock(NumberSelectorService.class);
+
+                final DaoManager daoManager = mock(DaoManager.class);
+                final SmsMessagesDao smsMessagesDao = mock(SmsMessagesDao.class);
+                final SmsMessage smsMessage = mock(SmsMessage.class);
+
+                final DLRPayload dlrPayload = new DLRPayload();
+                dlrPayload.setId("12345");
+                dlrPayload.setStat(SmsMessage.Status.QUEUED);
+
+                when(servletContext.getAttribute(DaoManager.class.getName())).thenReturn(daoManager);
+                when(servletContext.getAttribute(Configuration.class.getName())).thenReturn(configuration);
+                when(servletContext.getAttribute(SipFactory.class.getName())).thenReturn(sipFactory);
+                when(servletContext.getAttribute(MonitoringService.class.getName())).thenReturn(mock(ActorRef.class));
+                when(servletContext.getAttribute(NumberSelectorService.class.getName())).thenReturn(numberSelectorService);
+
+                when(daoManager.getSmsMessagesDao()).thenReturn(smsMessagesDao);
+                when(smsMessagesDao.getSmsMessageBySmppMessageId(dlrPayload.getId())).thenReturn(smsMessage);
+                when(smsMessage.setStatus(any(SmsMessage.Status.class))).thenReturn(smsMessage);
+
+                final ActorRef messageHandler = system.actorOf(Props.apply(new Creator<Actor>() {
+                    @Override
+                    public Actor create() throws Exception {
+                        return new SmppMessageHandler(servletContext);
+                    }
+                }));
+
+                // when
+
+                messageHandler.tell(dlrPayload, getRef());
+
+                // then
+                verify(smsMessage, timeout(100)).setSmppMessageId(null);
+                verify(smsMessage, timeout(100)).setStatus(dlrPayload.getStat());
+                verify(smsMessagesDao, timeout(100)).updateSmsMessage(any(SmsMessage.class));
+            }
+        };
+    }
+
+    @Test
+    public void testOnReceiveDlrPayloadForUnknownSms() {
+        new JavaTestKit(system) {
+            {
+                // given
+                final ServletContext servletContext = mock(ServletContext.class);
+                final Configuration configuration = mock(Configuration.class);
+                final SipFactory sipFactory = mock(SipFactory.class);
+                final MonitoringService monitoringService = mock(MonitoringService.class);
+                final NumberSelectorService numberSelectorService = mock(NumberSelectorService.class);
+
+                final DaoManager daoManager = mock(DaoManager.class);
+                final SmsMessagesDao smsMessagesDao = mock(SmsMessagesDao.class);
+
+                final DLRPayload dlrPayload = new DLRPayload();
+                dlrPayload.setId("12345");
+
+                when(servletContext.getAttribute(DaoManager.class.getName())).thenReturn(daoManager);
+                when(servletContext.getAttribute(Configuration.class.getName())).thenReturn(configuration);
+                when(servletContext.getAttribute(SipFactory.class.getName())).thenReturn(sipFactory);
+                when(servletContext.getAttribute(MonitoringService.class.getName())).thenReturn(mock(ActorRef.class));
+                when(servletContext.getAttribute(NumberSelectorService.class.getName())).thenReturn(numberSelectorService);
+
+                when(daoManager.getSmsMessagesDao()).thenReturn(smsMessagesDao);
+                when(smsMessagesDao.getSmsMessageBySmppMessageId(dlrPayload.getId())).thenReturn(null);
+
+                final ActorRef messageHandler = system.actorOf(Props.apply(new Creator<Actor>() {
+                    @Override
+                    public Actor create() throws Exception {
+                        return new SmppMessageHandler(servletContext);
+                    }
+                }));
+
+                // when
+
+                messageHandler.tell(dlrPayload, getRef());
+
+                // then
+                verify(smsMessagesDao, never()).updateSmsMessage(any(SmsMessage.class));
+            }
+        };
     }
 
 }
