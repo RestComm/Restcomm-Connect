@@ -150,6 +150,7 @@ public class SmppMessageHandler extends RestcommUntypedActor {
             if (smsMessage == null) {
                 logger.warning("responseMessageId=" + dLRPayload.getId() + " was never received! ");
             } else {
+                // Clean correlation to SMPP Message ID because SMPP identifiers are may repeat after a given time frame
                 smsMessage.setSmppMessageId(null);
                 smsMessagesDao.updateSmsMessage(smsMessage.setStatus(dLRPayload.getStat()));
             }
