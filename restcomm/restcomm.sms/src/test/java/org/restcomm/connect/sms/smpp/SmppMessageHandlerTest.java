@@ -28,6 +28,12 @@ import akka.actor.ActorSystem;
 import akka.actor.Props;
 import akka.japi.Creator;
 import akka.testkit.JavaTestKit;
+import com.cloudhopper.commons.util.windowing.WindowFuture;
+import com.cloudhopper.smpp.PduAsyncResponse;
+import com.cloudhopper.smpp.impl.DefaultPduAsyncResponse;
+import com.cloudhopper.smpp.pdu.PduRequest;
+import com.cloudhopper.smpp.pdu.PduResponse;
+import com.cloudhopper.smpp.pdu.SubmitSmResp;
 import org.apache.commons.configuration.Configuration;
 import org.junit.AfterClass;
 import org.junit.BeforeClass;
@@ -37,6 +43,8 @@ import org.junit.Test;
 import static org.junit.Assert.*;
 import static org.mockito.Mockito.*;
 
+import org.mockito.ArgumentCaptor;
+import org.restcomm.connect.commons.dao.Sid;
 import org.restcomm.connect.core.service.api.NumberSelectorService;
 import org.restcomm.connect.dao.DaoManager;
 import org.restcomm.connect.dao.SmsMessagesDao;
@@ -125,11 +133,6 @@ public class SmppMessageHandlerTest {
             {
                 // given
                 final ServletContext servletContext = mock(ServletContext.class);
-                final Configuration configuration = mock(Configuration.class);
-                final SipFactory sipFactory = mock(SipFactory.class);
-                final MonitoringService monitoringService = mock(MonitoringService.class);
-                final NumberSelectorService numberSelectorService = mock(NumberSelectorService.class);
-
                 final DaoManager daoManager = mock(DaoManager.class);
                 final SmsMessagesDao smsMessagesDao = mock(SmsMessagesDao.class);
                 final SmsMessage smsMessage = mock(SmsMessage.class);
@@ -139,10 +142,10 @@ public class SmppMessageHandlerTest {
                 dlrPayload.setStat(SmsMessage.Status.QUEUED);
 
                 when(servletContext.getAttribute(DaoManager.class.getName())).thenReturn(daoManager);
-                when(servletContext.getAttribute(Configuration.class.getName())).thenReturn(configuration);
-                when(servletContext.getAttribute(SipFactory.class.getName())).thenReturn(sipFactory);
+                when(servletContext.getAttribute(Configuration.class.getName())).thenReturn(mock(Configuration.class));
+                when(servletContext.getAttribute(SipFactory.class.getName())).thenReturn(mock(SipFactory.class));
                 when(servletContext.getAttribute(MonitoringService.class.getName())).thenReturn(mock(ActorRef.class));
-                when(servletContext.getAttribute(NumberSelectorService.class.getName())).thenReturn(numberSelectorService);
+                when(servletContext.getAttribute(NumberSelectorService.class.getName())).thenReturn(mock(NumberSelectorService.class));
 
                 when(daoManager.getSmsMessagesDao()).thenReturn(smsMessagesDao);
                 when(smsMessagesDao.getSmsMessageBySmppMessageId(dlrPayload.getId())).thenReturn(smsMessage);
@@ -156,7 +159,6 @@ public class SmppMessageHandlerTest {
                 }));
 
                 // when
-
                 messageHandler.tell(dlrPayload, getRef());
 
                 // then
@@ -173,11 +175,6 @@ public class SmppMessageHandlerTest {
             {
                 // given
                 final ServletContext servletContext = mock(ServletContext.class);
-                final Configuration configuration = mock(Configuration.class);
-                final SipFactory sipFactory = mock(SipFactory.class);
-                final MonitoringService monitoringService = mock(MonitoringService.class);
-                final NumberSelectorService numberSelectorService = mock(NumberSelectorService.class);
-
                 final DaoManager daoManager = mock(DaoManager.class);
                 final SmsMessagesDao smsMessagesDao = mock(SmsMessagesDao.class);
 
@@ -185,10 +182,10 @@ public class SmppMessageHandlerTest {
                 dlrPayload.setId("12345");
 
                 when(servletContext.getAttribute(DaoManager.class.getName())).thenReturn(daoManager);
-                when(servletContext.getAttribute(Configuration.class.getName())).thenReturn(configuration);
-                when(servletContext.getAttribute(SipFactory.class.getName())).thenReturn(sipFactory);
+                when(servletContext.getAttribute(Configuration.class.getName())).thenReturn(mock(Configuration.class));
+                when(servletContext.getAttribute(SipFactory.class.getName())).thenReturn(mock(SipFactory.class));
                 when(servletContext.getAttribute(MonitoringService.class.getName())).thenReturn(mock(ActorRef.class));
-                when(servletContext.getAttribute(NumberSelectorService.class.getName())).thenReturn(numberSelectorService);
+                when(servletContext.getAttribute(NumberSelectorService.class.getName())).thenReturn(mock(NumberSelectorService.class));
 
                 when(daoManager.getSmsMessagesDao()).thenReturn(smsMessagesDao);
                 when(smsMessagesDao.getSmsMessageBySmppMessageId(dlrPayload.getId())).thenReturn(null);
@@ -201,11 +198,66 @@ public class SmppMessageHandlerTest {
                 }));
 
                 // when
-
                 messageHandler.tell(dlrPayload, getRef());
 
                 // then
                 verify(smsMessagesDao, never()).updateSmsMessage(any(SmsMessage.class));
+            }
+        };
+    }
+
+    @Test
+    public void testOnReceivePduAsyncResponseWithExistingSmppMessageCorrelation() {
+        new JavaTestKit(system) {
+            {
+                // given
+                final ServletContext servletContext = mock(ServletContext.class);
+                final DaoManager daoManager = mock(DaoManager.class);
+
+                when(servletContext.getAttribute(DaoManager.class.getName())).thenReturn(daoManager);
+                when(servletContext.getAttribute(Configuration.class.getName())).thenReturn(mock(Configuration.class));
+                when(servletContext.getAttribute(SipFactory.class.getName())).thenReturn(mock(SipFactory.class));
+                when(servletContext.getAttribute(MonitoringService.class.getName())).thenReturn(mock(ActorRef.class));
+                when(servletContext.getAttribute(NumberSelectorService.class.getName())).thenReturn(mock(NumberSelectorService.class));
+
+                final String smppMessageId = "12345";
+                final SmsMessagesDao smsMessagesDao = mock(SmsMessagesDao.class);
+                final SmsMessage existingSmsMessage = SmsMessage.builder().setSid(Sid.generate(Sid.Type.SMS_MESSAGE)).setSmppMessageId(smppMessageId).setStatus(SmsMessage.Status.QUEUED).build();
+                final SmsMessage smsMessage = SmsMessage.builder().setSid(Sid.generate(Sid.Type.SMS_MESSAGE)).setSmppMessageId(null).setStatus(SmsMessage.Status.SENDING).build();
+                final SubmitSmResp submitSmResp = mock(SubmitSmResp.class);
+                final PduRequest pduRequest = mock(PduRequest.class);
+                final PduAsyncResponse pduResponse = mock(DefaultPduAsyncResponse.class);
+
+                when(pduResponse.getRequest()).thenReturn(pduRequest);
+                when(pduResponse.getResponse()).thenReturn(submitSmResp);
+                when(pduRequest.getReferenceObject()).thenReturn(smsMessage.getSid());
+                when(submitSmResp.getMessageId()).thenReturn(smppMessageId);
+                when(submitSmResp.getCommandStatus()).thenReturn(0);
+
+                when(daoManager.getSmsMessagesDao()).thenReturn(smsMessagesDao);
+                when(smsMessagesDao.getSmsMessageBySmppMessageId(smppMessageId)).thenReturn(existingSmsMessage);
+                when(smsMessagesDao.getSmsMessage(smsMessage.getSid())).thenReturn(smsMessage);
+
+                final ActorRef messageHandler = system.actorOf(Props.apply(new Creator<Actor>() {
+                    @Override
+                    public Actor create() throws Exception {
+                        return new SmppMessageHandler(servletContext);
+                    }
+                }));
+
+                // when
+                messageHandler.tell(pduResponse, getRef());
+
+                // then
+                final ArgumentCaptor<SmsMessage> smsCaptor = ArgumentCaptor.forClass(SmsMessage.class);
+                verify(smsMessagesDao, timeout(100).times(2)).updateSmsMessage(smsCaptor.capture());
+
+                final List<SmsMessage> capturedSms = smsCaptor.getAllValues();
+                assertEquals(2, capturedSms.size());
+                assertNull(capturedSms.get(0).getSmppMessageId());
+                assertEquals(SmsMessage.Status.FAILED, capturedSms.get(0).getStatus());
+                assertEquals(smppMessageId, capturedSms.get(1).getSmppMessageId());
+                assertEquals(SmsMessage.Status.SENT, capturedSms.get(1).getStatus());
             }
         };
     }

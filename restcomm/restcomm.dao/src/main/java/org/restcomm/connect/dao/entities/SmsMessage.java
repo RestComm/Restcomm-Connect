@@ -187,64 +187,79 @@ public class SmsMessage implements StreamEvent {
                     priceUnit, apiVersion, uri, smppMessageId);
         }
 
-        public void setSid(final Sid sid) {
+        public Builder setSid(final Sid sid) {
             this.sid = sid;
+            return this;
         }
 
-        public void setDateSent(final DateTime dateSent) {
+        public Builder setDateSent(final DateTime dateSent) {
             this.dateSent = dateSent;
+            return this;
         }
 
-        public void setAccountSid(final Sid accountSid) {
+        public Builder setAccountSid(final Sid accountSid) {
             this.accountSid = accountSid;
+            return this;
         }
 
-        public void setSender(final String sender) {
+        public Builder setSender(final String sender) {
             this.sender = sender;
+            return this;
         }
 
-        public void setRecipient(final String recipient) {
+        public Builder setRecipient(final String recipient) {
             this.recipient = recipient;
+            return this;
         }
 
-        public void setBody(final String body) {
+        public Builder setBody(final String body) {
             this.body = body;
+            return this;
         }
 
-        public void setStatus(final Status status) {
+        public Builder setStatus(final Status status) {
             this.status = status;
+            return this;
         }
 
-        public void setDirection(final Direction direction) {
+        public Builder setDirection(final Direction direction) {
             this.direction = direction;
+            return this;
         }
 
-        public void setPrice(final BigDecimal price) {
+        public Builder setPrice(final BigDecimal price) {
             this.price = price;
+            return this;
         }
 
-        public void setPriceUnit(Currency priceUnit) {
+        public Builder setPriceUnit(Currency priceUnit) {
             this.priceUnit = priceUnit;
+            return this;
         }
 
-        public void setApiVersion(final String apiVersion) {
+        public Builder setApiVersion(final String apiVersion) {
             this.apiVersion = apiVersion;
+            return this;
         }
 
-        public void setUri(final URI uri) {
+        public Builder setUri(final URI uri) {
             this.uri = uri;
+            return this;
         }
 
-        public void setDateCreated(DateTime dateCreated) {
+        public Builder setDateCreated(DateTime dateCreated) {
             this.dateCreated = dateCreated;
+            return this;
         }
 
-        public void setDateUpdated(DateTime dateUpdated) {
+        public Builder setDateUpdated(DateTime dateUpdated) {
             this.dateUpdated = dateUpdated;
+            return this;
         }
 
-        public void setSmppMessageId(String smppMessageId) {
+        public Builder setSmppMessageId(String smppMessageId) {
             this.smppMessageId = smppMessageId;
+            return this;
         }
     }
 
