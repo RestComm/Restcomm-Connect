@@ -61,6 +61,7 @@ public class SmsMessageConverter extends AbstractConverter implements JsonSerial
         writeBody(smsMessage.getBody(), writer);
         writeStatus(smsMessage.getStatus().toString(), writer);
         writeDirection(smsMessage.getDirection().toString(), writer);
+        writeError(smsMessage.getError(), writer);
         writePrice(smsMessage.getPrice(), writer);
         writePriceUnit(smsMessage.getPriceUnit(), writer);
         writeApiVersion(smsMessage.getApiVersion(), writer);
@@ -81,6 +82,7 @@ public class SmsMessageConverter extends AbstractConverter implements JsonSerial
         writeBody(smsMessage.getBody(), object);
         writeStatus(smsMessage.getStatus().toString(), object);
         writeDirection(smsMessage.getDirection().toString(), object);
+        writeError(smsMessage.getError(), object);
         writePrice(smsMessage.getPrice(), object);
         writePriceUnit(smsMessage.getPriceUnit(), object);
         writeApiVersion(smsMessage.getApiVersion(), object);
