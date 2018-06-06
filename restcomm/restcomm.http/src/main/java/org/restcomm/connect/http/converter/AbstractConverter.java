@@ -27,6 +27,7 @@ import java.util.Locale;
 
 import org.apache.commons.configuration.Configuration;
 import org.joda.time.DateTime;
+import org.restcomm.connect.commons.dao.Error;
 import org.restcomm.connect.commons.dao.Sid;
 
 import com.google.gson.JsonNull;
@@ -661,6 +662,37 @@ public abstract class AbstractConverter implements Converter {
             object.addProperty("fax_capable", faxCapable);
         } else {
             object.addProperty("fax_capable", Boolean.FALSE);
+        }
+    }
+
+    protected void writeError(final Error error, final HierarchicalStreamWriter writer) {
+        if (error != null) {
+            writer.startNode("Error");
+            writeErrorCode(error, writer);
+            writeErrorMessage(error, writer);
+            writer.endNode();
+        }
+    }
+
+    private void writeErrorCode(final Error error, final HierarchicalStreamWriter writer){
+        writer.startNode("ErrorCode");
+        writer.setValue(error.getErrorCode()+"");
+        writer.endNode();
+    }
+
+    private void writeErrorMessage(final Error error, final HierarchicalStreamWriter writer){
+        writer.startNode("ErrorMessage");
+        writer.setValue(error.getErrorMessage());
+        writer.endNode();
+    }
+
+    protected void writeError(final Error error, final JsonObject object) {
+        if (error != null) {
+            object.addProperty("error_code", error.getErrorCode());
+            object.addProperty("error_message", error.getErrorMessage());
+        } else {
+            object.add("error_code", JsonNull.INSTANCE);
+            object.add("error_message", JsonNull.INSTANCE);
         }
     }
 }
