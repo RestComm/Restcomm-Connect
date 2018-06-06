@@ -257,7 +257,7 @@ public class SmppMessageHandlerTest {
                 final List<SmsMessage> capturedSms = smsCaptor.getAllValues();
                 assertEquals(2, capturedSms.size());
                 assertNull(capturedSms.get(0).getSmppMessageId());
-                assertEquals(SmsMessage.Status.FAILED, capturedSms.get(0).getStatus());
+                assertEquals(SmsMessage.Status.QUEUED, capturedSms.get(0).getStatus());
                 assertEquals(smppMessageId, capturedSms.get(1).getSmppMessageId());
                 assertEquals(SmsMessage.Status.SENT, capturedSms.get(1).getStatus());
             }

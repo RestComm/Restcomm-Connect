@@ -190,8 +190,8 @@ public class SmppMessageHandler extends RestcommUntypedActor {
                     SmsMessage existingMessage = this.storage.getSmsMessagesDao().getSmsMessageBySmppMessageId(smppMessageId);
                     if (existingMessage != null) {
                         // Cut correlation between SMS and SMPP Message ID and update message to a final state
-                        existingMessage = existingMessage.setSmppMessageId(null).setStatus(SmsMessage.Status.FAILED);
-                        logger.warning("SmsMessage " + existingMessage.getSid() + " failed. Reason: Correlation with SMPP Message " + smppMessageId + " expired.");
+                        existingMessage = existingMessage.setSmppMessageId(null);
+                        logger.warning("Correlation between SmsMessage " + existingMessage.getSid() + " and SMPP Message " + smppMessageId + " expired.");
                         this.storage.getSmsMessagesDao().updateSmsMessage(existingMessage);
                     }
 
