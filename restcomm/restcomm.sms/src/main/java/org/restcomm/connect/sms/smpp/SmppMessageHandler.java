@@ -23,7 +23,6 @@ import java.io.IOException;
 import java.net.URI;
 import java.net.URISyntaxException;
 import java.util.Arrays;
-import java.util.Calendar;
 import java.util.Collection;
 import java.util.List;
 
@@ -34,7 +33,6 @@ import javax.servlet.sip.SipURI;
 
 import org.apache.commons.configuration.Configuration;
 import org.joda.time.DateTime;
-import org.joda.time.Instant;
 import org.restcomm.connect.commons.configuration.RestcommConfiguration;
 import org.restcomm.connect.commons.configuration.sets.RcmlserverConfigurationSet;
 import org.restcomm.connect.commons.dao.Sid;
@@ -47,7 +45,10 @@ import org.restcomm.connect.dao.DaoManager;
 import org.restcomm.connect.dao.NotificationsDao;
 import org.restcomm.connect.dao.SmsMessagesDao;
 import org.restcomm.connect.dao.common.OrganizationUtil;
-import org.restcomm.connect.dao.entities.*;
+import org.restcomm.connect.dao.entities.Application;
+import org.restcomm.connect.dao.entities.IncomingPhoneNumber;
+import org.restcomm.connect.dao.entities.Notification;
+import org.restcomm.connect.dao.entities.SmsMessage;
 import org.restcomm.connect.extension.api.ExtensionResponse;
 //import org.restcomm.connect.extension.api.ExtensionRequest;
 //import org.restcomm.connect.extension.api.ExtensionResponse;
@@ -185,22 +186,16 @@ public class SmppMessageHandler extends RestcommUntypedActor {
                 Object ref = pduAsyncResponse.getRequest().getReferenceObject();
 
                 if (ref != null && ref instanceof Sid) {
-                    final Sid sid = (Sid) ref;
-
-                    // BS-230, BS-232: Ensure there is no other message sharing same SMPP Message ID in last 3 days
-                    final Calendar calendar = Calendar.getInstance();
-                    calendar.add(Calendar.DAY_OF_MONTH, -3);
-                    final SmsMessageFilter filter = SmsMessageFilter.builer().smppMessageId(smppMessageId).startTime(calendar.getTime()).build();
-
-                    final List<SmsMessage> smsMessages = this.storage.getSmsMessagesDao().getSmsMessages(filter);
-                    for (SmsMessage sms: smsMessages) {
-                        if(!sid.equals(sms.getSid())) {
-                            // Cut correlation between SMS and SMPP Message ID and update message to a final state
-                            this.storage.getSmsMessagesDao().updateSmsMessage(sms.setSmppMessageId(null).setStatus(SmsMessage.Status.SENT));
-                            logger.warning("Correlation between SmsMessage " + sms.getSid() + " and SMPP Message " + smppMessageId + " expired. Marked status as SENT");
-                        }
+                    // BS-230: Ensure there is no other message sharing same SMPP Message ID
+                    SmsMessage existingMessage = this.storage.getSmsMessagesDao().getSmsMessageBySmppMessageId(smppMessageId);
+                    if (existingMessage != null) {
+                        // Cut correlation between SMS and SMPP Message ID and update message to a final state
+                        existingMessage = existingMessage.setSmppMessageId(null);
+                        logger.warning("Correlation between SmsMessage " + existingMessage.getSid() + " and SMPP Message " + smppMessageId + " expired.");
+                        this.storage.getSmsMessagesDao().updateSmsMessage(existingMessage);
                     }
 
+                    Sid sid = (Sid) ref;
                     SmsMessage smsMessage = storage.getSmsMessagesDao().getSmsMessage(sid);
                     if (submitSmResp.getCommandStatus() != 0) {
                         logger.warning(String.format("SubmitSmResp Failure! Message could not be sent Status Code %s Result Messages: %s", submitSmResp.getCommandStatus(), submitSmResp.getResultMessage()));
