@@ -190,7 +190,7 @@ public class SmppMessageHandler extends RestcommUntypedActor {
                     // BS-230, BS-232: Ensure there is no other message sharing same SMPP Message ID in last 3 days
                     final Calendar calendar = Calendar.getInstance();
                     calendar.add(Calendar.DAY_OF_MONTH, -3);
-                    final SmsMessageFilter filter = SmsMessageFilter.builer().smppMessageId(smppMessageId).endTime(calendar.getTime()).build();
+                    final SmsMessageFilter filter = SmsMessageFilter.builer().smppMessageId(smppMessageId).startTime(calendar.getTime()).build();
 
                     final List<SmsMessage> smsMessages = this.storage.getSmsMessagesDao().getSmsMessages(filter);
                     for (SmsMessage sms: smsMessages) {
