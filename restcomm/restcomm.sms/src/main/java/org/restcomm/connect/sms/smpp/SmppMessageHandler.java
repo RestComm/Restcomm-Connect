@@ -22,9 +22,7 @@ package org.restcomm.connect.sms.smpp;
 import java.io.IOException;
 import java.net.URI;
 import java.net.URISyntaxException;
-import java.util.Arrays;
-import java.util.Collection;
-import java.util.List;
+import java.util.*;
 
 import javax.servlet.ServletContext;
 import javax.servlet.sip.SipFactory;
@@ -45,10 +43,7 @@ import org.restcomm.connect.dao.DaoManager;
 import org.restcomm.connect.dao.NotificationsDao;
 import org.restcomm.connect.dao.SmsMessagesDao;
 import org.restcomm.connect.dao.common.OrganizationUtil;
-import org.restcomm.connect.dao.entities.Application;
-import org.restcomm.connect.dao.entities.IncomingPhoneNumber;
-import org.restcomm.connect.dao.entities.Notification;
-import org.restcomm.connect.dao.entities.SmsMessage;
+import org.restcomm.connect.dao.entities.*;
 import org.restcomm.connect.extension.api.ExtensionResponse;
 //import org.restcomm.connect.extension.api.ExtensionRequest;
 //import org.restcomm.connect.extension.api.ExtensionResponse;
@@ -143,15 +138,35 @@ public class SmppMessageHandler extends RestcommUntypedActor {
             }
             outbound((SmppOutboundMessageEntity) message);
         } else if (message instanceof DLRPayload) {
-            DLRPayload dLRPayload = (DLRPayload) message;
-            logger.info("DLRPayload " + dLRPayload);
-            SmsMessagesDao smsMessagesDao = storage.getSmsMessagesDao();
-            SmsMessage smsMessage = smsMessagesDao.getSmsMessageBySmppMessageId(dLRPayload.getId());
-            if (smsMessage == null) {
-                logger.warning("responseMessageId=" + dLRPayload.getId() + " was never received! ");
+            final DLRPayload deliveryReceipt = (DLRPayload) message;
+            final String smppMessageId = deliveryReceipt.getId();
+            final SmsMessage.Status deliveryStatus = deliveryReceipt.getStat();
+
+            if (logger.isDebugEnabled()) {
+                logger.debug("DLR Received for SMPP Message " + deliveryReceipt.getId() + " with status " + deliveryStatus);
+            }
+
+            // Find all messages correlated with SMPP Message ID in last three days
+            final Calendar calendar = Calendar.getInstance();
+            calendar.add(Calendar.DAY_OF_MONTH, -3);
+            final SmsMessageFilter filter = SmsMessageFilter.builer().smppMessageId(deliveryReceipt.getId()).endTime(calendar.getTime()).build();
+            final List<SmsMessage> smsMessages = this.storage.getSmsMessagesDao().getSmsMessages(filter);
+
+            // Update status of messages and remove correlation with SMPP Message ID
+            // IMPORTANT: First message in the results list is considered the real target of the DLR
+            // BS-232: Other "pending" messages that might share correlation with same SMPP Message ID will have their status forcefully updated to SENT
+            final int smsCount = smsMessages.size();
+            if (smsCount == 0) {
+                logger.warning("responseMessageId=" + deliveryReceipt.getId() + " was never received! ");
             } else {
-                // Clean correlation to SMPP Message ID because SMPP identifiers are may repeat after a given time frame
-                smsMessagesDao.updateSmsMessage(smsMessage.setSmppMessageId(null).setStatus(dLRPayload.getStat()));
+                for (int index = 0; index < smsCount; index++) {
+                    final SmsMessage.Status status = (index > 0) ? SmsMessage.Status.SENT : deliveryStatus;
+                    this.storage.getSmsMessagesDao().updateSmsMessage(smsMessages.get(index).setSmppMessageId(null).setStatus(status));
+
+                    if (index > 0) {
+                        logger.warning("Correlation between SmsMessage " + smsMessages.get(index).getSid() + " and SMPP Message " + smppMessageId + " expired. Status forcefully set to " + status);
+                    }
+                }
             }
         } else if (message instanceof CreateSmsSession) {
             IExtensionCreateSmsSessionRequest ier = (CreateSmsSession) message;
