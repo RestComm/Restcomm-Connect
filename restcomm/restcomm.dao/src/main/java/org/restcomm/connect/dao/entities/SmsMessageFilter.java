@@ -47,15 +47,18 @@ public class SmsMessageFilter {
     private Integer limit;
     private Integer offset;
     private String instanceid;
+    private String smppMessageId;
 
     public SmsMessageFilter() {
     }
 
+    @Deprecated
     public SmsMessageFilter(String accountSid, List<String> accountSidSet, String recipient, String sender, String startTime, String endTime,
                             String body, Integer limit, Integer offset) throws ParseException {
         this(accountSid, accountSidSet, recipient, sender, startTime, endTime, body, limit, offset, null);
     }
 
+    @Deprecated
     public SmsMessageFilter(String accountSid, List<String> accountSidSet, String recipient, String sender, String startTime, String endTime,
                             String body, Integer limit, Integer offset, String instanceId) throws ParseException {
         this.accountSid = accountSid;
@@ -132,11 +135,15 @@ public class SmsMessageFilter {
         return instanceid;
     }
 
-    public Builder builer() {
+    public String getSmppMessageId() {
+        return smppMessageId;
+    }
+
+    public static Builder builer() {
         return new Builder();
     }
 
-    public class Builder {
+    public static class Builder {
 
         private final SmsMessageFilter filter;
 
@@ -198,7 +205,12 @@ public class SmsMessageFilter {
         }
 
         public Builder instanceId(String instanceId) {
-            this.filter.instanceid = instanceid;
+            this.filter.instanceid = instanceId;
+            return this;
+        }
+
+        public Builder smppMessageId(String smppMessageId) {
+            this.filter.smppMessageId = smppMessageId;
             return this;
         }
 
