@@ -41,8 +41,8 @@ public class SmsMessageFilter {
     private List<String> accountSidSet; // if not-null we need the cdrs that belong to several accounts
     private String recipient;
     private String sender;
-    private Date startTime;  // to initialize it pass string arguments with  yyyy-MM-dd format
-    private Date endTime;
+    private String startTime;  // to initialize it pass string arguments with  yyyy-MM-dd format
+    private String endTime;
     private String body;
     private Integer limit;
     private Integer offset;
@@ -77,14 +77,14 @@ public class SmsMessageFilter {
         this.limit = limit;
         this.offset = offset;
         if (startTime != null) {
-            Date date = DATE_FORMAT.parse(startTime);
-            this.startTime = date;
+            //Date date = DATE_FORMAT.parse(startTime);
+            this.startTime = startTime;
         } else
             this.startTime = null;
 
         if (endTime != null) {
-            Date date = DATE_FORMAT.parse(endTime);
-            this.endTime = date;
+            //Date date = DATE_FORMAT.parse(endTime);
+            this.endTime = endTime;
         } else {
             this.endTime = null;
         }
@@ -111,11 +111,11 @@ public class SmsMessageFilter {
         return sender;
     }
 
-    public Date getStartTime() {
+    public String getStartTime() {
         return startTime;
     }
 
-    public Date getEndTime() {
+    public String getEndTime() {
         return endTime;
     }
 
@@ -175,16 +175,16 @@ public class SmsMessageFilter {
             return this;
         }
 
-        public Builder startTime(String startTime) throws ParseException {
-            if (startTime != null && !startTime.isEmpty()) {
-                this.filter.startTime = DATE_FORMAT.parse(startTime);
+        public Builder startTime(Date startTime) {
+            if (startTime != null) {
+                this.filter.startTime = DATE_FORMAT.format(startTime);
             }
             return this;
         }
 
-        public Builder endTime(String endTime) throws ParseException {
-            if (endTime != null && !endTime.isEmpty()) {
-                this.filter.endTime = DATE_FORMAT.parse(endTime);
+        public Builder endTime(Date endTime) {
+            if (endTime != null) {
+                this.filter.endTime = DATE_FORMAT.format(endTime);
             }
             return this;
         }
