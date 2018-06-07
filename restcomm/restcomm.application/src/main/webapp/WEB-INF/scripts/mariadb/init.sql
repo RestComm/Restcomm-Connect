@@ -249,7 +249,8 @@ direction VARCHAR(14) NOT NULL,
 price VARCHAR(8) NOT NULL,
 api_version VARCHAR(10) NOT NULL,
 uri MEDIUMTEXT NOT NULL,
-smpp_message_id MEDIUMTEXT
+smpp_message_id MEDIUMTEXT,
+error_code BIGINT
 );
 
 CREATE TABLE restcomm_recordings (
