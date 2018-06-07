@@ -11,7 +11,7 @@ RESTCOMM_BIN=$RESTCOMM_HOME/bin
 RESTCOMM_DARS=$RESTCOMM_HOME/standalone/configuration/dars
 RESTCOMM_CONF=$RESTCOMM_HOME/standalone/configuration
 RESTCOMM_DEPLOY=$RESTCOMM_HOME/standalone/deployments/restcomm.war
-RVD_DEPLOY_PATH=$RESTCOMM_HOME/standalone/deployments/restcomm-rvd.war
+RVD_DEPLOY_PATH=$RESTCOMM_HOME/standalone/deployments/visual-designer.war
 
 ## FUNCTIONS
 
