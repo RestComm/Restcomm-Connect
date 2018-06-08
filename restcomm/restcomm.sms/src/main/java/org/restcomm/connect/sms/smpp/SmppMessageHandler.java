@@ -57,7 +57,6 @@ import org.restcomm.connect.dao.entities.Application;
 import org.restcomm.connect.dao.entities.IncomingPhoneNumber;
 import org.restcomm.connect.dao.entities.Notification;
 import org.restcomm.connect.dao.entities.SmsMessage;
-import org.restcomm.connect.dao.entities.SmsMessageFilter;
 import org.restcomm.connect.extension.api.ExtensionResponse;
 import org.restcomm.connect.extension.api.ExtensionType;
 import org.restcomm.connect.extension.api.IExtensionCreateSmsSessionRequest;

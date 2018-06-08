@@ -19,17 +19,6 @@
  */
 package org.restcomm.connect.dao.mybatis;
 
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertTrue;
-
-import java.io.InputStream;
-import java.math.BigDecimal;
-import java.net.URI;
-import java.text.ParseException;
-import java.util.Calendar;
-import java.util.Currency;
-import java.util.List;
-
 import org.apache.ibatis.session.SqlSessionFactory;
 import org.apache.ibatis.session.SqlSessionFactoryBuilder;
 import org.apache.log4j.Logger;
@@ -40,7 +29,16 @@ import org.junit.Test;
 import org.restcomm.connect.commons.dao.Sid;
 import org.restcomm.connect.dao.SmsMessagesDao;
 import org.restcomm.connect.dao.entities.SmsMessage;
-import org.restcomm.connect.dao.entities.SmsMessageFilter;
+
+import java.io.InputStream;
+import java.math.BigDecimal;
+import java.net.URI;
+import java.text.ParseException;
+import java.util.Currency;
+import java.util.List;
+
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertTrue;
 
 /**
  * @author quintana.thomas@gmail.com (Thomas Quintana)
@@ -263,8 +261,6 @@ public final class SmsMessagesDaoTest {
         final DateTime today = DateTime.now();
         final SmsMessage smsMessage6 = createSms(accountSid, SmsMessage.Direction.OUTBOUND_API, 5, today, smppMessageId);
         final SmsMessage smsMessage7 = createSms(accountSid, SmsMessage.Direction.OUTBOUND_API, 6, today, null);
-
-        final SmsMessageFilter filter = SmsMessageFilter.builer().accountSid(accountSid.toString()).smppMessageId(smppMessageId).startTime(threeDaysAgo).build();
 
         // when
         smsMessagesDao.addSmsMessage(smsMessage1);

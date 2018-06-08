@@ -35,23 +35,12 @@ import java.net.URI;
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
-import java.util.Collections;
 import java.util.Currency;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
-import static org.restcomm.connect.dao.DaoUtils.readBigDecimal;
-import static org.restcomm.connect.dao.DaoUtils.readCurrency;
-import static org.restcomm.connect.dao.DaoUtils.readDateTime;
-import static org.restcomm.connect.dao.DaoUtils.readSid;
-import static org.restcomm.connect.dao.DaoUtils.readString;
-import static org.restcomm.connect.dao.DaoUtils.readUri;
-import static org.restcomm.connect.dao.DaoUtils.writeBigDecimal;
-import static org.restcomm.connect.dao.DaoUtils.writeCurrency;
-import static org.restcomm.connect.dao.DaoUtils.writeDateTime;
-import static org.restcomm.connect.dao.DaoUtils.writeSid;
-import static org.restcomm.connect.dao.DaoUtils.writeUri;
+import static org.restcomm.connect.dao.DaoUtils.*;
 
 /**
  * @author quintana.thomas@gmail.com (Thomas Quintana)
