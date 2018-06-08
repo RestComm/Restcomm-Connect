@@ -32,11 +32,11 @@ import java.nio.channels.ReadableByteChannel;
 import java.nio.channels.WritableByteChannel;
 import java.util.Arrays;
 import javax.servlet.ServletException;
-import javax.servlet.annotation.WebServlet;
 import javax.servlet.http.HttpServlet;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 import org.apache.commons.configuration.Configuration;
+import org.apache.log4j.Logger;
 
 /**
  * Serves media resources to other third-prty systems like RMS.
@@ -47,6 +47,7 @@ import org.apache.commons.configuration.Configuration;
  * The urlpattern needs to be synced with "cache-uri" conf
  */
 public class FileCacheServlet extends HttpServlet {
+    private Logger logger = Logger.getLogger(ExtensionFilter.class);
 
     // Constants ----------------------------------------------------------------------------------
     private static final int DEFAULT_BUFFER_SIZE = 10240; // ..bytes = 10KB.
@@ -90,9 +91,13 @@ public class FileCacheServlet extends HttpServlet {
 
         // Get requested file by path info.
         String requestedFile = request.getPathInfo();
+        if (logger.isDebugEnabled()) {
+            logger.debug("Requested path:" + requestedFile);
+        }
 
         // Check if file is actually supplied to the request URL.
         if (requestedFile == null) {
+            logger.debug("No file requested, return 404.");
             // Do your thing if the file is not supplied to the request URL.
             // Throw an exception, or send 404, or show default/warning page, or just ignore it.
             response.sendError(HttpServletResponse.SC_NOT_FOUND);
@@ -107,10 +112,12 @@ public class FileCacheServlet extends HttpServlet {
         long expireTime = runtimeConfiguration.getLong("cache-expire-time", DEFAULT_EXPIRE_TIME);
 
         // URL-decode the file name (might contain spaces and on) and prepare file object.
-        File file = new File(basePath, URLDecoder.decode(requestedFile, "UTF-8"));
+        String fDecodedPath = URLDecoder.decode(requestedFile, "UTF-8");
+        File file = new File(basePath, fDecodedPath);
 
         // Check if file actually exists in filesystem.
         if (!file.exists()) {
+            logger.debug("Requested file not found, return 404.");
             // Do your thing if the file appears to be non-existing.
             // Throw an exception, or send 404, or show default/warning page, or just ignore it.
             response.sendError(HttpServletResponse.SC_NOT_FOUND);
@@ -128,6 +135,7 @@ public class FileCacheServlet extends HttpServlet {
         // If-None-Match header should contain "*" or ETag. If so, then return 304.
         String ifNoneMatch = request.getHeader("If-None-Match");
         if (ifNoneMatch != null && matches(ifNoneMatch, eTag)) {
+            logger.debug("IfNoneMatch/Etag not matching, return 304.");
             response.setStatus(HttpServletResponse.SC_NOT_MODIFIED);
             response.setHeader("ETag", eTag); // Required in 304.
             response.setDateHeader("Expires", expires); // Postpone cache with 1 week.
@@ -138,6 +146,7 @@ public class FileCacheServlet extends HttpServlet {
         // This header is ignored if any If-None-Match header is specified.
         long ifModifiedSince = request.getDateHeader("If-Modified-Since");
         if (ifNoneMatch == null && ifModifiedSince != -1 && ifModifiedSince + 1000 > lastModified) {
+            logger.debug("IfModifiedSince not matching, return 304.");
             response.setStatus(HttpServletResponse.SC_NOT_MODIFIED);
             response.setHeader("ETag", eTag); // Required in 304.
             response.setDateHeader("Expires", expires); // Postpone cache with 1 week.
@@ -148,6 +157,7 @@ public class FileCacheServlet extends HttpServlet {
         // If-Match header should contain "*" or ETag. If not, then return 412.
         String ifMatch = request.getHeader("If-Match");
         if (ifMatch != null && !matches(ifMatch, eTag)) {
+            logger.debug("ifMatch not matching, return 412.");
             response.sendError(HttpServletResponse.SC_PRECONDITION_FAILED);
             return;
         }
@@ -155,12 +165,13 @@ public class FileCacheServlet extends HttpServlet {
         // If-Unmodified-Since header should be greater than LastModified. If not, then return 412.
         long ifUnmodifiedSince = request.getDateHeader("If-Unmodified-Since");
         if (ifUnmodifiedSince != -1 && ifUnmodifiedSince + 1000 <= lastModified) {
+            logger.debug("ifUnmodifiedSince not matching, return 412.");
             response.sendError(HttpServletResponse.SC_PRECONDITION_FAILED);
             return;
         }
 
         // Prepare and initialize response --------------------------------------------------------
-        // Get content type by file name and set default GZIP support and content disposition.
+        // Get content type by file name and content disposition.
         String contentType = getServletContext().getMimeType(fileName);
         String disposition = "inline";
 
@@ -171,8 +182,7 @@ public class FileCacheServlet extends HttpServlet {
             contentType = "application/octet-stream";
         }
 
-        // If content type is text, then determine whether GZIP content encoding is supported by
-        // the browser and expand content type with the one and right character encoding.
+        // If content type is text, expand content type with the one and right character encoding.
         if (contentType.startsWith("text")) {
             contentType += ";charset=UTF-8";
         } // Else, expect for images, determine content disposition. If content type is supported by
@@ -197,10 +207,14 @@ public class FileCacheServlet extends HttpServlet {
         OutputStream output = null;
 
         if (content) {
+            logger.debug("Content requested,streaming.");
             // Open streams.
             input = new FileInputStream(file);
             output = response.getOutputStream();
-            stream(input, output, bufferSize);
+            long streamed = stream(input, output, bufferSize);
+            if (logger.isDebugEnabled()) {
+                logger.debug("Bytes streamed:" + streamed);
+            }
         }
 
     }
