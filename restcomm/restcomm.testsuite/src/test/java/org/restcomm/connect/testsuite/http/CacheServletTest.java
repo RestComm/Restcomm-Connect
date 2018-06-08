@@ -64,7 +64,7 @@ public class CacheServletTest extends EndpointTest {
     public void testMediaDownloading() {
 
         Client jersey = Client.create();
-        WebResource resource = jersey.resource(getResourceUrl("/cache/sample.wav"));
+        WebResource resource = jersey.resource(getResourceUrl("/cache/ACae6e420f425248d6a26948c17a9e2acf/101cc31d1b07e8285c40d13d83f63da9caaaf21155a321f231980601bac555de.wav"));
         ClientResponse response = resource.get(ClientResponse.class);
         Assert.assertEquals(200, response.getStatus());
     }
