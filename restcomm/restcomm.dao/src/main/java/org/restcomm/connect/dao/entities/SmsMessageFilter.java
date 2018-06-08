@@ -35,7 +35,7 @@ import java.util.List;
 @Immutable
 public class SmsMessageFilter {
 
-    private static final DateFormat DATE_FORMAT = new SimpleDateFormat("yyyy-MM-dd");
+    public static final DateFormat DATE_FORMAT = new SimpleDateFormat("yyyy-MM-dd");
 
     private String accountSid;
     private List<String> accountSidSet; // if not-null we need the cdrs that belong to several accounts
