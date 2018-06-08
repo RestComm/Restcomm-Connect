@@ -243,7 +243,7 @@ public final class SmsMessagesDaoTest {
     }
 
     @Test
-    public void testGetSmsMessagesWithSmppMessageFromLastThreeDays() throws InterruptedException, ParseException {
+    public void testFindBySmppMessageIdAndDateCreatedGreaterOrEqualThanOrderedByDateCreatedDesc() {
         // given
         final SmsMessagesDao smsMessagesDao = manager.getSmsMessagesDao();
         final Sid accountSid = Sid.generate(Sid.Type.ACCOUNT);
@@ -257,17 +257,25 @@ public final class SmsMessagesDaoTest {
         final SmsMessage smsMessage3 = createSms(accountSid, SmsMessage.Direction.OUTBOUND_API, 2, threeDaysAgo, smppMessageId);
         final SmsMessage smsMessage4 = createSms(accountSid, SmsMessage.Direction.OUTBOUND_API, 3, threeDaysAgo, null);
 
-        final DateTime yesterdar = DateTime.now().minusDays(1);
-        final SmsMessage smsMessage5 = createSms(accountSid, SmsMessage.Direction.OUTBOUND_API, 4, threeDaysAgo, smppMessageId);
+        final DateTime yesterday = DateTime.now().minusDays(1);
+        final SmsMessage smsMessage5 = createSms(accountSid, SmsMessage.Direction.OUTBOUND_API, 4, yesterday, smppMessageId);
 
         final DateTime today = DateTime.now();
         final SmsMessage smsMessage6 = createSms(accountSid, SmsMessage.Direction.OUTBOUND_API, 5, today, smppMessageId);
         final SmsMessage smsMessage7 = createSms(accountSid, SmsMessage.Direction.OUTBOUND_API, 6, today, null);
 
-        final SmsMessageFilter filter = SmsMessageFilter.builer().smppMessageId(smppMessageId).endTime(threeDaysAgo).build();
+        final SmsMessageFilter filter = SmsMessageFilter.builer().accountSid(accountSid.toString()).smppMessageId(smppMessageId).startTime(threeDaysAgo).build();
 
         // when
-        final List<SmsMessage> messages = smsMessagesDao.getSmsMessages(filter);
+        smsMessagesDao.addSmsMessage(smsMessage1);
+        smsMessagesDao.addSmsMessage(smsMessage2);
+        smsMessagesDao.addSmsMessage(smsMessage3);
+        smsMessagesDao.addSmsMessage(smsMessage4);
+        smsMessagesDao.addSmsMessage(smsMessage5);
+        smsMessagesDao.addSmsMessage(smsMessage6);
+        smsMessagesDao.addSmsMessage(smsMessage7);
+
+        final List<SmsMessage> messages = smsMessagesDao.findBySmppMessageIdAndDateCreatedGreaterOrEqualThanOrderedByDateCreatedDesc(smppMessageId, threeDaysAgo);
 
         try {
             assertEquals(3, messages.size());

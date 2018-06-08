@@ -19,38 +19,21 @@
  */
 package org.restcomm.connect.sms.smpp;
 
-import java.text.ParseException;
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.Calendar;
-import java.util.Collections;
-import java.util.Date;
-import java.util.List;
-import java.util.concurrent.TimeUnit;
-
 import akka.actor.Actor;
 import akka.actor.ActorRef;
 import akka.actor.ActorSystem;
 import akka.actor.Props;
 import akka.japi.Creator;
 import akka.testkit.JavaTestKit;
-import com.cloudhopper.commons.util.windowing.WindowFuture;
 import com.cloudhopper.smpp.PduAsyncResponse;
 import com.cloudhopper.smpp.impl.DefaultPduAsyncResponse;
 import com.cloudhopper.smpp.pdu.PduRequest;
-import com.cloudhopper.smpp.pdu.PduResponse;
 import com.cloudhopper.smpp.pdu.SubmitSmResp;
 import org.apache.commons.configuration.Configuration;
 import org.joda.time.DateTime;
-import org.joda.time.format.DateTimeFormatter;
 import org.junit.AfterClass;
 import org.junit.BeforeClass;
-import org.junit.Ignore;
 import org.junit.Test;
-
-import static org.junit.Assert.*;
-import static org.mockito.Mockito.*;
-
 import org.mockito.ArgumentCaptor;
 import org.restcomm.connect.commons.dao.Sid;
 import org.restcomm.connect.core.service.api.NumberSelectorService;
@@ -58,12 +41,21 @@ import org.restcomm.connect.dao.DaoManager;
 import org.restcomm.connect.dao.SmsMessagesDao;
 import org.restcomm.connect.dao.entities.IncomingPhoneNumber;
 import org.restcomm.connect.dao.entities.SmsMessage;
-import org.restcomm.connect.dao.entities.SmsMessageFilter;
 import org.restcomm.connect.monitoringservice.MonitoringService;
 import org.restcomm.connect.sms.smpp.dlr.spi.DLRPayload;
 
 import javax.servlet.ServletContext;
 import javax.servlet.sip.SipFactory;
+import java.text.ParseException;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Collections;
+import java.util.Date;
+import java.util.List;
+import java.util.concurrent.TimeUnit;
+
+import static org.junit.Assert.*;
+import static org.mockito.Mockito.*;
 
 /**
  * @author Henrique Rosa (henrique.rosa@telestax.com)
@@ -162,7 +154,7 @@ public class SmppMessageHandlerTest {
                 when(servletContext.getAttribute(NumberSelectorService.class.getName())).thenReturn(mock(NumberSelectorService.class));
 
                 when(daoManager.getSmsMessagesDao()).thenReturn(smsMessagesDao);
-                when(smsMessagesDao.getSmsMessages(any(SmsMessageFilter.class))).thenReturn(messages);
+                when(smsMessagesDao.findBySmppMessageIdAndDateCreatedGreaterOrEqualThanOrderedByDateCreatedDesc(eq(dlrPayload.getId()), any(DateTime.class))).thenReturn(messages);
 
                 final ActorRef messageHandler = system.actorOf(Props.apply(new Creator<Actor>() {
                     @Override
@@ -175,14 +167,9 @@ public class SmppMessageHandlerTest {
                 messageHandler.tell(dlrPayload, getRef());
 
                 // then
-                final ArgumentCaptor<SmsMessageFilter> filterCaptor = ArgumentCaptor.forClass(SmsMessageFilter.class);
-                verify(smsMessagesDao, timeout(50)).getSmsMessages(filterCaptor.capture());
-
-                final SmsMessageFilter filter = filterCaptor.getValue();
-                assertEquals(dlrPayload.getId(), filter.getSmppMessageId());
-
-                final DateTime endDate = SmsMessageFilter.DATE_TIME_FORMATTER.parseDateTime(filter.getEndTime());
-                assertEquals(3, TimeUnit.DAYS.convert(new Date().getTime() - endDate.toDate().getTime(), TimeUnit.MILLISECONDS));
+                final ArgumentCaptor<DateTime> dateCaptor = ArgumentCaptor.forClass(DateTime.class);
+                verify(smsMessagesDao, timeout(50)).findBySmppMessageIdAndDateCreatedGreaterOrEqualThanOrderedByDateCreatedDesc(eq(dlrPayload.getId()), dateCaptor.capture());
+                assertEquals(3, TimeUnit.DAYS.convert(new Date().getTime() - dateCaptor.getValue().toDate().getTime(), TimeUnit.MILLISECONDS));
 
                 final ArgumentCaptor<SmsMessage> smsCaptor = ArgumentCaptor.forClass(SmsMessage.class);
                 verify(smsMessagesDao, timeout(50).times(3)).updateSmsMessage(smsCaptor.capture());
@@ -218,7 +205,7 @@ public class SmppMessageHandlerTest {
                 final List<SmsMessage> messages = Collections.emptyList();
 
                 when(daoManager.getSmsMessagesDao()).thenReturn(smsMessagesDao);
-                when(smsMessagesDao.getSmsMessages(any(SmsMessageFilter.class))).thenReturn(messages);
+                when(smsMessagesDao.findBySmppMessageIdAndDateCreatedGreaterOrEqualThanOrderedByDateCreatedDesc(eq(dlrPayload.getId()), any(DateTime.class))).thenReturn(messages);
 
                 final ActorRef messageHandler = system.actorOf(Props.apply(new Creator<Actor>() {
                     @Override
@@ -231,14 +218,9 @@ public class SmppMessageHandlerTest {
                 messageHandler.tell(dlrPayload, getRef());
 
                 // then
-                final ArgumentCaptor<SmsMessageFilter> filterCaptor = ArgumentCaptor.forClass(SmsMessageFilter.class);
-                verify(smsMessagesDao, timeout(50)).getSmsMessages(filterCaptor.capture());
-
-                final SmsMessageFilter filter = filterCaptor.getValue();
-                assertEquals(dlrPayload.getId(), filter.getSmppMessageId());
-
-                final DateTime endDate = SmsMessageFilter.DATE_TIME_FORMATTER.parseDateTime(filter.getEndTime());
-                assertEquals(3, TimeUnit.DAYS.convert(new Date().getTime() - endDate.toDate().getTime(), TimeUnit.MILLISECONDS));
+                final ArgumentCaptor<DateTime> dateCaptor = ArgumentCaptor.forClass(DateTime.class);
+                verify(smsMessagesDao, timeout(50)).findBySmppMessageIdAndDateCreatedGreaterOrEqualThanOrderedByDateCreatedDesc(eq(dlrPayload.getId()), dateCaptor.capture());
+                assertEquals(3, TimeUnit.DAYS.convert(new Date().getTime() - dateCaptor.getValue().toDate().getTime(), TimeUnit.MILLISECONDS));
 
                 verify(smsMessagesDao, never()).updateSmsMessage(any(SmsMessage.class));
             }

@@ -151,8 +151,7 @@ public class SmppMessageHandler extends RestcommUntypedActor {
             }
 
             // Find all messages correlated with SMPP Message ID in last three days
-            final SmsMessageFilter filter = SmsMessageFilter.builer().smppMessageId(deliveryReceipt.getId()).endTime(DateTime.now().minusDays(3)).build();
-            final List<SmsMessage> smsMessages = this.storage.getSmsMessagesDao().getSmsMessages(filter);
+            final List<SmsMessage> smsMessages = this.storage.getSmsMessagesDao().findBySmppMessageIdAndDateCreatedGreaterOrEqualThanOrderedByDateCreatedDesc(smppMessageId, DateTime.now().minusDays(3));
 
             // Update status of messages and remove correlation with SMPP Message ID
             // IMPORTANT: First message in the results list is considered the real target of the DLR

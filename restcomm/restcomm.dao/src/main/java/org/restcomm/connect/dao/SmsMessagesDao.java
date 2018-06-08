@@ -22,6 +22,7 @@ package org.restcomm.connect.dao;
 import java.text.ParseException;
 import java.util.List;
 
+import org.joda.time.DateTime;
 import org.restcomm.connect.commons.dao.Sid;
 import org.restcomm.connect.dao.entities.SmsMessage;
 import org.restcomm.connect.dao.entities.SmsMessageFilter;
@@ -53,4 +54,6 @@ public interface SmsMessagesDao {
     // Support for filtering of message list result, Issue 1395
     Integer getTotalSmsMessage(SmsMessageFilter filter);
     List<SmsMessage> getSmsMessages(SmsMessageFilter filter);
+
+    List<SmsMessage> findBySmppMessageIdAndDateCreatedGreaterOrEqualThanOrderedByDateCreatedDesc(String smppMessageId, DateTime startDate);
 }
