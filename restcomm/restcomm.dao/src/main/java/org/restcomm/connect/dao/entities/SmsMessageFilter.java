@@ -19,12 +19,12 @@
  */
 package org.restcomm.connect.dao.entities;
 
+import org.joda.time.DateTime;
+import org.joda.time.format.DateTimeFormat;
+import org.joda.time.format.DateTimeFormatter;
 import org.restcomm.connect.commons.annotations.concurrency.Immutable;
 
-import java.text.DateFormat;
 import java.text.ParseException;
-import java.text.SimpleDateFormat;
-import java.util.Date;
 import java.util.List;
 
 /**
@@ -35,7 +35,7 @@ import java.util.List;
 @Immutable
 public class SmsMessageFilter {
 
-    public static final DateFormat DATE_FORMAT = new SimpleDateFormat("yyyy-MM-dd");
+    public static final DateTimeFormatter DATE_TIME_FORMATTER = DateTimeFormat.forPattern("yyyy-MM-dd");
 
     private String accountSid;
     private List<String> accountSidSet; // if not-null we need the cdrs that belong to several accounts
@@ -49,7 +49,8 @@ public class SmsMessageFilter {
     private String instanceid;
     private String smppMessageId;
 
-    public SmsMessageFilter() {
+    private SmsMessageFilter() {
+
     }
 
     @Deprecated
@@ -149,6 +150,8 @@ public class SmsMessageFilter {
 
         private Builder() {
             this.filter = new SmsMessageFilter();
+            this.filter.limit = 50;
+            this.filter.offset = 0;
         }
 
         public Builder accountSid(String accountSid) {
@@ -175,16 +178,16 @@ public class SmsMessageFilter {
             return this;
         }
 
-        public Builder startTime(Date startTime) {
+        public Builder startTime(DateTime startTime) {
             if (startTime != null) {
-                this.filter.startTime = DATE_FORMAT.format(startTime);
+                this.filter.startTime = DATE_TIME_FORMATTER.print(startTime);
             }
             return this;
         }
 
-        public Builder endTime(Date endTime) {
+        public Builder endTime(DateTime endTime) {
             if (endTime != null) {
-                this.filter.endTime = DATE_FORMAT.format(endTime);
+                this.filter.endTime = DATE_TIME_FORMATTER.print(endTime);
             }
             return this;
         }

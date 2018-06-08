@@ -84,7 +84,6 @@ import java.io.IOException;
 import java.net.URI;
 import java.net.URISyntaxException;
 import java.util.Arrays;
-import java.util.Calendar;
 import java.util.Collection;
 import java.util.List;
 
@@ -152,9 +151,7 @@ public class SmppMessageHandler extends RestcommUntypedActor {
             }
 
             // Find all messages correlated with SMPP Message ID in last three days
-            final Calendar calendar = Calendar.getInstance();
-            calendar.add(Calendar.DAY_OF_MONTH, -3);
-            final SmsMessageFilter filter = SmsMessageFilter.builer().smppMessageId(deliveryReceipt.getId()).endTime(calendar.getTime()).build();
+            final SmsMessageFilter filter = SmsMessageFilter.builer().smppMessageId(deliveryReceipt.getId()).endTime(DateTime.now().minusDays(3)).build();
             final List<SmsMessage> smsMessages = this.storage.getSmsMessagesDao().getSmsMessages(filter);
 
             // Update status of messages and remove correlation with SMPP Message ID

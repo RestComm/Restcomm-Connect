@@ -181,8 +181,8 @@ public class SmppMessageHandlerTest {
                 final SmsMessageFilter filter = filterCaptor.getValue();
                 assertEquals(dlrPayload.getId(), filter.getSmppMessageId());
 
-                final Date endDate = SmsMessageFilter.DATE_FORMAT.parse(filter.getEndTime());
-                assertEquals(3, TimeUnit.DAYS.convert(new Date().getTime() - endDate.getTime(), TimeUnit.MILLISECONDS));
+                final DateTime endDate = SmsMessageFilter.DATE_TIME_FORMATTER.parseDateTime(filter.getEndTime());
+                assertEquals(3, TimeUnit.DAYS.convert(new Date().getTime() - endDate.toDate().getTime(), TimeUnit.MILLISECONDS));
 
                 final ArgumentCaptor<SmsMessage> smsCaptor = ArgumentCaptor.forClass(SmsMessage.class);
                 verify(smsMessagesDao, timeout(50).times(3)).updateSmsMessage(smsCaptor.capture());
@@ -237,8 +237,8 @@ public class SmppMessageHandlerTest {
                 final SmsMessageFilter filter = filterCaptor.getValue();
                 assertEquals(dlrPayload.getId(), filter.getSmppMessageId());
 
-                final Date endDate = SmsMessageFilter.DATE_FORMAT.parse(filter.getEndTime());
-                assertEquals(3, TimeUnit.DAYS.convert(new Date().getTime() - endDate.getTime(), TimeUnit.MILLISECONDS));
+                final DateTime endDate = SmsMessageFilter.DATE_TIME_FORMATTER.parseDateTime(filter.getEndTime());
+                assertEquals(3, TimeUnit.DAYS.convert(new Date().getTime() - endDate.toDate().getTime(), TimeUnit.MILLISECONDS));
 
                 verify(smsMessagesDao, never()).updateSmsMessage(any(SmsMessage.class));
             }
