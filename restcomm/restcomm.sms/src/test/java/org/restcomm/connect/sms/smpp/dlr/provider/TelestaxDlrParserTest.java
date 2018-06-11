@@ -6,6 +6,7 @@ import org.junit.Test;
 import org.restcomm.connect.dao.entities.SmsMessage.Status;
 import org.restcomm.connect.sms.smpp.dlr.spi.DLRPayload;
 import org.restcomm.connect.sms.smpp.dlr.spi.DlrParser;
+import org.restcomm.connect.commons.dao.Error;
 
 /**
  * @author mariafarooq
@@ -29,7 +30,7 @@ public class TelestaxDlrParserTest {
         Assert.assertEquals("0000058049", dlrMap.getId());
         Assert.assertEquals("001", dlrMap.getSub());
         Assert.assertEquals("001", dlrMap.getDlvrd());
-        Assert.assertEquals("000", dlrMap.getErr());
+        Assert.assertNull(dlrMap.getErr());
         Assert.assertEquals(Status.DELIVERED, dlrMap.getStat());
         Assert.assertEquals(2018, dlrMap.getDoneDate().getYear());
         Assert.assertEquals(2018, dlrMap.getSubmitDate().getYear());

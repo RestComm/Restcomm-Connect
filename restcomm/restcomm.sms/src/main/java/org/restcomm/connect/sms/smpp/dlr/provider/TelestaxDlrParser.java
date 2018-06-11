@@ -11,11 +11,13 @@ import org.restcomm.connect.dao.entities.SmsMessage;
 import org.restcomm.connect.dao.entities.SmsMessage.Status;
 import org.restcomm.connect.sms.smpp.dlr.spi.DLRPayload;
 import org.restcomm.connect.sms.smpp.dlr.spi.DlrParser;
+import org.restcomm.connect.commons.dao.Error;
 
 public class TelestaxDlrParser implements DlrParser {
 
     private static final Logger logger = Logger.getLogger(TelestaxDlrParser.class);
     private static final Map<String, SmsMessage.Status> statusMap;
+    private static final Map<String, Error> errorMap;
 
     private static final String TAG_SEPARATOR = " ";
     private static final String TAG_VALUE_SEPARATOR = ":";
@@ -29,6 +31,9 @@ public class TelestaxDlrParser implements DlrParser {
 
     private static final DateTimeFormatter DLR_SENT_FORMAT = DateTimeFormat.forPattern("yyMMddHHmm");
 
+    //TODO change according to SMSc spec
+    private static final String SUCCESS_CODE = "200";
+
     static {
         statusMap = new HashMap<String, SmsMessage.Status>();
         statusMap.put("ACCEPTD", SmsMessage.Status.SENT);
@@ -38,6 +43,20 @@ public class TelestaxDlrParser implements DlrParser {
         statusMap.put("REJECTD", SmsMessage.Status.FAILED);
         statusMap.put("DELIVRD", SmsMessage.Status.DELIVERED);
         statusMap.put("UNKNOWN", SmsMessage.Status.SENT);
+
+        errorMap = new HashMap<String, Error>();
+        //TODO change according to SMSc spec
+        errorMap.put("ACCEPTD", Error.QUEUE_OVERFLOW);
+        errorMap.put("ACCEPTD", Error.ACCOUNT_SUSPENDED);
+        errorMap.put("ACCEPTD", Error.UNREACHABLE_DESTINATION_HANDSET);
+        errorMap.put("ACCEPTD", Error.MESSAGE_BLOCKED);
+        errorMap.put("ACCEPTD", Error.UNKNOWN_DESTINATION_HANDSET);
+        errorMap.put("ACCEPTD", Error.LANDLINE_OR_UNREACHABLE_CARRIER);
+        errorMap.put("ACCEPTD", Error.CARRIER_VIOLATION);
+        errorMap.put("ACCEPTD", Error.UNKNOWN_ERROR);
+        errorMap.put("ACCEPTD", Error.MISSING_SEGMENT);
+        errorMap.put("ACCEPTD", Error.MESSAGE_PRICE_EXCEEDS_MAX_PRICE);
+
     }
 
     private String parseTagValue(String message, String tagName) {
@@ -81,7 +100,8 @@ public class TelestaxDlrParser implements DlrParser {
         dlr.setStat(parsedStatus);
 
         final String err = parseTagValue(message, ERR_TAG);
-        dlr.setErr(err);
+        Error parsedError = parseRestcommErrorCode(err);
+        dlr.setErr(parsedError);
 
         final String sub = parseTagValue(message, SUB_TAG);
         dlr.setSub(sub);
@@ -106,7 +126,7 @@ public class TelestaxDlrParser implements DlrParser {
         return date;
     }
 
-    public Status parseRestcommStatus(String message) {
+    private Status parseRestcommStatus(String message) {
         /*
         https://help.nexmo.com/hc/en-us/articles/204015663-What-is-Nexmo-s-SMPP-DLR-format-
         DELIVRD Message is delivered to destination
@@ -125,6 +145,21 @@ public class TelestaxDlrParser implements DlrParser {
         }
 
         return status;
+    }
+
+    private Error parseRestcommErrorCode(String errCode) {
+        Error error = null;
+        if (SUCCESS_CODE.equals(errCode)) {
+            //set to null so no error is shown
+            error = null;
+        } else if (errorMap.containsKey(errCode)) {
+            error = errorMap.get(errCode);
+        } else {
+            //if error is not in mapping table, set it to unknown
+            error = Error.UNKNOWN_ERROR;
+            logger.debug("received an unexpected error message " + error);
+        }
+        return error;
     }
 
 }
