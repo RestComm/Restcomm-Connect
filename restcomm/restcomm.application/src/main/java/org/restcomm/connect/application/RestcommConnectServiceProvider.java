@@ -25,9 +25,11 @@ import javax.servlet.ServletContext;
 import org.restcomm.connect.core.service.api.ClientPasswordHashingService;
 import org.restcomm.connect.core.service.api.NumberSelectorService;
 import org.restcomm.connect.core.service.api.ProfileService;
+import org.restcomm.connect.core.service.api.RecordingService;
 import org.restcomm.connect.core.service.client.ClientPasswordHashingServiceImpl;
 import org.restcomm.connect.core.service.number.NumberSelectorServiceImpl;
 import org.restcomm.connect.core.service.profile.ProfileServiceImpl;
+import org.restcomm.connect.core.service.recording.RecordingsServiceImpl;
 import org.restcomm.connect.dao.DaoManager;
 
 /**
@@ -41,6 +43,7 @@ public class RestcommConnectServiceProvider {
     private NumberSelectorService numberSelector;
     private ProfileService profileService;
     private ClientPasswordHashingService clientPasswordHashingService;
+    private RecordingService recordingService;
 
     public static RestcommConnectServiceProvider getInstance() {
         if (instance == null) {
@@ -61,6 +64,8 @@ public class RestcommConnectServiceProvider {
         ctx.setAttribute(ProfileService.class.getName(), profileService);
         this.clientPasswordHashingService = new ClientPasswordHashingServiceImpl(daoManager);
         ctx.setAttribute(ClientPasswordHashingService.class.getName(), clientPasswordHashingService);
+        this.recordingService = new RecordingsServiceImpl(daoManager);
+        ctx.setAttribute(RecordingService.class.getName(), recordingService);
     }
 
     /**
@@ -77,6 +82,14 @@ public class RestcommConnectServiceProvider {
         return profileService;
     }
 
+    /**
+     * @return
+     */
     public ClientPasswordHashingService clientPasswordHashingService() { return clientPasswordHashingService; }
+
+    /**
+     * @return
+     */
+    public RecordingService recordingService() { return recordingService; }
 
 }
