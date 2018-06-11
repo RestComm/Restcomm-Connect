@@ -19,13 +19,12 @@
  */
 package org.restcomm.connect.dao;
 
-import java.text.ParseException;
-import java.util.List;
-
-import org.joda.time.DateTime;
 import org.restcomm.connect.commons.dao.Sid;
 import org.restcomm.connect.dao.entities.SmsMessage;
 import org.restcomm.connect.dao.entities.SmsMessageFilter;
+
+import java.text.ParseException;
+import java.util.List;
 
 /**
  * @author quintana.thomas@gmail.com (Thomas Quintana)
