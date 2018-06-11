@@ -150,7 +150,9 @@ public class SmppMessageHandler extends RestcommUntypedActor {
             if (smsMessage == null) {
                 logger.warning("responseMessageId=" + dLRPayload.getId() + " was never received! ");
             } else {
-                smsMessagesDao.updateSmsMessage(smsMessage.setStatus(dLRPayload.getStat()));
+                smsMessage.setStatus(dLRPayload.getStat());
+                smsMessage.setError(dLRPayload.getErr());
+                smsMessagesDao.updateSmsMessage(smsMessage);
             }
         } else if (message instanceof CreateSmsSession) {
             IExtensionCreateSmsSessionRequest ier = (CreateSmsSession) message;
