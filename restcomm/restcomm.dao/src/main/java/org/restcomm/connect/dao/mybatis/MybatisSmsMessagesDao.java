@@ -22,8 +22,6 @@ package org.restcomm.connect.dao.mybatis;
 import org.apache.ibatis.session.SqlSession;
 import org.apache.ibatis.session.SqlSessionFactory;
 import org.joda.time.DateTime;
-import org.joda.time.format.DateTimeFormat;
-import org.joda.time.format.DateTimeFormatter;
 import org.restcomm.connect.commons.annotations.concurrency.ThreadSafe;
 import org.restcomm.connect.commons.dao.Sid;
 import org.restcomm.connect.dao.SmsMessagesDao;
@@ -198,19 +196,16 @@ public final class MybatisSmsMessagesDao implements SmsMessagesDao {
     }
 
     @Override
-    public List<SmsMessage> findBySmppMessageIdAndDateCreatedGreaterOrEqualThanOrderedByDateCreatedDesc(String smppMessageId, DateTime startDate) {
-        final DateTimeFormatter formatter = DateTimeFormat.forPattern("yyyy-MM-dd HH:mm:ss");
+    public List<SmsMessage> findBySmppMessageId(String smppMessageId) {
         final Map<String, Object> parameters = new HashMap<>(2);
         parameters.put("smppMessageId", smppMessageId);
-        parameters.put("startDate", formatter.print(startDate.withTime(0, 0, 0, 0)));
-
         final SqlSession session = this.sessions.openSession();
 
         try {
-            final List<Map<String, Object>> results = session.selectList(namespace + "findBySmppMessageIdAndDateCreatedGreaterOrEqualThanOrderedByDateCreatedDesc", parameters);
+            final List<Map<String, Object>> results = session.selectList(namespace + "findBySmppMessageId", parameters);
             final List<SmsMessage> messages = new ArrayList<>(results.size());
 
-            for (Map<String, Object> result: results) {
+            for (Map<String, Object> result : results) {
                 messages.add(toSmsMessage(result));
             }
             return messages;

@@ -149,24 +149,15 @@ public class SmppMessageHandler extends RestcommUntypedActor {
                 logger.debug("DLR Received for SMPP Message " + deliveryReceipt.getId() + " with status " + deliveryStatus);
             }
 
-            // Find all messages correlated with SMPP Message ID in last three days
-            final List<SmsMessage> smsMessages = this.storage.getSmsMessagesDao().findBySmppMessageIdAndDateCreatedGreaterOrEqualThanOrderedByDateCreatedDesc(smppMessageId, DateTime.now().minusDays(3));
+            // Find message bound to the SMPP Message ID
+            // NOTE: We ensure there is only one message bound to any SmppMessageId at this point because uniqueness is enforced on submit_response event
+            final SmsMessage sms = this.storage.getSmsMessagesDao().getSmsMessageBySmppMessageId(smppMessageId);
 
-            // Update status of messages and remove correlation with SMPP Message ID
-            // IMPORTANT: First message in the results list is considered the real target of the DLR
-            // BS-232: Other "pending" messages that might share correlation with same SMPP Message ID will have their status forcefully updated to SENT
-            final int smsCount = smsMessages.size();
-            if (smsCount == 0) {
-                logger.warning("responseMessageId=" + deliveryReceipt.getId() + " was never received! ");
+            // Update status of message and remove correlation with SMPP Message ID
+            if (sms == null) {
+                logger.warning("responseMessageId=" + smppMessageId + " was never received!");
             } else {
-                for (int index = 0; index < smsCount; index++) {
-                    final SmsMessage.Status status = (index > 0) ? SmsMessage.Status.SENT : deliveryStatus;
-                    this.storage.getSmsMessagesDao().updateSmsMessage(smsMessages.get(index).setSmppMessageId(null).setStatus(status));
-
-                    if (index > 0) {
-                        logger.warning("Correlation between SmsMessage " + smsMessages.get(index).getSid() + " and SMPP Message " + smppMessageId + " expired. Status forcefully set to " + status);
-                    }
-                }
+                this.storage.getSmsMessagesDao().updateSmsMessage(sms.setSmppMessageId(null).setStatus(deliveryStatus));
             }
         } else if (message instanceof CreateSmsSession) {
             IExtensionCreateSmsSessionRequest ier = (CreateSmsSession) message;
@@ -187,43 +178,41 @@ public class SmppMessageHandler extends RestcommUntypedActor {
             final ActorRef session = destroySmsSession.session();
             context.stop(session);
         } else if (message instanceof PduAsyncResponse) {
-
-            PduAsyncResponse pduAsyncResponse = (PduAsyncResponse) message;
-
+            final PduAsyncResponse pduAsyncResponse = (PduAsyncResponse) message;
             if (pduAsyncResponse instanceof DefaultPduAsyncResponse && pduAsyncResponse.getResponse() instanceof SubmitSmResp) {
-                SubmitSmResp submitSmResp = (SubmitSmResp) pduAsyncResponse.getResponse();
+                final SubmitSmResp submitSmResp = (SubmitSmResp) pduAsyncResponse.getResponse();
                 if (logger.isInfoEnabled()) {
                     logger.info(" ********** SmppMessageHandler received SubmitSmResp: " + submitSmResp + "SubmitSmResp Status:" + submitSmResp.getCommandStatus());
                 }
 
-                String smppMessageId = submitSmResp.getMessageId();
-
-                Object ref = pduAsyncResponse.getRequest().getReferenceObject();
+                final String smppMessageId = submitSmResp.getMessageId();
+                final Object ref = pduAsyncResponse.getRequest().getReferenceObject();
 
                 if (ref != null && ref instanceof Sid) {
                     // BS-230: Ensure there is no other message sharing same SMPP Message ID
-                    SmsMessage existingMessage = this.storage.getSmsMessagesDao().getSmsMessageBySmppMessageId(smppMessageId);
-                    if (existingMessage != null) {
-                        // Cut correlation between SMS and SMPP Message ID and update message to a final state
-                        existingMessage = existingMessage.setSmppMessageId(null);
-                        logger.warning("Correlation between SmsMessage " + existingMessage.getSid() + " and SMPP Message " + smppMessageId + " expired.");
-                        this.storage.getSmsMessagesDao().updateSmsMessage(existingMessage);
+                    final List<SmsMessage> smsMessages = this.storage.getSmsMessagesDao().findBySmppMessageId(smppMessageId);
+
+                    // Delete correlation between messages and SMPP Message ID
+                    for (SmsMessage smsMessage : smsMessages) {
+                        this.storage.getSmsMessagesDao().updateSmsMessage(smsMessage.setSmppMessageId(null));
+                        logger.warning("Correlation between SmsMessage " + smsMessage.getSid() + " and SMPP Message " + smppMessageId + " expired.");
                     }
 
-                    Sid sid = (Sid) ref;
-                    SmsMessage smsMessage = storage.getSmsMessagesDao().getSmsMessage(sid);
-                    if (submitSmResp.getCommandStatus() != 0) {
-                        logger.warning(String.format("SubmitSmResp Failure! Message could not be sent Status Code %s Result Messages: %s", submitSmResp.getCommandStatus(), submitSmResp.getResultMessage()));
-                        smsMessage = smsMessage.setSmppMessageId(smppMessageId).setStatus(SmsMessage.Status.FAILED);
-                    } else {
-                        //update smppMessageId as well as status to SENT and date sent
+                    // Update status of target message
+                    SmsMessage smsMessage = storage.getSmsMessagesDao().getSmsMessage((Sid) ref);
+                    if (submitSmResp.getCommandStatus() == SmppConstants.STATUS_OK) {
+                        // Successful reponse: update smppMessageId as well as status to SENT and date sent
                         smsMessage = smsMessage.setSmppMessageId(smppMessageId).setStatus(SmsMessage.Status.SENT).setDateSent(DateTime.now());
+                    } else {
+                        // Failure response: set status to FAILED and do not correlate to any smppMessageId
+                        logger.warning(String.format("SubmitSmResp Failure! Message could not be sent Status Code %s Result Messages: %s", submitSmResp.getCommandStatus(), submitSmResp.getResultMessage()));
+                        smsMessage = smsMessage.setSmppMessageId(null).setStatus(SmsMessage.Status.FAILED);
                     }
                     storage.getSmsMessagesDao().updateSmsMessage(smsMessage);
                 } else {
                     logger.warning("PduAsyncResponse reference is null or not Sid");
                 }
-            } else {
+            } else if (logger.isInfoEnabled()) {
                 logger.info("PduAsyncResponse not SubmitSmResp " + pduAsyncResponse.getClass().toString());
             }
         }

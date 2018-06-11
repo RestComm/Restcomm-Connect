@@ -126,10 +126,8 @@
             LIMIT #{limit} OFFSET #{offset}
     </select>
 
-    <select id="findBySmppMessageIdAndDateCreatedGreaterOrEqualThanOrderedByDateCreatedDesc" parameterType="map" resultType="hashmap">
+    <select id="findBySmppMessageId" parameterType="map" resultType="hashmap">
         SELECT * FROM "restcomm_sms_messages" AS "restcomm_sms_messages"
         WHERE "smpp_message_id" = #{smppMessageId}
-        AND "date_created" &gt;= #{startDate}
-        ORDER BY "date_created" DESC
     </select>
 </mapper>

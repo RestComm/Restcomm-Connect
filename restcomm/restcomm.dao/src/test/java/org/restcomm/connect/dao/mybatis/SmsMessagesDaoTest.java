@@ -116,9 +116,9 @@ public final class SmsMessagesDaoTest {
         // Validate that the CDR was removed.
         assertTrue(messages.getSmsMessage(sid) == null);
     }
-    
+
     private SmsMessage createSms() {
-    	return createSms(Sid.generate(Sid.Type.ACCOUNT), SmsMessage.Direction.OUTBOUND_API, 0, DateTime.now());
+        return createSms(Sid.generate(Sid.Type.ACCOUNT), SmsMessage.Direction.OUTBOUND_API, 0, DateTime.now());
     }
 
     private SmsMessage createSms(Sid account, SmsMessage.Direction direction, int index, DateTime date) {
@@ -134,7 +134,7 @@ public final class SmsMessagesDaoTest {
                 .setApiVersion("2012-04-24")
                 .setRecipient("+12223334444")
                 .setSender("+17778889999")
-                .setBody("Hello World - "+index)
+                .setBody("Hello World - " + index)
                 .setStatus(SmsMessage.Status.SENDING)
                 .setDirection(direction)
                 .setPrice(new BigDecimal("0.00"))
@@ -154,22 +154,22 @@ public final class SmsMessagesDaoTest {
             SmsMessage message = createSms(account, SmsMessage.Direction.OUTBOUND_API, i, oneMinuteAgo);
             // Create a new sms message in the data store.
             messages.addSmsMessage(message);
-            logger.info("Created message: "+message);
+            logger.info("Created message: " + message);
         }
         for (int i = 0; i < 2; i++) {
             SmsMessage message = createSms(account, SmsMessage.Direction.OUTBOUND_CALL, i, oneMinuteAgo);
             // Create a new sms message in the data store.
             messages.addSmsMessage(message);
-            logger.info("Created message: "+message);
+            logger.info("Created message: " + message);
         }
         for (int i = 0; i < 2; i++) {
             SmsMessage message = createSms(account, SmsMessage.Direction.OUTBOUND_REPLY, i, oneMinuteAgo);
             // Create a new sms message in the data store.
             messages.addSmsMessage(message);
-            logger.info("Created message: "+message);
+            logger.info("Created message: " + message);
         }
         int lastMessages = messages.getSmsMessagesPerAccountLastPerMinute(account.toString());
-        logger.info("SMS Messages last minutes: "+lastMessages);
+        logger.info("SMS Messages last minutes: " + lastMessages);
         assertEquals(6, lastMessages);
         Thread.sleep(5000);
         DateTime oneMinuteLater = DateTime.now();
@@ -177,10 +177,10 @@ public final class SmsMessagesDaoTest {
             SmsMessage message = createSms(account, SmsMessage.Direction.OUTBOUND_CALL, i, oneMinuteLater);
             // Create a new sms message in the data store.
             messages.addSmsMessage(message);
-            logger.info("Created message: "+message);
+            logger.info("Created message: " + message);
         }
         lastMessages = messages.getSmsMessagesPerAccountLastPerMinute(account.toString());
-        logger.info("SMS Messages last minutes: "+lastMessages);
+        logger.info("SMS Messages last minutes: " + lastMessages);
         assertEquals(3, lastMessages);
         messages.removeSmsMessages(account);
     }
@@ -217,20 +217,20 @@ public final class SmsMessagesDaoTest {
     }
 
     @Test
-    public void testUpdateSmsMessageDateSentAndStatusAndGetBySmppMsgId(){
-    	final DateTime dateSent = DateTime.now();
-    	final SmsMessage.Status status = SmsMessage.Status.SENT;
-    	final String smppMessageId = "0000058049";
+    public void testUpdateSmsMessageDateSentAndStatusAndGetBySmppMsgId() {
+        final DateTime dateSent = DateTime.now();
+        final SmsMessage.Status status = SmsMessage.Status.SENT;
+        final String smppMessageId = "0000058049";
 
-    	// add a new msg
-    	SmsMessage smsMessage = createSms();
-    	final SmsMessagesDao messages = manager.getSmsMessagesDao();
+        // add a new msg
+        SmsMessage smsMessage = createSms();
+        final SmsMessagesDao messages = manager.getSmsMessagesDao();
         messages.addSmsMessage(smsMessage);
 
         //set status and dateSent
-    	smsMessage = smsMessage.setStatus(status).setDateSent(dateSent).setSmppMessageId(smppMessageId);
-    	messages.updateSmsMessage(smsMessage);
-        
+        smsMessage = smsMessage.setStatus(status).setDateSent(dateSent).setSmppMessageId(smppMessageId);
+        messages.updateSmsMessage(smsMessage);
+
         //get SmsMessage By SmppMessageId
         SmsMessage resultantSmsMessage = messages.getSmsMessageBySmppMessageId(smppMessageId);
 
@@ -271,13 +271,14 @@ public final class SmsMessagesDaoTest {
         smsMessagesDao.addSmsMessage(smsMessage6);
         smsMessagesDao.addSmsMessage(smsMessage7);
 
-        final List<SmsMessage> messages = smsMessagesDao.findBySmppMessageIdAndDateCreatedGreaterOrEqualThanOrderedByDateCreatedDesc(smppMessageId, threeDaysAgo);
+        final List<SmsMessage> messages = smsMessagesDao.findBySmppMessageId(smppMessageId);
 
+        // then
         try {
-            assertEquals(3, messages.size());
-            assertEquals(smsMessage6.getSid(), messages.get(0).getSid());
-            assertEquals(smsMessage5.getSid(), messages.get(1).getSid());
-            assertEquals(smsMessage3.getSid(), messages.get(2).getSid());
+            assertEquals(5, messages.size());
+            for (SmsMessage message: messages) {
+                assertEquals(smppMessageId, message.getSmppMessageId());
+            }
         } finally {
             smsMessagesDao.removeSmsMessages(accountSid);
         }

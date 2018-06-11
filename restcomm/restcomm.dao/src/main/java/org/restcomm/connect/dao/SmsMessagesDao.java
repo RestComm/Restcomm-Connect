@@ -55,5 +55,5 @@ public interface SmsMessagesDao {
     Integer getTotalSmsMessage(SmsMessageFilter filter);
     List<SmsMessage> getSmsMessages(SmsMessageFilter filter);
 
-    List<SmsMessage> findBySmppMessageIdAndDateCreatedGreaterOrEqualThanOrderedByDateCreatedDesc(String smppMessageId, DateTime startDate);
+    List<SmsMessage> findBySmppMessageId(String smppMessageId);
 }
