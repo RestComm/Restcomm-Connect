@@ -73,6 +73,8 @@ public class TelestaxDlrParser implements DlrParser {
         errorMap.put("228", Error.UNREACHABLE_DESTINATION_HANDSET);
         errorMap.put("229", Error.MESSAGE_BLOCKED);
         errorMap.put("230", Error.MESSAGE_BLOCKED);
+        errorMap.put("231", Error.CARRIER_VIOLATION);
+        errorMap.put("232", Error.UNKNOWN_DESTINATION_HANDSET);
 
     }
 
