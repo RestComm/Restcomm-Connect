@@ -31,8 +31,7 @@ public class TelestaxDlrParser implements DlrParser {
 
     private static final DateTimeFormatter DLR_SENT_FORMAT = DateTimeFormat.forPattern("yyMMddHHmm");
 
-    //TODO change according to SMSc spec
-    private static final String SUCCESS_CODE = "200";
+    private static final String SUCCESS_CODE = "000";
 
     static {
         statusMap = new HashMap<String, SmsMessage.Status>();
@@ -46,16 +45,34 @@ public class TelestaxDlrParser implements DlrParser {
 
         errorMap = new HashMap<String, Error>();
         //TODO change according to SMSc spec
-        errorMap.put("ACCEPTD", Error.QUEUE_OVERFLOW);
-        errorMap.put("ACCEPTD", Error.ACCOUNT_SUSPENDED);
-        errorMap.put("ACCEPTD", Error.UNREACHABLE_DESTINATION_HANDSET);
-        errorMap.put("ACCEPTD", Error.MESSAGE_BLOCKED);
-        errorMap.put("ACCEPTD", Error.UNKNOWN_DESTINATION_HANDSET);
-        errorMap.put("ACCEPTD", Error.LANDLINE_OR_UNREACHABLE_CARRIER);
-        errorMap.put("ACCEPTD", Error.CARRIER_VIOLATION);
-        errorMap.put("ACCEPTD", Error.UNKNOWN_ERROR);
-        errorMap.put("ACCEPTD", Error.MISSING_SEGMENT);
-        errorMap.put("ACCEPTD", Error.MESSAGE_PRICE_EXCEEDS_MAX_PRICE);
+        errorMap.put("001", Error.UNKNOWN_DESTINATION_HANDSET);
+        errorMap.put("002", Error.UNKNOWN_DESTINATION_HANDSET);
+        errorMap.put("003", Error.UNKNOWN_DESTINATION_HANDSET);
+        errorMap.put("004", Error.MESSAGE_BLOCKED);
+        errorMap.put("005", Error.MESSAGE_BLOCKED);
+        errorMap.put("007", Error.MESSAGE_BLOCKED);
+        errorMap.put("008", Error.UNREACHABLE_DESTINATION_HANDSET);
+        errorMap.put("010", Error.LANDLINE_OR_UNREACHABLE_CARRIER);
+        errorMap.put("011", Error.UNREACHABLE_DESTINATION_HANDSET);
+        errorMap.put("012", Error.UNKNOWN_ERROR);
+        errorMap.put("013", Error.UNKNOWN_ERROR);
+        errorMap.put("014", Error.UNKNOWN_ERROR);
+        errorMap.put("022", Error.MESSAGE_BLOCKED);
+        errorMap.put("023", Error.UNREACHABLE_DESTINATION_HANDSET);
+        errorMap.put("034", Error.UNKNOWN_ERROR);
+        errorMap.put("038", Error.UNKNOWN_DESTINATION_HANDSET);
+        errorMap.put("039", Error.UNKNOWN_DESTINATION_HANDSET);
+        errorMap.put("040", Error.UNKNOWN_ERROR);
+        errorMap.put("045", Error.UNKNOWN_ERROR);
+        errorMap.put("051", Error.UNKNOWN_ERROR);
+        errorMap.put("194", Error.UNKNOWN_ERROR);
+        errorMap.put("224", Error.MESSAGE_BLOCKED);
+        errorMap.put("225", Error.MESSAGE_BLOCKED);
+        errorMap.put("226", Error.UNKNOWN_ERROR);
+        errorMap.put("227", Error.UNKNOWN_ERROR);
+        errorMap.put("228", Error.UNREACHABLE_DESTINATION_HANDSET);
+        errorMap.put("229", Error.MESSAGE_BLOCKED);
+        errorMap.put("230", Error.MESSAGE_BLOCKED);
 
     }
 
