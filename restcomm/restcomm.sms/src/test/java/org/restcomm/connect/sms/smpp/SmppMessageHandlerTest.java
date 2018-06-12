@@ -160,10 +160,10 @@ public class SmppMessageHandlerTest {
                 messageHandler.tell(dlrPayload, getRef());
 
                 // then
-                verify(smsMessagesDao, timeout(50)).getSmsMessageBySmppMessageId(dlrPayload.getId());
+                verify(smsMessagesDao, timeout(100)).getSmsMessageBySmppMessageId(dlrPayload.getId());
 
                 final ArgumentCaptor<SmsMessage> smsCaptor = ArgumentCaptor.forClass(SmsMessage.class);
-                verify(smsMessagesDao, timeout(50)).updateSmsMessage(smsCaptor.capture());
+                verify(smsMessagesDao, timeout(100)).updateSmsMessage(smsCaptor.capture());
                 assertNull(smsCaptor.getValue().getSmppMessageId());
                 assertEquals(dlrPayload.getStat(), smsCaptor.getValue().getStatus());
             }
@@ -202,7 +202,7 @@ public class SmppMessageHandlerTest {
                 messageHandler.tell(dlrPayload, getRef());
 
                 // then
-                verify(smsMessagesDao, timeout(50)).getSmsMessageBySmppMessageId(dlrPayload.getId());
+                verify(smsMessagesDao, timeout(100)).getSmsMessageBySmppMessageId(dlrPayload.getId());
                 verify(smsMessagesDao, never()).updateSmsMessage(any(SmsMessage.class));
             }
         };
@@ -259,7 +259,7 @@ public class SmppMessageHandlerTest {
 
                 // then
                 final ArgumentCaptor<SmsMessage> smsCaptor = ArgumentCaptor.forClass(SmsMessage.class);
-                verify(smsMessagesDao, timeout(50).times(4)).updateSmsMessage(smsCaptor.capture());
+                verify(smsMessagesDao, timeout(100).times(4)).updateSmsMessage(smsCaptor.capture());
 
                 final List<SmsMessage> capturedSms = smsCaptor.getAllValues();
                 assertNull(capturedSms.get(0).getSmppMessageId());
