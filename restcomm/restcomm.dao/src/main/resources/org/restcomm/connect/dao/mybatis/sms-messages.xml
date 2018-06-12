@@ -119,9 +119,6 @@
             <if test="endTime != null">
                 AND "date_created" &lt;= DATE_ADD(#{endTime},INTERVAL 1 DAY)
             </if>
-            <if test="smppMessageId != null">
-                AND "smpp_message_id"=#{smppMessageId}
-            </if>
 
             order by "date_created"
             LIMIT #{limit} OFFSET #{offset}
