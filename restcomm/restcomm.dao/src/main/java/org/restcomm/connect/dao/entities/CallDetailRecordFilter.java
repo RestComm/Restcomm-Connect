@@ -45,14 +45,16 @@ public class CallDetailRecordFilter {
     private final Integer limit;
     private final Integer offset;
     private final String instanceid;
+    private final String sortBy;
+    private final String sortDirection;
 
     public CallDetailRecordFilter(String accountSid, List<String> accountSidSet, String recipient, String sender, String status, String startTime, String endTime,
                                   String parentCallSid, String conferenceSid, Integer limit, Integer offset) throws ParseException {
-        this(accountSid, accountSidSet, recipient,sender,status,startTime,endTime,parentCallSid, conferenceSid, limit,offset,null);
+        this(accountSid, accountSidSet, recipient,sender,status,startTime,endTime,parentCallSid, conferenceSid, limit, offset, null, null, null);
     }
 
     public CallDetailRecordFilter(String accountSid, List<String> accountSidSet, String recipient, String sender, String status, String startTime, String endTime,
-                                  String parentCallSid, String conferenceSid, Integer limit, Integer offset, String instanceId) throws ParseException {
+                                  String parentCallSid, String conferenceSid, Integer limit, Integer offset, String instanceId, String sortBy, String sortDirection) throws ParseException {
         this.accountSid = accountSid;
         this.accountSidSet = accountSidSet;
 
@@ -89,6 +91,9 @@ public class CallDetailRecordFilter {
         } else {
             this.instanceid = null;
         }
+
+        this.sortBy = sortBy;
+        this.sortDirection = sortDirection;
     }
 
     public String getSid() {
@@ -136,4 +141,8 @@ public class CallDetailRecordFilter {
     }
 
     public String getInstanceid() { return instanceid; }
+
+    public String getSortBy() { return sortBy; }
+
+    public String getSortDirection() { return sortDirection; }
 }

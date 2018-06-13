@@ -261,7 +261,7 @@ public class CallsEndpoint extends AbstractEndpoint {
                         parentCallSid, conferenceSid, null, null);
             } else {
                 filterForTotal = new CallDetailRecordFilter(accountSid, ownerAccounts, recipient, sender, status, startTime, endTime,
-                        parentCallSid, conferenceSid, null, null, instanceId);
+                        parentCallSid, conferenceSid, null, null, instanceId, "start_time", "ASC");
             }
         } catch (ParseException e) {
             return status(BAD_REQUEST).build();
@@ -269,6 +269,7 @@ public class CallsEndpoint extends AbstractEndpoint {
 
         final int total = dao.getTotalCallDetailRecords(filterForTotal);
 
+/*
         if (reverse != null) {
             if (reverse.equalsIgnoreCase("true")){
                 if (total > Integer.parseInt(pageSize)){
@@ -283,6 +284,7 @@ public class CallsEndpoint extends AbstractEndpoint {
                 }
             }
         }
+*/
 
         if (Integer.parseInt(page) > (total / limit)) {
             return status(javax.ws.rs.core.Response.Status.BAD_REQUEST).build();
@@ -295,7 +297,7 @@ public class CallsEndpoint extends AbstractEndpoint {
                         parentCallSid, conferenceSid, limit, offset);
             } else {
                 filter = new CallDetailRecordFilter(accountSid, ownerAccounts, recipient, sender, status, startTime, endTime,
-                        parentCallSid, conferenceSid, limit, offset, instanceId);
+                        parentCallSid, conferenceSid, limit, offset, instanceId, "start_time", "ASC");
             }
         } catch (ParseException e) {
             return status(BAD_REQUEST).build();
