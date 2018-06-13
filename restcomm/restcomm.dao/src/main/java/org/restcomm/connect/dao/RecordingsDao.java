@@ -42,9 +42,9 @@ public interface RecordingsDao {
 
     List<Recording> getRecordings(Sid accountSid);
 
-    int removeRecording(Sid sid);
+    void removeRecording(Sid sid);
 
-    int removeRecordings(Sid accountSid);
+    void removeRecordings(Sid accountSid);
 
     // Support for filtering of recording list result, Issue 1395
     Integer getTotalRecording(RecordingFilter filter);
