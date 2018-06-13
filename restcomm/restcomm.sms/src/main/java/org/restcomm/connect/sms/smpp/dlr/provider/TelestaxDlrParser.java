@@ -176,7 +176,9 @@ public class TelestaxDlrParser implements DlrParser {
         } else {
             //if error is not in mapping table, set it to unknown
             error = Error.UNKNOWN_ERROR;
-            logger.debug("received an unexpected error message " + error);
+        }
+        if (logger.isDebugEnabled()) {
+            logger.debug("Mapped to: " + error);
         }
         return error;
     }
