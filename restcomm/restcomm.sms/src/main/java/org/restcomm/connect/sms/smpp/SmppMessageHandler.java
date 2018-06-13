@@ -157,10 +157,10 @@ public class SmppMessageHandler extends RestcommUntypedActor {
             if (sms == null) {
                 logger.warning("responseMessageId=" + smppMessageId + " was never received!");
             } else {
-                this.storage.getSmsMessagesDao().updateSmsMessage(sms.setSmppMessageId(null).setStatus(deliveryStatus));
-                smsMessage.setStatus(dLRPayload.getStat());
-                smsMessage.setError(dLRPayload.getErr());
-                smsMessagesDao.updateSmsMessage(smsMessage);
+                sms.setSmppMessageId(null);
+                sms.setStatus(deliveryReceipt.getStat());
+                sms.setError(deliveryReceipt.getErr());
+                storage.getSmsMessagesDao().updateSmsMessage(sms);
             }
         } else if (message instanceof CreateSmsSession) {
             IExtensionCreateSmsSessionRequest ier = (CreateSmsSession) message;
@@ -210,6 +210,8 @@ public class SmppMessageHandler extends RestcommUntypedActor {
                         // Failure response: set status to FAILED and do not correlate to any smppMessageId
                         logger.warning(String.format("SubmitSmResp Failure! Message could not be sent Status Code %s Result Messages: %s", submitSmResp.getCommandStatus(), submitSmResp.getResultMessage()));
                         smsMessage = smsMessage.setSmppMessageId(null).setStatus(SmsMessage.Status.FAILED);
+                        org.restcomm.connect.commons.dao.Error err = ErrorCodeMapper.parseRestcommErrorCode(submitSmResp.getCommandStatus());
+                        smsMessage = smsMessage.setError(err);
                     }
                     storage.getSmsMessagesDao().updateSmsMessage(smsMessage);
                 } else {
