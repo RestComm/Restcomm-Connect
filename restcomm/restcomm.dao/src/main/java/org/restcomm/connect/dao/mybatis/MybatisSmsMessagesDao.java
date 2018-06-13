@@ -38,17 +38,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
-import static org.restcomm.connect.dao.DaoUtils.readBigDecimal;
-import static org.restcomm.connect.dao.DaoUtils.readCurrency;
-import static org.restcomm.connect.dao.DaoUtils.readDateTime;
-import static org.restcomm.connect.dao.DaoUtils.readSid;
-import static org.restcomm.connect.dao.DaoUtils.readString;
-import static org.restcomm.connect.dao.DaoUtils.readUri;
-import static org.restcomm.connect.dao.DaoUtils.writeBigDecimal;
-import static org.restcomm.connect.dao.DaoUtils.writeCurrency;
-import static org.restcomm.connect.dao.DaoUtils.writeDateTime;
-import static org.restcomm.connect.dao.DaoUtils.writeSid;
-import static org.restcomm.connect.dao.DaoUtils.writeUri;
+import static org.restcomm.connect.dao.DaoUtils.*;
 
 /**
  * @author quintana.thomas@gmail.com (Thomas Quintana)
@@ -200,6 +190,25 @@ public final class MybatisSmsMessagesDao implements SmsMessagesDao {
         try {
             final int total = session.selectOne(namespace + "getSmsMessagesPerAccountLastPerMinute", params);
             return total;
+        } finally {
+            session.close();
+        }
+    }
+
+    @Override
+    public List<SmsMessage> findBySmppMessageId(String smppMessageId) {
+        final Map<String, Object> parameters = new HashMap<>(2);
+        parameters.put("smppMessageId", smppMessageId);
+        final SqlSession session = this.sessions.openSession();
+
+        try {
+            final List<Map<String, Object>> results = session.selectList(namespace + "findBySmppMessageId", parameters);
+            final List<SmsMessage> messages = new ArrayList<>(results.size());
+
+            for (Map<String, Object> result : results) {
+                messages.add(toSmsMessage(result));
+            }
+            return messages;
         } finally {
             session.close();
         }
