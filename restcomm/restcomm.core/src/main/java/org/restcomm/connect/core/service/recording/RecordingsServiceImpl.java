@@ -43,7 +43,7 @@ public class RecordingsServiceImpl implements RecordingService {
     }
 
     @Override
-    public boolean removeRecording (Sid recordingSid) {
+    public void removeRecording (Sid recordingSid) {
         RecordingsDao recordingsDao = daoManager.getRecordingsDao();
         Recording recording = recordingsDao.getRecording(recordingSid);
 
@@ -63,7 +63,7 @@ public class RecordingsServiceImpl implements RecordingService {
             }
         }
 
-        return recordingsDao.removeRecording(recordingSid) > 0;
+        recordingsDao.removeRecording(recordingSid);
     }
 
 }

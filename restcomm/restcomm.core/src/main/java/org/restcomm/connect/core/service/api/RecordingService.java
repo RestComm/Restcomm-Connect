@@ -23,6 +23,6 @@ import org.restcomm.connect.commons.dao.Sid;
 
 public interface RecordingService {
 
-    boolean removeRecording(Sid recordingSid);
+    void removeRecording(Sid recordingSid);
 
 }
