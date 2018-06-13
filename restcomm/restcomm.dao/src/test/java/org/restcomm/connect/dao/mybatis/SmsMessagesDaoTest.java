@@ -81,6 +81,7 @@ public final class SmsMessagesDaoTest {
         builder.setPrice(new BigDecimal("0.00"));
         builder.setPriceUnit(Currency.getInstance("USD"));
         builder.setUri(url);
+        builder.setStatusCallback(url);
         SmsMessage message = builder.build();
         final SmsMessagesDao messages = manager.getSmsMessagesDao();
         // Create a new sms message in the data store.
@@ -100,6 +101,7 @@ public final class SmsMessagesDaoTest {
         assertTrue(result.getPrice().equals(message.getPrice()));
         assertTrue(result.getPriceUnit().equals(message.getPriceUnit()));
         assertTrue(result.getUri().equals(message.getUri()));
+        assertTrue(result.getStatusCallback().equals(message.getStatusCallback()));
         // Update the message.
         final DateTime now = DateTime.now();
         message = message.setDateSent(now);
@@ -115,7 +117,7 @@ public final class SmsMessagesDaoTest {
         // Validate that the CDR was removed.
         assertTrue(messages.getSmsMessage(sid) == null);
     }
-    
+
     private SmsMessage createSms() {
     	return createSms(Sid.generate(Sid.Type.ACCOUNT), SmsMessage.Direction.OUTBOUND_API, 0, DateTime.now());
     }
@@ -225,7 +227,7 @@ public final class SmsMessagesDaoTest {
         //set status and dateSent
     	smsMessage = smsMessage.setStatus(status).setDateSent(dateSent).setSmppMessageId(smppMessageId);
     	messages.updateSmsMessage(smsMessage);
-        
+
         //get SmsMessage By SmppMessageId
         SmsMessage resultantSmsMessage = messages.getSmsMessageBySmppMessageId(smppMessageId);
 
