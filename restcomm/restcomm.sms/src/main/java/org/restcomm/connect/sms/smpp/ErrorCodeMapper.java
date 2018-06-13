@@ -33,7 +33,6 @@ public class ErrorCodeMapper {
 
     static {
         errorMap = new HashMap<>();
-        //TODO change according to SMSc spec
         errorMap.put(STATUS_THROTTLED, org.restcomm.connect.commons.dao.Error.LANDLINE_OR_UNREACHABLE_CARRIER);
         errorMap.put(STATUS_DELIVERYFAILURE, org.restcomm.connect.commons.dao.Error.LANDLINE_OR_UNREACHABLE_CARRIER);
     }

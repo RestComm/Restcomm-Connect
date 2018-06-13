@@ -44,7 +44,6 @@ public class TelestaxDlrParser implements DlrParser {
         statusMap.put("UNKNOWN", SmsMessage.Status.SENT);
 
         errorMap = new HashMap<String, Error>();
-        //TODO change according to SMSc spec
         errorMap.put("001", Error.UNKNOWN_DESTINATION_HANDSET);
         errorMap.put("002", Error.UNKNOWN_DESTINATION_HANDSET);
         errorMap.put("003", Error.UNKNOWN_DESTINATION_HANDSET);
