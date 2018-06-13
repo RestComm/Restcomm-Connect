@@ -377,7 +377,8 @@ public class RecordingsEndpoint extends AbstractEndpoint {
                     recording.getAccountSid(),
                     SecuredType.SECURED_STANDARD,
                     userIdentityContext);
-            recordingService.removeRecording(recording.getSid());
+            recordingService.removeRecording(recording);
+
             return Response.status(Response.Status.OK).build();
         }
     }

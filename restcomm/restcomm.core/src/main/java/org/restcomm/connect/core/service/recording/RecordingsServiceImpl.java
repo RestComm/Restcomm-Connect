@@ -19,9 +19,10 @@
 
 package org.restcomm.connect.core.service.recording;
 
+import akka.actor.ActorSystem;
 import org.apache.log4j.Logger;
+import org.joda.time.DateTime;
 import org.restcomm.connect.commons.amazonS3.S3AccessTool;
-import org.restcomm.connect.commons.dao.Sid;
 import org.restcomm.connect.core.service.api.RecordingService;
 import org.restcomm.connect.dao.DaoManager;
 import org.restcomm.connect.dao.RecordingsDao;
@@ -36,16 +37,17 @@ public class RecordingsServiceImpl implements RecordingService {
 
     private final DaoManager daoManager;
     private final S3AccessTool s3AccessTool;
+    private final ActorSystem actorSystem;
 
-    public RecordingsServiceImpl (DaoManager daoManager) {
+    public RecordingsServiceImpl (DaoManager daoManager, ActorSystem system) {
         this.daoManager = daoManager;
         s3AccessTool = daoManager.getRecordingsDao().getS3AccessTool();
+        this.actorSystem = system;
     }
 
     @Override
-    public void removeRecording (Sid recordingSid) {
+    public void removeRecording (Recording recording) {
         RecordingsDao recordingsDao = daoManager.getRecordingsDao();
-        Recording recording = recordingsDao.getRecording(recordingSid);
 
         boolean isStoredAtS3 = recording.getS3Uri() != null;
 
@@ -63,7 +65,10 @@ public class RecordingsServiceImpl implements RecordingService {
             }
         }
 
-        recordingsDao.removeRecording(recordingSid);
+        recordingsDao.removeRecording(recording.getSid());
+
+        recording.setDateRemoved(DateTime.now());
+        actorSystem.eventStream().publish(recording);
     }
 
 }

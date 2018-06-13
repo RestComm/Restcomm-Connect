@@ -19,10 +19,10 @@
 
 package org.restcomm.connect.core.service.api;
 
-import org.restcomm.connect.commons.dao.Sid;
+import org.restcomm.connect.dao.entities.Recording;
 
 public interface RecordingService {
 
-    void removeRecording(Sid recordingSid);
+    void removeRecording(Recording recording);
 
 }

@@ -22,6 +22,7 @@ package org.restcomm.connect.application;
 
 import javax.servlet.ServletContext;
 
+import akka.actor.ActorSystem;
 import org.restcomm.connect.core.service.api.ClientPasswordHashingService;
 import org.restcomm.connect.core.service.api.NumberSelectorService;
 import org.restcomm.connect.core.service.api.ProfileService;
@@ -55,7 +56,7 @@ public class RestcommConnectServiceProvider {
     /**
      * @param ctx
      */
-    public void startServices(ServletContext ctx) {
+    public void startServices(ServletContext ctx, ActorSystem system) {
         DaoManager daoManager = (DaoManager) ctx.getAttribute(DaoManager.class.getName());
         // core services initialization
         this.numberSelector = new NumberSelectorServiceImpl(daoManager.getIncomingPhoneNumbersDao());
@@ -64,7 +65,7 @@ public class RestcommConnectServiceProvider {
         ctx.setAttribute(ProfileService.class.getName(), profileService);
         this.clientPasswordHashingService = new ClientPasswordHashingServiceImpl(daoManager);
         ctx.setAttribute(ClientPasswordHashingService.class.getName(), clientPasswordHashingService);
-        this.recordingService = new RecordingsServiceImpl(daoManager);
+        this.recordingService = new RecordingsServiceImpl(daoManager, system);
         ctx.setAttribute(RecordingService.class.getName(), recordingService);
     }
 
