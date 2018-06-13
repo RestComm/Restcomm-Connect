@@ -467,6 +467,9 @@ CREATE INDEX idx_cdr_conference_sid ON restcomm_call_detail_records (conference_
 /* Create index on restcomm_call_detail_records on conference_sid column */
 CREATE INDEX idx_cdr_conference_status ON restcomm_conference_detail_records (status);
 
+/* Create index on restcomm_sms_messages on smpp_message_id column */
+CREATE INDEX idx_restcomm_sms_messages_smpp_message_id ON restcomm_sms_messages (smpp_message_id);
+
 DELIMITER //
 DROP PROCEDURE IF EXISTS addConferenceDetailRecord;
 CREATE PROCEDURE addConferenceDetailRecord(	IN in_sid VARCHAR(34),

@@ -207,6 +207,25 @@ public final class MybatisSmsMessagesDao implements SmsMessagesDao {
         }
     }
 
+    @Override
+    public List<SmsMessage> findBySmppMessageId(String smppMessageId) {
+        final Map<String, Object> parameters = new HashMap<>(2);
+        parameters.put("smppMessageId", smppMessageId);
+        final SqlSession session = this.sessions.openSession();
+
+        try {
+            final List<Map<String, Object>> results = session.selectList(namespace + "findBySmppMessageId", parameters);
+            final List<SmsMessage> messages = new ArrayList<>(results.size());
+
+            for (Map<String, Object> result : results) {
+                messages.add(toSmsMessage(result));
+            }
+            return messages;
+        } finally {
+            session.close();
+        }
+    }
+
     private Map<String, Object> toMap(final SmsMessage smsMessage) {
         final Map<String, Object> map = new HashMap<String, Object>();
         map.put("sid", writeSid(smsMessage.getSid()));
