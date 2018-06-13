@@ -119,7 +119,14 @@
 		<if test="endTime != null">
 			AND "end_time" &lt;= DATE_ADD(#{endTime},INTERVAL 1 DAY)
 		</if>
-		order by "start_time"
+		<choose>
+			<when test="sortBy != null and sortDirection != null">
+				order by "restcomm_call_detail_records".${sortBy} ${sortDirection}
+			</when>
+			<otherwise>
+				order by "start_time"
+			</otherwise>
+		</choose>
 		LIMIT #{limit} OFFSET #{offset}
 	</select>
 
