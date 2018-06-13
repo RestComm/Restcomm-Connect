@@ -201,17 +201,16 @@ public final class MybatisRecordingsDao implements RecordingsDao {
     }
 
     @Override
-    public int removeRecording(final Sid sid) {
-        return removeRecording(namespace + "removeRecording", sid);
+    public void removeRecording(final Sid sid) {
+        removeRecording(namespace + "removeRecording", sid);
     }
 
     @Override
-    public int removeRecordings(final Sid accountSid) {
-        return removeRecording(namespace + "removeRecordings", accountSid);
+    public void removeRecordings(final Sid accountSid) {
+        removeRecording(namespace + "removeRecordings", accountSid);
     }
 
-    private int removeRecording(final String selector, final Sid sid) {
-        int removed = 0;
+    private void removeRecording(final String selector, final Sid sid) {
         final SqlSession session = sessions.openSession();
         try {
             session.delete(selector, sid.toString());
@@ -219,7 +218,6 @@ public final class MybatisRecordingsDao implements RecordingsDao {
         } finally {
             session.close();
         }
-        return removed;
     }
 
     @Override
