@@ -129,28 +129,16 @@ public class RecordingEndpointTest extends EndpointTest{
     }
 
     @Test
-    public void deleteRecording() {
+    public void recordingDelete() {
+        String recordingSid = "RE10000000000000000000000000000032";
+
+        RecordingEndpointTool.getInstance().deleteRecording(deploymentUrl.toString(), adminAccountSid, adminAuthToken, recordingSid);
+
         JsonObject firstPage = RecordingEndpointTool.getInstance().getRecordingList(deploymentUrl.toString(), adminAccountSid,
                 adminAuthToken);
         int totalSize = firstPage.get("total").getAsInt();
         JsonArray firstPageRecordingsArray = firstPage.get("recordings").getAsJsonArray();
         int firstPageRecordingsArraySize = firstPageRecordingsArray.size();
-        assertTrue(firstPageRecordingsArraySize == 34);
-        assertTrue(firstPage.get("start").getAsInt() == 0);
-        assertTrue(firstPage.get("end").getAsInt() == 34);
-        assertTrue(totalSize == 34);
-
-        //Recording SID to delete RE10000000000000000000000000000032
-
-        String recordingSid = "RE10000000000000000000000000000032";
-
-        RecordingEndpointTool.getInstance().deleteRecording(deploymentUrl.toString(), adminAccountSid, adminAuthToken, recordingSid);
-
-        firstPage = RecordingEndpointTool.getInstance().getRecordingList(deploymentUrl.toString(), adminAccountSid,
-                adminAuthToken);
-        totalSize = firstPage.get("total").getAsInt();
-        firstPageRecordingsArray = firstPage.get("recordings").getAsJsonArray();
-        firstPageRecordingsArraySize = firstPageRecordingsArray.size();
         assertTrue(firstPageRecordingsArraySize == 33);
         assertTrue(firstPage.get("start").getAsInt() == 0);
         assertTrue(firstPage.get("end").getAsInt() == 33);
