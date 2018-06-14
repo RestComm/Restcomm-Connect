@@ -121,7 +121,8 @@
 		</if>
 		<choose>
 			<when test="sortBy != null and sortDirection != null">
-				order by "restcomm_call_detail_records".${sortBy} ${sortDirection}
+				<!-- Without the quotes in the parameters the query is messed up, probably because HSQL needs table columns with double quotes -->
+				order by "${sortBy}" ${sortDirection}
 			</when>
 			<otherwise>
 				order by "start_time"
