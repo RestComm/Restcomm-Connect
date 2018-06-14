@@ -22,7 +22,7 @@ package org.restcomm.connect.sms.smpp.dlr.spi;
 
 import org.joda.time.DateTime;
 import org.restcomm.connect.dao.entities.SmsMessage;
-import org.restcomm.connect.commons.dao.Error;
+import org.restcomm.connect.commons.dao.MessageError;
 
 
 public class DLRPayload {
@@ -32,7 +32,7 @@ public class DLRPayload {
     private DateTime submitDate;
     private DateTime doneDate;
     private SmsMessage.Status stat;
-    private Error err;
+    private MessageError err;
     private String text;
 
     public String getId() {
@@ -83,11 +83,11 @@ public class DLRPayload {
         this.stat = stat;
     }
 
-    public Error getErr() {
+    public MessageError getErr() {
         return err;
     }
 
-    public void setErr(Error err) {
+    public void setErr(MessageError err) {
         this.err = err;
     }
 

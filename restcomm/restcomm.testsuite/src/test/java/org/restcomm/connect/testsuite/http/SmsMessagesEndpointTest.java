@@ -38,7 +38,7 @@ import org.junit.runners.MethodSorters;
 import org.junit.experimental.categories.Category;
 import org.junit.runner.RunWith;
 import org.restcomm.connect.commons.annotations.FeatureAltTests;
-import org.restcomm.connect.commons.dao.Error;
+import org.restcomm.connect.commons.dao.MessageError;
 import org.restcomm.connect.dao.entities.SmsMessage;
 import org.restcomm.connect.testsuite.sms.SmsEndpointTool;
 
@@ -175,8 +175,8 @@ public class SmsMessagesEndpointTest extends EndpointTest{
                 adminAccountSid, adminAuthToken, "SMfe8a9e566f4544eab21c2ec94ae9e790");
         assertNotNull(smsMessageJson);
         assertEquals(SmsMessage.Status.SENT.toString(), smsMessageJson.get("status").getAsString());
-        assertEquals(Error.UNKNOWN_ERROR.getErrorCode().intValue(), smsMessageJson.get("error_code").getAsInt());
-        assertEquals(Error.UNKNOWN_ERROR.getErrorMessage(), smsMessageJson.get("error_message").getAsString());
+        assertEquals(MessageError.UNKNOWN_ERROR.getErrorCode().intValue(), smsMessageJson.get("error_code").getAsInt());
+        assertEquals(MessageError.UNKNOWN_ERROR.getErrorMessage(), smsMessageJson.get("error_message").getAsString());
     }
 
     @Deployment(name = "SmsMessagesEndpointTest", managed = true, testable = false)

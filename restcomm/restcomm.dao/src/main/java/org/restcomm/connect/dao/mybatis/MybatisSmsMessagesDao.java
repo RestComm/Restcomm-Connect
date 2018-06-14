@@ -24,7 +24,7 @@ import org.apache.ibatis.session.SqlSessionFactory;
 import org.joda.time.DateTime;
 import org.restcomm.connect.commons.annotations.concurrency.ThreadSafe;
 import org.restcomm.connect.commons.dao.Sid;
-import org.restcomm.connect.commons.dao.Error;
+import org.restcomm.connect.commons.dao.MessageError;
 import org.restcomm.connect.dao.SmsMessagesDao;
 import org.restcomm.connect.dao.entities.SmsMessage;
 import org.restcomm.connect.dao.entities.SmsMessageFilter;
@@ -243,7 +243,7 @@ public final class MybatisSmsMessagesDao implements SmsMessagesDao {
         map.put("api_version", smsMessage.getApiVersion());
         map.put("uri", writeUri(smsMessage.getUri()));
         map.put("smpp_message_id", smsMessage.getSmppMessageId());
-        Error error = smsMessage.getError();
+        MessageError error = smsMessage.getError();
         if(error != null)
             map.put("error_code", smsMessage.getError().getErrorCode());
         return map;
@@ -266,9 +266,9 @@ public final class MybatisSmsMessagesDao implements SmsMessagesDao {
         final URI uri = readUri(map.get("uri"));
         final String smppMessageId = readString(map.get("smpp_message_id"));
         final Integer errorCode = readInteger(map.get("error_code"));
-        Error error = null;
+        MessageError error = null;
         if(errorCode != null)
-            error = Error.getErrorValue(errorCode);
+            error = MessageError.getErrorValue(errorCode);
         return new SmsMessage(sid, dateCreated, dateUpdated, dateSent, accountSid, sender, recipient, body, status, direction,
                 price, priceUnit, apiVersion, uri, smppMessageId, error);
     }

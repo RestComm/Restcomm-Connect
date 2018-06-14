@@ -6,7 +6,7 @@ import org.junit.Test;
 import org.restcomm.connect.dao.entities.SmsMessage.Status;
 import org.restcomm.connect.sms.smpp.dlr.spi.DLRPayload;
 import org.restcomm.connect.sms.smpp.dlr.spi.DlrParser;
-import org.restcomm.connect.commons.dao.Error;
+import org.restcomm.connect.commons.dao.MessageError;
 
 /**
  * @author mariafarooq

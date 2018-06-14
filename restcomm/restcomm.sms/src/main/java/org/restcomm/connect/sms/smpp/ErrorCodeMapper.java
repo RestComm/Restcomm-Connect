@@ -29,16 +29,16 @@ import org.apache.log4j.Logger;
 
 public class ErrorCodeMapper {
     private static final Logger logger = Logger.getLogger(ErrorCodeMapper.class);
-    private static final Map<Integer, org.restcomm.connect.commons.dao.Error> errorMap;
+    private static final Map<Integer, org.restcomm.connect.commons.dao.MessageError> errorMap;
 
     static {
         errorMap = new HashMap<>();
-        errorMap.put(STATUS_THROTTLED, org.restcomm.connect.commons.dao.Error.LANDLINE_OR_UNREACHABLE_CARRIER);
-        errorMap.put(STATUS_DELIVERYFAILURE, org.restcomm.connect.commons.dao.Error.LANDLINE_OR_UNREACHABLE_CARRIER);
+        errorMap.put(STATUS_THROTTLED, org.restcomm.connect.commons.dao.MessageError.LANDLINE_OR_UNREACHABLE_CARRIER);
+        errorMap.put(STATUS_DELIVERYFAILURE, org.restcomm.connect.commons.dao.MessageError.LANDLINE_OR_UNREACHABLE_CARRIER);
     }
 
-    public static org.restcomm.connect.commons.dao.Error parseRestcommErrorCode(int errCode) {
-        org.restcomm.connect.commons.dao.Error error = null;
+    public static org.restcomm.connect.commons.dao.MessageError parseRestcommErrorCode(int errCode) {
+        org.restcomm.connect.commons.dao.MessageError error = null;
         if (SmppConstants.STATUS_OK == errCode) {
             //set to null so no error is shown
             error = null;
@@ -46,7 +46,7 @@ public class ErrorCodeMapper {
             error = errorMap.get(errCode);
         } else {
             //if error is not in mapping table, set it to unknown
-            error = org.restcomm.connect.commons.dao.Error.UNKNOWN_ERROR;
+            error = org.restcomm.connect.commons.dao.MessageError.UNKNOWN_ERROR;
         }
         if (logger.isDebugEnabled()) {
             logger.debug("Mapped to: " + error);
