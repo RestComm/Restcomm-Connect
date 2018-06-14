@@ -1,0 +1,20 @@
+= Visual Designer - How To
+
+The following articles will guide you through using RVD quickly and efficiently.
+
+////
+* <<Restcomm - RVD Quick Video Tutorial.adoc#video,Restcomm RVD Quick Video Tutorials>>
+* <<Restcomm - Understanding RVD Variables.adoc#rvd-variables,Restcomm RVD Variables>>
+* <<Restcomm - External Services Arrays Strings and Objects.adoc#external-services,Restcomm - External Services Arrays Strings and Objects>>
+* <<Fixing RVD projects with deprecated dynamic routing.adoc#deprecated-routing,Fixing RVD projects with deprecated dynamic routing>>
+* <<Restcomm - Quick External Service Demo.adoc#video,Restcomm RVD External Service Demo>>
+* <<Hosting RVD External Services in the Cloud.adoc#web-trigger,Hosting RVD External Services in the Cloud>>
+////
+* <<Restcomm - Making HTTP requests with External Service client.adoc#http,Making HTTP requests with External Service client>>
+* <<Restcomm RVD - Control Element.adoc#,Making decisions with Control element>>
+* <<Accessing custom SIP headers from an RCML or RVD application.adoc#custom-sip-headers,Accessing custom SIP headers from an RCML or RVD application>>
+* <<Restcomm RVD - Using Web Trigger.adoc#web-trigger,Web Trigger>>
+* <<Restcomm RVD - Introducing Diagrams.adoc#diagrams,Diagrams>>
+* <<Restcomm - Enable Application Log in RVD.adoc#rvd-variables,Application Log>>
+
+
