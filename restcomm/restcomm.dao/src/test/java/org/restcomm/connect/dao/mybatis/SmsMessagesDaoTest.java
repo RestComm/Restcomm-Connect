@@ -26,7 +26,7 @@ import org.joda.time.DateTime;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
-import org.restcomm.connect.commons.dao.Error;
+import org.restcomm.connect.commons.dao.MessageError;
 import org.restcomm.connect.commons.dao.Sid;
 import org.restcomm.connect.dao.SmsMessagesDao;
 import org.restcomm.connect.dao.entities.SmsMessage;
@@ -104,9 +104,11 @@ public final class SmsMessagesDaoTest {
         assertTrue(result.getUri().equals(message.getUri()));
         // Update the message.
         final DateTime now = DateTime.now();
-        message = message.setDateSent(now);
-        message = message.setStatus(SmsMessage.Status.SENT);
-        messages.updateSmsMessage(message);
+        final SmsMessage.Builder builder2 = SmsMessage.builder();
+        builder2.copyMessage(message);
+        builder2.setDateSent(now);
+        builder2.setStatus(SmsMessage.Status.SENT);
+        messages.updateSmsMessage(builder2.build());
         // Read the updated message from the data store.
         result = messages.getSmsMessage(sid);
         // Validate the results.
@@ -229,8 +231,10 @@ public final class SmsMessagesDaoTest {
         messages.addSmsMessage(smsMessage);
 
         //set status and dateSent
-        smsMessage = smsMessage.setStatus(status).setDateSent(dateSent).setSmppMessageId(smppMessageId);
-        messages.updateSmsMessage(smsMessage);
+        final SmsMessage.Builder builder2 = SmsMessage.builder();
+        builder2.copyMessage(smsMessage);
+        builder2.setStatus(status).setDateSent(dateSent).setSmppMessageId(smppMessageId);
+        messages.updateSmsMessage(builder2.build());
 
         //get SmsMessage By SmppMessageId
         SmsMessage resultantSmsMessage = messages.getSmsMessageBySmppMessageId(smppMessageId);
@@ -249,14 +253,16 @@ public final class SmsMessagesDaoTest {
         messages.addSmsMessage(smsMessage);
 
         //update error message
-        smsMessage = smsMessage.setError(Error.QUEUE_OVERFLOW);
-        messages.updateSmsMessage(smsMessage);
+        final SmsMessage.Builder builder2 = SmsMessage.builder();
+        builder2.copyMessage(smsMessage);
+        builder2.setError(MessageError.QUEUE_OVERFLOW);
+        messages.updateSmsMessage(builder2.build());
 
         //get msg from DB
         SmsMessage resultantSmsMessage = messages.getSmsMessage(smsMessage.getSid());
 
         //make assertions
-        assertEquals(Error.QUEUE_OVERFLOW, resultantSmsMessage.getError());
+        assertEquals(MessageError.QUEUE_OVERFLOW, resultantSmsMessage.getError());
     }
 
     public void testFindBySmppMessageIdAndDateCreatedGreaterOrEqualThanOrderedByDateCreatedDesc() {

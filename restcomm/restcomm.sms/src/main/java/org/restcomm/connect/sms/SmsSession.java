@@ -266,15 +266,21 @@ public final class SmsSession extends RestcommUntypedActor {
         Object record = info.attributes().get("record");
         if (SipServletResponse.SC_ACCEPTED == status || SipServletResponse.SC_OK == status) {
             if (record != null) {
-                record = ((SmsMessage)record).setDateSent(DateTime.now());
-                record = ((SmsMessage)record).setStatus(SmsMessage.Status.SENT);
-                info.attributes().put("record", record);
+                SmsMessage toBeUpdated = ((SmsMessage)record);
+                SmsMessage.Builder builder = SmsMessage.builder();
+                builder.copyMessage(toBeUpdated);
+                builder.setDateSent(DateTime.now());
+                builder.setStatus(SmsMessage.Status.SENT);
+                info.attributes().put("record", builder.build());
             }
             result = new SmsSessionResponse(info, true);
         } else {
             if (record != null) {
-                record = ((SmsMessage)record).setStatus(SmsMessage.Status.FAILED);
-                info.attributes().put("record", record);
+                SmsMessage toBeUpdated = ((SmsMessage)record);
+                SmsMessage.Builder builder = SmsMessage.builder();
+                builder.copyMessage(toBeUpdated);
+                builder.setStatus(SmsMessage.Status.FAILED);
+                info.attributes().put("record", builder.build());
             }
             result = new SmsSessionResponse(info, false);
         }
@@ -429,8 +435,11 @@ public final class SmsSession extends RestcommUntypedActor {
             final SmsSessionResponse error = new SmsSessionResponse(info, false);
             Object record = info.attributes().get("record");
             if (record != null) {
-                record = ((SmsMessage)record).setStatus(SmsMessage.Status.FAILED);
-                info.attributes().put("record", record);
+                SmsMessage toBeUpdated = ((SmsMessage)record);
+                SmsMessage.Builder builder = SmsMessage.builder();
+                builder.copyMessage(toBeUpdated);
+                builder.setStatus(SmsMessage.Status.FAILED);
+                info.attributes().put("record", builder.build());
             }
             for (final ActorRef observer : observers) {
                 observer.tell(error, self());
