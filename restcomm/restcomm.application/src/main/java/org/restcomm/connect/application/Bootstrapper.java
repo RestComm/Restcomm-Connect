@@ -402,7 +402,7 @@ public final class Bootstrapper extends SipServlet implements SipServletListener
             context.setAttribute(IdentityContext.class.getName(), identityContext);
 
             // Initialize CoreServices
-            RestcommConnectServiceProvider.getInstance().startServices(context, system);
+            RestcommConnectServiceProvider.getInstance().startServices(context);
 
             // Create the media gateway.
 

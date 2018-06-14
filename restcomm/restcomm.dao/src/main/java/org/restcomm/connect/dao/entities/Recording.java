@@ -43,7 +43,6 @@ public final class Recording implements StreamEvent {
     private URI uri;
     private URI fileUri;
     private URI s3Uri;
-    private DateTime dateRemoved;
 
     public Recording(final Sid sid, final DateTime dateCreated, final DateTime dateUpdated, final Sid accountSid,
             final Sid callSid, final Double duration, final String apiVersion, final URI uri, final URI fileUri, final URI s3Uri) {
@@ -117,14 +116,6 @@ public final class Recording implements StreamEvent {
 
     public URI getS3Uri() {
         return s3Uri;
-    }
-
-    public DateTime getDateRemoved () {
-        return dateRemoved;
-    }
-
-    public void setDateRemoved (DateTime dateRemoved) {
-        this.dateRemoved = dateRemoved;
     }
 
     @NotThreadSafe
