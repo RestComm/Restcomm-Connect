@@ -40,10 +40,13 @@ import java.util.List;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
+import org.junit.FixMethodOrder;
+import org.junit.runners.MethodSorters;
 
 /**
  * @author quintana.thomas@gmail.com (Thomas Quintana)
  */
+@FixMethodOrder(MethodSorters.NAME_ASCENDING)
 public final class SmsMessagesDaoTest {
     private static Logger logger = Logger.getLogger(SmsMessagesDaoTest.class);
     private static MybatisDaoManager manager;
@@ -149,7 +152,7 @@ public final class SmsMessagesDaoTest {
     }
 
     @Test
-    public void testGetSmsMessagesLastMinute() throws InterruptedException, ParseException {
+    public void aaatestGetSmsMessagesLastMinute() throws InterruptedException, ParseException {
         final SmsMessagesDao messages = manager.getSmsMessagesDao();
         final Sid account = Sid.generate(Sid.Type.ACCOUNT);
         DateTime oneMinuteAgo = DateTime.now().minusSeconds(58);
