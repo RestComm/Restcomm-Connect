@@ -22,7 +22,16 @@ The 'to' attribute takes a valid E.164 phone number as a value. RestComm will se
 The 'from' attribute takes a valid E.164 phone number as an argument. When sending an SMS during an incoming call, 'from' defaults to the calling party. When sending an SMS during an outgoing call, 'from' defaults to the called party.
 
 ==== action
-The 'action' attribute takes a URL as an argument. After processing the <Sms> verb, RestComm will make a GET or POST request to this URL with the form parameters 'SmsStatus' and 'SmsSid'. Using an 'action' URL, your application can receive synchronous notification that the message was successfully enqueued. If you provide an 'action' URL, RestComm will use the RCML received in your response to the 'action' URL request to continue the current call. Any RCML verbs occuring after an <Sms> which specifies an 'action' attribute are unreachable. If no 'action' is provided, <Sms> will finish and RestComm will move on to the next RCML verb in the document. If there is no next verb, RestComm will end the phone call.
+The 'action' attribute takes a URL as an argument.
+
+After processing the <Sms> verb, RestComm will make a GET or POST request to this URL with the form parameters 'SmsSid', 'SmsStatus' and optionally 'ErrorCode'.
+Using an 'action' URL, your application can receive asynchronous notifications about the status of the message sent in response to an inbound message.
+The possible statuses for a message are: queued, failed, sent, delivered, or undelivered.
+
+If you provide an 'action' URL, RestComm will use the RCML received in your response to the 'action' URL request to continue the current call.
+Any RCML verbs occuring after an <Sms> which specifies an 'action' attribute are unreachable.
+If no 'action' is provided, <Sms> will finish and RestComm will move on to the next RCML verb in the document.
+If there is no next verb, RestComm will end the phone call.
 
 ==== method
 The 'method' attribute takes the value 'GET' or 'POST'. This tells RestComm whether to request the 'action' URL via HTTP GET or POST. This attribute is modeled after the HTML form 'method' attribute.
