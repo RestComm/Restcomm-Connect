@@ -112,8 +112,8 @@ public final class SmsMessagesDaoTest {
         // Read the updated message from the data store.
         result = messages.getSmsMessage(sid);
         // Validate the results.
-        assertTrue(result.getDateSent().equals(message.getDateSent()));
-        assertTrue(result.getStatus() == message.getStatus());
+        assertTrue(result.getDateSent().equals(now));
+        assertEquals(SmsMessage.Status.SENT, result.getStatus());
         // Delete the message.
         messages.removeSmsMessage(sid);
         // Validate that the CDR was removed.
@@ -240,9 +240,9 @@ public final class SmsMessagesDaoTest {
         SmsMessage resultantSmsMessage = messages.getSmsMessageBySmppMessageId(smppMessageId);
 
         //make assertions
-        assertEquals(smsMessage.getSmppMessageId(), resultantSmsMessage.getSmppMessageId());
-        assertEquals(smsMessage.getDateSent(), resultantSmsMessage.getDateSent());
-        assertEquals(smsMessage.getStatus(), resultantSmsMessage.getStatus());
+        assertEquals(smppMessageId, resultantSmsMessage.getSmppMessageId());
+        assertEquals(dateSent, resultantSmsMessage.getDateSent());
+        assertEquals(status, resultantSmsMessage.getStatus());
     }
 
     @Test
