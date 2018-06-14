@@ -1,5 +1,6 @@
 package org.restcomm.connect.testsuite.http;
 
+import static javax.ws.rs.core.Response.Status.BAD_REQUEST;
 import static junit.framework.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
 
@@ -7,6 +8,7 @@ import java.net.URL;
 import java.util.HashMap;
 import java.util.Map;
 
+import com.sun.jersey.api.client.UniformInterfaceException;
 import org.apache.log4j.Logger;
 import org.jboss.arquillian.container.test.api.Deployer;
 import org.jboss.arquillian.container.test.api.Deployment;
@@ -64,14 +66,14 @@ public class CallsEndpointTest {
         assertTrue(firstPage.get("end").getAsInt() == 49);
 
         JsonObject secondPage = (JsonObject) RestcommCallsTool.getInstance().getCalls(deploymentUrl.toString(),
-                adminAccountSid, adminAuthToken, 2, null, true);
+                adminAccountSid, adminAuthToken, 2, null, null, true);
         JsonArray secondPageCallsArray = secondPage.get("calls").getAsJsonArray();
         assertTrue(secondPageCallsArray.size() == 50);
         assertTrue(secondPage.get("start").getAsInt() == 100);
         assertTrue(secondPage.get("end").getAsInt() == 149);
 
         JsonObject lastPage = (JsonObject) RestcommCallsTool.getInstance().getCalls(deploymentUrl.toString(), adminAccountSid,
-                adminAuthToken, firstPage.get("num_pages").getAsInt(), null, true);
+                adminAuthToken, firstPage.get("num_pages").getAsInt(), null, null, true);
         JsonArray lastPageCallsArray = lastPage.get("calls").getAsJsonArray();
         assertTrue(lastPageCallsArray.get(lastPageCallsArray.size() - 1).getAsJsonObject().get("sid").getAsString()
                 .equals("CAe803a594ac1649d98855eafc7535ed41"));
@@ -83,10 +85,43 @@ public class CallsEndpointTest {
     }
 
     @Test
+    public void getCallsListUsingSorting() {
+        // provide both sort field and direction
+/*
+        JsonObject response1 = (JsonObject) RestcommCallsTool.getInstance().getCalls(deploymentUrl.toString(),
+                adminAccountSid, adminAuthToken, 1, 10, "start_time:asc", true);
+
+        // provide only sort field; direction should default to desc
+        JsonObject response2 = (JsonObject) RestcommCallsTool.getInstance().getCalls(deploymentUrl.toString(),
+                adminAccountSid, adminAuthToken, 1, 10, "start_time", true);
+*/
+
+        try {
+            // provide only direction, should cause an exception
+            JsonObject response3 = (JsonObject) RestcommCallsTool.getInstance().getCalls(deploymentUrl.toString(),
+                    adminAccountSid, adminAuthToken, 1, 10, ":asc", true);
+        }
+        catch (UniformInterfaceException e) {
+            assertTrue(e.getResponse().getStatus() == BAD_REQUEST.getStatusCode());
+        }
+
+
+        try {
+            // provide sort field and direction, but direction is invalid (neither of asc or desc)
+            JsonObject response3 = (JsonObject) RestcommCallsTool.getInstance().getCalls(deploymentUrl.toString(),
+                    adminAccountSid, adminAuthToken, 1, 10, ":invalid", true);
+        }
+        catch (UniformInterfaceException e) {
+            assertTrue(e.getResponse().getStatus() == BAD_REQUEST.getStatusCode());
+        }
+
+    }
+
+    @Test
     @Category(FeatureAltTests.class)
     public void getCallsListUsingPageSize() {
         JsonObject firstPage = (JsonObject) RestcommCallsTool.getInstance().getCalls(deploymentUrl.toString(), adminAccountSid,
-                adminAuthToken, null, 100, true);
+                adminAuthToken, null, 100, null, true);
         int totalSize = firstPage.get("total").getAsInt();
         JsonArray firstPageCallsArray = firstPage.get("calls").getAsJsonArray();
         int firstPageCallsArraySize = firstPageCallsArray.size();
@@ -95,14 +130,14 @@ public class CallsEndpointTest {
         assertTrue(firstPage.get("end").getAsInt() == 99);
 
         JsonObject secondPage = (JsonObject) RestcommCallsTool.getInstance().getCalls(deploymentUrl.toString(),
-                adminAccountSid, adminAuthToken, 2, 100, true);
+                adminAccountSid, adminAuthToken, 2, 100, null, true);
         JsonArray secondPageCallsArray = secondPage.get("calls").getAsJsonArray();
         assertTrue(secondPageCallsArray.size() == 100);
         assertTrue(secondPage.get("start").getAsInt() == 200);
         assertTrue(secondPage.get("end").getAsInt() == 299);
 
         JsonObject lastPage = (JsonObject) RestcommCallsTool.getInstance().getCalls(deploymentUrl.toString(), adminAccountSid,
-                adminAuthToken, firstPage.get("num_pages").getAsInt(), 100, true);
+                adminAuthToken, firstPage.get("num_pages").getAsInt(), 100, null, true);
         JsonArray lastPageCallsArray = lastPage.get("calls").getAsJsonArray();
         assertEquals("CAe803a594ac1649d98855eafc7535ed41",lastPageCallsArray.get(lastPageCallsArray.size() - 1).getAsJsonObject().get("sid").getAsString());
         assertTrue(lastPageCallsArray.size() == 48);

@@ -21,7 +21,9 @@ package org.restcomm.connect.http;
 
 import akka.actor.ActorRef;
 import akka.pattern.AskTimeoutException;
+
 import static akka.pattern.Patterns.ask;
+
 import akka.util.Timeout;
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
@@ -30,6 +32,7 @@ import com.google.i18n.phonenumbers.PhoneNumberUtil;
 import com.google.i18n.phonenumbers.PhoneNumberUtil.PhoneNumberFormat;
 import com.sun.jersey.spi.resource.Singleton;
 import com.thoughtworks.xstream.XStream;
+
 import java.net.URI;
 import java.net.URL;
 import java.text.ParseException;
@@ -50,12 +53,15 @@ import javax.ws.rs.PathParam;
 import javax.ws.rs.Produces;
 import javax.ws.rs.core.Context;
 import javax.ws.rs.core.MediaType;
+
 import static javax.ws.rs.core.MediaType.APPLICATION_JSON;
 import static javax.ws.rs.core.MediaType.APPLICATION_JSON_TYPE;
 import static javax.ws.rs.core.MediaType.APPLICATION_XML;
 import static javax.ws.rs.core.MediaType.APPLICATION_XML_TYPE;
+
 import javax.ws.rs.core.MultivaluedMap;
 import javax.ws.rs.core.Response;
+
 import static javax.ws.rs.core.Response.Status.BAD_REQUEST;
 import static javax.ws.rs.core.Response.Status.GONE;
 import static javax.ws.rs.core.Response.Status.INTERNAL_SERVER_ERROR;
@@ -63,8 +69,10 @@ import static javax.ws.rs.core.Response.Status.NOT_ACCEPTABLE;
 import static javax.ws.rs.core.Response.Status.NOT_FOUND;
 import static javax.ws.rs.core.Response.ok;
 import static javax.ws.rs.core.Response.status;
+
 import javax.ws.rs.core.SecurityContext;
 import javax.ws.rs.core.UriInfo;
+
 import org.apache.commons.configuration.Configuration;
 import org.restcomm.connect.commons.amazonS3.RecordingSecurityLevel;
 import org.restcomm.connect.commons.annotations.concurrency.ThreadSafe;
@@ -129,8 +137,6 @@ public class CallsEndpoint extends AbstractEndpoint {
     private boolean normalizePhoneNumbers;
 
 
-
-
     public CallsEndpoint() {
         super();
     }
@@ -165,7 +171,7 @@ public class CallsEndpoint extends AbstractEndpoint {
         instanceId = RestcommConfiguration.getInstance().getMain().getInstanceId();
 
         normalizePhoneNumbers = configuration.getBoolean("normalize-numbers-for-outbound-calls");
-        if(!amazonS3Configuration.isEmpty()) { // Do not fail with NPE is amazonS3Configuration is not present for older install
+        if (!amazonS3Configuration.isEmpty()) { // Do not fail with NPE is amazonS3Configuration is not present for older install
             boolean amazonS3Enabled = amazonS3Configuration.getBoolean("enabled");
             if (amazonS3Enabled) {
                 securityLevel = RecordingSecurityLevel.valueOf(amazonS3Configuration.getString("security-level", "secure").toUpperCase());
@@ -175,10 +181,10 @@ public class CallsEndpoint extends AbstractEndpoint {
     }
 
     protected Response getCall(final String accountSid, final String sid,
-            final MediaType responseType,
-            UserIdentityContext userIdentityContext) {
+                               final MediaType responseType,
+                               UserIdentityContext userIdentityContext) {
         Account account = daos.getAccountsDao().getAccount(accountSid);
-        permissionEvaluator.secure(account, "RestComm:Read:Calls",userIdentityContext);
+        permissionEvaluator.secure(account, "RestComm:Read:Calls", userIdentityContext);
         final CallDetailRecordsDao dao = daos.getCallDetailRecordsDao();
         final CallDetailRecord cdr = dao.getCallDetailRecord(new Sid(sid));
         if (cdr == null) {
@@ -200,10 +206,10 @@ public class CallsEndpoint extends AbstractEndpoint {
     // Issue 153: https://bitbucket.org/telestax/telscale-restcomm/issue/153
     // Issue 110: https://bitbucket.org/telestax/telscale-restcomm/issue/110
     protected Response getCalls(final String accountSid, UriInfo info,
-            MediaType responseType,
-            UserIdentityContext userIdentityContex) {
+                                MediaType responseType,
+                                UserIdentityContext userIdentityContex) {
         Account account = daos.getAccountsDao().getAccount(accountSid);
-        permissionEvaluator.secure(account, "RestComm:Read:Calls",userIdentityContex);
+        permissionEvaluator.secure(account, "RestComm:Read:Calls", userIdentityContex);
 
         boolean localInstanceOnly = true;
         try {
@@ -228,7 +234,37 @@ public class CallsEndpoint extends AbstractEndpoint {
         String endTime = info.getQueryParameters().getFirst("EndTime");
         String parentCallSid = info.getQueryParameters().getFirst("ParentCallSid");
         String conferenceSid = info.getQueryParameters().getFirst("ConferenceSid");
-        String reverse = info.getQueryParameters().getFirst("Reverse");
+
+        // 'Reverse' URL parameter currently behaves a bit weird; it has no control over the direction of the ordering,
+        // as is the case for example in IncomingPhoneNumbersEndpoint. What it does is affecting paging instead,
+        // and the reason I think is that back when this was implemented we wanted Console to be able to get
+        // the right set of results, even if without ordering so that they are ordered in the client side. But now
+        // that sorting is implemented, I think we don't need that anymore and we should be ok ignoring it. Also,
+        // I believe having a boolean Reverse url parameter won't be able to scale well in the future if we introduce
+        // multiple SortBy fields for example.
+        //String reverse = info.getQueryParameters().getFirst("Reverse");
+
+        // Format for sorting URL paremeter is '?SortBy=<field>:<direction>', for example: '?SortBy=start_time:asc'. In the
+        // future we can extend it to multiple sort fields, like ?SortBy=<field1>:<direction1>,<field2>:<direction2>
+        String sortParameters = info.getQueryParameters().getFirst("SortBy");
+
+        // Let's default to sorting based on 'start_time' in descending ordering, so that newest calls show up first
+        String sortBy = "start_time";
+        String sortDirection = "DESC";
+
+        // TODO: Validate direction to only be one of 'asc' 'desc' (we should care about case, since SQL is also case insensitive)
+        // TODO: Currently we use database names for the fields; we should avoid that and use whatever names we return in the json response, so that it is consistent
+        // TODO: Update also MariaDB mapper file of MyBatis; we currently only have
+        if (sortParameters != null && !sortParameters.isEmpty()) {
+            final String[] values = sortParameters.split(":", 2);
+            sortBy = values[0];
+            if (values.length > 1) {
+                if (sortBy.isEmpty()) {
+                    return status(BAD_REQUEST).entity(buildErrorResponseBody("Error parsing the SortBy parameter: missing field to sort by", responseType)).build();
+                }
+                sortDirection = values[1];
+            }
+        }
 
         if (pageSize == null) {
             pageSize = "50";
@@ -258,10 +294,10 @@ public class CallsEndpoint extends AbstractEndpoint {
 
             if (localInstanceOnly) {
                 filterForTotal = new CallDetailRecordFilter(accountSid, ownerAccounts, recipient, sender, status, startTime, endTime,
-                        parentCallSid, conferenceSid, null, null);
+                        parentCallSid, conferenceSid, null, null, null, null, null);
             } else {
                 filterForTotal = new CallDetailRecordFilter(accountSid, ownerAccounts, recipient, sender, status, startTime, endTime,
-                        parentCallSid, conferenceSid, null, null, instanceId, "start_time", "ASC");
+                        parentCallSid, conferenceSid, null, null, instanceId, null, null);
             }
         } catch (ParseException e) {
             return status(BAD_REQUEST).build();
@@ -269,7 +305,8 @@ public class CallsEndpoint extends AbstractEndpoint {
 
         final int total = dao.getTotalCallDetailRecords(filterForTotal);
 
-/*
+        // This is breaking the new implementation; we should remove it and leave paging + sorting to the DB layer
+        /*
         if (reverse != null) {
             if (reverse.equalsIgnoreCase("true")){
                 if (total > Integer.parseInt(pageSize)){
@@ -284,7 +321,7 @@ public class CallsEndpoint extends AbstractEndpoint {
                 }
             }
         }
-*/
+        */
 
         if (Integer.parseInt(page) > (total / limit)) {
             return status(javax.ws.rs.core.Response.Status.BAD_REQUEST).build();
@@ -294,10 +331,10 @@ public class CallsEndpoint extends AbstractEndpoint {
         try {
             if (localInstanceOnly) {
                 filter = new CallDetailRecordFilter(accountSid, ownerAccounts, recipient, sender, status, startTime, endTime,
-                        parentCallSid, conferenceSid, limit, offset);
+                        parentCallSid, conferenceSid, limit, offset, null, sortBy, sortDirection);
             } else {
                 filter = new CallDetailRecordFilter(accountSid, ownerAccounts, recipient, sender, status, startTime, endTime,
-                        parentCallSid, conferenceSid, limit, offset, instanceId, "start_time", "ASC");
+                        parentCallSid, conferenceSid, limit, offset, instanceId, sortBy, sortDirection);
             }
         } catch (ParseException e) {
             return status(BAD_REQUEST).build();
@@ -308,7 +345,7 @@ public class CallsEndpoint extends AbstractEndpoint {
         listConverter.setCount(total);
         listConverter.setPage(Integer.parseInt(page));
         listConverter.setPageSize(Integer.parseInt(pageSize));
-        listConverter.setPathUri("/"+getApiVersion(null)+"/"+info.getPath());
+        listConverter.setPathUri("/" + getApiVersion(null) + "/" + info.getPath());
 
         if (APPLICATION_XML_TYPE.equals(responseType)) {
             final RestCommResponse response = new RestCommResponse(new CallDetailRecordList(cdrs));
@@ -354,15 +391,15 @@ public class CallsEndpoint extends AbstractEndpoint {
 
     @SuppressWarnings("unchecked")
     protected Response putCall(final String accountSid,
-            final MultivaluedMap<String,
-                    String> data,
-            final MediaType responseType,
-            UserIdentityContext userIdentityContex) {
+                               final MultivaluedMap<String,
+                                       String> data,
+                               final MediaType responseType,
+                               UserIdentityContext userIdentityContex) {
         final Sid accountId;
         try {
             accountId = new Sid(accountSid);
-        } catch (final IllegalArgumentException exception){
-            return status(INTERNAL_SERVER_ERROR).entity(buildErrorResponseBody(exception.getMessage(),responseType)).build();
+        } catch (final IllegalArgumentException exception) {
+            return status(INTERNAL_SERVER_ERROR).entity(buildErrorResponseBody(exception.getMessage(), responseType)).build();
         }
 
         permissionEvaluator.secure(daos.getAccountsDao().getAccount(accountSid),
@@ -476,14 +513,14 @@ public class CallsEndpoint extends AbstractEndpoint {
                         }
                     }
                     if (APPLICATION_XML_TYPE.equals(responseType)) {
-                        if (cdrs.size()==1) {
+                        if (cdrs.size() == 1) {
                             return ok(xstream.toXML(cdrs.get(0)), APPLICATION_XML).build();
                         } else {
                             final RestCommResponse response = new RestCommResponse(new CallDetailRecordList(cdrs));
                             return ok(xstream.toXML(response), APPLICATION_XML).build();
                         }
                     } else if (APPLICATION_JSON_TYPE.equals(responseType)) {
-                        if (cdrs.size()==1) {
+                        if (cdrs.size() == 1) {
                             return ok(gson.toJson(cdrs.get(0)), APPLICATION_JSON).build();
                         } else {
                             return ok(gson.toJson(cdrs), APPLICATION_JSON).build();
@@ -512,7 +549,7 @@ public class CallsEndpoint extends AbstractEndpoint {
         String customHeaders = null;
 
         if (to.contains("?")) {
-            customHeaders = to.substring(to.indexOf("?")+1, to.length());
+            customHeaders = to.substring(to.indexOf("?") + 1, to.length());
         }
 
         return customHeaders;
@@ -521,10 +558,10 @@ public class CallsEndpoint extends AbstractEndpoint {
     // Issue 139: https://bitbucket.org/telestax/telscale-restcomm/issue/139
     @SuppressWarnings("unchecked")
     protected Response updateCall(final String sid,
-            final String callSid,
-            final MultivaluedMap<String, String> data,
-            final MediaType responseType,
-            UserIdentityContext userIdentityContex) {
+                                  final String callSid,
+                                  final MultivaluedMap<String, String> data,
+                                  final MediaType responseType,
+                                  UserIdentityContext userIdentityContex) {
         final Sid accountSid = new Sid(sid);
         Account account = daos.getAccountsDao().getAccount(accountSid);
         permissionEvaluator.secure(account, "RestComm:Modify:Calls", userIdentityContex);
@@ -538,7 +575,7 @@ public class CallsEndpoint extends AbstractEndpoint {
 
             if (cdr != null) {
                 //allow super admin to perform LCM on any call - https://telestax.atlassian.net/browse/RESTCOMM-1171
-                if(!permissionEvaluator.isSuperAdmin(userIdentityContex)){
+                if (!permissionEvaluator.isSuperAdmin(userIdentityContex)) {
                     permissionEvaluator.secure(account, cdr.getAccountSid(),
                             SecuredType.SECURED_STANDARD,
                             userIdentityContex);
@@ -575,19 +612,19 @@ public class CallsEndpoint extends AbstractEndpoint {
                     Duration.create(10, TimeUnit.SECONDS));
             callInfo = response.get();
         } catch (AskTimeoutException ate) {
-            final String msg ="Call is already completed.";
-            if(logger.isDebugEnabled())
-                logger.debug("Modify Call LCM for call sid:"+callSid+ " AskTimeout while getting call: "+ callPath +" restcomm will send "+GONE +" with msg: "+msg);
+            final String msg = "Call is already completed.";
+            if (logger.isDebugEnabled())
+                logger.debug("Modify Call LCM for call sid:" + callSid + " AskTimeout while getting call: " + callPath + " restcomm will send " + GONE + " with msg: " + msg);
             return status(GONE).entity(msg).build();
         } catch (Exception exception) {
-            logger.error("Exception while trying to update call callPath: "+callPath+" callSid: "+callSid, exception);
+            logger.error("Exception while trying to update call callPath: " + callPath + " callSid: " + callSid, exception);
             return status(INTERNAL_SERVER_ERROR).entity(exception.getMessage()).build();
         }
 
         if (method == null)
             method = "POST";
 
-        if (url == null && status == null && mute == null ) {
+        if (url == null && status == null && mute == null) {
             // Throw exception. We can either redirect a running call using Url or change the state of a Call with Status
             final String errorMessage = "You can either redirect a running call using \"Url\" or change the state of a Call with \"Status\" or mute a call using \"Mute=true\"";
             return status(javax.ws.rs.core.Response.Status.CONFLICT).entity(errorMessage).build();
@@ -600,13 +637,12 @@ public class CallsEndpoint extends AbstractEndpoint {
                     if (call != null) {
                         call.tell(new Hangup(), null);
                     }
-                } else if (callInfo.state().name().equalsIgnoreCase("wait_for_answer")){
+                } else if (callInfo.state().name().equalsIgnoreCase("wait_for_answer")) {
                     // We can cancel Wait For Answer calls
                     if (call != null) {
                         call.tell(new Hangup(SipServletResponse.SC_REQUEST_TERMINATED), null);
                     }
-                }
-                else{
+                } else {
                     // Do Nothing. We can only cancel Queued or Ringing calls
                 }
             }
@@ -619,8 +655,8 @@ public class CallsEndpoint extends AbstractEndpoint {
             }
         }
 
-        if(mute != null && call != null){
-            try{
+        if (mute != null && call != null) {
+            try {
                 CallsUtil.muteUnmuteCall(mute, callInfo, call, cdr, dao);
             } catch (Exception exception) {
                 return status(INTERNAL_SERVER_ERROR).entity(exception.getMessage()).build();
@@ -682,9 +718,9 @@ public class CallsEndpoint extends AbstractEndpoint {
     }
 
     protected Response getRecordingsByCall(final String accountSid,
-            final String callSid,
-            final MediaType responseType,
-            UserIdentityContext userIdentityContext) {
+                                           final String callSid,
+                                           final MediaType responseType,
+                                           UserIdentityContext userIdentityContext) {
         permissionEvaluator.secure(accountsDao.getAccount(accountSid),
                 "RestComm:Read:Recordings", userIdentityContext);
 
@@ -704,10 +740,10 @@ public class CallsEndpoint extends AbstractEndpoint {
     @GET
     @Produces({MediaType.APPLICATION_XML, MediaType.APPLICATION_JSON})
     public Response getCallAsXml(@PathParam("accountSid") final String accountSid,
-            @PathParam("sid") final String sid,
-            @HeaderParam("Accept") String accept,
-            @Context SecurityContext sec) {
-        return getCall(accountSid, sid, retrieveMediaType(accept),ContextUtil.convert(sec));
+                                 @PathParam("sid") final String sid,
+                                 @HeaderParam("Accept") String accept,
+                                 @Context SecurityContext sec) {
+        return getCall(accountSid, sid, retrieveMediaType(accept), ContextUtil.convert(sec));
     }
 
     // Issue 153: https://bitbucket.org/telestax/telscale-restcomm/issue/153
@@ -715,19 +751,19 @@ public class CallsEndpoint extends AbstractEndpoint {
     @GET
     @Produces({MediaType.APPLICATION_XML, MediaType.APPLICATION_JSON})
     public Response getCalls(@PathParam("accountSid") final String accountSid,
-            @Context UriInfo info,
-            @HeaderParam("Accept") String accept,
-            @Context SecurityContext sec) {
-        return getCalls(accountSid, info, retrieveMediaType(accept),ContextUtil.convert(sec));
+                             @Context UriInfo info,
+                             @HeaderParam("Accept") String accept,
+                             @Context SecurityContext sec) {
+        return getCalls(accountSid, info, retrieveMediaType(accept), ContextUtil.convert(sec));
     }
 
     @POST
     @Produces({MediaType.APPLICATION_XML, MediaType.APPLICATION_JSON})
     public Response putCall(@PathParam("accountSid") final String accountSid,
-            final MultivaluedMap<String, String> data,
-            @HeaderParam("Accept") String accept,
-            @Context SecurityContext sec) {
-        return putCall(accountSid, data, retrieveMediaType(accept),ContextUtil.convert(sec));
+                            final MultivaluedMap<String, String> data,
+                            @HeaderParam("Accept") String accept,
+                            @Context SecurityContext sec) {
+        return putCall(accountSid, data, retrieveMediaType(accept), ContextUtil.convert(sec));
     }
 
     // Issue 139: https://bitbucket.org/telestax/telscale-restcomm/issue/139
@@ -735,10 +771,10 @@ public class CallsEndpoint extends AbstractEndpoint {
     @POST
     @Produces({MediaType.APPLICATION_XML, MediaType.APPLICATION_JSON})
     public Response modifyCall(@PathParam("accountSid") final String accountSid,
-            @PathParam("sid") final String sid,
-            final MultivaluedMap<String, String> data,
-            @HeaderParam("Accept") String accept,
-            @Context SecurityContext sec) {
+                               @PathParam("sid") final String sid,
+                               final MultivaluedMap<String, String> data,
+                               @HeaderParam("Accept") String accept,
+                               @Context SecurityContext sec) {
         return updateCall(accountSid, sid, data, retrieveMediaType(accept),
                 ContextUtil.convert(sec));
     }
@@ -747,9 +783,9 @@ public class CallsEndpoint extends AbstractEndpoint {
     @Path("/{callSid}/Recordings")
     @Produces({MediaType.APPLICATION_XML, MediaType.APPLICATION_JSON})
     public Response getRecordingsByCallXml(@PathParam("accountSid") String accountSid,
-            @PathParam("callSid") String callSid,
-            @HeaderParam("Accept") String accept,
-            @Context SecurityContext sec) {
+                                           @PathParam("callSid") String callSid,
+                                           @HeaderParam("Accept") String accept,
+                                           @Context SecurityContext sec) {
         return getRecordingsByCall(accountSid, callSid, retrieveMediaType(accept),
                 ContextUtil.convert(sec));
     }
