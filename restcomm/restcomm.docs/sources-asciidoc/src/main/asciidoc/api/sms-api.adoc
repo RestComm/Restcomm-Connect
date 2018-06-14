@@ -59,15 +59,26 @@ Sends a new SMS Message and returns the representation of the SMS Message resour
 
 ====== Request Parameters
 
-Description A phone number that is enabled for SMS. The destination phone number in E.164 format. The text of the message you want to send, limited to 160 characters.
+[cols=",",options="header",]
+|========================================================================================================
+|Parameter |Description
+|To |The destination phone number in E.164 format. The phone number must be SMS capable.
+|From |The phone number or short code that initiated the message.
+|Body |The text body of the SMS message. Up to 160 characters long.
+|StatusCallback |*Optional* A URL where RestComm will POST each time the message status changes.
+|========================================================================================================
 
-Parameter
+====== Message Status Notifications
 
-From(Required)
+Besides passing all the standard parameters in its request to the StatusCallback URL, RestComm will also includes these additional ones:
 
-To(Required)
-
-Body(Required)
+[cols=",",options="header",]
+|========================================================================================================
+|Parameter |Description
+|Status |The status of the message.
+|ErrorCode |*Optional* The error code (if any) associated with your message. If your message status is failed or undelivered, the ErrorCode can give you more information about the failure.
+|ChannelStatusMessage |*Optional* The Error message returned by the underlying Channel if Message delivery failed.
+|========================================================================================================
 
 == Using SMS and making DID calls
 
