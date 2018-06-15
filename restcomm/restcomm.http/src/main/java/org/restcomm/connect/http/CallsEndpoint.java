@@ -52,6 +52,7 @@ import javax.ws.rs.Path;
 import javax.ws.rs.PathParam;
 import javax.ws.rs.Produces;
 import javax.ws.rs.core.Context;
+//import javax.ws.rs.WebApplicationException;
 import javax.ws.rs.core.MediaType;
 
 import static javax.ws.rs.core.MediaType.APPLICATION_JSON;
@@ -237,9 +238,11 @@ public class CallsEndpoint extends AbstractEndpoint {
 
         // 'Reverse' URL parameter currently behaves a bit weird; it has no control over the direction of the ordering,
         // as is the case for example in IncomingPhoneNumbersEndpoint. What it does is affecting paging instead,
-        // and the reason I think is that back when this was implemented we wanted Console to be able to get
-        // the right set of results, even if without ordering so that they are ordered in the client side. But now
-        // that sorting is implemented, I think we don't need that anymore and we should be ok ignoring it. Also,
+        // and the reason I think is that back when this was implemented to avoid too much work on BE we wanted Console
+        // to be able to get the right set of results, even if without ordering so that they are ordered in
+        // the client side.
+
+        // But now that sorting is implemented, I think we don't need that anymore and we should be ok ignoring it. Also,
         // I believe having a boolean Reverse url parameter won't be able to scale well in the future if we introduce
         // multiple SortBy fields for example.
         //String reverse = info.getQueryParameters().getFirst("Reverse");
@@ -252,17 +255,21 @@ public class CallsEndpoint extends AbstractEndpoint {
         String sortBy = "start_time";
         String sortDirection = "DESC";
 
-        // TODO: Validate direction to only be one of 'asc' 'desc' (we should care about case, since SQL is also case insensitive)
-        // TODO: Currently we use database names for the fields; we should avoid that and use whatever names we return in the json response, so that it is consistent
-        // TODO: Update also MariaDB mapper file of MyBatis; we currently only have
+        // TODO: Update also MariaDB mapper file of MyBatis; we currently only have HSQL
+        // TODO: Add more ITs
         if (sortParameters != null && !sortParameters.isEmpty()) {
             final String[] values = sortParameters.split(":", 2);
             sortBy = values[0];
             if (values.length > 1) {
+                sortDirection = values[1];
                 if (sortBy.isEmpty()) {
+                    //throw new WebApplicationException(Response.status(BAD_REQUEST).entity(buildErrorResponseBody("Error parsing the SortBy parameter: missing field to sort by", responseType)).build());
                     return status(BAD_REQUEST).entity(buildErrorResponseBody("Error parsing the SortBy parameter: missing field to sort by", responseType)).build();
                 }
-                sortDirection = values[1];
+                if (!sortDirection.equalsIgnoreCase("asc") && !sortDirection.equalsIgnoreCase("desc")) {
+                    //throw new WebApplicationException(Response.status(BAD_REQUEST).entity(buildErrorResponseBody("Error parsing the SortBy parameter: sort direction needs to be either \'asc\' or \'desc\'", responseType)).build());
+                    return status(BAD_REQUEST).entity(buildErrorResponseBody("Error parsing the SortBy parameter: sort direction needs to be either \'asc\' or \'desc\'", responseType)).build();
+                }
             }
         }
 
