@@ -251,7 +251,8 @@ api_version VARCHAR(10) NOT NULL,
 uri MEDIUMTEXT NOT NULL,
 smpp_message_id MEDIUMTEXT,
 status_callback MEDIUMTEXT,
-status_callback_method MEDIUMTEXT
+status_callback_method MEDIUMTEXT,
+error_code BIGINT
 );
 
 CREATE TABLE restcomm_recordings (

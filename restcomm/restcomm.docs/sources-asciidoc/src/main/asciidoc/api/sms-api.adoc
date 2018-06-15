@@ -26,6 +26,8 @@ A *SMS Message* resource represents an inbound or outbound SMS message.
 |Direction |The direction of this SMS message. Possible values are incoming, outbound-api, outbound-call.
 |ApiVersion |The API version RestComm used to handle the SMS message.
 |Uri |The URI for this account, relative to https://localhost/restcomm.
+|error_code | In case message status is *failed* or *undelivered*, this will give you more information about failure reason. If not, the content will be simply null.
+|error_message | Same as *error_code*, but providing human readable text.
 |========================================================================================================
 
 ==== Status Description
@@ -38,6 +40,22 @@ A *SMS Message* resource represents an inbound or outbound SMS message.
 |delivered | The provider has delivered the message into user's terminal. Applies to outbound message.
 |undelivered | The provider couldnt deliver the message into user's terminal. Applies to outbound message.
 |========================================================================================================
+
+==== Error Code Description
+|========================================================================================================
+|Code | Message
+|30001 | Queue overflow
+|30002 | Account suspended
+|30003 | Unreachable destination handset
+|30004 | Message blocked
+|30005 | Unknown destination handset
+|30006 | Landline or unreachable carrier
+|30007 | Carrier violation
+|30008 | Unknown error
+|30009 | Missing segment
+|300010 | Message price exceeds max price
+|========================================================================================================
+
 
 ==== Supported Operations
 

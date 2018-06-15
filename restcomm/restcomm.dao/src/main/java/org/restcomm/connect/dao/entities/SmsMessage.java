@@ -28,6 +28,7 @@ import org.joda.time.DateTime;
 import org.restcomm.connect.commons.annotations.concurrency.Immutable;
 import org.restcomm.connect.commons.annotations.concurrency.NotThreadSafe;
 import org.restcomm.connect.commons.dao.Sid;
+import org.restcomm.connect.commons.dao.MessageError;
 import org.restcomm.connect.commons.stream.StreamEvent;
 
 /**
@@ -60,8 +61,11 @@ public class SmsMessage implements StreamEvent {
     public SmsMessage(final Sid sid, final DateTime dateCreated, final DateTime dateUpdated, final DateTime dateSent,
             final Sid accountSid, final String sender, final String recipient, final String body, final Status status,
             final Direction direction, final BigDecimal price, final Currency priceUnit, final String apiVersion, final URI uri, final String smppMessageId,
-            URI statusCallback,
+            , final MessageError error, URI statusCallback,
             String statusCallbackMethod) {
+
+
+
         super();
         this.sid = sid;
         this.dateCreated = dateCreated;
@@ -80,6 +84,7 @@ public class SmsMessage implements StreamEvent {
         this.smppMessageId = smppMessageId;
         this.statusCallback = statusCallback;
         this.statusCallbackMethod = statusCallbackMethod;
+        this.error = error;
     }
 
     public static Builder builder() {
@@ -146,12 +151,16 @@ public class SmsMessage implements StreamEvent {
         return smppMessageId;
     }
 
+
     public URI getStatusCallback() {
         return statusCallback;
     }
 
     public String getStatusCallbackMethod() {
         return statusCallbackMethod;
+
+    public MessageError getError() {
+        return error;
     }
 
     @NotThreadSafe
@@ -174,6 +183,7 @@ public class SmsMessage implements StreamEvent {
         private String smppMessageId;
         private URI statusCallback;
         private String statusCallbackMethod = "POST";
+        private MessageError error;
 
         private Builder() {
             super();
@@ -188,7 +198,7 @@ public class SmsMessage implements StreamEvent {
             }
             return new SmsMessage(sid, dateCreated, dateUpdated, dateSent,
                     accountSid, sender, recipient, body, status, direction, price,
-                    priceUnit, apiVersion, uri, smppMessageId, statusCallback,
+                    priceUnit, apiVersion, uri, smppMessageId, error, statusCallback,
                     statusCallbackMethod);
         }
 
@@ -210,6 +220,8 @@ public class SmsMessage implements StreamEvent {
             this.uri = msg.uri;
             this.smppMessageId = msg.smppMessageId;
             this.error = msg.error;
+            this.statusCallback = msg.statusCallback;
+            this.statusCallbackMethod = msg.statusCallbackMethod;
             return this;
         }
 
@@ -295,6 +307,11 @@ public class SmsMessage implements StreamEvent {
 
         public Builder setStatusCallbackMethod(String method) {
             this.statusCallbackMethod = method;
+            return this;
+        }
+
+        public Builder setError(MessageError error) {
+            this.error = error;
             return this;
         }
     }

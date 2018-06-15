@@ -216,6 +216,7 @@ public class MgcpMediaGroup extends MediaGroup {
             builder.setFirstDigitTimer(request.timeout());
             builder.setInterDigitTimer(request.timeout());
             builder.setEndInputKey(request.endInputKey());
+            builder.setStartInputKey(request.startInputKey());
             builder.setMaxNumberOfDigits(request.numberOfDigits());
             signal = builder.build();
             this.lastEvent = AUMgcpEvent.aupc;
