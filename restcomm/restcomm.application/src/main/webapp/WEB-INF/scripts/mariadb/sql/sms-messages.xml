@@ -32,7 +32,7 @@
   </delete>
 
   <update id="updateSmsMessage" parameterType="map">
-    UPDATE restcomm_sms_messages SET date_sent=#{date_sent}, status=#{status}, price=#{price}, smpp_message_id=#{smpp_message_id}, date_updated=NOW() WHERE sid=#{sid};
+    UPDATE restcomm_sms_messages SET date_sent=#{date_sent}, status=#{status}, price=#{price}, smpp_message_id=#{smpp_message_id}, error_code=#{error_code}, date_updated=NOW() WHERE sid=#{sid};
   </update>
 
   <select id="getSmsMessagesPerAccountLastPerMinute" parameterType="map" resultType="int">
@@ -125,7 +125,7 @@
     </select>
 
     <select id="findBySmppMessageId" parameterType="map" resultType="hashmap">
-        SELECT * FROM "restcomm_sms_messages" AS "restcomm_sms_messages"
-        WHERE "smpp_message_id" = #{smppMessageId}
+        SELECT * FROM restcomm_sms_messages AS restcomm_sms_messages
+        WHERE smpp_message_id = #{smppMessageId}
     </select>
 </mapper>

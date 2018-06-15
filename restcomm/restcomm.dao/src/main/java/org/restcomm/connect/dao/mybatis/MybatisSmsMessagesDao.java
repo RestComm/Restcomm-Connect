@@ -24,6 +24,7 @@ import org.apache.ibatis.session.SqlSessionFactory;
 import org.joda.time.DateTime;
 import org.restcomm.connect.commons.annotations.concurrency.ThreadSafe;
 import org.restcomm.connect.commons.dao.Sid;
+import org.restcomm.connect.commons.dao.MessageError;
 import org.restcomm.connect.dao.SmsMessagesDao;
 import org.restcomm.connect.dao.entities.SmsMessage;
 import org.restcomm.connect.dao.entities.SmsMessageFilter;
@@ -38,7 +39,18 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
-import static org.restcomm.connect.dao.DaoUtils.*;
+import static org.restcomm.connect.dao.DaoUtils.readBigDecimal;
+import static org.restcomm.connect.dao.DaoUtils.readInteger;
+import static org.restcomm.connect.dao.DaoUtils.readCurrency;
+import static org.restcomm.connect.dao.DaoUtils.readDateTime;
+import static org.restcomm.connect.dao.DaoUtils.readSid;
+import static org.restcomm.connect.dao.DaoUtils.readString;
+import static org.restcomm.connect.dao.DaoUtils.readUri;
+import static org.restcomm.connect.dao.DaoUtils.writeBigDecimal;
+import static org.restcomm.connect.dao.DaoUtils.writeCurrency;
+import static org.restcomm.connect.dao.DaoUtils.writeDateTime;
+import static org.restcomm.connect.dao.DaoUtils.writeSid;
+import static org.restcomm.connect.dao.DaoUtils.writeUri;
 
 /**
  * @author quintana.thomas@gmail.com (Thomas Quintana)
@@ -236,6 +248,10 @@ public final class MybatisSmsMessagesDao implements SmsMessagesDao {
         map.put("smpp_message_id", smsMessage.getSmppMessageId());
         map.put(STATUS_CALLBACK_COL, writeUri(smsMessage.getStatusCallback()));
         map.put(STATUS_CALLBACK_METHOD_COL, smsMessage.getStatusCallbackMethod());
+        MessageError error = smsMessage.getError();
+        if(error != null) {
+            map.put("error_code", smsMessage.getError().getErrorCode());
+        }
         return map;
     }
 
@@ -257,7 +273,14 @@ public final class MybatisSmsMessagesDao implements SmsMessagesDao {
         final String smppMessageId = readString(map.get("smpp_message_id"));
         final URI statusCallback = readUri(map.get(STATUS_CALLBACK_COL));
         final String statusCallbackMethod = readString(map.get(STATUS_CALLBACK_METHOD_COL));
-        return new SmsMessage(sid, dateCreated, dateUpdated, dateSent, accountSid, sender, recipient, body, status, direction,
-                price, priceUnit, apiVersion, uri, smppMessageId, statusCallback, statusCallbackMethod);
+        final Integer errorCode = readInteger(map.get("error_code"));
+        MessageError error = null;
+        if(errorCode != null) {
+            error = MessageError.getErrorValue(errorCode);
+        }
+        return new SmsMessage(sid, dateCreated, dateUpdated, dateSent, accountSid,
+                sender, recipient, body, status, direction,
+                price, priceUnit, apiVersion, uri, smppMessageId, error,
+                statusCallback, statusCallbackMethod);
     }
 }
