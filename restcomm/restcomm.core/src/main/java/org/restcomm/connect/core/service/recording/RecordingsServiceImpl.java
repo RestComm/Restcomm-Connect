@@ -21,6 +21,7 @@ package org.restcomm.connect.core.service.recording;
 
 import org.apache.log4j.Logger;
 import org.restcomm.connect.commons.amazonS3.S3AccessTool;
+import org.restcomm.connect.commons.configuration.RestcommConfiguration;
 import org.restcomm.connect.commons.dao.Sid;
 import org.restcomm.connect.core.service.api.RecordingService;
 import org.restcomm.connect.dao.DaoManager;
@@ -54,12 +55,11 @@ public class RecordingsServiceImpl implements RecordingService {
                 s3AccessTool.removeS3Uri(recording.getS3Uri());
             }
         } else {
-            URI fileUri = recording.getFileUri();
-            if (fileUri.getScheme().equalsIgnoreCase("file")) {
-                File recordingFile = new File(fileUri);
-                if (recordingFile.exists()) {
-                    recordingFile.delete();
-                }
+            URI fileUri = URI.create(RestcommConfiguration.getInstance().getMain().getRecordingPath()+"/"+recordingSid+".wav");
+            File fileToDelete = new File(fileUri);
+
+            if (fileToDelete.exists()) {
+                fileToDelete.delete();
             }
         }
 
