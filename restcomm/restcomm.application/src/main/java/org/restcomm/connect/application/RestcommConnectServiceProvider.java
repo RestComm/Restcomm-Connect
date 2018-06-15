@@ -22,6 +22,7 @@ package org.restcomm.connect.application;
 
 import javax.servlet.ServletContext;
 
+import org.restcomm.connect.commons.amazonS3.S3AccessTool;
 import org.restcomm.connect.core.service.api.ClientPasswordHashingService;
 import org.restcomm.connect.core.service.api.NumberSelectorService;
 import org.restcomm.connect.core.service.api.ProfileService;
@@ -64,7 +65,10 @@ public class RestcommConnectServiceProvider {
         ctx.setAttribute(ProfileService.class.getName(), profileService);
         this.clientPasswordHashingService = new ClientPasswordHashingServiceImpl(daoManager);
         ctx.setAttribute(ClientPasswordHashingService.class.getName(), clientPasswordHashingService);
-        this.recordingService = new RecordingsServiceImpl(daoManager);
+
+        S3AccessTool s3AccessTool = (S3AccessTool) ctx.getAttribute(S3AccessTool.class.getName());
+
+        this.recordingService = new RecordingsServiceImpl(daoManager.getRecordingsDao(), s3AccessTool);
         ctx.setAttribute(RecordingService.class.getName(), recordingService);
     }
 

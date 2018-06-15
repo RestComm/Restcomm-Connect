@@ -24,7 +24,6 @@ import org.restcomm.connect.commons.amazonS3.S3AccessTool;
 import org.restcomm.connect.commons.configuration.RestcommConfiguration;
 import org.restcomm.connect.commons.dao.Sid;
 import org.restcomm.connect.core.service.api.RecordingService;
-import org.restcomm.connect.dao.DaoManager;
 import org.restcomm.connect.dao.RecordingsDao;
 import org.restcomm.connect.dao.entities.Recording;
 
@@ -35,17 +34,25 @@ public class RecordingsServiceImpl implements RecordingService {
 
     private static Logger logger = Logger.getLogger(RecordingsServiceImpl.class);
 
-    private final DaoManager daoManager;
+    private final RecordingsDao recordingsDao;
     private final S3AccessTool s3AccessTool;
+    private String recordingsPath;
 
-    public RecordingsServiceImpl (DaoManager daoManager) {
-        this.daoManager = daoManager;
-        s3AccessTool = daoManager.getRecordingsDao().getS3AccessTool();
+    public RecordingsServiceImpl (RecordingsDao recordingsDao, S3AccessTool s3AccessTool) {
+        this.recordingsDao = recordingsDao;
+        this.s3AccessTool = s3AccessTool;
+        this.recordingsPath = RestcommConfiguration.getInstance().getMain().getRecordingPath();
+    }
+
+    //Used for unit testing
+    public RecordingsServiceImpl (RecordingsDao recordingsDao, S3AccessTool s3AccessTool, String recordingsPath) {
+        this.recordingsDao = recordingsDao;
+        this.s3AccessTool = s3AccessTool;
+        this.recordingsPath = recordingsPath;
     }
 
     @Override
     public void removeRecording (Sid recordingSid) {
-        RecordingsDao recordingsDao = daoManager.getRecordingsDao();
         Recording recording = recordingsDao.getRecording(recordingSid);
 
         boolean isStoredAtS3 = recording.getS3Uri() != null;
@@ -55,8 +62,10 @@ public class RecordingsServiceImpl implements RecordingService {
                 s3AccessTool.removeS3Uri(recording.getS3Uri());
             }
         } else {
-            URI fileUri = URI.create(RestcommConfiguration.getInstance().getMain().getRecordingPath()+"/"+recordingSid+".wav");
-            File fileToDelete = new File(fileUri);
+            if (!recordingsPath.endsWith("/"))
+                recordingsPath += "/";
+            URI recordingsUri = URI.create(recordingsPath+recordingSid+".wav");
+            File fileToDelete = new File(recordingsUri);
 
             if (fileToDelete.exists()) {
                 fileToDelete.delete();
