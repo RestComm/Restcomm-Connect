@@ -112,7 +112,7 @@ public class SmppMessageHandler extends RestcommUntypedActor {
         this.configuration = (Configuration) servletContext.getAttribute(Configuration.class.getName());
         this.sipFactory = (SipFactory) servletContext.getAttribute(SipFactory.class.getName());
         this.monitoringService = (ActorRef) servletContext.getAttribute(MonitoringService.class.getName());
-        numberSelector = (NumberSelectorService)servletContext.getAttribute(NumberSelectorService.class.getName());
+        numberSelector = (NumberSelectorService) servletContext.getAttribute(NumberSelectorService.class.getName());
         //FIXME:Should new ExtensionType.SmppMessageHandler be defined?
         extensions = ExtensionController.getInstance().getExtensions(ExtensionType.SmsService);
         if (logger.isInfoEnabled()) {
@@ -123,10 +123,7 @@ public class SmppMessageHandler extends RestcommUntypedActor {
     @Override
     public void onReceive(Object message) throws Exception {
         final Class<?> klass = message.getClass();
-        final UntypedActorContext context = getContext();
         final ActorRef sender = sender();
-        final ActorRef self = self();
-        ExtensionController ec = ExtensionController.getInstance();
 
         if (logger.isInfoEnabled()) {
             logger.info(" ********** SmppMessageHandler " + self().path() + ", Processing Message: " + klass.getName()
@@ -143,65 +140,84 @@ public class SmppMessageHandler extends RestcommUntypedActor {
             }
             outbound((SmppOutboundMessageEntity) message);
         } else if (message instanceof DLRPayload) {
-            DLRPayload dLRPayload = (DLRPayload) message;
-            logger.info("DLRPayload " + dLRPayload);
-            SmsMessagesDao smsMessagesDao = storage.getSmsMessagesDao();
-            SmsMessage smsMessage = smsMessagesDao.getSmsMessageBySmppMessageId(dLRPayload.getId());
-            if (smsMessage == null) {
-                logger.warning("responseMessageId=" + dLRPayload.getId() + " was never received! ");
-            } else {
-                smsMessagesDao.updateSmsMessage(smsMessage.setStatus(dLRPayload.getStat()));
-            }
+            onDLR((DLRPayload) message);
         } else if (message instanceof CreateSmsSession) {
-            IExtensionCreateSmsSessionRequest ier = (CreateSmsSession) message;
-            ier.setConfiguration(this.configuration);
-            ExtensionResponse executePreOutboundAction = ec.executePreOutboundAction(ier, this.extensions);
-            if (executePreOutboundAction.isAllowed()) {
-                CreateSmsSession createSmsSession = (CreateSmsSession) message;
-                final ActorRef session = session(ier.getConfiguration(), OrganizationUtil.getOrganizationSidByAccountSid(storage, new Sid(createSmsSession.getAccountSid())));
-                final SmsServiceResponse<ActorRef> response = new SmsServiceResponse<ActorRef>(session);
-                sender.tell(response, self);
-            } else {
-                final SmsServiceResponse<ActorRef> response = new SmsServiceResponse(new RestcommExtensionException("Now allowed to create SmsSession"));
-                sender.tell(response, self());
-            }
-            ec.executePostOutboundAction(ier, this.extensions);
+            onCreateSession((CreateSmsSession)message);
         } else if (message instanceof DestroySmsSession) {
-            final DestroySmsSession destroySmsSession = (DestroySmsSession) message;
-            final ActorRef session = destroySmsSession.session();
-            context.stop(session);
+           onDestroySmsSession((DestroySmsSession) message);
         } else if (message instanceof PduAsyncResponse) {
-
             PduAsyncResponse pduAsyncResponse = (PduAsyncResponse) message;
-
             if (pduAsyncResponse instanceof DefaultPduAsyncResponse && pduAsyncResponse.getResponse() instanceof SubmitSmResp) {
-                SubmitSmResp submitSmResp = (SubmitSmResp) pduAsyncResponse.getResponse();
-                if (logger.isInfoEnabled()) {
-                    logger.info(" ********** SmppMessageHandler received SubmitSmResp: "+submitSmResp +"SubmitSmResp Status:"+submitSmResp.getCommandStatus());
-                }
-
-                String smppMessageId = submitSmResp.getMessageId();
-
-                Object ref = pduAsyncResponse.getRequest().getReferenceObject();
-
-                if (ref != null && ref instanceof Sid) {
-                    Sid sid = (Sid) ref;
-                    SmsMessage smsMessage = storage.getSmsMessagesDao().getSmsMessage(sid);
-                    if (submitSmResp.getCommandStatus() != 0) {
-                        logger.warning(String.format("SubmitSmResp Failure! Message could not be sent Status Code %s Result Messages: %s", submitSmResp.getCommandStatus(), submitSmResp.getResultMessage()));
-                        smsMessage = smsMessage.setSmppMessageId(smppMessageId).setStatus(SmsMessage.Status.FAILED);
-                    } else {
-                        //update smppMessageId as well as status to SENT and date sent
-                        smsMessage = smsMessage.setSmppMessageId(smppMessageId).setStatus(SmsMessage.Status.SENT).setDateSent(DateTime.now());
-                    }
-                    storage.getSmsMessagesDao().updateSmsMessage(smsMessage);
-                } else {
-                    logger.warning("PduAsyncResponse reference is null or not Sid");
-                }
-             } else {
+                onSubmitResponse(pduAsyncResponse);
+            } else {
                 logger.info("PduAsyncResponse not SubmitSmResp " + pduAsyncResponse.getClass().toString());
             }
         }
+    }
+
+    private void onDestroySmsSession(DestroySmsSession destroySmsSession) {
+        final UntypedActorContext context = getContext();
+        final ActorRef session = destroySmsSession.session();
+        context.stop(session);
+    }
+
+    private void onCreateSession(CreateSmsSession message) {
+        ExtensionController ec = ExtensionController.getInstance();
+        final ActorRef sender = sender();
+        final ActorRef self = self();
+        IExtensionCreateSmsSessionRequest ier = message;
+        ier.setConfiguration(this.configuration);
+        ExtensionResponse executePreOutboundAction = ec.executePreOutboundAction(ier, this.extensions);
+        if (executePreOutboundAction.isAllowed()) {
+            CreateSmsSession createSmsSession = (CreateSmsSession) message;
+            final ActorRef session = session(ier.getConfiguration(), OrganizationUtil.getOrganizationSidByAccountSid(storage, new Sid(createSmsSession.getAccountSid())));
+            final SmsServiceResponse<ActorRef> response = new SmsServiceResponse<ActorRef>(session);
+            sender.tell(response, self);
+        } else {
+            final SmsServiceResponse<ActorRef> response = new SmsServiceResponse(new RestcommExtensionException("Now allowed to create SmsSession"));
+            sender.tell(response, self());
+        }
+        ec.executePostOutboundAction(ier, this.extensions);
+
+    }
+
+    private void onSubmitResponse(PduAsyncResponse pduAsyncResponse) {
+        SubmitSmResp submitSmResp = (SubmitSmResp) pduAsyncResponse.getResponse();
+        if (logger.isInfoEnabled()) {
+            logger.info(" ********** SmppMessageHandler received SubmitSmResp: " + submitSmResp + "SubmitSmResp Status:" + submitSmResp.getCommandStatus());
+        }
+
+        String smppMessageId = submitSmResp.getMessageId();
+
+        Object ref = pduAsyncResponse.getRequest().getReferenceObject();
+
+        if (ref != null && ref instanceof Sid) {
+            Sid sid = (Sid) ref;
+            SmsMessage smsMessage = storage.getSmsMessagesDao().getSmsMessage(sid);
+            if (submitSmResp.getCommandStatus() != 0) {
+                logger.warning(String.format("SubmitSmResp Failure! Message could not be sent Status Code %s Result Messages: %s", submitSmResp.getCommandStatus(), submitSmResp.getResultMessage()));
+                smsMessage = smsMessage.setSmppMessageId(smppMessageId).setStatus(SmsMessage.Status.FAILED);
+            } else {
+                //update smppMessageId as well as status to SENT and date sent
+                smsMessage = smsMessage.setSmppMessageId(smppMessageId).setStatus(SmsMessage.Status.SENT).setDateSent(DateTime.now());
+            }
+            storage.getSmsMessagesDao().updateSmsMessage(smsMessage);
+        } else {
+            logger.warning("PduAsyncResponse reference is null or not Sid");
+        }
+    }
+
+    private void onDLR(DLRPayload dLRPayload) {
+
+        logger.info("DLRPayload " + dLRPayload);
+        SmsMessagesDao smsMessagesDao = storage.getSmsMessagesDao();
+        SmsMessage smsMessage = smsMessagesDao.getSmsMessageBySmppMessageId(dLRPayload.getId());
+        if (smsMessage == null) {
+            logger.warning("responseMessageId=" + dLRPayload.getId() + " was never received! ");
+        } else {
+            smsMessagesDao.updateSmsMessage(smsMessage.setStatus(dLRPayload.getStat()));
+        }
+
     }
 
     private void inbound(final SmppInboundMessageEntity request) throws IOException {
@@ -242,7 +258,7 @@ public class SmppMessageHandler extends RestcommUntypedActor {
                 notifications.addNotification(notification);
             }
         } else if (errType == "info") {
-            if(logger.isInfoEnabled()) {
+            if (logger.isInfoEnabled()) {
                 logger.info(errMessage); // send message to console
             }
         }
@@ -279,9 +295,11 @@ public class SmppMessageHandler extends RestcommUntypedActor {
             e.printStackTrace();
         }
         /**
-         * if (response != null) { builder.setRequestUrl(request.getUri()); builder.setRequestMethod(request.getMethod());
+         * if (response != null) { builder.setRequestUrl(request.getUri());
+         * builder.setRequestMethod(request.getMethod());
          * builder.setRequestVariables(request.getParametersAsString()); }
-         **/
+         *
+         */
 
         builder.setRequestMethod("");
         builder.setRequestVariables("");
@@ -424,25 +442,21 @@ public class SmppMessageHandler extends RestcommUntypedActor {
             submit0.setDataCoding(SmppConstants.DATA_CODING_DEFAULT);
             textBytes = CharsetUtil.encode(request.getSmppContent(), SmppClientOpsThread.getOutboundDefaultEncoding());
         }
-        if(autodetectdcs) {
+        if (autodetectdcs) {
             submit0.setDataCoding((byte) DATA_CODING_AUTODETECT);
         }
 
         boolean payloadFlag = SmppClientOpsThread.getMessagePayloadFlag();
         int contentLength = request.getSmppContent().length();
-        //TODO reverted from https://telestax.atlassian.net/browse/RESTCOMM-1595 as it caused SMS loop at SMSC
-        //TODO the delivery receipt should be introduced only together with the remaining/pending DLR implementation
-        //TODO the DLR implementation should be configurable (on/off)
-        //TODO when enabling delivery receipts again, enable also SmppTest.testClientSentOutUsingSMPPDeliveryReceipt()
         //set the delivery flag to true
         submit0.setRegisteredDelivery((byte) 1);
 
         TlvSet tlvSet = request.getTlvSet();
 
-        if(logger.isDebugEnabled()) {
-            logger.debug("msg.body="+msg.getBody()+" msg.getStatus()="+msg.getStatus()+" payloadFlag="+payloadFlag+" contentLength="+contentLength+" textBytes="+Arrays.toString(textBytes));
+        if (logger.isDebugEnabled()) {
+            logger.debug("msg.body=" + msg.getBody() + " msg.getStatus()=" + msg.getStatus() + " payloadFlag=" + payloadFlag + " contentLength=" + contentLength + " textBytes=" + Arrays.toString(textBytes));
         }
-        if(payloadFlag || (contentLength> CONTENT_LENGTH_MAX)) {
+        if (payloadFlag || (contentLength > CONTENT_LENGTH_MAX)) {
             tlvSet.addOptionalParameter(new Tlv(SmppConstants.TAG_MESSAGE_PAYLOAD, textBytes));
         } else {
             submit0.setShortMessage(textBytes);
@@ -457,7 +471,7 @@ public class SmppMessageHandler extends RestcommUntypedActor {
         }
         try {
             if (logger.isInfoEnabled()) {
-                logger.info("Sending SubmitSM for " + request+" messageSid="+request.getMessageSid());
+                logger.info("Sending SubmitSM for " + request + " messageSid=" + request.getMessageSid());
             }
 
             submit0.setReferenceObject(request.getMessageSid());
