@@ -86,10 +86,6 @@ import java.util.Arrays;
 import java.util.Collection;
 import java.util.List;
 
-//import org.restcomm.connect.extension.api.ExtensionRequest;
-//import org.restcomm.connect.extension.api.ExtensionResponse;
-//import org.restcomm.connect.extension.api.ExtensionRequest;
-//import org.restcomm.connect.extension.api.ExtensionResponse;
 public class SmppMessageHandler extends RestcommUntypedActor {
 
     private static final int SEND_TIMEOUT = 10000;

@@ -54,6 +54,7 @@ public class SmsMessage implements StreamEvent {
     private final URI uri;
     private final String smppMessageId;
     private final URI statusCallback;
+    private final MessageError error;
     private final String statusCallbackMethod;
 
     public SmsMessage(final Sid sid, final DateTime dateCreated, final DateTime dateUpdated, final DateTime dateSent,
@@ -191,6 +192,27 @@ public class SmsMessage implements StreamEvent {
                     statusCallbackMethod);
         }
 
+        public Builder copyMessage(SmsMessage msg) {
+            this.accountSid = msg.accountSid;
+            this.sid = msg.sid;
+            this.dateCreated = msg.dateCreated;
+            this.dateUpdated = msg.dateUpdated;
+            this.dateSent = msg.dateSent;
+            this.accountSid = msg.accountSid;
+            this.sender = msg.sender;
+            this.recipient = msg.recipient;
+            this.body = msg.body;
+            this.status = msg.status;
+            this.direction = msg.direction;
+            this.price = msg.price;
+            this.priceUnit = msg.priceUnit;
+            this.apiVersion = msg.apiVersion;
+            this.uri = msg.uri;
+            this.smppMessageId = msg.smppMessageId;
+            this.error = msg.error;
+            return this;
+        }
+
         public Builder setSid(final Sid sid) {
             this.sid = sid;
             return this;
@@ -265,7 +287,6 @@ public class SmsMessage implements StreamEvent {
             this.smppMessageId = smppMessageId;
             return this;
         }
-
 
         public Builder setStatusCallback(URI callback) {
             this.statusCallback = callback;
