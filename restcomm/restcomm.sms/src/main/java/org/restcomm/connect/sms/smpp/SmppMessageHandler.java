@@ -157,7 +157,12 @@ public class SmppMessageHandler extends RestcommUntypedActor {
             if (sms == null) {
                 logger.warning("responseMessageId=" + smppMessageId + " was never received!");
             } else {
-                this.storage.getSmsMessagesDao().updateSmsMessage(sms.setSmppMessageId(null).setStatus(deliveryStatus));
+                SmsMessage.Builder builder = SmsMessage.builder();
+                builder.copyMessage(sms);
+                builder.setSmppMessageId(null);
+                builder.setStatus(deliveryReceipt.getStat());
+                builder.setError(deliveryReceipt.getErr());
+                storage.getSmsMessagesDao().updateSmsMessage(builder.build());
             }
         } else if (message instanceof CreateSmsSession) {
             IExtensionCreateSmsSessionRequest ier = (CreateSmsSession) message;
@@ -194,21 +199,28 @@ public class SmppMessageHandler extends RestcommUntypedActor {
 
                     // Delete correlation between messages and SMPP Message ID
                     for (SmsMessage smsMessage : smsMessages) {
-                        this.storage.getSmsMessagesDao().updateSmsMessage(smsMessage.setSmppMessageId(null));
+                        SmsMessage.Builder builder = SmsMessage.builder();
+                        builder.copyMessage(smsMessage);
+                        builder.setSmppMessageId(null);
+                        this.storage.getSmsMessagesDao().updateSmsMessage(builder.build());
                         logger.warning("Correlation between SmsMessage " + smsMessage.getSid() + " and SMPP Message " + smppMessageId + " expired.");
                     }
 
                     // Update status of target message
                     SmsMessage smsMessage = storage.getSmsMessagesDao().getSmsMessage((Sid) ref);
+                    SmsMessage.Builder builder = SmsMessage.builder();
+                    builder.copyMessage(smsMessage);
                     if (submitSmResp.getCommandStatus() == SmppConstants.STATUS_OK) {
                         // Successful reponse: update smppMessageId as well as status to SENT and date sent
-                        smsMessage = smsMessage.setSmppMessageId(smppMessageId).setStatus(SmsMessage.Status.SENT).setDateSent(DateTime.now());
+                        builder.setSmppMessageId(smppMessageId).setStatus(SmsMessage.Status.SENT).setDateSent(DateTime.now());
                     } else {
                         // Failure response: set status to FAILED and do not correlate to any smppMessageId
                         logger.warning(String.format("SubmitSmResp Failure! Message could not be sent Status Code %s Result Messages: %s", submitSmResp.getCommandStatus(), submitSmResp.getResultMessage()));
-                        smsMessage = smsMessage.setSmppMessageId(null).setStatus(SmsMessage.Status.FAILED);
+                        builder.setSmppMessageId(null).setStatus(SmsMessage.Status.FAILED);
+                        org.restcomm.connect.commons.dao.MessageError err = ErrorCodeMapper.parseRestcommErrorCode(submitSmResp.getCommandStatus());
+                        builder.setError(err);
                     }
-                    storage.getSmsMessagesDao().updateSmsMessage(smsMessage);
+                    storage.getSmsMessagesDao().updateSmsMessage(builder.build());
                 } else {
                     logger.warning("PduAsyncResponse reference is null or not Sid");
                 }
