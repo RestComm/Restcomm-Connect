@@ -11,11 +11,13 @@ import org.restcomm.connect.dao.entities.SmsMessage;
 import org.restcomm.connect.dao.entities.SmsMessage.Status;
 import org.restcomm.connect.sms.smpp.dlr.spi.DLRPayload;
 import org.restcomm.connect.sms.smpp.dlr.spi.DlrParser;
+import org.restcomm.connect.commons.dao.MessageError;
 
 public class TelestaxDlrParser implements DlrParser {
 
     private static final Logger logger = Logger.getLogger(TelestaxDlrParser.class);
     private static final Map<String, SmsMessage.Status> statusMap;
+    private static final Map<String, MessageError> errorMap;
 
     private static final String TAG_SEPARATOR = " ";
     private static final String TAG_VALUE_SEPARATOR = ":";
@@ -29,6 +31,8 @@ public class TelestaxDlrParser implements DlrParser {
 
     private static final DateTimeFormatter DLR_SENT_FORMAT = DateTimeFormat.forPattern("yyMMddHHmm");
 
+    private static final String SUCCESS_CODE = "000";
+
     static {
         statusMap = new HashMap<String, SmsMessage.Status>();
         statusMap.put("ACCEPTD", SmsMessage.Status.SENT);
@@ -38,6 +42,39 @@ public class TelestaxDlrParser implements DlrParser {
         statusMap.put("REJECTD", SmsMessage.Status.FAILED);
         statusMap.put("DELIVRD", SmsMessage.Status.DELIVERED);
         statusMap.put("UNKNOWN", SmsMessage.Status.SENT);
+
+        errorMap = new HashMap<String, MessageError>();
+        errorMap.put("001", MessageError.UNKNOWN_DESTINATION_HANDSET);
+        errorMap.put("002", MessageError.UNKNOWN_DESTINATION_HANDSET);
+        errorMap.put("003", MessageError.UNKNOWN_DESTINATION_HANDSET);
+        errorMap.put("004", MessageError.MESSAGE_BLOCKED);
+        errorMap.put("005", MessageError.MESSAGE_BLOCKED);
+        errorMap.put("007", MessageError.MESSAGE_BLOCKED);
+        errorMap.put("008", MessageError.UNREACHABLE_DESTINATION_HANDSET);
+        errorMap.put("010", MessageError.LANDLINE_OR_UNREACHABLE_CARRIER);
+        errorMap.put("011", MessageError.UNREACHABLE_DESTINATION_HANDSET);
+        errorMap.put("012", MessageError.UNKNOWN_ERROR);
+        errorMap.put("013", MessageError.UNKNOWN_ERROR);
+        errorMap.put("014", MessageError.UNKNOWN_ERROR);
+        errorMap.put("022", MessageError.MESSAGE_BLOCKED);
+        errorMap.put("023", MessageError.UNREACHABLE_DESTINATION_HANDSET);
+        errorMap.put("034", MessageError.UNKNOWN_ERROR);
+        errorMap.put("038", MessageError.UNKNOWN_DESTINATION_HANDSET);
+        errorMap.put("039", MessageError.UNKNOWN_DESTINATION_HANDSET);
+        errorMap.put("040", MessageError.UNKNOWN_ERROR);
+        errorMap.put("045", MessageError.UNKNOWN_ERROR);
+        errorMap.put("051", MessageError.UNKNOWN_ERROR);
+        errorMap.put("194", MessageError.UNKNOWN_ERROR);
+        errorMap.put("224", MessageError.MESSAGE_BLOCKED);
+        errorMap.put("225", MessageError.MESSAGE_BLOCKED);
+        errorMap.put("226", MessageError.UNKNOWN_ERROR);
+        errorMap.put("227", MessageError.UNKNOWN_ERROR);
+        errorMap.put("228", MessageError.UNREACHABLE_DESTINATION_HANDSET);
+        errorMap.put("229", MessageError.MESSAGE_BLOCKED);
+        errorMap.put("230", MessageError.MESSAGE_BLOCKED);
+        errorMap.put("231", MessageError.CARRIER_VIOLATION);
+        errorMap.put("232", MessageError.UNKNOWN_DESTINATION_HANDSET);
+
     }
 
     private String parseTagValue(String message, String tagName) {
@@ -81,7 +118,8 @@ public class TelestaxDlrParser implements DlrParser {
         dlr.setStat(parsedStatus);
 
         final String err = parseTagValue(message, ERR_TAG);
-        dlr.setErr(err);
+        MessageError parsedError = parseRestcommErrorCode(err);
+        dlr.setErr(parsedError);
 
         final String sub = parseTagValue(message, SUB_TAG);
         dlr.setSub(sub);
@@ -106,7 +144,7 @@ public class TelestaxDlrParser implements DlrParser {
         return date;
     }
 
-    public Status parseRestcommStatus(String message) {
+    private Status parseRestcommStatus(String message) {
         /*
         https://help.nexmo.com/hc/en-us/articles/204015663-What-is-Nexmo-s-SMPP-DLR-format-
         DELIVRD Message is delivered to destination
@@ -125,6 +163,23 @@ public class TelestaxDlrParser implements DlrParser {
         }
 
         return status;
+    }
+
+    private MessageError parseRestcommErrorCode(String errCode) {
+        MessageError error = null;
+        if (SUCCESS_CODE.equals(errCode)) {
+            //set to null so no error is shown
+            error = null;
+        } else if (errorMap.containsKey(errCode)) {
+            error = errorMap.get(errCode);
+        } else {
+            //if error is not in mapping table, set it to unknown
+            error = MessageError.UNKNOWN_ERROR;
+        }
+        if (logger.isDebugEnabled()) {
+            logger.debug("Mapped to: " + error);
+        }
+        return error;
     }
 
 }
