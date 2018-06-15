@@ -92,8 +92,22 @@ public class CallDetailRecordFilter {
             this.instanceid = null;
         }
 
-        this.sortBy = sortBy;
+        this.sortBy = mapAPIFieldsToDb(sortBy);
         this.sortDirection = sortDirection;
+    }
+
+    // We want the fields that the API caller provides for sorting to have the exact same names as what
+    // is returned from the API when it returns CDRs in queries, so that the API is consistent and intuitive. However, when doing
+    // the actual query in the db we are using the DB column names which sometimes are different from those API-level
+    // fields. Let's use a mapping function to convert API-level fields to db column names.
+    public String mapAPIFieldsToDb(String sortBy) {
+        if (sortBy != null) {
+            // Right now, the only fields that are different between API-level and DB-level and which we are
+            // interested in sorting by are 'from' and 'to'
+            return sortBy.replace("from", "sender")
+                    .replace("to", "recipient");
+        }
+        return null;
     }
 
     public String getSid() {

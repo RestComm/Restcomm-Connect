@@ -87,14 +87,12 @@ public class CallsEndpointTest {
     @Test
     public void getCallsListUsingSorting() {
         // provide both sort field and direction
-/*
-        JsonObject response1 = (JsonObject) RestcommCallsTool.getInstance().getCalls(deploymentUrl.toString(),
-                adminAccountSid, adminAuthToken, 1, 10, "start_time:asc", true);
 
+        JsonObject response1 = (JsonObject) RestcommCallsTool.getInstance().getCalls(deploymentUrl.toString(),
+                adminAccountSid, adminAuthToken, 1, 10, "date_created:asc", true);
         // provide only sort field; direction should default to desc
         JsonObject response2 = (JsonObject) RestcommCallsTool.getInstance().getCalls(deploymentUrl.toString(),
-                adminAccountSid, adminAuthToken, 1, 10, "start_time", true);
-*/
+                adminAccountSid, adminAuthToken, 1, 10, "date_created", true);
 
         try {
             // provide only direction, should cause an exception
@@ -105,16 +103,14 @@ public class CallsEndpointTest {
             assertTrue(e.getResponse().getStatus() == BAD_REQUEST.getStatusCode());
         }
 
-
         try {
             // provide sort field and direction, but direction is invalid (neither of asc or desc)
             JsonObject response3 = (JsonObject) RestcommCallsTool.getInstance().getCalls(deploymentUrl.toString(),
-                    adminAccountSid, adminAuthToken, 1, 10, ":invalid", true);
+                    adminAccountSid, adminAuthToken, 1, 10, "start_time:invalid", true);
         }
         catch (UniformInterfaceException e) {
             assertTrue(e.getResponse().getStatus() == BAD_REQUEST.getStatusCode());
         }
-
     }
 
     @Test
