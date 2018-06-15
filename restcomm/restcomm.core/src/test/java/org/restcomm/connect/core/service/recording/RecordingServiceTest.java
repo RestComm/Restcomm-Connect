@@ -41,7 +41,6 @@ public class RecordingServiceTest {
 
     Sid recordingSid = Sid.generate(Sid.Type.RECORDING);
     URI s3Uri = URI.create("https://127.0.0.1:8099/s3/dfsdfsaad");
-    String recorginsPath = "./";
 
     @Test
     public void deleteRecordingS3Test() throws IOException {
