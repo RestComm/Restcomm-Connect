@@ -35,8 +35,7 @@ import org.restcomm.connect.commons.stream.StreamEvent;
  * @author mariafarooq
  */
 @Immutable
-public final class SmsMessage implements StreamEvent {
-
+public class SmsMessage implements StreamEvent {
     public static final int MAX_SIZE = 160;
     private final Sid sid;
     private final DateTime dateCreated;
@@ -154,28 +153,6 @@ public final class SmsMessage implements StreamEvent {
         return statusCallbackMethod;
     }
 
-
-
-
-
-    public SmsMessage setDateSent(final DateTime dateSent) {
-        return new SmsMessage(sid, dateCreated, DateTime.now(), dateSent, accountSid, sender, recipient, body, status,
-                direction, price, priceUnit, apiVersion, uri, smppMessageId,
-                statusCallback,statusCallbackMethod);
-    }
-
-    public SmsMessage setStatus(final Status status) {
-        return new SmsMessage(sid, dateCreated, DateTime.now(), dateSent, accountSid, sender, recipient, body, status,
-                direction, price, priceUnit, apiVersion, uri, smppMessageId,
-                statusCallback,statusCallbackMethod);
-    }
-
-    public SmsMessage setSmppMessageId(final String smppMessageId) {
-        return new SmsMessage(sid, dateCreated, DateTime.now(), dateSent, accountSid, sender, recipient, body, status,
-                direction, price, priceUnit, apiVersion, uri, smppMessageId,
-                statusCallback, statusCallbackMethod);
-    }
-
     @NotThreadSafe
     public static final class Builder {
 
@@ -288,6 +265,7 @@ public final class SmsMessage implements StreamEvent {
             this.smppMessageId = smppMessageId;
             return this;
         }
+
 
         public Builder setStatusCallback(URI callback) {
             this.statusCallback = callback;
