@@ -128,6 +128,23 @@ public class RecordingEndpointTest extends EndpointTest{
         assertTrue(filteredRecordingsByCallSid.get("end").getAsInt() == 17);
     }
 
+    @Test
+    public void recordingDelete() {
+        String recordingSid = "RE10000000000000000000000000000032";
+
+        RecordingEndpointTool.getInstance().deleteRecording(deploymentUrl.toString(), adminAccountSid, adminAuthToken, recordingSid);
+
+        JsonObject firstPage = RecordingEndpointTool.getInstance().getRecordingList(deploymentUrl.toString(), adminAccountSid,
+                adminAuthToken);
+        int totalSize = firstPage.get("total").getAsInt();
+        JsonArray firstPageRecordingsArray = firstPage.get("recordings").getAsJsonArray();
+        int firstPageRecordingsArraySize = firstPageRecordingsArray.size();
+        assertTrue(firstPageRecordingsArraySize == 33);
+        assertTrue(firstPage.get("start").getAsInt() == 0);
+        assertTrue(firstPage.get("end").getAsInt() == 33);
+        assertTrue(totalSize == 33);
+    }
+
     @Deployment(name = "RecordingEndpointTest", managed = true, testable = false)
     public static WebArchive createWebArchiveNoGw() {
         logger.info("Packaging Test App");
