@@ -97,7 +97,7 @@ public class SmppInterpreter extends RestcommUntypedActor {
     // FSM.
     private final FiniteStateMachine fsm;
     // SMS Stuff.
-    private final ActorRef smppMessageHandler;
+    private final ActorRef smsService;
     private final Map<Sid, ActorRef> sessions;
     private Sid initialSessionSid;
     private ActorRef initialSession;
@@ -189,7 +189,7 @@ public class SmppInterpreter extends RestcommUntypedActor {
         // Initialize the FSM.
         this.fsm = new FiniteStateMachine(uninitialized, transitions);
         // Initialize the runtime stuff.
-        this.smppMessageHandler = params.getSmsService();
+        this.smsService = params.getSmsService();
         this.downloader = downloader();
         this.storage = params.getStorage();
         this.runtime = params.getConfiguration().subset("runtime-settings");
@@ -442,7 +442,7 @@ public class SmppInterpreter extends RestcommUntypedActor {
             // Destroy the sms session.
             final ActorRef session = sessions.remove(record.getSid());
             final DestroySmsSession destroy = new DestroySmsSession(session);
-            smppMessageHandler.tell(destroy, self);
+            smsService.tell(destroy, self);
             // Try to stop the interpreter.
             final State state = fsm.state();
             if (waitingForSmsResponses.equals(state)) {
@@ -520,7 +520,7 @@ public class SmppInterpreter extends RestcommUntypedActor {
             messages.addSmsMessage(record);
             getContext().system().eventStream().publish(record);
             // Destroy the initial session.
-            smppMessageHandler.tell(new DestroySmsSession(initialSession), source);
+            smsService.tell(new DestroySmsSession(initialSession), source);
             initialSession = null;
             // Ask the downloader to get us the application that will be executed.
             final List<NameValuePair> parameters = parameters();
@@ -675,7 +675,7 @@ public class SmppInterpreter extends RestcommUntypedActor {
             // Save <Sms> verb.
             verb = (Tag) message;
             // Create a new sms session to handle the <Sms> verb.
-            smppMessageHandler.tell(new CreateSmsSession(initialSessionRequest.from(), initialSessionRequest.to(), accountId.toString(), false), source);
+            smsService.tell(new CreateSmsSession(initialSessionRequest.from(), initialSessionRequest.to(), accountId.toString(), false), source);
         }
     }
 
@@ -703,7 +703,7 @@ public class SmppInterpreter extends RestcommUntypedActor {
                         final Notification notification = notification(ERROR_NOTIFICATION, 14102, from
                                 + " is an invalid 'from' phone number.");
                         notifications.addNotification(notification);
-                        smppMessageHandler.tell(new DestroySmsSession(session), source);
+                        smsService.tell(new DestroySmsSession(session), source);
                         final StopInterpreter stop = new  StopInterpreter();
                         source.tell(stop, source);
                         return;
@@ -726,7 +726,7 @@ public class SmppInterpreter extends RestcommUntypedActor {
             if (body == null || body.isEmpty()) {
                 final Notification notification = notification(ERROR_NOTIFICATION, 14103, body + " is an invalid SMS body.");
                 notifications.addNotification(notification);
-                smppMessageHandler.tell(new DestroySmsSession(session), source);
+                smsService.tell(new DestroySmsSession(session), source);
                 final StopInterpreter stop = new StopInterpreter();
                 source.tell(stop, source);
                 return;
