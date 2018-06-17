@@ -61,7 +61,7 @@ public class SmsMessage implements StreamEvent {
     public SmsMessage(final Sid sid, final DateTime dateCreated, final DateTime dateUpdated, final DateTime dateSent,
             final Sid accountSid, final String sender, final String recipient, final String body, final Status status,
             final Direction direction, final BigDecimal price, final Currency priceUnit, final String apiVersion, final URI uri, final String smppMessageId,
-            , final MessageError error, URI statusCallback,
+            final MessageError error, URI statusCallback,
             String statusCallbackMethod) {
 
 
@@ -158,6 +158,7 @@ public class SmsMessage implements StreamEvent {
 
     public String getStatusCallbackMethod() {
         return statusCallbackMethod;
+    }
 
     public MessageError getError() {
         return error;
