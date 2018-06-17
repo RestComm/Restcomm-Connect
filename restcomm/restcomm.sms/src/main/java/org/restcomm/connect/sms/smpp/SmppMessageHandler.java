@@ -22,7 +22,6 @@ package org.restcomm.connect.sms.smpp;
 import akka.actor.ActorRef;
 import akka.actor.Props;
 import akka.actor.UntypedActor;
-import akka.actor.UntypedActorContext;
 import akka.actor.UntypedActorFactory;
 import akka.event.Logging;
 import akka.event.LoggingAdapter;
@@ -52,25 +51,19 @@ import org.restcomm.connect.dao.ApplicationsDao;
 import org.restcomm.connect.dao.DaoManager;
 import org.restcomm.connect.dao.NotificationsDao;
 import org.restcomm.connect.dao.SmsMessagesDao;
-import org.restcomm.connect.dao.common.OrganizationUtil;
 import org.restcomm.connect.dao.entities.Application;
 import org.restcomm.connect.dao.entities.IncomingPhoneNumber;
 import org.restcomm.connect.dao.entities.Notification;
 import org.restcomm.connect.dao.entities.SmsMessage;
 import org.restcomm.connect.extension.api.ExtensionResponse;
 import org.restcomm.connect.extension.api.ExtensionType;
-import org.restcomm.connect.extension.api.IExtensionCreateSmsSessionRequest;
 import org.restcomm.connect.extension.api.IExtensionFeatureAccessRequest;
-import org.restcomm.connect.extension.api.RestcommExtensionException;
 import org.restcomm.connect.extension.api.RestcommExtensionGeneric;
 import org.restcomm.connect.extension.controller.ExtensionController;
 import org.restcomm.connect.http.client.rcmlserver.resolver.RcmlserverResolver;
 import org.restcomm.connect.interpreter.StartInterpreter;
 import org.restcomm.connect.monitoringservice.MonitoringService;
 import org.restcomm.connect.sms.SmsSession;
-import org.restcomm.connect.sms.api.CreateSmsSession;
-import org.restcomm.connect.sms.api.DestroySmsSession;
-import org.restcomm.connect.sms.api.SmsServiceResponse;
 import org.restcomm.connect.sms.smpp.dlr.spi.DLRPayload;
 import org.restcomm.connect.telephony.api.FeatureAccessRequest;
 import org.restcomm.smpp.parameter.TlvSet;
@@ -84,7 +77,11 @@ import java.net.URI;
 import java.net.URISyntaxException;
 import java.util.Arrays;
 import java.util.Collection;
+import java.util.HashMap;
 import java.util.List;
+import org.restcomm.connect.sms.SmsService;
+import org.restcomm.connect.sms.api.SmsSessionInfo;
+import org.restcomm.connect.sms.api.SmsStatusUpdated;
 
 public class SmppMessageHandler extends RestcommUntypedActor {
 
@@ -96,6 +93,7 @@ public class SmppMessageHandler extends RestcommUntypedActor {
     private final SipFactory sipFactory;
     private final ActorRef monitoringService;
     private final NumberSelectorService numberSelector;
+    private final ActorRef smsService;
     //List of extensions for SmsService
     List<RestcommExtensionGeneric> extensions;
 
@@ -111,6 +109,7 @@ public class SmppMessageHandler extends RestcommUntypedActor {
         if (logger.isInfoEnabled()) {
             logger.info("SmsService extensions: " + (extensions != null ? extensions.size() : "0"));
         }
+        smsService = (ActorRef) servletContext.getAttribute(SmsService.class.getName());
     }
 
     @Override
@@ -134,10 +133,6 @@ public class SmppMessageHandler extends RestcommUntypedActor {
             outbound((SmppOutboundMessageEntity) message);
         } else if (message instanceof DLRPayload) {
             onDLR((DLRPayload) message);
-        } else if (message instanceof CreateSmsSession) {
-            onCreateSession((CreateSmsSession) message);
-        } else if (message instanceof DestroySmsSession) {
-            onDestroySmsSession((DestroySmsSession) message);
         } else if (message instanceof PduAsyncResponse) {
             PduAsyncResponse pduAsyncResponse = (PduAsyncResponse) message;
             if (pduAsyncResponse instanceof DefaultPduAsyncResponse && pduAsyncResponse.getResponse() instanceof SubmitSmResp) {
@@ -146,32 +141,6 @@ public class SmppMessageHandler extends RestcommUntypedActor {
                 logger.info("PduAsyncResponse not SubmitSmResp " + pduAsyncResponse.getClass().toString());
             }
         }
-    }
-
-    private void onDestroySmsSession(DestroySmsSession destroySmsSession) {
-        final UntypedActorContext context = getContext();
-        final ActorRef session = destroySmsSession.session();
-        context.stop(session);
-    }
-
-    private void onCreateSession(CreateSmsSession message) {
-        ExtensionController ec = ExtensionController.getInstance();
-        final ActorRef sender = sender();
-        final ActorRef self = self();
-        IExtensionCreateSmsSessionRequest ier = message;
-        ier.setConfiguration(this.configuration);
-        ExtensionResponse executePreOutboundAction = ec.executePreOutboundAction(ier, this.extensions);
-        if (executePreOutboundAction.isAllowed()) {
-            CreateSmsSession createSmsSession = (CreateSmsSession) message;
-            final ActorRef session = session(ier.getConfiguration(), OrganizationUtil.getOrganizationSidByAccountSid(storage, new Sid(createSmsSession.getAccountSid())));
-            final SmsServiceResponse<ActorRef> response = new SmsServiceResponse<ActorRef>(session);
-            sender.tell(response, self);
-        } else {
-            final SmsServiceResponse<ActorRef> response = new SmsServiceResponse(new RestcommExtensionException("Now allowed to create SmsSession"));
-            sender.tell(response, self());
-        }
-        ec.executePostOutboundAction(ier, this.extensions);
-
     }
 
     private void onSubmitResponse(PduAsyncResponse pduAsyncResponse) {
@@ -210,7 +179,13 @@ public class SmppMessageHandler extends RestcommUntypedActor {
                 org.restcomm.connect.commons.dao.MessageError err = ErrorCodeMapper.parseRestcommErrorCode(submitSmResp.getCommandStatus());
                 builder.setError(err);
             }
-            storage.getSmsMessagesDao().updateSmsMessage(builder.build());
+            SmsMessage msgUpdated = builder.build();
+            HashMap<String,Object> hashMap = new HashMap();
+            hashMap.put("record", msgUpdated);
+            SmsSessionInfo info = new SmsSessionInfo(msgUpdated.getSender(),
+                    msgUpdated.getRecipient(), hashMap);
+            SmsStatusUpdated smsStatusUpdated = new SmsStatusUpdated(info);
+            smsService.tell(smsStatusUpdated, self());
         } else {
             logger.warning("PduAsyncResponse reference is null or not Sid");
         }
@@ -237,7 +212,13 @@ public class SmppMessageHandler extends RestcommUntypedActor {
             builder.setSmppMessageId(null);
             builder.setStatus(deliveryReceipt.getStat());
             builder.setError(deliveryReceipt.getErr());
-            storage.getSmsMessagesDao().updateSmsMessage(builder.build());
+            SmsMessage msgUpdated = builder.build();
+            HashMap<String,Object> hashMap = new HashMap();
+            hashMap.put("record", msgUpdated);
+            SmsSessionInfo info = new SmsSessionInfo(msgUpdated.getSender(),
+                    msgUpdated.getRecipient(), hashMap);
+            SmsStatusUpdated smsStatusUpdated = new SmsStatusUpdated(info);
+            smsService.tell(smsStatusUpdated, self());
         }
 
     }
@@ -355,7 +336,7 @@ public class SmppMessageHandler extends RestcommUntypedActor {
                     URI appUri = number.getSmsUrl();
 
                     final SmppInterpreterParams.Builder builder = new SmppInterpreterParams.Builder();
-                    builder.setSmsService(self);
+                    builder.setSmsService(smsService);
                     builder.setConfiguration(configuration);
                     builder.setStorage(storage);
                     builder.setAccountId(number.getAccountSid());
