@@ -41,7 +41,9 @@ public class SmsStatusNotifier {
         parameters.add(new BasicNameValuePair(TO_PARAM, message.getRecipient()));
         parameters.add(new BasicNameValuePair(BODY_PARAM, message.getBody()));
         parameters.add(new BasicNameValuePair(ACCOUT_SID_PARAM, message.getAccountSid().toString()));
-        parameters.add(new BasicNameValuePair(ERROR_CODE_PARAM, message.getError().toString()));
+        if (message.getError() != null ) {
+            parameters.add(new BasicNameValuePair(ERROR_CODE_PARAM, message.getError().toString()));
+        }
         parameters.add(new BasicNameValuePair(MSG_ID_PARAM, message.getSid().toString()));
         parameters.add(new BasicNameValuePair(MSG_STATUS_PARAM, message.getStatus().toString()));
         parameters.add(new BasicNameValuePair(BODY_PARAM, message.getBody()));
