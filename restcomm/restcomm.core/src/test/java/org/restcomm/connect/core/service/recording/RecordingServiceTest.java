@@ -40,7 +40,7 @@ public class RecordingServiceTest {
     S3AccessTool s3AccessTool = mock(S3AccessTool.class);
 
     Sid recordingSid = Sid.generate(Sid.Type.RECORDING);
-    URI s3Uri = URI.create("https://127.0.0.1:8099/s3/dfsdfsaad");
+    URI s3Uri = URI.create("https://127.0.0.1:8099/s3/"+recordingSid.toString());
 
     @Test
     public void deleteRecordingS3Test() throws IOException {
@@ -51,7 +51,7 @@ public class RecordingServiceTest {
         RecordingsServiceImpl recordingsService = new RecordingsServiceImpl(recordingsDao, s3AccessTool, null);
         recordingsService.removeRecording(recordingSid);
 
-        verify(s3AccessTool).removeS3Uri(s3Uri);
+        verify(s3AccessTool).removeS3Uri(recordingSid.toString());
         verify(recordingsDao).removeRecording(recordingSid);
     }
 

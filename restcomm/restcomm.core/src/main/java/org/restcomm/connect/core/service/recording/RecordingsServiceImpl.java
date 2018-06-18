@@ -59,7 +59,7 @@ public class RecordingsServiceImpl implements RecordingService {
 
         if (isStoredAtS3) {
             if (s3AccessTool != null) {
-                s3AccessTool.removeS3Uri(recording.getS3Uri());
+                s3AccessTool.removeS3Uri(recordingSid.toString());
             }
         } else {
             if (!recordingsPath.endsWith("/"))
