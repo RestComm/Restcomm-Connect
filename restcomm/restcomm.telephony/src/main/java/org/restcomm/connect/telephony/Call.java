@@ -1474,6 +1474,10 @@ public final class Call extends RestcommUntypedActor implements TransitionEndLis
                 outgoingCallRecord = outgoingCallRecord.setStatus(external.name());
                 recordsDao.updateCallDetailRecord(outgoingCallRecord);
             }
+
+            if(isOutbound()){
+                executeStatusCallback(CallbackState.COMPLETED, true);
+            }
         }
     }
 
