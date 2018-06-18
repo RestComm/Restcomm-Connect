@@ -97,7 +97,6 @@ import akka.event.LoggingAdapter;
 import org.apache.http.NameValuePair;
 import org.restcomm.connect.http.client.Downloader;
 import org.restcomm.connect.http.client.HttpRequestDescriptor;
-import org.restcomm.connect.interpreter.RCDaoManagerProvider;
 import static org.restcomm.connect.sms.SmsStatusNotifier.populateReqParams;
 import org.restcomm.connect.sms.api.SmsStatusUpdated;
 import scala.concurrent.duration.Duration;
@@ -697,7 +696,6 @@ public final class SmsService extends RestcommUntypedActor {
                         && !org.apache.http.client.methods.HttpPost.METHOD_NAME.equalsIgnoreCase(method)) {
                     final Notification notification = notification(WARNING_NOTIFICATION, 14104, method
                             + " is not a valid HTTP method for <Sms>");
-                    DaoManager storage = RCDaoManagerProvider.extensionProvider.get(getContext().system()).getBean();
                     storage.getNotificationsDao().addNotification(notification);
                     method = org.apache.http.client.methods.HttpPost.METHOD_NAME;
                 }
