@@ -86,6 +86,7 @@ public final class SmsMessagesDaoTest {
         builder.setPrice(new BigDecimal("0.00"));
         builder.setPriceUnit(Currency.getInstance("USD"));
         builder.setUri(url);
+        builder.setStatusCallback(url);
         SmsMessage message = builder.build();
         final SmsMessagesDao messages = manager.getSmsMessagesDao();
         // Create a new sms message in the data store.
@@ -105,6 +106,7 @@ public final class SmsMessagesDaoTest {
         assertTrue(result.getPrice().equals(message.getPrice()));
         assertTrue(result.getPriceUnit().equals(message.getPriceUnit()));
         assertTrue(result.getUri().equals(message.getUri()));
+        assertTrue(result.getStatusCallback().equals(message.getStatusCallback()));
         // Update the message.
         final DateTime now = DateTime.now();
         final SmsMessage.Builder builder2 = SmsMessage.builder();
