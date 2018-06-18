@@ -255,19 +255,15 @@ public class CallsEndpoint extends AbstractEndpoint {
         String sortBy = "start_time";
         String sortDirection = "DESC";
 
-        // TODO: Update also MariaDB mapper file of MyBatis; we currently only have HSQL
-        // TODO: Add more ITs
         if (sortParameters != null && !sortParameters.isEmpty()) {
             final String[] values = sortParameters.split(":", 2);
             sortBy = values[0];
             if (values.length > 1) {
                 sortDirection = values[1];
                 if (sortBy.isEmpty()) {
-                    //throw new WebApplicationException(Response.status(BAD_REQUEST).entity(buildErrorResponseBody("Error parsing the SortBy parameter: missing field to sort by", responseType)).build());
                     return status(BAD_REQUEST).entity(buildErrorResponseBody("Error parsing the SortBy parameter: missing field to sort by", responseType)).build();
                 }
                 if (!sortDirection.equalsIgnoreCase("asc") && !sortDirection.equalsIgnoreCase("desc")) {
-                    //throw new WebApplicationException(Response.status(BAD_REQUEST).entity(buildErrorResponseBody("Error parsing the SortBy parameter: sort direction needs to be either \'asc\' or \'desc\'", responseType)).build());
                     return status(BAD_REQUEST).entity(buildErrorResponseBody("Error parsing the SortBy parameter: sort direction needs to be either \'asc\' or \'desc\'", responseType)).build();
                 }
             }

@@ -86,18 +86,30 @@ public class CallsEndpointTest {
 
     @Test
     public void getCallsListUsingSorting() {
-        // provide both sort field and direction
+        // Provide both sort field and direction
+        // Provide ascending sorting and verify that the first row is indeed the earliest one
+        JsonObject response1 = RestcommCallsTool.getInstance().getCalls(deploymentUrl.toString(),
+                adminAccountSid, adminAuthToken, 0, 10, "date_created:asc", true);
+        assertTrue(((JsonObject)response1.get("calls").getAsJsonArray().get(0)).get("date_created").getAsString().equals("Fri, 5 Jul 2013 22:15:53 +0300"));
 
-        JsonObject response1 = (JsonObject) RestcommCallsTool.getInstance().getCalls(deploymentUrl.toString(),
-                adminAccountSid, adminAuthToken, 1, 10, "date_created:asc", true);
-        // provide only sort field; direction should default to desc
-        JsonObject response2 = (JsonObject) RestcommCallsTool.getInstance().getCalls(deploymentUrl.toString(),
-                adminAccountSid, adminAuthToken, 1, 10, "date_created", true);
+        // Provide only sort field; direction should default to desc
+        JsonObject response2 = RestcommCallsTool.getInstance().getCalls(deploymentUrl.toString(),
+                adminAccountSid, adminAuthToken, 0, 10, "date_created", true);
+        assertTrue(((JsonObject)response2.get("calls").getAsJsonArray().get(0)).get("date_created").getAsString().equals("Tue, 31 May 2016 16:20:22 +0300"));
+
+        JsonObject response3 = RestcommCallsTool.getInstance().getCalls(deploymentUrl.toString(),
+                adminAccountSid, adminAuthToken, 0, 10, "date_created:desc", true);
+        assertTrue(((JsonObject)response3.get("calls").getAsJsonArray().get(0)).get("date_created").getAsString().equals("Tue, 31 May 2016 16:20:22 +0300"));
+
+        // Verify that when there is no sorting parameters passed, we default to sorting by date_created descending
+        JsonObject response4 = RestcommCallsTool.getInstance().getCalls(deploymentUrl.toString(),
+                adminAccountSid, adminAuthToken, 0, 10, null, true);
+        assertTrue(((JsonObject)response4.get("calls").getAsJsonArray().get(0)).get("date_created").getAsString().equals("Tue, 31 May 2016 16:20:22 +0300"));
 
         try {
             // provide only direction, should cause an exception
-            JsonObject response3 = (JsonObject) RestcommCallsTool.getInstance().getCalls(deploymentUrl.toString(),
-                    adminAccountSid, adminAuthToken, 1, 10, ":asc", true);
+            RestcommCallsTool.getInstance().getCalls(deploymentUrl.toString(),
+                    adminAccountSid, adminAuthToken, 0, 10, ":asc", true);
         }
         catch (UniformInterfaceException e) {
             assertTrue(e.getResponse().getStatus() == BAD_REQUEST.getStatusCode());
@@ -105,8 +117,8 @@ public class CallsEndpointTest {
 
         try {
             // provide sort field and direction, but direction is invalid (neither of asc or desc)
-            JsonObject response3 = (JsonObject) RestcommCallsTool.getInstance().getCalls(deploymentUrl.toString(),
-                    adminAccountSid, adminAuthToken, 1, 10, "start_time:invalid", true);
+            RestcommCallsTool.getInstance().getCalls(deploymentUrl.toString(),
+                    adminAccountSid, adminAuthToken, 0, 10, "start_time:invalid", true);
         }
         catch (UniformInterfaceException e) {
             assertTrue(e.getResponse().getStatus() == BAD_REQUEST.getStatusCode());

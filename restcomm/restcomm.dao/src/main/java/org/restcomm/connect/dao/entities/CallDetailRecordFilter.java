@@ -101,6 +101,8 @@ public class CallDetailRecordFilter {
     // the actual query in the db we are using the DB column names which sometimes are different from those API-level
     // fields. Let's use a mapping function to convert API-level fields to db column names.
     public String mapAPIFieldsToDb(String sortBy) {
+        // TODO: One issue here is that whatever the API user sends inside SortBy is sent down to DB, which is messy. How is this currently handled in other cases in the API?
+        // We could potentially have a list of fields that we are allowed to sort by and validate against that list. Thoughts?
         if (sortBy != null) {
             // Right now, the only fields that are different between API-level and DB-level and which we are
             // interested in sorting by are 'from' and 'to'
