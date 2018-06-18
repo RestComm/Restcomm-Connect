@@ -574,7 +574,6 @@ public final class SmsInterpreter extends RestcommUntypedActor {
             buffer.append(initialSessionSid.toString());
             final URI uri = URI.create(buffer.toString());
             builder.setUri(uri);
-            SmsVerb.populateAttributes(verb, builder);
             final SmsMessage record = builder.build();
             final SmsMessagesDao messages = storage.getSmsMessagesDao();
             messages.addSmsMessage(record);
