@@ -46,7 +46,6 @@ import org.restcomm.connect.commons.Version;
 import org.restcomm.connect.commons.annotations.BrokenTests;
 import org.restcomm.connect.commons.annotations.FeatureAltTests;
 import org.restcomm.connect.commons.annotations.FeatureExpTests;
-import org.restcomm.connect.commons.annotations.SequentialClassTests;
 import org.restcomm.connect.commons.annotations.WithInSecsTests;
 import org.restcomm.connect.dao.entities.SmsMessage;
 import org.restcomm.connect.sms.smpp.SmppInboundMessageEntity;
@@ -57,7 +56,6 @@ import com.cloudhopper.commons.charset.CharsetUtil;
 import com.cloudhopper.smpp.type.SmppChannelException;
 import com.cloudhopper.smpp.type.SmppInvalidArgumentException;
 import static com.github.tomakehurst.wiremock.client.WireMock.matching;
-import static com.github.tomakehurst.wiremock.client.WireMock.notMatching;
 import static com.github.tomakehurst.wiremock.client.WireMock.post;
 import static com.github.tomakehurst.wiremock.client.WireMock.postRequestedFor;
 import static com.github.tomakehurst.wiremock.client.WireMock.urlMatching;
@@ -65,6 +63,11 @@ import static com.github.tomakehurst.wiremock.client.WireMock.verify;
 import com.github.tomakehurst.wiremock.junit.WireMockRule;
 import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
+import java.util.ArrayList;
+import java.util.List;
+import org.restcomm.connect.commons.annotations.ParallelClassTests;
+import org.restcomm.connect.testsuite.NetworkPortAssigner;
+import org.restcomm.connect.testsuite.WebArchiveUtil;
 
 /**
  * @author quintana.thomas@gmail.com (Thomas Quintana)
@@ -72,7 +75,7 @@ import com.google.gson.JsonObject;
  */
 @RunWith(Arquillian.class)
 @FixMethodOrder(MethodSorters.NAME_ASCENDING)
-@Category(value = {SequentialClassTests.class, WithInSecsTests.class})
+@Category(value = {ParallelClassTests.class, WithInSecsTests.class})
 public class SmppTest {
 
     private final static Logger logger = Logger.getLogger(SmppTest.class);
@@ -85,8 +88,10 @@ public class SmppTest {
     private static String msgBodyResp = "か~!@#$%^&*()-=\u263a\u00a1\u00a2\u00a3\u00a4\u00a5Response from Restcomm to SMPP server";
     private static String msgBodyRespUCS2 = "か~!@#$%^&*()-=\u263a\u00a1\u00a2\u00a3\u00a4\u00a5Response from Restcomm to SMPP server";
 
+    private static int wirePort = NetworkPortAssigner.retrieveNextPortByFile();
+    private static int mediaPort = NetworkPortAssigner.retrieveNextPortByFile();
     @Rule
-    public WireMockRule wireMockRule = new WireMockRule(8090); // No-args constructor defaults to port 8080
+    public WireMockRule wireMockRule = new WireMockRule(wirePort); // No-args constructor defaults to port 8080
 
     @ArquillianResource
     private Deployer deployer;
@@ -98,30 +103,50 @@ public class SmppTest {
     private static SipStackTool tool2;
     private SipStack aliceSipStack;
     private SipPhone alicePhone;
-    private String aliceContact = "sip:alice@127.0.0.1:5092";
+    private static String alicePort = String.valueOf(NetworkPortAssigner.retrieveNextPortByFile());
+    private String aliceContact = "sip:alice@127.0.0.1:" + alicePort; //5092;
 
     private static SipStackTool tool3;
     private SipStack bobSipStack;
     private SipPhone bobPhone;
-    private String bobContact = "sip:bob@127.0.0.1:5093";
+    private static String bobPort = String.valueOf(NetworkPortAssigner.retrieveNextPortByFile());
+    private String bobContact = "sip:bob@127.0.0.1:" + bobPort; //5093;
 
     private static SipStackTool tool5;
     private SipStack mariaSipStack;
     private SipPhone mariaPhone;
-    private String mariaContact = "sip:maria@org2.restcomm.com";
+    private static String mariaPort = String.valueOf(NetworkPortAssigner.retrieveNextPortByFile());
+    private String mariaContact = "sip:maria@org2.restcomm.com:" + mariaPort;//5095
 
     private static SipStackTool tool6;
     private SipStack shoaibSipStack;
     private SipPhone shoaibPhone;
-    private String shoaibContact = "sip:shoaib@org2.restcomm.com";
+    private static String shoaibPort = String.valueOf(NetworkPortAssigner.retrieveNextPortByFile());
+    private String shoaibContact = "sip:shoaib@org2.restcomm.com:" + shoaibPort; //5096
 
     private static SipStackTool tool4;
     private SipStack mariaOrg3SipStack;
     private SipPhone mariaOrg3Phone;
-    private String mariaOrg3Contact = "sip:maria@org3.restcomm.com";
+    private static String mariaOrg3Port = String.valueOf(NetworkPortAssigner.retrieveNextPortByFile());
+    private String mariaOrg3Contact = "sip:maria@org3.restcomm.com:" + mariaOrg3Port;//5094
+
+    private static int restcommPort = 5080;
+    private static int restcommHTTPPort = 8080;
+    private static String restcommContact = "127.0.0.1:" + restcommPort;
 
     private String adminAccountSid = "ACae6e420f425248d6a26948c17a9e2acf";
     private String adminAuthToken = "77f8c12cc7b8f8423e5c38b035249166";
+
+
+    public static void reconfigurePorts() {
+        if (System.getProperty("arquillian_sip_port") != null) {
+            restcommPort = Integer.valueOf(System.getProperty("arquillian_sip_port"));
+            restcommContact = "127.0.0.1:" + restcommPort;
+        }
+        if (System.getProperty("arquillian_http_port") != null) {
+            restcommHTTPPort = Integer.valueOf(System.getProperty("arquillian_http_port"));
+        }
+    }
 
     @BeforeClass
     public static void prepare() throws SmppChannelException, InterruptedException {
@@ -142,23 +167,28 @@ public class SmppTest {
     @Before
     public void before() throws Exception {
 
-        aliceSipStack = tool2.initializeSipStack(SipStack.PROTOCOL_UDP, "127.0.0.1", "5092", "127.0.0.1:5080");
-        alicePhone = aliceSipStack.createSipPhone("127.0.0.1", SipStack.PROTOCOL_UDP, 5080, aliceContact);
+        aliceSipStack = tool2.initializeSipStack(SipStack.PROTOCOL_UDP, "127.0.0.1", alicePort, restcommContact);
+        alicePhone = aliceSipStack.createSipPhone("127.0.0.1", SipStack.PROTOCOL_UDP, restcommPort, aliceContact);
 
-        bobSipStack = tool3.initializeSipStack(SipStack.PROTOCOL_UDP, "127.0.0.1", "5093", "127.0.0.1:5080");
-        bobPhone = bobSipStack.createSipPhone("127.0.0.1", SipStack.PROTOCOL_UDP, 5080, bobContact);
+        bobSipStack = tool3.initializeSipStack(SipStack.PROTOCOL_UDP, "127.0.0.1", bobPort, restcommContact);
+        bobPhone = bobSipStack.createSipPhone("127.0.0.1", SipStack.PROTOCOL_UDP, restcommPort, bobContact);
 
-        mariaSipStack = tool5.initializeSipStack(SipStack.PROTOCOL_UDP, "127.0.0.1", "5095", "127.0.0.1:5080");
-        mariaPhone = mariaSipStack.createSipPhone("127.0.0.1", SipStack.PROTOCOL_UDP, 5080, mariaContact);
+        mariaSipStack = tool5.initializeSipStack(SipStack.PROTOCOL_UDP, "127.0.0.1", mariaPort, restcommContact);
+        mariaPhone = mariaSipStack.createSipPhone("127.0.0.1", SipStack.PROTOCOL_UDP, restcommPort, mariaContact);
 
-        shoaibSipStack = tool6.initializeSipStack(SipStack.PROTOCOL_UDP, "127.0.0.1", "5096", "127.0.0.1:5080");
-        shoaibPhone = shoaibSipStack.createSipPhone("127.0.0.1", SipStack.PROTOCOL_UDP, 5080, shoaibContact);
+        shoaibSipStack = tool6.initializeSipStack(SipStack.PROTOCOL_UDP, "127.0.0.1", shoaibPort, restcommContact);
+        shoaibPhone = shoaibSipStack.createSipPhone("127.0.0.1", SipStack.PROTOCOL_UDP, restcommPort, shoaibContact);
 
-        mariaOrg3SipStack = tool4.initializeSipStack(SipStack.PROTOCOL_UDP, "127.0.0.1", "5094", "127.0.0.1:5080");
-        mariaOrg3Phone = mariaOrg3SipStack.createSipPhone("127.0.0.1", SipStack.PROTOCOL_UDP, 5080, mariaOrg3Contact);
+        mariaOrg3SipStack = tool4.initializeSipStack(SipStack.PROTOCOL_UDP, "127.0.0.1", mariaOrg3Port, restcommContact);
+        mariaOrg3Phone = mariaOrg3SipStack.createSipPhone("127.0.0.1", SipStack.PROTOCOL_UDP, restcommPort, mariaOrg3Contact);
 
         mockSmppServer.cleanup();
+
+        //set submit_sm_resp to Pass by default
+        mockSmppServer.setSendFailureOnSubmitSmResponse(false);
+
         Thread.sleep(5000);
+
     }
 
     @AfterClass
@@ -265,6 +295,11 @@ public class SmppTest {
         assertTrue(inboundMessageEntity.getSmppContent().equals(msgBodyResp));
     }
 
+
+    private String dlrBody ="testSendSMPPMessageAndGetDeliveryReceipt";
+    private String callbackURL = "http://127.0.0.1:" + wirePort + "/statusCallback";
+    private String smsActionAtt = "<Response><Sms action= \"" + callbackURL + "\" to=\"" + from + "\" from=\"" + to + "\">" + dlrBody + "</Sms></Response>";
+
     @Test
     public void testSendSMPPMessageAndGetDeliveryReceipt() throws SmppInvalidArgumentException, IOException, InterruptedException, ParseException {
 
@@ -272,33 +307,30 @@ public class SmppTest {
                 .willReturn(aResponse()
                         .withStatus(200)
                         .withHeader("Content-Type", "text/xml")
-                        .withBody(smsEchoRcmlPureSipProviderNumber)));
+                        .withBody(smsActionAtt)));
+        stubFor(post(urlPathEqualTo("/statusCallback"))
+                .willReturn(aResponse()
+                        .withStatus(200)));
 
         final String from = "alice";
-        final String to = "9999"; // pstn (not a RC number)
         // Send out SMS using SMPP
         final String body = "Test Message from Alice. " + System.currentTimeMillis();
-        SipURI uri = aliceSipStack.getAddressFactory().createSipURI(null, "127.0.0.1:5080");
+        SipURI uri = aliceSipStack.getAddressFactory().createSipURI(null, restcommContact);
         assertTrue(alicePhone.register(uri, from, "1234", aliceContact, 3600, 3600));
         Credential aliceCred = new Credential("127.0.0.1", from, "1234");
         alicePhone.addUpdateCredential(aliceCred);
 
         SipCall aliceCall = alicePhone.createSipCall();
-        aliceCall.initiateOutgoingMessage("sip:9999@127.0.0.1:5080", null, body);
+        aliceCall.initiateOutgoingMessage("sip:" + to + "@" + restcommContact, null, body);
         aliceCall.waitForAuthorisation(8000);
         Thread.sleep(5000);
         SmppInboundMessageEntity inboundMessageEntity = mockSmppServer.getSmppInboundMessageEntity();
         assertNotNull(inboundMessageEntity);
-        assertTrue(inboundMessageEntity.getSmppTo().equals(to));
-        assertTrue(inboundMessageEntity.getSmppFrom().equals(from));
-        assertTrue(inboundMessageEntity.getSmppContent().equals(body));
         final String smppMessageId = mockSmppServer.getSmppMessageId();
 
         // Verify SMS CDR
         Map<String, String> filters = new HashMap<String, String>();
-        filters.put("From", from);
-        filters.put("To", to);
-        filters.put("Body", body);
+        filters.put("Body", dlrBody);
         JsonObject smsCdrResult = SmsEndpointTool.getInstance().getSmsMessageListUsingFilter(deploymentUrl.toString(), adminAccountSid, adminAuthToken, filters);
         assertNotNull(smsCdrResult);
         JsonElement msgs = smsCdrResult.get("messages");
@@ -307,10 +339,11 @@ public class SmppTest {
         final String sid = smsCDR.get("sid").getAsString();
         String status = smsCDR.get("status").getAsString();
         String actualFrom = smsCDR.get("from").getAsString();
-        String actualTo = smsCDR.get("to").getAsString();
         assertEquals(SmsMessage.Status.SENT.toString(), status);
-        assertEquals("alice", actualFrom);
-        assertEquals("9999", actualTo);
+        assertEquals(to, actualFrom);
+        verify(postRequestedFor(urlMatching("/statusCallback"))
+                .withRequestBody(matching(".*sent.*"))
+                );
 
         // Ask SMPP mock server to Send DLR to RC
         mockSmppServer.sendSmppDeliveryMessageToRestcomm(smppMessageId, MockSmppServer.SmppDeliveryStatus.DELIVRD);
@@ -321,6 +354,9 @@ public class SmppTest {
         assertNotNull(smsCdrResult);
         status = smsCDR.get("status").getAsString();
         assertEquals(SmsMessage.Status.DELIVERED.toString(), status);
+        verify(postRequestedFor(urlMatching("/statusCallback"))
+                .withRequestBody(matching(".*delivered.*"))
+                );
     }
 
     @Test
@@ -420,7 +456,7 @@ public class SmppTest {
     @Category(value = {FeatureAltTests.class})
     public void testClientSentToOtherClient() throws ParseException {
 
-        SipURI uri = aliceSipStack.getAddressFactory().createSipURI(null, "127.0.0.1:5080");
+        SipURI uri = aliceSipStack.getAddressFactory().createSipURI(null, restcommContact);
         assertTrue(alicePhone.register(uri, "alice", "1234", aliceContact, 3600, 3600));
         Credential aliceCred = new Credential("127.0.0.1", "alice", "1234");
         alicePhone.addUpdateCredential(aliceCred);
@@ -433,7 +469,7 @@ public class SmppTest {
         bobCall.listenForMessage();
 
         SipCall aliceCall = alicePhone.createSipCall();
-        assertTrue(aliceCall.initiateOutgoingMessage("sip:bob@127.0.0.1:5080", null, "Test Message from Alice"));
+        assertTrue(aliceCall.initiateOutgoingMessage("sip:bob@" + restcommContact, null, "Test Message from Alice"));
         assertTrue(aliceCall.waitForAuthorisation(5000));
         assertTrue(aliceCall.waitOutgoingMessageResponse(5000));
 
@@ -445,7 +481,7 @@ public class SmppTest {
     @Test
     public void testClientSentOutUsingSMPP() throws ParseException, InterruptedException {
 
-        SipURI uri = aliceSipStack.getAddressFactory().createSipURI(null, "127.0.0.1:5080");
+        SipURI uri = aliceSipStack.getAddressFactory().createSipURI(null, restcommContact);
         assertTrue(alicePhone.register(uri, "alice", "1234", aliceContact, 3600, 3600));
         Credential aliceCred = new Credential("127.0.0.1", "alice", "1234");
         alicePhone.addUpdateCredential(aliceCred);
@@ -455,7 +491,7 @@ public class SmppTest {
         bobPhone.addUpdateCredential(bobCread);
 
         SipCall aliceCall = alicePhone.createSipCall();
-        aliceCall.initiateOutgoingMessage("sip:9999@127.0.0.1:5080", null, "Test Message from Alice");
+        aliceCall.initiateOutgoingMessage("sip:9999@" + restcommContact, null, "Test Message from Alice");
         aliceCall.waitForAuthorisation(8000);
         Thread.sleep(5000);
         assertTrue(mockSmppServer.isMessageReceived());
@@ -470,13 +506,13 @@ public class SmppTest {
     @Ignore
     public void testClientSentOutUsingSMPPDeliveryReceipt() throws ParseException, InterruptedException {
         final String msg = "Test Message from Alice with Delivery Receipt";
-        SipURI uri = aliceSipStack.getAddressFactory().createSipURI(null, "127.0.0.1:5080");
+        SipURI uri = aliceSipStack.getAddressFactory().createSipURI(null, restcommContact);
         assertTrue(alicePhone.register(uri, "alice", "1234", aliceContact, 3600, 3600));
         Credential aliceCred = new Credential("127.0.0.1", "alice", "1234");
         alicePhone.addUpdateCredential(aliceCred);
 
         SipCall aliceCall = alicePhone.createSipCall();
-        aliceCall.initiateOutgoingMessage("sip:9999@127.0.0.1:5080", null, msg);
+        aliceCall.initiateOutgoingMessage("sip:9999@" + restcommContact, null, msg);
         aliceCall.waitForAuthorisation(8000);
         Thread.sleep(5000);
         assertTrue(mockSmppServer.isMessageReceived());
@@ -492,12 +528,14 @@ public class SmppTest {
     @Category(value = {FeatureExpTests.class})
     public void testClientSentToOtherClientDifferentOrganization() throws ParseException {
 
-        SipURI uri = mariaSipStack.getAddressFactory().createSipURI(null, "127.0.0.1:5080");
-        assertTrue(mariaPhone.register(uri, "maria", "qwerty1234RT", "sip:maria@127.0.0.1:5095", 3600, 3600));
+        SipURI uri = mariaSipStack.getAddressFactory().createSipURI(null, restcommContact);
+        assertTrue(mariaPhone.register(uri, "maria", "qwerty1234RT",
+                "sip:maria@127.0.0.1:" + mariaPort, 3600, 3600));
         Credential mariaCred = new Credential("org2.restcomm.com", "maria", "qwerty1234RT");
         mariaPhone.addUpdateCredential(mariaCred);
 
-        assertTrue(mariaOrg3Phone.register(uri, "maria", "1234", "sip:maria@127.0.0.1:5094", 3600, 3600));
+        assertTrue(mariaOrg3Phone.register(uri, "maria", "1234",
+                "sip:maria@127.0.0.1:" + mariaOrg3Port, 3600, 3600));
         Credential mariaOrg3Cread = new Credential("org3.restcomm.com", "maria", "1234");
         mariaOrg3Phone.addUpdateCredential(mariaOrg3Cread);
 
@@ -518,12 +556,14 @@ public class SmppTest {
     @Test
     public void testClientSentToOtherClientSameOrganization() throws ParseException {
 
-        SipURI uri = mariaSipStack.getAddressFactory().createSipURI(null, "127.0.0.1:5080");
-        assertTrue(mariaPhone.register(uri, "maria", "qwerty1234RT", "sip:maria@127.0.0.1:5095", 3600, 3600));
+        SipURI uri = mariaSipStack.getAddressFactory().createSipURI(null, restcommContact);
+        assertTrue(mariaPhone.register(uri, "maria", "qwerty1234RT",
+                "sip:maria@127.0.0.1:" + mariaPort, 3600, 3600));
         Credential mariaCred = new Credential("org2.restcomm.com", "maria", "qwerty1234RT");
         mariaPhone.addUpdateCredential(mariaCred);
 
-        assertTrue(shoaibPhone.register(uri, "shoaib", "qwerty1234RT", "sip:shoaib@127.0.0.1:5096", 3600, 3600));
+        assertTrue(shoaibPhone.register(uri, "shoaib", "qwerty1234RT",
+                "sip:shoaib@127.0.0.1:" + shoaibPort, 3600, 3600));
         Credential shoaibCread = new Credential("org2.restcomm.com", "shoaib", "qwerty1234RT");
         shoaibPhone.addUpdateCredential(shoaibCread);
 
@@ -549,15 +589,23 @@ public class SmppTest {
                         .withStatus(200)
                         .withHeader("Content-Type", "text/xml")
                         .withBody(smsEchoRcmlPureSipProviderNumber)));
+        stubFor(post(urlPathEqualTo("/statusCallback"))
+                .willReturn(aResponse()
+                        .withStatus(200)));
 
         //set submit_sm_resp to Failed
         mockSmppServer.setSendFailureOnSubmitSmResponse(true);
+
+
+        HashMap<String, String> statusCallback = new HashMap();
+        String callbackURL = "http://127.0.0.1:" + wireMockRule.port() + "/statusCallback";
+        statusCallback.put("StatusCallback", callbackURL);
 
         final String from = "alice";
         final String to = "9999"; // pstn (not a RC number)
         // Send out SMS using SMPP via rest api
         final String body = "Test Message from Alice. " + System.currentTimeMillis();
-        SmsEndpointTool.getInstance().createSms(deploymentUrl.toString(), adminAccountSid, adminAuthToken, "alice", "9999", body, null);
+        SmsEndpointTool.getInstance().createSms(deploymentUrl.toString(), adminAccountSid, adminAuthToken, "alice", "9999", body, statusCallback);
         Thread.sleep(5000);
         SmppInboundMessageEntity inboundMessageEntity = mockSmppServer.getSmppInboundMessageEntity();
         assertNotNull(inboundMessageEntity);
@@ -584,25 +632,38 @@ public class SmppTest {
         assertEquals("alice", actualFrom);
         assertEquals("9999", actualTo);
 
-        //set submit_sm_resp to Pass
-        mockSmppServer.setSendFailureOnSubmitSmResponse(false);
+        verify(postRequestedFor(urlMatching("/statusCallback"))
+                .withRequestBody(matching(".*failed.*"))
+                );
     }
 
     @Deployment(name = "SmppTests", managed = true, testable = false)
     public static WebArchive createWebArchive() {
-        WebArchive archive = ShrinkWrap.create(WebArchive.class, "restcomm.war");
-        final WebArchive restcommArchive = Maven.resolver()
-                .resolve("org.restcomm:restcomm-connect.application:war:" + version).withoutTransitivity()
-                .asSingle(WebArchive.class);
-        archive = archive.merge(restcommArchive);
-        archive.delete("/WEB-INF/sip.xml");
-        archive.delete("/WEB-INF/web.xml");
-        archive.delete("/WEB-INF/conf/restcomm.xml");
-        archive.delete("/WEB-INF/data/hsql/restcomm.script");
-        archive.addAsWebInfResource("sip.xml");
-        archive.addAsWebInfResource("web.xml");
-        archive.addAsWebInfResource("restcomm-smpp.xml", "conf/restcomm.xml");
-        archive.addAsWebInfResource("restcomm.script-smpp", "data/hsql/restcomm.script");
-        return archive;
+        logger.info("Packaging Test App");
+        reconfigurePorts();
+
+        Map<String, String> webInfResources = new HashMap();
+        webInfResources.put("restcomm-smpp.xml", "conf/restcomm.xml");
+        webInfResources.put("restcomm.script-smpp", "data/hsql/restcomm.script");
+        webInfResources.put("sip.xml", "sip.xml");
+        webInfResources.put("web.xml", "web.xml");
+        webInfResources.put("akka_application.conf", "classes/application.conf");
+
+        Map<String, String> replacements = new HashMap();
+        //replace mediaport 2727
+        replacements.put("2727", String.valueOf(mediaPort));
+        replacements.put("8080", String.valueOf(restcommHTTPPort));
+        replacements.put("8090", String.valueOf(wirePort));
+        replacements.put("5080", String.valueOf(restcommPort));
+        replacements.put("5092", String.valueOf(alicePort));
+        replacements.put("5093", String.valueOf(bobPort));
+        replacements.put("5094", String.valueOf(mariaOrg3Port));
+        replacements.put("5095", String.valueOf(mariaPort));
+        replacements.put("5096", String.valueOf(shoaibPort));
+
+        List<String> resources = new ArrayList();
+        return WebArchiveUtil.createWebArchiveNoGw(webInfResources,
+                resources,
+                replacements);
     }
 }
