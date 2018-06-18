@@ -418,7 +418,8 @@ public class CallsEndpoint extends AbstractEndpoint {
                 statusCallbackMethod = data.getFirst("StatusCallbackMethod").trim();
             }
             if (data.containsKey("StatusCallbackEvent")) {
-                statusCallbackEvent.addAll(Arrays.asList(data.getFirst("StatusCallbackEvent").trim().split(",")));
+                statusCallbackEvent.clear();
+                statusCallbackEvent.addAll(Arrays.asList(data.getFirst("StatusCallbackEvent").replace(" ","").trim().split(",")));
             }
         }
 

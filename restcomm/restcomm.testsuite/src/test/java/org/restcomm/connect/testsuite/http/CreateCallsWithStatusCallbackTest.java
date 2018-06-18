@@ -231,6 +231,166 @@ public class CreateCallsWithStatusCallbackTest {
         assertTrue(liveCallsArraySize==0);
     }
 
+    @Test
+    public void createCallNumberWithStatusCallbackEvent() throws InterruptedException {
+
+        stubFor(post(urlPathEqualTo("/1111"))
+                .willReturn(aResponse()
+                        .withStatus(200)
+                        .withHeader("Content-Type", "text/xml")
+                        .withBody(dialNumber)));
+
+        stubFor(get(urlPathMatching("/status.*"))
+                .willReturn(aResponse()
+                        .withStatus(200)));
+
+        SipCall bobCall = bobPhone.createSipCall();
+        bobCall.listenForIncomingCall();
+
+        SipCall georgeCall = georgePhone.createSipCall();
+        georgeCall.listenForIncomingCall();
+
+        String from = "+15126002188";
+        String to = bobContact;
+        String rcmlUrl = "http://127.0.0.1:8090/1111";
+        String statusCallback = "http://127.0.0.1:8090/status";
+        String statusCallbackMethod = "GET";
+        String statusCallbackEvent = "ringing, completed";
+
+
+        JsonElement callResult = RestcommCallsTool.getInstance().createCall(deploymentUrl.toString(), adminAccountSid,
+                adminAuthToken, from, to, rcmlUrl, statusCallback, statusCallbackMethod, statusCallbackEvent);
+        assertNotNull(callResult);
+
+        assertTrue(bobCall.waitForIncomingCall(5000));
+        String receivedBody = new String(bobCall.getLastReceivedRequest().getRawContent());
+        assertTrue(bobCall.sendIncomingCallResponse(Response.RINGING, "Ringing-Bob", 3600));
+        assertTrue(bobCall
+                .sendIncomingCallResponse(Response.OK, "OK-Bob", 3600, receivedBody, "application", "sdp", null, null));
+
+        // Restcomm now should execute RCML that will create a call to +131313 (george's phone)
+
+        assertTrue(georgeCall.waitForIncomingCall(5000));
+        receivedBody = new String(georgeCall.getLastReceivedRequest().getRawContent());
+        assertTrue(georgeCall.sendIncomingCallResponse(Response.RINGING, "Ringing-George", 3600));
+        assertTrue(georgeCall.sendIncomingCallResponse(Response.OK, "OK-George", 3600, receivedBody, "application", "sdp",
+                null, null));
+
+        Thread.sleep(3000);
+
+        bobCall.listenForDisconnect();
+
+        assertTrue(georgeCall.disconnect());
+        assertTrue(georgeCall.waitForAck(5000));
+
+        assertTrue(bobCall.waitForDisconnect(5000));
+        assertTrue(bobCall.respondToDisconnect());
+
+        Thread.sleep(10000);
+
+        logger.info("About to check the StatusCallback Requests");
+        List<LoggedRequest> requests = findAll(getRequestedFor(urlPathMatching("/status.*")));
+        assertEquals(2, requests.size());
+        String requestUrl = requests.get(0).getUrl();
+        assertTrue(requestUrl.contains("SequenceNumber=1"));
+        assertTrue(requestUrl.contains("CallStatus=ringing"));
+
+        requestUrl = requests.get(1).getUrl();
+        assertTrue(requestUrl.contains("SequenceNumber=3"));
+        assertTrue(requestUrl.contains("CallStatus=completed"));
+
+        int liveCalls = MonitoringServiceTool.getInstance().getStatistics(deploymentUrl.toString(),adminAccountSid, adminAuthToken);
+        int liveIncomingCalls = MonitoringServiceTool.getInstance().getLiveIncomingCallStatistics(deploymentUrl.toString(),adminAccountSid, adminAuthToken);
+        int liveOutgoingCalls = MonitoringServiceTool.getInstance().getLiveOutgoingCallStatistics(deploymentUrl.toString(),adminAccountSid, adminAuthToken);
+        int liveCallsArraySize = MonitoringServiceTool.getInstance().getLiveCallsArraySize(deploymentUrl.toString(),adminAccountSid, adminAuthToken);
+        assertTrue(liveCalls==0);
+        assertTrue(liveIncomingCalls==0);
+        assertTrue(liveOutgoingCalls==0);
+        assertTrue(liveCallsArraySize==0);
+    }
+
+    @Test
+    public void createCallNumberWithStatusCallbackEventWithSpace() throws InterruptedException {
+
+        stubFor(post(urlPathEqualTo("/1111"))
+                .willReturn(aResponse()
+                        .withStatus(200)
+                        .withHeader("Content-Type", "text/xml")
+                        .withBody(dialNumber)));
+
+        stubFor(get(urlPathMatching("/status.*"))
+                .willReturn(aResponse()
+                        .withStatus(200)));
+
+        SipCall bobCall = bobPhone.createSipCall();
+        bobCall.listenForIncomingCall();
+
+        SipCall georgeCall = georgePhone.createSipCall();
+        georgeCall.listenForIncomingCall();
+
+        String from = "+15126002188";
+        String to = bobContact;
+        String rcmlUrl = "http://127.0.0.1:8090/1111";
+        String statusCallback = "http://127.0.0.1:8090/status";
+        String statusCallbackMethod = "GET";
+        String statusCallbackEvent = "ringing,answered, completed ";
+
+
+        JsonElement callResult = RestcommCallsTool.getInstance().createCall(deploymentUrl.toString(), adminAccountSid,
+                adminAuthToken, from, to, rcmlUrl, statusCallback, statusCallbackMethod, statusCallbackEvent);
+        assertNotNull(callResult);
+
+        assertTrue(bobCall.waitForIncomingCall(5000));
+        String receivedBody = new String(bobCall.getLastReceivedRequest().getRawContent());
+        assertTrue(bobCall.sendIncomingCallResponse(Response.RINGING, "Ringing-Bob", 3600));
+        assertTrue(bobCall
+                .sendIncomingCallResponse(Response.OK, "OK-Bob", 3600, receivedBody, "application", "sdp", null, null));
+
+        // Restcomm now should execute RCML that will create a call to +131313 (george's phone)
+
+        assertTrue(georgeCall.waitForIncomingCall(5000));
+        receivedBody = new String(georgeCall.getLastReceivedRequest().getRawContent());
+        assertTrue(georgeCall.sendIncomingCallResponse(Response.RINGING, "Ringing-George", 3600));
+        assertTrue(georgeCall.sendIncomingCallResponse(Response.OK, "OK-George", 3600, receivedBody, "application", "sdp",
+                null, null));
+
+        Thread.sleep(3000);
+
+        bobCall.listenForDisconnect();
+
+        assertTrue(georgeCall.disconnect());
+        assertTrue(georgeCall.waitForAck(5000));
+
+        assertTrue(bobCall.waitForDisconnect(5000));
+        assertTrue(bobCall.respondToDisconnect());
+
+        Thread.sleep(10000);
+
+        logger.info("About to check the StatusCallback Requests");
+        List<LoggedRequest> requests = findAll(getRequestedFor(urlPathMatching("/status.*")));
+        assertEquals(3, requests.size());
+        String requestUrl = requests.get(0).getUrl();
+        assertTrue(requestUrl.contains("SequenceNumber=1"));
+        assertTrue(requestUrl.contains("CallStatus=ringing"));
+
+        requestUrl = requests.get(1).getUrl();
+        assertTrue(requestUrl.contains("SequenceNumber=2"));
+        assertTrue(requestUrl.contains("CallStatus=answered"));
+
+        requestUrl = requests.get(2).getUrl();
+        assertTrue(requestUrl.contains("SequenceNumber=3"));
+        assertTrue(requestUrl.contains("CallStatus=completed"));
+
+        int liveCalls = MonitoringServiceTool.getInstance().getStatistics(deploymentUrl.toString(),adminAccountSid, adminAuthToken);
+        int liveIncomingCalls = MonitoringServiceTool.getInstance().getLiveIncomingCallStatistics(deploymentUrl.toString(),adminAccountSid, adminAuthToken);
+        int liveOutgoingCalls = MonitoringServiceTool.getInstance().getLiveOutgoingCallStatistics(deploymentUrl.toString(),adminAccountSid, adminAuthToken);
+        int liveCallsArraySize = MonitoringServiceTool.getInstance().getLiveCallsArraySize(deploymentUrl.toString(),adminAccountSid, adminAuthToken);
+        assertTrue(liveCalls==0);
+        assertTrue(liveIncomingCalls==0);
+        assertTrue(liveOutgoingCalls==0);
+        assertTrue(liveCallsArraySize==0);
+    }
+
     private String dialNumberWithStatusCallback = "<Response><Dial><Number statusCallback=\"http://127.0.0.1:8090/statusOfDialNumber\" statusCallbackMethod=\"GET\">+131313</Number></Dial></Response>";
     @Test
     @Category(UnstableTests.class)
