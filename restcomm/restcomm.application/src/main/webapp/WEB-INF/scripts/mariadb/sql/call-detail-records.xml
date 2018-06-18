@@ -114,12 +114,17 @@
 		<if test="startTime != null">
 		    AND start_time &gt;= #{startTime}
 		</if>
-
 		<if test="endTime != null">
 			AND end_time &lt;= DATE_ADD(#{endTime},INTERVAL 1 DAY)
 		</if>
-
-		order by start_time
+		<choose>
+			<when test="sortBy != null and sortDirection != null">
+				order by ${sortBy} ${sortDirection}
+			</when>
+			<otherwise>
+				order by start_time
+			</otherwise>
+		</choose>
 		LIMIT #{limit} OFFSET #{offset}
 	</select>
 
