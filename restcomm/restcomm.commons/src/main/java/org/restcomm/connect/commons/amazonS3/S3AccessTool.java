@@ -227,13 +227,16 @@ public class S3AccessTool {
         }
     }
 
-    public void removeS3Uri(URI s3Uri) {
+    public void removeS3Uri(String recordingSid) {
         if (s3client == null) {
             s3client = getS3client();
         }
         String bucket = prepareBucket();
-        String objectKey = s3Uri.getPath().replaceFirst("/","");
+        String recordingKey = recordingSid.concat(".wav");
+        if (logger.isInfoEnabled()) {
+            logger.info("Bucket: "+bucket+", object key to remove: "+recordingKey);
+        }
         //S3 URI: https://hastaging-restcomm-as-a-service.s3.amazonaws.com/REffff84e4fa224d89b213ff25362a2cb1.wav
-        s3client.deleteObject(new DeleteObjectRequest(bucket, objectKey));
+        s3client.deleteObject(new DeleteObjectRequest(bucket, recordingKey));
     }
 }
