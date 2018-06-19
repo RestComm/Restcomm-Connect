@@ -858,6 +858,11 @@ configConferenceTimeout(){
 	xmlstarlet ed --inplace -u "/restcomm/runtime-settings/conference-timeout" -v "$CONFERENCE_TIMEOUT" $FILE
 }
 
+configMaxP2PCallLength(){
+    echo "Configure Max P2P Call Length $MAX_P2P_CALL_LENGTH"
+    xmlstarlet ed --inplace -u "/restcomm/runtime-settings/max-p2p-call-length" -v "$MAX_P2P_CALL_LENGTH" $FILE
+}
+
 configSdrService(){
     xmlstarlet ed --inplace -d "/restcomm/runtime-settings/sdr-service" $FILE
     if  [ -n "$SDR_SERVICE_CLASS" ]; then
@@ -921,5 +926,6 @@ configRMSNetworking
 configAsrDriver
 configDnsProvisioningManager
 configConferenceTimeout
+configMaxP2PCallLength
 configSdrService
 echo 'Configured RestComm!'
