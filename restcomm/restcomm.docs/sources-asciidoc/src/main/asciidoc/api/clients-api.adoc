@@ -27,8 +27,8 @@ The CDR records generated for calls made by Clients, will have account SID the a
 |DateCreated |The date that this client was created.
 |DateUpdated |The date that this clientr was last updated.
 |FriendlyName |A friendly name for this client.
-|AccountSid |The unique id of the Account that owns this phone number.
-|ApiVersion |Calls to this phone number will create a new RCML session with this API version.
+|AccountSid |The unique id of the Account that owns this client.
+|ApiVersion |Calls to this client will create a new RCML session with this API version.
 |Login |The name that is used inside the <Client> noun. This is also used by the user agent as the user name used for registration and outbound dialing. This must conform to "userinfo" part as defined in RFC2396.
 |Password |The password used by the user agent during registration and outbound dialing.
 |Status |The client status the possible values are 0 for disabled and 1 for enabled.
@@ -51,10 +51,10 @@ The CDR records generated for calls made by Clients, will have account SID the a
 [cols=",",options="header",]
 |===============================================================================================================================================================================
 |Parameter |Description
-|FriendlyName |A formatted version of this phone number.
+|FriendlyName |A formatted version of this client.
 |Password |The password used by the user agent during registration and outbound dialing.
 |Status |The client status the possible values are 0 for disabled and 1 for enabled.
-|VoiceUrl |The URL RestComm will request when this phone number receives a call.
+|VoiceUrl |The URL RestComm will request when this client receives a call.
 |VoiceMethod |The HTTP method RestComm will use when requesting the above Url. Either GET or POST.
 |VoiceFallbackUrl |The URL that RestComm will request if execution of VoiceUrl fails for any reason.
 |VoiceFallbackMethod |The HTTP method RestComm will use when requesting the VoiceFallbackUrl. Either GET or POST.
@@ -78,7 +78,7 @@ The CDR records generated for calls made by Clients, will have account SID the a
 [cols=",",options="header",]
 |===============================================================================================================================================================================
 |Parameter |Description
-|FriendlyName |A formatted version of this phone number.
+|FriendlyName |A formatted version of this client.
 |Login |The name that is used inside the <Client> noun. This is also used by the user agent as the user name used for registration and outbound dialing.
 |Password |The password used by the user agent during registration and outbound dialing.
 |Status |The client status the possible values are 0 for disabled and 1 for enabled.
