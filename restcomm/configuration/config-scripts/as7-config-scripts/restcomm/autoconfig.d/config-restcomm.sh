@@ -608,13 +608,11 @@ configRestCommURIs() {
 
 		sed -i "s|<prompts-uri>.*</prompts-uri>|<prompts-uri>$REMOTE_ADDRESS/restcomm/audio<\/prompts-uri>|" $FILE
 		sed -i "s|<cache-uri>.*</cache-uri>|<cache-uri>$REMOTE_ADDRESS/restcomm/cache</cache-uri>|" $FILE
-		sed -i "s|<cache-path>.*</cache-path>|<cache-path>$CACHE_PATH</cache-path>|" $FILE
 		sed -i "s|<error-dictionary-uri>.*</error-dictionary-uri>|<error-dictionary-uri>$REMOTE_ADDRESS/restcomm/errors</error-dictionary-uri>|" $FILE
 
                 #Equivalent changes in case XML tags are empty after empty values
 		sed -i "s|<prompts-uri/>|<prompts-uri>$REMOTE_ADDRESS/restcomm/audio<\/prompts-uri>|" $FILE
 		sed -i "s|<cache-uri/>|<cache-uri>$REMOTE_ADDRESS/restcomm/cache</cache-uri>|" $FILE
-                sed -i "s|<cache-path/>|<cache-path>$CACHE_PATH</cache-path>|" $FILE
 		sed -i "s|<error-dictionary-uri/>|<error-dictionary-uri>$REMOTE_ADDRESS/restcomm/errors</error-dictionary-uri>|" $FILE
 
 		echo "Updated prompts-uri cache-uri error-dictionary-uri External MSaddress for "
@@ -710,6 +708,11 @@ otherRestCommConf(){
 
     echo "CACHE_NO_WAV $CACHE_NO_WAV"
     sed -i "s|<cache-no-wav>.*</cache-no-wav>|<cache-no-wav>${CACHE_NO_WAV}</cache-no-wav>|" $FILE
+    
+    echo "CACHE_PATH $CACHE_PATHV"
+    sed -i "s|<cache-path>.*</cache-path>|<cache-path>$CACHE_PATH</cache-path>|" $FILE
+    sed -i "s|<cache-path/>|<cache-path>$CACHE_PATH</cache-path>|" $FILE		
+    
 
     #Configure USESBC
     echo "USESBC: $RCUSESBC"
