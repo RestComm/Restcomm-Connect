@@ -709,7 +709,7 @@ otherRestCommConf(){
     echo "CACHE_NO_WAV $CACHE_NO_WAV"
     sed -i "s|<cache-no-wav>.*</cache-no-wav>|<cache-no-wav>${CACHE_NO_WAV}</cache-no-wav>|" $FILE
     
-    echo "CACHE_PATH $CACHE_PATHV"
+    echo "CACHE_PATH $CACHE_PATH"
     sed -i "s|<cache-path>.*</cache-path>|<cache-path>$CACHE_PATH</cache-path>|" $FILE
     sed -i "s|<cache-path/>|<cache-path>$CACHE_PATH</cache-path>|" $FILE		
     
