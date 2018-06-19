@@ -495,7 +495,10 @@ public final class SmsService extends RestcommUntypedActor {
     @Override
     public void onReceive(final Object message) throws Exception {
         final Class<?> klass = message.getClass();
-
+        if (logger.isDebugEnabled()) {
+            logger.debug(" ********** Onreceive: " + self().path() + ", Processing Message: " + klass.getName()
+                    + " Sender is: " + sender().path() + " Message is: " + message);
+        }
         if (CreateSmsSession.class.equals(klass)) {
             onCreateSession(message);
         } else if (DestroySmsSession.class.equals(klass)) {
