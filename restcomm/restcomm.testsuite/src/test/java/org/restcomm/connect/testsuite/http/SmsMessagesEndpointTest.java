@@ -19,6 +19,8 @@
  */
 package org.restcomm.connect.testsuite.http;
 
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertTrue;
 
 import java.util.HashMap;
@@ -36,6 +38,8 @@ import org.junit.runners.MethodSorters;
 import org.junit.experimental.categories.Category;
 import org.junit.runner.RunWith;
 import org.restcomm.connect.commons.annotations.FeatureAltTests;
+import org.restcomm.connect.commons.dao.MessageError;
+import org.restcomm.connect.dao.entities.SmsMessage;
 import org.restcomm.connect.testsuite.sms.SmsEndpointTool;
 
 import com.google.gson.JsonArray;
@@ -161,6 +165,18 @@ public class SmsMessagesEndpointTest extends EndpointTest{
         assertTrue(filteredMessagesByBody.get("messages").getAsJsonArray().size() == 6);
         assertTrue(filteredMessagesByBody.get("start").getAsInt() == 0);
         assertTrue(filteredMessagesByBody.get("end").getAsInt() == 6);
+    }
+
+    @Test
+    @Category(FeatureAltTests.class)
+    public void getSmsMessageBySidVerifyError() {
+
+        JsonObject smsMessageJson = SmsEndpointTool.getInstance().getSmsMessage(deploymentUrl.toString(),
+                adminAccountSid, adminAuthToken, "SMfe8a9e566f4544eab21c2ec94ae9e790");
+        assertNotNull(smsMessageJson);
+        assertEquals(SmsMessage.Status.SENT.toString(), smsMessageJson.get("status").getAsString());
+        assertEquals(MessageError.UNKNOWN_ERROR.getErrorCode().intValue(), smsMessageJson.get("error_code").getAsInt());
+        assertEquals(MessageError.UNKNOWN_ERROR.getErrorMessage(), smsMessageJson.get("error_message").getAsString());
     }
 
     @Deployment(name = "SmsMessagesEndpointTest", managed = true, testable = false)

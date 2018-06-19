@@ -46,15 +46,14 @@ import org.jboss.shrinkwrap.api.spec.WebArchive;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.BeforeClass;
-import org.junit.Test;
 import org.junit.FixMethodOrder;
-import org.junit.runners.MethodSorters;
+import org.junit.Test;
 import org.junit.experimental.categories.Category;
 import org.junit.runner.RunWith;
+import org.junit.runners.MethodSorters;
 import org.restcomm.connect.commons.Version;
 import org.restcomm.connect.commons.annotations.FeatureAltTests;
 import org.restcomm.connect.commons.annotations.ParallelClassTests;
-import org.restcomm.connect.commons.annotations.UnstableTests;
 import org.restcomm.connect.commons.annotations.WithInSecsTests;
 import org.restcomm.connect.testsuite.NetworkPortAssigner;
 import org.restcomm.connect.testsuite.WebArchiveUtil;
@@ -213,7 +212,7 @@ public class SmsEndpointTest {
      * @throws ParseException
      */
     @Test
-    @Category(value={FeatureAltTests.class, UnstableTests.class})
+    @Category(value={FeatureAltTests.class})
     public void sendSmsTestToClientExistingInDifferentOrganizations() throws ParseException {
     	// Prepare alice org2 phone to receive call
         SipURI uri = aliceSipStackOrg2.getAddressFactory().createSipURI(null, restcommContact);
