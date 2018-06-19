@@ -8,6 +8,8 @@ The folowing tags are used to categorize and state the scope of a change
 
 * **security improvement** tags changes related to security
 * **commercial** tags changes that are available only in the commercial RestcommOne product
+
+
 == 8.6.0 version 2018-06-19
 === New Features
 // New features (whether major or minor) go here
