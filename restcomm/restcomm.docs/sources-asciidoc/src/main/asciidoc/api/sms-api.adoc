@@ -93,7 +93,7 @@ You need to configure Restcomm to send SMS messages and DID phone calls to a Ser
 
 == Send SMS Messages
 
-Note the encoding used *%2B13216549878* instead of the **+13216549878**  The *+* sign is encoded to to send SMS from the command line. "**From**" DID number The "**From**" number should be the DID SMS enabled number from VoIP Innovations. From the bash terminal, you can run the command below:
+Note the encoding used *%2B13216549878* instead of the **+13216549878**  The *+* sign is encoded to to send SMS from the command line. "**From**" DID number The "**From**" number should be the DID SMS enabled number from your Service Provider. From the bash terminal, you can run the command below:
 
 ....
 curl -X POST https://<accountSid>:<authToken>@cloud.restcomm.com/restcomm/2012-04-24/Accounts/ACae6e420f425248d6a26948c17a9e2acf/SMS/Messages -d "To=%2B13216549878" -d "From=%2B19876543212" -d "Body=This is a test from RestComm"
