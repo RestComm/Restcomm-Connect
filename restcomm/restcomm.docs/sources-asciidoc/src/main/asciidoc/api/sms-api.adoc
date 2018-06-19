@@ -25,7 +25,7 @@ A *SMS Message* resource represents an inbound or outbound SMS message.
 |Status |The status of this SMS message. Possible values are queued, sending, sent, failed, received, delivered, and undelivered.
 |Direction |The direction of this SMS message. Possible values are incoming, outbound-api, outbound-call.
 |ApiVersion |The API version RestComm used to handle the SMS message.
-|Uri |The URI for this account, relative to https://localhost/restcomm.
+|Uri |The URI for this account, relative to https://cloud.restcomm.com/restcomm.
 |error_code | In case message status is *failed* or *undelivered*, this will give you more information about failure reason. If not, the content will be simply null.
 |error_message | Same as *error_code*, but providing human readable text.
 |========================================================================================================
@@ -96,7 +96,7 @@ You need to configure Restcomm to send SMS messages and DID phone calls to a Ser
 Note the encoding used *%2B13216549878* instead of the **+13216549878**  The *+* sign is encoded to to send SMS from the command line. "**From**" DID number The "**From**" number should be the DID SMS enabled number from VoIP Innovations. From the bash terminal, you can run the command below:
 
 ....
-curl -X POST https://ACae6e420f425248d6a26948c17a9e2acf:77f8c12cc7b8f8423e5c38b035249166@127.0.0.1:8080/restcomm/2012-04-24/Accounts/ACae6e420f425248d6a26948c17a9e2acf/SMS/Messages -d "To=%2B13216549878" -d "From=%2B19876543212" -d "Body=This is a test from RestComm"
+curl -X POST https://<accountSid>:<authToken>@cloud.restcomm.com/restcomm/2012-04-24/Accounts/ACae6e420f425248d6a26948c17a9e2acf/SMS/Messages -d "To=%2B13216549878" -d "From=%2B19876543212" -d "Body=This is a test from RestComm"
 ....
 
 == Get list of SMS Messages
@@ -106,7 +106,7 @@ This will display list of message sent
 From the bash terminal, you can run the command below:
 
 ....
-curl -X GET https://ACae6e420f425248d6a26948c17a9e2acf:77f8c12cc7b8f8423e5c38b035249166@127.0.0.1:8080/restcomm/2012-04-24/Accounts/ACae6e420f425248d6a26948c17a9e2acf/SMS/Messages  
+curl -X GET https://<accountSid>:<authToken>@cloud.restcomm.com/restcomm/2012-04-24/Accounts/ACae6e420f425248d6a26948c17a9e2acf/SMS/Messages  
 ....
 
 [[example-post-response---xml-and-json]]
@@ -115,7 +115,7 @@ curl -X GET https://ACae6e420f425248d6a26948c17a9e2acf:77f8c12cc7b8f8423e5c38b03
 === XML POST Response
 
 ----
-curl -X POST https://ACae6e420f425248d6a26948c17a9e2acf:77f8c12cc7b8f8423e5c38b035249166@127.0.0.1:8080/restcomm/2012-04-24/Accounts/ACae6e0f425248d6a26948c17a9e2acf/SMS/Messages -d "To=%2B1321654879" -d "From=%2B1654123987" -d "Body=This is a test from RestComm"
+curl -X POST https://<accountSid>:<authToken>@cloud.restcomm.com/restcomm/2012-04-24/Accounts/ACae6e0f425248d6a26948c17a9e2acf/SMS/Messages -d "To=%2B1321654879" -d "From=%2B1654123987" -d "Body=This is a test from RestComm"
 ---- 
 
 
@@ -142,7 +142,7 @@ curl -X POST https://ACae6e420f425248d6a26948c17a9e2acf:77f8c12cc7b8f8423e5c38b0
 === JSON POST Response
 
 ----
-curl -X POST https://ACae6e420f425248d6a26948c17a9e2acf:77f8c12cc7b8f8423e5c38b035249166@127.0.0.1:8080/restcomm/2012-04-20f425248d6a26948c17a9e2acf/SMS/Messages.json -d "To=%2B1321654879" -d "From=%2B1654123987" -d "Body=This is a test from RestComm"
+curl -X POST https://<accountSid>:<authToken>@cloud.restcomm.com/restcomm/2012-04-20f425248d6a26948c17a9e2acf/SMS/Messages.json -d "To=%2B1321654879" -d "From=%2B1654123987" -d "Body=This is a test from RestComm"
 ----
 
 
@@ -170,7 +170,7 @@ curl -X POST https://ACae6e420f425248d6a26948c17a9e2acf:77f8c12cc7b8f8423e5c38b0
 === JSON GET Response
 
 ----
-curl -X GET https://ACae6e420f425248d6a26948c17a9e2acf:77f8c12cc7b8f8423e5c38b035249166@127.0.0.1:8080/restcomm/2012-04-24/Accounts/ACae6e420f425248d6a26948c17a9e2acf/SMS/Messages.json 
+curl -X GET https://<accountSid>:<authToken>@cloud.restcomm.com/restcomm/2012-04-24/Accounts/ACae6e420f425248d6a26948c17a9e2acf/SMS/Messages.json 
 ----
 
 
@@ -202,7 +202,7 @@ curl -X GET https://ACae6e420f425248d6a26948c17a9e2acf:77f8c12cc7b8f8423e5c38b03
 == Get Response Using SMS SID
 
 ----
-curl -X GET https://ACae6e420f425248d6a26948c17a9e2acf:77f8c12cc7b8f8423e5c38b035249166@127.0.0.1:8080/restcomm/2012-04-24/Accounts/ACae6e42f425248d6a26948c17a9e2acf/SMS/Messages/SM55ce5cf07b9649c283cbacab4dae56a9.json 
+curl -X GET https://<accountSid>:<authToken>@cloud.restcomm.com/restcomm/2012-04-24/Accounts/ACae6e42f425248d6a26948c17a9e2acf/SMS/Messages/SM55ce5cf07b9649c283cbacab4dae56a9.json 
 ----
 
 
@@ -249,7 +249,7 @@ curl -X GET https://ACae6e420f425248d6a26948c17a9e2acf:77f8c12cc7b8f8423e5c38b03
 The example below will only return Messages made from client Alice
 
 ....
- curl -X GET  https://ACae6e420f425248d6a26948c17a9e2acf:77f8c12cc7b8f8423e5c38b035249166@127.0.0.1:8080/restcomm/2012-04-24/Accounts/ACae6e420f425248d6a26948c17a9e2acf/SMS/Messages.json?From=alice
+ curl -X GET  https://<accountSid>:<authToken>@cloud.restcomm.com/restcomm/2012-04-24/Accounts/ACae6e420f425248d6a26948c17a9e2acf/SMS/Messages.json?From=alice
 ....
 
 The result will be similar to the one below
@@ -302,7 +302,7 @@ The result will be similar to the one below
 The command below will return a single item from the list of messages using the PageSize parameter
 
 ....
-curl -X GET  https://ACae6e420f425248d6a26948c17a9e2acf:77f8c12cc7b8f8423e5c38b035249166@127.0.0.1:8080/restcomm/2012-04-24/Accounts/ACae6e420f425248d6a26948c17a9e2acf/SMS/Messages.json?PageSize=1
+curl -X GET  https://<accountSid>:<authToken>@cloud.restcomm.com/restcomm/2012-04-24/Accounts/ACae6e420f425248d6a26948c17a9e2acf/SMS/Messages.json?PageSize=1
 ....
 
 The result of the *PageSize* parameter

@@ -114,7 +114,7 @@ When the call progress events are fired, the Status Callback request also passes
 Restcomm will make a call to any SIP account that is reachable. It the example below, the *SIP* account is listening on port **5060**. When you make the call, the SIP phone on which Alice is registered will ring and the hello-play.xml file will be played.
 
 ....
-curl -X POST https://ACae6e420f425248d6a26948c17a9e2acf:77f8c12cc7b8f8423e5c38b035249166@127.0.0.1:8080/restcomm/2012-04-24/Accounts/ACae6e420f425248d6a26948c17a9e2acf/Calls.json -d "From=+16175551212" -d "To=sip:alice@127.0.0.1:5060" -d "Url=http://127.0.0.1:8080/restcomm/demos/hello-play.xml"
+curl -X POST https://<accountSid>:<authToken>@cloud.restcomm.com/restcomm/2012-04-24/Accounts/ACae6e420f425248d6a26948c17a9e2acf/Calls.json -d "From=+16175551212" -d "To=sip:alice@127.0.0.1:5060" -d "Url=https://<accountSid>:<authToken>@cloud.restcomm.com/restcomm/demos/hello-play.xml"
 ....
 
 == Making a call to a Restcomm client
@@ -122,14 +122,14 @@ curl -X POST https://ACae6e420f425248d6a26948c17a9e2acf:77f8c12cc7b8f8423e5c38b0
 You must first create a RestComm client. In the example below, the Restcomm client created is called Alice. When you make the call, the SIP phone on which Alice is registered will ring and the *hello-play.xml* file will be played.
 
 ....
-curl -X POST https://ACae6e420f425248d6a26948c17a9e2acf:77f8c12cc7b8f8423e5c38b035249166@127.0.0.1:8080/restcomm/2012-04-24/Accounts/ACae6e420f425248d6a26948c17a9e2acf/Calls.json -d "From=+16175551212" -d "To=client:alice" -d "Url=http://127.0.0.1:8080/restcomm/demos/hello-play.xml"
+curl -X POST https://<accountSid>:<authToken>@cloud.restcomm.com/restcomm/2012-04-24/Accounts/ACae6e420f425248d6a26948c17a9e2acf/Calls.json -d "From=+16175551212" -d "To=client:alice" -d "Url=https://<accountSid>:<authToken>@cloud.restcomm.com/restcomm/demos/hello-play.xml"
 ....
 
 This Client URI may contain URI params to declare propietary SIP headers to be 
 included in the outgoing INVITE message.
 
 ----
-curl -X POST https://ACae6e420f425248d6a26948c17a9e2acf:77f8c12cc7b8f8423e5c38b035249166@127.0.0.1:8080/restcomm/2012-04-24/Accounts/ACae6e420f425248d6a26948c17a9e2acf/Calls.json -d "From=+16175551212" -d "To=client:alice?X-Custom-Header1=1234&X-Custom-Header2=432" -d "Url=http://127.0.0.1:8080/restcomm/demos/hello-play.xml"
+curl -X POST https://<accountSid>:<authToken>@cloud.restcomm.com/restcomm/2012-04-24/Accounts/ACae6e420f425248d6a26948c17a9e2acf/Calls.json -d "From=+16175551212" -d "To=client:alice?X-Custom-Header1=1234&X-Custom-Header2=432" -d "Url=https://<accountSid>:<authToken>@cloud.restcomm.com/restcomm/demos/hello-play.xml"
 ----
 
 == Calling a DID number
@@ -140,7 +140,7 @@ The above example shows how to make a call to a SIP number. If you want to make 
 Using filter is a good practice on a server with thousands or millions of calls
 
 ....
-curl -X GET  https://administrator%40company.com:77f8c12cc7b8f8423e5c38b035249166@127.0.0.1:8080/restcomm/2012-04-24/Accounts/ACae6e420f425248d6a26948c17a9e2acf/Calls
+curl -X GET  https://<accountSid>:<authToken>@cloud.restcomm.com/restcomm/2012-04-24/Accounts/ACae6e420f425248d6a26948c17a9e2acf/Calls
 ....
 
 If the system hasn't received any calls, you will see the the output below
@@ -239,40 +239,40 @@ Similar, application server can change an incoming call to Bob to a conference c
 == Examples
 
 === Redirect Call to a new RCML
-Live Call Modification POST request URL : *http://127.0.0.1:8080/restcomm/2012­04­24/Accounts/ACae6e420f425248d6a26948c17a9e2acf/Calls.json/CAd62f17e7c7f149ac8095f7574495d988*
+Live Call Modification POST request URL : *https://<accountSid>:<authToken>@cloud.restcomm.com/restcomm/2012­04­24/Accounts/ACae6e420f425248d6a26948c17a9e2acf/Calls.json/CAd62f17e7c7f149ac8095f7574495d988*
 
 ==== Parameters:
 
-**Url**=http://127.0.0.1:8080/restcomm/dial­alice.xml
+**Url**=https://<accountSid>:<authToken>@cloud.restcomm.com/restcomm/dial­alice.xml
 
 ----
 curl ­X POST
-http://ACae6e420f425248d6a26948c17a9e2acf:dcd25094354d425c8ab85b6621083d20@192.168.1.151:8080/restcomm/2012­04­24/Accounts/ACae6e420f425248d6a26948c17a9e2acf/Calls.json/CAccccfd3a0c394cc1993803af785abc60 ­-d
+https://<accountSid>:<authToken>@cloud.restcomm.com/restcomm/2012­04­24/Accounts/ACae6e420f425248d6a26948c17a9e2acf/Calls.json/CAccccfd3a0c394cc1993803af785abc60 ­-d
 "Url=http://192.168.1.151:8080/restcomm/demos/dial­alice.xml"
 ----
 
 === Redirect Call to a new RCML and connect both call legs
-Live Call Modification POST request URL: *http://127.0.0.1:8080/restcomm/2012­04­24/Accounts/ACae6e420f425248d6a26948c17a9e2acf/Calls.json/CAd62f17e7c7f149ac8095f7574495d988*
+Live Call Modification POST request URL: *https://<accountSid>:<authToken>@cloud.restcomm.com/restcomm/2012­04­24/Accounts/ACae6e420f425248d6a26948c17a9e2acf/Calls.json/CAd62f17e7c7f149ac8095f7574495d988*
 
 ==== Parameters
 
-**Url**=http://127.0.0.1:8080/restcomm/conference.xml
+**Url**=https://<accountSid>:<authToken>@cloud.restcomm.com/restcomm/conference.xml
 
 ----
 curl ­X POST
-http://ACae6e420f425248d6a26948c17a9e2acf:dcd25094354d425c8ab85b6621083d20@192.168.1.151:8080/restcomm/2012­04­24/Accounts/ACae6e420f425248d6a26948c17a9e2acf/Calls.json/CAccccfd3a0c394cc1993803af785abc60 ­-d
+https://<accountSid>:<authToken>@cloud.restcomm.com/restcomm/2012­04­24/Accounts/ACae6e420f425248d6a26948c17a9e2acf/Calls.json/CAccccfd3a0c394cc1993803af785abc60 ­-d
 "Url=http://192.168.1.151:8080/restcomm/demos/conference.xml" ­-d
 "MoveConnectedCallLeg=true"
 ----
 
 === Terminate In Progress call
-Live Call Modification POST request URL: *http://127.0.0.1:8080/restcomm/2012­04­24/Accounts/ACae6e420f425248d6a26948c17a9e2acf/Calls.json/CAe29bf33b54ba43dc952f0d3eb331567c*
+Live Call Modification POST request URL: *https://<accountSid>:<authToken>@cloud.restcomm.com/restcomm/2012­04­24/Accounts/ACae6e420f425248d6a26948c17a9e2acf/Calls.json/CAe29bf33b54ba43dc952f0d3eb331567c*
 
 ==== Parameters:
 **Status**=completed
 
 === Terminate Ringing call
-Live Call Modification POST request URL: *http://127.0.0.1:8080/restcomm/2012­04­24/Accounts/ACae6e420f425248d6a26948c17a9e2acf/Calls.json/CA312824ebd262419dbd4c00b057448d57*  
+Live Call Modification POST request URL: *https://<accountSid>:<authToken>@cloud.restcomm.com/restcomm/2012­04­24/Accounts/ACae6e420f425248d6a26948c17a9e2acf/Calls.json/CA312824ebd262419dbd4c00b057448d57*  
 
 ==== Parameters:
 **Status**=canceled  
@@ -289,7 +289,7 @@ Live Call Modification POST request URL: *http://127.0.0.1:8080/restcomm/2012­0
 Modifying a Live Call
 
 ----
-curl -X POST http://ACae6e420f425248d6a26948c17a9e2acf:77f8c12cc7b8f8423e5c38b035249166@127.0.0.1:8080/restcomm/2012-04-24/Accounts/ACae6e420f425248d6a26948c17a9e2acf/Calls.json -d "From=+16175551212" -d "To=sip:alice@127.0.0.1:5061" -d "Url=http://127.0.0.1:8080/restcomm/demos/hello-play.xml"
+curl -X POST https://<accountSid>:<authToken>@cloud.restcomm.com/restcomm/2012-04-24/Accounts/ACae6e420f425248d6a26948c17a9e2acf/Calls.json -d "From=+16175551212" -d "To=sip:alice@127.0.0.1:5061" -d "Url=https://<accountSid>:<authToken>@cloud.restcomm.com/restcomm/demos/hello-play.xml"
 ----
 
 You will see an output similar to the one below:
@@ -321,7 +321,7 @@ Notice that the Call ID is referenced
 The call will now be redirected to the Url specified(hello-world.xml)
 
 ----
-curl -X POST http://ACae6e420f425248d6a26948c17a9e2acf:77f8c12cc7b8f8423e5c38b035249166@127.0.0.1:8080/restcomm/2012-04-24/Accounts/ACae6e420f425248d6a26948c17a9e2acf/Calls/CAfa51b104354440b09213d04752f50271 -d "Url=http://127.0.0.1:8080/restcomm/demos/hello-world.xml"
+curl -X POST https://<accountSid>:<authToken>@cloud.restcomm.com/restcomm/2012-04-24/Accounts/ACae6e420f425248d6a26948c17a9e2acf/Calls/CAfa51b104354440b09213d04752f50271 -d "Url=https://<accountSid>:<authToken>@cloud.restcomm.com/restcomm/demos/hello-world.xml"
 ----
 
 The output showing the same Call ID
@@ -343,7 +343,7 @@ The output showing the same Call ID
 You can still redirect the current call back to the previous application
 
 ----
-curl -X POST http://ACae6e420f425248d6f8c12cc7b8f8423e5c38b035249166@127.0.0.1:8080/restcomm/2012-04-24/Accounts/ACae6e420f425248d6a26948c17a9e2acf/Calls/CAfa51b104354440b09213d04752f50271 -d "Url=http://127.0.0.1:8080/restcomm/demos/hello-play.xml"
+curl -X POST https://<accountSid>:<authToken>@cloud.restcomm.com/restcomm/2012-04-24/Accounts/ACae6e420f425248d6a26948c17a9e2acf/Calls/CAfa51b104354440b09213d04752f50271 -d "Url=https://<accountSid>:<authToken>@cloud.restcomm.com/restcomm/demos/hello-play.xml"
 ----
 
 The output showing the same Call ID
@@ -365,7 +365,7 @@ The output showing the same Call ID
 You can end the call using the Status=completed command as shown below
 
 ----
-curl -X POST http://ACae6e420f425248d6f8c12cc7b8f8423e5c38b035249166@127.0.0.1:8080/restcomm/2012-04-24/Accounts/ACae6e420f425248d6a26948c17a9e2acf/Calls/CAfa51b104354440b09213d04752f50271 -d "Status=completed"
+curl -X POST https://<accountSid>:<authToken>@cloud.restcomm.com/restcomm/2012-04-24/Accounts/ACae6e420f425248d6a26948c17a9e2acf/Calls/CAfa51b104354440b09213d04752f50271 -d "Status=completed"
 ----
 
 The output showing the same Call ID
@@ -518,7 +518,7 @@ The result will be similar to the one below
 The command below will return a single item from the list of calls using the PageSize parameter
 
 ....
-curl -X GET  http://ACae6e420f425248d6a26948c17a9e2acf:77f8c12cc7b8f8423e5c38b035249166@127.0.0.1:8080/restcomm/2012-04-24/Accounts/ACae6e420f425248d6a26948c17a9e2acf/Calls?PageSize=1
+curl -X GET  https://<accountSid>:<authToken>@cloud.restcomm.com/restcomm/2012-04-24/Accounts/ACae6e420f425248d6a26948c17a9e2acf/Calls?PageSize=1
 ....
 
 The result of the *PageSize* parameter
