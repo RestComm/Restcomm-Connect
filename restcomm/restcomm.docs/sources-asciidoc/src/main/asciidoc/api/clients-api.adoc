@@ -94,7 +94,7 @@ The CDR records generated for calls made by Clients, will have account SID the a
 The client name will be Alice as shown below
 
 ....
- curl -X POST  https://ACae6e420f425248d6a26948c17a9e2acf:77f8c12cc7b8f8423e5c38b035249166@127.0.0.1/restcomm/2012-04-24/Accounts/ACae6e420f425248d6a26948c17a9e2acf/Clients.json -d "Login=alice" -d "Password=test"
+ curl -X POST  https://<accountSid>:<authToken>@cloud.restcomm.com/restcomm/2012-04-24/Accounts/ACae6e420f425248d6a26948c17a9e2acf/Clients.json -d "Login=alice" -d "Password=test"
 ....
 
 The output of the command will be similar to the one below
@@ -120,7 +120,7 @@ The output of the command will be similar to the one below
 You must use the Client SID
 
 ....
-curl -X DELETE https://ACae6e420f425248d6a26948c17a9e2acf:77f8c12cc7b8f8423e5c38b035249166@127.0.0.1/restcomm/2012-04-24/Accounts/ACae6e420f425248d6a26948c17a9e2acf/Clients/CL4e10e3b56a614414bcc1eeca5d96effe
+curl -X DELETE https://<accountSid>:<authToken>@cloud.restcomm.com/restcomm/2012-04-24/Accounts/ACae6e420f425248d6a26948c17a9e2acf/Clients/CL4e10e3b56a614414bcc1eeca5d96effe
 ....
 
 == Change Client's Password
@@ -128,7 +128,7 @@ curl -X DELETE https://ACae6e420f425248d6a26948c17a9e2acf:77f8c12cc7b8f8423e5c38
 You must use the Client SID as shown below:
 
 ....
-curl -X PUT https://ACae6e420f425248d6a26948c17a9e2acf:77f8c12cc7b8f8423e5c38b035249166@127.0.0.1/restcomm/2012-04-24/Accounts/ACae6e420f425248d6a26948c17a9e2acf/Clients/CL4e10e3b56a614414bcc1eeca5d96effe -d "Password=NewPassword"
+curl -X PUT https://<accountSid>:<authToken>@cloud.restcomm.com/restcomm/2012-04-24/Accounts/ACae6e420f425248d6a26948c17a9e2acf/Clients/CL4e10e3b56a614414bcc1eeca5d96effe -d "Password=NewPassword"
 ....
 
 == Get List of available Clients
@@ -136,12 +136,12 @@ curl -X PUT https://ACae6e420f425248d6a26948c17a9e2acf:77f8c12cc7b8f8423e5c38b03
 The command below shows all Clients created using the default Admin Account
 
 ....
-curl -X GET https://ACae6e420f425248d6a26948c17a9e2acf:77f8c12cc7b8f8423e5c38b035249166@127.0.0.1/restcomm/2012-04-24/Accounts/ACae6e420f425248d6a26948c17a9e2acf/Clients/
+curl -X GET https://<accountSid>:<authToken>@cloud.restcomm.com/restcomm/2012-04-24/Accounts/ACae6e420f425248d6a26948c17a9e2acf/Clients/
 ....
 
 
 ----
-curl -X GET https://ACae6e420f425248d6a26948c17a9e2acf:R3stC0mm@127.0.0.1/restcomm/2012-04-24/Accounts/ACae6e420f425248d6a26948c17a9e2acf/Clients
+curl -X GET https://<accountSid>:<authToken>@cloud.restcomm.com/restcomm/2012-04-24/Accounts/ACae6e420f425248d6a26948c17a9e2acf/Clients
 ----
 
 XML GET Response
@@ -185,7 +185,7 @@ XML GET Response
 
 
 ----
-curl -X GET https://ACae6e420f425248d6a26948c17a9e2acf:R3stC0mm@127.0.0.1/restcomm/2012-04-24f425248d6a26948c17a9e2acf/Clients.json
+curl -X GET https://<accountSid>:<authToken>@cloud.restcomm.com/restcomm/2012-04-24f425248d6a26948c17a9e2acf/Clients.json
 ----
 
 JSON GET Response
