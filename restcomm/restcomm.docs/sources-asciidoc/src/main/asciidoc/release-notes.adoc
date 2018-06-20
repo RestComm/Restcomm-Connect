@@ -31,6 +31,7 @@ The folowing tags are used to categorize and state the scope of a change
 // Things to consider during migration from previous release
 
 *Important Note* This version is adding a new columns to support SMS Error Code updates. 
+*Important Note* There is new cache configuration. New settings is CACHE_PATH with value /mnt/restcomm_cache. "docker run" command needs to be inline with this to sync the EFS sharing with app configuration.
 
 ==== Migration steps - part 1
 
