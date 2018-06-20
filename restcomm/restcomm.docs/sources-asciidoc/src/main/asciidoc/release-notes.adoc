@@ -10,7 +10,7 @@ The folowing tags are used to categorize and state the scope of a change
 * **commercial** tags changes that are available only in the commercial RestcommOne product
 
 
-== 8.6.0 version 2018-06-19
+== 8.6.0 version 2018-06-19 (docker tag 8.6.0-211)
 === New Features
 // New features (whether major or minor) go here
 * SMS CDR Error Codes
@@ -30,7 +30,7 @@ The folowing tags are used to categorize and state the scope of a change
 === Migration Notes
 // Things to consider during migration from previous release
 
-*Important Note* This version is adding a new columns to support SMS Error Code updates. 
+*Important Note* This version is adding a new columns to support SMS Error Code updates, and SMS StatusCallback notifications. 
 
 *Important Note* There is new cache configuration. New settings is CACHE_PATH with value /mnt/restcomm_cache. "docker run" command needs to be inline with this to sync the EFS sharing with app configuration.
 
