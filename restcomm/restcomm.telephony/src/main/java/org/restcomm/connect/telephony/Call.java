@@ -814,8 +814,8 @@ public final class Call extends RestcommUntypedActor implements TransitionEndLis
     }
 
     private void onRecordStoped (RecordStoped message, ActorRef sender) {
+        isStoppingRecord = false;
         if (is(stopping)) {
-            isStoppingRecord = false;
             msController.tell(new CloseMediaSession(), self());
             context().setReceiveTimeout(Duration.create(2000, TimeUnit.MILLISECONDS));
         }
