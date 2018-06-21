@@ -97,6 +97,14 @@ import scala.concurrent.duration.Duration;
 @ThreadSafe
 @Singleton
 public class SmsMessagesEndpoint extends AbstractEndpoint {
+
+    private static final String CALLBACK_PARAM = "StatusCallback";
+    private static final String FROM_PARAM = "From";
+    private static final String TO_PARAM = "To";
+    private static final String BODY_PARAM = "Body";
+
+
+
     @Context
     protected ServletContext context;
     protected ActorSystem system;
@@ -197,11 +205,11 @@ public class SmsMessagesEndpoint extends AbstractEndpoint {
         String pageSize = info.getQueryParameters().getFirst("PageSize");
         String page = info.getQueryParameters().getFirst("Page");
         // String afterSid = info.getQueryParameters().getFirst("AfterSid");
-        String recipient = info.getQueryParameters().getFirst("To");
-        String sender = info.getQueryParameters().getFirst("From");
+        String recipient = info.getQueryParameters().getFirst(TO_PARAM);
+        String sender = info.getQueryParameters().getFirst(FROM_PARAM);
         String startTime = info.getQueryParameters().getFirst("StartTime");
         String endTime = info.getQueryParameters().getFirst("EndTime");
-        String body = info.getQueryParameters().getFirst("Body");
+        String body = info.getQueryParameters().getFirst(BODY_PARAM);
 
         if (pageSize == null) {
             pageSize = "50";
@@ -278,24 +286,24 @@ public class SmsMessagesEndpoint extends AbstractEndpoint {
 
     private void normalize(final MultivaluedMap<String, String> data) throws IllegalArgumentException {
         final PhoneNumberUtil phoneNumberUtil = PhoneNumberUtil.getInstance();
-        final String from = data.getFirst("From");
-        data.remove("From");
+        final String from = data.getFirst(FROM_PARAM);
+        data.remove(FROM_PARAM);
         try {
-            data.putSingle("From", phoneNumberUtil.format(phoneNumberUtil.parse(from, "US"), PhoneNumberFormat.E164));
+            data.putSingle(FROM_PARAM, phoneNumberUtil.format(phoneNumberUtil.parse(from, "US"), PhoneNumberFormat.E164));
         } catch (final NumberParseException exception) {
             throw new IllegalArgumentException(exception);
         }
-        final String to = data.getFirst("To");
-        data.remove("To");
+        final String to = data.getFirst(TO_PARAM);
+        data.remove(TO_PARAM);
         try {
-            data.putSingle("To", phoneNumberUtil.format(phoneNumberUtil.parse(to, "US"), PhoneNumberFormat.E164));
+            data.putSingle(TO_PARAM, phoneNumberUtil.format(phoneNumberUtil.parse(to, "US"), PhoneNumberFormat.E164));
         } catch (final NumberParseException exception) {
             throw new IllegalArgumentException(exception);
         }
-        final String body = data.getFirst("Body");
+        final String body = data.getFirst(BODY_PARAM);
         if (body.getBytes().length > 160) {
-            data.remove("Body");
-            data.putSingle("Body", body.substring(0, 159));
+            data.remove(BODY_PARAM);
+            data.putSingle(BODY_PARAM, body.substring(0, 159));
         }
     }
 
@@ -309,19 +317,26 @@ public class SmsMessagesEndpoint extends AbstractEndpoint {
                 userIdentityContext);
         try {
             validate(data);
-            if(normalizePhoneNumbers)
+            if(normalizePhoneNumbers) {
                 normalize(data);
+            }
         } catch (final RuntimeException exception) {
             return status(BAD_REQUEST).entity(exception.getMessage()).build();
         }
-        final String sender = data.getFirst("From");
-        final String recipient = data.getFirst("To");
-        final String body = data.getFirst("Body");
+        final String sender = data.getFirst(FROM_PARAM);
+        final String recipient = data.getFirst(TO_PARAM);
+        final String body = data.getFirst(BODY_PARAM);
         final SmsSessionRequest.Encoding encoding;
         if (!data.containsKey("Encoding")) {
             encoding = SmsSessionRequest.Encoding.GSM;
         } else {
             encoding = SmsSessionRequest.Encoding.valueOf(data.getFirst("Encoding").replace('-', '_'));
+        }
+        final URI statusCallback;
+        if (!data.containsKey(CALLBACK_PARAM)) {
+            statusCallback = null;
+        } else {
+            statusCallback = URI.create(data.getFirst(CALLBACK_PARAM));
         }
         ConcurrentHashMap<String, String> customRestOutgoingHeaderMap = new ConcurrentHashMap<String, String>();
         Iterator<String> iter = data.keySet().iterator();
@@ -341,7 +356,7 @@ public class SmsMessagesEndpoint extends AbstractEndpoint {
                 if (smsServiceResponse.succeeded()) {
                     // Create an SMS record for the text message.
                     final SmsMessage record = sms(new Sid(accountSid), getApiVersion(data), sender, recipient, body,
-                            SmsMessage.Status.SENDING, SmsMessage.Direction.OUTBOUND_API);
+                            SmsMessage.Status.SENDING, SmsMessage.Direction.OUTBOUND_API, statusCallback);
                     dao.addSmsMessage(record);
                     // Send the sms.
                     final ActorRef session = smsServiceResponse.get();
@@ -371,7 +386,7 @@ public class SmsMessagesEndpoint extends AbstractEndpoint {
     }
 
     private SmsMessage sms(final Sid accountSid, final String apiVersion, final String sender, final String recipient,
-            final String body, final SmsMessage.Status status, final SmsMessage.Direction direction) {
+            final String body, final SmsMessage.Status status, final SmsMessage.Direction direction, URI callback) {
         final SmsMessage.Builder builder = SmsMessage.builder();
         final Sid sid = Sid.generate(Sid.Type.SMS_MESSAGE);
         builder.setSid(sid);
@@ -391,15 +406,16 @@ public class SmsMessagesEndpoint extends AbstractEndpoint {
         buffer.append(sid.toString());
         final URI uri = URI.create(buffer.toString());
         builder.setUri(uri);
+        builder.setStatusCallback(callback);
         return builder.build();
     }
 
     private void validate(final MultivaluedMap<String, String> data) throws NullPointerException {
-        if (!data.containsKey("From")) {
+        if (!data.containsKey(FROM_PARAM)) {
             throw new NullPointerException("From can not be null.");
-        } else if (!data.containsKey("To")) {
+        } else if (!data.containsKey(TO_PARAM)) {
             throw new NullPointerException("To can not be null.");
-        } else if (!data.containsKey("Body")) {
+        } else if (!data.containsKey(BODY_PARAM)) {
             throw new NullPointerException("Body can not be null.");
         }
     }

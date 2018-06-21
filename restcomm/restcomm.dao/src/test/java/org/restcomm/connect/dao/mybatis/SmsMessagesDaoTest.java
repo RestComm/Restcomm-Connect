@@ -26,6 +26,7 @@ import org.joda.time.DateTime;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
+import org.restcomm.connect.commons.dao.MessageError;
 import org.restcomm.connect.commons.dao.Sid;
 import org.restcomm.connect.dao.SmsMessagesDao;
 import org.restcomm.connect.dao.entities.SmsMessage;
@@ -39,10 +40,13 @@ import java.util.List;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
+import org.junit.FixMethodOrder;
+import org.junit.runners.MethodSorters;
 
 /**
  * @author quintana.thomas@gmail.com (Thomas Quintana)
  */
+@FixMethodOrder(MethodSorters.NAME_ASCENDING)
 public final class SmsMessagesDaoTest {
     private static Logger logger = Logger.getLogger(SmsMessagesDaoTest.class);
     private static MybatisDaoManager manager;
@@ -82,6 +86,7 @@ public final class SmsMessagesDaoTest {
         builder.setPrice(new BigDecimal("0.00"));
         builder.setPriceUnit(Currency.getInstance("USD"));
         builder.setUri(url);
+        builder.setStatusCallback(url);
         SmsMessage message = builder.build();
         final SmsMessagesDao messages = manager.getSmsMessagesDao();
         // Create a new sms message in the data store.
@@ -101,16 +106,19 @@ public final class SmsMessagesDaoTest {
         assertTrue(result.getPrice().equals(message.getPrice()));
         assertTrue(result.getPriceUnit().equals(message.getPriceUnit()));
         assertTrue(result.getUri().equals(message.getUri()));
+        assertTrue(result.getStatusCallback().equals(message.getStatusCallback()));
         // Update the message.
         final DateTime now = DateTime.now();
-        message = message.setDateSent(now);
-        message = message.setStatus(SmsMessage.Status.SENT);
-        messages.updateSmsMessage(message);
+        final SmsMessage.Builder builder2 = SmsMessage.builder();
+        builder2.copyMessage(message);
+        builder2.setDateSent(now);
+        builder2.setStatus(SmsMessage.Status.SENT);
+        messages.updateSmsMessage(builder2.build());
         // Read the updated message from the data store.
         result = messages.getSmsMessage(sid);
         // Validate the results.
-        assertTrue(result.getDateSent().equals(message.getDateSent()));
-        assertTrue(result.getStatus() == message.getStatus());
+        assertTrue(result.getDateSent().equals(now));
+        assertEquals(SmsMessage.Status.SENT, result.getStatus());
         // Delete the message.
         messages.removeSmsMessage(sid);
         // Validate that the CDR was removed.
@@ -146,7 +154,7 @@ public final class SmsMessagesDaoTest {
     }
 
     @Test
-    public void testGetSmsMessagesLastMinute() throws InterruptedException, ParseException {
+    public void aaatestGetSmsMessagesLastMinute() throws InterruptedException, ParseException {
         final SmsMessagesDao messages = manager.getSmsMessagesDao();
         final Sid account = Sid.generate(Sid.Type.ACCOUNT);
         DateTime oneMinuteAgo = DateTime.now().minusSeconds(58);
@@ -228,19 +236,40 @@ public final class SmsMessagesDaoTest {
         messages.addSmsMessage(smsMessage);
 
         //set status and dateSent
-        smsMessage = smsMessage.setStatus(status).setDateSent(dateSent).setSmppMessageId(smppMessageId);
-        messages.updateSmsMessage(smsMessage);
+        final SmsMessage.Builder builder2 = SmsMessage.builder();
+        builder2.copyMessage(smsMessage);
+        builder2.setStatus(status).setDateSent(dateSent).setSmppMessageId(smppMessageId);
+        messages.updateSmsMessage(builder2.build());
 
         //get SmsMessage By SmppMessageId
         SmsMessage resultantSmsMessage = messages.getSmsMessageBySmppMessageId(smppMessageId);
 
         //make assertions
-        assertEquals(smsMessage.getSmppMessageId(), resultantSmsMessage.getSmppMessageId());
-        assertEquals(smsMessage.getDateSent(), resultantSmsMessage.getDateSent());
-        assertEquals(smsMessage.getStatus(), resultantSmsMessage.getStatus());
+        assertEquals(smppMessageId, resultantSmsMessage.getSmppMessageId());
+        assertEquals(dateSent, resultantSmsMessage.getDateSent());
+        assertEquals(status, resultantSmsMessage.getStatus());
     }
 
     @Test
+    public void testSmsMessageError() {
+    	// add a new msg
+    	SmsMessage smsMessage = createSms();
+    	final SmsMessagesDao messages = manager.getSmsMessagesDao();
+        messages.addSmsMessage(smsMessage);
+
+        //update error message
+        final SmsMessage.Builder builder2 = SmsMessage.builder();
+        builder2.copyMessage(smsMessage);
+        builder2.setError(MessageError.QUEUE_OVERFLOW);
+        messages.updateSmsMessage(builder2.build());
+
+        //get msg from DB
+        SmsMessage resultantSmsMessage = messages.getSmsMessage(smsMessage.getSid());
+
+        //make assertions
+        assertEquals(MessageError.QUEUE_OVERFLOW, resultantSmsMessage.getError());
+    }
+
     public void testFindBySmppMessageIdAndDateCreatedGreaterOrEqualThanOrderedByDateCreatedDesc() {
         // given
         final SmsMessagesDao smsMessagesDao = manager.getSmsMessagesDao();
