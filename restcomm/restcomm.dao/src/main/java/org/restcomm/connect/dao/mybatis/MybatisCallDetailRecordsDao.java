@@ -40,6 +40,7 @@ import org.restcomm.connect.commons.annotations.concurrency.ThreadSafe;
 import org.restcomm.connect.commons.dao.Sid;
 import org.restcomm.connect.dao.CallDetailRecordsDao;
 import org.restcomm.connect.dao.DaoUtils;
+import org.restcomm.connect.dao.common.SortDirection;
 import org.restcomm.connect.dao.entities.CallDetailRecord;
 import org.restcomm.connect.dao.entities.CallDetailRecordFilter;
 
@@ -128,6 +129,7 @@ public final class MybatisCallDetailRecordsDao implements CallDetailRecordsDao {
         }
 
     }
+
     // Issue 153: https://bitbucket.org/telestax/telscale-restcomm/issue/153
     // Issue 110: https://bitbucket.org/telestax/telscale-restcomm/issue/110
     @Override
@@ -136,8 +138,9 @@ public final class MybatisCallDetailRecordsDao implements CallDetailRecordsDao {
         final SqlSession session = sessions.openSession();
 
         try {
+            Map<String, Object> map = filterToMap(filter);
             final List<Map<String, Object>> results = session.selectList(namespace + "getCallDetailRecordByUsingFilters",
-                    filter);
+                    map);
             final List<CallDetailRecord> cdrs = new ArrayList<CallDetailRecord>();
 
             if (results != null && !results.isEmpty()) {
@@ -347,6 +350,54 @@ public final class MybatisCallDetailRecordsDao implements CallDetailRecordsDao {
         return new CallDetailRecord(sid, instanceId, parentCallSid, conferenceSid, dateCreated, dateUpdated, accountSid, to, from, phoneNumberSid, status,
                 startTime, endTime, duration, price, priceUnit, direction, answeredBy, apiVersion, forwardedFrom, callerName,
                 uri, callPath, ringDuration, muted, startConferenceOnEnter, endConferenceOnExit, onHold, msId);
+    }
+
+    private Map<String, Object> filterToMap(final CallDetailRecordFilter cdrFilter) {
+        final Map<String, Object> map = new HashMap<String, Object>();
+        map.put("accountSid", cdrFilter.getSid());
+        map.put("accountSidSet", cdrFilter.getAccountSidSet());
+        map.put("recipient", cdrFilter.getRecipient());
+        map.put("sender", cdrFilter.getSender());
+        map.put("status", cdrFilter.getStatus());
+        map.put("startTime", cdrFilter.getStartTime());
+        map.put("endTime", cdrFilter.getEndTime());
+        map.put("parentCallSid", cdrFilter.getParentCallSid());
+        map.put("conferenceSid", cdrFilter.getConferenceSid());
+        map.put("limit", cdrFilter.getLimit());
+        map.put("offset", cdrFilter.getOffset());
+        map.put("instanceid", cdrFilter.getInstanceid());
+
+        if (cdrFilter.getSortByDate() != null && cdrFilter.getSortByDate() != SortDirection.NONE) {
+            map.put("sortBy", "start_time");
+            if (cdrFilter.getSortByDate() == SortDirection.ASCENDING) {
+                map.put("sortDirection", "ASC");
+            } else if (cdrFilter.getSortByDate() == SortDirection.DESCENDING) {
+                map.put("sortDirection", "DESC");
+            }
+        }
+
+        if (cdrFilter.getSortByFrom() != null && cdrFilter.getSortByFrom() != SortDirection.NONE) {
+            map.put("sortBy", "sender");
+            if (cdrFilter.getSortByFrom() == SortDirection.ASCENDING) {
+                map.put("sortDirection", "ASC");
+            } else if (cdrFilter.getSortByFrom() == SortDirection.DESCENDING) {
+                map.put("sortDirection", "DESC");
+            }
+        }
+
+        if (cdrFilter.getSortByTo() != null && cdrFilter.getSortByTo() != SortDirection.NONE) {
+            map.put("sortBy", "recipient");
+            if (cdrFilter.getSortByTo() == SortDirection.ASCENDING) {
+                map.put("sortDirection", "ASC");
+            } else if (cdrFilter.getSortByTo() == SortDirection.DESCENDING) {
+                map.put("sortDirection", "DESC");
+            }
+        }
+        // TODO: Add the rest
+        // ...
+
+
+        return map;
     }
 
     private Map<String, Object> toMap(final CallDetailRecord cdr) {

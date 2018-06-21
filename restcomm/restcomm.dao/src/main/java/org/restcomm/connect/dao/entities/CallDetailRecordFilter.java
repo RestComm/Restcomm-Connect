@@ -25,6 +25,7 @@ import java.util.Date;
 import java.util.List;
 
 import org.restcomm.connect.commons.annotations.concurrency.Immutable;
+import org.restcomm.connect.dao.common.SortDirection;
 
 /**
  * @author <a href="mailto:gvagenas@gmail.com">gvagenas</a>
@@ -32,7 +33,6 @@ import org.restcomm.connect.commons.annotations.concurrency.Immutable;
 
 @Immutable
 public class CallDetailRecordFilter {
-
     private final String accountSid;
     private final List<String> accountSidSet; // if not-null we need the cdrs that belong to several accounts
     private final String recipient;
@@ -45,8 +45,16 @@ public class CallDetailRecordFilter {
     private final Integer limit;
     private final Integer offset;
     private final String instanceid;
-    private final String sortBy;
-    private final String sortDirection;
+    private SortDirection sortByDate = null;
+    private SortDirection sortByFrom = null;
+    private SortDirection sortByTo = null;
+    // TODO: add them in. We could use a builder to make these easier to set without huge number of arguments
+    /*
+    private final Sorting sortByDirection;
+    private final Sorting sortByStatus;
+    private final Sorting sortByDuration;
+    private final Sorting sortByPrice;
+    */
 
     public CallDetailRecordFilter(String accountSid, List<String> accountSidSet, String recipient, String sender, String status, String startTime, String endTime,
                                   String parentCallSid, String conferenceSid, Integer limit, Integer offset) throws ParseException {
@@ -92,24 +100,52 @@ public class CallDetailRecordFilter {
             this.instanceid = null;
         }
 
-        this.sortBy = mapAPIFieldsToDb(sortBy);
-        this.sortDirection = sortDirection;
-    }
-
-    // We want the fields that the API caller provides for sorting to have the exact same names as what
-    // is returned from the API when it returns CDRs in queries, so that the API is consistent and intuitive. However, when doing
-    // the actual query in the db we are using the DB column names which sometimes are different from those API-level
-    // fields. Let's use a mapping function to convert API-level fields to db column names.
-    public String mapAPIFieldsToDb(String sortBy) {
-        // TODO: One issue here is that whatever the API user sends inside SortBy is sent down to DB, which is messy. How is this currently handled in other cases in the API?
-        // We could potentially have a list of fields that we are allowed to sort by and validate against that list. Thoughts?
         if (sortBy != null) {
-            // Right now, the only fields that are different between API-level and DB-level and which we are
-            // interested in sorting by are 'from' and 'to'
-            return sortBy.replace("from", "sender")
-                    .replace("to", "recipient");
+            // Use the API-level field names here
+            if (sortBy.equals("date_created")) {
+                if (sortDirection != null) {
+                    if (sortDirection.equalsIgnoreCase("asc")) {
+                        this.sortByDate = SortDirection.ASCENDING;
+                    }
+                    else {
+                        this.sortByDate = SortDirection.DESCENDING;
+                    }
+                }
+                else {
+                    this.sortByDate = SortDirection.NONE;
+                }
+            }
+
+            if (sortBy.equals("from")) {
+                if (sortDirection != null) {
+                    if (sortDirection.equalsIgnoreCase("asc")) {
+                        this.sortByFrom = SortDirection.ASCENDING;
+                    }
+                    else {
+                        this.sortByFrom = SortDirection.DESCENDING;
+                    }
+                }
+                else {
+                    this.sortByFrom = SortDirection.NONE;
+                }
+            }
+
+            if (sortBy.equals("to")) {
+                if (sortDirection != null) {
+                    if (sortDirection.equalsIgnoreCase("asc")) {
+                        this.sortByTo = SortDirection.ASCENDING;
+                    }
+                    else {
+                        this.sortByTo = SortDirection.DESCENDING;
+                    }
+                }
+                else {
+                    this.sortByTo = SortDirection.NONE;
+                }
+            }
+            // TODO: add the rest
+            // ...
         }
-        return null;
     }
 
     public String getSid() {
@@ -158,7 +194,14 @@ public class CallDetailRecordFilter {
 
     public String getInstanceid() { return instanceid; }
 
-    public String getSortBy() { return sortBy; }
 
+    /*
+    public String getSortBy() { return sortBy; }
     public String getSortDirection() { return sortDirection; }
+    */
+    public SortDirection getSortByDate() { return sortByDate; }
+    public SortDirection getSortByFrom() { return sortByFrom; }
+    public SortDirection getSortByTo() { return sortByTo; }
+
+    // TODO: Introduce the rest of them
 }

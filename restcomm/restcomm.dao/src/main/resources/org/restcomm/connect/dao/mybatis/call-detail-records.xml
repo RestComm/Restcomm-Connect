@@ -75,7 +75,7 @@
 
 	<!-- Issue 153: https://bitbucket.org/telestax/telscale-restcomm/issue/153 -->
 	<!-- Issue 153: https://bitbucket.org/telestax/telscale-restcomm/issue/110 -->
-	<select id="getCallDetailRecordByUsingFilters" parameterType="org.restcomm.connect.dao.entities.CallDetailRecordFilter" resultType="hashmap">
+	<select id="getCallDetailRecordByUsingFilters" parameterType="map" resultType="hashmap">
 		SELECT * FROM "restcomm_call_detail_records" AS "restcomm_call_detail_records" WHERE
 
 		<!-- are we retrieving cdrs from a single account or from an account set -->
