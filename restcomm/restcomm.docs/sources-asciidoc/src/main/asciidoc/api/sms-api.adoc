@@ -77,15 +77,25 @@ Sends a new SMS Message and returns the representation of the SMS Message resour
 
 ====== Request Parameters
 
-Description A phone number that is enabled for SMS. The destination phone number in E.164 format. The text of the message you want to send, limited to 160 characters.
+[cols=",",options="header",]
+|========================================================================================================
+|Parameter |Description
+|To |The destination phone number in E.164 format. The phone number must be SMS capable.
+|From |The phone number or short code that initiated the message.
+|Body |The text body of the SMS message. Up to 160 characters long.
+|StatusCallback |*Optional* A URL where RestComm will POST each time the message status changes.
+|========================================================================================================
 
-Parameter
+====== Message Status Notifications
 
-From(Required)
+Besides passing all the standard parameters in its request to the StatusCallback URL, RestComm will also includes these additional ones:
 
-To(Required)
-
-Body(Required)
+[cols=",",options="header",]
+|========================================================================================================
+|Parameter |Description
+|Status |The status of the message.
+|ErrorCode |*Optional* The error code (if any) associated with your message. If your message status is failed or undelivered, the ErrorCode can give you more information about the failure.
+|========================================================================================================
 
 == Using SMS and making DID calls
 
@@ -254,7 +264,7 @@ The example below will only return Messages made from client Alice
 
 The result will be similar to the one below
 
-[source,decode:true]
+[source]
 ----
 {"page":0,"num_pages":0,"page_size":50,"total":1,"start":"0","end":"1","uri":"/restcomm/2012-04-24/Accounts/ACae6e420f425248d6a26948c17a9e2acf/SMS/Messages.json","first_page_uri":"/restcomm/2012-04-24/Accounts/ACae6e420f425248d6a26948c17a9e2acf/SMS/Messages.json?Page=0&PageSize=50","previous_page_uri":"null","next_page_uri":"null","last_page_uri":"/restcomm/2012-04-24/Accounts/ACae6e420f425248d6a26948c17a9e2acf/SMS/Messages.json?Page=0&PageSize=50","messages":
     [
@@ -307,7 +317,7 @@ curl -X GET  https://ACae6e420f425248d6a26948c17a9e2acf:77f8c12cc7b8f8423e5c38b0
 
 The result of the *PageSize* parameter
 
-[source,decode:true]
+[source]
 ----
 {"page":0,"num_pages":34,"page_size":1,"total":34,"start":"0","end":"0","uri":"/restcomm/2012-04-24/Accounts/ACae6e420f425248d6a26948c17a9e2acf/SMS/Messages.json","first_page_uri":"/restcomm/2012-04-24/Accounts/ACae6e420f425248d6a26948c17a9e2acf/SMS/Messages.json?Page=0&PageSize=1","previous_page_uri":"null","next_page_uri":"/restcomm/2012-04-24/Accounts/ACae6e420f425248d6a26948c17a9e2acf/SMS/Messages.json?Page=1&PageSize=1&AfterSid=SM00ae962506694a61a4e29d776918a747","last_page_uri":"/restcomm/2012-04-24/Accounts/ACae6e420f425248d6a26948c17a9e2acf/SMS/Messages.json?Page=34&PageSize=1","messages":
     [
