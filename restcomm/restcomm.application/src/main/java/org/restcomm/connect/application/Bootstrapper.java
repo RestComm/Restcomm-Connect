@@ -30,6 +30,7 @@ import org.joda.time.DateTime;
 import org.mobicents.servlet.sip.SipConnector;
 import org.restcomm.connect.application.config.ConfigurationStringLookup;
 import org.restcomm.connect.commons.Version;
+import org.restcomm.connect.commons.amazonS3.S3AccessTool;
 import org.restcomm.connect.commons.common.http.CustomHttpClientBuilder;
 import org.restcomm.connect.commons.configuration.RestcommConfiguration;
 import org.restcomm.connect.commons.dao.Sid;
@@ -232,10 +233,10 @@ public final class Bootstrapper extends SipServlet implements SipServletListener
         }
     }
 
-    private DaoManager storage(final Configuration configuration, Configuration daoManagerConfiguration, final ClassLoader loader, final ExecutionContext ec) throws ObjectInstantiationException {
+    private DaoManager storage(final Configuration configuration, Configuration daoManagerConfiguration, S3AccessTool s3AccessTool, final ClassLoader loader, final ExecutionContext ec) throws ObjectInstantiationException {
         final String classpath = daoManagerConfiguration.getString("dao-manager[@class]");
         final DaoManager daoManager = (DaoManager) new ObjectFactory(loader).getObjectInstance(classpath);
-        daoManager.configure(configuration, daoManagerConfiguration, ec);
+        daoManager.configure(configuration, daoManagerConfiguration, s3AccessTool, ec);
         daoManager.start();
         return daoManager;
     }
@@ -335,6 +336,27 @@ public final class Bootstrapper extends SipServlet implements SipServletListener
         }
     }
 
+    private S3AccessTool prepareS3AccessTool(Configuration configuration) {
+        Configuration amazonS3Configuration = configuration.subset("amazon-s3");
+        if (!amazonS3Configuration.isEmpty()) { // Do not fail with NPE is amazonS3Configuration is not present for older install
+            boolean amazonS3Enabled = amazonS3Configuration.getBoolean("enabled");
+            if (amazonS3Enabled) {
+                final String accessKey = amazonS3Configuration.getString("access-key");
+                final String securityKey = amazonS3Configuration.getString("security-key");
+                final String bucketName = amazonS3Configuration.getString("bucket-name");
+                final String folder = amazonS3Configuration.getString("folder");
+                final boolean reducedRedundancy = amazonS3Configuration.getBoolean("reduced-redundancy");
+                final int minutesToRetainPublicUrl = amazonS3Configuration.getInt("minutes-to-retain-public-url", 10);
+                final boolean removeOriginalFile = amazonS3Configuration.getBoolean("remove-original-file");
+                final String bucketRegion = amazonS3Configuration.getString("bucket-region");
+                final boolean testing = amazonS3Configuration.getBoolean("testing", false);
+                final String testingUrl = amazonS3Configuration.getString("testing-url", null);
+                return new S3AccessTool(accessKey, securityKey, bucketName, folder, reducedRedundancy, minutesToRetainPublicUrl, removeOriginalFile, bucketRegion, testing, testingUrl);
+            }
+        }
+        return null;
+    }
+
     @Override
     public void servletInitialized(SipServletContextEvent event) {
         if (event.getSipServlet().getClass().equals(Bootstrapper.class)) {
@@ -387,10 +409,14 @@ public final class Bootstrapper extends SipServlet implements SipServletListener
             // Share the actor system with other servlets.
             context.setAttribute(ActorSystem.class.getName(), system);
             ec = system.dispatchers().lookup("restcomm-blocking-dispatcher");
+
+            S3AccessTool s3AccessTool = prepareS3AccessTool(xml);
+            context.setAttribute(S3AccessTool.class.getName(), s3AccessTool);
+
             // Create the storage system.
             DaoManager storage = null;
             try {
-                storage = storage(xml, daoManagerConf, loader, ec);
+                storage = storage(xml, daoManagerConf, s3AccessTool, loader, ec);
             } catch (final ObjectInstantiationException exception) {
                 logger.error("ObjectInstantiationException during initialization: ", exception);
             }
