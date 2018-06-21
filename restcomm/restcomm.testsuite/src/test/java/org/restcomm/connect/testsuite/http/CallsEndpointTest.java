@@ -61,27 +61,27 @@ public class CallsEndpointTest {
         int totalSize = firstPage.get("total").getAsInt();
         JsonArray firstPageCallsArray = firstPage.get("calls").getAsJsonArray();
         int firstPageCallsArraySize = firstPageCallsArray.size();
-        assertTrue(firstPageCallsArraySize == 50);
-        assertTrue(firstPage.get("start").getAsInt() == 0);
-        assertTrue(firstPage.get("end").getAsInt() == 49);
+        assertEquals(firstPageCallsArraySize, 50);
+        assertEquals(firstPage.get("start").getAsInt(), 0);
+        assertEquals(firstPage.get("end").getAsInt(), 49);
 
         JsonObject secondPage = (JsonObject) RestcommCallsTool.getInstance().getCalls(deploymentUrl.toString(),
                 adminAccountSid, adminAuthToken, 2, null, null, true);
         JsonArray secondPageCallsArray = secondPage.get("calls").getAsJsonArray();
-        assertTrue(secondPageCallsArray.size() == 50);
-        assertTrue(secondPage.get("start").getAsInt() == 100);
-        assertTrue(secondPage.get("end").getAsInt() == 149);
+        assertEquals(secondPageCallsArray.size(), 50);
+        assertEquals(secondPage.get("start").getAsInt(), 100);
+        assertEquals(secondPage.get("end").getAsInt(), 149);
 
         JsonObject lastPage = (JsonObject) RestcommCallsTool.getInstance().getCalls(deploymentUrl.toString(), adminAccountSid,
                 adminAuthToken, firstPage.get("num_pages").getAsInt(), null, null, true);
         JsonArray lastPageCallsArray = lastPage.get("calls").getAsJsonArray();
-        assertTrue(lastPageCallsArray.get(lastPageCallsArray.size() - 1).getAsJsonObject().get("sid").getAsString()
-                .equals("CAe803a594ac1649d98855eafc7535ed41"));
-        assertTrue(lastPageCallsArray.size() == 48);
-        assertTrue(lastPage.get("start").getAsInt() == 400);
-        assertTrue(lastPage.get("end").getAsInt() == 448);
+        assertEquals(lastPageCallsArray.get(lastPageCallsArray.size() - 1).getAsJsonObject().get("sid").getAsString(),
+                "CA22ac5fd16a954c339f33519bdfe4af78");
+        assertEquals(lastPageCallsArray.size(), 48);
+        assertEquals(lastPage.get("start").getAsInt(), 400);
+        assertEquals(lastPage.get("end").getAsInt(), 448);
 
-        assertTrue(totalSize == 448);
+        assertEquals(totalSize, 448);
     }
 
     @Test
@@ -90,21 +90,21 @@ public class CallsEndpointTest {
         // Provide ascending sorting and verify that the first row is indeed the earliest one
         JsonObject response1 = RestcommCallsTool.getInstance().getCalls(deploymentUrl.toString(),
                 adminAccountSid, adminAuthToken, 0, 10, "date_created:asc", true);
-        assertTrue(((JsonObject)response1.get("calls").getAsJsonArray().get(0)).get("date_created").getAsString().equals("Fri, 5 Jul 2013 22:15:53 +0300"));
+        assertEquals(((JsonObject)response1.get("calls").getAsJsonArray().get(0)).get("date_created").getAsString(), "Fri, 5 Jul 2013 22:15:53 +0300");
 
         // Provide only sort field; direction should default to desc
         JsonObject response2 = RestcommCallsTool.getInstance().getCalls(deploymentUrl.toString(),
                 adminAccountSid, adminAuthToken, 0, 10, "date_created", true);
-        assertTrue(((JsonObject)response2.get("calls").getAsJsonArray().get(0)).get("date_created").getAsString().equals("Tue, 31 May 2016 16:20:22 +0300"));
+        assertEquals(((JsonObject)response2.get("calls").getAsJsonArray().get(0)).get("date_created").getAsString(), "Tue, 31 May 2016 16:20:22 +0300");
 
         JsonObject response3 = RestcommCallsTool.getInstance().getCalls(deploymentUrl.toString(),
                 adminAccountSid, adminAuthToken, 0, 10, "date_created:desc", true);
-        assertTrue(((JsonObject)response3.get("calls").getAsJsonArray().get(0)).get("date_created").getAsString().equals("Tue, 31 May 2016 16:20:22 +0300"));
+        assertEquals(((JsonObject)response3.get("calls").getAsJsonArray().get(0)).get("date_created").getAsString(), "Tue, 31 May 2016 16:20:22 +0300");
 
         // Verify that when there is no sorting parameters passed, we default to sorting by date_created descending
         JsonObject response4 = RestcommCallsTool.getInstance().getCalls(deploymentUrl.toString(),
                 adminAccountSid, adminAuthToken, 0, 10, null, true);
-        assertTrue(((JsonObject)response4.get("calls").getAsJsonArray().get(0)).get("date_created").getAsString().equals("Tue, 31 May 2016 16:20:22 +0300"));
+        assertEquals(((JsonObject)response4.get("calls").getAsJsonArray().get(0)).get("date_created").getAsString(), "Tue, 31 May 2016 16:20:22 +0300");
 
         try {
             // provide only direction, should cause an exception
@@ -112,7 +112,7 @@ public class CallsEndpointTest {
                     adminAccountSid, adminAuthToken, 0, 10, ":asc", true);
         }
         catch (UniformInterfaceException e) {
-            assertTrue(e.getResponse().getStatus() == BAD_REQUEST.getStatusCode());
+            assertEquals(e.getResponse().getStatus(), BAD_REQUEST.getStatusCode());
         }
 
         try {
@@ -121,7 +121,7 @@ public class CallsEndpointTest {
                     adminAccountSid, adminAuthToken, 0, 10, "start_time:invalid", true);
         }
         catch (UniformInterfaceException e) {
-            assertTrue(e.getResponse().getStatus() == BAD_REQUEST.getStatusCode());
+            assertEquals(e.getResponse().getStatus(), BAD_REQUEST.getStatusCode());
         }
     }
 
@@ -133,26 +133,26 @@ public class CallsEndpointTest {
         int totalSize = firstPage.get("total").getAsInt();
         JsonArray firstPageCallsArray = firstPage.get("calls").getAsJsonArray();
         int firstPageCallsArraySize = firstPageCallsArray.size();
-        assertTrue(firstPageCallsArraySize == 100);
-        assertTrue(firstPage.get("start").getAsInt() == 0);
-        assertTrue(firstPage.get("end").getAsInt() == 99);
+        assertEquals(firstPageCallsArraySize, 100);
+        assertEquals(firstPage.get("start").getAsInt(), 0);
+        assertEquals(firstPage.get("end").getAsInt(), 99);
 
         JsonObject secondPage = (JsonObject) RestcommCallsTool.getInstance().getCalls(deploymentUrl.toString(),
                 adminAccountSid, adminAuthToken, 2, 100, null, true);
         JsonArray secondPageCallsArray = secondPage.get("calls").getAsJsonArray();
-        assertTrue(secondPageCallsArray.size() == 100);
-        assertTrue(secondPage.get("start").getAsInt() == 200);
-        assertTrue(secondPage.get("end").getAsInt() == 299);
+        assertEquals(secondPageCallsArray.size(), 100);
+        assertEquals(secondPage.get("start").getAsInt(), 200);
+        assertEquals(secondPage.get("end").getAsInt(), 299);
 
         JsonObject lastPage = (JsonObject) RestcommCallsTool.getInstance().getCalls(deploymentUrl.toString(), adminAccountSid,
                 adminAuthToken, firstPage.get("num_pages").getAsInt(), 100, null, true);
         JsonArray lastPageCallsArray = lastPage.get("calls").getAsJsonArray();
-        assertEquals("CAe803a594ac1649d98855eafc7535ed41",lastPageCallsArray.get(lastPageCallsArray.size() - 1).getAsJsonObject().get("sid").getAsString());
-        assertTrue(lastPageCallsArray.size() == 48);
-        assertTrue(lastPage.get("start").getAsInt() == 400);
-        assertTrue(lastPage.get("end").getAsInt() == 448);
+        assertEquals("CA22ac5fd16a954c339f33519bdfe4af78",lastPageCallsArray.get(lastPageCallsArray.size() - 1).getAsJsonObject().get("sid").getAsString());
+        assertEquals(lastPageCallsArray.size(), 48);
+        assertEquals(lastPage.get("start").getAsInt(), 400);
+        assertEquals(lastPage.get("end").getAsInt(), 448);
 
-        assertTrue(totalSize == 448);
+        assertEquals(totalSize, 448);
     }
 
     @Test
@@ -167,12 +167,12 @@ public class CallsEndpointTest {
         JsonObject filteredCallsByStatusObject = RestcommCallsTool.getInstance().getCallsUsingFilter(deploymentUrl.toString(),
                 adminAccountSid, adminAuthToken, filters);
 
-        assertTrue(filteredCallsByStatusObject.get("calls").getAsJsonArray().size() == 50);
-        assertTrue(allCallsObject.get("start").getAsInt() == 0);
-        assertTrue(allCallsObject.get("end").getAsInt() == 49);
-        assertTrue(filteredCallsByStatusObject.get("start").getAsInt() == 0);
-        assertTrue(filteredCallsByStatusObject.get("end").getAsInt() == 49);
-        assertTrue(allCallsObject.get("calls").getAsJsonArray().size() == filteredCallsByStatusObject.get("calls")
+        assertEquals(filteredCallsByStatusObject.get("calls").getAsJsonArray().size(), 50);
+        assertEquals(allCallsObject.get("start").getAsInt(), 0);
+        assertEquals(allCallsObject.get("end").getAsInt(), 49);
+        assertEquals(filteredCallsByStatusObject.get("start").getAsInt(), 0);
+        assertEquals(filteredCallsByStatusObject.get("end").getAsInt(), 49);
+        assertEquals(allCallsObject.get("calls").getAsJsonArray().size(), filteredCallsByStatusObject.get("calls")
                 .getAsJsonArray().size());
     }
 
@@ -187,12 +187,12 @@ public class CallsEndpointTest {
         JsonObject filteredCallsBySender = RestcommCallsTool.getInstance().getCallsUsingFilter(deploymentUrl.toString(),
                 adminAccountSid, adminAuthToken, filters);
 
-        assertTrue(filteredCallsBySender.get("calls").getAsJsonArray().size() == 50);
-        assertTrue(allCalls.get("start").getAsInt() == 0);
-        assertTrue(allCalls.get("end").getAsInt() == 49);
-        assertTrue(filteredCallsBySender.get("start").getAsInt() == 0);
-        assertTrue(filteredCallsBySender.get("end").getAsInt() == 49);
-        assertTrue(allCalls.get("calls").getAsJsonArray().size() == filteredCallsBySender.get("calls").getAsJsonArray().size());
+        assertEquals(filteredCallsBySender.get("calls").getAsJsonArray().size(), 50);
+        assertEquals(allCalls.get("start").getAsInt(), 0);
+        assertEquals(allCalls.get("end").getAsInt(), 49);
+        assertEquals(filteredCallsBySender.get("start").getAsInt(), 0);
+        assertEquals(filteredCallsBySender.get("end").getAsInt(), 49);
+        assertEquals(allCalls.get("calls").getAsJsonArray().size(), filteredCallsBySender.get("calls").getAsJsonArray().size());
     }
 
     @Test
@@ -206,8 +206,8 @@ public class CallsEndpointTest {
         JsonObject filteredCallsByRecipient = RestcommCallsTool.getInstance().getCallsUsingFilter(deploymentUrl.toString(),
                 adminAccountSid, adminAuthToken, filters);
 
-        assertTrue(filteredCallsByRecipient.get("calls").getAsJsonArray().size() == 50);
-        assertTrue(allCalls.get("calls").getAsJsonArray().size() == filteredCallsByRecipient.get("calls").getAsJsonArray()
+        assertEquals(filteredCallsByRecipient.get("calls").getAsJsonArray().size(), 50);
+        assertEquals(allCalls.get("calls").getAsJsonArray().size(), filteredCallsByRecipient.get("calls").getAsJsonArray()
                 .size());
     }
 
@@ -223,7 +223,7 @@ public class CallsEndpointTest {
                 adminAccountSid, adminAuthToken, filters);
 
         assertTrue(filteredCallsByStartTime.get("calls").getAsJsonArray().size() > 0);
-        assertTrue(allCalls.get("calls").getAsJsonArray().size() == filteredCallsByStartTime.get("calls").getAsJsonArray()
+        assertEquals(allCalls.get("calls").getAsJsonArray().size(), filteredCallsByStartTime.get("calls").getAsJsonArray()
                 .size());
     }
 
@@ -236,7 +236,7 @@ public class CallsEndpointTest {
         JsonObject filteredCallsByParentCallSid = RestcommCallsTool.getInstance().getCallsUsingFilter(deploymentUrl.toString(),
                 adminAccountSid, adminAuthToken, filters);
 
-        assertTrue(filteredCallsByParentCallSid.get("calls").getAsJsonArray().size() == 0);
+        assertEquals(filteredCallsByParentCallSid.get("calls").getAsJsonArray().size(), 0);
     }
 
     @Test
