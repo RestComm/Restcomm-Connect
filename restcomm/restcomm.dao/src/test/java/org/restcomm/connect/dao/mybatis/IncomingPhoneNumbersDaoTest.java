@@ -37,6 +37,7 @@ import org.restcomm.connect.dao.IncomingPhoneNumbersDao;
 import org.restcomm.connect.dao.entities.IncomingPhoneNumber;
 import org.restcomm.connect.dao.entities.IncomingPhoneNumberFilter;
 import org.restcomm.connect.commons.dao.Sid;
+import org.restcomm.connect.dao.common.SortDirection;
 import org.restcomm.connect.dao.entities.SearchFilterMode;
 
 /**
@@ -174,7 +175,7 @@ public class IncomingPhoneNumbersDaoTest {
         final IncomingPhoneNumbersDao dao = manager.getIncomingPhoneNumbersDao();
         IncomingPhoneNumberFilter.Builder filterBuilder = IncomingPhoneNumberFilter.Builder.builder();
         filterBuilder.byAccountSid("ACae6e420f425248d6a26948c17a9e2acf");
-        filterBuilder.sortedBy("phone_number", "ASC");
+        filterBuilder.sortedByPhoneNumber(SortDirection.ASCENDING);
         filterBuilder.limited(50, 0);
         List<IncomingPhoneNumber> phoneNumbers = dao.getIncomingPhoneNumbersByFilter(filterBuilder.build());
         Assert.assertEquals("Only a single phone number expected",1, phoneNumbers.size());
@@ -220,6 +221,7 @@ public class IncomingPhoneNumbersDaoTest {
         IncomingPhoneNumberFilter.Builder filterBuilder = IncomingPhoneNumberFilter.Builder.builder();
         filterBuilder.byPhoneNumber("+12223334444");
         filterBuilder.byAccountSid(account.toString());
+        filterBuilder.sortedByfriendly(SortDirection.ASCENDING);
         List<IncomingPhoneNumber> incomingPhoneNumbers = numbers.getIncomingPhoneNumbersByFilter(filterBuilder.build());
         assertNotNull (incomingPhoneNumbers);
         assertEquals (1, incomingPhoneNumbers.size());
@@ -231,6 +233,7 @@ public class IncomingPhoneNumbersDaoTest {
         filterBuilder.byPhoneNumber("2223334444");
         filterBuilder.byAccountSid(account.toString());
         filterBuilder.usingMode(SearchFilterMode.WILDCARD_MATCH);
+        filterBuilder.sortedByPhoneNumber(SortDirection.DESCENDING);
         incomingPhoneNumbers = numbers.getIncomingPhoneNumbersByFilter(filterBuilder.build());
         assertNotNull (incomingPhoneNumbers);
         assertEquals (1, incomingPhoneNumbers.size());
@@ -311,6 +314,7 @@ public class IncomingPhoneNumbersDaoTest {
         filterBuilder.byPhoneNumber("+12223334444");
         filterBuilder.byOrgSid(org2.toString());
         filterBuilder.byPureSIP(Boolean.FALSE);
+        filterBuilder.sortedByPhoneNumber(SortDirection.NONE);
         IncomingPhoneNumberFilter numFilter = filterBuilder.build();
         List<IncomingPhoneNumber> incomingPhoneNumbers = numbers.getIncomingPhoneNumbersByFilter(numFilter);
         assertNotNull(incomingPhoneNumbers);
@@ -387,6 +391,7 @@ public class IncomingPhoneNumbersDaoTest {
         IncomingPhoneNumberFilter.Builder filterBuilder = IncomingPhoneNumberFilter.Builder.builder();
         filterBuilder.byOrgSid(org1.toString());
         filterBuilder.byPureSIP(Boolean.TRUE);
+        filterBuilder.sortedByfriendly(SortDirection.DESCENDING);
         IncomingPhoneNumberFilter numFilter = filterBuilder.build();
         List<IncomingPhoneNumber> incomingPhoneNumbers = numbers.getIncomingPhoneNumbersRegex(numFilter);
         assertNotNull(incomingPhoneNumbers);
