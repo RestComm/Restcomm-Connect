@@ -23,38 +23,13 @@ import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
 import com.sun.jersey.spi.resource.Singleton;
 import com.thoughtworks.xstream.XStream;
-import java.io.File;
-import java.net.URI;
-import java.text.ParseException;
-import java.util.ArrayList;
-import java.util.List;
-import javax.annotation.PostConstruct;
-import javax.servlet.ServletContext;
-import javax.ws.rs.GET;
-import javax.ws.rs.HeaderParam;
-import javax.ws.rs.Path;
-import javax.ws.rs.PathParam;
-import javax.ws.rs.Produces;
-import javax.ws.rs.core.Context;
-import javax.ws.rs.core.MediaType;
-import static javax.ws.rs.core.MediaType.APPLICATION_JSON;
-import static javax.ws.rs.core.MediaType.APPLICATION_JSON_TYPE;
-import static javax.ws.rs.core.MediaType.APPLICATION_XML;
-import static javax.ws.rs.core.MediaType.APPLICATION_XML_TYPE;
-import javax.ws.rs.core.Response;
-import static javax.ws.rs.core.Response.Status.BAD_REQUEST;
-import static javax.ws.rs.core.Response.Status.NOT_FOUND;
-import static javax.ws.rs.core.Response.ok;
-import static javax.ws.rs.core.Response.status;
-import static javax.ws.rs.core.Response.temporaryRedirect;
-import javax.ws.rs.core.SecurityContext;
-import javax.ws.rs.core.UriInfo;
 import org.apache.commons.configuration.Configuration;
 import org.restcomm.connect.commons.amazonS3.RecordingSecurityLevel;
 import org.restcomm.connect.commons.amazonS3.S3AccessTool;
 import org.restcomm.connect.commons.annotations.concurrency.ThreadSafe;
 import org.restcomm.connect.commons.configuration.RestcommConfiguration;
 import org.restcomm.connect.commons.dao.Sid;
+import org.restcomm.connect.core.service.api.RecordingService;
 import org.restcomm.connect.dao.AccountsDao;
 import org.restcomm.connect.dao.DaoManager;
 import org.restcomm.connect.dao.RecordingsDao;
@@ -69,6 +44,35 @@ import org.restcomm.connect.http.converter.RestCommResponseConverter;
 import org.restcomm.connect.http.security.ContextUtil;
 import org.restcomm.connect.http.security.PermissionEvaluator.SecuredType;
 import org.restcomm.connect.identity.UserIdentityContext;
+
+import javax.annotation.PostConstruct;
+import javax.servlet.ServletContext;
+import javax.ws.rs.DELETE;
+import javax.ws.rs.GET;
+import javax.ws.rs.HeaderParam;
+import javax.ws.rs.Path;
+import javax.ws.rs.PathParam;
+import javax.ws.rs.Produces;
+import javax.ws.rs.core.Context;
+import javax.ws.rs.core.MediaType;
+import javax.ws.rs.core.Response;
+import javax.ws.rs.core.SecurityContext;
+import javax.ws.rs.core.UriInfo;
+import java.io.File;
+import java.net.URI;
+import java.text.ParseException;
+import java.util.ArrayList;
+import java.util.List;
+
+import static javax.ws.rs.core.MediaType.APPLICATION_JSON;
+import static javax.ws.rs.core.MediaType.APPLICATION_JSON_TYPE;
+import static javax.ws.rs.core.MediaType.APPLICATION_XML;
+import static javax.ws.rs.core.MediaType.APPLICATION_XML_TYPE;
+import static javax.ws.rs.core.Response.Status.BAD_REQUEST;
+import static javax.ws.rs.core.Response.Status.NOT_FOUND;
+import static javax.ws.rs.core.Response.ok;
+import static javax.ws.rs.core.Response.status;
+import static javax.ws.rs.core.Response.temporaryRedirect;
 
 /**
  * @author quintana.thomas@gmail.com (Thomas Quintana)
@@ -88,6 +92,7 @@ public class RecordingsEndpoint extends AbstractEndpoint {
     private RecordingSecurityLevel securityLevel = RecordingSecurityLevel.SECURE;
     private RecordingListConverter listConverter;
     private String instanceId;
+    private RecordingService recordingService;
 
 
 
@@ -103,6 +108,7 @@ public class RecordingsEndpoint extends AbstractEndpoint {
         Configuration amazonS3Configuration = configuration.subset("amazon-s3");
         configuration = configuration.subset("runtime-settings");
         super.init(configuration);
+        recordingService = (RecordingService) context.getAttribute(RecordingService.class.getName());
         this.accountsDao = storage.getAccountsDao();
         dao = storage.getRecordingsDao();
         final RecordingConverter converter = new RecordingConverter(configuration);
@@ -356,6 +362,26 @@ public class RecordingsEndpoint extends AbstractEndpoint {
         return status(Response.Status.NOT_FOUND).build();
     }
 
+    protected Response deleteRecording(final String accountSid,
+                                    final String sid,
+                                    UserIdentityContext userIdentityContext) {
+        Account operatedAccount = accountsDao.getAccount(accountSid);
+        permissionEvaluator.secure(operatedAccount,
+                "RestComm:Delete:Recordings",
+                userIdentityContext);
+        final Recording recording = dao.getRecording(new Sid(sid));
+        if (recording == null) {
+            return status(NOT_FOUND).build();
+        } else {
+            permissionEvaluator.secure(operatedAccount,
+                    recording.getAccountSid(),
+                    SecuredType.SECURED_STANDARD,
+                    userIdentityContext);
+            recordingService.removeRecording(recording.getSid());
+            return Response.status(Response.Status.OK).build();
+        }
+    }
+
     @Path("/{sid}.wav")
     @GET
     @Produces({MediaType.APPLICATION_XML, MediaType.APPLICATION_JSON})
@@ -381,6 +407,17 @@ public class RecordingsEndpoint extends AbstractEndpoint {
         return getRecording(accountSid,
                 sid,
                 retrieveMediaType(accept),
+                ContextUtil.convert(sec));
+    }
+
+    @Path("/{sid}")
+    @DELETE
+    @Produces({MediaType.APPLICATION_XML, MediaType.APPLICATION_JSON})
+    public Response deleteRecording(@PathParam("accountSid") final String accountSid,
+                                      @PathParam("sid") final String sid,
+                                      @Context SecurityContext sec) {
+        return deleteRecording(accountSid,
+                sid,
                 ContextUtil.convert(sec));
     }
 

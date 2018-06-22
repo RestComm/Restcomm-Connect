@@ -653,8 +653,10 @@ public class MockMediaGateway extends RestcommUntypedActor {
         final NotificationRequest request = (NotificationRequest) message;
 
         MgcpEvent event = null;
-        if (request.getSignalRequests()[0].getEventIdentifier().getName().equalsIgnoreCase("es")
-                || request.getSignalRequests()[0].getEventIdentifier().getName().equalsIgnoreCase("pr")) {
+        // Remove case RQNT for stoping media instead of stop recording.
+        if (!request.getSignalRequests()[0].getEventIdentifier().getParms().equalsIgnoreCase("sg=pa") &&
+                (request.getSignalRequests()[0].getEventIdentifier().getName().equalsIgnoreCase("es") ||
+                        request.getSignalRequests()[0].getEventIdentifier().getName().equalsIgnoreCase("pr"))) {
             //Looks like this is either an RQNT AU/ES or
             //recording max length reached and we got the original recording RQNT
             event = AUMgcpEvent.auoc.withParm("AU/pr ri=file://" + recordingFile.toPath() + " rc=100 dc=1");
@@ -700,7 +702,9 @@ public class MockMediaGateway extends RestcommUntypedActor {
             }
         }
 
-        if (events != null && !events[0].getEventIdentifier().getName().equalsIgnoreCase("pr")) {
+        if (events != null && !events[0].getEventIdentifier().getName().equalsIgnoreCase("pr") &&
+                // In real scenario, there is no NTFY for finish ringing immediately.
+                !events[0].getEventIdentifier().getParms().contains("ringing.wav")) {
             if (NotificationRequest.class.equals(command.getClass())) {
                 final NotificationRequest request = (NotificationRequest) command;
                 final String id = Long.toString(requestIdPool.get());
