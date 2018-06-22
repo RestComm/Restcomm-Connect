@@ -57,13 +57,13 @@ public final class DownloaderTest {
 
     private ActorSystem system;
     private ActorRef downloader;
-    
+
     private static int MOCK_PORT = 8099;
     //use localhost instead of 127.0.0.1 to match the route rule
     private static String PATH = "http://localhost:" + MOCK_PORT + "/";
 
     @Rule
-    public WireMockRule wireMockRule = new WireMockRule(wireMockConfig().bindAddress("127.0.0.1").port(MOCK_PORT));    
+    public WireMockRule wireMockRule = new WireMockRule(wireMockConfig().bindAddress("127.0.0.1").port(MOCK_PORT));
 
     public DownloaderTest() {
         super();
@@ -71,7 +71,7 @@ public final class DownloaderTest {
 
     @Before
     public void before() throws Exception {
-        URL url = this.getClass().getResource("/restcomm.xml");
+        URL url = this.getClass().getResource("/restcomm_downloader.xml");
         Configuration xml = new XMLConfiguration(url);
         RestcommConfiguration.createOnce(xml);
         system = ActorSystem.create();
@@ -89,7 +89,7 @@ public final class DownloaderTest {
         stubFor(get(urlMatching("/testGet")).willReturn(aResponse()
                 .withStatus(200)
                 .withHeader("Content-Type", "application/json")
-                .withBody("expectedBody")));        
+                .withBody("expectedBody")));
         new JavaTestKit(system) {
             {
                 final ActorRef observer = getRef();
@@ -135,7 +135,7 @@ public final class DownloaderTest {
         stubFor(get(urlMatching("/testNotFound")).willReturn(aResponse()
                 .withStatus(404)
                 .withHeader("Content-Type", "application/json")
-                .withBody("{}")));        
+                .withBody("{}")));
         new JavaTestKit(system) {
             {
                 final ActorRef observer = getRef();
@@ -172,12 +172,12 @@ public final class DownloaderTest {
                 final String method = "GET";
                 final HttpRequestDescriptor request = new HttpRequestDescriptor(uri, method);
                 final ActorRef observer = getRef();
-                
+
                 for (int i =0; i < connsPerRoute; i ++)
                 {
                     downloader = system.actorOf(new Props(Downloader.class));
                     downloader.tell(request, observer);
-                }           
+                }
                 Thread.sleep(1000);
                 downloader = system.actorOf(new Props(Downloader.class));
                 downloader.tell(request, observer);
