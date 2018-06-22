@@ -137,6 +137,8 @@ import java.util.concurrent.TimeUnit;
 import java.util.regex.Pattern;
 
 import static akka.pattern.Patterns.ask;
+import org.restcomm.connect.http.asyncclient.HttpAsycClientHelper;
+import org.restcomm.connect.interpreter.rcml.SmsVerb;
 
 /**
  * @author thomas.quintana@telestax.com (Thomas Quintana)
@@ -176,7 +178,6 @@ public abstract class BaseVoiceInterpreter extends RestcommUntypedActor {
     final State sendingSms;
     final State hangingUp;
     final State sendingEmail;
-    final State continuousGathering;
     // final State finished;
 
     // FSM.
@@ -262,6 +263,7 @@ public abstract class BaseVoiceInterpreter extends RestcommUntypedActor {
     Boolean processingGather = false;
     Boolean dtmfReceived = false;
     String finishOnKey;
+    String startInputKey;
     int numberOfDigits = Short.MAX_VALUE;
     StringBuffer collectedDigits;
     String speechResult;
@@ -302,8 +304,6 @@ public abstract class BaseVoiceInterpreter extends RestcommUntypedActor {
         sendingSms = new State("sending sms", new SendingSms(source), null);
         hangingUp = new State("hanging up", new HangingUp(source), null);
         sendingEmail = new State("sending Email", new SendingEmail(source), null);
-        continuousGathering = new State("push partial result", new PartialGathering(source), null);
-
         // Initialize the transitions for the FSM.
         transitions.add(new Transition(uninitialized, acquiringAsrInfo));
         transitions.add(new Transition(acquiringAsrInfo, acquiringSynthesizerInfo));
@@ -385,10 +385,6 @@ public abstract class BaseVoiceInterpreter extends RestcommUntypedActor {
 
         transitions.add(new Transition(gathering, finishGathering));
         transitions.add(new Transition(gathering, hangingUp));
-        transitions.add(new Transition(gathering, continuousGathering));
-
-        transitions.add(new Transition(continuousGathering, continuousGathering));
-        transitions.add(new Transition(continuousGathering, finishGathering));
 
         transitions.add(new Transition(finishGathering, faxing));
         transitions.add(new Transition(finishGathering, sendingEmail));
@@ -415,6 +411,8 @@ public abstract class BaseVoiceInterpreter extends RestcommUntypedActor {
         transitions.add(new Transition(sendingSms, hangingUp));
 
         extensions = ExtensionController.getInstance().getExtensions(ExtensionType.FeatureAccessControl);
+
+        httpAsycClientHelper = httpAsycClientHelper();
     }
 
     @Override
@@ -699,6 +697,9 @@ public abstract class BaseVoiceInterpreter extends RestcommUntypedActor {
         if (downloader != null && !downloader.isTerminated()) {
             getContext().stop(downloader);
         }
+        if(httpAsycClientHelper != null && !httpAsycClientHelper.isTerminated()) {
+            getContext().stop(httpAsycClientHelper);
+        }
     }
 
     void sendMail(final Notification notification) {
@@ -835,6 +836,26 @@ public abstract class BaseVoiceInterpreter extends RestcommUntypedActor {
             synthesizer = tts(ttsConf);
         }
         return synthesizer;
+    }
+
+    private ActorRef httpAsycClientHelper;
+
+    protected ActorRef httpAsycClientHelper(){
+        final Props props = new Props(new UntypedActorFactory() {
+            private static final long serialVersionUID = 1L;
+
+            @Override
+            public UntypedActor create() throws Exception {
+                return new HttpAsycClientHelper();
+            }
+        });
+        return getContext().actorOf(props);
+
+    }
+    private void notifyAsyncWebHook(HttpRequestDescriptor httpReq) {
+        httpAsycClientHelper.tell(httpReq, self());
+
+
     }
 
     ActorRef tts(final Configuration ttsConf) {
@@ -1599,8 +1620,23 @@ public abstract class BaseVoiceInterpreter extends RestcommUntypedActor {
 
             // Parse finish on key.
             finishOnKey = finishOnKey(verb);
+            // Parse start Input key
+            startInputKey = "*0123456789"; // Default value.
+            Attribute attribute = verb.attribute(GatherAttributes.ATTRIBUTE_START_INPUT_KEY);
+            if (attribute != null) {
+                final String value = attribute.value();
+                if (!StringUtils.isEmpty(value)) {
+                    if (!PATTERN.matcher(value).matches()) {
+                        final Notification notification = notification(WARNING_NOTIFICATION, 13315, value
+                                + " is not a valid startInputKey value");
+                        notifications.addNotification(notification);
+                    } else {
+                        startInputKey = value;
+                    }
+                }
+            }
             // Parse the number of digits.
-            Attribute attribute = verb.attribute(GatherAttributes.ATTRIBUTE_NUM_DIGITS);
+            attribute = verb.attribute(GatherAttributes.ATTRIBUTE_NUM_DIGITS);
             if (attribute != null) {
                 final String value = attribute.value();
                 if (!StringUtils.isEmpty(value)) {
@@ -1630,7 +1666,7 @@ public abstract class BaseVoiceInterpreter extends RestcommUntypedActor {
             }
             // Start gathering.
             final Collect collect = new Collect(restcommConfiguration.getMgAsr().getDefaultDriver(), inputType, gatherPrompts,
-                    null, timeout, finishOnKey, numberOfDigits, lang, hints, partialResultCallbackAttr != null && !StringUtils.isEmpty(partialResultCallbackAttr.value()));
+                    null, timeout, finishOnKey, startInputKey, numberOfDigits, lang, hints, partialResultCallbackAttr != null && !StringUtils.isEmpty(partialResultCallbackAttr.value()));
             call.tell(collect, source);
             // Some clean up.
             gatherChildren = null;
@@ -1705,7 +1741,7 @@ public abstract class BaseVoiceInterpreter extends RestcommUntypedActor {
             final URI base = request.getUri();
             final URI uri = UriUtils.resolve(base, target);
             request = new HttpRequestDescriptor(uri, method, parameters);
-            downloader.tell(request, source);
+            notifyAsyncWebHook(request);
         }
     }
 
@@ -2215,29 +2251,6 @@ public abstract class BaseVoiceInterpreter extends RestcommUntypedActor {
             } else {
                 // Start observing events from the sms session.
                 session.tell(new Observe(source), source);
-                // Store the status callback in the sms session.
-                attribute = verb.attribute("statusCallback");
-                if (attribute != null) {
-                    String callback = attribute.value();
-                    if (callback != null && !callback.isEmpty()) {
-                        URI target = null;
-                        try {
-                            target = URI.create(callback);
-                        } catch (final Exception exception) {
-                            final Notification notification = notification(ERROR_NOTIFICATION, 14105, callback
-                                    + " is an invalid URI.");
-                            notifications.addNotification(notification);
-                            sendMail(notification);
-                            smsService.tell(new DestroySmsSession(session), source);
-                            final StopInterpreter stop = new StopInterpreter();
-                            source.tell(stop, source);
-                            return;
-                        }
-                        final URI base = request.getUri();
-                        final URI uri = UriUtils.resolve(base, target);
-                        session.tell(new SmsSessionAttribute("callback", uri), source);
-                    }
-                }
                 // Create an SMS detail record.
                 final Sid sid = Sid.generate(Sid.Type.SMS_MESSAGE);
                 final SmsMessage.Builder builder = SmsMessage.builder();
@@ -2256,6 +2269,7 @@ public abstract class BaseVoiceInterpreter extends RestcommUntypedActor {
                 buffer.append(sid.toString());
                 final URI uri = URI.create(buffer.toString());
                 builder.setUri(uri);
+                SmsVerb.populateAttributes(verb, builder);
                 final SmsMessage record = builder.build();
                 final SmsMessagesDao messages = storage.getSmsMessagesDao();
                 messages.addSmsMessage(record);
@@ -2315,4 +2329,6 @@ public abstract class BaseVoiceInterpreter extends RestcommUntypedActor {
             parser.tell(next, source);
         }
     }
+
+
 }

@@ -27,6 +27,11 @@
             <param-value>true</param-value>
     </init-param> 
   </servlet>
+  
+  <servlet>
+    <servlet-name>RestcommFileCache</servlet-name>
+    <servlet-class>org.restcomm.connect.http.filters.FileCacheServlet</servlet-class>
+  </servlet>  
 
   <context-param>
     <param-name>resteasy.scan</param-name>
@@ -47,6 +52,12 @@
     <servlet-name>Jersey</servlet-name>
     <url-pattern>/2012-04-24/*</url-pattern>
   </servlet-mapping>
+  
+  <servlet-mapping>
+    <servlet-name>RestcommFileCache</servlet-name>
+    <url-pattern>/cache/*</url-pattern>
+  </servlet-mapping>
+  
 
   <welcome-file-list>
     <welcome-file>index.html</welcome-file>
