@@ -24,7 +24,6 @@ import com.sun.jersey.spi.container.ContainerRequestFilter;
 import org.apache.log4j.Logger;
 import org.restcomm.connect.dao.AccountsDao;
 import org.restcomm.connect.dao.DaoManager;
-import org.restcomm.connect.dao.OrganizationsDao;
 import org.restcomm.connect.dao.entities.Account;
 import org.restcomm.connect.dao.entities.Organization;
 import org.restcomm.connect.identity.UserIdentityContext;

@@ -412,14 +412,14 @@
             <testResource>
                 <directory>src/test/resources</directory>
                 <filtering>false</filtering>
-            </testResource>            
+            </testResource>
             <testResource>
                 <directory>src/test/resources/org/restcomm/connect/testsuite/http</directory>
                 <filtering>true</filtering>
                 <includes>
                     <include>*.xml</include>
                 </includes>
-                
+
             </testResource>
         </testResources>
 
