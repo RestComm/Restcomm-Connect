@@ -23,15 +23,16 @@ To download the audio file just append *.wav* after the *RecordingSid.*
 |CallSid |The unique id of the call during which the recording was made.
 |Duration |The length of the recording, in seconds.
 |ApiVersion |The API version in use during the recording.
-|Uri |The URI for this account, relative to https://localhost:restcomm.
-|FileUri |The File URI for this recording, relative to https://localhost:restcomm. It can be used to access the WAV file
+|Uri |The URI for this account, relative to https://cloud.restcomm.com/restcomm.
+|FileUri |The File URI for this recording, relative to https://cloud.restcomm.com/restcomm. It can be used to access the WAV file
 |S3Uri |The S3 URI for this recording - Exists ONLY IF Amazon S3 integration is enabled and security level is NONE-
 |==========================================================================
 
 === Supported Operations
 
 *HTTP GET.* Returns the representation of a Recording resource, including the properties above.
-**HTTP DELETE**. Removes the recording from the account.
+
+*HTTP DELETE*. Removes the recording from the account.
 
 == Recording List Resource
 
@@ -49,6 +50,10 @@ NOTE: Unlike the Recording instance resource described above, the list of record
 
 Returns the list representation of all the Recording resources for this Account, including the properties above.
 
+==== HTTP DELETE
+
+Deletes a recording that belongs to this Account.
+
 == How to Record a Message
 
 Go to the RCML section to learn how to record a message.
@@ -60,7 +65,7 @@ The list of recorded *wav* files can be found in the directory *$RESTCOMM_HOME/s
 From the bash terminal, you can run the command below:
 
 ....
-curl -X GET  https://ACae6e420f425248d6a26948c17a9e2acf:77f8c12cc7b8f8423e5c38b035249166@127.0.0.1:8080/restcomm/2012-04-24/Accounts/ACae6e420f425248d6a26948c17a9e2acf/Recordings.json
+curl -X GET  https://<accountSid>:<authToken>@cloud.restcomm.com/restcomm/2012-04-24/Accounts/ACae6e420f425248d6a26948c17a9e2acf/Recordings.json
 ....
 
 The response will be similar to the one below.
@@ -78,7 +83,7 @@ The response will be similar to the one below.
             "duration":"14.70275",
             "api_version":"2012-04-24",
             "uri":"/2012-04-24/Accounts/ACae6e420f425248d6a26948c17a9e2acf/Recordings/RE50675909d9c94acda36f0e119b6cb431.json",
-            "file_uri":"http://instance1.restcomm.com:8080/restcomm/recordings/RE50675909d9c94acda36f0e119b6cb431.wav"
+            "file_uri":"https://cloud.restcomm.com/restcomm/recordings/RE50675909d9c94acda36f0e119b6cb431.wav"
         },
         ...
     ]
@@ -90,7 +95,7 @@ NOTE: *<Sid>* holds the file name of the recorded message. The recording Sid.**w
 If you want to return the recording url you will need to parse the *<Uri>/2012-04-24/Accounts/ACae6e420f425248d6a26948c17a9e2acf/Recordings/REb4c03af76cdc4a27aad0d9d759e119bc</Uri>* response from Restcomm and add the extension .**wav**
 
 The *<Uri>* holds the http URI that can be used for playback or to download the recorded message.
-Here is how to access the file using http *https://IP_ADDRESS/restcomm/recordings/REb4c03af76cdc4a27aad0d9d759e119bc.wav*
+Here is how to access the file using http *https://cloud.restcomm.com/restcomm/recordings/REb4c03af76cdc4a27aad0d9d759e119bc.wav*
  
 
 == List Filter
@@ -114,7 +119,7 @@ Here is how to access the file using http *https://IP_ADDRESS/restcomm/recording
 The example below will only return Recordings that has been started from this CallSid
 
 ....
- curl -X GET  https://ACae6e420f425248d6a26948c17a9e2acf:77f8c12cc7b8f8423e5c38b035249166@127.0.0.1:8080/restcomm/2012-04-24/Accounts/ACae6e420f425248d6a26948c17a9e2acf/Recordings.json?CallSid=CAfe9ce46f104f5beeb10c83a5dad2be66
+ curl -X GET  https://<accountSid>:<authToken>@cloud.restcomm.com/restcomm/2012-04-24/Accounts/ACae6e420f425248d6a26948c17a9e2acf/Recordings.json?CallSid=CAfe9ce46f104f5beeb10c83a5dad2be66
 ....
 
 The result will be similar to the one below
@@ -132,7 +137,7 @@ The result will be similar to the one below
             "duration":"14.70275",
             "api_version":"2012-04-24",
             "uri":"/2012-04-24/Accounts/ACae6e420f425248d6a26948c17a9e2acf/Recordings/RE50675909d9c94acda36f0e119b6cb431.json",
-            "file_uri":"http://instance1.restcomm.com:8080/restcomm/recordings/RE50675909d9c94acda36f0e119b6cb431.wav"
+            "file_uri":"https://cloud.restcomm.com/restcomm/recordings/RE50675909d9c94acda36f0e119b6cb431.wav"
         },
         ...
     ]
@@ -158,12 +163,12 @@ The result will be similar to the one below
 
  
 
-=== Example. 
+=== Example.
 
 The command below will return a single item from the list of recordings using the PageSize parameter
 
 ....
-curl -X GET  https://ACae6e420f425248d6a26948c17a9e2acf:77f8c12cc7b8f8423e5c38b035249166@127.0.0.1:8080/restcomm/2012-04-24/Accounts/ACae6e420f425248d6a26948c17a9e2acf/Recordings.json?PageSize=1
+curl -X GET  https://<accountSid>:<authToken>@cloud.restcomm.com/restcomm/2012-04-24/Accounts/ACae6e420f425248d6a26948c17a9e2acf/Recordings.json?PageSize=1
 ....
 
 The result of the *PageSize* parameter
@@ -181,13 +186,11 @@ The result of the *PageSize* parameter
             "duration":"14.70275",
             "api_version":"2012-04-24",
             "uri":"/2012-04-24/Accounts/ACae6e420f425248d6a26948c17a9e2acf/Recordings/RE50675909d9c94acda36f0e119b6cb431.json",
-            "file_uri":"http://instance1.restcomm.com:8080/restcomm/recordings/RE50675909d9c94acda36f0e119b6cb431.wav"
+            "file_uri":"https://cloud.restcomm.com/restcomm/recordings/RE50675909d9c94acda36f0e119b6cb431.wav"
         }
     ]
 }
 ----
-
- 
 
 == Additional Paging Information.
 
@@ -204,3 +207,17 @@ The API returns URIs to the next, previous, first and last pages of the returned
 |Previouspageuri |The URI for the previous page of this list.
 |Lastpageuri |The URI for the last page of this list.
 |============================================================
+
+== Delete a Recording
+
+=== Recording Delete Resource URI
+
+* */2012-04-24/Accounts/{AccountSid}/Recordings/{RecordingSid}*
+
+From the bash terminal, you can run the command below:
+
+....
+curl -X DELETE  https://<accountSid>:<authToken>@cloud.restcomm.com/restcomm/2012-04-24/Accounts/ACae6e420f425248d6a26948c17a9e2acf/Recordings/RE10000000000000000000000000000032
+....
+
+

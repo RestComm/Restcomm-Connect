@@ -233,6 +233,7 @@ public class VoiceInterpreter extends BaseVoiceInterpreter {
 
     // Controls if VI will wait MS response to move to the next verb
     protected boolean msResponsePending;
+    private boolean msStopingRingTone = false;
 
     private boolean callWaitingForAnswer = false;
 
@@ -331,9 +332,6 @@ public class VoiceInterpreter extends BaseVoiceInterpreter {
         transitions.add(new Transition(finishGathering, ready));
         transitions.add(new Transition(finishGathering, finishGathering));
         transitions.add(new Transition(finishGathering, finished));
-        transitions.add(new Transition(continuousGathering, ready));
-        transitions.add(new Transition(continuousGathering, finishGathering));
-        transitions.add(new Transition(continuousGathering, finished));
         transitions.add(new Transition(creatingSmsSession, finished));
         transitions.add(new Transition(sendingSms, ready));
         transitions.add(new Transition(sendingSms, startDialing));
@@ -833,7 +831,12 @@ public class VoiceInterpreter extends BaseVoiceInterpreter {
             if (is(playingRejectionPrompt)) {
                 fsm.transition(message, hangingUp);
             } else if (is(playing)) {
-                fsm.transition(message, ready);
+                logger.info ("Is restcomm stoping ring tone: " + msStopingRingTone);
+                // When RestComm is requesting stop ring tone, the first NTFY response is for stop ring tone,
+                // instead for play/say verb. When enable200OkDelay = true, there is no NTFY for stop ring tone.
+                if (!msStopingRingTone || enable200OkDelay) {
+                    fsm.transition(message, ready);
+                }
             } else if (is(creatingRecording)) {
                 if (logger.isInfoEnabled()) {
                     logger.info("Will move to finishRecording because of MediaGroupResponse");
@@ -842,11 +845,18 @@ public class VoiceInterpreter extends BaseVoiceInterpreter {
             }
             // This is either MMS collected digits or SIP INFO DTMF. If the DTMF is from SIP INFO, then more DTMF might
             // come later
-            else if (is(gathering) || is(continuousGathering) || (is(finishGathering) && !super.dtmfReceived)) {
+            else if (is(gathering) || (is(finishGathering) && !super.dtmfReceived)) {
                 final MediaGroupResponse dtmfResponse = (MediaGroupResponse) message;
                 Object data = dtmfResponse.get();
                 if (data instanceof CollectedResult && ((CollectedResult)data).isAsr() && ((CollectedResult)data).isPartial()) {
-                    fsm.transition(message, continuousGathering);
+                    try {
+                        //we dont need a new state for this action. The notification
+                        //is purely async, and the Interpreter logic will resume
+                        //regardless notification result.
+                        new PartialGathering(self()).execute(message);
+                    } catch (Exception ex) {
+                        this.logger.debug("Notifying partial result", ex);
+                    }
                 } else if (data instanceof CollectedResult && ((CollectedResult)data).isAsr() && !((CollectedResult)data).isPartial() && collectedDigits.length() == 0) {
                     speechResult = ((CollectedResult)data).getResult();
                     fsm.transition(message, finishGathering);
@@ -898,6 +908,10 @@ public class VoiceInterpreter extends BaseVoiceInterpreter {
                     final GetNextVerb next = new GetNextVerb();
                     parser.tell(next, self());
                 }
+            }
+
+            if (msStopingRingTone) {
+                msStopingRingTone = !(((MediaGroupResponse) message).get() instanceof CollectedResult);
             }
         } else {
             fsm.transition(message, hangingUp);
@@ -1179,7 +1193,7 @@ public class VoiceInterpreter extends BaseVoiceInterpreter {
                 logger.debug("statusCode " + response.get().getStatusCode());
         }
         if (response.succeeded() && HttpStatus.SC_OK == response.get().getStatusCode()) {
-            if (continuousGathering.equals(state)) {
+            if (gathering.equals(state)) {
                 //no need change state
                 return;
             }
@@ -1286,8 +1300,7 @@ public class VoiceInterpreter extends BaseVoiceInterpreter {
                         }
                         if (dialBranches == null || dialBranches.size() == 0){
                             // Stop playing the ringing tone from inbound call
-                            msResponsePending = true;
-                            call.tell(new StopMediaGroup(), self());
+                            stopRingTone();
                         }
                         checkDialBranch(message, sender, action);
                         return;
@@ -1327,6 +1340,10 @@ public class VoiceInterpreter extends BaseVoiceInterpreter {
                 if (!sender.equals(call)) {
                     if (dialBranches != null && dialBranches.contains(sender)) {
                         dialBranches.remove(sender);
+                    }
+                    if (dialBranches == null || dialBranches.size() == 0){
+                        // Stop playing the ringing tone from inbound call
+                        stopRingTone();
                     }
                     checkDialBranch(message,sender,action);
                 } else if (sender.equals(call)) {
@@ -1393,7 +1410,13 @@ public class VoiceInterpreter extends BaseVoiceInterpreter {
                 if(call!=null && (call == sender) && event.state().equals(CallStateChanged.State.WAIT_FOR_ANSWER)){
                     callWaitingForAnswer  = true;
                 }
-                if (is(initializingCall) || is(rejecting)) {
+                if (enable200OkDelay && sender.equals(call) && event.state().equals(CallStateChanged.State.IN_PROGRESS) && callWaitingForAnswerPendingTag != null) {
+                    if (logger.isInfoEnabled()) {
+                        logger.info("Waiting call is inProgress we can proceed to the pending tag execution");
+                    }
+                    callWaitingForAnswer = false;
+                    onTagMessage(callWaitingForAnswerPendingTag);
+                } else if (is(initializingCall) || is(rejecting)) {
                     if (parser != null) {
                         //This is an inbound call
                         fsm.transition(message, ready);
@@ -1422,13 +1445,8 @@ public class VoiceInterpreter extends BaseVoiceInterpreter {
                         final GetNextVerb next = new GetNextVerb();
                         parser.tell(next, self());
                     }
-                } else if (enable200OkDelay && sender.equals(call) && event.state().equals(CallStateChanged.State.IN_PROGRESS) && callWaitingForAnswerPendingTag != null) {
-                    if (logger.isInfoEnabled()) {
-                        logger.info("Waiting call is inProgress we can proceed to the pending tag execution");
-                    }
-                    callWaitingForAnswer = false;
-                    onTagMessage(callWaitingForAnswerPendingTag);
                 }
+
                 // Update the storage for conferencing.
                 if (callRecord != null && !is(initializingCall) && !is(rejecting)) {
                     final CallDetailRecordsDao records = storage.getCallDetailRecordsDao();
@@ -1714,6 +1732,13 @@ public class VoiceInterpreter extends BaseVoiceInterpreter {
         }
     }
 
+    private void stopRingTone() {
+        // Stop playing the ringing tone from inbound call
+        msResponsePending = true;
+        msStopingRingTone = true;
+        call.tell(new StopMediaGroup(), self());
+    }
+
     private abstract class AbstractAction implements Action {
         protected final ActorRef source;
 
@@ -1932,7 +1957,7 @@ public class VoiceInterpreter extends BaseVoiceInterpreter {
                 source.tell(verb, source);
                 return;
             } else if (downloadingRcml.equals(state) || downloadingFallbackRcml.equals(state) || redirecting.equals(state)
-                    || continuousGathering.equals(state) || finishGathering.equals(state) || finishRecording.equals(state) || sendingSms.equals(state)
+                    || finishGathering.equals(state) || finishRecording.equals(state) || sendingSms.equals(state)
                     || finishDialing.equals(state) || finishConferencing.equals(state) || is(forking)) {
                 response = ((DownloaderResponse) message).get();
                 if (parser != null) {
@@ -2842,8 +2867,7 @@ public class VoiceInterpreter extends BaseVoiceInterpreter {
                         }
                     }
                     // Stop playing the ringing tone from inbound call
-                    msResponsePending = true;
-                    call.tell(new StopMediaGroup(), self());
+                    stopRingTone();
                 } else if (outboundCall != null) {
                     outboundCall.tell(new Cancel(), source);
                     call.tell(new Hangup(outboundCallResponse), self());
