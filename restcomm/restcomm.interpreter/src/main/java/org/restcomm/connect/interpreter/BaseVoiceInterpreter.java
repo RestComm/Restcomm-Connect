@@ -137,6 +137,7 @@ import java.util.concurrent.TimeUnit;
 import java.util.regex.Pattern;
 
 import static akka.pattern.Patterns.ask;
+import org.restcomm.connect.http.asyncclient.HttpAsycClientHelper;
 import org.restcomm.connect.interpreter.rcml.SmsVerb;
 
 /**
@@ -177,7 +178,6 @@ public abstract class BaseVoiceInterpreter extends RestcommUntypedActor {
     final State sendingSms;
     final State hangingUp;
     final State sendingEmail;
-    final State continuousGathering;
     // final State finished;
 
     // FSM.
@@ -304,8 +304,6 @@ public abstract class BaseVoiceInterpreter extends RestcommUntypedActor {
         sendingSms = new State("sending sms", new SendingSms(source), null);
         hangingUp = new State("hanging up", new HangingUp(source), null);
         sendingEmail = new State("sending Email", new SendingEmail(source), null);
-        continuousGathering = new State("push partial result", new PartialGathering(source), null);
-
         // Initialize the transitions for the FSM.
         transitions.add(new Transition(uninitialized, acquiringAsrInfo));
         transitions.add(new Transition(acquiringAsrInfo, acquiringSynthesizerInfo));
@@ -387,10 +385,6 @@ public abstract class BaseVoiceInterpreter extends RestcommUntypedActor {
 
         transitions.add(new Transition(gathering, finishGathering));
         transitions.add(new Transition(gathering, hangingUp));
-        transitions.add(new Transition(gathering, continuousGathering));
-
-        transitions.add(new Transition(continuousGathering, continuousGathering));
-        transitions.add(new Transition(continuousGathering, finishGathering));
 
         transitions.add(new Transition(finishGathering, faxing));
         transitions.add(new Transition(finishGathering, sendingEmail));
@@ -417,6 +411,8 @@ public abstract class BaseVoiceInterpreter extends RestcommUntypedActor {
         transitions.add(new Transition(sendingSms, hangingUp));
 
         extensions = ExtensionController.getInstance().getExtensions(ExtensionType.FeatureAccessControl);
+
+        httpAsycClientHelper = httpAsycClientHelper();
     }
 
     @Override
@@ -701,6 +697,9 @@ public abstract class BaseVoiceInterpreter extends RestcommUntypedActor {
         if (downloader != null && !downloader.isTerminated()) {
             getContext().stop(downloader);
         }
+        if(httpAsycClientHelper != null && !httpAsycClientHelper.isTerminated()) {
+            getContext().stop(httpAsycClientHelper);
+        }
     }
 
     void sendMail(final Notification notification) {
@@ -837,6 +836,26 @@ public abstract class BaseVoiceInterpreter extends RestcommUntypedActor {
             synthesizer = tts(ttsConf);
         }
         return synthesizer;
+    }
+
+    private ActorRef httpAsycClientHelper;
+
+    protected ActorRef httpAsycClientHelper(){
+        final Props props = new Props(new UntypedActorFactory() {
+            private static final long serialVersionUID = 1L;
+
+            @Override
+            public UntypedActor create() throws Exception {
+                return new HttpAsycClientHelper();
+            }
+        });
+        return getContext().actorOf(props);
+
+    }
+    private void notifyAsyncWebHook(HttpRequestDescriptor httpReq) {
+        httpAsycClientHelper.tell(httpReq, self());
+
+
     }
 
     ActorRef tts(final Configuration ttsConf) {
@@ -1722,7 +1741,7 @@ public abstract class BaseVoiceInterpreter extends RestcommUntypedActor {
             final URI base = request.getUri();
             final URI uri = UriUtils.resolve(base, target);
             request = new HttpRequestDescriptor(uri, method, parameters);
-            downloader.tell(request, source);
+            notifyAsyncWebHook(request);
         }
     }
 
