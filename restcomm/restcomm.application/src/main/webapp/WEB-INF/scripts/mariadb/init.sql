@@ -249,7 +249,10 @@ direction VARCHAR(14) NOT NULL,
 price VARCHAR(8) NOT NULL,
 api_version VARCHAR(10) NOT NULL,
 uri MEDIUMTEXT NOT NULL,
-smpp_message_id MEDIUMTEXT
+smpp_message_id MEDIUMTEXT,
+status_callback MEDIUMTEXT,
+status_callback_method MEDIUMTEXT,
+error_code BIGINT
 );
 
 CREATE TABLE restcomm_recordings (
@@ -465,6 +468,9 @@ CREATE INDEX idx_cdr_conference_sid ON restcomm_call_detail_records (conference_
 
 /* Create index on restcomm_call_detail_records on conference_sid column */
 CREATE INDEX idx_cdr_conference_status ON restcomm_conference_detail_records (status);
+
+/* Create index on restcomm_sms_messages on smpp_message_id column */
+CREATE INDEX idx_restcomm_sms_messages_smpp_message_id ON restcomm_sms_messages (smpp_message_id);
 
 DELIMITER //
 DROP PROCEDURE IF EXISTS addConferenceDetailRecord;

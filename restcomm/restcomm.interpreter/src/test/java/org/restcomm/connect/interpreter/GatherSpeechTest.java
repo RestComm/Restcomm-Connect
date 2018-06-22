@@ -79,6 +79,7 @@ import akka.actor.Props;
 import akka.actor.UntypedActorFactory;
 import akka.testkit.JavaTestKit;
 import akka.testkit.TestActorRef;
+import org.junit.Assert;
 import org.restcomm.connect.dao.entities.MediaAttributes;
 
 /**
@@ -157,6 +158,15 @@ public class GatherSpeechTest {
         return xmlConfiguration;
     }
 
+    private HttpResponseDescriptor getOk(URI uri) {
+        HttpResponseDescriptor.Builder builder = HttpResponseDescriptor.builder();
+        builder.setURI(uri);
+        builder.setStatusCode(200);
+        builder.setStatusDescription("OK");
+        builder.setContentLength(0);
+        return builder.build();
+    }
+
     private HttpResponseDescriptor getOkRcml(URI uri, String rcml) {
         HttpResponseDescriptor.Builder builder = HttpResponseDescriptor.builder();
         builder.setURI(uri);
@@ -201,6 +211,11 @@ public class GatherSpeechTest {
                 return new VoiceInterpreter(builder.build()) {
                     @Override
                     protected ActorRef downloader() {
+                        return observer;
+                    }
+
+                    @Override
+                    protected ActorRef httpAsycClientHelper(){
                         return observer;
                     }
 
@@ -384,7 +399,7 @@ public class GatherSpeechTest {
                 assertEquals(callback.getUri(), partialCallbackUri);
                 assertEquals(findParam(callback.getParameters(), "UnstableSpeechResult").getValue(), "1");
 
-                interpreter.tell(new DownloaderResponse(getOkRcml(partialCallbackUri, "")), observer);
+                interpreter.tell(new DownloaderResponse(getOk(partialCallbackUri)), observer);
 
                 //generate partial response2
                 interpreter.tell(new MediaGroupResponse(new CollectedResult("12", true, true)), observer);
@@ -532,7 +547,7 @@ public class GatherSpeechTest {
                 final ActorRef observer = getRef();
                 final TestActorRef<VoiceInterpreter> interpreterRef = createVoiceInterpreter(observer);
                 VoiceInterpreter interpreter = interpreterRef.underlyingActor();
-                interpreter.fsm = spy(new FiniteStateMachine(interpreter.continuousGathering, interpreter.transitions));
+                interpreter.fsm = spy(new FiniteStateMachine(interpreter.gathering, interpreter.transitions));
                 doNothing().when(interpreter.fsm).transition(any(), eq(interpreter.finishGathering));
                 interpreter.collectedDigits = new StringBuffer();
                 interpreterRef.tell(new MediaGroupResponse(new CollectedResult("", false, false)), observer);
@@ -549,8 +564,8 @@ public class GatherSpeechTest {
                 final ActorRef observer = getRef();
                 final TestActorRef<VoiceInterpreter> interpreterRef = createVoiceInterpreter(observer);
                 VoiceInterpreter interpreter = interpreterRef.underlyingActor();
-                interpreter.fsm = spy(new FiniteStateMachine(interpreter.continuousGathering, interpreter.transitions));
-                interpreterRef.tell(new DownloaderResponse(getOkRcml(partialCallbackUri, playRcml)), observer);
+                interpreter.fsm = spy(new FiniteStateMachine(interpreter.gathering, interpreter.transitions));
+                interpreterRef.tell(new DownloaderResponse(getOk(partialCallbackUri)), observer);
                 verify(interpreter.fsm, never()).transition(any(), any(State.class));
             }
         };
@@ -564,7 +579,7 @@ public class GatherSpeechTest {
                 final ActorRef observer = getRef();
                 final TestActorRef<VoiceInterpreter> interpreterRef = createVoiceInterpreter(observer);
                 VoiceInterpreter interpreter = interpreterRef.underlyingActor();
-                interpreter.fsm = spy(new FiniteStateMachine(interpreter.continuousGathering, interpreter.transitions));
+                interpreter.fsm = spy(new FiniteStateMachine(interpreter.gathering, interpreter.transitions));
                 doNothing().when(interpreter.fsm).transition(any(), eq(interpreter.finishGathering));
                 interpreter.collectedDigits = new StringBuffer();
                 interpreter.finishOnKey="#";
@@ -610,6 +625,55 @@ public class GatherSpeechTest {
                 interpreter.tell(new DownloaderResponse(getOkRcml(requestUri, gatherRcmlWithHints)), observer);
 
                 expectMsgClass(Hangup.class);
+            }
+        };
+    }
+
+    @Test
+    public void testStartInputKeys() {
+        final String inputKeys = "1234";
+        final String GATHER_WITH_START_INPUT = "<Response><Gather " +
+            GatherAttributes.ATTRIBUTE_PARTIAL_RESULT_CALLBACK + "=\"" + partialCallbackUri + "\" " +
+            GatherAttributes.ATTRIBUTE_TIME_OUT + "=\"60\" " +
+            GatherAttributes.ATTRIBUTE_START_INPUT_KEY + "=\"" + inputKeys + "\" " +
+            ">" +
+            "</Gather></Response>";
+        new JavaTestKit(system) {
+            {
+                final ActorRef observer = getRef();
+                final ActorRef interpreter = createVoiceInterpreter(observer);
+                interpreter.tell(new StartInterpreter(observer), observer);
+
+                expectMsgClass(GetCallInfo.class);
+                interpreter.tell(new CallResponse(new CallInfo(
+                        new Sid("ACae6e420f425248d6a26948c17a9e2acf"),
+                        new Sid("ACae6e420f425248d6a26948c17a9e2acf"),
+                        CallStateChanged.State.IN_PROGRESS,
+                        CreateCallType.SIP,
+                        "inbound",
+                        new DateTime(),
+                        null,
+                        "test", "test",
+                        "testTo",
+                        null,
+                        null,
+                        false,
+                        false,
+                        false,
+                        new DateTime(),
+                        new MediaAttributes())), observer);
+
+                expectMsgClass(Observe.class);
+
+                //wait for rcml downloading
+                HttpRequestDescriptor callback = expectMsgClass(HttpRequestDescriptor.class);
+                assertEquals(callback.getUri(), requestUri);
+
+                interpreter.tell(new DownloaderResponse(getOkRcml(requestUri, GATHER_WITH_START_INPUT)), observer);
+
+                Collect collectCmd = expectMsgClass(Collect.class);
+                Assert.assertTrue( collectCmd.hasStartInputKey());
+                assertEquals(inputKeys, collectCmd.startInputKey());
             }
         };
     }
