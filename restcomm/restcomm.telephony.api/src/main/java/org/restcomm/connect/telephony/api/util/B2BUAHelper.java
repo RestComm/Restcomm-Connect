@@ -61,6 +61,7 @@ import java.util.HashMap;
 import java.util.Iterator;
 import java.util.Map;
 import java.util.Vector;
+import javax.servlet.sip.SipApplicationSession;
 
 /**
   * Helper methods for proxying SIP messages between Restcomm clients that are connecting in peer to peer mode
@@ -864,5 +865,26 @@ import java.util.Vector;
              );
              system.eventStream().publish(new CallInfoStreamEvent(callInfo));
          }
+     }
+
+     public static void dropB2BUA(SipApplicationSession application) {
+        //finish sessions
+        Iterator<?> sessions = application.getSessions();
+        while(sessions.hasNext()) {
+            Object next = sessions.next();
+            if (next instanceof SipSession) {
+                try {
+                    SipSession session = (SipSession) next;
+                    SipServletRequest createRequest = session.createRequest("BYE");
+                    if (logger.isDebugEnabled()) {
+                        logger.debug("sending BYE");
+                    }
+                    createRequest.send();
+                } catch (IOException ex) {
+                    logger.debug("Unable to drop session.", ex);
+                }
+            }
+
+        }
      }
  }
