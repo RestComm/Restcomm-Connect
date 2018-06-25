@@ -74,7 +74,7 @@ import org.restcomm.connect.commons.telephony.CreateCallType;
 import org.restcomm.connect.commons.telephony.ProxyRule;
 import org.restcomm.connect.commons.util.DNSUtils;
 import org.restcomm.connect.commons.util.SdpUtils;
-import org.restcomm.connect.commons.util.UriUtils;
+import org.restcomm.connect.core.service.util.UriUtils;
 import org.restcomm.connect.core.service.api.NumberSelectorService;
 import org.restcomm.connect.core.service.number.api.NumberSelectionResult;
 import org.restcomm.connect.dao.AccountsDao;

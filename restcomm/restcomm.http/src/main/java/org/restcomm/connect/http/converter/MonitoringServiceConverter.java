@@ -32,7 +32,7 @@ import org.joda.time.DateTime;
 import org.joda.time.format.DateTimeFormat;
 import org.joda.time.format.DateTimeFormatter;
 import org.restcomm.connect.commons.Version;
-import org.restcomm.connect.commons.util.UriUtils;
+import org.restcomm.connect.core.service.util.UriUtils;
 import org.restcomm.connect.telephony.api.CallInfo;
 import org.restcomm.connect.telephony.api.MonitoringServiceResponse;
 

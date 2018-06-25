@@ -30,7 +30,7 @@ import org.apache.http.NameValuePair;
 import org.apache.http.message.BasicNameValuePair;
 import org.restcomm.connect.commons.dao.Sid;
 import org.restcomm.connect.commons.faulttolerance.RestcommUntypedActor;
-import org.restcomm.connect.commons.util.UriUtils;
+import org.restcomm.connect.core.service.util.UriUtils;
 import org.restcomm.connect.dao.DaoManager;
 import org.restcomm.connect.dao.entities.CallDetailRecord;
 import org.restcomm.connect.http.asyncclient.HttpAsycClientHelper;

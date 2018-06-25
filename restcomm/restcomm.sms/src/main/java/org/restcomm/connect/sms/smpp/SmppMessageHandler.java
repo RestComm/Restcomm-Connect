@@ -44,7 +44,7 @@ import org.restcomm.connect.commons.configuration.RestcommConfiguration;
 import org.restcomm.connect.commons.configuration.sets.RcmlserverConfigurationSet;
 import org.restcomm.connect.commons.dao.Sid;
 import org.restcomm.connect.commons.faulttolerance.RestcommUntypedActor;
-import org.restcomm.connect.commons.util.UriUtils;
+import org.restcomm.connect.core.service.util.UriUtils;
 import org.restcomm.connect.core.service.api.NumberSelectorService;
 import org.restcomm.connect.dao.AccountsDao;
 import org.restcomm.connect.dao.ApplicationsDao;

@@ -31,7 +31,7 @@ import org.restcomm.connect.commons.common.http.CustomHttpClientBuilder;
 import org.restcomm.connect.commons.configuration.sets.MainConfigurationSet;
 import org.restcomm.connect.commons.configuration.sets.RcmlserverConfigurationSet;
 import org.restcomm.connect.commons.util.SecurityUtils;
-import org.restcomm.connect.commons.util.UriUtils;
+import org.restcomm.connect.core.service.util.UriUtils;
 import org.restcomm.connect.dao.entities.Account;
 
 import java.net.URI;

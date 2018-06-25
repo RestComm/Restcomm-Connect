@@ -26,7 +26,7 @@ import com.sun.jersey.spi.container.ResourceFilter;
 import java.net.URI;
 import javax.ws.rs.ext.Provider;
 import org.apache.log4j.Logger;
-import org.restcomm.connect.commons.util.UriUtils;
+import org.restcomm.connect.core.service.util.UriUtils;
 
 /**
  * Ensures UriInfo builders build proper link scheme depending on container
