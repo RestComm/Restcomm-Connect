@@ -156,6 +156,10 @@ import scala.concurrent.duration.Duration;
  */
 public final class CallManager extends RestcommUntypedActor {
 
+    public static final String TIMEOUT_ATT ="org.restcomm.connect.telephony.timeoutProcessed";
+
+
+
     static final int ERROR_NOTIFICATION = 0;
     static final int WARNING_NOTIFICATION = 1;
     static final Pattern PATTERN = Pattern.compile("[\\*#0-9]{1,12}");
@@ -2442,8 +2446,14 @@ public final class CallManager extends RestcommUntypedActor {
         final SipApplicationSessionEvent event = (SipApplicationSessionEvent) message;
         final SipApplicationSession application = event.getApplicationSession();
         final ActorRef call = (ActorRef) application.getAttribute(Call.class.getName());
-        final ReceiveTimeout timeout = ReceiveTimeout.getInstance();
-        call.tell(timeout, self);
+        if (call != null) {
+            final ReceiveTimeout timeout = ReceiveTimeout.getInstance();
+            call.tell(timeout, self);
+        } else {
+            B2BUAHelper.dropB2BUA(application);
+        }
+        //mark timeout as processed
+        application.setAttribute(TIMEOUT_ATT, "completed");
     }
 
     public void checkErrorResponse(SipServletResponse response) {
