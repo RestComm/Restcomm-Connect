@@ -28,6 +28,7 @@ import org.joda.time.DateTime;
 import org.restcomm.connect.commons.annotations.concurrency.Immutable;
 import org.restcomm.connect.commons.annotations.concurrency.NotThreadSafe;
 import org.restcomm.connect.commons.dao.Sid;
+import org.restcomm.connect.commons.dao.MessageError;
 import org.restcomm.connect.commons.stream.StreamEvent;
 
 /**
@@ -53,10 +54,18 @@ public class SmsMessage implements StreamEvent {
     private final String apiVersion;
     private final URI uri;
     private final String smppMessageId;
+    private final URI statusCallback;
+    private final MessageError error;
+    private final String statusCallbackMethod;
 
     public SmsMessage(final Sid sid, final DateTime dateCreated, final DateTime dateUpdated, final DateTime dateSent,
             final Sid accountSid, final String sender, final String recipient, final String body, final Status status,
-            final Direction direction, final BigDecimal price, final Currency priceUnit, final String apiVersion, final URI uri, final String smppMessageId) {
+            final Direction direction, final BigDecimal price, final Currency priceUnit, final String apiVersion, final URI uri, final String smppMessageId,
+            final MessageError error, URI statusCallback,
+            String statusCallbackMethod) {
+
+
+
         super();
         this.sid = sid;
         this.dateCreated = dateCreated;
@@ -73,6 +82,9 @@ public class SmsMessage implements StreamEvent {
         this.apiVersion = apiVersion;
         this.uri = uri;
         this.smppMessageId = smppMessageId;
+        this.statusCallback = statusCallback;
+        this.statusCallbackMethod = statusCallbackMethod;
+        this.error = error;
     }
 
     public static Builder builder() {
@@ -139,23 +151,22 @@ public class SmsMessage implements StreamEvent {
         return smppMessageId;
     }
 
-    public SmsMessage setDateSent(final DateTime dateSent) {
-        return new SmsMessage(sid, dateCreated, DateTime.now(), dateSent, accountSid, sender, recipient, body, status,
-                direction, price, priceUnit, apiVersion, uri, smppMessageId);
+
+    public URI getStatusCallback() {
+        return statusCallback;
     }
 
-    public SmsMessage setStatus(final Status status) {
-        return new SmsMessage(sid, dateCreated, DateTime.now(), dateSent, accountSid, sender, recipient, body, status,
-                direction, price, priceUnit, apiVersion, uri, smppMessageId);
+    public String getStatusCallbackMethod() {
+        return statusCallbackMethod;
     }
 
-    public SmsMessage setSmppMessageId(final String smppMessageId) {
-        return new SmsMessage(sid, dateCreated, DateTime.now(), dateSent, accountSid, sender, recipient, body, status,
-                direction, price, priceUnit, apiVersion, uri, smppMessageId);
+    public MessageError getError() {
+        return error;
     }
 
     @NotThreadSafe
     public static final class Builder {
+
         private Sid sid;
         private DateTime dateSent;
         private Sid accountSid;
@@ -171,6 +182,9 @@ public class SmsMessage implements StreamEvent {
         private DateTime dateCreated;
         private DateTime dateUpdated;
         private String smppMessageId;
+        private URI statusCallback;
+        private String statusCallbackMethod = "POST";
+        private MessageError error;
 
         private Builder() {
             super();
@@ -183,8 +197,33 @@ public class SmsMessage implements StreamEvent {
             if (dateUpdated == null) {
                 dateUpdated = dateCreated;
             }
-            return new SmsMessage(sid, dateCreated, dateUpdated, dateSent, accountSid, sender, recipient, body, status, direction, price,
-                    priceUnit, apiVersion, uri, smppMessageId);
+            return new SmsMessage(sid, dateCreated, dateUpdated, dateSent,
+                    accountSid, sender, recipient, body, status, direction, price,
+                    priceUnit, apiVersion, uri, smppMessageId, error, statusCallback,
+                    statusCallbackMethod);
+        }
+
+        public Builder copyMessage(SmsMessage msg) {
+            this.accountSid = msg.accountSid;
+            this.sid = msg.sid;
+            this.dateCreated = msg.dateCreated;
+            this.dateUpdated = msg.dateUpdated;
+            this.dateSent = msg.dateSent;
+            this.accountSid = msg.accountSid;
+            this.sender = msg.sender;
+            this.recipient = msg.recipient;
+            this.body = msg.body;
+            this.status = msg.status;
+            this.direction = msg.direction;
+            this.price = msg.price;
+            this.priceUnit = msg.priceUnit;
+            this.apiVersion = msg.apiVersion;
+            this.uri = msg.uri;
+            this.smppMessageId = msg.smppMessageId;
+            this.error = msg.error;
+            this.statusCallback = msg.statusCallback;
+            this.statusCallbackMethod = msg.statusCallbackMethod;
+            return this;
         }
 
         public Builder setSid(final Sid sid) {
@@ -259,6 +298,21 @@ public class SmsMessage implements StreamEvent {
 
         public Builder setSmppMessageId(String smppMessageId) {
             this.smppMessageId = smppMessageId;
+            return this;
+        }
+
+        public Builder setStatusCallback(URI callback) {
+            this.statusCallback = callback;
+            return this;
+        }
+
+        public Builder setStatusCallbackMethod(String method) {
+            this.statusCallbackMethod = method;
+            return this;
+        }
+
+        public Builder setError(MessageError error) {
+            this.error = error;
             return this;
         }
     }
