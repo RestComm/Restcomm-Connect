@@ -12,7 +12,7 @@ Considering that Primary and Secondary accounts represents different Restcomm us
 
 [source,lang:default,decode:true]
 ----
-curl -X GET http://[primarySid]:[primaryAuthToken]@127.0.0.1:8080/restcomm/2012-04-24/Accounts/[secondarySid]/IncomingPhoneNumbers.json
+curl -X GET https://<accountSid>:<authToken>@cloud.restcomm.com/restcomm/2012-04-24/Accounts/[secondarySid]/IncomingPhoneNumbers.json
 ----
 
 As mentioned above, there are more possible combinations between credentials and accounts used to request information through the API. But instead list all those possibilities, we can assume the pattern used by the API to control access in a general way, grouped by the result obtained from the API: 
