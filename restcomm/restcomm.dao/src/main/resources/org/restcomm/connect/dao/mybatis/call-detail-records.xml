@@ -75,7 +75,7 @@
 
 	<!-- Issue 153: https://bitbucket.org/telestax/telscale-restcomm/issue/153 -->
 	<!-- Issue 153: https://bitbucket.org/telestax/telscale-restcomm/issue/110 -->
-	<select id="getCallDetailRecordByUsingFilters" parameterType="map" resultType="hashmap">
+	<select id="getCallDetailRecordByUsingFilters" parameterType="org.restcomm.connect.dao.entities.CallDetailRecordFilter" resultType="hashmap">
 		SELECT * FROM "restcomm_call_detail_records" AS "restcomm_call_detail_records" WHERE
 
 		<!-- are we retrieving cdrs from a single account or from an account set -->
@@ -120,12 +120,32 @@
 			AND "end_time" &lt;= DATE_ADD(#{endTime},INTERVAL 1 DAY)
 		</if>
 		<choose>
+			<when test="sortByDate != null and sortByDate != 'NONE'">
+				<if test="sortByDate == 'ASCENDING'">
+					order by "date_created" ASC
+				</if>
+				<if test="sortByDate == 'DESCENDING'">
+					order by "date_created" DESC
+				</if>
+			</when>
+			<when test="sortByFrom != null and sortByFrom != 'NONE'">
+				<if test="sortByFrom == 'ASCENDING'">
+					order by "sender" ASC
+				</if>
+				<if test="sortByFrom == 'DESCENDING'">
+					order by "sender" DESC
+				</if>
+			</when>
+
+			<!-- ... -->
+
+<!--
 			<when test="sortBy != null and sortDirection != null">
-				<!-- Without the quotes in the parameters the query is messed up, probably because HSQL needs table columns with double quotes -->
 				order by "${sortBy}" ${sortDirection}
 			</when>
+-->
 			<otherwise>
-				order by "start_time"
+				order by "date_created" DESC
 			</otherwise>
 		</choose>
 		LIMIT #{limit} OFFSET #{offset}

@@ -84,6 +84,7 @@ import org.restcomm.connect.dao.AccountsDao;
 import org.restcomm.connect.dao.CallDetailRecordsDao;
 import org.restcomm.connect.dao.DaoManager;
 import org.restcomm.connect.dao.RecordingsDao;
+import org.restcomm.connect.dao.common.SortDirection;
 import org.restcomm.connect.dao.entities.Account;
 import org.restcomm.connect.dao.entities.CallDetailRecord;
 import org.restcomm.connect.dao.entities.CallDetailRecordFilter;
@@ -251,9 +252,10 @@ public class CallsEndpoint extends AbstractEndpoint {
         // future we can extend it to multiple sort fields, like ?SortBy=<field1>:<direction1>,<field2>:<direction2>
         String sortParameters = info.getQueryParameters().getFirst("SortBy");
 
-        // Let's default to sorting based on 'start_time' in descending ordering, so that newest calls show up first
-        String sortBy = "start_time";
-        String sortDirection = "DESC";
+        CallDetailRecordFilter.Builder filterBuilder = CallDetailRecordFilter.Builder.builder();
+
+        String sortBy = null;
+        String sortDirection = null;
 
         if (sortParameters != null && !sortParameters.isEmpty()) {
             final String[] values = sortParameters.split(":", 2);
@@ -268,6 +270,48 @@ public class CallsEndpoint extends AbstractEndpoint {
                 }
             }
         }
+
+        ///////
+        if (sortBy != null) {
+            if (sortBy.equals("date_created")) {
+                if (sortDirection != null) {
+                    if (sortDirection.equalsIgnoreCase("asc")) {
+                        filterBuilder.sortedByDate(SortDirection.ASCENDING);
+                    } else {
+                        filterBuilder.sortedByDate(SortDirection.DESCENDING);
+                    }
+                }
+            }
+
+            if (sortBy.equals("from")) {
+                if (sortDirection != null) {
+                    if (sortDirection.equalsIgnoreCase("asc")) {
+                        filterBuilder.sortedByFrom(SortDirection.ASCENDING);
+                    } else {
+                        filterBuilder.sortedByFrom(SortDirection.DESCENDING);
+                    }
+                }
+            }
+
+/*
+            if (sortBy.equals("to")) {
+                if (sortDirection != null) {
+                    if (sortDirection.equalsIgnoreCase("asc")) {
+                        filterBuilder.sortedByFrom = SortDirection.ASCENDING;
+                    } else {
+                        filterBuilder.sortedByFrom = SortDirection.DESCENDING;
+                    }
+                }
+            }
+*/
+            // TODO: add the rest
+            // ...
+        }
+        else {
+            // Let's default to sorting based on 'start_time' in descending ordering, so that newest calls show up first
+            filterBuilder.sortedByDate(SortDirection.DESCENDING);
+        }
+        ///////
 
         if (pageSize == null) {
             pageSize = "50";
@@ -292,21 +336,28 @@ public class CallsEndpoint extends AbstractEndpoint {
 
         CallDetailRecordsDao dao = daos.getCallDetailRecordsDao();
 
-        CallDetailRecordFilter filterForTotal;
-        try {
+        filterBuilder.byAccountSid(accountSid)
+                .byAccountSidSet(ownerAccounts)
+                .byRecipient(recipient)
+                .bySender(sender)
+                .byStatus(status)
+                .byStartTime(startTime)
+                .byEndTime(endTime)
+                .byParentCallSid(parentCallSid)
+                .byConferenceSid(conferenceSid)
+                .limited(limit, offset);
+        if (!localInstanceOnly) {
+            filterBuilder.byInstanceId(instanceId);
+        }
 
-            if (localInstanceOnly) {
-                filterForTotal = new CallDetailRecordFilter(accountSid, ownerAccounts, recipient, sender, status, startTime, endTime,
-                        parentCallSid, conferenceSid, null, null, null, null, null);
-            } else {
-                filterForTotal = new CallDetailRecordFilter(accountSid, ownerAccounts, recipient, sender, status, startTime, endTime,
-                        parentCallSid, conferenceSid, null, null, instanceId, null, null);
-            }
+        CallDetailRecordFilter filter;
+        try {
+            filter = filterBuilder.build();
         } catch (ParseException e) {
             return status(BAD_REQUEST).build();
         }
 
-        final int total = dao.getTotalCallDetailRecords(filterForTotal);
+        final int total = dao.getTotalCallDetailRecords(filter);
 
         // This is breaking the new implementation; we should remove it and leave paging + sorting to the DB layer
         /*
@@ -330,6 +381,11 @@ public class CallsEndpoint extends AbstractEndpoint {
             return status(javax.ws.rs.core.Response.Status.BAD_REQUEST).build();
         }
 
+        // TODO: Do we really need to utilize separate filters between getting totals and actually getting query results?
+        // I mean given that the total-related SQL doesn't enforce any paging or sorting, shouldn't the
+        // same filter apply equally well in both cases?
+
+        /*
         CallDetailRecordFilter filter;
         try {
             if (localInstanceOnly) {
@@ -342,6 +398,7 @@ public class CallsEndpoint extends AbstractEndpoint {
         } catch (ParseException e) {
             return status(BAD_REQUEST).build();
         }
+        */
 
         final List<CallDetailRecord> cdrs = dao.getCallDetailRecords(filter);
 
