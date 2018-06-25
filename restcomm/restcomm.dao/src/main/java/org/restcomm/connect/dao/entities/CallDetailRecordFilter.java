@@ -62,7 +62,7 @@ public class CallDetailRecordFilter {
     }
 
     public CallDetailRecordFilter(String accountSid, List<String> accountSidSet, String recipient, String sender, String status, String startTime, String endTime,
-                                  String parentCallSid, String conferenceSid, Integer limit, Integer offset, String instanceId, String sortBy, String sortDirection) throws ParseException {
+                                  String parentCallSid, String conferenceSid, Integer limit, Integer offset, String instanceId, SortDirection sortByDate, SortDirection sortByFrom) throws ParseException {
         this.accountSid = accountSid;
         this.accountSidSet = accountSidSet;
 
@@ -100,52 +100,11 @@ public class CallDetailRecordFilter {
             this.instanceid = null;
         }
 
-        if (sortBy != null) {
-            // Use the API-level field names here
-            if (sortBy.equals("date_created")) {
-                if (sortDirection != null) {
-                    if (sortDirection.equalsIgnoreCase("asc")) {
-                        this.sortByDate = SortDirection.ASCENDING;
-                    }
-                    else {
-                        this.sortByDate = SortDirection.DESCENDING;
-                    }
-                }
-                else {
-                    this.sortByDate = SortDirection.NONE;
-                }
-            }
+        this.sortByDate = sortByDate;
+        this.sortByFrom = sortByFrom;
 
-            if (sortBy.equals("from")) {
-                if (sortDirection != null) {
-                    if (sortDirection.equalsIgnoreCase("asc")) {
-                        this.sortByFrom = SortDirection.ASCENDING;
-                    }
-                    else {
-                        this.sortByFrom = SortDirection.DESCENDING;
-                    }
-                }
-                else {
-                    this.sortByFrom = SortDirection.NONE;
-                }
-            }
-
-            if (sortBy.equals("to")) {
-                if (sortDirection != null) {
-                    if (sortDirection.equalsIgnoreCase("asc")) {
-                        this.sortByTo = SortDirection.ASCENDING;
-                    }
-                    else {
-                        this.sortByTo = SortDirection.DESCENDING;
-                    }
-                }
-                else {
-                    this.sortByTo = SortDirection.NONE;
-                }
-            }
-            // TODO: add the rest
-            // ...
-        }
+        // TODO: add the rest
+        // ...
     }
 
     public String getSid() {
@@ -204,4 +163,106 @@ public class CallDetailRecordFilter {
     public SortDirection getSortByTo() { return sortByTo; }
 
     // TODO: Introduce the rest of them
+
+    public static final class Builder {
+        private String accountSid = null;
+        private List<String> accountSidSet = null;
+        private String recipient = null;
+        private String sender = null;
+        private String status = null;
+        private String startTime = null;
+        private String endTime = null;
+        private String parentCallSid = null;
+        private String conferenceSid = null;
+        private String instanceid = null;
+        private SortDirection sortByDate = null;
+        private SortDirection sortByFrom = null;
+        private SortDirection sortByTo = null;
+        // TODO: ...
+        private Integer limit = null;
+        private Integer offset = null;
+
+        public static CallDetailRecordFilter.Builder builder() {
+            return new CallDetailRecordFilter.Builder();
+        }
+
+
+        public CallDetailRecordFilter build() throws ParseException {
+            return new CallDetailRecordFilter(accountSid,
+                    accountSidSet,
+                    recipient,
+                    sender,
+                    status,
+                    startTime,
+                    endTime,
+                    parentCallSid,
+                    conferenceSid,
+                    limit,
+                    offset,
+                    instanceid,
+                    sortByDate,
+                    sortByFrom);  // TODO: ...
+        }
+
+        // Filters
+        public Builder byAccountSid(String accountSid) {
+            this.accountSid = accountSid;
+            return this;
+        }
+        public Builder byAccountSidSet(List<String> accountSidSet) {
+            this.accountSidSet = accountSidSet;
+            return this;
+        }
+        public Builder byRecipient(String recipient) {
+            this.recipient = recipient;
+            return this;
+        }
+        public Builder bySender(String sender) {
+            this.sender = sender;
+            return this;
+        }
+        public Builder byStatus(String status) {
+            this.status = status;
+            return this;
+        }
+        public Builder byStartTime(String startTime) {
+            this.startTime = startTime;
+            return this;
+        }
+        public Builder byEndTime(String endTime) {
+            this.endTime = endTime;
+            return this;
+        }
+        public Builder byParentCallSid(String parentCallSid) {
+            this.parentCallSid = parentCallSid;
+            return this;
+        }
+        public Builder byConferenceSid(String conferenceSid) {
+            this.conferenceSid = conferenceSid;
+            return this;
+        }
+        public Builder byInstanceId(String instanceid) {
+            this.instanceid = instanceid;
+            return this;
+        }
+
+        // Sorters
+        public Builder sortedByDate(SortDirection sortDirection) {
+            this.sortByDate = sortDirection;
+            return this;
+        }
+        public Builder sortedByFrom(SortDirection sortDirection) {
+            this.sortByFrom = sortDirection;
+            return this;
+        }
+
+        // TODO: ...
+
+        // Paging
+        public Builder limited(Integer limit, Integer offset) {
+            this.limit = limit;
+            this.offset = offset;
+            return this;
+        }
+    }
 }

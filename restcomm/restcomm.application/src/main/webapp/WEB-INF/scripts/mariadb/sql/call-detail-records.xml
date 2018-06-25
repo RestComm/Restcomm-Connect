@@ -118,6 +118,28 @@
 			AND end_time &lt;= DATE_ADD(#{endTime},INTERVAL 1 DAY)
 		</if>
 		<choose>
+			<when test="sortByDate != null and sortByDate != 'NONE'">
+				<if test="sortByDate == 'ASCENDING'">
+					order by date_created ASC
+				</if>
+				<if test="sortByDate == 'DESCENDING'">
+					order by date_created DESC
+				</if>
+			</when>
+			<when test="sortByFrom != null and sortByFrom != 'NONE'">
+				<if test="sortByFrom == 'ASCENDING'">
+					order by sender ASC
+				</if>
+				<if test="sortByFrom == 'DESCENDING'">
+					order by sender DESC
+				</if>
+			</when>
+			<otherwise>
+				order by date_created DESC
+			</otherwise>
+		</choose>
+		<!--
+		<choose>
 			<when test="sortBy != null and sortDirection != null">
 				order by ${sortBy} ${sortDirection}
 			</when>
@@ -125,6 +147,7 @@
 				order by start_time
 			</otherwise>
 		</choose>
+		-->
 		LIMIT #{limit} OFFSET #{offset}
 	</select>
 
