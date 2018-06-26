@@ -22,6 +22,7 @@ package org.restcomm.connect.testsuite.http;
 import com.google.gson.JsonObject;
 import com.google.gson.JsonParser;
 import com.sun.jersey.api.client.Client;
+import com.sun.jersey.api.client.ClientResponse;
 import com.sun.jersey.api.client.WebResource;
 import com.sun.jersey.api.client.filter.HTTPBasicAuthFilter;
 import com.sun.jersey.core.util.MultivaluedMapImpl;
@@ -49,14 +50,10 @@ public class RecordingEndpointTool {
     }
 
     private String getAccountsUrl(String deploymentUrl, String username, Boolean json) {
-        if (accountsUrl == null) {
-            if (deploymentUrl.endsWith("/")) {
-                deploymentUrl = deploymentUrl.substring(0, deploymentUrl.length() - 1);
-            }
-
-            accountsUrl = deploymentUrl + "/2012-04-24/Accounts/" + username + "/Recordings" + ((json) ? ".json" : "");
+        if (deploymentUrl.endsWith("/")) {
+            deploymentUrl = deploymentUrl.substring(0, deploymentUrl.length() - 1);
         }
-
+        accountsUrl = deploymentUrl + "/2012-04-24/Accounts/" + username + "/Recordings" + ((json) ? ".json" : "");
         return accountsUrl;
     }
 
@@ -69,6 +66,15 @@ public class RecordingEndpointTool {
         JsonParser parser = new JsonParser();
         JsonObject jsonObject = parser.parse(response).getAsJsonObject();
         return jsonObject;
+    }
+
+    public ClientResponse getRecordingListResponse ( String deploymentUrl, String username, String authToken ) {
+        Client jerseyClient = Client.create();
+        jerseyClient.addFilter(new HTTPBasicAuthFilter(username, authToken));
+        String url = getAccountsUrl(deploymentUrl, username, true);
+        WebResource webResource = jerseyClient.resource(url);
+        ClientResponse response = webResource.accept(MediaType.APPLICATION_JSON).get(ClientResponse.class);
+        return response;
     }
 
     public JsonObject getRecordingList(String deploymentUrl, String username, String authToken, Integer page, Integer pageSize, Boolean json) {

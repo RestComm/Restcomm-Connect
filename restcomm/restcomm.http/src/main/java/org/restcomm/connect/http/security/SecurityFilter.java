@@ -96,15 +96,32 @@ public class SecurityFilter implements ContainerRequestFilter {
 
     /**
      * filter out accounts that are not active
+     * filter out accounts that have parent is not active
      *
      * @param userIdentityContext
      */
     protected void filterClosedAccounts(UserIdentityContext userIdentityContext, String path) {
-        if (userIdentityContext.getEffectiveAccount() != null && !userIdentityContext.getEffectiveAccount().getStatus().equals(Account.Status.ACTIVE)) {
-            if (userIdentityContext.getEffectiveAccount().getStatus().equals(Account.Status.UNINITIALIZED) && path.startsWith("Accounts")) {
-                return;
+        Account account = userIdentityContext.getEffectiveAccount();
+
+        if (account != null) {
+            if (!account.getStatus().equals(Account.Status.ACTIVE)) {
+                if (account.getStatus().equals(Account.Status.UNINITIALIZED) && path.startsWith("Accounts")) {
+                    return;
+                }
+                throw new WebApplicationException(status(Status.FORBIDDEN).entity("Provided Account is not active").build());
+            } else {
+                Account parentAccount = userIdentityContext.getParrentAccount();
+                if (parentAccount != null) {
+                    if (parentAccount.getStatus() != Account.Status.ACTIVE && parentAccount.getStatus() != Account.Status.UNINITIALIZED) {
+                        throw new WebApplicationException(status(Status.FORBIDDEN).entity("Parent Account is not active").build());
+                    }
+                } else {
+                    // Parent account is null -> this could be administrator.
+                    // Administrator account should not be closed/inactive.
+                }
             }
-            throw new WebApplicationException(status(Status.FORBIDDEN).entity("Provided Account is not active").build());
+        } else {
+            throw new WebApplicationException(status(Status.NOT_FOUND).entity("Provided Account is not found").build());
         }
     }
 }

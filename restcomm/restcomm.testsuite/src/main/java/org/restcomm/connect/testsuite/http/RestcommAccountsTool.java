@@ -42,7 +42,6 @@ public class RestcommAccountsTool {
     }
 
     private String getAccountsUrl(String deploymentUrl, Boolean xml) {
-//        if (accountsUrl == null) {
         if (deploymentUrl.endsWith("/")) {
             deploymentUrl = deploymentUrl.substring(0, deploymentUrl.length() - 1);
         }
@@ -51,7 +50,6 @@ public class RestcommAccountsTool {
         } else {
             accountsUrl = deploymentUrl + "/2012-04-24/Accounts.json";
         }
-//        }
 
         return accountsUrl;
     }
@@ -170,7 +168,7 @@ public class RestcommAccountsTool {
         MultivaluedMap<String, String> params = new MultivaluedMapImpl();
         params.add("EmailAddress", emailAddress);
         params.add("Password", password);
-        params.add("Role", "Administartor");
+        params.add("Role", "Developer");
         if (friendlyName != null) {
             params.add("FriendlyName", friendlyName);
         }
