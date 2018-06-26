@@ -474,7 +474,7 @@ public class CallDetailRecordsDaoTest extends DaoTest {
         List<CallDetailRecord> callDetailRecords = dao.getCallDetailRecords(filter);
         assertEquals(12, callDetailRecords.size());
         assertEquals("+1011420534008567", callDetailRecords.get(0).getFrom());
-        assertEquals("14582010335", callDetailRecords.get(11).getFrom());
+        assertEquals("Anonymous", callDetailRecords.get(11).getFrom());
     }
 
     @Test
