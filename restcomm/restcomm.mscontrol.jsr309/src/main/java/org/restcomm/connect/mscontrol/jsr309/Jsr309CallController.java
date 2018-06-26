@@ -67,6 +67,7 @@ import org.restcomm.connect.mscontrol.api.messages.StopMediaGroup;
 import org.restcomm.connect.mscontrol.api.messages.StopRecording;
 import org.restcomm.connect.mscontrol.api.messages.Unmute;
 import org.restcomm.connect.mscontrol.api.messages.UpdateMediaSession;
+import org.restcomm.connect.mscontrol.api.messages.RecordStoped;
 
 import javax.media.mscontrol.EventType;
 import javax.media.mscontrol.MediaEvent;
@@ -831,6 +832,7 @@ public class Jsr309CallController extends MediaServerController {
                 this.mediaGroup.getSignalDetector().stop();
                 this.collecting = Boolean.FALSE;
             }
+            call.tell(new RecordStoped(), self);
         } catch (MsControlException e) {
             call.tell(new MediaServerControllerError(e), self);
         }
