@@ -277,9 +277,9 @@ public class UssdCallManager extends RestcommUntypedActor {
                     final Application application = applications.getApplication(sid);
                     RcmlserverConfigurationSet rcmlserverConfig = RestcommConfiguration.getInstance().getRcmlserver();
                     RcmlserverResolver resolver = RcmlserverResolver.getInstance(rcmlserverConfig.getBaseUrl(), rcmlserverConfig.getApiPath());
-                    builder.setUrl(UriUtils.resolve(resolver.resolveRelative(application.getRcmlUrl())));
+                    builder.setUrl(UriUtils.resolve(resolver.resolveRelative(application.getRcmlUrl()), number.getAccountSid()));
                 } else {
-                    builder.setUrl(UriUtils.resolve(number.getUssdUrl()));
+                    builder.setUrl(UriUtils.resolve(number.getUssdUrl(), number.getAccountSid()));
                 }
                 final String ussdMethod = number.getUssdMethod();
                 if (ussdMethod == null || ussdMethod.isEmpty()) {

@@ -31,9 +31,11 @@ import org.restcomm.connect.commons.HttpConnector;
 import org.restcomm.connect.commons.configuration.RestcommConfiguration;
 import org.restcomm.connect.commons.HttpConnectorList;
 import org.restcomm.connect.commons.annotations.concurrency.ThreadSafe;
+import org.restcomm.connect.commons.dao.Sid;
 import org.restcomm.connect.commons.util.DNSUtils;
 import org.restcomm.connect.commons.util.JBossConnectorDiscover;
 import org.restcomm.connect.commons.util.TomcatConnectorDiscover;
+import org.restcomm.connect.dao.DaoManager;
 
 /**
  * Utility class to manipulate URI.
@@ -43,14 +45,15 @@ import org.restcomm.connect.commons.util.TomcatConnectorDiscover;
 @ThreadSafe
 public final class UriUtils {
 
-    private static Logger logger = Logger.getLogger(UriUtils.class);
-    private static HttpConnector selectedConnector = null;
+    private Logger logger = Logger.getLogger(UriUtils.class);
+    private HttpConnector selectedConnector = null;
+    private DaoManager daoManager;
 
     /**
      * Default constructor.
      */
-    private UriUtils() {
-        super();
+    public UriUtils(final DaoManager daoManager) {
+        this.daoManager = daoManager;
     }
 
     /**
@@ -60,7 +63,7 @@ public final class UriUtils {
      * @param uri The relative URI.
      * @return The absolute URI
      */
-    public static URI resolve(final URI base, final URI uri) {
+    public URI resolveWithBase (final URI base, final URI uri) {
         if (base.equals(uri)) {
             return uri;
         } else if (!uri.isAbsolute()) {
@@ -78,7 +81,7 @@ public final class UriUtils {
      *
      * @return the list of connectors found
      */
-    private static HttpConnectorList getHttpConnectors() throws Exception {
+    private HttpConnectorList getHttpConnectors() throws Exception {
         logger.info("Searching HTTP connectors.");
         HttpConnectorList httpConnectorList = null;
         //find Jboss first as is typical setup
@@ -91,41 +94,57 @@ public final class UriUtils {
     }
 
     /**
-     * Resolves a relative URI.
+     *
+     * Use to resolve a relative URI
+     * using the instance hostname as base
+     *
+     * @param uri
+     * @return
+     */
+    public URI resolve(final URI uri) {
+        return resolve(uri, null);
+    }
+
+    /**
+     * Use to resolve a relative URI
+     * using the domain name of the Organization
+     * that the provided AccountSid belongs
      *
      * @param uri The relative URI
+     * @param accountSid The accountSid to get the Org domain
      * @return The absolute URI
      */
-    public static URI resolve(final URI uri) {
+    public URI resolve(final URI uri, final Sid accountSid) {
         getHttpConnector();
 
-// Since this is a relative URL that we are trying to resolve, we don't care about the public URL.
-//        //HttpConnector address could be a local address while the request came from a public address
-//        String address;
-//        if (httpConnector.getAddress().equalsIgnoreCase(localAddress)) {
-//            address = httpConnector.getAddress();
-//        } else {
-//            address = localAddress;
-//        }
         String restcommAddress = null;
-        if (RestcommConfiguration.getInstance().getMain().isUseHostnameToResolveRelativeUrls()) {
-            restcommAddress = RestcommConfiguration.getInstance().getMain().getHostname();
-            if (restcommAddress == null || restcommAddress.isEmpty()) {
-                try {
-                    InetAddress addr = DNSUtils.getByName(selectedConnector.getAddress());
-                    restcommAddress = addr.getCanonicalHostName();
-                } catch (UnknownHostException e) {
-                    logger.error("Unable to resolve: " + selectedConnector + " to hostname: " + e);
-                    restcommAddress = selectedConnector.getAddress();
-                }
-            }
-        } else {
-            restcommAddress = selectedConnector.getAddress();
+
+        if (accountSid != null && daoManager != null) {
+            Sid organizationSid = daoManager.getAccountsDao().getAccount(accountSid).getOrganizationSid();
+            restcommAddress = daoManager.getOrganizationsDao().getOrganization(organizationSid).getDomainName();
         }
 
+        if (restcommAddress == null || restcommAddress.isEmpty()) {
+            if (RestcommConfiguration.getInstance().getMain().isUseHostnameToResolveRelativeUrls()) {
+                restcommAddress = RestcommConfiguration.getInstance().getMain().getHostname();
+                if (restcommAddress == null || restcommAddress.isEmpty()) {
+                    try {
+                        InetAddress addr = DNSUtils.getByName(selectedConnector.getAddress());
+                        restcommAddress = addr.getCanonicalHostName();
+                    } catch (UnknownHostException e) {
+                        logger.error("Unable to resolveWithBase: " + selectedConnector + " to hostname: " + e);
+                        restcommAddress = selectedConnector.getAddress();
+                    }
+                }
+            } else {
+                restcommAddress = selectedConnector.getAddress();
+            }
+        }
+
+        //TODO Resolve based on Organization domain name
         String base = selectedConnector.getScheme() + "://" + restcommAddress + ":" + selectedConnector.getPort();
         try {
-            return resolve(new URI(base), uri);
+            return resolveWithBase(new URI(base), uri);
         } catch (URISyntaxException e) {
             throw new IllegalArgumentException("Badly formed URI: " + base, e);
         }
@@ -141,7 +160,7 @@ public final class UriUtils {
      * @return The selected connector with Secure preference.
      * @throws RuntimeException if no connector is found for some reason
      */
-    public static HttpConnector getHttpConnector() throws RuntimeException {
+    public HttpConnector getHttpConnector() throws RuntimeException {
         if (selectedConnector == null) {
             try {
 

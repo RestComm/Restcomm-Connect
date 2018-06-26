@@ -759,7 +759,7 @@ public class AccountsEndpoint extends AbstractEndpoint {
         if (config != null && config.getNotify()) {
             logger.debug("notification enabled");
             // first send account removal notification to RVD now that the applications of the account still exist
-            RcmlserverApi rcmlServerApi = new RcmlserverApi(rcommConfiguration.getMain(), rcommConfiguration.getRcmlserver());
+            RcmlserverApi rcmlServerApi = new RcmlserverApi(rcommConfiguration.getMain(), rcommConfiguration.getRcmlserver(), updatedAccount.getSid());
             RcmlserverNotifications notifications = new RcmlserverNotifications();
             notifications.add(rcmlServerApi.buildAccountStatusNotification(updatedAccount));
             Account notifier = userIdentityContext.getEffectiveAccount();

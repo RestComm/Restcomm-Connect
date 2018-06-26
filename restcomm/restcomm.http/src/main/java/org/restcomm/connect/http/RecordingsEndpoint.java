@@ -328,7 +328,7 @@ public class RecordingsEndpoint extends AbstractEndpoint {
                     }
                 } else {
 //                    String recFile = "/restcomm/recordings/" + recording.getSid() + ".wav";
-//                    recordingUri = UriUtils.resolve(new URI(recFile));
+//                    recordingUri = UriUtils.resolveWithBase(new URI(recFile));
                     String path = configuration.getString("recordings-path");
                     if (!path.endsWith("/")) {
                         path += "/";

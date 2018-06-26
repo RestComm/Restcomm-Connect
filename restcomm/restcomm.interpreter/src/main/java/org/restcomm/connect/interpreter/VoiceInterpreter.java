@@ -50,7 +50,8 @@ import org.restcomm.connect.commons.fsm.TransitionRollbackException;
 import org.restcomm.connect.commons.patterns.Observe;
 import org.restcomm.connect.commons.patterns.StopObserving;
 import org.restcomm.connect.commons.telephony.CreateCallType;
-import org.restcomm.connect.commons.util.UriUtils;
+import org.restcomm.connect.core.service.RestcommConnectServiceProvider;
+import org.restcomm.connect.core.service.util.UriUtils;
 import org.restcomm.connect.dao.CallDetailRecordsDao;
 import org.restcomm.connect.dao.NotificationsDao;
 import org.restcomm.connect.dao.entities.CallDetailRecord;
@@ -240,6 +241,8 @@ public class VoiceInterpreter extends BaseVoiceInterpreter {
     private Tag callWaitingForAnswerPendingTag;
 
     private long timeout;
+
+    private UriUtils uriUtils;
 
     public VoiceInterpreter(VoiceInterpreterParams params) {
         super();
@@ -480,6 +483,8 @@ public class VoiceInterpreter extends BaseVoiceInterpreter {
         this.timeout = params.getTimeout();
         this.msResponsePending = false;
         this.mediaAttributes = new MediaAttributes();
+
+        this.uriUtils = RestcommConnectServiceProvider.getInstance().uriUtils();
     }
 
     public static Props props(final VoiceInterpreterParams params) {
@@ -502,7 +507,7 @@ public class VoiceInterpreter extends BaseVoiceInterpreter {
         builder.setErrorCode(error);
         String base = configuration.subset("runtime-settings").getString("error-dictionary-uri");
         try {
-            base = UriUtils.resolve(new URI(base)).toString();
+            base = uriUtils.resolve(new URI(base), accountId).toString();
         } catch (URISyntaxException e) {
             logger.error("URISyntaxException when trying to resolve Error-Dictionary URI: " + e);
         }
@@ -673,7 +678,7 @@ public class VoiceInterpreter extends BaseVoiceInterpreter {
                     path += exitAudio == null || exitAudio.equals("") ? "alert.wav" : exitAudio;
                     URI uri = null;
                     try {
-                        uri = UriUtils.resolve(new URI(path));
+                        uri = uriUtils.resolve(new URI(path));
                     } catch (final Exception exception) {
                         final Notification notification = notification(ERROR_NOTIFICATION, 12400, exception.getMessage());
                         final NotificationsDao notifications = storage.getNotificationsDao();
@@ -2530,7 +2535,7 @@ public class VoiceInterpreter extends BaseVoiceInterpreter {
             path += "ringing.wav";
             URI uri = null;
             try {
-                uri = resolve(new URI(path));
+                uri = uriUtils.resolve(new URI(path), accountId);
             } catch (final Exception exception) {
                 final Notification notification = notification(ERROR_NOTIFICATION, 12400, exception.getMessage());
                 final NotificationsDao notifications = storage.getNotificationsDao();
@@ -2614,7 +2619,7 @@ public class VoiceInterpreter extends BaseVoiceInterpreter {
         httpRecordingUri += recordingSid.toString() + ".wav";
         this.recordingUri = URI.create(path);
         try {
-            this.publicRecordingUri = UriUtils.resolve(new URI(httpRecordingUri));
+            this.publicRecordingUri = uriUtils.resolve(new URI(httpRecordingUri), accountId);
         } catch (URISyntaxException e) {
             logger.error("URISyntaxException when trying to resolve Recording URI: " + e);
         }
@@ -2789,7 +2794,7 @@ public class VoiceInterpreter extends BaseVoiceInterpreter {
                         return;
                     }
                     final URI base = request.getUri();
-                    final URI uri = UriUtils.resolve(base, target);
+                    final URI uri = uriUtils.resolveWithBase(base, target);
                     // Parse "method".
                     String method = "POST";
                     attribute = verb.attribute("method");
@@ -3139,7 +3144,7 @@ public class VoiceInterpreter extends BaseVoiceInterpreter {
                     }
 
                     final URI base = request.getUri();
-                    waitUrl = UriUtils.resolve(base, waitUrl);
+                    waitUrl = uriUtils.resolveWithBase(base, waitUrl);
                     // Parse method.
                     String method = "POST";
                     attribute = child.attribute("waitMethod");
@@ -3222,7 +3227,7 @@ public class VoiceInterpreter extends BaseVoiceInterpreter {
         path += entryAudio == null || entryAudio.equals("") ? "beep.wav" : entryAudio;
         URI uri = null;
         try {
-            uri = UriUtils.resolve(new URI(path));
+            uri = uriUtils.resolve(new URI(path));
         } catch (final Exception exception) {
             final Notification notification = notification(ERROR_NOTIFICATION, 12400, exception.getMessage());
             final NotificationsDao notifications = storage.getNotificationsDao();
@@ -3312,7 +3317,7 @@ public class VoiceInterpreter extends BaseVoiceInterpreter {
                         return;
                     }
                     final URI base = request.getUri();
-                    final URI uri = UriUtils.resolve(base, target);
+                    final URI uri = uriUtils.resolveWithBase(base, target);
                     // Parse "method".
                     String method = "POST";
                     attribute = conferenceVerb.attribute("method");
@@ -3546,9 +3551,9 @@ public class VoiceInterpreter extends BaseVoiceInterpreter {
             URI url = null;
             if (request != null) {
                 final URI base = request.getUri();
-                url = UriUtils.resolve(base, new URI(child.attribute("url").value()));
+                url = uriUtils.resolveWithBase(base, new URI(child.attribute("url").value()));
             } else {
-                url = UriUtils.resolve(new URI(child.attribute("url").value()));
+                url = uriUtils.resolve(new URI(child.attribute("url").value()));
             }
             String method;
             if (child.hasAttribute("method")) {

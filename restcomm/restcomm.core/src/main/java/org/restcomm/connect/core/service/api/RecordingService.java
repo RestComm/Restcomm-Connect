@@ -20,8 +20,15 @@
 package org.restcomm.connect.core.service.api;
 
 import org.restcomm.connect.commons.dao.Sid;
+import org.restcomm.connect.dao.entities.MediaAttributes;
+
+import java.net.URI;
 
 public interface RecordingService {
+
+    URI storeRecording(Sid recordingSid, MediaAttributes.MediaType mediaType);
+
+    URI prepareFileUrl (String apiVersion, String accountSid, String recordingSid, MediaAttributes.MediaType mediaType);
 
     void removeRecording(Sid recordingSid);
 
