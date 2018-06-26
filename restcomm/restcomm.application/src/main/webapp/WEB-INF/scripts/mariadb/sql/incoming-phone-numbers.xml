@@ -48,19 +48,19 @@
             AND pure_sip = #{pureSIP}
         </if>        
         <choose>
-            <when test="sortByNumber !=  null and sortByNumber != 'NONE'">
-                <if test="sortByNumber == 'ASCENDING'">
+            <when test="sortByNumber !=  null and sortByNumber.name() != 'NONE'">
+                <if test="sortByNumber.name() == 'ASCENDING'">
                     order by phone_number ASC
                 </if>
-                <if test="sortByNumber == 'DESCENDING'">
+                <if test="sortByNumber.name() == 'DESCENDING'">
                     order by phone_number DESC
                 </if>                
             </when>
-            <when test="sortByFriendly != null and sortByFriendly != 'NONE'">
-                <if test="sortByFriendly == 'ASCENDING'">
+            <when test="sortByFriendly != null and sortByFriendly.name() != 'NONE'">
+                <if test="sortByFriendly.name() == 'ASCENDING'">
                     order by friendly_name ASC
                 </if>
-                <if test="sortByFriendly == 'DESCENDING'">
+                <if test="sortByFriendly.name() == 'DESCENDING'">
                     order by friendly_name DESC
                 </if>                 
             </when>
@@ -105,19 +105,19 @@
         AND n.pure_sip = #{pureSIP}
     </if>        
     <choose>
-        <when test="sortByNumber !=  null and sortByNumber != 'NONE'">
-            <if test="sortByNumber == 'ASCENDING'">
+        <when test="sortByNumber !=  null and sortByNumber.name() != 'NONE'">
+            <if test="sortByNumber.name() == 'ASCENDING'">
                 order by n.phone_number ASC
             </if>
-            <if test="sortByNumber == 'DESCENDING'">
+            <if test="sortByNumber.name() == 'DESCENDING'">
                 order by n.phone_number DESC
             </if>                
         </when>
-        <when test="sortByFriendly != null and sortByFriendly != 'NONE'">
-            <if test="sortByFriendly == 'ASCENDING'">
+        <when test="sortByFriendly != null and sortByFriendly.name() != 'NONE'">
+            <if test="sortByFriendly.name() == 'ASCENDING'">
                 order by n.friendly_name ASC
             </if>
-            <if test="sortByFriendly == 'DESCENDING'">
+            <if test="sortByFriendly.name() == 'DESCENDING'">
                 order by n.friendly_name DESC
             </if>                 
         </when>
@@ -159,19 +159,19 @@
         AND n.pure_sip = #{pureSIP}
     </if>        
     <choose>
-        <when test="sortByNumber !=  null and sortByNumber != 'NONE'">
-            <if test="sortByNumber == 'ASCENDING'">
+        <when test="sortByNumber !=  null and sortByNumber.name() != 'NONE'">
+            <if test="sortByNumber.name() == 'ASCENDING'">
                 order by n.phone_number ASC
             </if>
-            <if test="sortByNumber == 'DESCENDING'">
+            <if test="sortByNumber.name() == 'DESCENDING'">
                 order by n.phone_number DESC
             </if>                
         </when>
-        <when test="sortByFriendly != null and sortByFriendly != 'NONE'">
-            <if test="sortByFriendly == 'ASCENDING'">
+        <when test="sortByFriendly != null and sortByFriendly.name() != 'NONE'">
+            <if test="sortByFriendly.name() == 'ASCENDING'">
                 order by n.friendly_name ASC
             </if>
-            <if test="sortByFriendly == 'DESCENDING'">
+            <if test="sortByFriendly.name() == 'DESCENDING'">
                 order by n.friendly_name DESC
             </if>                 
         </when>
