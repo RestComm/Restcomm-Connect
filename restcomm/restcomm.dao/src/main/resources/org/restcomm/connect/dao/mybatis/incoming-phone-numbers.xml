@@ -52,22 +52,22 @@
         <choose>
             <when test="sortByNumber !=  null and sortByNumber.name() != 'NONE'">
                 <if test="sortByNumber.name() == 'ASCENDING'">
-                    order by "n"."phone_number" ASC
+                    order by "phone_number" ASC
                 </if>
                 <if test="sortByNumber.name() == 'DESCENDING'">
-                    order by "n"."phone_number" DESC
+                    order by "phone_number" DESC
                 </if>                
             </when>
             <when test="sortByFriendly != null and sortByFriendly.name() != 'NONE'">
                 <if test="sortByFriendly.name() == 'ASCENDING'">
-                    order by "n"."friendly_name" ASC
+                    order by "friendly_name" ASC
                 </if>
                 <if test="sortByFriendly.name() == 'DESCENDING'">
-                    order by "n"."friendly_name" DESC
+                    order by "friendly_name" DESC
                 </if>                 
             </when>
             <otherwise>
-                order by "n"."phone_number"
+                order by "phone_number"
             </otherwise>
         </choose> 
         <if test="limit != null">
