@@ -23,13 +23,13 @@ import javax.servlet.http.HttpServletRequest;
 import javax.ws.rs.WebApplicationException;
 import javax.ws.rs.core.Context;
 import javax.ws.rs.core.Response;
-import javax.ws.rs.core.Response.Status;
 import javax.ws.rs.ext.Provider;
 
 import org.apache.log4j.Logger;
 import org.restcomm.connect.dao.AccountsDao;
 import org.restcomm.connect.dao.DaoManager;
 import org.restcomm.connect.dao.entities.Account;
+import org.restcomm.connect.http.exceptionmappers.CustomReasonPhraseType;
 import org.restcomm.connect.identity.UserIdentityContext;
 
 import com.sun.jersey.spi.container.ContainerRequest;
@@ -104,7 +104,8 @@ public class SecurityFilter implements ContainerRequestFilter {
             if (userIdentityContext.getEffectiveAccount().getStatus().equals(Account.Status.UNINITIALIZED) && path.startsWith("Accounts")) {
                 return;
             }
-            throw new WebApplicationException(status(Status.FORBIDDEN).entity("Provided Account is not active").build());
+            CustomReasonPhraseType stat = new CustomReasonPhraseType(Response.Status.FORBIDDEN, "Provided Account is not active");
+            throw new WebApplicationException(status(stat).build());
         }
     }
 }
