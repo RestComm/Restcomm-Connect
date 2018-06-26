@@ -143,11 +143,11 @@ public class CallDetailRecordFilter {
         return conferenceSid;
     }
 
-    public int getLimit() {
+    public Integer getLimit() {
         return limit;
     }
 
-    public int getOffset() {
+    public Integer getOffset() {
         return offset;
     }
 
