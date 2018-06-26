@@ -54,6 +54,8 @@ import javax.sip.header.RecordRouteHeader;
 import javax.sip.header.RouteHeader;
 import javax.sip.message.Response;
 
+import akka.pattern.Patterns;
+import akka.util.Timeout;
 import org.apache.commons.configuration.Configuration;
 import org.apache.http.NameValuePair;
 import org.apache.http.message.BasicNameValuePair;
@@ -85,6 +87,7 @@ import org.restcomm.connect.dao.DaoManager;
 import org.restcomm.connect.dao.entities.CallDetailRecord;
 import org.restcomm.connect.dao.entities.MediaAttributes;
 import org.restcomm.connect.http.client.Downloader;
+import org.restcomm.connect.http.client.DownloaderResponse;
 import org.restcomm.connect.http.client.HttpRequestDescriptor;
 import org.restcomm.connect.mscontrol.api.MediaServerControllerFactory;
 import org.restcomm.connect.mscontrol.api.messages.CloseMediaSession;
@@ -138,6 +141,8 @@ import akka.actor.UntypedActorContext;
 import akka.actor.UntypedActorFactory;
 import akka.event.Logging;
 import akka.event.LoggingAdapter;
+import scala.concurrent.Await;
+import scala.concurrent.Future;
 import scala.concurrent.duration.Duration;
 
 /**
@@ -590,7 +595,7 @@ public final class Call extends RestcommUntypedActor implements TransitionEndLis
         return parameters;
     }
 
-    private void executeStatusCallback(final CallbackState state) {
+    private void executeStatusCallback(final CallbackState state, boolean ask) {
         if (statusCallback != null) {
             if (statusCallbackEvent.remove(state.toString())) {
                 if (logger.isDebugEnabled()) {
@@ -604,7 +609,18 @@ public final class Call extends RestcommUntypedActor implements TransitionEndLis
 
                 if (parameters != null) {
                     requestCallback = new HttpRequestDescriptor(statusCallback, statusCallbackMethod, parameters);
-                    downloader.tell(requestCallback, null);
+                    if (!ask) {
+                        downloader.tell(requestCallback, null);
+                    } else {
+                        final Timeout timeout = new Timeout(Duration.create(5, TimeUnit.SECONDS));
+                        Future<Object> future = (Future<Object>) Patterns.ask(downloader, requestCallback, timeout);
+                        DownloaderResponse downloaderResponse = null;
+                        try {
+                            downloaderResponse = (DownloaderResponse) Await.result(future, Duration.create(10, TimeUnit.SECONDS));
+                        } catch (Exception e) {
+                            logger.error("Exception during callback with ask pattern");
+                        }
+                    }
                 }
             } else {
                 if (logger.isDebugEnabled()) {
@@ -1076,7 +1092,7 @@ public final class Call extends RestcommUntypedActor implements TransitionEndLis
 //                String msg = String.format("Deadline left %s", deadline.timeLeft().toSeconds());
 //                logger.debug(msg);
 //            }
-            executeStatusCallback(CallbackState.INITIATED);
+            executeStatusCallback(CallbackState.INITIATED, false);
         }
 
         /**
@@ -1154,7 +1170,7 @@ public final class Call extends RestcommUntypedActor implements TransitionEndLis
                 if (initialInetUri != null) {
                     ((SipServletResponse)message).getSession().setAttribute("realInetUri", initialInetUri);
                 }
-                executeStatusCallback(CallbackState.RINGING);
+                executeStatusCallback(CallbackState.RINGING, false);
             }
 
             // Notify the observers.
@@ -1332,7 +1348,7 @@ public final class Call extends RestcommUntypedActor implements TransitionEndLis
             }
 
             if(isOutbound()){
-                executeStatusCallback(CallbackState.COMPLETED);
+                executeStatusCallback(CallbackState.COMPLETED, true);
             }
         }
     }
@@ -1730,7 +1746,7 @@ public final class Call extends RestcommUntypedActor implements TransitionEndLis
                     recordsDao.updateCallDetailRecord(outgoingCallRecord);
                 }
                 if (isOutbound()) {
-                    executeStatusCallback(CallbackState.ANSWERED);
+                    executeStatusCallback(CallbackState.ANSWERED, false);
                 }
             }
         }
@@ -1847,7 +1863,7 @@ public final class Call extends RestcommUntypedActor implements TransitionEndLis
                 }
             }
             if (isOutbound()) {
-                executeStatusCallback(CallbackState.COMPLETED);
+                executeStatusCallback(CallbackState.COMPLETED, true);
             }
         }
     }
