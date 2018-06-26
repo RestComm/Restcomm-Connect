@@ -1,0 +1,33 @@
+= Restcomm Visual Designer
+
+== Quick Start guide
+
+This guide will help you learn the bare basics about Visual Designer.
+
+
+=== Create an application from scratch
+
+New applications are easily created from Console. Sign in and navigate your browser to:
+
+https://cloud.restcomm.com/#/applications
+
+then
+
+* Click on the `Add New App` button to initiate the wizzard.
+* In the following wizzard view choose `Create a Visual Designer Application`.
+Other options are importing application from local file or linking to an external one.
+We'll see more on these options later.
+* In the Template Gallery pick the `Blank` thumbnail. That's the simplest application that can be.
+* Next you need to _name_ your application and choose a _type_ for it. The name is not an
+identifier but more like a user friendly way to refer to your app. Pick something short and descriptive.
+The _type_ determines whether this application will respond to voice calls or SMS messages.
+Choose `voice` for now. You may learn more about application types <<here>>.
+* When done click `Create`. This will create your application and navigate you to the
+application details page. This is where you can perform management operations on it like
+ removing it and where related information like numbers bound etc is displayed.
+* Click `Design` to open the Visual Designer editor in a new tab. You're done.
+
+
+
+
+
