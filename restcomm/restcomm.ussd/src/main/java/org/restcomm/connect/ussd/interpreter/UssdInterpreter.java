@@ -1014,7 +1014,7 @@ public class UssdInterpreter extends RestcommUntypedActor {
                     return;
                 }
                 final URI base = request.getUri();
-                final URI uri = UriUtils.resolve(base, target);
+                final URI uri = UriUtils.resolveWithBase(base, target);
                 // Parse "method".
                 String method = "POST";
                 Attribute attribute = null;
