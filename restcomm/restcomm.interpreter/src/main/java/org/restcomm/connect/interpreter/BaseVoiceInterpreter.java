@@ -82,6 +82,7 @@ import org.restcomm.connect.extension.api.RestcommExtensionGeneric;
 import org.restcomm.connect.extension.controller.ExtensionController;
 import org.restcomm.connect.fax.FaxRequest;
 import org.restcomm.connect.fax.InterfaxService;
+import org.restcomm.connect.http.asyncclient.HttpAsycClientHelper;
 import org.restcomm.connect.http.client.Downloader;
 import org.restcomm.connect.http.client.DownloaderResponse;
 import org.restcomm.connect.http.client.HttpRequestDescriptor;
