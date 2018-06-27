@@ -207,7 +207,12 @@ public class MmsBridgeController extends MediaServerController {
             String apiVersion = runtimeSettings.getString("api-version");
             builder.setApiVersion(apiVersion);
 
-            builder.setUri(RestcommConnectServiceProvider.getInstance().recordingService()
+            StringBuilder buffer = new StringBuilder();
+            buffer.append("/").append(apiVersion).append("/Accounts/").append(accountId.toString());
+            buffer.append("/Recordings/").append(recordingSid.toString());
+            builder.setUri(URI.create(buffer.toString()));
+
+            builder.setFileUri(RestcommConnectServiceProvider.getInstance().recordingService()
                     .prepareFileUrl(apiVersion, accountId.toString(), recordingSid.toString(), MediaAttributes.MediaType.AUDIO_ONLY));
 
             URI s3Uri = RestcommConnectServiceProvider.getInstance().recordingService().storeRecording(recordingSid, MediaAttributes.MediaType.AUDIO_ONLY);

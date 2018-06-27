@@ -2000,7 +2000,12 @@ public abstract class BaseVoiceInterpreter extends RestcommUntypedActor {
                 builder.setDuration(duration);
                 builder.setApiVersion(version);
 
-                builder.setUri(RestcommConnectServiceProvider.getInstance().recordingService()
+                StringBuilder buffer = new StringBuilder();
+                buffer.append("/").append(version).append("/Accounts/").append(accountId.toString());
+                buffer.append("/Recordings/").append(recordingSid.toString());
+                builder.setUri(URI.create(buffer.toString()));
+
+                builder.setFileUri(RestcommConnectServiceProvider.getInstance().recordingService()
                         .prepareFileUrl(version, accountId.toString(), recordingSid.toString(), MediaAttributes.MediaType.AUDIO_ONLY));
 
                 URI s3Uri = RestcommConnectServiceProvider.getInstance().recordingService().storeRecording(recordingSid, MediaAttributes.MediaType.AUDIO_ONLY);
@@ -2058,7 +2063,7 @@ public abstract class BaseVoiceInterpreter extends RestcommUntypedActor {
                         otherBuilder.setTranscriptionText("Transcription Text not available");
                         otherBuilder.setDuration(duration);
                         otherBuilder.setPrice(new BigDecimal("0.00"));
-                        StringBuilder buffer = new StringBuilder();
+                        buffer = new StringBuilder();
                         buffer.append("/").append(version).append("/Accounts/").append(accountId.toString());
                         buffer.append("/Transcriptions/").append(sid.toString());
                         final URI uri = URI.create(buffer.toString());
