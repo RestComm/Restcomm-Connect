@@ -335,9 +335,6 @@ public class VoiceInterpreter extends BaseVoiceInterpreter {
         transitions.add(new Transition(finishGathering, ready));
         transitions.add(new Transition(finishGathering, finishGathering));
         transitions.add(new Transition(finishGathering, finished));
-        transitions.add(new Transition(continuousGathering, ready));
-        transitions.add(new Transition(continuousGathering, finishGathering));
-        transitions.add(new Transition(continuousGathering, finished));
         transitions.add(new Transition(creatingSmsSession, finished));
         transitions.add(new Transition(sendingSms, ready));
         transitions.add(new Transition(sendingSms, startDialing));
@@ -853,11 +850,18 @@ public class VoiceInterpreter extends BaseVoiceInterpreter {
             }
             // This is either MMS collected digits or SIP INFO DTMF. If the DTMF is from SIP INFO, then more DTMF might
             // come later
-            else if (is(gathering) || is(continuousGathering) || (is(finishGathering) && !super.dtmfReceived)) {
+            else if (is(gathering) || (is(finishGathering) && !super.dtmfReceived)) {
                 final MediaGroupResponse dtmfResponse = (MediaGroupResponse) message;
                 Object data = dtmfResponse.get();
                 if (data instanceof CollectedResult && ((CollectedResult)data).isAsr() && ((CollectedResult)data).isPartial()) {
-                    fsm.transition(message, continuousGathering);
+                    try {
+                        //we dont need a new state for this action. The notification
+                        //is purely async, and the Interpreter logic will resume
+                        //regardless notification result.
+                        new PartialGathering(self()).execute(message);
+                    } catch (Exception ex) {
+                        this.logger.debug("Notifying partial result", ex);
+                    }
                 } else if (data instanceof CollectedResult && ((CollectedResult)data).isAsr() && !((CollectedResult)data).isPartial() && collectedDigits.length() == 0) {
                     speechResult = ((CollectedResult)data).getResult();
                     fsm.transition(message, finishGathering);
@@ -1194,7 +1198,7 @@ public class VoiceInterpreter extends BaseVoiceInterpreter {
                 logger.debug("statusCode " + response.get().getStatusCode());
         }
         if (response.succeeded() && HttpStatus.SC_OK == response.get().getStatusCode()) {
-            if (continuousGathering.equals(state)) {
+            if (gathering.equals(state)) {
                 //no need change state
                 return;
             }
@@ -1958,7 +1962,7 @@ public class VoiceInterpreter extends BaseVoiceInterpreter {
                 source.tell(verb, source);
                 return;
             } else if (downloadingRcml.equals(state) || downloadingFallbackRcml.equals(state) || redirecting.equals(state)
-                    || continuousGathering.equals(state) || finishGathering.equals(state) || finishRecording.equals(state) || sendingSms.equals(state)
+                    || finishGathering.equals(state) || finishRecording.equals(state) || sendingSms.equals(state)
                     || finishDialing.equals(state) || finishConferencing.equals(state) || is(forking)) {
                 response = ((DownloaderResponse) message).get();
                 if (parser != null) {
