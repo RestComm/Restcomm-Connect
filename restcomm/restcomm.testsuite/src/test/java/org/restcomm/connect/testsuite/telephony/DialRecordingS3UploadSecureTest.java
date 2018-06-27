@@ -455,7 +455,7 @@ public class DialRecordingS3UploadSecureTest {
 		assertNotNull(recording);
 		assertEquals(1, recording.size());
 		double duration = recording.get(0).getAsJsonObject().get("duration").getAsDouble();
-		assertEquals(2.0,duration, 0.5);
+		assertEquals(3.0,duration, 1.0);
 		assertTrue(recording.get(0).getAsJsonObject().get("file_uri").getAsString().contains("restcomm/2012-04-24/Accounts/ACae6e420f425248d6a26948c17a9e2acf/Recordings/"));
 
 		//Since we are in secure mode the s3_uri shouldn't be here
@@ -559,7 +559,6 @@ public class DialRecordingS3UploadSecureTest {
 	final String recordCallWithAction = "<Response><Record timeout=\"15\" maxLength=\"60\" action=\"http://127.0.0.1:8090/record-action\"/></Response>";
 	final String hangupRcml = "<Response><Hangup/></Response>";
 	@Test
-    @Category(UnstableTests.class)
 	public synchronized void testRecordCallWithAction() throws InterruptedException, ParseException {
 		stubFor(get(urlPathEqualTo("/1111"))
 				.willReturn(aResponse()
