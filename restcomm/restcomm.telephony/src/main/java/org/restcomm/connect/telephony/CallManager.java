@@ -100,6 +100,20 @@ import org.restcomm.connect.telephony.api.SwitchProxy;
 import org.restcomm.connect.telephony.api.UpdateCallScript;
 import org.restcomm.connect.telephony.api.util.B2BUAHelper;
 import org.restcomm.connect.telephony.api.util.CallControlHelper;
+
+import com.google.i18n.phonenumbers.NumberParseException;
+
+import akka.actor.ActorContext;
+import akka.actor.ActorRef;
+import akka.actor.ActorSystem;
+import akka.actor.Props;
+import akka.actor.UntypedActor;
+import akka.actor.UntypedActorContext;
+import akka.actor.UntypedActorFactory;
+import akka.event.Logging;
+import akka.event.LoggingAdapter;
+import akka.util.Timeout;
+import gov.nist.javax.sip.header.UserAgent;
 import scala.concurrent.Await;
 import scala.concurrent.Future;
 import scala.concurrent.duration.Duration;
@@ -153,6 +167,10 @@ import static javax.servlet.sip.SipServletResponse.SC_SERVER_INTERNAL_ERROR;
  * @author maria.farooq@telestax.com
  */
 public final class CallManager extends RestcommUntypedActor {
+
+    public static final String TIMEOUT_ATT ="org.restcomm.connect.telephony.timeoutProcessed";
+
+
 
     static final int ERROR_NOTIFICATION = 0;
     static final int WARNING_NOTIFICATION = 1;
@@ -212,6 +230,9 @@ public final class CallManager extends RestcommUntypedActor {
     private int imsProxyPort;
     private String imsDomain;
     private String imsAccount;
+
+    //Maximum P2P call length
+    private int maxP2PCallLength;
 
     private boolean actAsProxyOut;
     private List<ProxyRule> proxyOutRules;
@@ -326,6 +347,8 @@ public final class CallManager extends RestcommUntypedActor {
             }
             patchForNatB2BUASessions = false;
         }
+
+        maxP2PCallLength = runtime.getInt("max-p2p-call-length", 60);
 
         //Monitoring Service
         this.monitoring = (ActorRef) context.getAttribute(MonitoringService.class.getName());
@@ -1648,7 +1671,7 @@ public final class CallManager extends RestcommUntypedActor {
             ack.send();
             SipApplicationSession sipApplicationSession = request.getApplicationSession();
             // Defaulting the sip application session to 1h
-            sipApplicationSession.setExpires(60);
+            sipApplicationSession.setExpires(maxP2PCallLength);
         } else {
             if (logger.isInfoEnabled()) {
                 logger.info("Linked Response couldn't be found for ACK request");
@@ -2439,8 +2462,13 @@ public final class CallManager extends RestcommUntypedActor {
         final SipApplicationSessionEvent event = (SipApplicationSessionEvent) message;
         final SipApplicationSession application = event.getApplicationSession();
         final ActorRef call = (ActorRef) application.getAttribute(Call.class.getName());
-        final ReceiveTimeout timeout = ReceiveTimeout.getInstance();
-        call.tell(timeout, self);
+        if (call == null) {
+            B2BUAHelper.dropB2BUA(application);
+        }
+        //if there is Call actor, session was set to never expired, since Call
+        //Akka actor is handling its own call expiration. so, do nothing in that case
+        //mark timeout as processed
+        application.setAttribute(TIMEOUT_ATT, "completed");
     }
 
     public void checkErrorResponse(SipServletResponse response) {
