@@ -613,11 +613,18 @@ public class DialRecordingS3UploadSecureTest {
 		assertEquals(1,liveCalls);
 		assertEquals(1, liveCallsArraySize);
 
-		Thread.sleep(3000);
+//		Thread.sleep(3000);
+//		bobCall.disconnect();
+//
+//		Thread.sleep(7000);
 
-		bobCall.disconnect();
+		bobCall.listenForDisconnect();
 
-		Thread.sleep(7000);
+		Thread.sleep(8000);
+
+		assertTrue(bobCall.waitForDisconnect(5000));
+
+		Thread.sleep(1000);
 
 		//Check recording
 		JsonArray recording = RestcommCallsTool.getInstance().getCallRecordings(deploymentUrl.toString(),adminAccountSid,adminAuthToken,callSid);
