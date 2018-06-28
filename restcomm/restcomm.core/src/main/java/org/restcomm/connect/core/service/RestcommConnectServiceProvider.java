@@ -110,4 +110,9 @@ public class RestcommConnectServiceProvider {
      */
     public UriUtils uriUtils() { return uriUtils; }
 
+    //Used for unit testing - not elegant way though
+    public void setUriUtils(UriUtils uriUtils) {
+        this.uriUtils = uriUtils;
+    }
+
 }
