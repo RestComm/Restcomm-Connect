@@ -123,6 +123,14 @@ import scala.concurrent.duration.Duration;
 @ThreadSafe
 @Singleton
 public class CallsEndpoint extends AbstractEndpoint {
+    private static final String SORTING_URL_PARAM_DATE_CREATED = "DateCreated";
+    private static final String SORTING_URL_PARAM_FROM = "From";
+    private static final String SORTING_URL_PARAM_TO = "To";
+    private static final String SORTING_URL_PARAM_DIRECTION = "Direction";
+    private static final String SORTING_URL_PARAM_STATUS = "Status";
+    private static final String SORTING_URL_PARAM_DURATION = "Duration";
+    private static final String SORTING_URL_PARAM_PRICE = "Price";
+
     @Context
     private ServletContext context;
     private Configuration configuration;
@@ -236,21 +244,28 @@ public class CallsEndpoint extends AbstractEndpoint {
         String endTime = info.getQueryParameters().getFirst("EndTime");
         String parentCallSid = info.getQueryParameters().getFirst("ParentCallSid");
         String conferenceSid = info.getQueryParameters().getFirst("ConferenceSid");
+        String reverse = info.getQueryParameters().getFirst("Reverse");
 
-        // 'Reverse' URL parameter currently behaves a bit weird; it has no control over the direction of the ordering,
-        // as is the case for example in IncomingPhoneNumbersEndpoint. What it does is affecting paging instead,
-        // and the reason I think is that back when this was implemented to avoid too much work on BE we wanted Console
-        // to be able to get the right set of results, even if without ordering so that they are ordered in
-        // the client side.
-
-        // But now that sorting is implemented, I think we don't need that anymore and we should be ok ignoring it. Also,
-        // I believe having a boolean Reverse url parameter won't be able to scale well in the future if we introduce
-        // multiple SortBy fields for example.
-        //String reverse = info.getQueryParameters().getFirst("Reverse");
-
-        // Format for sorting URL paremeter is '?SortBy=<field>:<direction>', for example: '?SortBy=start_time:asc'. In the
+        // Format for sorting URL parameter is '?SortBy=<field>:<direction>', for example: '?SortBy=date_created:asc'. In the
         // future we can extend it to multiple sort fields, like ?SortBy=<field1>:<direction1>,<field2>:<direction2>
         String sortParameters = info.getQueryParameters().getFirst("SortBy");
+
+        // Even though 'Reverse=true/false' URL query parameter isn't documented, old console is using it, so we need
+        // to make sure we are backwards compatible:
+        // - If 'Reverse' is found in the URL but SortBy is not found then we deem that we are servicing an old version of Console
+        //   and we should support sorting only for Date field and translate as follows:
+        //   > 'Reverse=true': corresponds to SortBy=date_created:desc
+        //   > 'Reverse=false': corresponds to SortBy=date_created:asc
+        // - If Reverse is found in the URL but SortBy is also found we just discard 'Reverse' and service request normally
+        // - If only 'SortBy' is found in the URL then we service the request normally
+        if (reverse != null && sortParameters == null) {
+            if (reverse.equalsIgnoreCase("true")) {
+                sortParameters = "date_created:desc";
+            }
+            else {
+                sortParameters = "date_created:asc";
+            }
+        }
 
         CallDetailRecordFilter.Builder filterBuilder = CallDetailRecordFilter.Builder.builder();
 
@@ -269,11 +284,14 @@ public class CallsEndpoint extends AbstractEndpoint {
                     return status(BAD_REQUEST).entity(buildErrorResponseBody("Error parsing the SortBy parameter: sort direction needs to be either \'asc\' or \'desc\'", responseType)).build();
                 }
             }
+            else if (values.length == 1) {
+                // Default to asc if only the sorting field has been passed without direction
+                sortDirection = "asc";
+            }
         }
 
-        ///////
         if (sortBy != null) {
-            if (sortBy.equals("date_created")) {
+            if (sortBy.equals(SORTING_URL_PARAM_DATE_CREATED)) {
                 if (sortDirection != null) {
                     if (sortDirection.equalsIgnoreCase("asc")) {
                         filterBuilder.sortedByDate(SortDirection.ASCENDING);
@@ -282,8 +300,7 @@ public class CallsEndpoint extends AbstractEndpoint {
                     }
                 }
             }
-
-            if (sortBy.equals("from")) {
+            if (sortBy.equals(SORTING_URL_PARAM_FROM)) {
                 if (sortDirection != null) {
                     if (sortDirection.equalsIgnoreCase("asc")) {
                         filterBuilder.sortedByFrom(SortDirection.ASCENDING);
@@ -292,26 +309,52 @@ public class CallsEndpoint extends AbstractEndpoint {
                     }
                 }
             }
-
-/*
-            if (sortBy.equals("to")) {
+            if (sortBy.equals(SORTING_URL_PARAM_TO)) {
                 if (sortDirection != null) {
                     if (sortDirection.equalsIgnoreCase("asc")) {
-                        filterBuilder.sortedByFrom = SortDirection.ASCENDING;
+                        filterBuilder.sortedByTo(SortDirection.ASCENDING);
                     } else {
-                        filterBuilder.sortedByFrom = SortDirection.DESCENDING;
+                        filterBuilder.sortedByTo(SortDirection.DESCENDING);
                     }
                 }
             }
-*/
-            // TODO: add the rest
-            // ...
+            if (sortBy.equals(SORTING_URL_PARAM_DIRECTION)) {
+                if (sortDirection != null) {
+                    if (sortDirection.equalsIgnoreCase("asc")) {
+                        filterBuilder.sortedByDirection(SortDirection.ASCENDING);
+                    } else {
+                        filterBuilder.sortedByDirection(SortDirection.DESCENDING);
+                    }
+                }
+            }
+            if (sortBy.equals(SORTING_URL_PARAM_STATUS)) {
+                if (sortDirection != null) {
+                    if (sortDirection.equalsIgnoreCase("asc")) {
+                        filterBuilder.sortedByStatus(SortDirection.ASCENDING);
+                    } else {
+                        filterBuilder.sortedByStatus(SortDirection.DESCENDING);
+                    }
+                }
+            }
+            if (sortBy.equals(SORTING_URL_PARAM_DURATION)) {
+                if (sortDirection != null) {
+                    if (sortDirection.equalsIgnoreCase("asc")) {
+                        filterBuilder.sortedByDuration(SortDirection.ASCENDING);
+                    } else {
+                        filterBuilder.sortedByDuration(SortDirection.DESCENDING);
+                    }
+                }
+            }
+            if (sortBy.equals(SORTING_URL_PARAM_PRICE)) {
+                if (sortDirection != null) {
+                    if (sortDirection.equalsIgnoreCase("asc")) {
+                        filterBuilder.sortedByPrice(SortDirection.ASCENDING);
+                    } else {
+                        filterBuilder.sortedByPrice(SortDirection.DESCENDING);
+                    }
+                }
+            }
         }
-        else {
-            // Let's default to sorting based on 'start_time' in descending ordering, so that newest calls show up first
-            filterBuilder.sortedByDate(SortDirection.DESCENDING);
-        }
-        ///////
 
         if (pageSize == null) {
             pageSize = "50";
@@ -358,24 +401,6 @@ public class CallsEndpoint extends AbstractEndpoint {
         }
 
         final int total = dao.getTotalCallDetailRecords(filter);
-
-        // This is breaking the new implementation; we should remove it and leave paging + sorting to the DB layer
-        /*
-        if (reverse != null) {
-            if (reverse.equalsIgnoreCase("true")){
-                if (total > Integer.parseInt(pageSize)){
-                    if (total > Integer.parseInt(pageSize)*(Integer.parseInt(page) + 1)){
-                        offset = total - Integer.parseInt(pageSize)*(Integer.parseInt(page) + 1);
-                        limit = Integer.parseInt(pageSize);
-                    }
-                    else{
-                        offset = 0;
-                        limit = total - Integer.parseInt(pageSize)*Integer.parseInt(page);
-                    }
-                }
-            }
-        }
-        */
 
         if (Integer.parseInt(page) > (total / limit)) {
             return status(javax.ws.rs.core.Response.Status.BAD_REQUEST).build();

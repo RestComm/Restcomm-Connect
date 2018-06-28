@@ -463,6 +463,27 @@ public class CallDetailRecordsDaoTest extends DaoTest {
     }
 
     @Test
+    public void filterWithDateSorting() throws ParseException {
+        CallDetailRecordsDao dao = manager.getCallDetailRecordsDao();
+        CallDetailRecordFilter.Builder builder = new CallDetailRecordFilter.Builder();
+        List<String> accountSidSet = new ArrayList<String>();
+        accountSidSet.add("AC00000000000000000000000000000000");
+        builder.byAccountSidSet(accountSidSet);
+        builder.sortedByDate(SortDirection.ASCENDING);
+        CallDetailRecordFilter filter = builder.build();
+        List<CallDetailRecord> callDetailRecords = dao.getCallDetailRecords(filter);
+        assertEquals(12, callDetailRecords.size());
+        assertEquals("2013-07-30T15:08:21.228+03:00", callDetailRecords.get(0).getDateCreated().toString());
+        assertEquals("2013-09-10T14:03:36.496+03:00", callDetailRecords.get(11).getDateCreated().toString());
+
+        builder.sortedByDate(SortDirection.DESCENDING);
+        filter = builder.build();
+        callDetailRecords = dao.getCallDetailRecords(filter);
+        assertEquals("2013-09-10T14:03:36.496+03:00", callDetailRecords.get(0).getDateCreated().toString());
+        assertEquals("2013-07-30T15:08:21.228+03:00", callDetailRecords.get(11).getDateCreated().toString());
+    }
+
+    @Test
     public void filterWithFromSorting() throws ParseException {
         CallDetailRecordsDao dao = manager.getCallDetailRecordsDao();
         CallDetailRecordFilter.Builder builder = new CallDetailRecordFilter.Builder();
@@ -475,20 +496,116 @@ public class CallDetailRecordsDaoTest extends DaoTest {
         assertEquals(12, callDetailRecords.size());
         assertEquals("+1011420534008567", callDetailRecords.get(0).getFrom());
         assertEquals("Anonymous", callDetailRecords.get(11).getFrom());
+
+        builder.sortedByFrom(SortDirection.DESCENDING);
+        filter = builder.build();
+        callDetailRecords = dao.getCallDetailRecords(filter);
+        assertEquals("Anonymous", callDetailRecords.get(0).getFrom());
+        assertEquals("+1011420534008567", callDetailRecords.get(11).getFrom());
     }
 
     @Test
-    public void filterWithDateSorting() throws ParseException {
+    public void filterWithToSorting() throws ParseException {
         CallDetailRecordsDao dao = manager.getCallDetailRecordsDao();
         CallDetailRecordFilter.Builder builder = new CallDetailRecordFilter.Builder();
         List<String> accountSidSet = new ArrayList<String>();
         accountSidSet.add("AC00000000000000000000000000000000");
         builder.byAccountSidSet(accountSidSet);
-        builder.sortedByDate(SortDirection.ASCENDING);
+        builder.sortedByTo(SortDirection.ASCENDING);
         CallDetailRecordFilter filter = builder.build();
         List<CallDetailRecord> callDetailRecords = dao.getCallDetailRecords(filter);
         assertEquals(12, callDetailRecords.size());
-        assertEquals(7, callDetailRecords.get(0).getDateCreated().getMonthOfYear());
-        assertEquals(9, callDetailRecords.get(11).getDateCreated().getMonthOfYear());
+        assertEquals("+13052406432", callDetailRecords.get(0).getTo());
+        assertEquals("+17863580884", callDetailRecords.get(11).getTo());
+
+        builder.sortedByTo(SortDirection.DESCENDING);
+        filter = builder.build();
+        callDetailRecords = dao.getCallDetailRecords(filter);
+        assertEquals("+17863580884", callDetailRecords.get(0).getTo());
+        assertEquals("+13052406432", callDetailRecords.get(11).getTo());
+    }
+
+    @Test
+    public void filterWithDirectionSorting() throws ParseException {
+        CallDetailRecordsDao dao = manager.getCallDetailRecordsDao();
+        CallDetailRecordFilter.Builder builder = new CallDetailRecordFilter.Builder();
+        List<String> accountSidSet = new ArrayList<String>();
+        accountSidSet.add("AC00000000000000000000000000000000");
+        builder.byAccountSidSet(accountSidSet);
+        builder.sortedByDirection(SortDirection.ASCENDING);
+        CallDetailRecordFilter filter = builder.build();
+        List<CallDetailRecord> callDetailRecords = dao.getCallDetailRecords(filter);
+        assertEquals(12, callDetailRecords.size());
+        assertEquals("inbound", callDetailRecords.get(0).getDirection());
+        assertEquals("outbound", callDetailRecords.get(11).getDirection());
+
+        builder.sortedByDirection(SortDirection.DESCENDING);
+        filter = builder.build();
+        callDetailRecords = dao.getCallDetailRecords(filter);
+        assertEquals("outbound", callDetailRecords.get(0).getDirection());
+        assertEquals("inbound", callDetailRecords.get(11).getDirection());
+    }
+
+    @Test
+    public void filterWithStatusSorting() throws ParseException {
+        CallDetailRecordsDao dao = manager.getCallDetailRecordsDao();
+        CallDetailRecordFilter.Builder builder = new CallDetailRecordFilter.Builder();
+        List<String> accountSidSet = new ArrayList<String>();
+        accountSidSet.add("AC00000000000000000000000000000000");
+        builder.byAccountSidSet(accountSidSet);
+        builder.sortedByStatus(SortDirection.ASCENDING);
+        CallDetailRecordFilter filter = builder.build();
+        List<CallDetailRecord> callDetailRecords = dao.getCallDetailRecords(filter);
+        assertEquals(12, callDetailRecords.size());
+        assertEquals("completed", callDetailRecords.get(0).getStatus());
+        assertEquals("in-progress", callDetailRecords.get(11).getStatus());
+
+        builder.sortedByStatus(SortDirection.DESCENDING);
+        filter = builder.build();
+        callDetailRecords = dao.getCallDetailRecords(filter);
+        assertEquals("in-progress", callDetailRecords.get(0).getStatus());
+        assertEquals("completed", callDetailRecords.get(11).getStatus());
+    }
+
+    @Test
+    public void filterWithDurationSorting() throws ParseException {
+        CallDetailRecordsDao dao = manager.getCallDetailRecordsDao();
+        CallDetailRecordFilter.Builder builder = new CallDetailRecordFilter.Builder();
+        List<String> accountSidSet = new ArrayList<String>();
+        accountSidSet.add("AC00000000000000000000000000000000");
+        builder.byAccountSidSet(accountSidSet);
+        builder.sortedByDuration(SortDirection.ASCENDING);
+        CallDetailRecordFilter filter = builder.build();
+        List<CallDetailRecord> callDetailRecords = dao.getCallDetailRecords(filter);
+        assertEquals(12, callDetailRecords.size());
+        assertEquals("1", callDetailRecords.get(0).getDuration().toString());
+        assertEquals("44", callDetailRecords.get(11).getDuration().toString());
+
+        builder.sortedByDuration(SortDirection.DESCENDING);
+        filter = builder.build();
+        callDetailRecords = dao.getCallDetailRecords(filter);
+        assertEquals("44", callDetailRecords.get(0).getDuration().toString());
+        assertEquals("1", callDetailRecords.get(11).getDuration().toString());
+    }
+
+    @Test
+    public void filterWithPriceSorting() throws ParseException {
+        CallDetailRecordsDao dao = manager.getCallDetailRecordsDao();
+        CallDetailRecordFilter.Builder builder = new CallDetailRecordFilter.Builder();
+        List<String> accountSidSet = new ArrayList<String>();
+        accountSidSet.add("AC00000000000000000000000000000000");
+        builder.byAccountSidSet(accountSidSet);
+        builder.sortedByPrice(SortDirection.ASCENDING);
+        CallDetailRecordFilter filter = builder.build();
+        List<CallDetailRecord> callDetailRecords = dao.getCallDetailRecords(filter);
+        assertEquals(12, callDetailRecords.size());
+        assertEquals("0.00", callDetailRecords.get(0).getPrice().toString());
+        assertEquals("120.00", callDetailRecords.get(11).getPrice().toString());
+
+        builder.sortedByPrice(SortDirection.DESCENDING);
+        filter = builder.build();
+        callDetailRecords = dao.getCallDetailRecords(filter);
+        assertEquals("120.00", callDetailRecords.get(0).getPrice().toString());
+        assertEquals("0.00", callDetailRecords.get(11).getPrice().toString());
     }
 }

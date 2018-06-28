@@ -45,24 +45,24 @@ public class CallDetailRecordFilter {
     private final Integer limit;
     private final Integer offset;
     private final String instanceid;
-    private SortDirection sortByDate = null;
-    private SortDirection sortByFrom = null;
-    private SortDirection sortByTo = null;
-    // TODO: add them in. We could use a builder to make these easier to set without huge number of arguments
-    /*
-    private final Sorting sortByDirection;
-    private final Sorting sortByStatus;
-    private final Sorting sortByDuration;
-    private final Sorting sortByPrice;
-    */
+    private final SortDirection sortByDate;
+    private final SortDirection sortByFrom;
+    private final SortDirection sortByTo;
+    private final SortDirection sortByDirection;
+    private final SortDirection sortByStatus;
+    private final SortDirection sortByDuration;
+    private final SortDirection sortByPrice;
 
     public CallDetailRecordFilter(String accountSid, List<String> accountSidSet, String recipient, String sender, String status, String startTime, String endTime,
                                   String parentCallSid, String conferenceSid, Integer limit, Integer offset) throws ParseException {
-        this(accountSid, accountSidSet, recipient,sender,status,startTime,endTime,parentCallSid, conferenceSid, limit, offset, null, null, null);
+        this(accountSid, accountSidSet, recipient,sender,status,startTime,endTime,parentCallSid, conferenceSid, limit, offset, null, null,
+                null, null, null, null, null, null);
     }
 
     public CallDetailRecordFilter(String accountSid, List<String> accountSidSet, String recipient, String sender, String status, String startTime, String endTime,
-                                  String parentCallSid, String conferenceSid, Integer limit, Integer offset, String instanceId, SortDirection sortByDate, SortDirection sortByFrom) throws ParseException {
+                                  String parentCallSid, String conferenceSid, Integer limit, Integer offset, String instanceId, SortDirection sortByDate,
+                                  SortDirection sortByFrom, SortDirection sortByTo, SortDirection sortByDirection, SortDirection sortByStatus, SortDirection sortByDuration,
+                                  SortDirection sortByPrice) throws ParseException {
         this.accountSid = accountSid;
         this.accountSidSet = accountSidSet;
 
@@ -102,9 +102,11 @@ public class CallDetailRecordFilter {
 
         this.sortByDate = sortByDate;
         this.sortByFrom = sortByFrom;
-
-        // TODO: add the rest
-        // ...
+        this.sortByTo = sortByTo;
+        this.sortByDirection = sortByDirection;
+        this.sortByStatus = sortByStatus;
+        this.sortByDuration = sortByDuration;
+        this.sortByPrice = sortByPrice;
     }
 
     public String getSid() {
@@ -153,14 +155,14 @@ public class CallDetailRecordFilter {
 
     public String getInstanceid() { return instanceid; }
 
-
-    /*
-    public String getSortBy() { return sortBy; }
-    public String getSortDirection() { return sortDirection; }
-    */
     public SortDirection getSortByDate() { return sortByDate; }
     public SortDirection getSortByFrom() { return sortByFrom; }
     public SortDirection getSortByTo() { return sortByTo; }
+    public SortDirection getSortByDirection() { return sortByDirection; }
+    public SortDirection getSortByStatus() { return sortByStatus; }
+    public SortDirection getSortByDuration() { return sortByDuration; }
+    public SortDirection getSortByPrice() { return sortByPrice; }
+
 
     // TODO: Introduce the rest of them
 
@@ -178,7 +180,11 @@ public class CallDetailRecordFilter {
         private SortDirection sortByDate = null;
         private SortDirection sortByFrom = null;
         private SortDirection sortByTo = null;
-        // TODO: ...
+        private SortDirection sortByDirection = null;
+        private SortDirection sortByStatus = null;
+        private SortDirection sortByDuration = null;
+        private SortDirection sortByPrice = null;
+
         private Integer limit = null;
         private Integer offset = null;
 
@@ -201,7 +207,12 @@ public class CallDetailRecordFilter {
                     offset,
                     instanceid,
                     sortByDate,
-                    sortByFrom);  // TODO: ...
+                    sortByFrom,
+                    sortByTo,
+                    sortByDirection,
+                    sortByStatus,
+                    sortByDuration,
+                    sortByPrice);
         }
 
         // Filters
@@ -255,8 +266,27 @@ public class CallDetailRecordFilter {
             this.sortByFrom = sortDirection;
             return this;
         }
+        public Builder sortedByTo(SortDirection sortDirection) {
+            this.sortByTo = sortDirection;
+            return this;
+        }
+        public Builder sortedByDirection(SortDirection sortDirection) {
+            this.sortByDirection = sortDirection;
+            return this;
+        }
+        public Builder sortedByStatus(SortDirection sortDirection) {
+            this.sortByStatus = sortDirection;
+            return this;
+        }
+        public Builder sortedByDuration(SortDirection sortDirection) {
+            this.sortByDuration = sortDirection;
+            return this;
+        }
+        public Builder sortedByPrice(SortDirection sortDirection) {
+            this.sortByPrice = sortDirection;
+            return this;
+        }
 
-        // TODO: ...
 
         // Paging
         public Builder limited(Integer limit, Integer offset) {

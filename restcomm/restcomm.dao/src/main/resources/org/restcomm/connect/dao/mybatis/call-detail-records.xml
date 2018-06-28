@@ -137,7 +137,46 @@
                         order by "sender" DESC
                     </if>
                 </when>
-
+                <when test="sortByTo != null and sortByTo.name() != 'NONE'">
+                    <if test="sortByTo.name() == 'ASCENDING'">
+                        order by "recipient" ASC
+                    </if>
+                    <if test="sortByTo.name() == 'DESCENDING'">
+                        order by "recipient" DESC
+                    </if>
+                </when>
+                <when test="sortByDirection != null and sortByDirection.name() != 'NONE'">
+                    <if test="sortByDirection.name() == 'ASCENDING'">
+                        order by "direction" ASC
+                    </if>
+                    <if test="sortByDirection.name() == 'DESCENDING'">
+                        order by "direction" DESC
+                    </if>
+                </when>
+                <when test="sortByStatus != null and sortByStatus.name() != 'NONE'">
+                    <if test="sortByStatus.name() == 'ASCENDING'">
+                        order by "status" ASC
+                    </if>
+                    <if test="sortByStatus.name() == 'DESCENDING'">
+                        order by "status" DESC
+                    </if>
+                </when>
+                <when test="sortByDuration != null and sortByDuration.name() != 'NONE'">
+                    <if test="sortByDuration.name() == 'ASCENDING'">
+                        order by "duration" ASC
+                    </if>
+                    <if test="sortByDuration.name() == 'DESCENDING'">
+                        order by "duration" DESC
+                    </if>
+                </when>
+                <when test="sortByPrice != null and sortByPrice.name() != 'NONE'">
+                    <if test="sortByPrice.name() == 'ASCENDING'">
+                        order by cast("price" as int) ASC
+                    </if>
+                    <if test="sortByPrice.name() == 'DESCENDING'">
+                        order by cast("price" as int) DESC
+                    </if>
+                </when>
                 <otherwise>
                     order by "date_created" DESC
                 </otherwise>
