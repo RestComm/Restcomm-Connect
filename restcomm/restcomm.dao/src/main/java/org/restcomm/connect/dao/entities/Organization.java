@@ -28,7 +28,7 @@ import org.restcomm.connect.commons.dao.Sid;
  * @author maria-farooq@live.com (Maria Farooq)
  */
 @Immutable
-public final class Organization {
+public class Organization {
     private final Sid sid;
     private final String domainName;
     private final DateTime dateCreated;
