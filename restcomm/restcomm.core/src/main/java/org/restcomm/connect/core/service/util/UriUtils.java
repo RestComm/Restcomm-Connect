@@ -43,7 +43,7 @@ import org.restcomm.connect.dao.DaoManager;
  * @author Henrique Rosa
  */
 @ThreadSafe
-public final class UriUtils {
+public class UriUtils {
 
     private Logger logger = Logger.getLogger(UriUtils.class);
     private HttpConnector selectedConnector = null;
