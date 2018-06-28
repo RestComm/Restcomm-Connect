@@ -574,9 +574,9 @@ The API returns URIs to the next, previous, first and last pages of the returned
 
 == Sorting Information
 
-*HTTP GET.* You can use the *SortBy* GET query parameter to determine which attribute you want to sort by and in which direction; direction can either be 'asc' for ascending and 'desc' for descending sort ordering. Here's the overall format: *SortBy=<attribute>:<direction>*. If no direction parameter is provided, then the listing of calls is sorted by the attribute in ascending order.
+*HTTP GET.* You can use the *SortBy* GET query parameter to determine which attribute you want to sort by and in which direction; direction can either be 'asc' for ascending and 'desc' for descending sort ordering. Here's the overall format: *SortBy=<sorting attribute>:<direction>*. If no direction parameter is provided, then the listing of calls is sorted by the attribute in ascending order. Below you can find the possible attributes you can sort by:
 
-=== SortBy Parameters
+=== SortBy Attributes
 
 [cols=",",options="header",]
 |=======================================================================
