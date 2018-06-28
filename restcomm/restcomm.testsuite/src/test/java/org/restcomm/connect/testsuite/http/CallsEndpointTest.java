@@ -88,25 +88,21 @@ public class CallsEndpointTest {
     public void getCallsListUsingSorting() {
         // Provide both sort field and direction
         // Provide ascending sorting and verify that the first row is indeed the earliest one
-/*
         JsonObject response1 = RestcommCallsTool.getInstance().getCalls(deploymentUrl.toString(),
-                adminAccountSid, adminAuthToken, 0, 10, "date_created:asc", true);
+                adminAccountSid, adminAuthToken, 0, 10, "DateCreated:asc", true);
+        // Remember there is a discrepancy between the sort parameters and the result attribute in the .json response. For example DateCreated:asc, means
+        // to sort based of DateCreated field, but in the response the field is called 'date_created', not DateCreated. This only happens only for .json; in
+        // .xml the naming seems to be respected.
         assertEquals(((JsonObject)response1.get("calls").getAsJsonArray().get(0)).get("date_created").getAsString(), "Fri, 5 Jul 2013 22:15:53 +0300");
 
-        // Provide only sort field; direction should default to desc
+        // Provide only sort field; all fields default to ascending
         JsonObject response2 = RestcommCallsTool.getInstance().getCalls(deploymentUrl.toString(),
-                adminAccountSid, adminAuthToken, 0, 10, "date_created", true);
-        assertEquals(((JsonObject)response2.get("calls").getAsJsonArray().get(0)).get("date_created").getAsString(), "Tue, 31 May 2016 16:20:22 +0300");
-*/
+                adminAccountSid, adminAuthToken, 0, 10, "DateCreated", true);
+        assertEquals(((JsonObject)response2.get("calls").getAsJsonArray().get(0)).get("date_created").getAsString(), "Fri, 5 Jul 2013 22:15:53 +0300");
 
         JsonObject response3 = RestcommCallsTool.getInstance().getCalls(deploymentUrl.toString(),
-                adminAccountSid, adminAuthToken, 0, 10, "date_created:desc", true);
+                adminAccountSid, adminAuthToken, 0, 10, "DateCreated:desc", true);
         assertEquals(((JsonObject)response3.get("calls").getAsJsonArray().get(0)).get("date_created").getAsString(), "Tue, 31 May 2016 16:20:22 +0300");
-
-/*        // Verify that when there is no sorting parameters passed, we default to sorting by date_created descending
-        JsonObject response4 = RestcommCallsTool.getInstance().getCalls(deploymentUrl.toString(),
-                adminAccountSid, adminAuthToken, 0, 10, null, true);
-        assertEquals(((JsonObject)response4.get("calls").getAsJsonArray().get(0)).get("date_created").getAsString(), "Tue, 31 May 2016 16:20:22 +0300");
 
         try {
             // provide only direction, should cause an exception
@@ -120,11 +116,11 @@ public class CallsEndpointTest {
         try {
             // provide sort field and direction, but direction is invalid (neither of asc or desc)
             RestcommCallsTool.getInstance().getCalls(deploymentUrl.toString(),
-                    adminAccountSid, adminAuthToken, 0, 10, "start_time:invalid", true);
+                    adminAccountSid, adminAuthToken, 0, 10, "DateCreated:invalid", true);
         }
         catch (UniformInterfaceException e) {
             assertEquals(e.getResponse().getStatus(), BAD_REQUEST.getStatusCode());
-        }*/
+        }
     }
 
     @Test
