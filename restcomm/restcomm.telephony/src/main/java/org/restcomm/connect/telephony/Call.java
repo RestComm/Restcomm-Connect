@@ -1852,7 +1852,10 @@ public final class Call extends RestcommUntypedActor implements TransitionEndLis
                 outgoingCallRecord = outgoingCallRecord.setStatus(external.toString());
                 final DateTime now = DateTime.now();
                 outgoingCallRecord = outgoingCallRecord.setEndTime(now);
-                callDuration = (int) ((now.getMillis() - outgoingCallRecord.getStartTime().getMillis()) / 1000);
+                // Calculate call duration when the state is completed.
+                if (external.equals(CallStateChanged.State.COMPLETED)) {
+                    callDuration = (int) ((now.getMillis() - outgoingCallRecord.getStartTime().getMillis()) / 1000);
+                }
                 outgoingCallRecord = outgoingCallRecord.setDuration(callDuration);
                 recordsDao.updateCallDetailRecord(outgoingCallRecord);
                 if(logger.isDebugEnabled()) {
