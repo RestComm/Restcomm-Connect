@@ -49,11 +49,6 @@ public final class MybatisRecordingsDao implements RecordingsDao {
         this.sessions = sessions;
     }
 
-//    public MybatisRecordingsDao(final SqlSessionFactory sessions, final String recordingPath) {
-//        super();
-//        this.sessions = sessions;
-//    }
-
     @Override
     public void addRecording(Recording recording) {
         final SqlSession session = sessions.openSession();
@@ -227,40 +222,7 @@ public final class MybatisRecordingsDao implements RecordingsDao {
         // s3Uri: https://gvagrestcomm.s3.amazonaws.com/RE4c9c09908b60402c8c0a77e24313f27d.wav
         // old S3URI: https://s3.amazonaws.com/restcomm-as-a-service/logs/RE7ddbd5b441574e4ab786a1fddf33eb47.wav?X-Amz-Algorithm=AWS4-HMAC-SHA256&X-Amz-Date=20170209T103950Z&X-Amz-SignedHeaders=host&X-Amz-Expires=604800&X-Amz-Credential=AKIAIRG5NINXKJAJM5DA%2F20170209%2Fus-east-1%2Fs3%2Faws4_request&X-Amz-Signature=b3da2acc17ee9c6aca4cd151e154d94f530670850f0fcade2422f85d1c7cc992
         String s3Uri = (String) map.get("s3_uri");
-//        if (fileUri.contains("s3.amazonaws.com") && s3AccessTool != null) {
-//            update = true;
-//            dateUpdated = DateTime.now();
-//            String tempUri = fileUri;
-//            String file = String.format("/restcomm/%s/Accounts/%s/Recordings/%s",apiVersion,accountSid,sid);
-//            String fileExtension = null;
-//            URI oldS3Uri = null;
-//            try {
-//                oldS3Uri = new URI(tempUri);
-//            } catch (URISyntaxException e) {
-//                e.printStackTrace();
-//            }
-//            if (oldS3Uri != null) {
-//                String tempS3Uri = oldS3Uri.getPath().replaceFirst("/","").replaceAll("/",",");
-//                String bucketName = tempS3Uri.split(",")[0].trim();
-//                String folder = tempS3Uri.split(",")[1].trim();
-//                String filename = tempS3Uri.split(",")[2].trim();
-//                fileExtension = filename.contains(".wav") ? ".wav" : ".mp4";
-//                StringBuffer bucket = new StringBuffer();
-//                bucket.append(bucketName);
-//                if (folder != null && !folder.isEmpty())
-//                    bucket.append("/").append(folder);
-//                s3Uri =  s3AccessTool.getS3client().getUrl(bucket.toString(), filename).toString();
-//            }
-//            if (fileExtension == null) {
-//                // assuming as WAV since previous attempt to obtain fileExtension failed
-//                fileExtension = ".wav";
-//            }
-//            fileUri = generateLocalFileUri(file, fileExtension).toString();
-//        }
         recording = new Recording(sid, dateCreated, dateUpdated, accountSid, callSid, duration, apiVersion, uri, DaoUtils.readUri(fileUri), DaoUtils.readUri(s3Uri));
-//        if (update) {
-//            updateRecording(recording);
-//        }
         return recording;
     }
 

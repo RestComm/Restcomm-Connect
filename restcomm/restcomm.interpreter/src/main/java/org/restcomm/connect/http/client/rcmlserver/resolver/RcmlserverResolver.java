@@ -75,7 +75,7 @@ public class RcmlserverResolver {
             filterPrefix = null;
     }
 
-    // if rvdOrigin is null no point in trying to resolveWithBase RVD location. We will return passed uri instead
+    // if rvdOrigin is null no point in trying to resolve RVD location. We will return passed uri instead
     public URI resolveRelative(URI uri) {
         if (uri != null && rvdOrigin != null && filterPrefix != null) {
             if (uri.isAbsolute())
@@ -85,7 +85,7 @@ public class RcmlserverResolver {
                 if (uriString.startsWith(filterPrefix))
                     return new URI(rvdOrigin + uri.toString());
             } catch (URISyntaxException e) {
-                logger.error("Cannot resolveWithBase uri: " + uri.toString() + ". Ignoring...", e);
+                logger.error("Cannot resolve uri: " + uri.toString() + ". Ignoring...", e);
             }
         }
         return uri;

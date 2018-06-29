@@ -190,6 +190,7 @@
         <dependency>
             <groupId>org.restcomm</groupId>
             <artifactId>restcomm-connect.core</artifactId>
+			<version>${project.version}</version>
         </dependency>
 
     </dependencies>
