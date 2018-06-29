@@ -612,11 +612,6 @@ public class DialRecordingS3UploadSecureTest {
 		assertEquals(1,liveCalls);
 		assertEquals(1, liveCallsArraySize);
 
-//		Thread.sleep(3000);
-//		bobCall.disconnect();
-//
-//		Thread.sleep(7000);
-
 		bobCall.listenForDisconnect();
 
 		Thread.sleep(8000);

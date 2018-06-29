@@ -75,9 +75,6 @@ public class RestcommConnectServiceProvider {
 
         this.recordingService = new RecordingsServiceImpl(daoManager.getRecordingsDao(), s3AccessTool, ec, uriUtils);
         ctx.setAttribute(RecordingService.class.getName(), recordingService);
-
-
-
     }
 
     /**

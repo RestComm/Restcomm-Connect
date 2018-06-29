@@ -141,7 +141,6 @@ public class UriUtils {
             }
         }
 
-        //TODO Resolve based on Organization domain name
         String base = selectedConnector.getScheme() + "://" + restcommAddress + ":" + selectedConnector.getPort();
         try {
             return resolveWithBase(new URI(base), uri);

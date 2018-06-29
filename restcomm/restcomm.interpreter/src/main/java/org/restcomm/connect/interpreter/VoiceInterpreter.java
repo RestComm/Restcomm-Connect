@@ -675,7 +675,7 @@ public class VoiceInterpreter extends BaseVoiceInterpreter {
                     path += exitAudio == null || exitAudio.equals("") ? "alert.wav" : exitAudio;
                     URI uri = null;
                     try {
-                        uri = uriUtils.resolve(new URI(path));
+                        uri = uriUtils.resolve(new URI(path), accountId);
                     } catch (final Exception exception) {
                         final Notification notification = notification(ERROR_NOTIFICATION, 12400, exception.getMessage());
                         final NotificationsDao notifications = storage.getNotificationsDao();
@@ -3231,7 +3231,7 @@ public class VoiceInterpreter extends BaseVoiceInterpreter {
         path += entryAudio == null || entryAudio.equals("") ? "beep.wav" : entryAudio;
         URI uri = null;
         try {
-            uri = uriUtils.resolve(new URI(path));
+            uri = uriUtils.resolve(new URI(path), accountId);
         } catch (final Exception exception) {
             final Notification notification = notification(ERROR_NOTIFICATION, 12400, exception.getMessage());
             final NotificationsDao notifications = storage.getNotificationsDao();
@@ -3557,7 +3557,7 @@ public class VoiceInterpreter extends BaseVoiceInterpreter {
                 final URI base = request.getUri();
                 url = uriUtils.resolveWithBase(base, new URI(child.attribute("url").value()));
             } else {
-                url = uriUtils.resolve(new URI(child.attribute("url").value()));
+                url = uriUtils.resolve(new URI(child.attribute("url").value()), accountId);
             }
             String method;
             if (child.hasAttribute("method")) {
