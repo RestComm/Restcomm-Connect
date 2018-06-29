@@ -12,6 +12,7 @@ The folowing tags are used to categorize and state the scope of a change
 == 8.7.0 version 2018-06-19 (docker tag _____)
 === New Features
 // New features (whether major or minor) go here
+* Enabled multi-provider routing for the organization SIP domain
 
 
 === Breaking Changes
@@ -20,6 +21,7 @@ The folowing tags are used to categorize and state the scope of a change
 
 === Bug Fixes
 * Send BYE on session expiration for B2BUA calls
+* 
 
 
 === Migration Notes
