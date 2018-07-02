@@ -20,6 +20,9 @@
 package org.restcomm.connect.testsuite.http.util;
 
 
+import org.apache.log4j.Logger;
+import sun.rmi.runtime.Log;
+
 import java.net.InetAddress;
 import java.net.UnknownHostException;
 import java.util.List;
@@ -32,7 +35,8 @@ import java.util.Map;
 public class CustomDnsResolver implements sun.net.spi.nameservice.NameService {
     //Based on https://stackoverflow.com/a/43870031
 
-    private static String LOCALHOST = "127.0.0.1";
+    private static Logger logger = Logger.getLogger(CustomDnsResolver.class);
+    private static final String LOCALHOST = "127.0.0.1";
     private static Map<String, String> domainIpMap;
 
     @Override
@@ -68,7 +72,7 @@ public class CustomDnsResolver implements sun.net.spi.nameservice.NameService {
             }
             nameServices.add(new CustomDnsResolver());
         } catch (IllegalAccessException e) {
-            e.printStackTrace();
+            logger.error("Error during setNameService: ",e);
         }
     }
 

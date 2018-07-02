@@ -10,6 +10,10 @@
 
     <artifactId>restcomm-connect.testsuite</artifactId>
 
+    <properties>
+        <commons-lang3.version>3.7</commons-lang3.version>
+    </properties>
+
     <dependencies>
         <!-- Testing -->
         <dependency>
@@ -281,7 +285,7 @@
         <dependency>
             <groupId>org.apache.commons</groupId>
             <artifactId>commons-lang3</artifactId>
-            <version>3.7</version>
+            <version>${commons-lang3.version}</version>
         </dependency>
 
         <dependency>

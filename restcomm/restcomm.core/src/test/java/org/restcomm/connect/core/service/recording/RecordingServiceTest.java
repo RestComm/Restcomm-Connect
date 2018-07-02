@@ -55,7 +55,7 @@ public class RecordingServiceTest {
     Sid recordingSid = Sid.generate(Sid.Type.RECORDING);
     URI s3Uri = URI.create("https://127.0.0.1:8099/s3/"+recordingSid.toString());
 
-    UriUtils uriUtils = new UriUtils(daoManager);
+    UriUtils uriUtils = new UriUtils(daoManager, null, false);
 
     @Test
     public void deleteRecordingS3Test() throws IOException {
