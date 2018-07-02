@@ -18,24 +18,23 @@
  */
 package org.restcomm.connect.core.service.util;
 
+import org.apache.log4j.Logger;
+import org.restcomm.connect.commons.HttpConnector;
+import org.restcomm.connect.commons.HttpConnectorList;
+import org.restcomm.connect.commons.annotations.concurrency.ThreadSafe;
+import org.restcomm.connect.commons.configuration.RestcommConfiguration;
+import org.restcomm.connect.commons.dao.Sid;
+import org.restcomm.connect.commons.util.DNSUtils;
+import org.restcomm.connect.commons.util.JBossConnectorDiscover;
+import org.restcomm.connect.commons.util.TomcatConnectorDiscover;
+import org.restcomm.connect.dao.DaoManager;
+
 import java.net.InetAddress;
 import java.net.URI;
 import java.net.URISyntaxException;
 import java.net.UnknownHostException;
 import java.util.Iterator;
 import java.util.List;
-
-
-import org.apache.log4j.Logger;
-import org.restcomm.connect.commons.HttpConnector;
-import org.restcomm.connect.commons.configuration.RestcommConfiguration;
-import org.restcomm.connect.commons.HttpConnectorList;
-import org.restcomm.connect.commons.annotations.concurrency.ThreadSafe;
-import org.restcomm.connect.commons.dao.Sid;
-import org.restcomm.connect.commons.util.DNSUtils;
-import org.restcomm.connect.commons.util.JBossConnectorDiscover;
-import org.restcomm.connect.commons.util.TomcatConnectorDiscover;
-import org.restcomm.connect.dao.DaoManager;
 
 /**
  * Utility class to manipulate URI.
@@ -48,12 +47,22 @@ public class UriUtils {
     private Logger logger = Logger.getLogger(UriUtils.class);
     private HttpConnector selectedConnector = null;
     private DaoManager daoManager;
+    private JBossConnectorDiscover jBossConnectorDiscover;
+    private boolean useHostnameToResolve;
 
     /**
      * Default constructor.
      */
     public UriUtils(final DaoManager daoManager) {
         this.daoManager = daoManager;
+        jBossConnectorDiscover = new JBossConnectorDiscover();
+        useHostnameToResolve = RestcommConfiguration.getInstance().getMain().isUseHostnameToResolveRelativeUrls();
+    }
+
+    public UriUtils(final DaoManager daoManager, final JBossConnectorDiscover jBossConnectorDiscover, boolean useHostnameToResolve) {
+        this.daoManager = daoManager;
+        this.jBossConnectorDiscover = jBossConnectorDiscover;
+        this.useHostnameToResolve = useHostnameToResolve;
     }
 
     /**
@@ -85,7 +94,7 @@ public class UriUtils {
         logger.info("Searching HTTP connectors.");
         HttpConnectorList httpConnectorList = null;
         //find Jboss first as is typical setup
-        httpConnectorList = new JBossConnectorDiscover().findConnectors();
+        httpConnectorList = jBossConnectorDiscover.findConnectors();
         if (httpConnectorList == null || httpConnectorList.getConnectors().isEmpty()) {
             //if not found try tomcat
             httpConnectorList = new TomcatConnectorDiscover().findConnectors();
@@ -125,7 +134,7 @@ public class UriUtils {
         }
 
         if (restcommAddress == null || restcommAddress.isEmpty()) {
-            if (RestcommConfiguration.getInstance().getMain().isUseHostnameToResolveRelativeUrls()) {
+            if (useHostnameToResolve) {
                 restcommAddress = RestcommConfiguration.getInstance().getMain().getHostname();
                 if (restcommAddress == null || restcommAddress.isEmpty()) {
                     try {
