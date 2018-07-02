@@ -177,7 +177,7 @@
 			<artifactId>mockito-core</artifactId>
 			<scope>test</scope>
 		</dependency>
-                
+
                 <dependency>
                     <groupId>com.github.tomakehurst</groupId>
                     <artifactId>wiremock</artifactId>
@@ -186,7 +186,12 @@
                     or Apache HTTP Client -->
                     <classifier>standalone</classifier>
                     <scope>test</scope>
-                </dependency>                
+                </dependency>
+        <dependency>
+            <groupId>org.restcomm</groupId>
+            <artifactId>restcomm-connect.core</artifactId>
+			<version>${project.version}</version>
+        </dependency>
 
-	</dependencies>
+    </dependencies>
 </project>

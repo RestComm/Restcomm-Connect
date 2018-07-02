@@ -44,7 +44,8 @@ import org.restcomm.connect.commons.configuration.RestcommConfiguration;
 import org.restcomm.connect.commons.configuration.sets.RcmlserverConfigurationSet;
 import org.restcomm.connect.commons.dao.Sid;
 import org.restcomm.connect.commons.faulttolerance.RestcommUntypedActor;
-import org.restcomm.connect.commons.util.UriUtils;
+import org.restcomm.connect.core.service.RestcommConnectServiceProvider;
+import org.restcomm.connect.core.service.util.UriUtils;
 import org.restcomm.connect.core.service.api.NumberSelectorService;
 import org.restcomm.connect.dao.AccountsDao;
 import org.restcomm.connect.dao.ApplicationsDao;
@@ -97,6 +98,8 @@ public class SmppMessageHandler extends RestcommUntypedActor {
     //List of extensions for SmsService
     List<RestcommExtensionGeneric> extensions;
 
+    private UriUtils uriUtils;
+
     public SmppMessageHandler(final ServletContext servletContext) {
         this.servletContext = servletContext;
         this.storage = (DaoManager) servletContext.getAttribute(DaoManager.class.getName());
@@ -110,6 +113,7 @@ public class SmppMessageHandler extends RestcommUntypedActor {
             logger.info("SmsService extensions: " + (extensions != null ? extensions.size() : "0"));
         }
         smsService = (ActorRef) servletContext.getAttribute(SmsService.class.getName());
+        uriUtils = RestcommConnectServiceProvider.getInstance().uriUtils();
     }
 
     @Override
@@ -349,11 +353,11 @@ public class SmppMessageHandler extends RestcommUntypedActor {
                             isApplicationNull = false;
                             RcmlserverConfigurationSet rcmlserverConfig = RestcommConfiguration.getInstance().getRcmlserver();
                             RcmlserverResolver resolver = RcmlserverResolver.getInstance(rcmlserverConfig.getBaseUrl(), rcmlserverConfig.getApiPath());
-                            builder.setUrl(UriUtils.resolve(resolver.resolveRelative(application.getRcmlUrl())));
+                            builder.setUrl(uriUtils.resolve(resolver.resolveRelative(application.getRcmlUrl()), number.getAccountSid()));
                         }
                     }
                     if (isApplicationNull && appUri != null) {
-                        builder.setUrl(UriUtils.resolve(appUri));
+                        builder.setUrl(uriUtils.resolve(appUri, number.getAccountSid()));
                     } else if (isApplicationNull) {
                         logger.warning("the matched number doesn't have SMS application attached, number: " + number.getPhoneNumber());
                         return false;
@@ -361,7 +365,7 @@ public class SmppMessageHandler extends RestcommUntypedActor {
                     builder.setMethod(number.getSmsMethod());
                     URI appFallbackUrl = number.getSmsFallbackUrl();
                     if (appFallbackUrl != null) {
-                        builder.setFallbackUrl(UriUtils.resolve(number.getSmsFallbackUrl()));
+                        builder.setFallbackUrl(uriUtils.resolve(number.getSmsFallbackUrl(), number.getAccountSid()));
                         builder.setFallbackMethod(number.getSmsFallbackMethod());
                     }
                     final Props props = SmppInterpreter.props(builder.build());
