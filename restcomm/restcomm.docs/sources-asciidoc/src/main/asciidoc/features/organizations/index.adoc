@@ -23,7 +23,7 @@ include::organizations/uml/component.adoc[]
 
 *   Relative URLs  will be resolved based on the Organization domain name
 
-*   Security constrains will not allow access to organization resources when using wrong domain name, even if valid credential provided.
+*   Security constraints will not allow access to organization resources when hostname of the request doesn't match the domain name of the organization, even if valid credential provided.
 
 
 == High Level Routing
