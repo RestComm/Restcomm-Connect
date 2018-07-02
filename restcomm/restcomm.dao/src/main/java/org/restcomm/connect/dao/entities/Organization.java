@@ -40,7 +40,7 @@ public class Organization {
      * @param domainName - such as customer.restcomm.com
      * @param dateCreated
      * @param dateUpdated
-     * @param Status
+     * @param status
      * @throws IllegalArgumentException if sid or domainName are null/empty
      */
     public Organization(final Sid sid, final String domainName, final DateTime dateCreated, final DateTime dateUpdated, final Status status) throws IllegalArgumentException {
