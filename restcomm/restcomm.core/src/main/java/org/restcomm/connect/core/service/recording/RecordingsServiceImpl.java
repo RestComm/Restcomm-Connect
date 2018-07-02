@@ -44,8 +44,8 @@ public class RecordingsServiceImpl implements RecordingService {
     private final RecordingsDao recordingsDao;
     private final S3AccessTool s3AccessTool;
     private String recordingsPath;
-    private ExecutionContext ec;
-    private UriUtils uriUtils;
+    private final ExecutionContext ec;
+    private final UriUtils uriUtils;
 
     public RecordingsServiceImpl (RecordingsDao recordingsDao, S3AccessTool s3AccessTool, ExecutionContext ec, UriUtils uriUtils) {
         this.recordingsDao = recordingsDao;
