@@ -169,10 +169,10 @@
 			</when>
 			<when test="sortByPrice != null">
 				<if test="sortByPrice.name() == 'ASCENDING'">
-					order by cast(price as int) ASC
+					order by cast(price as unsigned) ASC
 				</if>
 				<if test="sortByPrice.name() == 'DESCENDING'">
-					order by cast(price as int) DESC
+					order by cast(price as unsigned) DESC
 				</if>
 			</when>
 
