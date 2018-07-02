@@ -9,10 +9,9 @@ The folowing tags are used to categorize and state the scope of a change
 * **security improvement** tags changes related to security
 * **commercial** tags changes that are available only in the commercial RestcommOne product
 
-== 8.7.0 version 2018-06-19 (docker tag _____)
+== 8.7.0 version 2018-07-4 (docker tag _____)
 === New Features
-// New features (whether major or minor) go here
-
+* Support for Organizations in the REST API. New ecurity constrains applied in order to allow access to organization resources only when origin host match the organization domain.
 
 === Breaking Changes
 // draws attention to functionality that is getting removed
@@ -64,7 +63,7 @@ Follow the steps below:
 === Migration Notes
 // Things to consider during migration from previous release
 
-*Important Note* This version is adding a new columns to support SMS Error Code updates, and SMS StatusCallback notifications. 
+*Important Note* This version is adding a new columns to support SMS Error Code updates, and SMS StatusCallback notifications.
 
 *Important Note* There is new cache configuration. New settings is CACHE_PATH with value /mnt/restcomm_cache. "docker run" command needs to be inline with this to sync the EFS sharing with app configuration.
 
@@ -106,7 +105,7 @@ Follow the steps below:
 === Migration Notes
 // Things to consider during migration from previous release
 
-*Important Note* This version is adding a new column to support SMS CDR updates. 
+*Important Note* This version is adding a new column to support SMS CDR updates.
 
 ==== Migration steps - part 1
 
