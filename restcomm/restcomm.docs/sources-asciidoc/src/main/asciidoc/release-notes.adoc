@@ -13,7 +13,7 @@ The folowing tags are used to categorize and state the scope of a change
 === New Features
 // New features (whether major or minor) go here
 * Enabled multi-provider routing for the organization SIP domain
-* Support for Organizations in the REST API. New ecurity constraints applied in order to allow access to organization resources only when hostname of the request match the organization domain that the account credentials belong to.
+* Support for Organizations in the REST API. New security constraints applied in order to allow access to organization resources only when hostname of the request match the organization domain that the account credentials belong to.
 
 === Breaking Changes
 // draws attention to functionality that is getting removed
