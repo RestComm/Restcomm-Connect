@@ -1,0 +1,145 @@
+= Restcomm Visual Designer
+
+== Quick Start guide
+
+This guide will help you learn the bare basics of Visual Designer.
+
+=== The _Greeting_ application
+
+==== Create the application
+
+New applications are easily created from within the Console. Sign into your account and navigate to the
+application list view. For cloud accounts this is:
+
+https://cloud.restcomm.com/#/applications
+
+In order to create an application
+
+* Click on the `Add New App` button. This will start the application creation wizzard.
+* Choose `Create a Visual Designer Application` in the next view.
+Other options are <<importing application from local file#>> or <<linking to an external one#>>.
+We will review these options later.
+* In the Template Gallery pick the `Blank` template. That's the most basic Visual Designer application.
+<<Template Gallery#>> offers a range of options to kick start your application and can save you a great deal of time
+and effort. We will stick to the bare minimum for now.
+* Next, you need to name your application and choose a _type_ for it. The _name_ is not an
+identifier but more like a user friendly way to refer to your app. Pick something short and descriptive.
+We'll use `greeting-app` for the purpose of this example.
+* The _type_ determines whether this application will respond to voice calls or SMS messages.
+Choose `voice` for now. You may learn more about application types <<here#>>.
+* When done, click `Create`. This will create your application and navigate you to the
+application details page. Here, you can perform management operations like
+application removal. Other helpfull information, such as which numbers are bound to it, is displayed too.
+* Click `Design` to open the Visual Designer editor in a new tab.
+* Keep the tab open. You will need it in a while.
+
+image::https://www.restcomm.com/wp-content/uploads/2018/07/Screenshot-from-2018-07-02-16-39-23.png[Restcomm Visual Designer Greeting application]
+
+You're almost there. Your application is operational and will greet you with the default message when called.
+You do need a way to reach it though. To do that, you'll have to
+<<bind it to a DID#>> (a number you can call to) and finally <<make a call using a SIP client#>>.
+
+
+==== Bind with a number
+
+You've just created a _voice_ application. Such applications are triggered
+and respond to voice calls. You will need some sort of handle to make a call to. We call this handle a _DID_ or _Incoming Number_.
+In cloud Console you can manage these entities in the `Numbers` section. In cloud this is:
+
+https://cloud.restcomm.com/#/numbers/incoming
+
+Navigate  your browser to the _Numbers_ section. Then
+
+* Click on the `Register Number` to start the wizard for reserving a number.
+* In the form provide an identifier value for `SIP Address` and `Friendly Name`. You can use something like
+a handy numeric value in both fields. For example 5555. Remember, what you define as SIP Address is where you will
+call to in a while. Click `Register` to reserve this number. The operation will fail if the number has
+already been reserved. That's ok, you may try another one.
+* You should now see the number details form. Your number is reserved but does not point
+ to your application yet.
+* In the `Voice` section expand the dropdown with the list of applications. You should
+see an entry named `greeting-app`. Select it.
+* Click `Save changes` at the bottom.
+
+image::
+https://www.restcomm.com/wp-content/uploads/2018/07/Screenshot-from-2018-07-02-16-42-35.png[Bind greeting application to a phone number]
+
+Your number is now linked to the application.
+
+==== Call the application
+
+Time to execute the application. Voice applications respond to voice calls. In order to make such
+one, you can use a SIP client to call the number you just registered. In cloud you can use the <<WebRTC Demo client#>>.
+
+Get back to the Console
+
+* Start WebRTC Demo client. It will open in a new tab.
+
+From WebRTC Demo client
+
+* Create a new Contact named after the number you created. In our case this is 5555.
+* Place your call and make sure your sound output device is active.
+* You should hear the greeting message of the `greeting-app` application.
+* Keep the tab open for later use.
+
+image::https://www.restcomm.com/wp-content/uploads/2018/07/Screenshot-from-2018-07-02-16-55-39.png[Greeting app demo call]
+
+=== Working with Visual Designer
+
+Now that the plumbing is all set up, you can go ahead and extend  your applicaiton
+ with more usefull and interesting features. Switch back to Visual Designer tab. Let's introduce some basic concepts.
+
+==== Elements
+
+On the left you will notice a long list of buttons. We call these `elements`. You can't click on them, but
+you can drag and drop them into modules. <<Elements#>> are the building blocks of each Visual Designer application.
+
+You will notice that your application already contains a `Say` element. It contains the greeting that
+you heard when calling the application. `Say` elements are able to convert written phrases to their
+verbal representations. We call this Text-To-Speech (TTS).
+
+==== Modules
+
+`Elements` are grouped together in sequences we call `modules`. The whole area next to the
+element toolbox is where modules appear. They are organized in a series of tabs and will accept
+elements when dragged  and dropped over them. <<Modules#>> are the main execution unit in a Visual Designer application.
+
+By default new applications already contain a _Welcome_ module with the `Say` element we just
+mentioned. Since this gets executed first, we call this the `Startup` module.
+
+==== Making changes
+
+Let's now change the greeting to something more interesting.
+
+* Edit the default text in the `Say` element and use something more personalized like _'Hello Alice. I am glad to hear back from you.'_.
+* Click the `Save` button.
+
+image::https://www.restcomm.com/wp-content/uploads/2018/07/Screenshot-from-2018-07-02-16-49-11.png[Greeting app announcement modified]
+
+* Get back to the WebRTC Demo tab and call your application once again.
+* You should hear the updated greeting.
+
+image::https://www.restcomm.com/wp-content/uploads/2018/07/Screenshot-from-2018-07-02-16-55-39.png[Greeting demo app call]
+
+===== Validation errors
+
+You will need to _Save_ your changes so that they are effective. In case you get a validation
+error, your changes won't be applied to the actual running application. They will be persisted though so
+that you don't loose your work.
+
+==== Workflow
+
+Once you're done, it's good practice to close the editor tab. Think of Visual Designer
+as an editor like the one you edit images in. You get a new window for each new image you edit
+and you're allowed to switch between them. When done, you just close what you don't need any more.
+This is not required but will result in a cleaner and faster workflow.
+
+
+<<index.adoc#,Back to Visual Designer documentation home>>
+
+
+
+
+
+
+
