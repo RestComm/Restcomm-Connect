@@ -23,7 +23,6 @@ package org.restcomm.connect.dao.common;
  * Sorting direction for various API Queries
  */
 public enum SortDirection {
-    NONE,
     ASCENDING,
     DESCENDING,
 }

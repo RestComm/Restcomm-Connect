@@ -314,7 +314,6 @@ public class IncomingPhoneNumbersDaoTest {
         filterBuilder.byPhoneNumber("+12223334444");
         filterBuilder.byOrgSid(org2.toString());
         filterBuilder.byPureSIP(Boolean.FALSE);
-        filterBuilder.sortedByPhoneNumber(SortDirection.NONE);
         IncomingPhoneNumberFilter numFilter = filterBuilder.build();
         List<IncomingPhoneNumber> incomingPhoneNumbers = numbers.getIncomingPhoneNumbersByFilter(numFilter);
         assertNotNull(incomingPhoneNumbers);

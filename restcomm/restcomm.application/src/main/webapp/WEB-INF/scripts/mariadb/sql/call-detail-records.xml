@@ -118,7 +118,7 @@
 			AND end_time &lt;= DATE_ADD(#{endTime},INTERVAL 1 DAY)
 		</if>
 		<choose>
-			<when test="sortByDate != null and sortByDate.name() != 'NONE'">
+			<when test="sortByDate != null">
 				<if test="sortByDate.name() == 'ASCENDING'">
 					order by date_created ASC
 				</if>
@@ -126,7 +126,7 @@
 					order by date_created DESC
 				</if>
 			</when>
-			<when test="sortByFrom != null and sortByFrom.name() != 'NONE'">
+			<when test="sortByFrom != null">
 				<if test="sortByFrom.name() == 'ASCENDING'">
 					order by sender ASC
 				</if>
@@ -135,7 +135,7 @@
 				</if>
 			</when>
 
-			<when test="sortByTo != null and sortByTo.name() != 'NONE'">
+			<when test="sortByTo != null">
 				<if test="sortByTo.name() == 'ASCENDING'">
 					order by recipient ASC
 				</if>
@@ -143,7 +143,7 @@
 					order by recipient DESC
 				</if>
 			</when>
-			<when test="sortByDirection != null and sortByDirection.name() != 'NONE'">
+			<when test="sortByDirection != null">
 				<if test="sortByDirection.name() == 'ASCENDING'">
 					order by direction ASC
 				</if>
@@ -151,7 +151,7 @@
 					order by direction DESC
 				</if>
 			</when>
-			<when test="sortByStatus != null and sortByStatus.name() != 'NONE'">
+			<when test="sortByStatus != null">
 				<if test="sortByStatus.name() == 'ASCENDING'">
 					order by status ASC
 				</if>
@@ -159,7 +159,7 @@
 					order by status DESC
 				</if>
 			</when>
-			<when test="sortByDuration != null and sortByDuration.name() != 'NONE'">
+			<when test="sortByDuration != null">
 				<if test="sortByDuration.name() == 'ASCENDING'">
 					order by duration ASC
 				</if>
@@ -167,7 +167,7 @@
 					order by duration DESC
 				</if>
 			</when>
-			<when test="sortByPrice != null and sortByPrice.name() != 'NONE'">
+			<when test="sortByPrice != null">
 				<if test="sortByPrice.name() == 'ASCENDING'">
 					order by cast(price as int) ASC
 				</if>

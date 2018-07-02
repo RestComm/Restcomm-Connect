@@ -473,14 +473,15 @@ public class CallDetailRecordsDaoTest extends DaoTest {
         CallDetailRecordFilter filter = builder.build();
         List<CallDetailRecord> callDetailRecords = dao.getCallDetailRecords(filter);
         assertEquals(12, callDetailRecords.size());
-        assertEquals("2013-07-30T15:08:21.228+03:00", callDetailRecords.get(0).getDateCreated().toString());
-        assertEquals("2013-09-10T14:03:36.496+03:00", callDetailRecords.get(11).getDateCreated().toString());
+        // Let's remove the timezone part as it seems that it can be different between local + CI builds
+        assertEquals("2013-07-30T15:08:21.228", callDetailRecords.get(0).getDateCreated().toString().replaceFirst("\\+.*", ""));
+        assertEquals("2013-09-10T14:03:36.496", callDetailRecords.get(11).getDateCreated().toString().replaceFirst("\\+.*", ""));
 
         builder.sortedByDate(SortDirection.DESCENDING);
         filter = builder.build();
         callDetailRecords = dao.getCallDetailRecords(filter);
-        assertEquals("2013-09-10T14:03:36.496+03:00", callDetailRecords.get(0).getDateCreated().toString());
-        assertEquals("2013-07-30T15:08:21.228+03:00", callDetailRecords.get(11).getDateCreated().toString());
+        assertEquals("2013-09-10T14:03:36.496", callDetailRecords.get(0).getDateCreated().toString().replaceFirst("\\+.*", ""));
+        assertEquals("2013-07-30T15:08:21.228", callDetailRecords.get(11).getDateCreated().toString().replaceFirst("\\+.*", ""));
     }
 
     @Test
