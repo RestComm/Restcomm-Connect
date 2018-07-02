@@ -25,6 +25,7 @@ import java.util.Date;
 import java.util.List;
 
 import org.restcomm.connect.commons.annotations.concurrency.Immutable;
+import org.restcomm.connect.dao.common.SortDirection;
 
 /**
  * @author <a href="mailto:gvagenas@gmail.com">gvagenas</a>
@@ -32,7 +33,6 @@ import org.restcomm.connect.commons.annotations.concurrency.Immutable;
 
 @Immutable
 public class CallDetailRecordFilter {
-
     private final String accountSid;
     private final List<String> accountSidSet; // if not-null we need the cdrs that belong to several accounts
     private final String recipient;
@@ -45,14 +45,24 @@ public class CallDetailRecordFilter {
     private final Integer limit;
     private final Integer offset;
     private final String instanceid;
+    private final SortDirection sortByDate;
+    private final SortDirection sortByFrom;
+    private final SortDirection sortByTo;
+    private final SortDirection sortByDirection;
+    private final SortDirection sortByStatus;
+    private final SortDirection sortByDuration;
+    private final SortDirection sortByPrice;
 
     public CallDetailRecordFilter(String accountSid, List<String> accountSidSet, String recipient, String sender, String status, String startTime, String endTime,
                                   String parentCallSid, String conferenceSid, Integer limit, Integer offset) throws ParseException {
-        this(accountSid, accountSidSet, recipient,sender,status,startTime,endTime,parentCallSid, conferenceSid, limit,offset,null);
+        this(accountSid, accountSidSet, recipient,sender,status,startTime,endTime,parentCallSid, conferenceSid, limit, offset, null, null,
+                null, null, null, null, null, null);
     }
 
     public CallDetailRecordFilter(String accountSid, List<String> accountSidSet, String recipient, String sender, String status, String startTime, String endTime,
-                                  String parentCallSid, String conferenceSid, Integer limit, Integer offset, String instanceId) throws ParseException {
+                                  String parentCallSid, String conferenceSid, Integer limit, Integer offset, String instanceId, SortDirection sortByDate,
+                                  SortDirection sortByFrom, SortDirection sortByTo, SortDirection sortByDirection, SortDirection sortByStatus, SortDirection sortByDuration,
+                                  SortDirection sortByPrice) throws ParseException {
         this.accountSid = accountSid;
         this.accountSidSet = accountSidSet;
 
@@ -89,6 +99,14 @@ public class CallDetailRecordFilter {
         } else {
             this.instanceid = null;
         }
+
+        this.sortByDate = sortByDate;
+        this.sortByFrom = sortByFrom;
+        this.sortByTo = sortByTo;
+        this.sortByDirection = sortByDirection;
+        this.sortByStatus = sortByStatus;
+        this.sortByDuration = sortByDuration;
+        this.sortByPrice = sortByPrice;
     }
 
     public String getSid() {
@@ -127,13 +145,154 @@ public class CallDetailRecordFilter {
         return conferenceSid;
     }
 
-    public int getLimit() {
+    public Integer getLimit() {
         return limit;
     }
 
-    public int getOffset() {
+    public Integer getOffset() {
         return offset;
     }
 
     public String getInstanceid() { return instanceid; }
+
+    public SortDirection getSortByDate() { return sortByDate; }
+    public SortDirection getSortByFrom() { return sortByFrom; }
+    public SortDirection getSortByTo() { return sortByTo; }
+    public SortDirection getSortByDirection() { return sortByDirection; }
+    public SortDirection getSortByStatus() { return sortByStatus; }
+    public SortDirection getSortByDuration() { return sortByDuration; }
+    public SortDirection getSortByPrice() { return sortByPrice; }
+
+
+    // TODO: Introduce the rest of them
+
+    public static final class Builder {
+        private String accountSid = null;
+        private List<String> accountSidSet = null;
+        private String recipient = null;
+        private String sender = null;
+        private String status = null;
+        private String startTime = null;
+        private String endTime = null;
+        private String parentCallSid = null;
+        private String conferenceSid = null;
+        private String instanceid = null;
+        private SortDirection sortByDate = null;
+        private SortDirection sortByFrom = null;
+        private SortDirection sortByTo = null;
+        private SortDirection sortByDirection = null;
+        private SortDirection sortByStatus = null;
+        private SortDirection sortByDuration = null;
+        private SortDirection sortByPrice = null;
+
+        private Integer limit = null;
+        private Integer offset = null;
+
+        public static CallDetailRecordFilter.Builder builder() {
+            return new CallDetailRecordFilter.Builder();
+        }
+
+
+        public CallDetailRecordFilter build() throws ParseException {
+            return new CallDetailRecordFilter(accountSid,
+                    accountSidSet,
+                    recipient,
+                    sender,
+                    status,
+                    startTime,
+                    endTime,
+                    parentCallSid,
+                    conferenceSid,
+                    limit,
+                    offset,
+                    instanceid,
+                    sortByDate,
+                    sortByFrom,
+                    sortByTo,
+                    sortByDirection,
+                    sortByStatus,
+                    sortByDuration,
+                    sortByPrice);
+        }
+
+        // Filters
+        public Builder byAccountSid(String accountSid) {
+            this.accountSid = accountSid;
+            return this;
+        }
+        public Builder byAccountSidSet(List<String> accountSidSet) {
+            this.accountSidSet = accountSidSet;
+            return this;
+        }
+        public Builder byRecipient(String recipient) {
+            this.recipient = recipient;
+            return this;
+        }
+        public Builder bySender(String sender) {
+            this.sender = sender;
+            return this;
+        }
+        public Builder byStatus(String status) {
+            this.status = status;
+            return this;
+        }
+        public Builder byStartTime(String startTime) {
+            this.startTime = startTime;
+            return this;
+        }
+        public Builder byEndTime(String endTime) {
+            this.endTime = endTime;
+            return this;
+        }
+        public Builder byParentCallSid(String parentCallSid) {
+            this.parentCallSid = parentCallSid;
+            return this;
+        }
+        public Builder byConferenceSid(String conferenceSid) {
+            this.conferenceSid = conferenceSid;
+            return this;
+        }
+        public Builder byInstanceId(String instanceid) {
+            this.instanceid = instanceid;
+            return this;
+        }
+
+        // Sorters
+        public Builder sortedByDate(SortDirection sortDirection) {
+            this.sortByDate = sortDirection;
+            return this;
+        }
+        public Builder sortedByFrom(SortDirection sortDirection) {
+            this.sortByFrom = sortDirection;
+            return this;
+        }
+        public Builder sortedByTo(SortDirection sortDirection) {
+            this.sortByTo = sortDirection;
+            return this;
+        }
+        public Builder sortedByDirection(SortDirection sortDirection) {
+            this.sortByDirection = sortDirection;
+            return this;
+        }
+        public Builder sortedByStatus(SortDirection sortDirection) {
+            this.sortByStatus = sortDirection;
+            return this;
+        }
+        public Builder sortedByDuration(SortDirection sortDirection) {
+            this.sortByDuration = sortDirection;
+            return this;
+        }
+        public Builder sortedByPrice(SortDirection sortDirection) {
+            this.sortByPrice = sortDirection;
+            return this;
+        }
+
+
+        // Paging
+        public Builder limited(Integer limit, Integer offset) {
+            this.limit = limit;
+            this.offset = offset;
+            return this;
+        }
+    }
 }
