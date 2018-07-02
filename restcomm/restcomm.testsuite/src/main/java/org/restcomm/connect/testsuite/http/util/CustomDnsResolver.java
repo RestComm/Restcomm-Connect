@@ -21,7 +21,6 @@ package org.restcomm.connect.testsuite.http.util;
 
 
 import org.apache.log4j.Logger;
-import sun.rmi.runtime.Log;
 
 import java.net.InetAddress;
 import java.net.UnknownHostException;
