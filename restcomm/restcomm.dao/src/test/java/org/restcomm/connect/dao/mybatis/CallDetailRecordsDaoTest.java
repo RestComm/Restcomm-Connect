@@ -473,15 +473,16 @@ public class CallDetailRecordsDaoTest extends DaoTest {
         CallDetailRecordFilter filter = builder.build();
         List<CallDetailRecord> callDetailRecords = dao.getCallDetailRecords(filter);
         assertEquals(12, callDetailRecords.size());
-        // Let's remove the timezone part as it seems that it can be different between local + CI builds
-        assertEquals("2013-07-30T15:08:21.228", callDetailRecords.get(0).getDateCreated().toString().replaceFirst("\\+.*", ""));
-        assertEquals("2013-09-10T14:03:36.496", callDetailRecords.get(11).getDateCreated().toString().replaceFirst("\\+.*", ""));
+        final DateTime min = DateTime.parse("2013-07-30T15:08:21.228");
+        final DateTime max = DateTime.parse("2013-09-10T14:03:36.496");
+        assertEquals(min.compareTo(callDetailRecords.get(0).getDateCreated()), 0);
+        assertEquals(max.compareTo(callDetailRecords.get(11).getDateCreated()), 0);
 
         builder.sortedByDate(SortDirection.DESCENDING);
         filter = builder.build();
         callDetailRecords = dao.getCallDetailRecords(filter);
-        assertEquals("2013-09-10T14:03:36.496", callDetailRecords.get(0).getDateCreated().toString().replaceFirst("\\+.*", ""));
-        assertEquals("2013-07-30T15:08:21.228", callDetailRecords.get(11).getDateCreated().toString().replaceFirst("\\+.*", ""));
+        assertEquals(max.compareTo(callDetailRecords.get(0).getDateCreated()), 0);
+        assertEquals(min.compareTo(callDetailRecords.get(11).getDateCreated()), 0);
     }
 
     @Test
