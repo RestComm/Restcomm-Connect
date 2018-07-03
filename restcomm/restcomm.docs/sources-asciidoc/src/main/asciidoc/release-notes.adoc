@@ -12,8 +12,9 @@ The folowing tags are used to categorize and state the scope of a change
 == 8.7.0 version 2018-07-4 (docker tag _____)
 === New Features
 // New features (whether major or minor) go here
-* Enabled multi-provider routing for the organization SIP domain
-* Support for Organizations in the REST API. New security constraints applied in order to allow access to organization resources only when hostname of the request match the organization domain that the account credentials belong to.
+* *Multi-provider routing for the organization SIP domain.* RestComm will automatically inject the organization domain when calling to a destination.
+* *Support for Organizations in the REST API.* New security constraints applied in order to allow access to organization resources only when hostname of the request match the organization domain that the account credentials belong to.
+* *Sorting Call Detail Records.* Added sorting fields for CDR in Administrator Console.
 
 === Breaking Changes
 // draws attention to functionality that is getting removed
@@ -21,7 +22,8 @@ The folowing tags are used to categorize and state the scope of a change
 
 === Bug Fixes
 * Send BYE on session expiration for B2BUA calls
-*
+* Gather operation now accepts star key as initial input.
+* Elegant call termination during audio recording. *Dialogic XMS only*.
 
 
 === Migration Notes
