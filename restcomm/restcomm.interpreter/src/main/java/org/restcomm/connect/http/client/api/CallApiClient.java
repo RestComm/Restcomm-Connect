@@ -19,26 +19,6 @@
  */
 package org.restcomm.connect.http.client.api;
 
-import java.net.URI;
-import java.net.URISyntaxException;
-import java.text.ParseException;
-import java.util.ArrayList;
-import java.util.concurrent.TimeUnit;
-
-import org.apache.http.Header;
-import org.apache.http.NameValuePair;
-import org.apache.http.message.BasicNameValuePair;
-import org.restcomm.connect.commons.dao.Sid;
-import org.restcomm.connect.commons.faulttolerance.RestcommUntypedActor;
-import org.restcomm.connect.commons.util.UriUtils;
-import org.restcomm.connect.dao.DaoManager;
-import org.restcomm.connect.dao.entities.CallDetailRecord;
-import org.restcomm.connect.http.asyncclient.HttpAsycClientHelper;
-import org.restcomm.connect.http.client.CallApiResponse;
-import org.restcomm.connect.http.client.DownloaderResponse;
-import org.restcomm.connect.http.client.HttpRequestDescriptor;
-import org.restcomm.connect.telephony.api.Hangup;
-
 import akka.actor.ActorRef;
 import akka.actor.Props;
 import akka.actor.ReceiveTimeout;
@@ -46,7 +26,26 @@ import akka.actor.UntypedActor;
 import akka.actor.UntypedActorFactory;
 import akka.event.Logging;
 import akka.event.LoggingAdapter;
+import org.apache.http.Header;
+import org.apache.http.NameValuePair;
+import org.apache.http.message.BasicNameValuePair;
+import org.restcomm.connect.commons.dao.Sid;
+import org.restcomm.connect.commons.faulttolerance.RestcommUntypedActor;
+import org.restcomm.connect.core.service.RestcommConnectServiceProvider;
+import org.restcomm.connect.dao.DaoManager;
+import org.restcomm.connect.dao.entities.CallDetailRecord;
+import org.restcomm.connect.http.asyncclient.HttpAsycClientHelper;
+import org.restcomm.connect.http.client.CallApiResponse;
+import org.restcomm.connect.http.client.DownloaderResponse;
+import org.restcomm.connect.http.client.HttpRequestDescriptor;
+import org.restcomm.connect.telephony.api.Hangup;
 import scala.concurrent.duration.Duration;
+
+import java.net.URI;
+import java.net.URISyntaxException;
+import java.text.ParseException;
+import java.util.ArrayList;
+import java.util.concurrent.TimeUnit;
 
 /**
  * @author mariafarooq
@@ -120,7 +119,7 @@ public class CallApiClient extends RestcommUntypedActor {
         } else {
             try {
                 URI uri = new URI("/restcomm"+callDetailRecord.getUri());
-                uri = UriUtils.resolve(uri);
+                uri = RestcommConnectServiceProvider.getInstance().uriUtils().resolve(uri, callDetailRecord.getAccountSid());
                 if (logger.isInfoEnabled())
                     logger.info("call api uri is: "+uri);
 
