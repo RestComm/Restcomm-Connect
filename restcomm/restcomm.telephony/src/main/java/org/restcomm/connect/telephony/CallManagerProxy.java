@@ -29,6 +29,7 @@ import org.apache.log4j.Logger;
 import org.restcomm.connect.dao.DaoManager;
 import org.restcomm.connect.mscontrol.api.MediaServerControllerFactory;
 import org.restcomm.connect.sms.SmsService;
+import org.restcomm.connect.telephony.api.util.B2BUAHelper;
 import org.restcomm.connect.ussd.telephony.UssdCallManager;
 
 import javax.servlet.ServletConfig;
@@ -227,7 +228,7 @@ public final class CallManagerProxy extends SipServlet implements SipServletList
         //check attribute signlling Akka actor completed timeout processing
         //if att is present, let the sesion just expire
         logger.debug("Session expired");
-        if (sase.getApplicationSession().getAttribute(CallManager.TIMEOUT_ATT) == null) {
+        if (sase.getApplicationSession().getAttribute(B2BUAHelper.B2BUA_CALL) != null && sase.getApplicationSession().getAttribute(CallManager.TIMEOUT_ATT) == null) {
             logger.debug("Session expired still not processed");
             //extend expiration a bit,to let sessions be properly disconnected
             sase.getApplicationSession().setExpires(EXPIRATION_GRACE_PERIOD);

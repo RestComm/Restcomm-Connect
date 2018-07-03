@@ -71,7 +71,7 @@ import javax.servlet.sip.SipApplicationSession;
   * @author gvagenas@telestax.com
   */
  public class B2BUAHelper {
-
+     public static final String B2BUA_CALL = "org.restcomm.connect.telephony.api.util.B2BUAHelper";
      public static final String FROM_INET_URI = "fromInetURI";
      public static final String TO_INET_URI = "toInetURI";
      public static final String B2BUA_LAST_REQUEST = "lastRequest";
@@ -237,6 +237,8 @@ import javax.servlet.sip.SipApplicationSession;
                  outgoingSession.setAttribute(CDR_TO, toClient.getLogin());
 
                  sendCallInfoStreamEvent(system, request, CallStateChanged.State.QUEUED);
+
+                 outgoingSession.getApplicationSession().setAttribute(B2BUA_CALL, "Client-To-Client");
 
                  return true; // successfully proxied the SIP request between two registered clients
              }
@@ -419,6 +421,8 @@ import javax.servlet.sip.SipApplicationSession;
              outgoingSession.setAttribute(CDR_TO, to.toString());
 
              sendCallInfoStreamEvent(system, request, CallStateChanged.State.QUEUED);
+
+             outgoingSession.getApplicationSession().setAttribute(B2BUA_CALL, "Client-To-Client");
 
              return true; // successfully proxied the SIP request
          } catch (IOException exception) {
@@ -880,7 +884,7 @@ import javax.servlet.sip.SipApplicationSession;
                         logger.debug("sending BYE");
                     }
                     createRequest.send();
-                } catch (IOException ex) {
+                } catch (IOException | IllegalStateException ex) {
                     logger.debug("Unable to drop session.", ex);
                 }
             }
