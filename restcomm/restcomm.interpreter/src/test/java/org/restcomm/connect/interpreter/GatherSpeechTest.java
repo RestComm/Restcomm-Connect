@@ -43,6 +43,10 @@ import org.junit.AfterClass;
 import org.junit.Before;
 import org.junit.BeforeClass;
 import org.junit.Test;
+import org.mockito.Mockito;
+import org.mockito.internal.stubbing.answers.ClonesArguments;
+import org.mockito.invocation.InvocationOnMock;
+import org.mockito.stubbing.Answer;
 import org.restcomm.connect.commons.cache.DiskCacheRequest;
 import org.restcomm.connect.commons.cache.DiskCacheResponse;
 import org.restcomm.connect.commons.configuration.RestcommConfiguration;
@@ -51,6 +55,8 @@ import org.restcomm.connect.commons.fsm.FiniteStateMachine;
 import org.restcomm.connect.commons.fsm.State;
 import org.restcomm.connect.commons.patterns.Observe;
 import org.restcomm.connect.commons.telephony.CreateCallType;
+import org.restcomm.connect.core.service.RestcommConnectServiceProvider;
+import org.restcomm.connect.core.service.util.UriUtils;
 import org.restcomm.connect.dao.CallDetailRecordsDao;
 import org.restcomm.connect.dao.DaoManager;
 import org.restcomm.connect.http.client.DownloaderResponse;
@@ -86,6 +92,8 @@ import org.restcomm.connect.dao.entities.MediaAttributes;
  * Created by gdubina on 6/24/17.
  */
 public class GatherSpeechTest {
+
+    private static UriUtils uriUtils;
 
     private static ActorSystem system;
 
@@ -130,6 +138,19 @@ public class GatherSpeechTest {
 
     @BeforeClass
     public static void before() throws Exception {
+        uriUtils = Mockito.mock(UriUtils.class);
+        RestcommConnectServiceProvider.getInstance().setUriUtils(uriUtils);
+
+        Mockito.when(uriUtils.resolveWithBase(Mockito.any(URI.class), Mockito.any(URI.class))).thenAnswer(new Answer() {
+            public Object answer (InvocationOnMock invocation) {
+                return invocation.getArguments()[1];
+            }});
+
+        Mockito.when(uriUtils.resolve(Mockito.any(URI.class), Mockito.any(Sid.class))).thenAnswer(new Answer() {
+            public Object answer (InvocationOnMock invocation) {
+                return invocation.getArguments()[0];
+            }});
+
         system = ActorSystem.create();
     }
 
@@ -292,7 +313,7 @@ public class GatherSpeechTest {
                 interpreter.tell(new MediaGroupResponse(new CollectedResult("Hello. World.", true, false)), observer);
 
                 callback = expectMsgClass(HttpRequestDescriptor.class);
-                assertEquals(callback.getUri(), actionCallbackUri);
+                assertEquals(actionCallbackUri, callback.getUri());
                 assertEquals(findParam(callback.getParameters(), "SpeechResult").getValue(), "Hello. World.");
 
                 interpreter.tell(new DownloaderResponse(getOkRcml(actionCallbackUri, endRcml)), observer);

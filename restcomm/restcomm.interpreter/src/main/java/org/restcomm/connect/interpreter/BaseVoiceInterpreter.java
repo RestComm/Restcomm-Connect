@@ -54,8 +54,9 @@ import org.restcomm.connect.commons.fsm.FiniteStateMachine;
 import org.restcomm.connect.commons.fsm.State;
 import org.restcomm.connect.commons.fsm.Transition;
 import org.restcomm.connect.commons.patterns.Observe;
-import org.restcomm.connect.commons.util.UriUtils;
 import org.restcomm.connect.commons.util.WavUtils;
+import org.restcomm.connect.core.service.RestcommConnectServiceProvider;
+import org.restcomm.connect.core.service.util.UriUtils;
 import org.restcomm.connect.dao.CallDetailRecordsDao;
 import org.restcomm.connect.dao.DaoManager;
 import org.restcomm.connect.dao.NotificationsDao;
@@ -81,6 +82,7 @@ import org.restcomm.connect.extension.api.RestcommExtensionGeneric;
 import org.restcomm.connect.extension.controller.ExtensionController;
 import org.restcomm.connect.fax.FaxRequest;
 import org.restcomm.connect.fax.InterfaxService;
+import org.restcomm.connect.http.asyncclient.HttpAsycClientHelper;
 import org.restcomm.connect.http.client.Downloader;
 import org.restcomm.connect.http.client.DownloaderResponse;
 import org.restcomm.connect.http.client.HttpRequestDescriptor;
@@ -89,6 +91,7 @@ import org.restcomm.connect.interpreter.rcml.Attribute;
 import org.restcomm.connect.interpreter.rcml.GetNextVerb;
 import org.restcomm.connect.interpreter.rcml.Parser;
 import org.restcomm.connect.interpreter.rcml.ParserFailed;
+import org.restcomm.connect.interpreter.rcml.SmsVerb;
 import org.restcomm.connect.interpreter.rcml.Tag;
 import org.restcomm.connect.interpreter.rcml.Verbs;
 import org.restcomm.connect.interpreter.rcml.domain.GatherAttributes;
@@ -137,8 +140,6 @@ import java.util.concurrent.TimeUnit;
 import java.util.regex.Pattern;
 
 import static akka.pattern.Patterns.ask;
-import org.restcomm.connect.http.asyncclient.HttpAsycClientHelper;
-import org.restcomm.connect.interpreter.rcml.SmsVerb;
 
 /**
  * @author thomas.quintana@telestax.com (Thomas Quintana)
@@ -278,6 +279,8 @@ public abstract class BaseVoiceInterpreter extends RestcommUntypedActor {
     //List of extensions for VoiceInterpreter
     List<RestcommExtensionGeneric> extensions;
 
+    private UriUtils uriUtils;
+
     public BaseVoiceInterpreter() {
         super();
         restcommConfiguration = RestcommConfiguration.getInstance();
@@ -413,16 +416,14 @@ public abstract class BaseVoiceInterpreter extends RestcommUntypedActor {
         extensions = ExtensionController.getInstance().getExtensions(ExtensionType.FeatureAccessControl);
 
         httpAsycClientHelper = httpAsycClientHelper();
+
+        this.uriUtils = RestcommConnectServiceProvider.getInstance().uriUtils();
     }
 
     @Override
     public abstract void onReceive(Object arg0) throws Exception;
 
     abstract List<NameValuePair> parameters();
-
-    protected URI resolve(URI uri){
-        return UriUtils.resolve(uri);
-    }
 
     public ActorRef getAsrService() {
         if (asrService == null || (asrService != null && asrService.isTerminated())) {
@@ -556,7 +557,7 @@ public abstract class BaseVoiceInterpreter extends RestcommUntypedActor {
                 uri = uri + "/";
             }
             try {
-                uri = UriUtils.resolve(new URI(uri)).toString();
+                uri = uriUtils.resolve(new URI(uri), accountId).toString();
             } catch (URISyntaxException e) {
                 logger.error("URISyntaxException while trying to resolve Cache URI: " + e);
             }
@@ -633,7 +634,7 @@ public abstract class BaseVoiceInterpreter extends RestcommUntypedActor {
         builder.setErrorCode(error);
         String base = configuration.subset("runtime-settings").getString("error-dictionary-uri");
         try {
-            base = UriUtils.resolve(new URI(base)).toString();
+            base = uriUtils.resolve(new URI(base), accountId).toString();
         } catch (URISyntaxException e) {
             logger.error("URISyntaxException when trying to resolve Error-Dictionary URI: "+e);
         }
@@ -994,7 +995,7 @@ public abstract class BaseVoiceInterpreter extends RestcommUntypedActor {
             path += "reject.wav";
             URI uri = null;
             try {
-                uri = UriUtils.resolve(new URI(path));
+                uri = uriUtils.resolve(new URI(path), accountId);
             } catch (final Exception exception) {
                 final Notification notification = notification(ERROR_NOTIFICATION, 12400, exception.getMessage());
                 final NotificationsDao notifications = storage.getNotificationsDao();
@@ -1146,7 +1147,7 @@ public abstract class BaseVoiceInterpreter extends RestcommUntypedActor {
                         return;
                     }
                     final URI base = request.getUri();
-                    final URI uri = UriUtils.resolve(base, target);
+                    final URI uri = uriUtils.resolveWithBase(base, target);
                     final DiskCacheRequest request = new DiskCacheRequest(uri);
                     getCache().tell(request, source);
                 } else {
@@ -1363,7 +1364,7 @@ public abstract class BaseVoiceInterpreter extends RestcommUntypedActor {
                     return;
                 }
                 final URI base = request.getUri();
-                final URI uri = UriUtils.resolve(base, target);
+                final URI uri = uriUtils.resolveWithBase(base, target);
                 final List<NameValuePair> parameters = parameters();
                 request = new HttpRequestDescriptor(uri, method, parameters);
                 downloader.tell(request, source);
@@ -1473,7 +1474,7 @@ public abstract class BaseVoiceInterpreter extends RestcommUntypedActor {
                                 return;
                             }
                             final URI base = request.getUri();
-                            final URI uri = UriUtils.resolve(base, target);
+                            final URI uri = uriUtils.resolveWithBase(base, target);
                             // Cache the prompt.
                             final DiskCacheRequest request = new DiskCacheRequest(uri);
                             getCache().tell(request, source);
@@ -1536,7 +1537,7 @@ public abstract class BaseVoiceInterpreter extends RestcommUntypedActor {
                             path += "/";
                         }
                         path += "one-second-silence.wav";
-                        final URI uri = UriUtils.resolve(new URI(path));
+                        final URI uri = uriUtils.resolve(new URI(path));
                         for (int counter = 0; counter < length; counter++) {
                             gatherPrompts.add(uri);
                         }
@@ -1739,7 +1740,7 @@ public abstract class BaseVoiceInterpreter extends RestcommUntypedActor {
                 }
             }
             final URI base = request.getUri();
-            final URI uri = UriUtils.resolve(base, target);
+            final URI uri = uriUtils.resolveWithBase(base, target);
             request = new HttpRequestDescriptor(uri, method, parameters);
             notifyAsyncWebHook(request);
         }
@@ -1915,7 +1916,7 @@ public abstract class BaseVoiceInterpreter extends RestcommUntypedActor {
             httpRecordingUri += recordingSid.toString() + fileExtension;
             recordingUri = URI.create(path);
             try {
-                publicRecordingUri = UriUtils.resolve(new URI(httpRecordingUri));
+                publicRecordingUri = uriUtils.resolve(new URI(httpRecordingUri));
             } catch (URISyntaxException e) {
                 logger.error("URISyntaxException when trying to resolve Recording URI: "+e);
             }
@@ -1928,7 +1929,7 @@ public abstract class BaseVoiceInterpreter extends RestcommUntypedActor {
                 }
                 path += "beep.wav";
                 try {
-                    prompts.add(UriUtils.resolve(new URI(path)));
+                    prompts.add(uriUtils.resolve(new URI(path)));
                 } catch (final Exception exception) {
                     final Notification notification = notification(ERROR_NOTIFICATION, 12400, exception.getMessage());
                     notifications.addNotification(notification);
@@ -1998,13 +1999,24 @@ public abstract class BaseVoiceInterpreter extends RestcommUntypedActor {
                 builder.setCallSid(callInfo.sid());
                 builder.setDuration(duration);
                 builder.setApiVersion(version);
+
                 StringBuilder buffer = new StringBuilder();
                 buffer.append("/").append(version).append("/Accounts/").append(accountId.toString());
                 buffer.append("/Recordings/").append(recordingSid.toString());
                 builder.setUri(URI.create(buffer.toString()));
+
+                builder.setFileUri(RestcommConnectServiceProvider.getInstance().recordingService()
+                        .prepareFileUrl(version, accountId.toString(), recordingSid.toString(), MediaAttributes.MediaType.AUDIO_ONLY));
+
+                URI s3Uri = RestcommConnectServiceProvider.getInstance().recordingService().storeRecording(recordingSid, MediaAttributes.MediaType.AUDIO_ONLY);
+                if (s3Uri != null) {
+                    builder.setS3Uri(s3Uri);
+                }
+
                 recording = builder.build();
+
                 final RecordingsDao recordings = storage.getRecordingsDao();
-                recordings.addRecording(recording, recordingMediaType);
+                recordings.addRecording(recording);
                 getContext().system().eventStream().publish(recording);
 
                 Attribute attribute = null;
@@ -2095,7 +2107,7 @@ public abstract class BaseVoiceInterpreter extends RestcommUntypedActor {
                         return;
                     }
                     final URI base = request.getUri();
-                    final URI uri = UriUtils.resolve(base, target);
+                    final URI uri = uriUtils.resolveWithBase(base, target);
                     // Parse "method".
                     String method = "POST";
                     attribute = verb.attribute(GatherAttributes.ATTRIBUTE_METHOD);
@@ -2126,7 +2138,7 @@ public abstract class BaseVoiceInterpreter extends RestcommUntypedActor {
                             }
                             String fileExtension = recordingMediaType.equals(MediaAttributes.MediaType.AUDIO_ONLY) ? ".wav" : ".mp4";
                             httpRecordingUri += recordingSid.toString() + fileExtension;
-                            URI publicRecordingUri = UriUtils.resolve(new URI(httpRecordingUri));
+                            URI publicRecordingUri = uriUtils.resolve(new URI(httpRecordingUri));
                             parameters.add(new BasicNameValuePair("RecordingUrl", recordingUri.toString()));
                             parameters.add(new BasicNameValuePair("PublicRecordingUrl", publicRecordingUri.toString()));
                         }
@@ -2298,7 +2310,7 @@ public abstract class BaseVoiceInterpreter extends RestcommUntypedActor {
                         return;
                     }
                     final URI base = request.getUri();
-                    final URI uri = UriUtils.resolve(base, target);
+                    final URI uri = uriUtils.resolveWithBase(base, target);
                     // Parse "method".
                     String method = "POST";
                     attribute = verb.attribute("method");
