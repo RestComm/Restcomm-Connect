@@ -9,7 +9,7 @@ The folowing tags are used to categorize and state the scope of a change
 * **security improvement** tags changes related to security
 * **commercial** tags changes that are available only in the commercial RestcommOne product
 
-== 8.7.0 version 2018-07-4 (docker tag _____)
+== 8.7.0 version 2018-07-4 (docker tag 8.7.0-220)
 === New Features
 // New features (whether major or minor) go here
 * Enabled multi-provider routing for the organization SIP domain
@@ -21,7 +21,7 @@ The folowing tags are used to categorize and state the scope of a change
 
 === Bug Fixes
 * Send BYE on session expiration for B2BUA calls
-*
+
 
 
 === Migration Notes
