@@ -2448,7 +2448,9 @@ public final class CallManager extends RestcommUntypedActor {
         final SipApplicationSession application = event.getApplicationSession();
         final ActorRef call = (ActorRef) application.getAttribute(Call.class.getName());
         if (call == null) {
-            B2BUAHelper.dropB2BUA(application);
+            if (application.isValid()) {
+                B2BUAHelper.dropB2BUA(application);
+            }
         }
         //if there is Call actor, session was set to never expired, since Call
         //Akka actor is handling its own call expiration. so, do nothing in that case
