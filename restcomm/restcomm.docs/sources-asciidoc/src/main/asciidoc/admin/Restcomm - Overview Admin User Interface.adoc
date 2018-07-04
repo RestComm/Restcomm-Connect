@@ -1,174 +1,146 @@
-The Restcomm Console is a great way to perform repetitive Restcomm task in a orderly manner. Care has been taken to make the user experience intuitive for those new to the platform. In this chapter, you will learn how to use some of the features available to create Clients, Phone Numbers, Check Call Logs, Get Speech-to-Text Transcription and many more
+The {product} Console is a great way to perform repetitive {product} tasks in a orderly manner. In this guide, you will learn how to use some of the features available to create Applications, Clients, Phone Numbers, Check Call Logs, Messages Logs, Recordings.
 
-= Login Interface
+= {product} Login Interface
 
-image:./images/restcomm-admin-ui-1.png[restcomm-admin-ui-1,width=300,height=228]
+Make sure you use the correct {product} Organization URL that you first defined when you created your {product} Account and that you received in the sign up email. It should look like `https://{mydomain}.restcomm.com/login` 
 
-*Login Interface*
+image:./images/console-1.png[console-1]
 
-[cols=",",options="header",]
-|===================================================================================================
-|Number |Description
-|1 |Host on which Restcomm is running
-|2 |You can log in using either the default email address or the default administrator's account SID
-|3 |The default password attached to the administrator's account
-|===================================================================================================
+= {product} Console Dashboard
 
-= Passwords, Sub Accounts Settings
+This is the default page after you log in where you can get latest news and features as well as a usage overview of your {product} Account activity.
 
-You should always change the passwords of the default Administrator's Account when you are in a production environment. When you click on the Administrators Account at the top right corner of the window, as shown in the screenshot below, you will be able to change passwords and create Sub Accounts.
+image:./images/console-2.png[console-2]
 
-image:./images/restcomm-admin-ui-12.png[restcomm-admin-ui-12,width=300,height=196]
 
-*Account Settings*
+= {product} Account Settings
 
-[cols=",",options="header",]
-|==========================================================
-|Number |Description
-|1 |Shows the current Acount profile
-|2 |You can create new Sub Accounts
-|3 |Descriptive name of the user account
-|4 |New password of the current logged in account
-|5 |You can activate or suspend an account
-|6 |There are three options, Trial, Basic and Full(default)
-|7 |List of Sub Accounts
-|==========================================================
+When you click on the drop down representing the name of your Account then `Account` at the top right corner of the window, as shown in the screenshot below, you will be able to :
 
-= Dashboard
+* Retrieve your Account SID and Auth Token which are required to use the <<../api/index.adoc#API,{product} API>> to place Outbound Calls or send SMS by example.
+* Retrieve your Account Information such as First Name, Last Name, Email, Role.
+* Change your Account password 
+* Create Sub-Accounts.
 
-This is the default page where you can get an overview of your Restcomm Installation.
+[NOTE]
+All of the information presented visually under the {product} Account Settings is also accessible through the <<../api/account-api.adoc#account,{product} Accounts API>>
 
-image:./images/restcomm-admin-ui-2.png[restcomm-admin-ui-2,width=300,height=250]
+image:./images/console-12.png[console-12]
 
-*Dashboard*
+= {product} Applications
 
-[cols=",",options="header",]
-|================================================================================================================================================
-|Number |Description
-|1 |Account SID is the default used by the Administrator's account
-|2 |The Auth Token is the password that is required for any Restcomm operation. You can click on the hidden button to reveal the hashed password.
-|3 |The Debugger lets you troubleshoot any issues you might encounter using Restcomm
-|4 |A quick way to get all the API exposed by Restcomm
-|5 |Additional information about Calls parsed by Restcomm
-|6 |Additional information about SMS parsed by Restcomm
-|================================================================================================================================================
+This Section allows you to create, delete, update and search for your {product} Applications. When you start the workspace is empty, future updates to the platform will list a number of demo applications to get you started more quickly
 
-= Restcomm Numbers
+image:./images/console-13.png[console-13]
 
-This will show the default demo applications that come with Restcomm. When you start creating applications and attaching numbers, they will also be displayed on this page.
+When you click on the `Add New App` button on the right corner, you can create a new application which leads you to the screen below allowing you to choose between three ways of doing so:
 
-image:./images/restcomm-admin-ui-3.png[restcomm-admin-ui-3,width=300,height=183]
+image:./images/console-14.png[console-14]
 
-*Restcomm Numbers*
+* *Create a URL Application* : This option allows you to create a <<../rcml/index.adoc#RCML,{rcml} Application>> which will be hosted externally outside of {product} and contain the logic of your application to be executed upon receiving a call or a message. The <<../rcml/index.adoc#RCML,{product} Markup language>> needs to be used to design your application. This option will let you define a name, URL of the {rcml} application hosted outside of {product} and the type of application (Voice or SMS). This option is the longest to get you started and will require that you understand {product} better, it's usually recommended to start by creating a Visual Designer Application to get started more quickly.
+* *Create a Visual Designer Application* : This option allows you to create a <<../rvd/index.adoc#RVD,{product} Visual Designer Application>> which will be hosted by {product} and contain the logic of your application to be executed upon receiving a call or a message. Visual Designer is a quick and great way to create Voice and Messaging applications with minimal or no programming skills. This option will let you define a name and the type of application (Voice or SMS). This option is the quickest to get you started and you can already choose from a pre-existing set of templates to get started even more quickly.
+* *Import a Visual Designer Application* : This option allows you to import a pre-existing <<../rvd/index.adoc#RVD,{product} Visual Designer Application>> which will be hosted by {product} and contain the logic of your application to be executed upon receiving a call or a message. Visual Designer is a quick and great way to create Voice and Messaging applications with minimal or no programming skills. This option will let you define a name and the type of application (Voice or SMS).
 
-[cols=",",options="header",]
-|======================================================================================================================================================================================================
-|Number |Description
-|1 |The number 1235 is attached to the hello-world.xml application. You must have configured VoiceRSS text-to-speech to use this application
-|2 |The number 1236 is attached to a the Gather verb. It will ask you to enter a number and you can hear the number you enter. You must have configured VoiceRSS text-to-speech to use this application
-|3 |The number 1234 plays a pre-recorded file.
-|4 |This icon lets you edit the Name of the entry to a more descriptive one.
-|5 |This button lets you create a new number that can be attached to a RCML
-|======================================================================================================================================================================================================
+= {product} Numbers
+
+This Section allows you to create, delete, update and search for your {product} Numbers. When you start with {Restcomm} this section is empty, future updates to the platform will list a number of demo numbers to get you started more quickly. This section also allows you to link a Number to an Application created in the previous section
+
+image:./images/console-3.png[console-3]
 
 [[register-number]]
-= Register Number
+== Register Number
 
-When you click on the Register Number button, you will see a screenshot similar to the one below. This will allow you to create a new phone number that can be attached to a Restcomm application.
+When you click on the `Register Number` button, you will see a screen similar to the screenshots below. This will allow you to create a new phone number that can be attached to a {product} application.
 
-image:./images/restcomm-admin-ui-4.png[restcomm-admin-ui-4,width=245,height=300]
+You can register two types of Numbers:
 
-*Table Restcomm Numbers*
-
-[cols=",",options="header",]
-|================================================================================================================
-|Number |Description
-|1 |The field to enter the phone number.
-|2 |This button will show advanced options if you want to add more features to the phone number like the VoiceUrl
-|3 |The friendly name is any descriptive text for your phone number
-|4 |See the Rest API link:[Chapter] for more information
-|5 |See the Rest API link:[Chapter]for more information
-|================================================================================================================
+* *SIP Number*: Those numbers are virtual numbers which are not tied to any Origination PSTN Provider and can be reached via a registered {product} Client using SIP or WebRTC. Type the name of the SIP Number you want to create in `SIP Address` field and give it a name you can remember easily in the `Friendly Name` field at the top and then click on the `Register` button, which will lead you to the `Edit Number` section below to link your newly purchased number to a {product} application your previously created
+image:./images/console-3-1.png[console-3-1]
+* *Provider Number*: Those numbers are numbers which are tied to an Origination PSTN Provider and can be reached via a landline or mobile phone as well as through a registered {product} Client using SIP or WebRTC. You need to first search for a number from the Provider to purchase it which requires you to select a `Country` in the dropdown, an optional `Number` to filter further if you are looking for a specific number pattern, optional capabilities (SMS or Voice), and optional type (Landline, Mobile, Toll-Free) to further filter the search, then click on the Search icon. Once you found a number in the list, click on `Register Number`, which will lead you to the `Edit Number` section below to link your newly purchased number to a {product} application your previously created
+image:./images/console-3-2.png[console-3-2]
 
 [[edit-update-number]]
-= Edit Update Number
+== Edit/Update Number
 
-Editing a phone number can be done by clicking on the number, the screenshot below shows how you can edit the number 1235. You can change the VoiceUrl to which the number is attached.
+Editing a {product} Number can be done after purchase or creation or by clicking on the number in the `Numbers` list, the screenshot below shows how you can edit a SIP Number but is applicable to a Provider Number as well. You can set or update the Voice or SMS Application to which the number is attached. 
 
-image:./images/restcomm-admin-ui-5.png[restcomm-admin-ui-5,width=244,height=300]
+image:./images/console-5.png[console-5]
 
-*Edit Update Numbers*
+You have two options for attaching the application to a number:
 
-[cols=",",options="header",]
-|==============================================================================================
-|Number |Description
-|1 |You can link the phone number to a VoiceUrl application. See the REST API for more details.
-|2 |You can link the phone number to a SMS application. See the REST API for more details
-|3 |You can link the phone number to a USSD application. See the REST API for more details
-|4 |Caller Id lookup requires a CNAM provier
-|5 |You can save your changes or press close to discard the changes
-|==============================================================================================
+* *Application*: You can use this dropdown list to select one of the applications you previously created using the Visual Designer.
+* *{rcml} URL*: You can use this field to copy the URL of where your {rcml} Application is hosted.
 
-= SIP Clients
+In addition to that, you can also set *{rcml} URL* to link another Application for a number of advanced options in clicking on the `Advanced` link for both SMS or Voice Applications.
 
-SIP Client is a feature that allows you to create a Restcomm profile that can be used for P2P or B2BUA calls. This will be empty until you create a new client. You can create a new client by clicking on the Resgister SIP Clent button.
+image:./images/console-5-1.png[console-5-1]
 
-image:./images/restcomm-admin-ui-6.png[restcomm-admin-ui-6,width=248,height=300]
+* *Voice or SMS Fallback URL*: The {rcml} URL that {product} will request if an error occurs retrieving or executing the Application set previously.
+* *Voice or SMS Callback URL*: The URL that {product} will request to pass status parameters (such as call ended or SMS delivered) to your application.
+* *Voice REFER URL*: The {rcml} URL that {product} will request when receiving a SIP REFER request to this number. Read the <<../tutorials/Restcomm_SIP_Refer_Support.adoc#REFER,{product} REFER Tutorial>> to learn more about {product} support for REFER.
 
-*SIP Clients*
 
-[cols=",",options="header",]
-|=====================================================================================================================================
-|Number |Description
-|1 |The client name. (ex. alice or bob)
-|2 |The password that will be used to when you want to register the client with restcomm
-|3 |Use to open optional parameters windows
-|4 |This can be the full name of the client (ex.Alice Wilkinson) or any descriptive name
-|5 |This is where you specify the VoiceUrl that is automatically invoked when the client is called. See the REST API for more details.
-|6 |See the REST API for more details.
-|7 |This will validate your changes and create the client.
-|=====================================================================================================================================
+= {product} Clients
 
-= Outgoing CallerId
+This Section allows you to create, delete, update and search for your {product} Clients. When you initially start with {product}, this section has a default Client that you can use whose username and password is the same that you used to login to your {product} Account.
 
-Will be available in future release
+A {product} Client is an abstraction for storing credentials related to a typical SIP or WebRTC (using SIP Over Websockets) endpoint that can use through traditional SIP Softphone or hardphone or through our <<../sdks/index.html#SDKs,{product} WebRTC SDKs>> (Currently in **Preview**)
+
+image:./images/console-6.png[console-6]
+
+== Edit/Update {product} Client
+
+You can change the {product} client password and also attach an application to the client (in the same manner that is described above to attach an application to a number) which will be executed upon any outbound calls done by the {product} client.
+
+image:./images/console-6-1.png[console-6-1]
 
 [[logs]]
 = Logs
 
-The log section gives you an overview of current Restcomm system information.
+The log section gives you an overview of {product} calls or SMS sent or received.
 
 [[logs---calls]]
 == Logs - Calls
 
-A list of all calls that have been processed by Restcomm
+A list of all calls that have been received or sent by {product}. This section will be empty until you make or receive any calls to a {product} number.
 
-image:./images/restcomm-admin-ui-7.png[restcomm-admin-ui-7,width=300,height=121]
+image:./images/console-7.png[console-7]
+
+=== Logs - Call Details
+
+If you click on any call details in the list, you will be able to see the full details of the call including its status and if there is a recording link to it be able to download it.
+
+image:./images/console-7-1.png[console-7-1]
 
 [[logs---messages]]
 == Logs - Messages
 
-A list of all SMS messages that have been processed by Restcomm
+A list of all SMS and Messages that have been received or sent by {product}. This section will be empty until you make or receive any SMS or Messages to a {product} number.
 
-image:./images/restcomm-admin-ui-8.png[restcomm-admin-ui-8,width=300,height=124]
+image:./images/console-8.png[console-8]
+
+=== Logs - Message Details
+
+If you click on any message in the list, you will be able to see the full details of the message including its delivery status.
+
+image:./images/console-8-1.png[console-8-1]
 
 [[logs---recordings]]
 == Logs - Recordings
 
-A list of all Recordings (using the Record Verb) that have been processed by Restcomm
+A list of all Recordings (using the Record Verb) that have been received or sent by {product}. This section will be empty until you record any calls with {product}.
 
-image:./images/restcomm-admin-ui-9.png[restcomm-admin-ui-9,width=300,height=123]
+image:./images/console-9.png[console-9]
 
-[[logs---transcriptions]]
-== Logs - Transcriptions
+=== Logs - Recordings Details
 
-A list of all Transcriptions that have (using the Transcribe parameters of the Record Verb) that have been processed by Restcomm.
+If you click on any recordings details in the list, you will be able to see the full details of the recording and download or delete it.
 
-image:./images/restcomm-admin-ui-10.png[restcomm-admin-ui-10,width=404,height=163]
+image:./images/console-9-1.png[console-9-1]
 
 [[logs---notifications]]
 == Logs - Notifications
 
-A list of all Notifications received by Restcomm.
+A list of all Notifications received by {product}.
 
-image:./images/restcomm-admin-ui-11.png[restcomm-admin-ui-11,width=300,height=122]
+image:./images/console-11.png[console-11]
