@@ -1,12 +1,10 @@
-= {product} Visual Designer
-
-== Quick Start guide
+= {product} Visual Designer Quick Start guide
 
 This guide will help you learn the basics of Visual Designer.
 
-=== The _Greeting_ Voice application
+== The _Greeting_ Voice Application
 
-==== Create the application
+=== Create the Application
 
 New applications are easily created from within the <<../admin/console-overview.html#restcomm-applications,{product} Console>>. 
 
@@ -32,7 +30,7 @@ You're almost there. Your application has been created and is ready to greet you
 You do need a way to reach it though. To do that, you'll have to attach it to a <<../admin/console-overview.html#restcomm-numbers,{product} Number>> and finally make a call to it.
 
 
-==== Attach your application to a {product} number
+=== Attach your Application to a {product} number
 
 You've just created a _voice_ application. Such applications are executed when an incoming voice call is made to a <<../admin/console-overview.html#restcomm-numbers,{product} Number>>.
 We will register a SIP Number which is a number that can be called via a SIP or WebRTC Client
@@ -53,7 +51,7 @@ image::https://www.restcomm.com/wp-content/uploads/2018/07/Screenshot-from-2018-
 
 Your number is now linked to the application.
 
-==== Call the application
+=== Call the Application
 
 It's now time to test the application. Voice applications are executed when an incoming voice call is made to the <<../admin/console-overview.html#restcomm-numbers,{product} Number>> you just registered.
 We will use the WebRTC Demo client that is available in your {product} account for testing purposes.
@@ -70,11 +68,11 @@ image::https://www.restcomm.com/wp-content/uploads/2018/07/Screenshot-from-2018-
 * You should hear the greeting message of the `greeting-app` application.
 * Keep the tab open for later use.
 
-=== Working with Visual Designer
+== Visual Designer Concepts
 
 Now that the base application has been created, linked to a <<../admin/console-overview.html#restcomm-numbers,{product} Number>> and tested through the WebRTC Demo Client, you can go ahead and tweak your application with more useful and interesting features.  Let's switch back to Visual Designer tab and introduce some basic concepts.
 
-==== Elements
+=== Elements
 
 On the left, you will notice a list of buttons you can drag and drop into the modules to the right of this list. They are called `Elements`. 
 Elements are the building blocks of each Visual Designer application.
@@ -83,7 +81,7 @@ You will notice that your application already contains a `Say` element. It conta
 you heard when calling the application. `Say` elements are able to convert written phrases to their
 audio representations. We call this Text-To-Speech (TTS).
 
-==== Modules
+=== Modules
 
 `Elements` are grouped together in sequences called `modules`. The whole area next to the
 element toolbox is where modules appear. They are organized in a series of tabs and will accept
@@ -92,7 +90,7 @@ elements when dragged and dropped over them. Modules are the main execution unit
 By default new applications already contain a _Welcome_ module with the `Say` element previously mentioned. 
 Since this gets executed first, this is called the `Startup` module.
 
-==== Making changes
+=== Making changes
 
 Let's now change the greeting to something more interesting.
 
@@ -106,13 +104,13 @@ image::https://www.restcomm.com/wp-content/uploads/2018/07/Screenshot-from-2018-
 
 image::https://www.restcomm.com/wp-content/uploads/2018/07/Screenshot-from-2018-07-02-16-55-39.png[Greeting demo app call]
 
-===== Validation errors
+==== Validation errors
 
 You will need to _Save_ your changes so that they are effective. In case you get a validation
 error, your changes won't be applied to the actual running application. They will be persisted though so
 that you don't loose your work.
 
-==== Workflow
+=== Workflow
 
 Once you're done, it's good practice to close the editor tab. Think of Visual Designer
 as an editor like the one you edit images in. You get a new window for each new image you edit
