@@ -13,7 +13,6 @@ IMPORTANT: We're reworking this section of the documentation. Expect new stuff p
 
 * <<Quick Start Guide.adoc#,{product} Visual Designer Quick Start Guide>>
 * <<Restcomm RVD - Control Element.adoc#,Making decisions with Control element>>
-* <<Restcomm RVD - Control Element.adoc#,Making decisions with Control element>>
 * <<Restcomm - Making HTTP requests with External Service client.adoc#http,Accessing HTTP resources with ES element>>
 * <<Restcomm RVD - Using Web Trigger.adoc#web-trigger,Web Trigger>>
 * <<Restcomm RVD - Introducing Diagrams.adoc#diagrams,Diagrams>>
