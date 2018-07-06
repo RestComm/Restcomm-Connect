@@ -164,8 +164,6 @@ public class CallDetailRecordFilter {
     public SortDirection getSortByPrice() { return sortByPrice; }
 
 
-    // TODO: Introduce the rest of them
-
     public static final class Builder {
         private String accountSid = null;
         private List<String> accountSidSet = null;
