@@ -405,25 +405,6 @@ public class CallsEndpoint extends AbstractEndpoint {
             return status(javax.ws.rs.core.Response.Status.BAD_REQUEST).build();
         }
 
-        // TODO: Do we really need to utilize separate filters between getting totals and actually getting query results?
-        // I mean given that the total-related SQL doesn't enforce any paging or sorting, shouldn't the
-        // same filter apply equally well in both cases?
-
-        /*
-        CallDetailRecordFilter filter;
-        try {
-            if (localInstanceOnly) {
-                filter = new CallDetailRecordFilter(accountSid, ownerAccounts, recipient, sender, status, startTime, endTime,
-                        parentCallSid, conferenceSid, limit, offset, null, sortBy, sortDirection);
-            } else {
-                filter = new CallDetailRecordFilter(accountSid, ownerAccounts, recipient, sender, status, startTime, endTime,
-                        parentCallSid, conferenceSid, limit, offset, instanceId, sortBy, sortDirection);
-            }
-        } catch (ParseException e) {
-            return status(BAD_REQUEST).build();
-        }
-        */
-
         final List<CallDetailRecord> cdrs = dao.getCallDetailRecords(filter);
 
         listConverter.setCount(total);
