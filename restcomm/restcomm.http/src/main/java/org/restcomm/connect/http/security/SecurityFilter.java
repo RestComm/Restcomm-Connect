@@ -68,7 +68,8 @@ public class SecurityFilter implements ContainerRequestFilter {
         if (!isUnprotected(cr)) {
             checkAuthenticatedAccount(userIdentityContext);
             filterClosedAccounts(userIdentityContext, cr.getPath());
-            validateOrganizationAccess(userIdentityContext, storage, cr);
+            //TODO temporarely disable organization domain validation - https://telestax.atlassian.net/browse/BS-408
+//            validateOrganizationAccess(userIdentityContext, storage, cr);
         }
         String scheme = cr.getAuthenticationScheme();
         AccountPrincipal aPrincipal = new AccountPrincipal(userIdentityContext);
