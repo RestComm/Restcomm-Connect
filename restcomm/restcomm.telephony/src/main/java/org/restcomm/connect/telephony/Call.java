@@ -24,18 +24,7 @@ import java.math.BigDecimal;
 import java.net.InetAddress;
 import java.net.URI;
 import java.net.UnknownHostException;
-import java.util.ArrayList;
-import java.util.Collections;
-import java.util.Currency;
-import java.util.HashMap;
-import java.util.HashSet;
-import java.util.Iterator;
-import java.util.List;
-import java.util.ListIterator;
-import java.util.Map;
-import java.util.Set;
-import java.util.StringTokenizer;
-import java.util.UUID;
+import java.util.*;
 import java.util.concurrent.TimeUnit;
 
 import javax.sdp.SdpException;
@@ -2439,10 +2428,20 @@ public final class Call extends RestcommUntypedActor implements TransitionEndLis
                 if(logger.isInfoEnabled()){
                     logger.info("We are behind LoadBalancer and will remove the first two RecordRoutes since they are the LB node");
                 }
-                recordRouteList.next();
-                recordRouteList.remove();
-                recordRouteList.next();
-                recordRouteList.remove();
+
+                if(recordRouteList.hasNext()) {
+                    recordRouteList.next();
+                    recordRouteList.remove();
+
+                    if(recordRouteList.hasNext()) {
+                        recordRouteList.next();
+                        recordRouteList.remove();
+                    } else {
+                        logger.warning("Missing second LB Record Route record");
+                    }
+                } else {
+                    logger.warning("Missing LB Record Route records");
+                }
             }
             if (recordRouteList.hasNext()) {
                 if(logger.isInfoEnabled()) {
