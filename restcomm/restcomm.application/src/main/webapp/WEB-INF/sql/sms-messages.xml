@@ -128,55 +128,55 @@
                     <if test="sortByDate.name() == 'ASCENDING'">
                         order by "date_created" ASC
                     </if>
-                    <if test="sortByDate.name() == 'DESCENDING'">
+                    <if test="sortByDate.name() == 'DESC'">
                         order by "date_created" DESC
                     </if>
                 </when>
                 <when test="sortByFrom != null">
-                    <if test="sortByFrom.name() == 'ASCENDING'">
+                    <if test="sortByFrom.name() == 'ASC'">
                         order by "sender" ASC, "date_created" DESC
                     </if>
-                    <if test="sortByFrom.name() == 'DESCENDING'">
+                    <if test="sortByFrom.name() == 'DESC'">
                         order by "sender" DESC, "date_created" DESC
                     </if>
                 </when>
                 <when test="sortByTo != null">
-                    <if test="sortByTo.name() == 'ASCENDING'">
+                    <if test="sortByTo.name() == 'ASC'">
                         order by "recipient" ASC, "date_created" DESC
                     </if>
-                    <if test="sortByTo.name() == 'DESCENDING'">
+                    <if test="sortByTo.name() == 'DESC'">
                         order by "recipient" DESC, "date_created" DESC
                     </if>
                 </when>
                 <when test="sortByDirection != null">
-                    <if test="sortByDirection.name() == 'ASCENDING'">
+                    <if test="sortByDirection.name() == 'ASC'">
                         order by "direction" ASC, "date_created" DESC
                     </if>
-                    <if test="sortByDirection.name() == 'DESCENDING'">
+                    <if test="sortByDirection.name() == 'DESC'">
                         order by "direction" DESC, "date_created" DESC
                     </if>
                 </when>
                 <when test="sortByStatus != null">
-                    <if test="sortByStatus.name() == 'ASCENDING'">
+                    <if test="sortByStatus.name() == 'ASC'">
                         order by "status" ASC, "date_created" DESC
                     </if>
-                    <if test="sortByStatus.name() == 'DESCENDING'">
+                    <if test="sortByStatus.name() == 'DESC'">
                         order by "status" DESC, "date_created" DESC
                     </if>
                 </when>
                 <when test="sortByBody != null">
-                    <if test="sortByBody.name() == 'ASCENDING'">
+                    <if test="sortByBody.name() == 'ASC'">
                         order by "body" ASC, "date_created" DESC
                     </if>
-                    <if test="sortByBody.name() == 'DESCENDING'">
+                    <if test="sortByBody.name() == 'DESC'">
                         order by "body" DESC, "date_created" DESC
                     </if>
                 </when>
                 <when test="sortByPrice != null">
-                    <if test="sortByPrice.name() == 'ASCENDING'">
+                    <if test="sortByPrice.name() == 'ASC'">
                         order by cast("price" as int) ASC, "date_created" DESC
                     </if>
-                    <if test="sortByPrice.name() == 'DESCENDING'">
+                    <if test="sortByPrice.name() == 'DESC'">
                         order by cast("price" as int) DESC, "date_created" DESC
                     </if>
                 </when>

@@ -37,10 +37,11 @@ import com.thoughtworks.xstream.XStream;
 import java.math.BigDecimal;
 import java.net.URI;
 import java.text.ParseException;
-import java.util.ArrayList;
-import java.util.Currency;
-import java.util.Iterator;
+import java.util.Map;
 import java.util.List;
+import java.util.ArrayList;
+import java.util.Iterator;
+import java.util.Currency;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.TimeUnit;
 import javax.annotation.PostConstruct;
@@ -69,7 +70,7 @@ import org.restcomm.connect.commons.faulttolerance.RestcommUntypedActor;
 import org.restcomm.connect.commons.patterns.Observe;
 import org.restcomm.connect.dao.DaoManager;
 import org.restcomm.connect.dao.SmsMessagesDao;
-import org.restcomm.connect.dao.common.SortDirection;
+import org.restcomm.connect.dao.common.Sorting;
 import org.restcomm.connect.dao.entities.Account;
 import org.restcomm.connect.dao.entities.RestCommResponse;
 import org.restcomm.connect.dao.entities.SmsMessage;
@@ -221,87 +222,78 @@ public class SmsMessagesEndpoint extends AbstractEndpoint {
         String sortBy = null;
         String sortDirection = null;
 
-        // TODO: Investigate why filtering on Body doesn't work from Console. Query string seems to be passed ok by Console
-        // TODO: Consider taking this parsing out to a separate module, as it will be reused multiple times
         if (sortParameters != null && !sortParameters.isEmpty()) {
-            final String[] values = sortParameters.split(":", 2);
-            sortBy = values[0];
-            if (values.length > 1) {
-                sortDirection = values[1];
-                if (sortBy.isEmpty()) {
-                    return status(BAD_REQUEST).entity(buildErrorResponseBody("Error parsing the SortBy parameter: missing field to sort by", responseType)).build();
-                }
-                if (!sortDirection.equalsIgnoreCase("asc") && !sortDirection.equalsIgnoreCase("desc")) {
-                    return status(BAD_REQUEST).entity(buildErrorResponseBody("Error parsing the SortBy parameter: sort direction needs to be either \'asc\' or \'desc\'", responseType)).build();
-                }
+            try {
+                Map<String, String> sortMap = Sorting.parseUrl(sortParameters);
+                sortBy = sortMap.get(Sorting.SORT_BY_KEY);
+                sortDirection = sortMap.get(Sorting.SORT_DIRECTION_KEY);
             }
-            else if (values.length == 1) {
-                // Default to asc if only the sorting field has been passed without direction
-                sortDirection = "asc";
+            catch (Exception e) {
+                return status(BAD_REQUEST).entity(buildErrorResponseBody(e.getMessage(), responseType)).build();
             }
         }
 
         if (sortBy != null) {
             if (sortBy.equals(SORTING_URL_PARAM_DATE_CREATED)) {
                 if (sortDirection != null) {
-                    if (sortDirection.equalsIgnoreCase("asc")) {
-                        filterBuilder.sortedByDate(SortDirection.ASCENDING);
+                    if (sortDirection.equalsIgnoreCase(Sorting.Direction.ASC.name())) {
+                        filterBuilder.sortedByDate(Sorting.Direction.ASC);
                     } else {
-                        filterBuilder.sortedByDate(SortDirection.DESCENDING);
+                        filterBuilder.sortedByDate(Sorting.Direction.DESC);
                     }
                 }
             }
             if (sortBy.equals(SORTING_URL_PARAM_FROM)) {
                 if (sortDirection != null) {
-                    if (sortDirection.equalsIgnoreCase("asc")) {
-                        filterBuilder.sortedByFrom(SortDirection.ASCENDING);
+                    if (sortDirection.equalsIgnoreCase(Sorting.Direction.ASC.name())) {
+                        filterBuilder.sortedByFrom(Sorting.Direction.ASC);
                     } else {
-                        filterBuilder.sortedByFrom(SortDirection.DESCENDING);
+                        filterBuilder.sortedByFrom(Sorting.Direction.DESC);
                     }
                 }
             }
             if (sortBy.equals(SORTING_URL_PARAM_TO)) {
                 if (sortDirection != null) {
-                    if (sortDirection.equalsIgnoreCase("asc")) {
-                        filterBuilder.sortedByTo(SortDirection.ASCENDING);
+                    if (sortDirection.equalsIgnoreCase(Sorting.Direction.ASC.name())) {
+                        filterBuilder.sortedByTo(Sorting.Direction.ASC);
                     } else {
-                        filterBuilder.sortedByTo(SortDirection.DESCENDING);
+                        filterBuilder.sortedByTo(Sorting.Direction.DESC);
                     }
                 }
             }
             if (sortBy.equals(SORTING_URL_PARAM_DIRECTION)) {
                 if (sortDirection != null) {
-                    if (sortDirection.equalsIgnoreCase("asc")) {
-                        filterBuilder.sortedByDirection(SortDirection.ASCENDING);
+                    if (sortDirection.equalsIgnoreCase(Sorting.Direction.ASC.name())) {
+                        filterBuilder.sortedByDirection(Sorting.Direction.ASC);
                     } else {
-                        filterBuilder.sortedByDirection(SortDirection.DESCENDING);
+                        filterBuilder.sortedByDirection(Sorting.Direction.DESC);
                     }
                 }
             }
             if (sortBy.equals(SORTING_URL_PARAM_STATUS)) {
                 if (sortDirection != null) {
-                    if (sortDirection.equalsIgnoreCase("asc")) {
-                        filterBuilder.sortedByStatus(SortDirection.ASCENDING);
+                    if (sortDirection.equalsIgnoreCase(Sorting.Direction.ASC.name())) {
+                        filterBuilder.sortedByStatus(Sorting.Direction.ASC);
                     } else {
-                        filterBuilder.sortedByStatus(SortDirection.DESCENDING);
+                        filterBuilder.sortedByStatus(Sorting.Direction.DESC);
                     }
                 }
             }
             if (sortBy.equals(SORTING_URL_PARAM_BODY)) {
                 if (sortDirection != null) {
-                    if (sortDirection.equalsIgnoreCase("asc")) {
-                        filterBuilder.sortedByBody(SortDirection.ASCENDING);
+                    if (sortDirection.equalsIgnoreCase(Sorting.Direction.ASC.name())) {
+                        filterBuilder.sortedByBody(Sorting.Direction.ASC);
                     } else {
-                        filterBuilder.sortedByBody(SortDirection.DESCENDING);
+                        filterBuilder.sortedByBody(Sorting.Direction.DESC);
                     }
                 }
             }
             if (sortBy.equals(SORTING_URL_PARAM_PRICE)) {
                 if (sortDirection != null) {
-                    if (sortDirection.equalsIgnoreCase("asc")) {
-                        filterBuilder.sortedByPrice(SortDirection.ASCENDING);
+                    if (sortDirection.equalsIgnoreCase(Sorting.Direction.ASC.name())) {
+                        filterBuilder.sortedByPrice(Sorting.Direction.ASC);
                     } else {
-                        filterBuilder.sortedByPrice(SortDirection.DESCENDING);
+                        filterBuilder.sortedByPrice(Sorting.Direction.DESC);
                     }
                 }
             }
@@ -341,23 +333,6 @@ public class SmsMessagesEndpoint extends AbstractEndpoint {
             filterBuilder.byInstanceId(instanceId);
         }
 
-        /*
-        SmsMessageFilter filterForTotal;
-
-        try {
-
-            if (localInstanceOnly) {
-                filterForTotal = new SmsMessageFilter(accountSid, ownerAccounts, recipient, sender, startTime, endTime,
-                        body, null, null);
-            } else {
-                filterForTotal = new SmsMessageFilter(accountSid, ownerAccounts, recipient, sender, startTime, endTime,
-                        body, null, null, instanceId);
-            }
-        } catch (ParseException e) {
-            return status(BAD_REQUEST).build();
-        }
-        */
-
         SmsMessageFilter filter;
         try {
             filter = filterBuilder.build();
@@ -367,24 +342,8 @@ public class SmsMessagesEndpoint extends AbstractEndpoint {
         final int total = dao.getTotalSmsMessage(filter);
 
         if (Integer.parseInt(page) > (total / limit)) {
-            return status(javax.ws.rs.core.Response.Status.BAD_REQUEST).build();
+            return status(Response.Status.BAD_REQUEST).build();
         }
-
-        /*
-        SmsMessageFilter filter;
-
-        try {
-            if (localInstanceOnly) {
-                filter = new SmsMessageFilter(accountSid, ownerAccounts, recipient, sender, startTime, endTime,
-                        body, limit, offset);
-            } else {
-                filter = new SmsMessageFilter(accountSid, ownerAccounts, recipient, sender, startTime, endTime,
-                        body, limit, offset, instanceId);
-            }
-        } catch (ParseException e) {
-            return status(BAD_REQUEST).build();
-        }
-        */
 
         final List<SmsMessage> cdrs = dao.getSmsMessages(filter);
 
