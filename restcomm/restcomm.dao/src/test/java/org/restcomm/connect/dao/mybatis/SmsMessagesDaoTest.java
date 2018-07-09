@@ -29,7 +29,7 @@ import org.junit.Test;
 import org.restcomm.connect.commons.dao.MessageError;
 import org.restcomm.connect.commons.dao.Sid;
 import org.restcomm.connect.dao.SmsMessagesDao;
-import org.restcomm.connect.dao.common.SortDirection;
+import org.restcomm.connect.dao.common.Sorting;
 import org.restcomm.connect.dao.entities.SmsMessage;
 
 import java.io.InputStream;
@@ -323,7 +323,7 @@ public final class SmsMessagesDaoTest {
         List<String> accountSidSet = new ArrayList<String>();
         accountSidSet.add("AC681caba993db40fd9166404f6a30e67d");
         builder.byAccountSidSet(accountSidSet);
-        builder.sortedByDate(SortDirection.ASCENDING);
+        builder.sortedByDate(Sorting.Direction.ASC);
         SmsMessageFilter filter = builder.build();
         List<SmsMessage> smsMessages = dao.getSmsMessages(filter);
         assertEquals(6, smsMessages.size());
@@ -332,7 +332,7 @@ public final class SmsMessagesDaoTest {
         assertEquals(min.compareTo(smsMessages.get(0).getDateCreated()), 0);
         assertEquals(max.compareTo(smsMessages.get(smsMessages.size() - 1).getDateCreated()), 0);
 
-        builder.sortedByDate(SortDirection.DESCENDING);
+        builder.sortedByDate(Sorting.Direction.DESC);
         filter = builder.build();
         smsMessages = dao.getSmsMessages(filter);
         assertEquals(max.compareTo(smsMessages.get(0).getDateCreated()), 0);
@@ -346,14 +346,14 @@ public final class SmsMessagesDaoTest {
         List<String> accountSidSet = new ArrayList<String>();
         accountSidSet.add("AC681caba993db40fd9166404f6a30e67d");
         builder.byAccountSidSet(accountSidSet);
-        builder.sortedByFrom(SortDirection.ASCENDING);
+        builder.sortedByFrom(Sorting.Direction.ASC);
         SmsMessageFilter filter = builder.build();
         List<SmsMessage> smsMessages = dao.getSmsMessages(filter);
         assertEquals(6, smsMessages.size());
         assertEquals("+17778889990", smsMessages.get(0).getSender());
         assertEquals("+17778889995", smsMessages.get(smsMessages.size() - 1).getSender());
 
-        builder.sortedByFrom(SortDirection.DESCENDING);
+        builder.sortedByFrom(Sorting.Direction.DESC);
         filter = builder.build();
         smsMessages = dao.getSmsMessages(filter);
         assertEquals("+17778889995", smsMessages.get(0).getSender());
@@ -367,14 +367,14 @@ public final class SmsMessagesDaoTest {
         List<String> accountSidSet = new ArrayList<String>();
         accountSidSet.add("AC681caba993db40fd9166404f6a30e67d");
         builder.byAccountSidSet(accountSidSet);
-        builder.sortedByTo(SortDirection.ASCENDING);
+        builder.sortedByTo(Sorting.Direction.ASC);
         SmsMessageFilter filter = builder.build();
         List<SmsMessage> smsMessages = dao.getSmsMessages(filter);
         assertEquals(6, smsMessages.size());
         assertEquals("+12223334444", smsMessages.get(0).getRecipient());
         assertEquals("+12223334449", smsMessages.get(smsMessages.size() - 1).getRecipient());
 
-        builder.sortedByTo(SortDirection.DESCENDING);
+        builder.sortedByTo(Sorting.Direction.DESC);
         filter = builder.build();
         smsMessages = dao.getSmsMessages(filter);
         assertEquals("+12223334449", smsMessages.get(0).getRecipient());
@@ -388,14 +388,14 @@ public final class SmsMessagesDaoTest {
         List<String> accountSidSet = new ArrayList<String>();
         accountSidSet.add("AC681caba993db40fd9166404f6a30e67d");
         builder.byAccountSidSet(accountSidSet);
-        builder.sortedByDirection(SortDirection.ASCENDING);
+        builder.sortedByDirection(Sorting.Direction.ASC);
         SmsMessageFilter filter = builder.build();
         List<SmsMessage> smsMessages = dao.getSmsMessages(filter);
         assertEquals(6, smsMessages.size());
         assertEquals("outbound-api", smsMessages.get(0).getDirection().toString());
         assertEquals("outbound-reply", smsMessages.get(smsMessages.size() - 1).getDirection().toString());
 
-        builder.sortedByDirection(SortDirection.DESCENDING);
+        builder.sortedByDirection(Sorting.Direction.DESC);
         filter = builder.build();
         smsMessages = dao.getSmsMessages(filter);
         assertEquals("outbound-reply", smsMessages.get(0).getDirection().toString());
@@ -409,14 +409,14 @@ public final class SmsMessagesDaoTest {
         List<String> accountSidSet = new ArrayList<String>();
         accountSidSet.add("AC681caba993db40fd9166404f6a30e67d");
         builder.byAccountSidSet(accountSidSet);
-        builder.sortedByStatus(SortDirection.ASCENDING);
+        builder.sortedByStatus(Sorting.Direction.ASC);
         SmsMessageFilter filter = builder.build();
         List<SmsMessage> smsMessages = dao.getSmsMessages(filter);
         assertEquals(6, smsMessages.size());
         assertEquals("delivered", smsMessages.get(0).getStatus().toString());
         assertEquals("undelivered", smsMessages.get(smsMessages.size() - 1).getStatus().toString());
 
-        builder.sortedByStatus(SortDirection.DESCENDING);
+        builder.sortedByStatus(Sorting.Direction.DESC);
         filter = builder.build();
         smsMessages = dao.getSmsMessages(filter);
         assertEquals("undelivered", smsMessages.get(0).getStatus().toString());
@@ -430,14 +430,14 @@ public final class SmsMessagesDaoTest {
         List<String> accountSidSet = new ArrayList<String>();
         accountSidSet.add("AC681caba993db40fd9166404f6a30e67d");
         builder.byAccountSidSet(accountSidSet);
-        builder.sortedByBody(SortDirection.ASCENDING);
+        builder.sortedByBody(Sorting.Direction.ASC);
         SmsMessageFilter filter = builder.build();
         List<SmsMessage> smsMessages = dao.getSmsMessages(filter);
         assertEquals(6, smsMessages.size());
         assertEquals("Hello World - 0", smsMessages.get(0).getBody().toString());
         assertEquals("Hello World - 1", smsMessages.get(smsMessages.size() - 1).getBody().toString());
 
-        builder.sortedByBody(SortDirection.DESCENDING);
+        builder.sortedByBody(Sorting.Direction.DESC);
         filter = builder.build();
         smsMessages = dao.getSmsMessages(filter);
         assertEquals("Hello World - 1", smsMessages.get(0).getBody().toString());
@@ -451,14 +451,14 @@ public final class SmsMessagesDaoTest {
         List<String> accountSidSet = new ArrayList<String>();
         accountSidSet.add("AC681caba993db40fd9166404f6a30e67d");
         builder.byAccountSidSet(accountSidSet);
-        builder.sortedByPrice(SortDirection.ASCENDING);
+        builder.sortedByPrice(Sorting.Direction.ASC);
         SmsMessageFilter filter = builder.build();
         List<SmsMessage> smsMessages = dao.getSmsMessages(filter);
         assertEquals(6, smsMessages.size());
         assertEquals("0.00", smsMessages.get(0).getPrice().toString());
         assertEquals("120.00", smsMessages.get(smsMessages.size() - 1).getPrice().toString());
 
-        builder.sortedByPrice(SortDirection.DESCENDING);
+        builder.sortedByPrice(Sorting.Direction.DESC);
         filter = builder.build();
         smsMessages = dao.getSmsMessages(filter);
         assertEquals("120.00", smsMessages.get(0).getPrice().toString());

@@ -25,7 +25,7 @@ import java.util.Date;
 import java.util.List;
 
 import org.restcomm.connect.commons.annotations.concurrency.Immutable;
-import org.restcomm.connect.dao.common.SortDirection;
+import org.restcomm.connect.dao.common.Sorting;
 
 /**
  * @author <a href="mailto:n.congvu@gmail.com">vunguyen</a>
@@ -45,13 +45,13 @@ public class SmsMessageFilter {
     private final Integer limit;
     private final Integer offset;
     private final String instanceid;
-    private final SortDirection sortByDate;
-    private final SortDirection sortByFrom;
-    private final SortDirection sortByTo;
-    private final SortDirection sortByDirection;
-    private final SortDirection sortByStatus;
-    private final SortDirection sortByBody;
-    private final SortDirection sortByPrice;
+    private final Sorting.Direction sortByDate;
+    private final Sorting.Direction sortByFrom;
+    private final Sorting.Direction sortByTo;
+    private final Sorting.Direction sortByDirection;
+    private final Sorting.Direction sortByStatus;
+    private final Sorting.Direction sortByBody;
+    private final Sorting.Direction sortByPrice;
 
 
     public SmsMessageFilter(String accountSid, List<String> accountSidSet, String recipient, String sender, String status, String startTime, String endTime,
@@ -61,9 +61,9 @@ public class SmsMessageFilter {
     }
 
     public SmsMessageFilter(String accountSid, List<String> accountSidSet, String recipient, String sender, String status, String startTime, String endTime,
-                            String body, Integer limit, Integer offset, String instanceId, SortDirection sortByDate,
-                            SortDirection sortByFrom, SortDirection sortByTo, SortDirection sortByDirection, SortDirection sortByStatus, SortDirection sortByBody,
-                            SortDirection sortByPrice) throws ParseException {
+                            String body, Integer limit, Integer offset, String instanceId, Sorting.Direction sortByDate,
+                            Sorting.Direction sortByFrom, Sorting.Direction sortByTo, Sorting.Direction sortByDirection, Sorting.Direction sortByStatus, Sorting.Direction sortByBody,
+                            Sorting.Direction sortByPrice) throws ParseException {
         this.accountSid = accountSid;
         this.accountSidSet = accountSidSet;
 
@@ -153,13 +153,13 @@ public class SmsMessageFilter {
 
     public String getInstanceid() { return instanceid; }
 
-    public SortDirection getSortByDate() { return sortByDate; }
-    public SortDirection getSortByFrom() { return sortByFrom; }
-    public SortDirection getSortByTo() { return sortByTo; }
-    public SortDirection getSortByDirection() { return sortByDirection; }
-    public SortDirection getSortByStatus() { return sortByStatus; }
-    public SortDirection getSortByBody() { return sortByBody; }
-    public SortDirection getSortByPrice() { return sortByPrice; }
+    public Sorting.Direction getSortByDate() { return sortByDate; }
+    public Sorting.Direction getSortByFrom() { return sortByFrom; }
+    public Sorting.Direction getSortByTo() { return sortByTo; }
+    public Sorting.Direction getSortByDirection() { return sortByDirection; }
+    public Sorting.Direction getSortByStatus() { return sortByStatus; }
+    public Sorting.Direction getSortByBody() { return sortByBody; }
+    public Sorting.Direction getSortByPrice() { return sortByPrice; }
 
     public static final class Builder {
         private String accountSid = null;
@@ -171,13 +171,13 @@ public class SmsMessageFilter {
         private String endTime = null;
         private String body;
         private String instanceid = null;
-        private SortDirection sortByDate = null;
-        private SortDirection sortByFrom = null;
-        private SortDirection sortByTo = null;
-        private SortDirection sortByDirection = null;
-        private SortDirection sortByStatus = null;
-        private SortDirection sortByBody = null;
-        private SortDirection sortByPrice = null;
+        private Sorting.Direction sortByDate = null;
+        private Sorting.Direction sortByFrom = null;
+        private Sorting.Direction sortByTo = null;
+        private Sorting.Direction sortByDirection = null;
+        private Sorting.Direction sortByStatus = null;
+        private Sorting.Direction sortByBody = null;
+        private Sorting.Direction sortByPrice = null;
         private Integer limit = null;
         private Integer offset = null;
 
@@ -245,31 +245,31 @@ public class SmsMessageFilter {
         }
 
         // Sorters
-        public Builder sortedByDate(SortDirection sortDirection) {
+        public Builder sortedByDate(Sorting.Direction sortDirection) {
             this.sortByDate = sortDirection;
             return this;
         }
-        public Builder sortedByFrom(SortDirection sortDirection) {
+        public Builder sortedByFrom(Sorting.Direction sortDirection) {
             this.sortByFrom = sortDirection;
             return this;
         }
-        public Builder sortedByTo(SortDirection sortDirection) {
+        public Builder sortedByTo(Sorting.Direction sortDirection) {
             this.sortByTo = sortDirection;
             return this;
         }
-        public Builder sortedByDirection(SortDirection sortDirection) {
+        public Builder sortedByDirection(Sorting.Direction sortDirection) {
             this.sortByDirection = sortDirection;
             return this;
         }
-        public Builder sortedByStatus(SortDirection sortDirection) {
+        public Builder sortedByStatus(Sorting.Direction sortDirection) {
             this.sortByStatus = sortDirection;
             return this;
         }
-        public Builder sortedByBody(SortDirection sortDirection) {
+        public Builder sortedByBody(Sorting.Direction sortDirection) {
             this.sortByBody = sortDirection;
             return this;
         }
-        public Builder sortedByPrice(SortDirection sortDirection) {
+        public Builder sortedByPrice(Sorting.Direction sortDirection) {
             this.sortByPrice = sortDirection;
             return this;
         }

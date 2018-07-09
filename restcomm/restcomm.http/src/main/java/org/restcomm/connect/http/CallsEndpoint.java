@@ -36,10 +36,11 @@ import com.thoughtworks.xstream.XStream;
 import java.net.URI;
 import java.net.URL;
 import java.text.ParseException;
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.LinkedList;
+import java.util.Map;
 import java.util.List;
+import java.util.ArrayList;
+import java.util.LinkedList;
+import java.util.Arrays;
 import java.util.concurrent.CopyOnWriteArrayList;
 import java.util.concurrent.TimeUnit;
 import javax.annotation.PostConstruct;
@@ -83,7 +84,7 @@ import org.restcomm.connect.dao.AccountsDao;
 import org.restcomm.connect.dao.CallDetailRecordsDao;
 import org.restcomm.connect.dao.DaoManager;
 import org.restcomm.connect.dao.RecordingsDao;
-import org.restcomm.connect.dao.common.SortDirection;
+import org.restcomm.connect.dao.common.Sorting;
 import org.restcomm.connect.dao.entities.Account;
 import org.restcomm.connect.dao.entities.CallDetailRecord;
 import org.restcomm.connect.dao.entities.CallDetailRecordFilter;
@@ -253,16 +254,16 @@ public class CallsEndpoint extends AbstractEndpoint {
         // to make sure we are backwards compatible:
         // - If 'Reverse' is found in the URL but SortBy is not found then we deem that we are servicing an old version of Console
         //   and we should support sorting only for Date field and translate as follows:
-        //   > 'Reverse=true': corresponds to SortBy=date_created:desc
-        //   > 'Reverse=false': corresponds to SortBy=date_created:asc
+        //   > 'Reverse=true': corresponds to SortBy=DateCreated:desc
+        //   > 'Reverse=false': corresponds to SortBy=DateCreated:asc
         // - If Reverse is found in the URL but SortBy is also found we just discard 'Reverse' and service request normally
         // - If only 'SortBy' is found in the URL then we service the request normally
         if (reverse != null && sortParameters == null) {
             if (reverse.equalsIgnoreCase("true")) {
-                sortParameters = "date_created:desc";
+                sortParameters = SORTING_URL_PARAM_DATE_CREATED + ":" + Sorting.Direction.DESC.name();
             }
             else {
-                sortParameters = "date_created:asc";
+                sortParameters = SORTING_URL_PARAM_DATE_CREATED + ":" + Sorting.Direction.ASC.name();
             }
         }
 
@@ -272,84 +273,77 @@ public class CallsEndpoint extends AbstractEndpoint {
         String sortDirection = null;
 
         if (sortParameters != null && !sortParameters.isEmpty()) {
-            final String[] values = sortParameters.split(":", 2);
-            sortBy = values[0];
-            if (values.length > 1) {
-                sortDirection = values[1];
-                if (sortBy.isEmpty()) {
-                    return status(BAD_REQUEST).entity(buildErrorResponseBody("Error parsing the SortBy parameter: missing field to sort by", responseType)).build();
-                }
-                if (!sortDirection.equalsIgnoreCase("asc") && !sortDirection.equalsIgnoreCase("desc")) {
-                    return status(BAD_REQUEST).entity(buildErrorResponseBody("Error parsing the SortBy parameter: sort direction needs to be either \'asc\' or \'desc\'", responseType)).build();
-                }
+            try {
+                Map<String, String> sortMap = Sorting.parseUrl(sortParameters);
+                sortBy = sortMap.get(Sorting.SORT_BY_KEY);
+                sortDirection = sortMap.get(Sorting.SORT_DIRECTION_KEY);
             }
-            else if (values.length == 1) {
-                // Default to asc if only the sorting field has been passed without direction
-                sortDirection = "asc";
+            catch (Exception e) {
+                return status(BAD_REQUEST).entity(buildErrorResponseBody(e.getMessage(), responseType)).build();
             }
         }
 
         if (sortBy != null) {
             if (sortBy.equals(SORTING_URL_PARAM_DATE_CREATED)) {
                 if (sortDirection != null) {
-                    if (sortDirection.equalsIgnoreCase("asc")) {
-                        filterBuilder.sortedByDate(SortDirection.ASCENDING);
+                    if (sortDirection.equalsIgnoreCase(Sorting.Direction.ASC.name())) {
+                        filterBuilder.sortedByDate(Sorting.Direction.ASC);
                     } else {
-                        filterBuilder.sortedByDate(SortDirection.DESCENDING);
+                        filterBuilder.sortedByDate(Sorting.Direction.DESC);
                     }
                 }
             }
             if (sortBy.equals(SORTING_URL_PARAM_FROM)) {
                 if (sortDirection != null) {
-                    if (sortDirection.equalsIgnoreCase("asc")) {
-                        filterBuilder.sortedByFrom(SortDirection.ASCENDING);
+                    if (sortDirection.equalsIgnoreCase(Sorting.Direction.ASC.name())) {
+                        filterBuilder.sortedByFrom(Sorting.Direction.ASC);
                     } else {
-                        filterBuilder.sortedByFrom(SortDirection.DESCENDING);
+                        filterBuilder.sortedByFrom(Sorting.Direction.DESC);
                     }
                 }
             }
             if (sortBy.equals(SORTING_URL_PARAM_TO)) {
                 if (sortDirection != null) {
-                    if (sortDirection.equalsIgnoreCase("asc")) {
-                        filterBuilder.sortedByTo(SortDirection.ASCENDING);
+                    if (sortDirection.equalsIgnoreCase(Sorting.Direction.ASC.name())) {
+                        filterBuilder.sortedByTo(Sorting.Direction.ASC);
                     } else {
-                        filterBuilder.sortedByTo(SortDirection.DESCENDING);
+                        filterBuilder.sortedByTo(Sorting.Direction.DESC);
                     }
                 }
             }
             if (sortBy.equals(SORTING_URL_PARAM_DIRECTION)) {
                 if (sortDirection != null) {
-                    if (sortDirection.equalsIgnoreCase("asc")) {
-                        filterBuilder.sortedByDirection(SortDirection.ASCENDING);
+                    if (sortDirection.equalsIgnoreCase(Sorting.Direction.ASC.name())) {
+                        filterBuilder.sortedByDirection(Sorting.Direction.ASC);
                     } else {
-                        filterBuilder.sortedByDirection(SortDirection.DESCENDING);
+                        filterBuilder.sortedByDirection(Sorting.Direction.DESC);
                     }
                 }
             }
             if (sortBy.equals(SORTING_URL_PARAM_STATUS)) {
                 if (sortDirection != null) {
-                    if (sortDirection.equalsIgnoreCase("asc")) {
-                        filterBuilder.sortedByStatus(SortDirection.ASCENDING);
+                    if (sortDirection.equalsIgnoreCase(Sorting.Direction.ASC.name())) {
+                        filterBuilder.sortedByStatus(Sorting.Direction.ASC);
                     } else {
-                        filterBuilder.sortedByStatus(SortDirection.DESCENDING);
+                        filterBuilder.sortedByStatus(Sorting.Direction.DESC);
                     }
                 }
             }
             if (sortBy.equals(SORTING_URL_PARAM_DURATION)) {
                 if (sortDirection != null) {
-                    if (sortDirection.equalsIgnoreCase("asc")) {
-                        filterBuilder.sortedByDuration(SortDirection.ASCENDING);
+                    if (sortDirection.equalsIgnoreCase(Sorting.Direction.ASC.name())) {
+                        filterBuilder.sortedByDuration(Sorting.Direction.ASC);
                     } else {
-                        filterBuilder.sortedByDuration(SortDirection.DESCENDING);
+                        filterBuilder.sortedByDuration(Sorting.Direction.DESC);
                     }
                 }
             }
             if (sortBy.equals(SORTING_URL_PARAM_PRICE)) {
                 if (sortDirection != null) {
-                    if (sortDirection.equalsIgnoreCase("asc")) {
-                        filterBuilder.sortedByPrice(SortDirection.ASCENDING);
+                    if (sortDirection.equalsIgnoreCase(Sorting.Direction.ASC.name())) {
+                        filterBuilder.sortedByPrice(Sorting.Direction.ASC);
                     } else {
-                        filterBuilder.sortedByPrice(SortDirection.DESCENDING);
+                        filterBuilder.sortedByPrice(Sorting.Direction.DESC);
                     }
                 }
             }
