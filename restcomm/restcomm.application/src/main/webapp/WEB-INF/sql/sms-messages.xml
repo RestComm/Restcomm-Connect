@@ -181,7 +181,7 @@
                     </if>
                 </when>
                 <otherwise>
-                    order by date_created DESC
+                    order by "date_created" DESC
                 </otherwise>
             </choose>
             <if test="limit != null and offset != null">
