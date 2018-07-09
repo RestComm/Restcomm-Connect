@@ -223,8 +223,8 @@ public class SmsMessagesEndpoint extends AbstractEndpoint {
 
         // TODO: Consider taking this parsing out to a separate module, as it will be reused multiple times
         // TODO: Update naming in CallEndpoint.java from SORTING_URL_PARAM_DATE_CREATED -> DATE_CREATE_PARAM for consistency
-        // TODO: Consider resolving inconsistency in CallEndpoint.java, so that the sorting parameter is called same as filtering parm,
-        // which is StartTime, instead of DateCreated. The problem is that they correspond to different concepts. Needs to think more about it
+        // TODO: Consider resolving inconsistency in CallEndpoint.java, so that the sorting parameter is called same as filtering parm, which is StartTime, instead of DateCreated. The problem is that they correspond to different concepts. Needs to think more about it
+        // TODO: See if we can have secondary sorting on DateCreated when sorting criteria is passed in the API, but it's not DateCreated. So that even when primary sorting is other than date we can still see descending date for the rows that have the same primary sorting field
         if (sortParameters != null && !sortParameters.isEmpty()) {
             final String[] values = sortParameters.split(":", 2);
             sortBy = values[0];
