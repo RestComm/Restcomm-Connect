@@ -37,10 +37,11 @@ import com.thoughtworks.xstream.XStream;
 import java.math.BigDecimal;
 import java.net.URI;
 import java.text.ParseException;
-import java.util.ArrayList;
-import java.util.Currency;
-import java.util.Iterator;
+import java.util.Map;
 import java.util.List;
+import java.util.ArrayList;
+import java.util.Iterator;
+import java.util.Currency;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.TimeUnit;
 import javax.annotation.PostConstruct;
@@ -69,6 +70,7 @@ import org.restcomm.connect.commons.faulttolerance.RestcommUntypedActor;
 import org.restcomm.connect.commons.patterns.Observe;
 import org.restcomm.connect.dao.DaoManager;
 import org.restcomm.connect.dao.SmsMessagesDao;
+import org.restcomm.connect.dao.common.Sorting;
 import org.restcomm.connect.dao.entities.Account;
 import org.restcomm.connect.dao.entities.RestCommResponse;
 import org.restcomm.connect.dao.entities.SmsMessage;
@@ -97,13 +99,19 @@ import scala.concurrent.duration.Duration;
 @ThreadSafe
 @Singleton
 public class SmsMessagesEndpoint extends AbstractEndpoint {
+    private static final String SORTING_URL_PARAM_DATE_CREATED = "DateCreated";
+    private static final String SORTING_URL_PARAM_FROM = "From";
+    private static final String SORTING_URL_PARAM_TO = "To";
+    private static final String SORTING_URL_PARAM_DIRECTION = "Direction";
+    private static final String SORTING_URL_PARAM_STATUS = "Status";
+    private static final String SORTING_URL_PARAM_BODY = "Body";
+    private static final String SORTING_URL_PARAM_PRICE = "Price";
 
     private static final String CALLBACK_PARAM = "StatusCallback";
     private static final String FROM_PARAM = "From";
     private static final String TO_PARAM = "To";
     private static final String BODY_PARAM = "Body";
-
-
+    private static final String STATUS_PARAM = "Status";
 
     @Context
     protected ServletContext context;
@@ -115,11 +123,7 @@ public class SmsMessagesEndpoint extends AbstractEndpoint {
     protected XStream xstream;
     protected SmsMessageListConverter listConverter;
     protected String instanceId;
-
     private boolean normalizePhoneNumbers;
-
-
-
 
     public SmsMessagesEndpoint() {
         super();
@@ -210,6 +214,90 @@ public class SmsMessagesEndpoint extends AbstractEndpoint {
         String startTime = info.getQueryParameters().getFirst("StartTime");
         String endTime = info.getQueryParameters().getFirst("EndTime");
         String body = info.getQueryParameters().getFirst(BODY_PARAM);
+        String status = info.getQueryParameters().getFirst(STATUS_PARAM);
+        String sortParameters = info.getQueryParameters().getFirst("SortBy");
+
+        SmsMessageFilter.Builder filterBuilder = SmsMessageFilter.Builder.builder();
+
+        String sortBy = null;
+        String sortDirection = null;
+
+        if (sortParameters != null && !sortParameters.isEmpty()) {
+            try {
+                Map<String, String> sortMap = Sorting.parseUrl(sortParameters);
+                sortBy = sortMap.get(Sorting.SORT_BY_KEY);
+                sortDirection = sortMap.get(Sorting.SORT_DIRECTION_KEY);
+            }
+            catch (Exception e) {
+                return status(BAD_REQUEST).entity(buildErrorResponseBody(e.getMessage(), responseType)).build();
+            }
+        }
+
+        if (sortBy != null) {
+            if (sortBy.equals(SORTING_URL_PARAM_DATE_CREATED)) {
+                if (sortDirection != null) {
+                    if (sortDirection.equalsIgnoreCase(Sorting.Direction.ASC.name())) {
+                        filterBuilder.sortedByDate(Sorting.Direction.ASC);
+                    } else {
+                        filterBuilder.sortedByDate(Sorting.Direction.DESC);
+                    }
+                }
+            }
+            if (sortBy.equals(SORTING_URL_PARAM_FROM)) {
+                if (sortDirection != null) {
+                    if (sortDirection.equalsIgnoreCase(Sorting.Direction.ASC.name())) {
+                        filterBuilder.sortedByFrom(Sorting.Direction.ASC);
+                    } else {
+                        filterBuilder.sortedByFrom(Sorting.Direction.DESC);
+                    }
+                }
+            }
+            if (sortBy.equals(SORTING_URL_PARAM_TO)) {
+                if (sortDirection != null) {
+                    if (sortDirection.equalsIgnoreCase(Sorting.Direction.ASC.name())) {
+                        filterBuilder.sortedByTo(Sorting.Direction.ASC);
+                    } else {
+                        filterBuilder.sortedByTo(Sorting.Direction.DESC);
+                    }
+                }
+            }
+            if (sortBy.equals(SORTING_URL_PARAM_DIRECTION)) {
+                if (sortDirection != null) {
+                    if (sortDirection.equalsIgnoreCase(Sorting.Direction.ASC.name())) {
+                        filterBuilder.sortedByDirection(Sorting.Direction.ASC);
+                    } else {
+                        filterBuilder.sortedByDirection(Sorting.Direction.DESC);
+                    }
+                }
+            }
+            if (sortBy.equals(SORTING_URL_PARAM_STATUS)) {
+                if (sortDirection != null) {
+                    if (sortDirection.equalsIgnoreCase(Sorting.Direction.ASC.name())) {
+                        filterBuilder.sortedByStatus(Sorting.Direction.ASC);
+                    } else {
+                        filterBuilder.sortedByStatus(Sorting.Direction.DESC);
+                    }
+                }
+            }
+            if (sortBy.equals(SORTING_URL_PARAM_BODY)) {
+                if (sortDirection != null) {
+                    if (sortDirection.equalsIgnoreCase(Sorting.Direction.ASC.name())) {
+                        filterBuilder.sortedByBody(Sorting.Direction.ASC);
+                    } else {
+                        filterBuilder.sortedByBody(Sorting.Direction.DESC);
+                    }
+                }
+            }
+            if (sortBy.equals(SORTING_URL_PARAM_PRICE)) {
+                if (sortDirection != null) {
+                    if (sortDirection.equalsIgnoreCase(Sorting.Direction.ASC.name())) {
+                        filterBuilder.sortedByPrice(Sorting.Direction.ASC);
+                    } else {
+                        filterBuilder.sortedByPrice(Sorting.Direction.DESC);
+                    }
+                }
+            }
+        }
 
         if (pageSize == null) {
             pageSize = "50";
@@ -232,39 +320,29 @@ public class SmsMessagesEndpoint extends AbstractEndpoint {
             ownerAccounts.addAll(accountsDao.getSubAccountSidsRecursive(new Sid(accountSid)));
         }
 
-        SmsMessageFilter filterForTotal;
-
-        try {
-
-            if (localInstanceOnly) {
-                filterForTotal = new SmsMessageFilter(accountSid, ownerAccounts, recipient, sender, startTime, endTime,
-                        body, null, null);
-            } else {
-                filterForTotal = new SmsMessageFilter(accountSid, ownerAccounts, recipient, sender, startTime, endTime,
-                        body, null, null, instanceId);
-            }
-        } catch (ParseException e) {
-            return status(BAD_REQUEST).build();
-        }
-
-        final int total = dao.getTotalSmsMessage(filterForTotal);
-
-        if (Integer.parseInt(page) > (total / limit)) {
-            return status(javax.ws.rs.core.Response.Status.BAD_REQUEST).build();
+        filterBuilder.byAccountSid(accountSid)
+                .byAccountSidSet(ownerAccounts)
+                .byRecipient(recipient)
+                .bySender(sender)
+                .byStatus(status)
+                .byStartTime(startTime)
+                .byEndTime(endTime)
+                .byBody(body)
+                .limited(limit, offset);
+        if (!localInstanceOnly) {
+            filterBuilder.byInstanceId(instanceId);
         }
 
         SmsMessageFilter filter;
-
         try {
-            if (localInstanceOnly) {
-                filter = new SmsMessageFilter(accountSid, ownerAccounts, recipient, sender, startTime, endTime,
-                        body, limit, offset);
-            } else {
-                filter = new SmsMessageFilter(accountSid, ownerAccounts, recipient, sender, startTime, endTime,
-                        body, limit, offset, instanceId);
-            }
+            filter = filterBuilder.build();
         } catch (ParseException e) {
             return status(BAD_REQUEST).build();
+        }
+        final int total = dao.getTotalSmsMessage(filter);
+
+        if (Integer.parseInt(page) > (total / limit)) {
+            return status(Response.Status.BAD_REQUEST).build();
         }
 
         final List<SmsMessage> cdrs = dao.getSmsMessages(filter);

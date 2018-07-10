@@ -48,7 +48,7 @@ import org.junit.FixMethodOrder;
 import org.junit.Rule;
 import org.junit.rules.TestName;
 import org.junit.runners.MethodSorters;
-import org.restcomm.connect.dao.common.SortDirection;
+import org.restcomm.connect.dao.common.Sorting;
 
 /**
  * @author quintana.thomas@gmail.com (Thomas Quintana)
@@ -469,7 +469,7 @@ public class CallDetailRecordsDaoTest extends DaoTest {
         List<String> accountSidSet = new ArrayList<String>();
         accountSidSet.add("AC00000000000000000000000000000000");
         builder.byAccountSidSet(accountSidSet);
-        builder.sortedByDate(SortDirection.ASCENDING);
+        builder.sortedByDate(Sorting.Direction.ASC);
         CallDetailRecordFilter filter = builder.build();
         List<CallDetailRecord> callDetailRecords = dao.getCallDetailRecords(filter);
         assertEquals(12, callDetailRecords.size());
@@ -478,7 +478,7 @@ public class CallDetailRecordsDaoTest extends DaoTest {
         assertEquals(min.compareTo(callDetailRecords.get(0).getDateCreated()), 0);
         assertEquals(max.compareTo(callDetailRecords.get(11).getDateCreated()), 0);
 
-        builder.sortedByDate(SortDirection.DESCENDING);
+        builder.sortedByDate(Sorting.Direction.DESC);
         filter = builder.build();
         callDetailRecords = dao.getCallDetailRecords(filter);
         assertEquals(max.compareTo(callDetailRecords.get(0).getDateCreated()), 0);
@@ -492,14 +492,14 @@ public class CallDetailRecordsDaoTest extends DaoTest {
         List<String> accountSidSet = new ArrayList<String>();
         accountSidSet.add("AC00000000000000000000000000000000");
         builder.byAccountSidSet(accountSidSet);
-        builder.sortedByFrom(SortDirection.ASCENDING);
+        builder.sortedByFrom(Sorting.Direction.ASC);
         CallDetailRecordFilter filter = builder.build();
         List<CallDetailRecord> callDetailRecords = dao.getCallDetailRecords(filter);
         assertEquals(12, callDetailRecords.size());
         assertEquals("+1011420534008567", callDetailRecords.get(0).getFrom());
         assertEquals("Anonymous", callDetailRecords.get(11).getFrom());
 
-        builder.sortedByFrom(SortDirection.DESCENDING);
+        builder.sortedByFrom(Sorting.Direction.DESC);
         filter = builder.build();
         callDetailRecords = dao.getCallDetailRecords(filter);
         assertEquals("Anonymous", callDetailRecords.get(0).getFrom());
@@ -513,14 +513,14 @@ public class CallDetailRecordsDaoTest extends DaoTest {
         List<String> accountSidSet = new ArrayList<String>();
         accountSidSet.add("AC00000000000000000000000000000000");
         builder.byAccountSidSet(accountSidSet);
-        builder.sortedByTo(SortDirection.ASCENDING);
+        builder.sortedByTo(Sorting.Direction.ASC);
         CallDetailRecordFilter filter = builder.build();
         List<CallDetailRecord> callDetailRecords = dao.getCallDetailRecords(filter);
         assertEquals(12, callDetailRecords.size());
         assertEquals("+13052406432", callDetailRecords.get(0).getTo());
         assertEquals("+17863580884", callDetailRecords.get(11).getTo());
 
-        builder.sortedByTo(SortDirection.DESCENDING);
+        builder.sortedByTo(Sorting.Direction.DESC);
         filter = builder.build();
         callDetailRecords = dao.getCallDetailRecords(filter);
         assertEquals("+17863580884", callDetailRecords.get(0).getTo());
@@ -534,14 +534,14 @@ public class CallDetailRecordsDaoTest extends DaoTest {
         List<String> accountSidSet = new ArrayList<String>();
         accountSidSet.add("AC00000000000000000000000000000000");
         builder.byAccountSidSet(accountSidSet);
-        builder.sortedByDirection(SortDirection.ASCENDING);
+        builder.sortedByDirection(Sorting.Direction.ASC);
         CallDetailRecordFilter filter = builder.build();
         List<CallDetailRecord> callDetailRecords = dao.getCallDetailRecords(filter);
         assertEquals(12, callDetailRecords.size());
         assertEquals("inbound", callDetailRecords.get(0).getDirection());
         assertEquals("outbound", callDetailRecords.get(11).getDirection());
 
-        builder.sortedByDirection(SortDirection.DESCENDING);
+        builder.sortedByDirection(Sorting.Direction.DESC);
         filter = builder.build();
         callDetailRecords = dao.getCallDetailRecords(filter);
         assertEquals("outbound", callDetailRecords.get(0).getDirection());
@@ -555,14 +555,14 @@ public class CallDetailRecordsDaoTest extends DaoTest {
         List<String> accountSidSet = new ArrayList<String>();
         accountSidSet.add("AC00000000000000000000000000000000");
         builder.byAccountSidSet(accountSidSet);
-        builder.sortedByStatus(SortDirection.ASCENDING);
+        builder.sortedByStatus(Sorting.Direction.ASC);
         CallDetailRecordFilter filter = builder.build();
         List<CallDetailRecord> callDetailRecords = dao.getCallDetailRecords(filter);
         assertEquals(12, callDetailRecords.size());
         assertEquals("completed", callDetailRecords.get(0).getStatus());
         assertEquals("in-progress", callDetailRecords.get(11).getStatus());
 
-        builder.sortedByStatus(SortDirection.DESCENDING);
+        builder.sortedByStatus(Sorting.Direction.DESC);
         filter = builder.build();
         callDetailRecords = dao.getCallDetailRecords(filter);
         assertEquals("in-progress", callDetailRecords.get(0).getStatus());
@@ -576,14 +576,14 @@ public class CallDetailRecordsDaoTest extends DaoTest {
         List<String> accountSidSet = new ArrayList<String>();
         accountSidSet.add("AC00000000000000000000000000000000");
         builder.byAccountSidSet(accountSidSet);
-        builder.sortedByDuration(SortDirection.ASCENDING);
+        builder.sortedByDuration(Sorting.Direction.ASC);
         CallDetailRecordFilter filter = builder.build();
         List<CallDetailRecord> callDetailRecords = dao.getCallDetailRecords(filter);
         assertEquals(12, callDetailRecords.size());
         assertEquals("1", callDetailRecords.get(0).getDuration().toString());
         assertEquals("44", callDetailRecords.get(11).getDuration().toString());
 
-        builder.sortedByDuration(SortDirection.DESCENDING);
+        builder.sortedByDuration(Sorting.Direction.DESC);
         filter = builder.build();
         callDetailRecords = dao.getCallDetailRecords(filter);
         assertEquals("44", callDetailRecords.get(0).getDuration().toString());
@@ -597,14 +597,14 @@ public class CallDetailRecordsDaoTest extends DaoTest {
         List<String> accountSidSet = new ArrayList<String>();
         accountSidSet.add("AC00000000000000000000000000000000");
         builder.byAccountSidSet(accountSidSet);
-        builder.sortedByPrice(SortDirection.ASCENDING);
+        builder.sortedByPrice(Sorting.Direction.ASC);
         CallDetailRecordFilter filter = builder.build();
         List<CallDetailRecord> callDetailRecords = dao.getCallDetailRecords(filter);
         assertEquals(12, callDetailRecords.size());
         assertEquals("0.00", callDetailRecords.get(0).getPrice().toString());
         assertEquals("120.00", callDetailRecords.get(11).getPrice().toString());
 
-        builder.sortedByPrice(SortDirection.DESCENDING);
+        builder.sortedByPrice(Sorting.Direction.DESC);
         filter = builder.build();
         callDetailRecords = dao.getCallDetailRecords(filter);
         assertEquals("120.00", callDetailRecords.get(0).getPrice().toString());
