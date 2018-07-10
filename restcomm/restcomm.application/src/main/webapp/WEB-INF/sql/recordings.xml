@@ -117,18 +117,18 @@
                 </when>
                 <when test="sortByDuration != null">
                     <if test="sortByDuration.name() == 'ASC'">
-                        order by "duration" ASC, date_created DESC
+                        order by "duration" ASC, "date_created" DESC
                     </if>
                     <if test="sortByDuration.name() == 'DESC'">
-                        order by "duration" DESC, date_created DESC
+                        order by "duration" DESC, "date_created" DESC
                     </if>
                 </when>
                 <when test="sortByCallSid != null">
                     <if test="sortByCallSid.name() == 'ASC'">
-                        order by "call_sid" ASC, date_created DESC
+                        order by "call_sid" ASC, "date_created" DESC
                     </if>
                     <if test="sortByCallSid.name() == 'DESC'">
-                        order by "call_sid" DESC, date_created DESC
+                        order by "call_sid" DESC, "date_created" DESC
                     </if>
                 </when>
                 <otherwise>
