@@ -69,7 +69,7 @@ import org.restcomm.connect.commons.loader.ObjectInstantiationException;
 import org.restcomm.connect.dao.DaoManager;
 import org.restcomm.connect.dao.IncomingPhoneNumbersDao;
 import org.restcomm.connect.dao.OrganizationsDao;
-import org.restcomm.connect.dao.common.SortDirection;
+import org.restcomm.connect.dao.common.Sorting;
 import org.restcomm.connect.dao.entities.Account;
 import org.restcomm.connect.dao.entities.IncomingPhoneNumber;
 import org.restcomm.connect.dao.entities.IncomingPhoneNumberFilter;
@@ -340,7 +340,7 @@ public class IncomingPhoneNumbersEndpoint extends AbstractEndpoint {
 
             pageSize = (pageSize == null) ? "50" : pageSize;
             page = (page == null) ? "0" : page;
-            SortDirection direction = (reverse != null && "true".equalsIgnoreCase(reverse)) ? SortDirection.DESCENDING : SortDirection.ASCENDING;
+            Sorting.Direction direction = (reverse != null && "true".equalsIgnoreCase(reverse)) ? Sorting.Direction.DESC : Sorting.Direction.ASC;
             sortBy = (sortBy != null) ? sortBy : PHONE_NUMER_PARAM;
 
             int limit = Integer.parseInt(pageSize);
