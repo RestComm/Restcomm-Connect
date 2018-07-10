@@ -94,9 +94,6 @@ public class RecordingsEndpoint extends AbstractEndpoint {
     private String instanceId;
     private RecordingService recordingService;
 
-
-
-
     public RecordingsEndpoint() {
         super();
     }
@@ -202,6 +199,8 @@ public class RecordingsEndpoint extends AbstractEndpoint {
         String startTime = info.getQueryParameters().getFirst("StartTime");
         String endTime = info.getQueryParameters().getFirst("EndTime");
         String callSid = info.getQueryParameters().getFirst("CallSid");
+
+        // TODO: Test that we are not imposing different ordering, compared to what we did before this enhancement, when the client is not asking for any type of sorting
 
         if (pageSize == null) {
             pageSize = "50";
