@@ -386,22 +386,19 @@ The result of the *SortBy* parameter:
             <Sid>SM316e8344154d4acc963641be78b2b401</Sid>
             <DateCreated>Thu, 5 Jul 2018 10:46:45 +0300</DateCreated>
             <DateUpdated>Thu, 5 Jul 2018 10:46:45 +0300</DateUpdated>
-            <DateSent/>
+            <From>alice</From>
+            <To>1235</To>
+            <Body>Hello there!</Body>
             ...
         </SMSMessage>
         <SMSMessage>
             <Sid>SMcb0a3712e56f4b2b8c5c2eba59d25ceb</Sid>
             <DateCreated>Thu, 5 Jul 2018 10:46:54 +0300</DateCreated>
             <DateUpdated>Thu, 5 Jul 2018 10:46:54 +0300</DateUpdated>
-            <DateSent/>
-            ....
-        </SMSMessage>
-        <SMSMessage>
-            <Sid>SMe4abc792dd3246e293684c14041f23ec</Sid>
-            <DateCreated>Thu, 5 Jul 2018 10:47:10 +0300</DateCreated>
-            <DateUpdated>Thu, 5 Jul 2018 10:47:10 +0300</DateUpdated>
-            <DateSent/>
-            ...
+            <From>bob</From>
+            <To>1235</To>
+            <Body>How are you doing?</Body>
+             ....
         </SMSMessage>
         ...
     </SMSMessages>
