@@ -208,6 +208,63 @@ The API returns URIs to the next, previous, first and last pages of the returned
 |Lastpageuri |The URI for the last page of this list.
 |============================================================
 
+== Sorting Information
+
+*HTTP GET.* You can use the *SortBy* GET query parameter to determine which attribute you want to sort by and in which direction; direction can either be 'asc' for ascending and 'desc' for descending sort ordering. Here's the overall format: *SortBy=<sorting attribute>:<direction>*. If no direction parameter is provided, then the listing of recordings is sorted by the attribute in ascending order. Below you can find the possible attributes you can sort by:
+
+=== SortBy Attributes
+
+[cols=",",options="header",]
+|=======================================================================
+|Parameter |Description
+|DateCreated |Sort by date at which the recording was created
+|Duration |Sort by the duration of the recording
+|CallSid |Sort by the CallSid of the recording, which points to the call to which the recording is related to
+|=======================================================================
+
+
+=== Example
+
+The command below will return recordings sorted by the creation date in ascending order using SortBy parameter:
+
+....
+curl -X GET  https://<accountSid>:<authToken>@cloud.restcomm.com/restcomm/2012-04-24/Accounts/<accountSid>/Recordings?SortBy=DateCreated:asc
+....
+
+The result of the *SortBy* parameter:
+
+[source,xml,decode:true]
+----
+<RestcommResponse>
+    <Recordings>
+        <Recording>
+            <Sid>REb3d71735549e4f91b3431305652e7309</Sid>
+            <DateCreated>Tue, 10 Jul 2018 10:58:25 +0300</DateCreated>
+            <DateUpdated>Tue, 10 Jul 2018 10:58:25 +0300</DateUpdated>
+            <CallSid>ID8555f97abe0441e0a07ca2da3a081871-CA9f2360fc21e848d291dfaf5f3d32d95b</CallSid>
+            <Duration>2</Duration>
+            ...
+        </Recording>
+        <Recording>
+            <Sid>RE4960cab74a984f85ba1c656485c981ea</Sid>
+            <DateCreated>Tue, 10 Jul 2018 10:58:33 +0300</DateCreated>
+            <DateUpdated>Tue, 10 Jul 2018 10:58:33 +0300</DateUpdated>
+            <CallSid>ID8555f97abe0441e0a07ca2da3a081871-CAfd5703072846456b9093a00c32e8b3f1</CallSid>
+            <Duration>2</Duration>
+            ...
+        </Recording>
+        <Recording>
+            <Sid>RE63d742b8b0f44e7a819302ae97775e26</Sid>
+            <DateCreated>Tue, 10 Jul 2018 11:00:19 +0300</DateCreated>
+            <DateUpdated>Tue, 10 Jul 2018 11:00:19 +0300</DateUpdated>
+            <CallSid>ID8555f97abe0441e0a07ca2da3a081871-CA79f2c079f1d145a1970118012554b154</CallSid>
+            <Duration>4</Duration>
+            ...
+        </Recording>
+    </Recordings>
+</RestcommResponse>
+----
+
 == Delete a Recording
 
 === Recording Delete Resource URI
