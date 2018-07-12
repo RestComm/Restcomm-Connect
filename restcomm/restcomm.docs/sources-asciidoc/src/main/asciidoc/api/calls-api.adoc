@@ -145,7 +145,7 @@ curl -X GET  https://<accountSid>:<authToken>@cloud.restcomm.com/restcomm/2012-0
 
 If the system hasn't received any calls, you will see the the output below
 
-[source,lang:xml,decode:true]
+[source,xml,decode:true]
 ----
 <RestcommResponse>
   <Calls page="0" numpages="0" pagesize="50" total="0" start="0" end="0" uri="/restcomm/2012-04-24/Accounts/ACae6e420f425248d6a26948c17a9e2acf/Calls" firstpageuri="/restcomm/2012-04-24/Accounts/ACae6e420f425248d6a26948c17a9e2acf/Calls?Page=0&amp;PageSize=50" previouspageuri="null" nextpageuri="null" lastpageuri=="/restcomm/2012-04-24/Accounts/ACae6e420f425248d6a26948c17a9e2acf/Calls?Page=0&amp;PageSize=50"/>
@@ -462,7 +462,7 @@ The example below will only return Calls made from client Alice
 
 The result will be similar to the one below
 
-[source,lang:xml,decode:true]
+[source,xml,decode:true]
 ----
 <RestcommResponse>
   <Calls page="0" numpages="0" pagesize="50" total="0" start="0" end="1" uri="/restcomm/2012-04-24/Accounts/ACae6e420f425248d6a26948c17a9e2acf/Calls" firstpageuri="/restcomm/2012-04-24/Accounts/ACae6e420f425248d6a26948c17a9e2acf/Calls?Page=0&amp;PageSize=50" previouspageuri="null" nextpageuri="null" lastpageuri=="/restcomm/2012-04-24/Accounts/ACae6e420f425248d6a26948c17a9e2acf/Calls?Page=0&amp;PageSize=50">
@@ -502,7 +502,7 @@ The result will be similar to the one below
 
 [cols=",",options="header",]
 |=======================================================================
-|PParameter |Description
+|Parameter |Description
 |Page |The current page number. Zero-indexed, so the first page is 0.
 |NumPages |The total number of pages.
 |PageSize |How many items are in each page
@@ -523,7 +523,7 @@ curl -X GET  https://<accountSid>:<authToken>@cloud.restcomm.com/restcomm/2012-0
 
 The result of the *PageSize* parameter
 
-[source,lang:xml,decode:true]
+[source,xml,decode:true]
 ----
 <RestcommResponse>
   <Calls page="0" numpages="7" pagesize="1" total="7" start="0" end="0" uri="/restcomm/2012-04-24/Accounts/ACae6e420f425248d6a26948c17a9e2acf/Calls" firstpageuri="/restcomm/2012-04-24/Accounts/ACae6e420f425248d6a26948c17a9e2acf/Calls?Page=0&amp;PageSize=1" previouspageuri="null" nextpageuri="/restcomm/2012-04-24/Accounts/ACae6e420f425248d6a26948c17a9e2acf/Calls?Page=1&amp;PageSize=1&amp;AfterSid=CA4049cf008d6b4277b92ab863fd4ec7c8" lastpageuri=="/restcomm/2012-04-24/Accounts/ACae6e420f425248d6a26948c17a9e2acf/Calls?Page=7&amp;PageSize=1">
@@ -555,9 +555,7 @@ The result of the *PageSize* parameter
   </Calls>
 ----
 
- 
-
-== Additional Paging Information.
+== Additional Paging Information
 
 The API returns URIs to the next, previous, first and last pages of the returned list as shown in the table below:
 
@@ -572,3 +570,65 @@ The API returns URIs to the next, previous, first and last pages of the returned
 |Previouspageuri |The URI for the previous page of this list.
 |Lastpageuri |The URI for the last page of this list.
 |============================================================
+
+
+== Sorting Information
+
+*HTTP GET.* You can use the *SortBy* GET query parameter to determine which attribute you want to sort by and in which direction; direction can either be 'asc' for ascending and 'desc' for descending sort ordering. Here's the overall format: *SortBy=<sorting attribute>:<direction>*. If no direction parameter is provided, then the listing of calls is sorted by the attribute in ascending order. Below you can find the possible attributes you can sort by:
+
+=== SortBy Attributes
+
+[cols=",",options="header",]
+|=======================================================================
+|Parameter |Description
+|DateCreated |Sort by date at which the call was created
+|From |Sort by the party who initiated the call
+|To |Sort by the party who received the call
+|Direction |Sort by the direction of the call
+|Status |Sort by the status of the call
+|Duration |Sort by the duration of the call
+|Price |Sort by the price of the call, if applicable
+|=======================================================================
+
+
+=== Example
+
+The command below will return calls sorted by the creation date in ascending order using SortBy parameter:
+
+....
+curl -X GET  https://<accountSid>:<authToken>@cloud.restcomm.com/restcomm/2012-04-24/Accounts/<accountSid>/Calls?SortBy=DateCreated:asc
+....
+
+The result of the *SortBy* parameter:
+
+[source,xml,decode:true]
+----
+<RestcommResponse>
+    <Calls page="0" numpages="0" pagesize="50" total="0" start="0" end="3" uri="/2012-04-24/Accounts/ACae6e420f425248d6a26948c17a9e2acf/Calls" firstpageuri="/2012-04-24/Accounts/ACae6e420f425248d6a26948c17a9e2acf/Calls?Page=0&amp;PageSize=50" previouspageuri="null" nextpageuri="null" lastpageuri="/2012-04-24/Accounts/ACae6e420f425248d6a26948c17a9e2acf/Calls?Page=0&amp;PageSize=50">
+        <Call>
+            <Sid>ID8555f97abe0441e0a07ca2da3a081871-CAaf146bdb9ea04cd7a9a6f76d955f1aed</Sid>
+            <InstanceId>ID8555f97abe0441e0a07ca2da3a081871</InstanceId>
+            <DateCreated>Thu, 28 Jun 2018 16:56:33 +0300</DateCreated>
+            <DateUpdated>Thu, 28 Jun 2018 16:56:36 +0300</DateUpdated>
+            <ParentCallSid/>
+            ...
+        </Call>
+        <Call>
+            <Sid>ID8555f97abe0441e0a07ca2da3a081871-CA898196ba193342769877eb218d5008d3</Sid>
+            <InstanceId>ID8555f97abe0441e0a07ca2da3a081871</InstanceId>
+            <DateCreated>Thu, 28 Jun 2018 16:56:39 +0300</DateCreated>
+            <DateUpdated>Thu, 28 Jun 2018 16:56:42 +0300</DateUpdated>
+            <ParentCallSid/>
+            ...
+        </Call>
+        <Call>
+            <Sid>ID8555f97abe0441e0a07ca2da3a081871-CA4458385933b4447aa3fa02389426a99d</Sid>
+            <InstanceId>ID8555f97abe0441e0a07ca2da3a081871</InstanceId>
+            <DateCreated>Thu, 28 Jun 2018 16:56:44 +0300</DateCreated>
+            <DateUpdated>Thu, 28 Jun 2018 16:56:50 +0300</DateUpdated>
+            <ParentCallSid/>
+            ...
+        </Call>
+    </Calls>
+</RestcommResponse>
+----

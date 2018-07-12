@@ -46,7 +46,8 @@ import org.restcomm.connect.commons.configuration.sets.RcmlserverConfigurationSe
 import org.restcomm.connect.commons.dao.Sid;
 import org.restcomm.connect.commons.faulttolerance.RestcommUntypedActor;
 import org.restcomm.connect.commons.push.PushNotificationServerHelper;
-import org.restcomm.connect.commons.util.UriUtils;
+import org.restcomm.connect.core.service.RestcommConnectServiceProvider;
+import org.restcomm.connect.core.service.util.UriUtils;
 import org.restcomm.connect.core.service.api.NumberSelectorService;
 import org.restcomm.connect.dao.AccountsDao;
 import org.restcomm.connect.dao.ApplicationsDao;
@@ -141,6 +142,8 @@ public final class SmsService extends RestcommUntypedActor {
 
     private final NumberSelectorService numberSelector;
 
+    private UriUtils uriUtils;
+
     public SmsService(final Configuration configuration, final SipFactory factory,
             final DaoManager storage, final ServletContext servletContext) {
         super();
@@ -170,6 +173,8 @@ public final class SmsService extends RestcommUntypedActor {
         if (logger.isInfoEnabled()) {
             logger.info("SmsService extensions: " + (extensions != null ? extensions.size() : "0"));
         }
+
+        this.uriUtils = RestcommConnectServiceProvider.getInstance().uriUtils();
     }
 
     private void message(final Object message) throws IOException {
@@ -441,9 +446,9 @@ public final class SmsService extends RestcommUntypedActor {
                             final Application application = applications.getApplication(sid);
                             RcmlserverConfigurationSet rcmlserverConfig = RestcommConfiguration.getInstance().getRcmlserver();
                             RcmlserverResolver resolver = RcmlserverResolver.getInstance(rcmlserverConfig.getBaseUrl(), rcmlserverConfig.getApiPath());
-                            builder.setUrl(UriUtils.resolve(resolver.resolveRelative(application.getRcmlUrl())));
+                            builder.setUrl(uriUtils.resolve(resolver.resolveRelative(application.getRcmlUrl()), number.getAccountSid()));
                         } else {
-                            builder.setUrl(UriUtils.resolve(appUri));
+                            builder.setUrl(uriUtils.resolve(appUri, number.getAccountSid()));
                         }
                         final String smsMethod = number.getSmsMethod();
                         if (smsMethod == null || smsMethod.isEmpty()) {
@@ -453,7 +458,7 @@ public final class SmsService extends RestcommUntypedActor {
                         }
                         URI appFallbackUrl = number.getSmsFallbackUrl();
                         if (appFallbackUrl != null) {
-                            builder.setFallbackUrl(UriUtils.resolve(number.getSmsFallbackUrl()));
+                            builder.setFallbackUrl(uriUtils.resolve(number.getSmsFallbackUrl(), number.getAccountSid()));
                             builder.setFallbackMethod(number.getSmsFallbackMethod());
                         }
                         final Props props = SmsInterpreter.props(builder.build());
@@ -495,7 +500,10 @@ public final class SmsService extends RestcommUntypedActor {
     @Override
     public void onReceive(final Object message) throws Exception {
         final Class<?> klass = message.getClass();
-
+        if (logger.isDebugEnabled()) {
+            logger.debug(" ********** Onreceive: " + self().path() + ", Processing Message: " + klass.getName()
+                    + " Sender is: " + sender().path() + " Message is: " + message);
+        }
         if (CreateSmsSession.class.equals(klass)) {
             onCreateSession(message);
         } else if (DestroySmsSession.class.equals(klass)) {
