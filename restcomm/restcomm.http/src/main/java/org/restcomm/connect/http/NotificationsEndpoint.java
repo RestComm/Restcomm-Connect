@@ -198,9 +198,9 @@ public class NotificationsEndpoint extends AbstractEndpoint {
             if (sortBy.equals(SORTING_URL_PARAM_LOG)) {
                 if (sortDirection != null) {
                     if (sortDirection.equalsIgnoreCase(Sorting.Direction.ASC.name())) {
-                        filterBuilder.sortedByLevel(Sorting.Direction.ASC);
+                        filterBuilder.sortedByLog(Sorting.Direction.ASC);
                     } else {
-                        filterBuilder.sortedByLevel(Sorting.Direction.DESC);
+                        filterBuilder.sortedByLog(Sorting.Direction.DESC);
                     }
                 }
             }

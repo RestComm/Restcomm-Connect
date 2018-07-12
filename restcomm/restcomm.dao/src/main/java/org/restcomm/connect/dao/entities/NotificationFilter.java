@@ -45,7 +45,7 @@ public class NotificationFilter {
     private final Integer offset;
     private final String instanceid;
     private final Sorting.Direction sortByDate;
-    private final Sorting.Direction sortByLevel;
+    private final Sorting.Direction sortByLog;
     private final Sorting.Direction sortByErrorCode;
     private final Sorting.Direction sortByCallSid;
     private final Sorting.Direction sortByMessageText;
@@ -58,7 +58,7 @@ public class NotificationFilter {
 
     public NotificationFilter(String accountSid, List<String> accountSidSet, String startTime, String endTime, String errorCode, String requestUrl,
                                   String messageText, Integer limit, Integer offset, String instanceId, Sorting.Direction sortByDate,
-                              Sorting.Direction sortByLevel, Sorting.Direction sortByErrorCode, Sorting.Direction sortByCallSid,
+                              Sorting.Direction sortByLog, Sorting.Direction sortByErrorCode, Sorting.Direction sortByCallSid,
                               Sorting.Direction sortByMessageText) throws ParseException {
         this.accountSid = accountSid;
         this.accountSidSet = accountSidSet;
@@ -89,7 +89,7 @@ public class NotificationFilter {
         }
 
         this.sortByDate = sortByDate;
-        this.sortByLevel = sortByLevel;
+        this.sortByLog = sortByLog;
         this.sortByErrorCode = sortByErrorCode;
         this.sortByCallSid = sortByCallSid;
         this.sortByMessageText = sortByMessageText;
@@ -134,7 +134,7 @@ public class NotificationFilter {
     public String getInstanceid() { return instanceid; }
 
     public Sorting.Direction getSortByDate() { return sortByDate; }
-    public Sorting.Direction getSortByLevel() { return sortByLevel; }
+    public Sorting.Direction getSortByLog() { return sortByLog; }
     public Sorting.Direction getSortByErrorCode() { return sortByErrorCode; }
     public Sorting.Direction getSortByCallSid() { return sortByCallSid; }
     public Sorting.Direction getSortByMessageText() { return sortByMessageText; }
@@ -149,7 +149,7 @@ public class NotificationFilter {
         private String messageText = null;
         private String instanceid = null;
         private Sorting.Direction sortByDate = null;
-        private Sorting.Direction sortByLevel = null;
+        private Sorting.Direction sortByLog = null;
         private Sorting.Direction sortByErrorCode = null;
         private Sorting.Direction sortByCallSid = null;
         private Sorting.Direction sortByMessageText = null;
@@ -172,7 +172,7 @@ public class NotificationFilter {
                     offset,
                     instanceid,
                     sortByDate,
-                    sortByLevel,
+                    sortByLog,
                     sortByErrorCode,
                     sortByCallSid,
                     sortByMessageText);
@@ -217,8 +217,8 @@ public class NotificationFilter {
             this.sortByDate = sortDirection;
             return this;
         }
-        public Builder sortedByLevel(Sorting.Direction sortDirection) {
-            this.sortByLevel = sortDirection;
+        public Builder sortedByLog(Sorting.Direction sortDirection) {
+            this.sortByLog = sortDirection;
             return this;
         }
         public Builder sortedByErrorCode(Sorting.Direction sortDirection) {
