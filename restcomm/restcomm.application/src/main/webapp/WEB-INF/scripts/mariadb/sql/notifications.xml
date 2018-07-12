@@ -130,11 +130,11 @@
                         order by date_created DESC
                     </if>
                 </when>
-                <when test="sortByLevel != null">
-                    <if test="sortByLevel.name() == 'ASC'">
+                <when test="sortByLog != null">
+                    <if test="sortByLog.name() == 'ASC'">
                         order by log ASC, date_created DESC
                     </if>
-                    <if test="sortByLevel.name() == 'DESC'">
+                    <if test="sortByLog.name() == 'DESC'">
                         order by log DESC, date_created DESC
                     </if>
                 </when>
