@@ -8,6 +8,7 @@ import java.net.URL;
 import java.util.HashMap;
 import java.util.Map;
 
+import com.google.gson.JsonElement;
 import com.sun.jersey.api.client.UniformInterfaceException;
 import org.apache.log4j.Logger;
 import org.jboss.arquillian.container.test.api.Deployer;
@@ -18,6 +19,7 @@ import org.jboss.shrinkwrap.api.ShrinkWrap;
 import org.jboss.shrinkwrap.api.spec.WebArchive;
 import org.jboss.shrinkwrap.resolver.api.maven.Maven;
 import org.joda.time.DateTime;
+import org.junit.Assert;
 import org.junit.Test;
 import org.junit.FixMethodOrder;
 import org.junit.runners.MethodSorters;
@@ -89,22 +91,22 @@ public class CallsEndpointTest {
     public void getCallsListUsingSorting() {
         // Provide both sort field and direction
         // Provide ascending sorting and verify that the first row is indeed the earliest one
-        JsonObject response1 = RestcommCallsTool.getInstance().getCalls(deploymentUrl.toString(),
+        JsonObject response = RestcommCallsTool.getInstance().getCalls(deploymentUrl.toString(),
                 adminAccountSid, adminAuthToken, 0, 10, "DateCreated:asc", true);
         // Remember there is a discrepancy between the sort parameters and the result attribute in the .json response. For example DateCreated:asc, means
         // to sort based of DateCreated field, but in the response the field is called 'date_created', not DateCreated. This only happens only for .json; in
         // .xml the naming seems to be respected.
         // Notice that we are removing the timezone part from the end of the string, because CI potentially uses different timezone that messes the test up
-        assertEquals(((JsonObject)response1.get("calls").getAsJsonArray().get(0)).get("date_created").getAsString().replaceFirst("\\s*\\+.*", ""), "Fri, 5 Jul 2013 22:15:53");
+        assertEquals("Fri, 5 Jul 2013 22:15:53", ((JsonObject)response.get("calls").getAsJsonArray().get(0)).get("date_created").getAsString().replaceFirst("\\s*\\+.*", ""));
 
         // Provide only sort field; all fields default to ascending
-        JsonObject response2 = RestcommCallsTool.getInstance().getCalls(deploymentUrl.toString(),
+        response = RestcommCallsTool.getInstance().getCalls(deploymentUrl.toString(),
                 adminAccountSid, adminAuthToken, 0, 10, "DateCreated", true);
-        assertEquals(((JsonObject)response2.get("calls").getAsJsonArray().get(0)).get("date_created").getAsString().replaceFirst("\\s*\\+.*", ""), "Fri, 5 Jul 2013 22:15:53");
+        assertEquals("Fri, 5 Jul 2013 22:15:53", ((JsonObject)response.get("calls").getAsJsonArray().get(0)).get("date_created").getAsString().replaceFirst("\\s*\\+.*", ""));
 
-        JsonObject response3 = RestcommCallsTool.getInstance().getCalls(deploymentUrl.toString(),
+        response = RestcommCallsTool.getInstance().getCalls(deploymentUrl.toString(),
                 adminAccountSid, adminAuthToken, 0, 10, "DateCreated:desc", true);
-        assertEquals(((JsonObject)response3.get("calls").getAsJsonArray().get(0)).get("date_created").getAsString().replaceFirst("\\s*\\+.*", ""), "Tue, 31 May 2016 16:20:22");
+        assertEquals("Tue, 31 May 2016 16:20:22", ((JsonObject)response.get("calls").getAsJsonArray().get(0)).get("date_created").getAsString().replaceFirst("\\s*\\+.*", ""));
 
         try {
             // provide only direction, should cause an exception
@@ -112,7 +114,7 @@ public class CallsEndpointTest {
                     adminAccountSid, adminAuthToken, 0, 10, ":asc", true);
         }
         catch (UniformInterfaceException e) {
-            assertEquals(e.getResponse().getStatus(), BAD_REQUEST.getStatusCode());
+            assertEquals(BAD_REQUEST.getStatusCode(), e.getResponse().getStatus());
         }
 
         try {
@@ -121,8 +123,64 @@ public class CallsEndpointTest {
                     adminAccountSid, adminAuthToken, 0, 10, "DateCreated:invalid", true);
         }
         catch (UniformInterfaceException e) {
-            assertEquals(e.getResponse().getStatus(), BAD_REQUEST.getStatusCode());
+            assertEquals(BAD_REQUEST.getStatusCode(), e.getResponse().getStatus());
         }
+
+        // From
+        response = RestcommCallsTool.getInstance().getCalls(deploymentUrl.toString(),
+                adminAccountSid, adminAuthToken, 0, 10, "From:asc", true);
+        assertEquals("+101133679364376", ((JsonObject)response.get("calls").getAsJsonArray().get(0)).get("from").getAsString());
+
+        response = RestcommCallsTool.getInstance().getCalls(deploymentUrl.toString(),
+                adminAccountSid, adminAuthToken, 0, 10, "From:desc", true);
+        assertEquals("thomas", ((JsonObject)response.get("calls").getAsJsonArray().get(0)).get("from").getAsString());
+
+        // To
+        response = RestcommCallsTool.getInstance().getCalls(deploymentUrl.toString(),
+                adminAccountSid, adminAuthToken, 0, 10, "To:asc", true);
+        assertEquals("+13052406432", ((JsonObject)response.get("calls").getAsJsonArray().get(0)).get("to").getAsString());
+
+        response = RestcommCallsTool.getInstance().getCalls(deploymentUrl.toString(),
+                adminAccountSid, adminAuthToken, 0, 10, "To:desc", true);
+        assertEquals("15126002188", ((JsonObject)response.get("calls").getAsJsonArray().get(0)).get("to").getAsString());
+
+        // Direction
+        response = RestcommCallsTool.getInstance().getCalls(deploymentUrl.toString(),
+                adminAccountSid, adminAuthToken, 0, 10, "Direction:asc", true);
+        assertEquals("inbound", ((JsonObject)response.get("calls").getAsJsonArray().get(0)).get("direction").getAsString());
+
+        response = RestcommCallsTool.getInstance().getCalls(deploymentUrl.toString(),
+                adminAccountSid, adminAuthToken, 0, 10, "Direction:desc", true);
+        assertEquals("outbound", ((JsonObject)response.get("calls").getAsJsonArray().get(0)).get("direction").getAsString());
+
+        // Status
+        response = RestcommCallsTool.getInstance().getCalls(deploymentUrl.toString(),
+                adminAccountSid, adminAuthToken, 0, 10, "Status:asc", true);
+        assertEquals("completed", ((JsonObject)response.get("calls").getAsJsonArray().get(0)).get("status").getAsString());
+
+        response = RestcommCallsTool.getInstance().getCalls(deploymentUrl.toString(),
+                adminAccountSid, adminAuthToken, 0, 10, "Status:desc", true);
+        assertEquals("ringing", ((JsonObject)response.get("calls").getAsJsonArray().get(0)).get("status").getAsString());
+
+        // TODO: need to improve Duration and Price assertions because right now there are so many NULL values in duration that are messing this up. We should
+        // probably add non null values in all duration and price fields to make these work better
+        // Duration
+        response = RestcommCallsTool.getInstance().getCalls(deploymentUrl.toString(),
+                adminAccountSid, adminAuthToken, 0, 10, "Duration:asc", true);
+        assertEquals(null, ((JsonObject)response.get("calls").getAsJsonArray().get(0)).get("duration"));
+
+        response = RestcommCallsTool.getInstance().getCalls(deploymentUrl.toString(),
+                adminAccountSid, adminAuthToken, 0, 10, "Duration:desc", true);
+        assertEquals(null, ((JsonObject)response.get("calls").getAsJsonArray().get(0)).get("duration"));
+
+        // Price
+        response = RestcommCallsTool.getInstance().getCalls(deploymentUrl.toString(),
+                adminAccountSid, adminAuthToken, 0, 10, "Price:asc", true);
+        assertEquals("", ((JsonObject)response.get("calls").getAsJsonArray().get(0)).get("price").getAsString());
+
+        response = RestcommCallsTool.getInstance().getCalls(deploymentUrl.toString(),
+                adminAccountSid, adminAuthToken, 0, 10, "Price:desc", true);
+        assertEquals("", ((JsonObject)response.get("calls").getAsJsonArray().get(0)).get("price\"").getAsString());
     }
 
     @Test
