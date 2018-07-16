@@ -3368,10 +3368,17 @@ public class VoiceInterpreter extends BaseVoiceInterpreter {
                 final CallDetailRecordsDao records = storage.getCallDetailRecordsDao();
                 callRecord = records.getCallDetailRecord(callRecord.getSid());
                 callRecord = callRecord.setStatus(callState.toString());
+
+                int outboundCallRingDuration = 0;
+                if (outboundCallInfo != null) {
+                    outboundCallRingDuration = records.getCallDetailRecord(outboundCallInfo.sid()).getRingDuration();
+                }
+
                 final DateTime end = DateTime.now();
                 callRecord = callRecord.setEndTime(end);
                 final int seconds = (int) (end.getMillis() - callRecord.getStartTime().getMillis()) / 1000;
-                callRecord = callRecord.setDuration(seconds);
+                // We don't count ringing duration from outbout call to this record.
+                callRecord = callRecord.setDuration(seconds - outboundCallRingDuration);
                 records.updateCallDetailRecord(callRecord);
             }
             if (!dialActionExecuted) {

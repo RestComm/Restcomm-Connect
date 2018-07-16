@@ -689,6 +689,8 @@ public class DialActionTest {
         assertNotNull(dialCallSid);
         JsonObject cdr = RestcommCallsTool.getInstance().getCall(deploymentUrl.toString(), adminAccountSid, adminAuthToken, dialCallSid);
         assertNotNull(cdr);
+        assertTrue(cdr.get("duration").getAsString().equalsIgnoreCase("0")); //Only talk time
+        assertTrue(cdr.get("direction").getAsString().equalsIgnoreCase("outbound-api"));
 
         JsonObject metrics = MonitoringServiceTool.getInstance().getMetrics(deploymentUrl.toString(),adminAccountSid, adminAuthToken);
         Map<String, Integer> mgcpResources = MonitoringServiceTool.getInstance().getMgcpResources(metrics);
@@ -772,6 +774,8 @@ public class DialActionTest {
         assertNotNull(dialCallSid);
         JsonObject cdr = RestcommCallsTool.getInstance().getCall(deploymentUrl.toString(), adminAccountSid, adminAuthToken, dialCallSid);
         assertNotNull(cdr);
+        assertTrue(cdr.get("duration").getAsString().equalsIgnoreCase("0")); //Only talk time
+        assertTrue(cdr.get("direction").getAsString().equalsIgnoreCase("outbound-api"));
 
         JsonObject metrics = MonitoringServiceTool.getInstance().getMetrics(deploymentUrl.toString(),adminAccountSid, adminAuthToken);
         Map<String, Integer> mgcpResources = MonitoringServiceTool.getInstance().getMgcpResources(metrics);
@@ -1147,7 +1151,7 @@ public class DialActionTest {
         assertNotNull(dialCdr);
 
         //INBOUND call has no ring_duration since Restcomm will answer imediatelly an incoming call
-        assertTrue(cdr.get("duration").getAsString().equalsIgnoreCase("5")); //Only talk time
+        assertTrue(cdr.get("duration").getAsString().equalsIgnoreCase("3")); //Only talk time
         assertTrue(cdr.get("direction").getAsString().equalsIgnoreCase("inbound"));
 
         assertTrue(dialCdr.get("duration").getAsString().equalsIgnoreCase("3")); //Only talk time
