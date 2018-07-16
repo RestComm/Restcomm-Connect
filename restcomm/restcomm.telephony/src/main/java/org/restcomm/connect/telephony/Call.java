@@ -54,8 +54,6 @@ import javax.sip.header.RecordRouteHeader;
 import javax.sip.header.RouteHeader;
 import javax.sip.message.Response;
 
-import akka.pattern.Patterns;
-import akka.util.Timeout;
 import org.apache.commons.configuration.Configuration;
 import org.apache.http.NameValuePair;
 import org.apache.http.message.BasicNameValuePair;
@@ -104,13 +102,13 @@ import org.restcomm.connect.mscontrol.api.messages.MediaSessionInfo;
 import org.restcomm.connect.mscontrol.api.messages.Mute;
 import org.restcomm.connect.mscontrol.api.messages.Play;
 import org.restcomm.connect.mscontrol.api.messages.Record;
+import org.restcomm.connect.mscontrol.api.messages.RecordStoped;
 import org.restcomm.connect.mscontrol.api.messages.StartRecording;
 import org.restcomm.connect.mscontrol.api.messages.Stop;
 import org.restcomm.connect.mscontrol.api.messages.StopMediaGroup;
 import org.restcomm.connect.mscontrol.api.messages.StopRecording;
 import org.restcomm.connect.mscontrol.api.messages.Unmute;
 import org.restcomm.connect.mscontrol.api.messages.UpdateMediaSession;
-import org.restcomm.connect.mscontrol.api.messages.RecordStoped;
 import org.restcomm.connect.telephony.api.Answer;
 import org.restcomm.connect.telephony.api.BridgeStateChanged;
 import org.restcomm.connect.telephony.api.CallFail;
@@ -141,6 +139,8 @@ import akka.actor.UntypedActorContext;
 import akka.actor.UntypedActorFactory;
 import akka.event.Logging;
 import akka.event.LoggingAdapter;
+import akka.pattern.Patterns;
+import akka.util.Timeout;
 import scala.concurrent.Await;
 import scala.concurrent.Future;
 import scala.concurrent.duration.Duration;
@@ -1474,6 +1474,10 @@ public final class Call extends RestcommUntypedActor implements TransitionEndLis
                 outgoingCallRecord = outgoingCallRecord.setStatus(external.name());
                 recordsDao.updateCallDetailRecord(outgoingCallRecord);
             }
+
+            if(isOutbound()){
+                executeStatusCallback(CallbackState.COMPLETED, true);
+            }
         }
     }
 
@@ -2435,10 +2439,20 @@ public final class Call extends RestcommUntypedActor implements TransitionEndLis
                 if(logger.isInfoEnabled()){
                     logger.info("We are behind LoadBalancer and will remove the first two RecordRoutes since they are the LB node");
                 }
-                recordRouteList.next();
-                recordRouteList.remove();
-                recordRouteList.next();
-                recordRouteList.remove();
+
+                if(recordRouteList.hasNext()) {
+                    recordRouteList.next();
+                    recordRouteList.remove();
+
+                    if(recordRouteList.hasNext()) {
+                        recordRouteList.next();
+                        recordRouteList.remove();
+                    } else {
+                        logger.warning("Missing second LB Record Route record");
+                    }
+                } else {
+                    logger.warning("Missing LB Record Route records");
+                }
             }
             if (recordRouteList.hasNext()) {
                 if(logger.isInfoEnabled()) {
