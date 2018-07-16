@@ -32,10 +32,10 @@ import java.net.URISyntaxException;
 public class RcmlserverResolverTest {
     @Test
     public void testResolving() throws URISyntaxException {
-        RcmlserverResolver resolver = RcmlserverResolver.getInstance("http://rvdserver.org","/restcomm-rvd/services/", true);
-        URI uri = resolver.resolveRelative(new URI("/restcomm-rvd/services/apps/AP5f58b0baf6e14001b6eec02295fab05a/controller"));
+        RcmlserverResolver resolver = RcmlserverResolver.getInstance("http://rvdserver.org","/visual-designer/services/", true);
+        URI uri = resolver.resolveRelative(new URI("/visual-designer/services/apps/AP5f58b0baf6e14001b6eec02295fab05a/controller"));
         // relative urls to actual RVD applications should get prefixed
-        Assert.assertEquals("http://rvdserver.org/restcomm-rvd/services/apps/AP5f58b0baf6e14001b6eec02295fab05a/controller", uri.toString());
+        Assert.assertEquals("http://rvdserver.org/visual-designer/services/apps/AP5f58b0baf6e14001b6eec02295fab05a/controller", uri.toString());
         // absolute urls should not be touched
         uri = resolver.resolveRelative(new URI("http://externalserver/AP5f58b0baf6e14001b6eec02295fab05a/controller"));
         Assert.assertEquals("http://externalserver/AP5f58b0baf6e14001b6eec02295fab05a/controller", uri.toString());
@@ -47,16 +47,16 @@ public class RcmlserverResolverTest {
         uri = resolver.resolveRelative(new URI("/new-rvd/myapp.xml"));
         Assert.assertEquals("http://rvdserver.org/new-rvd/myapp.xml", uri.toString());
         // if rcmlserver.baseUrl is null, no resolving should occur
-        resolver = RcmlserverResolver.getInstance(null,"/restcomm-rvd/services", true);
-        uri = resolver.resolveRelative(new URI("/restcomm-rvd/services/apps/xxxx"));
-        Assert.assertEquals("/restcomm-rvd/services/apps/xxxx", uri.toString());
+        resolver = RcmlserverResolver.getInstance(null,"/visual-designer/services", true);
+        uri = resolver.resolveRelative(new URI("/visual-designer/services/apps/xxxx"));
+        Assert.assertEquals("/visual-designer/services/apps/xxxx", uri.toString());
         // if rcmlserver.apiPath is null or empty, no resolving should occur
         resolver = RcmlserverResolver.getInstance("http://rvdotsakir.org","", true);
-        uri = resolver.resolveRelative(new URI("/restcomm-rvd/services/apps/xxxx"));
-        Assert.assertEquals("/restcomm-rvd/services/apps/xxxx", uri.toString());
+        uri = resolver.resolveRelative(new URI("/visual-designer/services/apps/xxxx"));
+        Assert.assertEquals("/visual-designer/services/apps/xxxx", uri.toString());
         // all nulls
         resolver = RcmlserverResolver.getInstance(null,null, true);
-        uri = resolver.resolveRelative(new URI("/restcomm-rvd/services/apps/xxxx"));
-        Assert.assertEquals("/restcomm-rvd/services/apps/xxxx", uri.toString());
+        uri = resolver.resolveRelative(new URI("/visual-designer/services/apps/xxxx"));
+        Assert.assertEquals("/visual-designer/services/apps/xxxx", uri.toString());
     }
 }

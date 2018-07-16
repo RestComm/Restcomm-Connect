@@ -34,6 +34,7 @@ import org.jboss.shrinkwrap.api.spec.WebArchive;
 import org.jboss.shrinkwrap.resolver.api.maven.Maven;
 import org.junit.BeforeClass;
 import org.junit.FixMethodOrder;
+import org.junit.Ignore;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.junit.runners.MethodSorters;
@@ -113,7 +114,7 @@ public class AccountsEndpointOrganizationsTest extends EndpointTest {
         assertTrue(org3account.get("sid").getAsString().equals(org3AccountSid));
     }
 
-    @Test
+    @Test @Ignore //TODO temporarely disable organization domain validation - https://telestax.atlassian.net/browse/BS-408
     public void testGetAccountOrg3WithOrg2Url() {
         // Get Account using admin email address and user email address
         String org2Url = "http://org2.restcomm.com:8080/restcomm";
