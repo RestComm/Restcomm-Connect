@@ -610,15 +610,21 @@ The result of the *SortBy* parameter:
             <InstanceId>ID8555f97abe0441e0a07ca2da3a081871</InstanceId>
             <DateCreated>Thu, 28 Jun 2018 16:56:33 +0300</DateCreated>
             <DateUpdated>Thu, 28 Jun 2018 16:56:36 +0300</DateUpdated>
-            <ParentCallSid/>
-            ...
+            <To>+112233</To>
+            <From>alice</From>
+            <Status>completed</Status>
+            <Duration>8</Duration>
+             ...
         </Call>
         <Call>
             <Sid>ID8555f97abe0441e0a07ca2da3a081871-CA898196ba193342769877eb218d5008d3</Sid>
             <InstanceId>ID8555f97abe0441e0a07ca2da3a081871</InstanceId>
             <DateCreated>Thu, 28 Jun 2018 16:56:39 +0300</DateCreated>
             <DateUpdated>Thu, 28 Jun 2018 16:56:42 +0300</DateUpdated>
-            <ParentCallSid/>
+            <To>+1234</To>
+            <From>alice</From>
+            <Status>completed</Status>
+            <Duration>12</Duration>
             ...
         </Call>
         <Call>
@@ -626,7 +632,10 @@ The result of the *SortBy* parameter:
             <InstanceId>ID8555f97abe0441e0a07ca2da3a081871</InstanceId>
             <DateCreated>Thu, 28 Jun 2018 16:56:44 +0300</DateCreated>
             <DateUpdated>Thu, 28 Jun 2018 16:56:50 +0300</DateUpdated>
-            <ParentCallSid/>
+            <To>+112233</To>
+            <From>bob</From>
+            <Status>completed</Status>
+            <Duration>15</Duration>
             ...
         </Call>
     </Calls>

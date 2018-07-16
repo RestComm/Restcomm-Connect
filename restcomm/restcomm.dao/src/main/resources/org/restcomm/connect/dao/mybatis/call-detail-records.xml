@@ -122,59 +122,59 @@
             </where>
             <choose>
                 <when test="sortByDate != null">
-                    <if test="sortByDate.name() == 'ASCENDING'">
+                    <if test="sortByDate.name() == 'ASC'">
                         order by "date_created" ASC
                     </if>
-                    <if test="sortByDate.name() == 'DESCENDING'">
+                    <if test="sortByDate.name() == 'DESC'">
                         order by "date_created" DESC
                     </if>
                 </when>
                 <when test="sortByFrom != null">
-                    <if test="sortByFrom.name() == 'ASCENDING'">
-                        order by "sender" ASC
+                    <if test="sortByFrom.name() == 'ASC'">
+                        order by "sender" ASC, "date_created" DESC
                     </if>
-                    <if test="sortByFrom.name() == 'DESCENDING'">
-                        order by "sender" DESC
+                    <if test="sortByFrom.name() == 'DESC'">
+                        order by "sender" DESC, "date_created" DESC
                     </if>
                 </when>
                 <when test="sortByTo != null">
-                    <if test="sortByTo.name() == 'ASCENDING'">
-                        order by "recipient" ASC
+                    <if test="sortByTo.name() == 'ASC'">
+                        order by "recipient" ASC, "date_created" DESC
                     </if>
-                    <if test="sortByTo.name() == 'DESCENDING'">
-                        order by "recipient" DESC
+                    <if test="sortByTo.name() == 'DESC'">
+                        order by "recipient" DESC, "date_created" DESC
                     </if>
                 </when>
                 <when test="sortByDirection != null">
-                    <if test="sortByDirection.name() == 'ASCENDING'">
-                        order by "direction" ASC
+                    <if test="sortByDirection.name() == 'ASC'">
+                        order by "direction" ASC, "date_created" DESC
                     </if>
-                    <if test="sortByDirection.name() == 'DESCENDING'">
-                        order by "direction" DESC
+                    <if test="sortByDirection.name() == 'DESC'">
+                        order by "direction" DESC, "date_created" DESC
                     </if>
                 </when>
                 <when test="sortByStatus != null">
-                    <if test="sortByStatus.name() == 'ASCENDING'">
-                        order by "status" ASC
+                    <if test="sortByStatus.name() == 'ASC'">
+                        order by "status" ASC, "date_created" DESC
                     </if>
-                    <if test="sortByStatus.name() == 'DESCENDING'">
-                        order by "status" DESC
+                    <if test="sortByStatus.name() == 'DESC'">
+                        order by "status" DESC, "date_created" DESC
                     </if>
                 </when>
                 <when test="sortByDuration != null">
-                    <if test="sortByDuration.name() == 'ASCENDING'">
-                        order by "duration" ASC
+                    <if test="sortByDuration.name() == 'ASC'">
+                        order by "duration" ASC, "date_created" DESC
                     </if>
-                    <if test="sortByDuration.name() == 'DESCENDING'">
-                        order by "duration" DESC
+                    <if test="sortByDuration.name() == 'DESC'">
+                        order by "duration" DESC, "date_created" DESC
                     </if>
                 </when>
                 <when test="sortByPrice != null">
-                    <if test="sortByPrice.name() == 'ASCENDING'">
-                        order by cast("price" as int) ASC
+                    <if test="sortByPrice.name() == 'ASC'">
+                        order by cast("price" as int) ASC, "date_created" DESC
                     </if>
-                    <if test="sortByPrice.name() == 'DESCENDING'">
-                        order by cast("price" as int) DESC
+                    <if test="sortByPrice.name() == 'DESC'">
+                        order by cast("price" as int) DESC, "date_created" DESC
                     </if>
                 </when>
                 <otherwise>
