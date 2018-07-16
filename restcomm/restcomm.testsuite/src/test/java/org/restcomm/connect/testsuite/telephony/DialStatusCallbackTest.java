@@ -870,6 +870,98 @@ public class DialStatusCallbackTest {
         assertTrue(liveCallsArraySize==0);
     }
 
+    @Test
+    public void testDialStatusCallbackDialSipWithDelayOnStatusCallbackResponse() throws ParseException, InterruptedException {
+
+        stubFor(get(urlPathEqualTo("/1111"))
+                .willReturn(aResponse()
+                        .withStatus(200)
+                        .withHeader("Content-Type", "text/xml")
+                        .withBody(dialStatusCallbackForSip)));
+
+        stubFor(post(urlPathMatching("/status.*"))
+                .willReturn(aResponse()
+                        .withFixedDelay(3000)
+                        .withStatus(200)));
+
+        final SipCall henriqueCall = henriquePhone.createSipCall();
+        henriqueCall.listenForIncomingCall();
+
+        // Create outgoing call with first phone
+        final SipCall bobCall = bobPhone.createSipCall();
+        bobCall.initiateOutgoingCall(bobContact, dialRestcomm, null, body, "application", "sdp", null, null);
+        assertLastOperationSuccess(bobCall);
+        assertTrue(bobCall.waitOutgoingCallResponse(5 * 1000));
+        final int response = bobCall.getLastReceivedResponse().getStatusCode();
+        assertTrue(response == Response.TRYING || response == Response.RINGING);
+
+        if (response == Response.TRYING) {
+            assertTrue(bobCall.waitOutgoingCallResponse(5 * 1000));
+            assertEquals(Response.RINGING, bobCall.getLastReceivedResponse().getStatusCode());
+        }
+
+        assertTrue(bobCall.waitOutgoingCallResponse(5 * 1000));
+        assertEquals(Response.OK, bobCall.getLastReceivedResponse().getStatusCode());
+        bobCall.sendInviteOkAck();
+
+        assertTrue(henriqueCall.waitForIncomingCall(5000));
+        assertTrue(henriqueCall.sendIncomingCallResponse(Response.TRYING, "Henrique-Trying", 3600));
+        assertTrue(henriqueCall.sendIncomingCallResponse(Response.RINGING, "Henrique-Ringing", 3600));
+        String receivedBody = new String(henriqueCall.getLastReceivedRequest().getRawContent());
+        assertTrue(henriqueCall.sendIncomingCallResponse(Response.OK, "Henrique-OK", 3600, receivedBody, "application", "sdp",
+                null, null));
+        assertTrue(henriqueCall.waitForAck(1500));
+
+        Thread.sleep(1000);
+        int liveCalls = MonitoringServiceTool.getInstance().getStatistics(deploymentUrl.toString(),adminAccountSid, adminAuthToken);
+        int liveIncomingCalls = MonitoringServiceTool.getInstance().getLiveIncomingCallStatistics(deploymentUrl.toString(),adminAccountSid, adminAuthToken);
+        int liveOutgoingCalls = MonitoringServiceTool.getInstance().getLiveOutgoingCallStatistics(deploymentUrl.toString(),adminAccountSid, adminAuthToken);
+        int liveCallsArraySize = MonitoringServiceTool.getInstance().getLiveCallsArraySize(deploymentUrl.toString(),adminAccountSid, adminAuthToken);
+        assertTrue(liveCalls==2);
+        assertTrue(liveIncomingCalls==1);
+        assertTrue(liveOutgoingCalls==1);
+        assertTrue(liveCallsArraySize==2);
+
+
+        Thread.sleep(3000);
+        bobCall.listenForDisconnect();
+
+        assertTrue(henriqueCall.disconnect());
+        Thread.sleep(500);
+        assertTrue(bobCall.waitForDisconnect(5000));
+        assertTrue(bobCall.respondToDisconnect());
+
+        Thread.sleep(10000);
+
+        logger.info("About to check the StatusCallback Requests");
+        List<LoggedRequest> requests = findAll(postRequestedFor(urlPathMatching("/status.*")));
+        assertEquals(4, requests.size());
+        String requestBody = requests.get(0).getBodyAsString();
+        assertTrue(requestBody.contains("SequenceNumber=0"));
+        assertTrue(requestBody.contains("CallStatus=initiated"));
+
+        requestBody = requests.get(1).getBodyAsString();
+        assertTrue(requestBody.contains("SequenceNumber=1"));
+        assertTrue(requestBody.contains("CallStatus=ringing"));
+
+        requestBody = requests.get(2).getBodyAsString();
+        assertTrue(requestBody.contains("SequenceNumber=2"));
+        assertTrue(requestBody.contains("CallStatus=answered"));
+
+        requestBody = requests.get(3).getBodyAsString();
+        assertTrue(requestBody.contains("SequenceNumber=3"));
+        assertTrue(requestBody.contains("CallStatus=completed"));
+
+        liveCalls = MonitoringServiceTool.getInstance().getStatistics(deploymentUrl.toString(),adminAccountSid, adminAuthToken);
+        liveIncomingCalls = MonitoringServiceTool.getInstance().getLiveIncomingCallStatistics(deploymentUrl.toString(),adminAccountSid, adminAuthToken);
+        liveOutgoingCalls = MonitoringServiceTool.getInstance().getLiveOutgoingCallStatistics(deploymentUrl.toString(),adminAccountSid, adminAuthToken);
+        liveCallsArraySize = MonitoringServiceTool.getInstance().getLiveCallsArraySize(deploymentUrl.toString(),adminAccountSid, adminAuthToken);
+        assertTrue(liveCalls==0);
+        assertTrue(liveIncomingCalls==0);
+        assertTrue(liveOutgoingCalls==0);
+        assertTrue(liveCallsArraySize==0);
+    }
+
     private String dialStatusCallbackForNumber = "<Response><Dial><Number statusCallback=\"http://127.0.0.1:" + mockPort + "/status\">+131313</Number></Dial></Response>";
     @Test
     public void testDialStatusCallbackDialNumber() throws ParseException, InterruptedException {
