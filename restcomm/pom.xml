@@ -10,7 +10,7 @@
 
     <groupId>org.restcomm</groupId>
     <artifactId>restcomm-connect</artifactId>
-    <version>8.5.0-241</version>
+    <version>8.5.1-19</version>
     <packaging>pom</packaging>
     <name>RestComm-Connect</name>
     <description>A unified communications platform for web developers.</description>
