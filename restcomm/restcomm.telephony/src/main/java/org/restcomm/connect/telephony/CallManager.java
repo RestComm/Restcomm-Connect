@@ -2400,6 +2400,9 @@ public final class CallManager extends RestcommUntypedActor {
             }
         } else {
             if (application.isValid()) {
+                if (logger.isInfoEnabled()) {
+                    logger.info("CallManager - Got response: "+response.toString());
+                }
                 // otherwise the response is coming back to a Voice app hosted by Restcomm
                 final ActorRef call = (ActorRef) application.getAttribute(Call.class.getName());
                 call.tell(response, self);

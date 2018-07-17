@@ -106,6 +106,9 @@ public final class CallManagerProxy extends SipServlet implements SipServletList
         if (isUssdMessage(response)) {
             ussdManager.tell(response, null);
         } else {
+            if (logger.isInfoEnabled()) {
+                logger.info("CallManagerProxy - Got response: "+response.toString());
+            }
             manager.tell(response, null);
         }
     }
