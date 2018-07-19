@@ -50,7 +50,7 @@ public class FileCacheServlet extends HttpServlet {
     private Logger logger = Logger.getLogger(FileCacheServlet.class);
 
     // Constants ----------------------------------------------------------------------------------
-    private static final int DEFAULT_BUFFER_SIZE = 10240; // ..bytes = 10KB.
+    private static final int DEFAULT_BUFFER_SIZE = 1024; // ..bytes = 1KB.
     private static final long DEFAULT_EXPIRE_TIME = 604800000L; // ..ms = 1 week.
 
     /**
