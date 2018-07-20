@@ -34,7 +34,7 @@ configRestcomm() {
 
 	sed -i  "s|<\!--.*<external-ip>.*<\/external-ip>.*-->|<external-ip>$static_address<\/external-ip>|" $FILE
 	sed -i "s|<external-ip>.*<\/external-ip>|<external-ip>$static_address<\/external-ip>|" $FILE
-	
+
 	sed -i "s|<external-ip\/>|<external-ip>$static_address<\/external-ip>|" $FILE
 
 	echo 'Updated RestComm configuration'
@@ -51,7 +51,7 @@ configRestcomm() {
 	#Configure RESTCOMM_HOSTNAME at restcomm.xml. If not set "STATIC_ADDRESS" will be used.
 	if [ -n "$RESTCOMM_HOSTNAME" ]; then
   		echo "HOSTNAME $RESTCOMM_HOSTNAME"
-  		
+
   		sed -i "s|<hostname>.*<\/hostname>|<hostname>${RESTCOMM_HOSTNAME}<\/hostname>|" $RESTCOMM_DEPLOY/WEB-INF/conf/restcomm.xml
   		sed -i "s|<hostname\/>|<hostname>${RESTCOMM_HOSTNAME}<\/hostname>|" $RESTCOMM_DEPLOY/WEB-INF/conf/restcomm.xml
 
@@ -78,7 +78,7 @@ configOutboundProxy(){
     sed -i "s|<outbound-proxy-uri>.*<\/outbound-proxy-uri>|<outbound-proxy-uri>$OUTBOUND_PROXY<\/outbound-proxy-uri>|" $FILE
     sed -i "s|<outbound-proxy-user>.*<\/outbound-proxy-user>|<outbound-proxy-user>$OUTBOUND_PROXY_USERNAME<\/outbound-proxy-user>|"  $FILE
     sed -i "s|<outbound-proxy-password>.*<\/outbound-proxy-password>|<outbound-proxy-password>$OUTBOUND_PROXY_PASSWORD<\/outbound-proxy-password>|" $FILE
-	
+
     sed -i "s|<outbound-proxy-uri\/>|<outbound-proxy-uri>$OUTBOUND_PROXY<\/outbound-proxy-uri>|" $FILE
     sed -i "s|<outbound-proxy-user\/>|<outbound-proxy-user>$OUTBOUND_PROXY_USERNAME<\/outbound-proxy-user>|"  $FILE
     sed -i "s|<outbound-proxy-password\/>|<outbound-proxy-password>$OUTBOUND_PROXY_PASSWORD<\/outbound-proxy-password>|" $FILE
@@ -87,11 +87,11 @@ configOutboundProxy(){
 configPushNotificationServer() {
     echo "Configure push-notification-server"
     FILE=$RESTCOMM_DEPLOY/WEB-INF/conf/restcomm.xml
-    
+
 	sed -i "s|<push-notification-server-enabled>.*<\/push-notification-server-enabled>|<push-notification-server-enabled>$PUSH_NOTIFICATION_SERVER_ENABLED<\/push-notification-server-enabled>|" $FILE
 	sed -i "s|<push-notification-server-url>.*<\/push-notification-server-url>|<push-notification-server-url>$PUSH_NOTIFICATION_SERVER_URL<\/push-notification-server-url>|;" $FILE
 	sed -i "s|<push-notification-server-delay>.*<\/push-notification-server-delay>|<push-notification-server-delay>$PUSH_NOTIFICATION_SERVER_DELAY<\/push-notification-server-delay>|" $FILE
-	
+
 	sed -i "s|<push-notification-server-enabled\/>|<push-notification-server-enabled>$PUSH_NOTIFICATION_SERVER_ENABLED<\/push-notification-server-enabled>|" $FILE
 	sed -i "s|<push-notification-server-url\/>|<push-notification-server-url>$PUSH_NOTIFICATION_SERVER_URL<\/push-notification-server-url>|" $FILE
 	sed -i "s|<push-notification-server-delay\/>|<push-notification-server-delay>$PUSH_NOTIFICATION_SERVER_DELAY<\/push-notification-server-delay>|" $FILE
@@ -108,7 +108,7 @@ configVoipInnovations() {
        	N; s|<password>.*</password>|<password>$2</password>|
        	N; s|<endpoint>.*</endpoint>|<endpoint>$3</endpoint>|
 	}" $FILE
-	
+
 	sed -i "/<voip-innovations>/ {
 		N; s|<login\/>|<login>$1</login>|
        	N; s|<password\/>|<password>$2</password>|
@@ -133,7 +133,7 @@ configDidProvisionManager() {
         	N; s|<password>.*</password>|<password>$2</password>|
         	N; s|<endpoint>.*</endpoint>|<endpoint>$3</endpoint>|
 		}" $FILE
-	
+
 		sed -i "/<voip-innovations>/ {
 			N; s|<login\/>|<login>$1</login>|
         	N; s|<password\/>|<password>$2</password>|
@@ -148,21 +148,21 @@ configDidProvisionManager() {
         sed -e "s|phone-number-provisioning class=\".*\"|phone-number-provisioning class=\"org.restcomm.connect.provisioning.number.bandwidth.BandwidthNumberProvisioningManager\"|" $FILE > $FILE.bak
 
 		mv $FILE.bak $FILE
-		
+
         sed -i "/<bandwidth>/ {
             N; s|<username>.*</username>|<username>$1</username>|
             N; s|<password>.*</password>|<password>$2</password>|
             N; s|<accountId>.*</accountId>|<accountId>$6</accountId>|
             N; s|<siteId>.*</siteId>|<siteId>$4</siteId>|
         }" $FILE
-        
+
         sed -i "/<bandwidth>/ {
             N; s|<username\/>|<username>$1</username>|
             N; s|<password\/>|<password>$2</password>|
             N; s|<accountId\/>|<accountId>$6</accountId>|
             N; s|<siteId\/>|<siteId>$4</siteId>|
         }" $FILE
-        
+
         sed -i "s|<outboudproxy-user-at-from-header>.*<\/outboudproxy-user-at-from-header>|<outboudproxy-user-at-from-header>"false"<\/outboudproxy-user-at-from-header>|" $FILE
         sed -i "s|<outboudproxy-user-at-from-header\/>|<outboudproxy-user-at-from-header>"false"<\/outboudproxy-user-at-from-header>|" $FILE
         echo 'Configured Bandwidth credentials'
@@ -193,7 +193,7 @@ configDidProvisionManager() {
                     N
                     N; s|<smpp-system-type>.*</smpp-system-type>|<smpp-system-type>$7</smpp-system-type>|
                 }" $FILE
-                
+
 				sed -i "/<nexmo>/ {
                     N; s|<api-key\/>|<api-key>$1</api-key>|
                     N; s|<api-secret\/>|<api-secret>$2</api-secret>|
@@ -243,7 +243,7 @@ configFaxService() {
 		N; s|<user>.*</user>|<user>$1</user>|
 		N; s|<password>.*</password>|<password>$2</password>|
 	}" $FILE
-	
+
 	sed -i "/<fax-service.*>/ {
 		N; s|<user\/>|<user>$1</user>|
 		N; s|<password\/>|<password>$2</password>|
@@ -262,7 +262,7 @@ configSmsAggregator() {
 		N; s|<outbound-prefix>.*</outbound-prefix>|<outbound-prefix>$2</outbound-prefix>|
 		N; s|<outbound-endpoint>.*</outbound-endpoint>|<outbound-endpoint>$1</outbound-endpoint>|
 	}" $FILE
-	
+
 	sed -i "/<sms-aggregator.*>/ {
 		N; s|<outbound-prefix\/>|<outbound-prefix>$2</outbound-prefix>|
 		N; s|<outbound-endpoint\/>|<outbound-endpoint>$1</outbound-endpoint>|
@@ -279,7 +279,7 @@ configSpeechRecognizer() {
         sed -i "/<speech-recognizer.*>/ {
             N; s|<api-key.*></api-key>|<api-key production=\"true\">$1</api-key>|
         }" $FILE
-        
+
         sed -i "/<speech-recognizer.*>/ {
             N; s|<api-key.*\/>|<api-key production=\"true\">$1</api-key>|
         }" $FILE
@@ -319,7 +319,7 @@ configAcapela() {
 		        N; s|<login>.*</login>|<login>$2</login>|
 		        N; s|<password>.*</password>|<password>$3</password>|
 	        }" $FILE
-	        
+
 	        sed -i "/<acapela class=\"org.restcomm.connect.tts.acapela.AcapelaSpeechSynthesizer\">/ {
 		        N
 		        N; s|<application\/>|<application>$1</application>|
@@ -371,7 +371,7 @@ configAWSPolly() {
 		        N; s|<aws-secret-key>.*</aws-secret-key>|<aws-secret-key>$2</aws-secret-key>|
 		        N; s|<aws-region>.*</aws-region>|<aws-region>$3</aws-region>|
 	        }" $FILE
-	        
+
 	        sed -i "/<awspolly class=\"org.restcomm.connect.tts.awspolly.AWSPollySpeechSyntetizer\">/ {
 		        N
 		        N; s|<aws-access-key\/>|<aws-access-key>$1</aws-access-key>|
@@ -410,7 +410,7 @@ configTelestaxProxy() {
 		N; s|<siteId>.*</siteId>|<siteId>$6</siteId>|
 		N; s|<uri>.*</uri>|<uri>http:\/\/$5:2080</uri>|
 		}" $FILE
-		
+
 		sed -i "/<telestax-proxy>/ {
 			N; s|<enabled\/>|<enabled>$1</enabled>|
 		N; s|<login\/>|<login>$2</login>|
@@ -430,7 +430,7 @@ configTelestaxProxy() {
 			N; s|<siteid>.*</siteid>|<siteid></siteid>|
 			N; s|<uri>.*</uri>|<uri>http:\/\/127.0.0.1:2080</uri>|
 		}" $FILE
-		
+
 		sed -i "/<telestax-proxy>/ {
 			N; s|<enabled\/>|<enabled>false</enabled>|
 			N; s|<login\/>|<login></login>|
@@ -516,7 +516,7 @@ configSMPPAccount() {
 			N; s|<password>.*</password>|<password>$password</password>|
 			N; s|<systemtype>.*</systemtype>|<systemtype>$systemType</systemtype>|
 		}" $FILE
-		
+
 		sed -i	"/<smpp class=\"org.restcomm.connect.sms.smpp.SmppService\"/{
 			N
 			N
@@ -617,6 +617,10 @@ configRestCommURIs() {
 
 		echo "Updated prompts-uri cache-uri error-dictionary-uri External MSaddress for "
 	fi
+
+	if [ -n "$CACHE_URI" ]; then
+        sed -i "s|<cache-uri/>|<cache-uri>$CACHE_URI</cache-uri>|" $FILE
+	fi
 	echo 'Configured RestCommURIs'
 }
 
@@ -683,7 +687,7 @@ otherRestCommConf(){
         sed -i "s|<ussd-gateway-uri>.*</ussd-gateway-uri>|<ussd-gateway-uri>$USSDGATEWAYURI</ussd-gateway-uri>|" $FILE
         sed -i "s|<ussd-gateway-user>.*</ussd-gateway-user>|<ussd-gateway-user>$USSDGATEWAYUSER</ussd-gateway-user>|" $FILE
         sed -i "s|<ussd-gateway-password>.*</ussd-gateway-password>|<ussd-gateway-password>$USSDGATEWAYPASSWORD</ussd-gateway-password>|" $FILE
-        
+
         sed -i "s|<ussd-gateway-uri/>|<ussd-gateway-uri>$USSDGATEWAYURI</ussd-gateway-uri>|" $FILE
         sed -i "s|<ussd-gateway-user/>|<ussd-gateway-user>$USSDGATEWAYUSER</ussd-gateway-user>|" $FILE
         sed -i "s|<ussd-gateway-password/>|<ussd-gateway-password>$USSDGATEWAYPASSWORD</ussd-gateway-password>|" $FILE
@@ -697,7 +701,7 @@ otherRestCommConf(){
 			N;
 			N; s|<response-timeout>.*</response-timeout>|<response-timeout>$HTTP_RESPONSE_TIMEOUT</response-timeout>|
 		}" $FILE
-		
+
 	sed -i"." "/<http-client>/ {
 			N
 			N;
@@ -708,11 +712,11 @@ otherRestCommConf(){
 
     echo "CACHE_NO_WAV $CACHE_NO_WAV"
     sed -i "s|<cache-no-wav>.*</cache-no-wav>|<cache-no-wav>${CACHE_NO_WAV}</cache-no-wav>|" $FILE
-    
+
     echo "CACHE_PATH $CACHE_PATH"
     sed -i "s|<cache-path>.*</cache-path>|<cache-path>$CACHE_PATH</cache-path>|" $FILE
-    sed -i "s|<cache-path/>|<cache-path>$CACHE_PATH</cache-path>|" $FILE		
-    
+    sed -i "s|<cache-path/>|<cache-path>$CACHE_PATH</cache-path>|" $FILE
+
 
     #Configure USESBC
     echo "USESBC: $RCUSESBC"
@@ -828,7 +832,7 @@ configDnsProvisioningManager() {
             -s "/restcomm/runtime-settings" -t elem  -n dns-provisioning \
             -i "/restcomm/runtime-settings/dns-provisioning" -t attr -n class -v "$DNS_PROVISIONING_CLASS" \
             $FILE
-            
+
 	xmlstarlet ed --inplace -d "/restcomm/runtime-settings/dns-provisioning" \
             -s "/restcomm/runtime-settings" -t elem  -n dns-provisioning \
             -i "/restcomm/runtime-settings/dns-provisioning" -t attr -n enabled -v "$DNS_PROVISIONING_ENABLED" \
