@@ -619,7 +619,7 @@ configRestCommURIs() {
 	fi
 
 	if [ -n "$CACHE_URI" ]; then
-        sed -i "s|<cache-uri/>|<cache-uri>$CACHE_URI</cache-uri>|" $FILE
+        sed -i "s|<cache-uri>.*</cache-uri>|<cache-uri>$CACHE_URI</cache-uri>|" $FILE
 	fi
 	echo 'Configured RestCommURIs'
 }
