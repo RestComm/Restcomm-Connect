@@ -2169,6 +2169,10 @@ public final class Call extends RestcommUntypedActor implements TransitionEndLis
     private void onSipServletResponse(SipServletResponse message, ActorRef self, ActorRef sender) throws Exception {
         this.lastResponse = message;
 
+        if (logger.isInfoEnabled()) {
+            logger.info("Call - Got response: "+message.toString());
+        }
+
         final int code = message.getStatus();
         switch (code) {
             case SipServletResponse.SC_CALL_BEING_FORWARDED: {
