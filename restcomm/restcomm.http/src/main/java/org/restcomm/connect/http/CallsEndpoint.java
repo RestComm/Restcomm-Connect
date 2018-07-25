@@ -123,6 +123,18 @@ import scala.concurrent.duration.Duration;
 @ThreadSafe
 @Singleton
 public class CallsEndpoint extends AbstractEndpoint {
+    // Filtering keywords in the URL
+    private static final String FILTERING_URL_PARAM_FROM = "From";
+    private static final String FILTERING_URL_PARAM_TO = "To";
+    private static final String FILTERING_URL_PARAM_STATUS = "Status";
+    private static final String FILTERING_URL_PARAM_START_TIME = "StartTime";
+    private static final String FILTERING_URL_PARAM_END_TIME = "EndTime";
+    private static final String FILTERING_URL_PARAM_DATE_CREATED_BEGIN = "DateCreatedBegin";
+    private static final String FILTERING_URL_PARAM_DATE_CREATED_END = "DateCreatedEnd";
+    private static final String FILTERING_URL_PARAM_PARENT_CALL_SID = "ParentCallSid";
+    private static final String FILTERING_URL_PARAM_CONFERENCE_SID = "ConferenceSid";
+
+    // Sorting keywords in the URL
     private static final String SORTING_URL_PARAM_DATE_CREATED = "DateCreated";
     private static final String SORTING_URL_PARAM_FROM = "From";
     private static final String SORTING_URL_PARAM_TO = "To";
@@ -237,13 +249,15 @@ public class CallsEndpoint extends AbstractEndpoint {
         String pageSize = info.getQueryParameters().getFirst("PageSize");
         String page = info.getQueryParameters().getFirst("Page");
         // String afterSid = info.getQueryParameters().getFirst("AfterSid");
-        String recipient = info.getQueryParameters().getFirst("To");
-        String sender = info.getQueryParameters().getFirst("From");
-        String status = info.getQueryParameters().getFirst("Status");
-        String startTime = info.getQueryParameters().getFirst("StartTime");
-        String endTime = info.getQueryParameters().getFirst("EndTime");
-        String parentCallSid = info.getQueryParameters().getFirst("ParentCallSid");
-        String conferenceSid = info.getQueryParameters().getFirst("ConferenceSid");
+        String recipient = info.getQueryParameters().getFirst(FILTERING_URL_PARAM_TO);
+        String sender = info.getQueryParameters().getFirst(FILTERING_URL_PARAM_FROM);
+        String status = info.getQueryParameters().getFirst(FILTERING_URL_PARAM_STATUS);
+        String startTime = info.getQueryParameters().getFirst(FILTERING_URL_PARAM_START_TIME);
+        String endTime = info.getQueryParameters().getFirst(FILTERING_URL_PARAM_END_TIME);
+        String dateCreatedBegin = info.getQueryParameters().getFirst(FILTERING_URL_PARAM_DATE_CREATED_BEGIN);
+        String dateCreatedEnd = info.getQueryParameters().getFirst(FILTERING_URL_PARAM_DATE_CREATED_END);
+        String parentCallSid = info.getQueryParameters().getFirst(FILTERING_URL_PARAM_PARENT_CALL_SID);
+        String conferenceSid = info.getQueryParameters().getFirst(FILTERING_URL_PARAM_CONFERENCE_SID);
         String reverse = info.getQueryParameters().getFirst("Reverse");
 
         // Format for sorting URL parameter is '?SortBy=<field>:<direction>', for example: '?SortBy=date_created:asc'. In the
@@ -379,6 +393,8 @@ public class CallsEndpoint extends AbstractEndpoint {
                 .byStatus(status)
                 .byStartTime(startTime)
                 .byEndTime(endTime)
+                .byDateCreatedBegin(dateCreatedBegin)
+                .byDateCreatedEnd(dateCreatedEnd)
                 .byParentCallSid(parentCallSid)
                 .byConferenceSid(conferenceSid)
                 .limited(limit, offset);

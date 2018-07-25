@@ -441,7 +441,7 @@ public class CallDetailRecordsDaoTest extends DaoTest {
         // read from a single account but using the 'accountSidSet' interface
         List<String> accountSidSet = new ArrayList<String>();
         accountSidSet.add("AC00000000000000000000000000000000");
-        CallDetailRecordFilter filter = new CallDetailRecordFilter(null, accountSidSet, null, null, null, null, null, null, null, null, null);
+        CallDetailRecordFilter filter = new CallDetailRecordFilter(null, accountSidSet, null, null, null, null, null, null, null, null, null, null, null);
         Assert.assertEquals(12, dao.getTotalCallDetailRecords(filter).intValue());
         // read cdrs of three accounts
         accountSidSet.add("AC00000000000000000000000000000000");
@@ -452,14 +452,46 @@ public class CallDetailRecordsDaoTest extends DaoTest {
         accountSidSet.clear();
         Assert.assertEquals(0, dao.getTotalCallDetailRecords(filter).intValue());
         // if both an accountSid and a accountSid set are passed, only accountSidSet is taken into account
-        filter = new CallDetailRecordFilter("ACae6e420f425248d6a26948c17a9e2acf", accountSidSet, null, null, null, null, null, null, null, null, null);
+        filter = new CallDetailRecordFilter("ACae6e420f425248d6a26948c17a9e2acf", accountSidSet, null, null, null, null, null, null, null, null, null, null, null);
         accountSidSet.add("AC00000000000000000000000000000000");
         accountSidSet.add("AC11111111111111111111111111111111");
         accountSidSet.add("AC22222222222222222222222222222222");
         Assert.assertEquals(25, dao.getTotalCallDetailRecords(filter).intValue());
         // if no (null) accountSidSet is passed the method still works
-        filter = new CallDetailRecordFilter("AC00000000000000000000000000000000", null, null, null, null, null, null, null, null, null, null);
+        filter = new CallDetailRecordFilter("AC00000000000000000000000000000000", null, null, null, null, null, null, null, null, null, null, null, null);
         Assert.assertEquals(12, dao.getTotalCallDetailRecords(filter).intValue());
+    }
+
+    @Test
+    public void filterWithDateCreated() throws ParseException {
+        CallDetailRecordsDao dao = manager.getCallDetailRecordsDao();
+        CallDetailRecordFilter.Builder builder = new CallDetailRecordFilter.Builder();
+        List<String> accountSidSet = new ArrayList<String>();
+        accountSidSet.add("AC00000000000000000000000000000000");
+
+        String dateCreatedBegin = "2013-08-09T15:25:31.303";
+        String dateCreatedEnd = "2013-08-27T14:02:23.775";
+
+        // Filter by DateCreatedBegin
+        builder.byAccountSidSet(accountSidSet)
+               .byDateCreatedBegin(dateCreatedBegin);
+        CallDetailRecordFilter filter = builder.build();
+        List<CallDetailRecord> callDetailRecords = dao.getCallDetailRecords(filter);
+        assertEquals(8, callDetailRecords.size());
+
+        // Filter by DateCreatedEnd
+        builder.byDateCreatedBegin(null)
+               .byDateCreatedEnd(dateCreatedEnd);
+        filter = builder.build();
+        callDetailRecords = dao.getCallDetailRecords(filter);
+        assertEquals(10, callDetailRecords.size());
+
+        // Filter by DateCreatedBegin and DateCreatedEnd
+        builder.byDateCreatedBegin(dateCreatedBegin)
+                .byDateCreatedEnd(dateCreatedEnd);
+        filter = builder.build();
+        callDetailRecords = dao.getCallDetailRecords(filter);
+        assertEquals(6, callDetailRecords.size());
     }
 
     @Test
