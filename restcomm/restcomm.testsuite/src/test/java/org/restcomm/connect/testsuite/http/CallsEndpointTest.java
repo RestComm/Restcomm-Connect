@@ -185,6 +185,33 @@ public class CallsEndpointTest {
 
     @Test
     @Category(FeatureAltTests.class)
+    public void getCallsListFilteredByDateCreated() {
+        Map<String, String> filters = new HashMap<String, String>();
+
+        // Filter by DateCreatedBegin
+        filters.put("DateCreatedBegin", "2013-09-24T14:59:24.028Z");
+        JsonObject response = RestcommCallsTool.getInstance().getCallsUsingFilter(deploymentUrl.toString(),
+                adminAccountSid, adminAuthToken, filters);
+        assertEquals(39, response.get("calls").getAsJsonArray().size());
+
+        // Filter by DateCreatedEnd
+        filters.remove("DateCreatedBegin");
+        filters.put("DateCreatedEnd", "2013-07-13T16:02:29.949Z");
+        response = RestcommCallsTool.getInstance().getCallsUsingFilter(deploymentUrl.toString(),
+                adminAccountSid, adminAuthToken, filters);
+        assertEquals(14, response.get("calls").getAsJsonArray().size());
+
+        // Filter by DateCreatedBegin and DateCreatedEnd
+        filters.put("DateCreatedBegin", "2013-07-11T15:33:14.430Z");
+        filters.put("DateCreatedEnd", "2013-07-13T16:02:29.949Z");
+        response = RestcommCallsTool.getInstance().getCallsUsingFilter(deploymentUrl.toString(),
+                adminAccountSid, adminAuthToken, filters);
+        assertEquals(10, response.get("calls").getAsJsonArray().size());
+
+    }
+
+    @Test
+    @Category(FeatureAltTests.class)
     public void getCallsListUsingPageSize() {
         JsonObject firstPage = (JsonObject) RestcommCallsTool.getInstance().getCalls(deploymentUrl.toString(), adminAccountSid,
                 adminAuthToken, null, 100, null, true);

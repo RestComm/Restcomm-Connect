@@ -40,6 +40,8 @@ public class CallDetailRecordFilter {
     private final String status;
     private final Date startTime;  // to initialize it pass string arguments with  yyyy-MM-dd format
     private final Date endTime;
+    private final Date dateCreatedBegin;
+    private final Date dateCreatedEnd;
     private final String parentCallSid;
     private final String conferenceSid;
     private final Integer limit;
@@ -54,13 +56,13 @@ public class CallDetailRecordFilter {
     private final Sorting.Direction sortByPrice;
 
     public CallDetailRecordFilter(String accountSid, List<String> accountSidSet, String recipient, String sender, String status, String startTime, String endTime,
-                                  String parentCallSid, String conferenceSid, Integer limit, Integer offset) throws ParseException {
-        this(accountSid, accountSidSet, recipient,sender,status,startTime,endTime,parentCallSid, conferenceSid, limit, offset, null, null,
+                                  String dateCreatedBegin, String dateCreatedEnd, String parentCallSid, String conferenceSid, Integer limit, Integer offset) throws ParseException {
+        this(accountSid, accountSidSet, recipient,sender,status,startTime,endTime,dateCreatedBegin, dateCreatedEnd, parentCallSid, conferenceSid, limit, offset, null, null,
                 null, null, null, null, null, null);
     }
 
-    public CallDetailRecordFilter(String accountSid, List<String> accountSidSet, String recipient, String sender, String status, String startTime, String endTime,
-                                  String parentCallSid, String conferenceSid, Integer limit, Integer offset, String instanceId, Sorting.Direction sortByDate,
+    public CallDetailRecordFilter(String accountSid, List<String> accountSidSet, String recipient, String sender, String status, String startTime, String endTime, String dateCreatedBegin,
+                                  String dateCreatedEnd, String parentCallSid, String conferenceSid, Integer limit, Integer offset, String instanceId, Sorting.Direction sortByDate,
                                   Sorting.Direction sortByFrom, Sorting.Direction sortByTo, Sorting.Direction sortByDirection, Sorting.Direction sortByStatus, Sorting.Direction sortByDuration,
                                   Sorting.Direction sortByPrice) throws ParseException {
         this.accountSid = accountSid;
@@ -84,9 +86,9 @@ public class CallDetailRecordFilter {
             SimpleDateFormat parser = new SimpleDateFormat("yyyy-MM-dd");
             Date date = parser.parse(startTime);
             this.startTime = date;
-        } else
+        } else {
             this.startTime = null;
-
+        }
         if (endTime != null) {
             SimpleDateFormat parser = new SimpleDateFormat("yyyy-MM-dd");
             Date date = parser.parse(endTime);
@@ -94,6 +96,22 @@ public class CallDetailRecordFilter {
         } else {
             this.endTime = null;
         }
+
+        if (dateCreatedBegin != null) {
+            SimpleDateFormat parser = new SimpleDateFormat("yyyy-MM-dd");
+            Date date = parser.parse(dateCreatedBegin);
+            this.dateCreatedBegin = date;
+        } else {
+            this.dateCreatedBegin = null;
+        }
+        if (dateCreatedEnd != null) {
+            SimpleDateFormat parser = new SimpleDateFormat("yyyy-MM-dd");
+            Date date = parser.parse(dateCreatedEnd);
+            this.dateCreatedEnd = date;
+        } else {
+            this.dateCreatedEnd = null;
+        }
+
         if (instanceId != null && !instanceId.isEmpty()) {
             this.instanceid = instanceId;
         } else {
@@ -137,6 +155,14 @@ public class CallDetailRecordFilter {
         return endTime;
     }
 
+    public Date getDateCreatedBegin() {
+        return dateCreatedBegin;
+    }
+
+    public Date getDateCreatedEnd() {
+        return dateCreatedEnd;
+    }
+
     public String getParentCallSid() {
         return parentCallSid;
     }
@@ -172,6 +198,8 @@ public class CallDetailRecordFilter {
         private String status = null;
         private String startTime = null;
         private String endTime = null;
+        private String dateCreatedBegin = null;
+        private String dateCreatedEnd = null;
         private String parentCallSid = null;
         private String conferenceSid = null;
         private String instanceid = null;
@@ -199,6 +227,8 @@ public class CallDetailRecordFilter {
                     status,
                     startTime,
                     endTime,
+                    dateCreatedBegin,
+                    dateCreatedEnd,
                     parentCallSid,
                     conferenceSid,
                     limit,
@@ -242,6 +272,15 @@ public class CallDetailRecordFilter {
             this.endTime = endTime;
             return this;
         }
+        public Builder byDateCreatedBegin(String dateCreatedBegin) {
+            this.dateCreatedBegin = dateCreatedBegin;
+            return this;
+        }
+        public Builder byDateCreatedEnd(String dateCreatedEnd) {
+            this.dateCreatedEnd = dateCreatedEnd;
+            return this;
+        }
+
         public Builder byParentCallSid(String parentCallSid) {
             this.parentCallSid = parentCallSid;
             return this;

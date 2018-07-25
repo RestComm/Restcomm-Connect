@@ -123,7 +123,7 @@ public class SupervisorEndpoint extends AbstractEndpoint{
         //following 2 things are enough to grant access: 1. a valid authentication token is present. 2 it is a super admin.
         CallDetailRecordFilter filterForTotal;
         try {
-            filterForTotal = new CallDetailRecordFilter("", null, null, null, null, null,null,
+            filterForTotal = new CallDetailRecordFilter("", null, null, null, null, null, null, null,null,
                     null, null, null, null);
         } catch (ParseException e) {
             return status(BAD_REQUEST).build();

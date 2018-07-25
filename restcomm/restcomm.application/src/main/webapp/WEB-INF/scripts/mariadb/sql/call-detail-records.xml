@@ -69,6 +69,13 @@
 		<if test="endTime != null">
 			AND end_time &lt;= DATE_ADD(#{endTime},INTERVAL 1 DAY)
 		</if>
+		<if test="dateCreatedBegin != null">
+			AND date_created &gt;= #{dateCreatedBegin}
+		</if>
+		<if test="dateCreatedEnd != null">
+			AND date_created &lt;= DATE_ADD(#{dateCreatedEnd},INTERVAL 1 DAY)
+		</if>
+
 	</select>
   
 	<!-- Issue 153: https://bitbucket.org/telestax/telscale-restcomm/issue/153 -->
@@ -116,6 +123,12 @@
 		</if>
 		<if test="endTime != null">
 			AND end_time &lt;= DATE_ADD(#{endTime},INTERVAL 1 DAY)
+		</if>
+		<if test="dateCreatedBegin != null">
+			AND date_created &gt;= #{dateCreatedBegin}
+		</if>
+		<if test="dateCreatedEnd != null">
+			AND date_created &lt;= DATE_ADD(#{dateCreatedEnd},INTERVAL 1 DAY)
 		</if>
 		<choose>
 			<when test="sortByDate != null">
@@ -174,7 +187,6 @@
 					order by cast(price as unsigned) DESC, date_created DESC
 				</if>
 			</when>
-
 			<otherwise>
 				order by date_created DESC
 			</otherwise>
