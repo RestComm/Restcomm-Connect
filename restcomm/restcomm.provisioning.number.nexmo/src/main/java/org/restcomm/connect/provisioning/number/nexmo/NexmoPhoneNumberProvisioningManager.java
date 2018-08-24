@@ -30,7 +30,6 @@ import org.apache.http.HttpResponse;
 import org.apache.http.HttpStatus;
 import org.apache.http.client.methods.HttpGet;
 import org.apache.http.client.methods.HttpPost;
-import org.apache.http.impl.client.DefaultHttpClient;
 import org.apache.log4j.Logger;
 import org.restcomm.connect.provisioning.number.api.ContainerConfiguration;
 import org.restcomm.connect.provisioning.number.api.PhoneNumber;
@@ -46,6 +45,8 @@ import com.google.gson.JsonPrimitive;
 import com.google.i18n.phonenumbers.NumberParseException;
 import com.google.i18n.phonenumbers.PhoneNumberUtil;
 import com.google.i18n.phonenumbers.PhoneNumberUtil.PhoneNumberFormat;
+import org.apache.http.impl.client.CloseableHttpClient;
+import org.restcomm.connect.commons.common.http.CustomHttpClientBuilder;
 
 /**
  * @author jean.deruelle@telestax.com
@@ -199,7 +200,7 @@ public class NexmoPhoneNumberProvisioningManager implements PhoneNumberProvision
         final HttpGet get = new HttpGet(queryUri);
         try {
 
-            final DefaultHttpClient client = new DefaultHttpClient();
+            final CloseableHttpClient client = CustomHttpClientBuilder.buildDefaultClient(null);
 //                if (telestaxProxyEnabled) {
 //                    // This will work as a flag for LB that this request will need to be modified and proxied to VI
 //                    get.addHeader("TelestaxProxy", String.valueOf(telestaxProxyEnabled));
@@ -275,7 +276,7 @@ public class NexmoPhoneNumberProvisioningManager implements PhoneNumberProvision
         final HttpPost post = new HttpPost(queryUri);
         try {
 
-            final DefaultHttpClient client = new DefaultHttpClient();
+            final CloseableHttpClient client = CustomHttpClientBuilder.buildDefaultClient(null);
 //                if (telestaxProxyEnabled) {
 //                    // This will work as a flag for LB that this request will need to be modified and proxied to VI
 //                    get.addHeader("TelestaxProxy", String.valueOf(telestaxProxyEnabled));
@@ -343,7 +344,7 @@ public class NexmoPhoneNumberProvisioningManager implements PhoneNumberProvision
                 }
             }
             final HttpPost updatePost = new HttpPost(updateUri);
-            final DefaultHttpClient client = new DefaultHttpClient();
+            final CloseableHttpClient client = CustomHttpClientBuilder.buildDefaultClient(null);
 
             final HttpResponse updateResponse = client.execute(updatePost);
             if (updateResponse.getStatusLine().getStatusCode() == HttpStatus.SC_OK) {
@@ -389,7 +390,7 @@ public class NexmoPhoneNumberProvisioningManager implements PhoneNumberProvision
         final HttpPost post = new HttpPost(queryUri);
         try {
 
-            final DefaultHttpClient client = new DefaultHttpClient();
+            final CloseableHttpClient client = CustomHttpClientBuilder.buildDefaultClient(null);
 //                if (telestaxProxyEnabled) {
 //                    // This will work as a flag for LB that this request will need to be modified and proxied to VI
 //                    get.addHeader("TelestaxProxy", String.valueOf(telestaxProxyEnabled));
