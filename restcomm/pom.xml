@@ -113,7 +113,7 @@
         <libphonenumber.version>4.3</libphonenumber.version>
         <junit.version>4.11</junit.version>
         <scalatest.version>1.9.1</scalatest.version>
-        <hsqldb.version>2.3.2</hsqldb.version>
+        <hsqldb.version>2.7.1</hsqldb.version>
         <sip-ri.version>1.2.293</sip-ri.version>
         <arquillian.version>1.0.3.Final</arquillian.version>
         <mss.arquillian.version>1.0.3</mss.arquillian.version>
